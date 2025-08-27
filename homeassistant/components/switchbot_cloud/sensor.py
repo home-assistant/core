@@ -1,6 +1,10 @@
 """Platform for sensor integration."""
 
-from switchbot_api import Device, Remote, SwitchBotAPI
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
+from switchbot_api import Device, SwitchBotAPI
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,7 +22,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
@@ -34,6 +38,23 @@ SENSOR_TYPE_POWER = "power"
 SENSOR_TYPE_VOLTAGE = "voltage"
 SENSOR_TYPE_CURRENT = "electricCurrent"
 SENSOR_TYPE_USED_ELECTRICITY = "usedElectricity"
+
+
+@dataclass(frozen=True)
+class PlugMiniEuUsedElectricitySensorEntityDescription(SensorEntityDescription):
+    """Plug Mini Eu UsedElectricity sensor."""
+
+    value_fn: Callable[[dict[str, Any]], float] | None = None
+
+
+USED_ELECTRICITY_DESCRIPTION = PlugMiniEuUsedElectricitySensorEntityDescription(
+    key=SENSOR_TYPE_USED_ELECTRICITY,
+    device_class=SensorDeviceClass.ENERGY,
+    state_class=SensorStateClass.TOTAL_INCREASING,
+    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    suggested_display_precision=2,
+    value_fn=lambda data: (data.get("usedElectricity") or 0) / 60000,
+)
 
 
 TEMPERATURE_DESCRIPTION = SensorEntityDescription(
@@ -92,12 +113,6 @@ CO2_DESCRIPTION = SensorEntityDescription(
     native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
 )
 
-USED_ELECTRICITY_DESCRIPTION = SensorEntityDescription(
-    key=SENSOR_TYPE_USED_ELECTRICITY,
-    device_class=SensorDeviceClass.ENERGY,
-    state_class=SensorStateClass.TOTAL_INCREASING,
-    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-)
 
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BATTERY_DESCRIPTION,),
@@ -171,7 +186,7 @@ async def async_setup_entry(
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
 
     async_add_entities(
-        _async_make_entity(data.api, device, coordinator, description)
+        SwitchBotCloudSensor(data.api, device, coordinator, description)
         for device, coordinator in data.devices.sensors
         for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
     )
@@ -196,33 +211,18 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-        self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
 
-
-class SwitchBotCloudSensorUsedElectricity(SwitchBotCloudSensor):
-    """Representation of a SwitchBot Cloud UsedElectricity sensor entity."""
-
-    def _set_attributes(self) -> None:
-        """Set attributes from coordinator data."""
-
-        if not self.coordinator.data:
-            return
-        used_electricity: int | None = self.coordinator.data.get(
-            self.entity_description.key
-        )
-        self._attr_native_value = used_electricity / 60000 if used_electricity else None
-
-
-@callback
-def _async_make_entity(
-    api: SwitchBotAPI,
-    device: Device | Remote,
-    coordinator: SwitchBotCoordinator,
-    description: SensorEntityDescription,
-) -> SwitchBotCloudSensor:
-    """Make a SwitchBotCloudSensor."""
-    if device.device_type == "Plug Mini (EU)":
-        return SwitchBotCloudSensorUsedElectricity(
-            api, device, coordinator, description
-        )
-    return SwitchBotCloudSensor(api, device, coordinator, description)
+        if (
+            isinstance(
+                self.entity_description,
+                PlugMiniEuUsedElectricitySensorEntityDescription,
+            )
+            and self.entity_description.value_fn is not None
+        ):
+            self._attr_native_value = self.entity_description.value_fn(
+                self.coordinator.data
+            )
+        else:
+            self._attr_native_value = self.coordinator.data.get(
+                self.entity_description.key
+            )
