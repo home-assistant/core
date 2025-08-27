@@ -245,6 +245,7 @@ STATE_PROGRAM_PHASE_OVEN = {
     3074: "process_running",
     3078: "process_finished",
     3084: "energy_save",
+    3099: "pre_heating",
     65535: "not_running",
 }
 STATE_PROGRAM_PHASE_WARMING_DRAWER = {
