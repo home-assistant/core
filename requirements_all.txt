@@ -1807,7 +1807,7 @@ pyW215==0.7.0
 pyW800rf32==0.4
 
 # homeassistant.components.ccm15
-py_ccm15==0.1.1
+py_ccm15==0.1.2
 
 # homeassistant.components.ads
 pyads==3.4.0
