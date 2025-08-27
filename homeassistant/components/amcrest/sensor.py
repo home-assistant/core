@@ -23,7 +23,13 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
+from .const import (
+    DATA_AMCREST,
+    DEVICES,
+    DOMAIN,
+    SENSOR_SCAN_INTERVAL_SECS,
+    SERVICE_UPDATE,
+)
 from .helpers import log_update_error, service_signal
 from .models import AmcrestConfiguredDevice
 
@@ -84,8 +90,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Amcrest sensors for a config entry."""
-    device = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["device"]
-    coordinator = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["coordinator"]
+    device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
     entities = [
         AmcrestCoordinatedSensor(device.name, device, coordinator, description)
         for description in SENSOR_TYPES
