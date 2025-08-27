@@ -347,7 +347,7 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
             if cls.options_flow is None:
                 raise UnknownHandler
 
-            if cls.options_flow_reloads is True:
+            if cls.options_flow_reloads:
                 return SchemaOptionsFlowHandlerWithReload(
                     config_entry,
                     cls.options_flow,
