@@ -23,6 +23,7 @@ import homeassistant.helpers.entity_registry as er
 from .const import _LOGGER, DOMAIN
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
+from .utils import async_update_unique_id
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -99,18 +100,10 @@ async def async_setup_entry(
 
     entity_registry = er.async_get(hass)
 
-    # Replace unique id for "Motion" switch
-    for serial_num in coordinator.data:
-        unique_id = f"{serial_num}-humanPresenceDetectionState"
-        if entity_id := entity_registry.async_get_entity_id(
-            BINARY_SENSOR_DOMAIN, DOMAIN, unique_id
-        ):
-            _LOGGER.debug("Updating unique_id for %s", entity_id)
-
-            new_unique_id = unique_id.replace("humanPresenceDetectionState", "motion")
-
-            # Update the registry with the new unique_id
-            entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+    # Replace unique id for "motion" binary sensor
+    await async_update_unique_id(
+        hass, coordinator, BINARY_SENSOR_DOMAIN, "humanPresenceDetectionState", "motion"
+    )
 
     async_add_entities(
         AmazonBinarySensorEntity(coordinator, serial_num, sensor_desc)

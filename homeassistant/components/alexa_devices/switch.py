@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
 
 from aioamazondevices.api import AmazonDevice
-from aioamazondevices.const import SPEAKER_GROUP_FAMILY
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -16,12 +15,10 @@ from homeassistant.components.switch import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-import homeassistant.helpers.entity_registry as er
 
-from .const import _LOGGER, DOMAIN
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
-from .utils import alexa_api_call
+from .utils import alexa_api_call, async_update_unique_id
 
 PARALLEL_UPDATES = 1
 
@@ -53,25 +50,10 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    # Replace unique id for "DND" switch
-    entity_registry = er.async_get(hass)
-    for serial_num in coordinator.data:
-        unique_id = f"{serial_num}-do_not_disturb"
-        if entity_id := entity_registry.async_get_entity_id(
-            SWITCH_DOMAIN, DOMAIN, unique_id
-        ):
-            _LOGGER.debug("Updating unique_id for %s", entity_id)
-
-            new_unique_id = unique_id.replace("do_not_disturb", "dnd")
-
-            # Remove the switch if device is a group
-            # otherwise update the registry with the new unique_id
-            if coordinator.data[serial_num].device_family == SPEAKER_GROUP_FAMILY:
-                entity_registry.async_remove(entity_id)
-            else:
-                entity_registry.async_update_entity(
-                    entity_id, new_unique_id=new_unique_id
-                )
+    # Replace unique id for "DND" switch and remove from Speaker Group
+    await async_update_unique_id(
+        hass, coordinator, SWITCH_DOMAIN, "do_not_disturb", "dnd", True
+    )
 
     async_add_entities(
         AmazonSwitchEntity(coordinator, serial_num, switch_desc)
