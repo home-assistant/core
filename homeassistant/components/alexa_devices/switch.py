@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
 
 from aioamazondevices.api import AmazonDevice
+from aioamazondevices.const import SPEAKER_GROUP_FAMILY
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -61,9 +62,16 @@ async def async_setup_entry(
         ):
             _LOGGER.debug("Updating unique_id for %s", entity_id)
 
-            # Update the registry with the new unique_id
             new_unique_id = unique_id.replace("do_not_disturb", "dnd")
-            entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+            # Remove the switch if device is a group
+            # otherwise update the registry with the new unique_id
+            if coordinator.data[serial_num].device_family == SPEAKER_GROUP_FAMILY:
+                entity_registry.async_remove(entity_id)
+            else:
+                entity_registry.async_update_entity(
+                    entity_id, new_unique_id=new_unique_id
+                )
 
     async_add_entities(
         AmazonSwitchEntity(coordinator, serial_num, switch_desc)
