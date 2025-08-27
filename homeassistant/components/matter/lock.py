@@ -108,7 +108,7 @@ class MatterLock(MatterEntity, LockEntity):
                 clusters.DoorLock.Events.LockOperationError.event_id
             ):  # Lock cluster event 3
                 # if an operation error occurs, clear the optimistic state
-                self._reset_optimistic_state(write_state=True)
+                self._reset_optimistic_state()
 
     @property
     def code_format(self) -> str | None:
