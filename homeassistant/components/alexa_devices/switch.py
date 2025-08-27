@@ -62,7 +62,7 @@ async def async_setup_entry(
             _LOGGER.debug("Updating unique_id for %s", entity_id)
 
             # Update the registry with the new unique_id
-            new_unique_id = entity_id.replace("do_not_disturb", "dnd")
+            new_unique_id = unique_id.replace("do_not_disturb", "dnd")
             entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
     async_add_entities(
