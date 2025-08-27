@@ -14,7 +14,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
-from .services import setup_services
+from .services import async_setup_services
 from .types import BoschAlarmConfigEntry
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -29,7 +29,7 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up bosch alarm services."""
-    setup_services(hass)
+    async_setup_services(hass)
     return True
 
 

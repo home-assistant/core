@@ -63,7 +63,7 @@ async def test_options_flow(
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][ATTR_PARSER] is None
+    assert result["data"][ATTR_PARSER] == PARSER_PLAIN_TEXT
 
 
 async def test_reconfigure_flow_broadcast(
@@ -117,6 +117,7 @@ async def test_reconfigure_flow_broadcast(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_webhooks_config_entry.data[CONF_PLATFORM] == PLATFORM_BROADCAST
+    assert mock_webhooks_config_entry.data[CONF_PROXY_URL] == "https://test"
 
 
 async def test_reconfigure_flow_webhooks(
@@ -220,10 +221,29 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
     # test: invalid proxy url
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PLATFORM: PLATFORM_WEBHOOKS,
+            CONF_API_KEY: "mock api key",
+            SECTION_ADVANCED_SETTINGS: {
+                CONF_PROXY_URL: "invalid",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "invalid_proxy_url"
+    assert result["description_placeholders"]["error_field"] == "proxy url"
+
+    # test: telegram error
+
     with patch(
         "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
     ) as mock_bot:
-        mock_bot.side_effect = NetworkError("mock invalid proxy")
+        mock_bot.side_effect = NetworkError("mock network error")
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -231,7 +251,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
                 CONF_PLATFORM: PLATFORM_WEBHOOKS,
                 CONF_API_KEY: "mock api key",
                 SECTION_ADVANCED_SETTINGS: {
-                    CONF_PROXY_URL: "invalid",
+                    CONF_PROXY_URL: "https://proxy",
                 },
             },
         )
@@ -239,7 +259,8 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "invalid_proxy_url"
+    assert result["errors"]["base"] == "telegram_error"
+    assert result["description_placeholders"]["error_message"] == "mock network error"
 
     # test: valid input, to continue with webhooks step
 
@@ -382,7 +403,7 @@ async def test_subentry_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert subentry.subentry_type == SUBENTRY_TYPE_ALLOWED_CHAT_IDS
-    assert subentry.title == "mock title"
+    assert subentry.title == "mock title (987654321)"
     assert subentry.unique_id == "987654321"
     assert subentry.data == {CONF_CHAT_ID: 987654321}
 

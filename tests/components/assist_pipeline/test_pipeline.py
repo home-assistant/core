@@ -29,7 +29,6 @@ from homeassistant.components.assist_pipeline.pipeline import (
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
-    async_migrate_engine,
     async_update_pipeline,
 )
 from homeassistant.const import MATCH_ALL
@@ -162,12 +161,6 @@ async def test_loading_pipelines_from_storage(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored pipelines on start."""
-    async_migrate_engine(
-        hass,
-        "conversation",
-        conversation.OLD_HOME_ASSISTANT_AGENT,
-        conversation.HOME_ASSISTANT_AGENT,
-    )
     id_1 = "01GX8ZWBAQYWNB1XV3EXEZ75DY"
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
@@ -176,7 +169,7 @@ async def test_loading_pipelines_from_storage(
         "data": {
             "items": [
                 {
-                    "conversation_engine": conversation.OLD_HOME_ASSISTANT_AGENT,
+                    "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
                     "conversation_language": "language_1",
                     "id": id_1,
                     "language": "language_1",
@@ -382,7 +375,7 @@ async def test_get_pipelines(hass: HomeAssistant) -> None:
         ("en", "us", "en", "en"),
         ("en", "uk", "en", "en"),
         ("pt", "pt", "pt", "pt"),
-        ("pt", "br", "pt-br", "pt"),
+        ("pt", "br", "pt-BR", "pt"),
     ],
 )
 async def test_default_pipeline_no_stt_tts(
@@ -435,7 +428,7 @@ async def test_default_pipeline_no_stt_tts(
         ("en", "us", "en", "en", "en", "en"),
         ("en", "uk", "en", "en", "en", "en"),
         ("pt", "pt", "pt", "pt", "pt", "pt"),
-        ("pt", "br", "pt-br", "pt", "pt-br", "pt-br"),
+        ("pt", "br", "pt-BR", "pt", "pt-br", "pt-br"),
     ],
 )
 @pytest.mark.usefixtures("init_supporting_components")
@@ -666,43 +659,6 @@ async def test_update_pipeline(
         "wake_word_id": "wake_word_id_1",
         "prefer_local_intents": False,
     }
-
-
-@pytest.mark.usefixtures("init_supporting_components")
-async def test_migrate_after_load(hass: HomeAssistant) -> None:
-    """Test migrating an engine after done loading."""
-    assert await async_setup_component(hass, "assist_pipeline", {})
-
-    pipeline_data: PipelineData = hass.data[DOMAIN]
-    store = pipeline_data.pipeline_store
-    assert len(store.data) == 1
-
-    assert (
-        await async_create_default_pipeline(
-            hass,
-            stt_engine_id="bla",
-            tts_engine_id="bla",
-            pipeline_name="Bla pipeline",
-        )
-        is None
-    )
-    pipeline = await async_create_default_pipeline(
-        hass,
-        stt_engine_id="test",
-        tts_engine_id="test",
-        pipeline_name="Test pipeline",
-    )
-    assert pipeline is not None
-
-    async_migrate_engine(hass, "stt", "test", "stt.test")
-    async_migrate_engine(hass, "tts", "test", "tts.test")
-
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    pipeline_updated = async_get_pipeline(hass, pipeline.id)
-
-    assert pipeline_updated.stt_engine == "stt.test"
-    assert pipeline_updated.tts_engine == "tts.test"
 
 
 def test_fallback_intent_filter() -> None:
@@ -1364,7 +1320,7 @@ async def test_stt_language_used_instead_of_conversation_language(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": MATCH_ALL,
             "language": "en",
             "name": "test_name",
@@ -1440,7 +1396,7 @@ async def test_tts_language_used_instead_of_conversation_language(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": MATCH_ALL,
             "language": "en",
             "name": "test_name",
@@ -1516,7 +1472,7 @@ async def test_pipeline_language_used_instead_of_conversation_language(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": MATCH_ALL,
             "language": "en",
             "name": "test_name",
@@ -1594,9 +1550,9 @@ async def test_pipeline_language_used_instead_of_conversation_language(
                     "?",
                 ],
             ),
-            # We are not streaming, so 0 chunks via streaming method
-            0,
-            "",
+            # We always stream when possible, so 1 chunk via streaming method
+            1,
+            "hello, how are you?",
         ),
         # Size above STREAM_RESPONSE_CHUNKS
         (

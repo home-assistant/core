@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import DOOR_STATUS_PROPERTY
 from zwave_js_server.const.command_class.notification import (
@@ -18,15 +17,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN
-from .discovery import ZwaveDiscoveryInfo
-from .entity import ZWaveBaseEntity
+from .const import DOMAIN
+from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
+from .models import (
+    NewZWaveDiscoverySchema,
+    ValueType,
+    ZwaveDiscoveryInfo,
+    ZwaveJSConfigEntry,
+    ZWaveValueDiscoverySchema,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -51,11 +56,11 @@ NOTIFICATION_IRRIGATION = "17"
 NOTIFICATION_GAS = "18"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class NotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
     """Represent a Z-Wave JS binary sensor entity description."""
 
-    off_state: str = "0"
+    not_states: set[str] = field(default_factory=lambda: {"0"})
     states: tuple[str, ...] | None = None
 
 
@@ -64,6 +69,13 @@ class PropertyZWaveJSEntityDescription(BinarySensorEntityDescription):
     """Represent the entity description for property name sensors."""
 
     on_states: tuple[str, ...]
+
+
+@dataclass(frozen=True, kw_only=True)
+class NewNotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
+    """Represent a Z-Wave JS binary sensor entity description."""
+
+    state_key: str
 
 
 # Mappings for Notification sensors
@@ -107,24 +119,6 @@ class PropertyZWaveJSEntityDescription(BinarySensorEntityDescription):
 # - Sump pump failure
 
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 1: Smoke Alarm - State Id's 1 and 2 - Smoke detected
-        key=NOTIFICATION_SMOKE_ALARM,
-        states=("1", "2"),
-        device_class=BinarySensorDeviceClass.SMOKE,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 1: Smoke Alarm - State Id's 4, 5, 7, 8
-        key=NOTIFICATION_SMOKE_ALARM,
-        states=("4", "5", "7", "8"),
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 1: Smoke Alarm - All other State Id's
-        key=NOTIFICATION_SMOKE_ALARM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 2: Carbon Monoxide - State Id's 1 and 2
         key=NOTIFICATION_CARBON_MONOOXIDE,
@@ -213,8 +207,8 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
     NotificationZWaveJSEntityDescription(
         # NotificationType 6: Access Control - State Id 22 (door/window open)
         key=NOTIFICATION_ACCESS_CONTROL,
-        off_state="23",
-        states=("22", "23"),
+        not_states={"23"},
+        states=("22",),
         device_class=BinarySensorDeviceClass.DOOR,
     ),
     NotificationZWaveJSEntityDescription(
@@ -246,8 +240,8 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         # NotificationType 8: Power Management -
         # State Id's 2, 3 (Mains status)
         key=NOTIFICATION_POWER_MANAGEMENT,
-        off_state="2",
-        states=("2", "3"),
+        not_states={"2"},
+        states=("3",),
         device_class=BinarySensorDeviceClass.PLUG,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -354,7 +348,7 @@ BOOLEAN_SENSOR_MAPPINGS: dict[tuple[int, int | str], BinarySensorEntityDescripti
 
 @callback
 def is_valid_notification_binary_sensor(
-    info: ZwaveDiscoveryInfo,
+    info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo,
 ) -> bool | NotificationZWaveJSEntityDescription:
     """Return if the notification CC Value is valid as binary sensor."""
     if not info.primary_value.metadata.states:
@@ -364,20 +358,43 @@ def is_valid_notification_binary_sensor(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZwaveJSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave binary sensor from config entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
-    def async_add_binary_sensor(info: ZwaveDiscoveryInfo) -> None:
+    def async_add_binary_sensor(
+        info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo,
+    ) -> None:
         """Add Z-Wave Binary Sensor."""
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
-        entities: list[BinarySensorEntity] = []
+        entities: list[Entity] = []
 
-        if info.platform_hint == "notification":
+        if (
+            isinstance(info, NewZwaveDiscoveryInfo)
+            and info.entity_class is ZWaveNotificationBinarySensor
+            and isinstance(
+                info.entity_description, NotificationZWaveJSEntityDescription
+            )
+            and is_valid_notification_binary_sensor(info)
+        ):
+            entities.extend(
+                ZWaveNotificationBinarySensor(
+                    config_entry, driver, info, state_key, info.entity_description
+                )
+                for state_key in info.primary_value.metadata.states
+                if state_key not in info.entity_description.not_states
+                and (
+                    not info.entity_description.states
+                    or state_key in info.entity_description.states
+                )
+            )
+        elif isinstance(info, NewZwaveDiscoveryInfo):
+            pass  # other entity classes are not migrated yet
+        elif info.platform_hint == "notification":
             # ensure the notification CC Value is valid as binary sensor
             if not is_valid_notification_binary_sensor(info):
                 return
@@ -402,7 +419,7 @@ async def async_setup_entry(
 
                 if (
                     notification_description
-                    and notification_description.off_state == state_key
+                    and state_key in notification_description.not_states
                 ):
                     continue
                 entities.append(
@@ -448,7 +465,7 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
@@ -476,9 +493,9 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
-        info: ZwaveDiscoveryInfo,
+        info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo,
         state_key: str,
         description: NotificationZWaveJSEntityDescription | None = None,
     ) -> None:
@@ -509,7 +526,7 @@ class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         description: PropertyZWaveJSEntityDescription,
@@ -533,7 +550,7 @@ class ZWaveConfigParameterBinarySensor(ZWaveBooleanBinarySensor):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZWaveConfigParameterBinarySensor entity."""
         super().__init__(config_entry, driver, info)
@@ -544,3 +561,71 @@ class ZWaveConfigParameterBinarySensor(ZWaveBooleanBinarySensor):
             alternate_value_name=self.info.primary_value.property_name,
             additional_info=[property_key_name] if property_key_name else None,
         )
+
+
+DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_states_keys={1, 2},
+            any_available_cc_specific={(CC_SPECIFIC_NOTIFICATION_TYPE, 1)},
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 1: Smoke Alarm - State Id's 1 and 2 - Smoke detected
+            key=NOTIFICATION_SMOKE_ALARM,
+            states=("1", "2"),
+            device_class=BinarySensorDeviceClass.SMOKE,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_states_keys={4, 5, 7, 8},
+            any_available_cc_specific={(CC_SPECIFIC_NOTIFICATION_TYPE, 1)},
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 1: Smoke Alarm - State Id's 4, 5, 7, 8
+            key=NOTIFICATION_SMOKE_ALARM,
+            states=("4", "5", "7", "8"),
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_cc_specific={(CC_SPECIFIC_NOTIFICATION_TYPE, 1)},
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 1: Smoke Alarm - All other State Id's
+            key=NOTIFICATION_SMOKE_ALARM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            not_states={
+                "1",
+                "2",
+                "4",
+                "5",
+                "7",
+                "8",
+            },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+]

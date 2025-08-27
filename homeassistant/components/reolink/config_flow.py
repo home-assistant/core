@@ -23,7 +23,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -61,7 +61,7 @@ DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
 API_STARTUP_TIME = 5
 
 
-class ReolinkOptionsFlowHandler(OptionsFlow):
+class ReolinkOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Reolink options."""
 
     async def async_step_init(

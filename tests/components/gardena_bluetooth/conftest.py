@@ -29,8 +29,18 @@ def mock_entry():
     )
 
 
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
+@pytest.fixture(scope="module")
+def mock_unload_entry() -> Generator[AsyncMock]:
+    """Override async_unload_entry."""
+    with patch(
+        "homeassistant.components.gardena_bluetooth.async_unload_entry",
+        return_value=True,
+    ) as mock_unload_entry:
+        yield mock_unload_entry
+
+
+@pytest.fixture(scope="module")
+def mock_setup_entry(mock_unload_entry) -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.gardena_bluetooth.async_setup_entry",

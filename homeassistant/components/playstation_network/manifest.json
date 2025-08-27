@@ -60,6 +60,21 @@
     },
     {
       "macaddress": "D44B5E*"
+    },
+    {
+      "macaddress": "F8D0AC*"
+    },
+    {
+      "macaddress": "E86E3A*"
+    },
+    {
+      "macaddress": "FC0FE6*"
+    },
+    {
+      "macaddress": "9C37CB*"
+    },
+    {
+      "macaddress": "84E657*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/playstation_network",
