@@ -505,7 +505,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
-            key="BooleanStateConfigurationCurrentSensitivityLevel",
+            key="AqaraBooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
             translation_key="sensitivity_level",
             options=["10 mm", "20 mm", "30 mm"],
@@ -523,6 +523,6 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterAttributeSelectEntity,
         required_attributes=(clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,),
         vendor_id=(4447,),
-        product_id=(8194,),
+        product_name=("Aqara Door and Window Sensor P2",),
     ),
 ]
