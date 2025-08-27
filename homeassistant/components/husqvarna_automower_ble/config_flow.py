@@ -20,7 +20,6 @@ from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN, LOGGER
 
-
 BLUETOOTH_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PIN): str,
@@ -102,7 +101,9 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
-            data_schema=self.add_suggested_values_to_schema(BLUETOOTH_SCHEMA, user_input),
+            data_schema=self.add_suggested_values_to_schema(
+                BLUETOOTH_SCHEMA, user_input
+            ),
             description_placeholders={"name": self.mower_name or self.address},
             errors=errors,
         )
@@ -176,17 +177,16 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_show_form(
                     step_id="bluetooth_confirm",
                     data_schema=BLUETOOTH_SCHEMA,
-                    description_placeholders={
-                        "name": self.address
-                    },
+                    description_placeholders={"name": self.address},
                     errors={"base": "cannot_connect"},
                 )
-            else:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, {CONF_ADDRESS: self.address}),
-                    errors={"base": "cannot_connect"},
-                )
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(
+                    USER_SCHEMA, {CONF_ADDRESS: self.address}
+                ),
+                errors={"base": "cannot_connect"},
+            )
         self.mower_name = title
 
         try:
@@ -227,7 +227,9 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, suggested_values),
+                    data_schema=self.add_suggested_values_to_schema(
+                        USER_SCHEMA, suggested_values
+                    ),
                     errors=errors,
                 )
         except (TimeoutError, BleakError):
@@ -301,7 +303,9 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=self.add_suggested_values_to_schema(REAUTH_SCHEMA, {CONF_PIN: self.pin}),
+            data_schema=self.add_suggested_values_to_schema(
+                REAUTH_SCHEMA, {CONF_PIN: self.pin}
+            ),
             description_placeholders={"name": self.mower_name},
             errors=errors,
         )
