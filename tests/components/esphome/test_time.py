@@ -26,7 +26,6 @@ async def test_generic_time_entity(
             object_id="mytime",
             key=1,
             name="my time",
-            unique_id="my_time",
         )
     ]
     states = [TimeState(key=1, hour=12, minute=34, second=56)]
@@ -62,7 +61,6 @@ async def test_generic_time_missing_state(
             object_id="mytime",
             key=1,
             name="my time",
-            unique_id="my_time",
         )
     ]
     states = [TimeState(key=1, missing_state=True)]

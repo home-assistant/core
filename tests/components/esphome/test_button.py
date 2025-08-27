@@ -18,7 +18,6 @@ async def test_button_generic_entity(
             object_id="mybutton",
             key=1,
             name="my button",
-            unique_id="my_button",
         )
     ]
     states = []

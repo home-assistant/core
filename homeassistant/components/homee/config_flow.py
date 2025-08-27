@@ -11,10 +11,16 @@ from pyHomee import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    RESULT_CANNOT_CONNECT,
+    RESULT_INVALID_AUTH,
+    RESULT_UNKNOWN_ERROR,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,58 +39,135 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     homee: Homee
+    _host: str
+    _name: str
     _reauth_host: str
     _reauth_username: str
+
+    async def _connect_homee(self) -> dict[str, str]:
+        errors: dict[str, str] = {}
+        try:
+            await self.homee.get_access_token()
+        except HomeeConnectionFailedException:
+            errors["base"] = RESULT_CANNOT_CONNECT
+        except HomeeAuthenticationFailedException:
+            errors["base"] = RESULT_INVALID_AUTH
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = RESULT_UNKNOWN_ERROR
+        else:
+            _LOGGER.info("Got access token for homee")
+            self.hass.loop.create_task(self.homee.run())
+            _LOGGER.debug("Homee task created")
+            await self.homee.wait_until_connected()
+            _LOGGER.info("Homee connected")
+            self.homee.disconnect()
+            _LOGGER.debug("Homee disconnecting")
+            await self.homee.wait_until_disconnected()
+            _LOGGER.info("Homee config successfully tested")
+
+            await self.async_set_unique_id(
+                self.homee.settings.uid, raise_on_progress=self.source != SOURCE_USER
+            )
+
+            self._abort_if_unique_id_configured()
+
+            _LOGGER.info("Created new homee entry with ID %s", self.homee.settings.uid)
+
+        return errors
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial user step."""
+        errors: dict[str, str] = {}
 
-        errors = {}
         if user_input is not None:
             self.homee = Homee(
                 user_input[CONF_HOST],
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
             )
+            errors = await self._connect_homee()
 
-            try:
-                await self.homee.get_access_token()
-            except HomeeConnectionFailedException:
-                errors["base"] = "cannot_connect"
-            except HomeeAuthenticationFailedException:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                _LOGGER.info("Got access token for homee")
-                self.hass.loop.create_task(self.homee.run())
-                _LOGGER.debug("Homee task created")
-                await self.homee.wait_until_connected()
-                _LOGGER.info("Homee connected")
-                self.homee.disconnect()
-                _LOGGER.debug("Homee disconnecting")
-                await self.homee.wait_until_disconnected()
-                _LOGGER.info("Homee config successfully tested")
-
-                await self.async_set_unique_id(self.homee.settings.uid)
-
-                self._abort_if_unique_id_configured()
-
-                _LOGGER.info(
-                    "Created new homee entry with ID %s", self.homee.settings.uid
-                )
-
+            if not errors:
                 return self.async_create_entry(
                     title=f"{self.homee.settings.homee_name} ({self.homee.host})",
                     data=user_input,
                 )
+
         return self.async_show_form(
             step_id="user",
             data_schema=AUTH_SCHEMA,
             errors=errors,
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+
+        # Ensure that an IPv4 address is received
+        self._host = discovery_info.host
+        self._name = discovery_info.hostname[6:18]
+        if discovery_info.ip_address.version == 6:
+            return self.async_abort(reason="ipv6_address")
+
+        await self.async_set_unique_id(self._name)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+
+        # Cause an auth-error to see if homee is reachable.
+        self.homee = Homee(
+            self._host,
+            "dummy_username",
+            "dummy_password",
+        )
+        errors = await self._connect_homee()
+        if errors["base"] != RESULT_INVALID_AUTH:
+            return self.async_abort(reason=RESULT_CANNOT_CONNECT)
+
+        self.context["title_placeholders"] = {"name": self._name, "host": self._host}
+
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the configuration of the device."""
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self.homee = Homee(
+                self._host,
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+            )
+
+            errors = await self._connect_homee()
+
+            if not errors:
+                return self.async_create_entry(
+                    title=f"{self.homee.settings.homee_name} ({self.homee.host})",
+                    data={
+                        CONF_HOST: self._host,
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                CONF_HOST: self._name,
+            },
+            last_step=True,
         )
 
     async def async_step_reauth(
@@ -108,12 +191,12 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self.homee.get_access_token()
             except HomeeConnectionFailedException:
-                errors["base"] = "cannot_connect"
+                errors["base"] = RESULT_CANNOT_CONNECT
             except HomeeAuthenticationFailedException:
-                errors["base"] = "invalid_auth"
+                errors["base"] = RESULT_INVALID_AUTH
             except Exception:
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors["base"] = RESULT_UNKNOWN_ERROR
             else:
                 self.hass.loop.create_task(self.homee.run())
                 await self.homee.wait_until_connected()
@@ -161,12 +244,12 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self.homee.get_access_token()
             except HomeeConnectionFailedException:
-                errors["base"] = "cannot_connect"
+                errors["base"] = RESULT_CANNOT_CONNECT
             except HomeeAuthenticationFailedException:
-                errors["base"] = "invalid_auth"
+                errors["base"] = RESULT_INVALID_AUTH
             except Exception:
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors["base"] = RESULT_UNKNOWN_ERROR
             else:
                 self.hass.loop.create_task(self.homee.run())
                 await self.homee.wait_until_connected()

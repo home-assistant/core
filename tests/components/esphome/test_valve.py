@@ -36,7 +36,6 @@ async def test_valve_entity(
             object_id="myvalve",
             key=1,
             name="my valve",
-            unique_id="my_valve",
             supports_position=True,
             supports_stop=True,
         )
@@ -134,7 +133,6 @@ async def test_valve_entity_without_position(
             object_id="myvalve",
             key=1,
             name="my valve",
-            unique_id="my_valve",
             supports_position=False,
             supports_stop=False,
         )

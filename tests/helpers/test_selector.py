@@ -232,6 +232,11 @@ def test_device_selector_schema_error(schema) -> None:
             ),
         ),
         (
+            {"multiple": True, "reorder": True},
+            ((["sensor.abc123", "sensor.def456"],)),
+            (None, "abc123", ["sensor.abc123", None]),
+        ),
+        (
             {"filter": {"domain": "light"}},
             ("light.abc123", FAKE_UUID),
             (None,),
@@ -558,7 +563,17 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections) -> N
         (
             {"entity_id": "sensor.abc"},
             ("on", "armed"),
-            (None, True, 1),
+            (None, True, 1, ["on"]),
+        ),
+        (
+            {"entity_id": "sensor.abc", "multiple": True},
+            (["on"], ["on", "off"], []),
+            (None, True, 1, [True], [1], "on"),
+        ),
+        (
+            {"hide_states": ["unknown", "unavailable"]},
+            (),
+            (),
         ),
     ],
 )

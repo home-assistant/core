@@ -197,10 +197,14 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        list_values = cast(
-            list[str],
-            self.get_matter_attribute_value(self.entity_description.list_attribute),
+        list_values_raw = self.get_matter_attribute_value(
+            self.entity_description.list_attribute
         )
+        if TYPE_CHECKING:
+            assert list_values_raw is not None
+
+        # Accept both list[str] and list[int], convert to str
+        list_values = [str(v) for v in list_values_raw]
         self._attr_options = list_values
         current_option_idx: int = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
@@ -441,6 +445,24 @@ DISCOVERY_SCHEMAS = [
             clusters.LaundryWasherControls.Attributes.SupportedRinses,
         ),
         # don't discover this entry if the supported rinses list is empty
+        secondary_value_is_not=[],
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterListSelectEntityDescription(
+            key="MicrowaveOvenControlSelectedWattIndex",
+            translation_key="power_level",
+            command=lambda selected_index: clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
+                wattSettingIndex=selected_index
+            ),
+            list_attribute=clusters.MicrowaveOvenControl.Attributes.SupportedWatts,
+        ),
+        entity_class=MatterListSelectEntity,
+        required_attributes=(
+            clusters.MicrowaveOvenControl.Attributes.SelectedWattIndex,
+            clusters.MicrowaveOvenControl.Attributes.SupportedWatts,
+        ),
+        # don't discover this entry if the supported state list is empty
         secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(

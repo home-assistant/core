@@ -26,7 +26,6 @@ async def test_generic_datetime_entity(
             object_id="mydatetime",
             key=1,
             name="my datetime",
-            unique_id="my_datetime",
         )
     ]
     states = [DateTimeState(key=1, epoch_seconds=1713270896)]
@@ -65,7 +64,6 @@ async def test_generic_datetime_missing_state(
             object_id="mydatetime",
             key=1,
             name="my datetime",
-            unique_id="my_datetime",
         )
     ]
     states = [DateTimeState(key=1, missing_state=True)]
