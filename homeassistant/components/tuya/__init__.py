@@ -234,8 +234,8 @@ class DeviceListener(SharingDeviceListener):
         LOGGER.debug(
             "Received update for device %s (online: %s): %s (updated properties: %s)",
             device.id,
-            self.manager.device_map[device.id].online,
-            self.manager.device_map[device.id].status,
+            device.online,
+            device.status,
             updated_status_properties,
         )
         dispatcher_send(
@@ -250,8 +250,9 @@ class DeviceListener(SharingDeviceListener):
         self.hass.add_job(self.async_remove_device, device.id)
 
         LOGGER.debug(
-            "Add device %s: %s (function: %s, status range: %s)",
+            "Add device %s (online: %s): %s (function: %s, status range: %s)",
             device.id,
+            device.online,
             device.status,
             device.function,
             device.status_range,
