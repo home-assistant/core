@@ -134,7 +134,7 @@ async def test_creating_entry_with_devices(
 
         # 选择设备
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"device": "hhhhhhhhhhhhhhhhhhhhhhhhhhh"}
+            result["flow_id"], {"host": "hhhhhhhhhhhhhhhhhhhhhhhhhhh"}
         )
         assert "type" in result
         assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -164,7 +164,7 @@ async def test_manual_entry_with_devices(
 
         # 选择手动输入
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"device": "manual"}
+            result["flow_id"], {"host": "manual"}
         )
         assert "type" in result
         assert result["type"] is FlowResultType.FORM
