@@ -526,11 +526,11 @@
         },
         "heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_percentage": {
           "name": "Fan speed percentage",
-          "description": "Setting to adjust the venting levels of the air conditioner as percentage."
+          "description": "Setting to adjust the venting level of the air conditioner as a percentage."
         },
         "heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_mode": {
           "name": "Fan speed mode",
-          "description": "Setting to adjust the fan speed mode to Manual or Automatic."
+          "description": "Setting to adjust the fan speed mode to Manual or Auto."
         },
         "consumer_products_cleaning_robot_option_reference_map_id": {
           "name": "Reference map ID",
@@ -668,7 +668,7 @@
       "sections": {
         "air_conditioner_options": {
           "name": "Air conditioner options",
-          "description": "Options for air conditioners."
+          "description": "Specific settings for air conditioners."
         },
         "cleaning_robot_options": {
           "name": "Cleaning robot options",
