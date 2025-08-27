@@ -22,7 +22,7 @@ CONF_TURN_ON = "turn_on"
 
 TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_DEFAULT_ENTITY_ID): cv.string,
+        vol.Optional(CONF_DEFAULT_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_NAME): cv.template,
         vol.Optional(CONF_PICTURE): cv.template,
