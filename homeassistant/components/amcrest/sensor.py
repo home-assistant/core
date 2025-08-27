@@ -314,3 +314,8 @@ class AmcrestCoordinatedSensor(CoordinatorEntity, AmcrestSensor):
             log_update_error(_LOGGER, "coordinator update", self.name, "sensor", error)
 
         super()._handle_coordinator_update()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.data is not None
