@@ -85,7 +85,7 @@ class MatterLock(MatterEntity, LockEntity):
             return
 
         LOGGER.debug(
-            "Received _on_matter_node_event: event type %s, event id %s for %s with data %s",
+            "Received node event: event type %s, event id %s for %s with data %s",
             event,
             nodeEvent.event_id,
             self.entity_id,
