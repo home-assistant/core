@@ -81,7 +81,7 @@
         },
         "language": {
           "name": "Language",
-          "description": "The language of the post (default: account setting)."
+          "description": "The language of the post (default: Mastodon account preference)."
         },
         "media": {
           "name": "Media",
