@@ -99,9 +99,9 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle initial step."""
         if user_input is not None:
-            if user_input["device"] == "manual":
+            if user_input["host"] == "manual":
                 return await self.async_step_manual()
-            return await self._async_create_entry_from_discovery(user_input["device"])
+            return await self._async_create_entry_from_discovery(user_input["host"])
 
         # try discovery
         devices_or_error = await _async_discover_devices(self.hass)
@@ -124,7 +124,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required("device"): vol.In(device_options)}),
+            data_schema=vol.Schema({vol.Required("host"): vol.In(device_options)}),
         )
 
     async def async_step_manual(
