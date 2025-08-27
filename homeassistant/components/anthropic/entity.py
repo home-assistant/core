@@ -359,7 +359,7 @@ class AnthropicBaseLLMEntity(Entity):
                         options.get(
                             CONF_WEB_SEARCH_MAX_USES, RECOMMENDED_WEB_SEARCH_MAX_USES
                         )
-                     ),
+                    ),
                 }
                 if tools is None:
                     tools = []

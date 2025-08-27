@@ -203,7 +203,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_PROMPT: user_input[CONF_PROMPT],
                 CONF_LLM_HASS_API: user_input.get(CONF_LLM_HASS_API),
                 CONF_WEB_SEARCH: user_input.get(CONF_WEB_SEARCH, False),
-                CONF_WEB_SEARCH_MAX_USES: user_input.get(CONF_WEB_SEARCH_MAX_USES, RECOMMENDED_WEB_SEARCH_MAX_USES),
+                CONF_WEB_SEARCH_MAX_USES: user_input.get(
+                    CONF_WEB_SEARCH_MAX_USES, RECOMMENDED_WEB_SEARCH_MAX_USES
+                ),
             }
 
         suggested_values = options.copy()

@@ -1021,7 +1021,7 @@ async def test_web_search_tool_not_added_when_disabled(
     )
     with patch("anthropic.resources.models.AsyncModels.retrieve"):
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    
+
     with patch(
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
@@ -1063,7 +1063,7 @@ async def test_web_search_tool_not_added_with_unsupported_model(
     )
     with patch("anthropic.resources.models.AsyncModels.retrieve"):
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    
+
     with patch(
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
@@ -1105,7 +1105,7 @@ async def test_web_search_custom_max_uses(
     )
     with patch("anthropic.resources.models.AsyncModels.retrieve"):
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    
+
     with patch(
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
