@@ -22,6 +22,11 @@
       "failed_to_read_config": "Failed to read config from device"
     }
   },
+  "device": {
+    "probe": {
+      "name": "Probe {probe_number}"
+    }
+  },
   "exceptions": {
     "disconnected": {
       "message": "The device is disconnected"
@@ -34,14 +39,9 @@
     }
   },
   "entity": {
-    "sensor": {
-      "temperature": {
-        "name": "Probe {probe_number}"
-      }
-    },
     "number": {
       "temperature_target": {
-        "name": "Target {probe_number}"
+        "name": "Target temperature"
       },
       "alarm_interval": {
         "name": "Alarm interval"
@@ -49,7 +49,7 @@
     },
     "event": {
       "event": {
-        "name": "Probe {probe_number}",
+        "name": "Event",
         "state_attributes": {
           "event_type": {
             "state": {

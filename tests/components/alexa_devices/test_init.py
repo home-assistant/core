@@ -49,7 +49,7 @@ async def test_migrate_entry(
         },
         unique_id=TEST_USERNAME,
         version=1,
-        minor_version=0,
+        minor_version=1,
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -57,5 +57,8 @@ async def test_migrate_entry(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.minor_version == 1
-    assert config_entry.data["site"] == f"https://www.amazon.{TEST_COUNTRY}"
+    assert config_entry.minor_version == 2
+    assert (
+        config_entry.data[CONF_LOGIN_DATA]["site"]
+        == f"https://www.amazon.{TEST_COUNTRY}"
+    )
