@@ -104,6 +104,7 @@ class DPCode(StrEnum):
     ALARM_DELAY_TIME = "alarm_delay_time"
     ALARM_MESSAGE = "alarm_message"
     ALARM_MSG = "alarm_msg"
+    ALARM_STATE = "alarm_state"
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
