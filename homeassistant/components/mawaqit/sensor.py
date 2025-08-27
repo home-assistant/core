@@ -259,23 +259,8 @@ class MyMosqueSensor(SensorEntity, CoordinatorEntity[MosqueCoordinator]):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return additional attributes for the mosque sensor."""
-        filtered_data = {
-            k: v
-            for k, v in self.coordinator.data.items()
-            if k
-            in [
-                "email",
-                "phone",
-                "closed",
-                "womenSpace",
-                "janazaPrayer",
-                "aidPrayer",
-                "childrenCourses",
-                "ablutions",
-                "parking",
-            ]
-            and (v is not None)
-        }
+        filtered_data = {}
+        # Announcements are dynamic and could be useful for automations
         announcements = self.coordinator.data.get("announcements")
         if announcements:
             filtered_data["announcements"] = [
