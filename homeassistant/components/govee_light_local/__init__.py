@@ -92,8 +92,16 @@ async def update_options_listener(
                     hass, SIGNAL_GOVEE_DEVICE_REMOVE, device.fingerprint
                 )
             coordinator.remove_device_from_discovery_queue(ip)
-            config_entry.options[CONF_IPS_TO_REMOVE].remove(ip)
-            config_entry.options[CONF_MANUAL_DEVICES].remove(ip)
+            updated_options = {**config_entry.options}
+            updated_options[CONF_IPS_TO_REMOVE] = {
+                item for item in updated_options[CONF_IPS_TO_REMOVE] if item != ip
+            }
+            updated_options[CONF_MANUAL_DEVICES] = {
+                item for item in updated_options[CONF_MANUAL_DEVICES] if item != ip
+            }
+            hass.config_entries.async_update_entry(
+                config_entry, options=updated_options
+            )
 
     if (
         config.option_mode == OptionMode.CONFIGURE_AUTO_DISCOVERY

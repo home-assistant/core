@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -227,7 +228,7 @@ class GoveeOptionsFlowHandler(OptionsFlow):
         )
 
     async def async_step_remove_device(
-        self, user_input: dict[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Remove a device."""
         if user_input is not None:
@@ -241,11 +242,14 @@ class GoveeOptionsFlowHandler(OptionsFlow):
 
         manual_devices = [
             *(
-                {"label": f"{device.sku} ({device.ip})", "value": device.ip}
+                SelectOptionDict(label=f"{device.sku} ({device.ip})", value=device.ip)
                 for device in coordinator.devices
                 if device.is_manual
             ),
-            *({"label": ip, "value": ip} for ip in coordinator.discovery_queue),
+            *(
+                SelectOptionDict(label=ip, value=ip)
+                for ip in coordinator.discovery_queue
+            ),
         ]
 
         if not manual_devices:
