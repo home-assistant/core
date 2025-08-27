@@ -24,6 +24,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
     ATTR_HW_VERSION,
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -54,7 +55,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
-    ATTR_CONFIG_ENTRY_ID,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
     CONF_UPNP_UDN,
