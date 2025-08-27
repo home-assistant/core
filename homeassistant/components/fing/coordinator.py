@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for Fing integration."""
 
 from contextlib import suppress
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 
@@ -9,7 +10,6 @@ from fing_agent_api.models import AgentInfoResponse, Device
 import httpx
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -18,19 +18,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
 class FingDataObject:
     """Fing Data Object."""
 
-    def __init__(
-        self,
-        network_id: str | None = None,
-        agent_info: AgentInfoResponse | None = None,
-        devices: dict[str, Device] | None = None,
-    ) -> None:
-        """Initialize FingDataObject."""
-        self.network_id = network_id
-        self.agent_info = agent_info
-        self.devices = devices if devices is not None else {}
+    network_id: str | None = None
+    agent_info: AgentInfoResponse | None = None
+    devices: dict[str, Device] = field(default_factory=dict)
 
 
 class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
@@ -38,11 +32,7 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize global Fing updater."""
-        self._fing = FingAgent(
-            config_entry.data[CONF_IP_ADDRESS],
-            int(config_entry.data[CONF_PORT]),
-            config_entry.data[CONF_API_KEY],
-        )
+        self._fing = FingAgent(config_entry.data)
         update_interval = timedelta(seconds=30)
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
@@ -53,7 +43,7 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
         try:
             device_response = await self._fing.get_devices()
 
-            with suppress(Exception):
+            with suppress(httpx.ConnectError):
                 # The suppression is needed because the get_agent_info method isn't available for desktop agents
                 agent_info_response = await self._fing.get_agent_info()
 
@@ -75,12 +65,15 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
             httpx.StreamError,
         ) as err:
             raise UpdateFailed("Unexpected error from HTTP request") from err
+        else:
+            if (
+                device_response.network_id is not None
+                and len(device_response.network_id) > 0
+            ):
+                return FingDataObject(
+                    device_response.network_id,
+                    agent_info_response,
+                    {device.mac: device for device in device_response.devices},
+                )
 
-        if device_response is not None:
-            return FingDataObject(
-                device_response.network_id,
-                agent_info_response,
-                {device.mac: device for device in device_response.devices},
-            )
-
-        raise UpdateFailed("get_device failed. Response is None")
+            raise UpdateFailed("No network ID received from Fing Agent")

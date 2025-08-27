@@ -77,7 +77,7 @@ class DeviceType(Enum):
     SECURITY_SYSTEM = "mdi:security"
 
 
-def get_icon_from_type(type: str):
+def get_icon_from_type(type: str) -> str:
     """Return the right icon based on the type."""
     try:
         return DeviceType[type].value

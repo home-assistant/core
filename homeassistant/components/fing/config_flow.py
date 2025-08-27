@@ -10,16 +10,13 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
-from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_data_schema(
-    hass: HomeAssistant, user_input: dict[str, Any] | None = None
-) -> vol.Schema:
+def _get_data_schema(user_input: dict[str, Any] | None = None) -> vol.Schema:
     """Get a schema with default values."""
 
     if user_input is None:
@@ -60,16 +57,12 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
             )
 
-            fing_api = FingAgent(
-                user_input[CONF_IP_ADDRESS],
-                user_input[CONF_PORT],
-                user_input[CONF_API_KEY],
-            )
+            fing_api = FingAgent(user_input)
 
             try:
                 devices_response = await fing_api.get_devices()
 
-                with suppress(Exception):
+                with suppress(httpx.ConnectError):
                     # The suppression is needed because the get_agent_info method isn't available for desktop agents
                     agent_info_response = await fing_api.get_agent_info()
 
@@ -92,10 +85,10 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 httpx.CookieConflict,
                 httpx.StreamError,
                 Exception,
-            ) as _:
-                errors["base"] = "unexpected_error"
-
-            if devices_response is not None:
+            ) as ex:
+                _LOGGER.error("Unexpected exception: %s", ex)
+                errors["base"] = "unknown"
+            else:
                 if (
                     devices_response.network_id is not None
                     and len(devices_response.network_id) > 0
@@ -105,8 +98,6 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                         agent_id = agent_info_response.agent_id
                         await self.async_set_unique_id(agent_info_response.agent_id)
                         self._abort_if_unique_id_configured()
-                    else:
-                        await self._async_handle_discovery_without_unique_id()
 
                     if (
                         devices_response.network_id is not None
@@ -121,7 +112,7 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_get_data_schema(self.hass, user_input),
+            data_schema=_get_data_schema(user_input),
             errors=errors,
             description_placeholders=description_placeholders,
         )
