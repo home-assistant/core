@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -53,7 +53,7 @@ _DATA_SCHEMA_DICT = {
     ),
 }
 
-_DATA_SCHEMA = vol.Schema(_DATA_SCHEMA_DICT)
+_CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_DATA): _DATA_SCHEMA_DICT})
 
 
 class MqttTrigger(Trigger):
@@ -62,10 +62,10 @@ class MqttTrigger(Trigger):
     has_target = False
 
     @classmethod
-    async def async_validate_config(
+    async def async_validate_complete_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
-        """Validate config."""
+        """Validate complete config."""
         config = config.copy()
         data = config.setdefault(CONF_DATA, {})
         # Move top-level keys to data
@@ -77,12 +77,14 @@ class MqttTrigger(Trigger):
                         f"'{key}' cannot be specified in both top-level and data"
                     )
                 data[key] = config.pop(key)
-        return await super().async_validate_config(hass, config)
+        return await super().async_validate_complete_config(hass, config)
 
     @classmethod
-    async def async_validate_data(cls, hass: HomeAssistant, data: Any) -> Any:
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
         """Validate data."""
-        return _DATA_SCHEMA(data)
+        return cast(ConfigType, _CONFIG_SCHEMA(config))
 
     def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize trigger."""
