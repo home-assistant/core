@@ -37,6 +37,7 @@ from .utils import (
     async_remove_orphaned_entities,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_rpc_key_instances,
     get_virtual_component_ids,
     is_block_momentary_input,
     is_rpc_momentary_input,
@@ -350,6 +351,14 @@ async def async_setup_entry(
                 BINARY_SENSOR_PLATFORM,
                 virtual_binary_sensor_ids,
                 "boolean",
+            )
+            async_remove_orphaned_entities(
+                hass,
+                config_entry.entry_id,
+                coordinator.mac,
+                BINARY_SENSOR_PLATFORM,
+                get_rpc_key_instances(coordinator.device.status, "presencezone"),
+                "presencezone",
             )
         return
 
