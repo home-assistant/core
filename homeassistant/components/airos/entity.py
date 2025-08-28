@@ -21,7 +21,7 @@ class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
 
         airos_data = self.coordinator.data
         url_schema = (
-            "https" if coordinator.config_entry.data.get(CONF_SSL, False) else "http"
+            "https" if coordinator.config_entry.data[CONF_SSL] else "http"
         )
 
         configuration_url: str | None = (
