@@ -173,7 +173,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.0
 
 # homeassistant.components.alexa_devices
-aioamazondevices==5.0.0
+aioamazondevices==5.0.1
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -873,6 +873,9 @@ gassist-text==0.0.14
 # homeassistant.components.google
 gcal-sync==8.0.0
 
+# homeassistant.components.aladdin_connect
+genie-partner-sdk==1.0.10
+
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
 
@@ -1026,10 +1029,10 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250811.1
+home-assistant-frontend==20250827.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.7.30
+home-assistant-intents==2025.8.27
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.3.0
