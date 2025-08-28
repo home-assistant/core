@@ -40,6 +40,7 @@
     'original_name': None,
     'platform': 'kitchen_sink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'outlet_1',
@@ -64,7 +65,6 @@
         'outlet_1',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -74,7 +74,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -97,7 +96,6 @@
         '2_ch_power_strip',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -107,7 +105,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -153,6 +150,7 @@
     'original_name': None,
     'platform': 'kitchen_sink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'outlet_2',
@@ -177,7 +175,6 @@
         'outlet_2',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -187,7 +184,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -210,7 +206,6 @@
         '2_ch_power_strip',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -220,7 +215,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })

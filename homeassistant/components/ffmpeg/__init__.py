@@ -11,32 +11,25 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONTENT_TYPE_MULTIPART,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util.signal_type import SignalType
 from homeassistant.util.system_info import is_official_image
 
-DOMAIN = "ffmpeg"
-
-SERVICE_START = "start"
-SERVICE_STOP = "stop"
-SERVICE_RESTART = "restart"
-
-SIGNAL_FFMPEG_START = SignalType[list[str] | None]("ffmpeg.start")
-SIGNAL_FFMPEG_STOP = SignalType[list[str] | None]("ffmpeg.stop")
-SIGNAL_FFMPEG_RESTART = SignalType[list[str] | None]("ffmpeg.restart")
+from .const import (
+    DOMAIN,
+    SIGNAL_FFMPEG_RESTART,
+    SIGNAL_FFMPEG_START,
+    SIGNAL_FFMPEG_STOP,
+)
+from .services import async_setup_services
 
 DATA_FFMPEG = "ffmpeg"
 
@@ -63,8 +56,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_FFMPEG_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the FFmpeg component."""
@@ -74,29 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await manager.async_get_version()
 
-    # Register service
-    async def async_service_handle(service: ServiceCall) -> None:
-        """Handle service ffmpeg process."""
-        entity_ids: list[str] | None = service.data.get(ATTR_ENTITY_ID)
-
-        if service.service == SERVICE_START:
-            async_dispatcher_send(hass, SIGNAL_FFMPEG_START, entity_ids)
-        elif service.service == SERVICE_STOP:
-            async_dispatcher_send(hass, SIGNAL_FFMPEG_STOP, entity_ids)
-        else:
-            async_dispatcher_send(hass, SIGNAL_FFMPEG_RESTART, entity_ids)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_START, async_service_handle, schema=SERVICE_FFMPEG_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_STOP, async_service_handle, schema=SERVICE_FFMPEG_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_RESTART, async_service_handle, schema=SERVICE_FFMPEG_SCHEMA
-    )
+    async_setup_services(hass)
 
     hass.data[DATA_FFMPEG] = manager
     return True

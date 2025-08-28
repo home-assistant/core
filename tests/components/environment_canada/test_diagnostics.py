@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.environment_canada.const import CONF_STATION
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE

@@ -1,32 +1,20 @@
 """Tests for the Spotify config flow."""
 
 from http import HTTPStatus
-from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 import pytest
 from spotifyaio import SpotifyConnectionError
 
 from homeassistant.components.spotify.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
-
-BLANK_ZEROCONF_INFO = ZeroconfServiceInfo(
-    ip_address=ip_address("1.2.3.4"),
-    ip_addresses=[ip_address("1.2.3.4")],
-    hostname="mock_hostname",
-    name="mock_name",
-    port=None,
-    properties={},
-    type="mock_type",
-)
 
 
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
@@ -37,25 +25,6 @@ async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_credentials"
-
-
-async def test_zeroconf_abort_if_existing_entry(hass: HomeAssistant) -> None:
-    """Check zeroconf flow aborts when an entry already exist."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

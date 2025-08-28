@@ -19,9 +19,7 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     MultiprotocolAddonManager,
     get_multiprotocol_addon_manager,
     is_multiprotocol_url,
-    multi_pan_addon_using_device,
 )
-from homeassistant.components.homeassistant_yellow import RADIO_DEVICE as YELLOW_RADIO
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -34,10 +32,6 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-INFO_URL_SKY_CONNECT = (
-    "https://skyconnect.home-assistant.io/multiprotocol-channel-missmatch"
-)
-INFO_URL_YELLOW = "https://yellow.home-assistant.io/multiprotocol-channel-missmatch"
 
 INSECURE_NETWORK_KEYS = (
     # Thread web UI default
@@ -208,16 +202,12 @@ async def _warn_on_channel_collision(
         delete_issue()
         return
 
-    yellow = await multi_pan_addon_using_device(hass, YELLOW_RADIO)
-    learn_more_url = INFO_URL_YELLOW if yellow else INFO_URL_SKY_CONNECT
-
     ir.async_create_issue(
         hass,
         DOMAIN,
         f"otbr_zha_channel_collision_{otbrdata.entry_id}",
         is_fixable=False,
         is_persistent=False,
-        learn_more_url=learn_more_url,
         severity=ir.IssueSeverity.WARNING,
         translation_key="otbr_zha_channel_collision",
         translation_placeholders={

@@ -7,13 +7,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, HEV_CYCLE_STATE
-from .coordinator import LIFXUpdateCoordinator
+from .const import HEV_CYCLE_STATE
+from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .util import lifx_features
 
@@ -27,11 +26,11 @@ HEV_CYCLE_STATE_SENSOR = BinarySensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LIFXConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LIFX from a config entry."""
-    coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     if lifx_features(coordinator.device)["hev"]:
         async_add_entities(

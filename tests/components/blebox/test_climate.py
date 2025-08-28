@@ -93,7 +93,7 @@ async def test_init(
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
 
-    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, None]
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF]
 
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_HVAC_MODE not in state.attributes

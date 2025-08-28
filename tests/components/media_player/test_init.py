@@ -152,7 +152,9 @@ def test_support_properties(hass: HomeAssistant, property_suffix: str) -> None:
     entity4 = MediaPlayerEntity()
     entity4.hass = hass
     entity4.platform = MockEntityPlatform(hass)
-    entity4._attr_supported_features = all_features - feature
+    entity4._attr_supported_features = media_player.MediaPlayerEntityFeature(
+        all_features - feature
+    )
 
     assert getattr(entity1, f"support_{property_suffix}") is False
     assert getattr(entity2, f"support_{property_suffix}") is True
@@ -654,25 +656,54 @@ async def test_get_async_get_browse_image_quoting(
         mock_browse_image.assert_called_with("album", media_content_id, None)
 
 
-def test_deprecated_supported_features_ints(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test deprecated supported features ints."""
+async def test_play_media_via_selector(hass: HomeAssistant) -> None:
+    """Test that play_media data under 'media' is remapped to top level keys for backward compatibility."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
 
-    class MockMediaPlayerEntity(MediaPlayerEntity):
-        @property
-        def supported_features(self) -> int:
-            """Return supported features."""
-            return 1
+    # Fake group support for DemoYoutubePlayer
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.play_media",
+    ) as mock_play_media:
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "entity_id": "media_player.bedroom",
+                "media": {
+                    "media_content_type": "music",
+                    "media_content_id": "1234",
+                },
+            },
+            blocking=True,
+        )
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "entity_id": "media_player.bedroom",
+                "media_content_type": "music",
+                "media_content_id": "1234",
+            },
+            blocking=True,
+        )
 
-    entity = MockMediaPlayerEntity()
-    entity.hass = hass
-    entity.platform = MockEntityPlatform(hass)
-    assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
-    assert "MockMediaPlayerEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "MediaPlayerEntityFeature.PAUSE" in caplog.text
-    caplog.clear()
-    assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
-    assert "is using deprecated supported features values" not in caplog.text
+    assert len(mock_play_media.mock_calls) == 2
+    assert mock_play_media.mock_calls[0].args == mock_play_media.mock_calls[1].args
+
+    with pytest.raises(vol.Invalid, match="Play media cannot contain 'media'"):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "media_content_id": "1234",
+                "entity_id": "media_player.bedroom",
+                "media": {
+                    "media_content_type": "music",
+                    "media_content_id": "1234",
+                },
+            },
+            blocking=True,
+        )

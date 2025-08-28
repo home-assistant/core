@@ -6,7 +6,7 @@ from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -164,6 +164,32 @@ async def test_water_heater_boostmode(
         node_id=matter_node.node_id,
         endpoint_id=2,
         command=clusters.WaterHeaterManagement.Commands.Boost(boostInfo=boost_info),
+    )
+
+    # disable water_heater boostmode
+    await hass.services.async_call(
+        "water_heater",
+        "set_operation_mode",
+        {
+            "entity_id": "water_heater.water_heater",
+            "operation_mode": STATE_ECO,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=2,
+            attribute=clusters.Thermostat.Attributes.SystemMode,
+        ),
+        value=4,
+    )
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.WaterHeaterManagement.Commands.CancelBoost(),
     )
 
 

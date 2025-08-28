@@ -1,0 +1,24 @@
+{
+  "hub": {
+    "first_boot": false,
+    "page_updated": false,
+    "error_message": 0,
+    "num_channels": 2,
+    "num_actuators": 2,
+    "version": "3.4.5",
+    "agenda": 1,
+    "batt_v": 9.0,
+    "num_vsens": 0,
+    "is_ac": 0,
+    "has_sd": 0,
+    "on_ap": 0
+  },
+  "wifi": {
+    "ssid": "YourWiFiName",
+    "strength": "-29",
+    "chan": "4",
+    "ip": "192.168.0.100",
+    "status": "3",
+    "mac_addr": "A1:B2:C3:D4:E5:F6"
+  }
+}

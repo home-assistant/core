@@ -7,7 +7,7 @@ from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 
 @pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
-async def test_button_states_and_commands(
+async def test_button_error_confirm(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -58,44 +58,43 @@ async def test_button_states_and_commands(
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNKNOWN
 
-    await hass.services.async_call(
-        domain="button",
-        service=SERVICE_PRESS,
-        target={ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    mock_automower_client.commands.error_confirm.assert_called_once_with(TEST_MOWER_ID)
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state.state == "2023-06-05T00:16:00+00:00"
-    getattr(mock_automower_client.commands, "error_confirm").side_effect = ApiError(
-        "Test error"
-    )
-    with pytest.raises(
-        HomeAssistantError,
-        match="Failed to send command: Test error",
-    ):
-        await hass.services.async_call(
-            domain="button",
-            service=SERVICE_PRESS,
-            target={ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
 
-
+@pytest.mark.parametrize(
+    ("entity_id", "name", "expected_command"),
+    [
+        (
+            "button.test_mower_1_confirm_error",
+            "Test Mower 1 Confirm error",
+            "error_confirm",
+        ),
+        (
+            "button.test_mower_1_sync_clock",
+            "Test Mower 1 Sync clock",
+            "set_datetime",
+        ),
+        (
+            "button.test_mower_1_reset_cutting_blade_usage_time",
+            "Test Mower 1 Reset cutting blade usage time",
+            "reset_cutting_blade_usage_time",
+        ),
+    ],
+)
 @pytest.mark.freeze_time(datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC))
-async def test_sync_clock(
+async def test_button_commands(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
     values: dict[str, MowerAttributes],
+    entity_id: str,
+    name: str,
+    expected_command: str,
 ) -> None:
-    """Test sync clock button command."""
-    entity_id = "button.test_mower_1_sync_clock"
+    """Test Automower button commands."""
+    values[TEST_MOWER_ID].mower.is_error_confirmable = True
     await setup_integration(hass, mock_config_entry)
+
     state = hass.states.get(entity_id)
-    assert state.name == "Test Mower 1 Sync clock"
+    assert state.name == name
 
     mock_automower_client.get_status.return_value = values
 
@@ -105,11 +104,15 @@ async def test_sync_clock(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mock_automower_client.commands.set_datetime.assert_called_once_with(TEST_MOWER_ID)
+
+    command_mock = getattr(mock_automower_client.commands, expected_command)
+    command_mock.assert_called_once_with(TEST_MOWER_ID)
+
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "2024-02-29T11:00:00+00:00"
-    mock_automower_client.commands.set_datetime.side_effect = ApiError("Test error")
+    command_mock.reset_mock()
+    command_mock.side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",

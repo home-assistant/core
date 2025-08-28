@@ -95,13 +95,27 @@ class SchemaFlowFormStep(SchemaFlowStep):
     preview: str | None = None
     """Optional preview component."""
 
+    description_placeholders: (
+        Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, dict[str, str]]]
+        | UndefinedType
+    ) = UNDEFINED
+    """Optional property to populate description placeholders."""
+
 
 @dataclass(slots=True)
 class SchemaFlowMenuStep(SchemaFlowStep):
     """Define a config or options flow menu step."""
 
     # Menu options
-    options: Container[str]
+    options: (
+        Container[str]
+        | Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, Container[str]]]
+    )
+    """Menu options, or function which returns menu options.
+
+    - If a function is specified, the function will be passed the current
+    `SchemaCommonFlowHandler`.
+    """
 
 
 class SchemaCommonFlowHandler:
@@ -145,6 +159,11 @@ class SchemaCommonFlowHandler:
         if isinstance(self._flow[step_id], SchemaFlowFormStep):
             return await self._async_form_step(step_id, user_input)
         return await self._async_menu_step(step_id, user_input)
+
+    async def _get_options(self, form_step: SchemaFlowMenuStep) -> Container[str]:
+        if isinstance(form_step.options, Container):
+            return form_step.options
+        return await form_step.options(self)
 
     async def _get_schema(self, form_step: SchemaFlowFormStep) -> vol.Schema | None:
         if form_step.schema is None:
@@ -214,6 +233,11 @@ class SchemaCommonFlowHandler:
                         and key.description.get("advanced")
                         and not self._handler.show_advanced_options
                     )
+                    and not (
+                        # don't remove read_only keys
+                        isinstance(data_schema.schema[key], selector.Selector)
+                        and data_schema.schema[key].config.get("read_only")
+                    )
                 ):
                     # Key not present, delete keys old value (if present) too
                     values.pop(key.schema, None)
@@ -244,13 +268,17 @@ class SchemaCommonFlowHandler:
             menu_step = cast(SchemaFlowMenuStep, self._flow[next_step_id])
             return self._handler.async_show_menu(
                 step_id=next_step_id,
-                menu_options=menu_step.options,
+                menu_options=await self._get_options(menu_step),
             )
 
         form_step = cast(SchemaFlowFormStep, self._flow[next_step_id])
 
         if (data_schema := await self._get_schema(form_step)) is None:
             return await self._show_next_step_or_create_entry(form_step)
+
+        description_placeholders: dict[str, str] | None = None
+        if form_step.description_placeholders is not UNDEFINED:
+            description_placeholders = await form_step.description_placeholders(self)
 
         suggested_values: dict[str, Any] = {}
         if form_step.suggested_values is UNDEFINED:
@@ -280,6 +308,7 @@ class SchemaCommonFlowHandler:
         return self._handler.async_show_form(
             step_id=next_step_id,
             data_schema=data_schema,
+            description_placeholders=description_placeholders,
             errors=errors,
             last_step=last_step,
             preview=form_step.preview,
@@ -292,7 +321,7 @@ class SchemaCommonFlowHandler:
         menu_step: SchemaFlowMenuStep = cast(SchemaFlowMenuStep, self._flow[step_id])
         return self._handler.async_show_menu(
             step_id=step_id,
-            menu_options=menu_step.options,
+            menu_options=await self._get_options(menu_step),
         )
 
 

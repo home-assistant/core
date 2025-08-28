@@ -5,13 +5,13 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_NEW_DEVICES,
     CONF_MASTER_GATEWAY,
-    DOMAIN as DECONZ_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
@@ -492,7 +492,7 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     deconz_payload["sensors"]["0"] = sensor
     mock_requests()
 
-    await hass.services.async_call(DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH)
+    await hass.services.async_call(DOMAIN, SERVICE_DEVICE_REFRESH)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
