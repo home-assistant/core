@@ -86,7 +86,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             )
 
         self.api.register_ws_ready_callback(start_watchdog)
-        self.websocket_alive = True
 
     async def _async_update_data(self) -> MowerDictionary:
         """Poll data from the API."""
