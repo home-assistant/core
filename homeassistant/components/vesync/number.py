@@ -123,7 +123,6 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        # Doesn't set correct on mine.  Needs testing.
         if not await self.entity_description.set_value_fn(self.device, value):
             raise HomeAssistantError(self.device.last_response.message)
-        await self.coordinator.async_request_refresh()
+        self.schedule_update_ha_state()
