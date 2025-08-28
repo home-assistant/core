@@ -30,9 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 MAX_WS_RECONNECT_TIME = 600
 SCAN_INTERVAL = timedelta(minutes=8)
 DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
-PONG_TIMEOUT = timedelta(seconds=90)
-PING_INTERVAL = timedelta(seconds=10)
-PING_TIMEOUT = timedelta(seconds=5)
+PING_INTERVAL = 60
+
 type AutomowerConfigEntry = ConfigEntry[AutomowerDataUpdateCoordinator]
 
 
@@ -63,6 +62,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self.new_areas_callbacks: list[Callable[[str, set[int]], None]] = []
         self.pong: datetime | None = None
         self.websocket_alive: bool = False
+        self.websocket_callbacks: list[Callable[[bool], None]] = []
         self._watchdog_task: asyncio.Task | None = None
 
     @override
@@ -199,14 +199,19 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         )
 
     async def _pong_watchdog(self) -> None:
+        """Watchdog to check for pong messages."""
         _LOGGER.debug("Watchdog started")
         try:
             while True:
                 _LOGGER.debug("Sending ping")
-                self.websocket_alive = await self.api.send_empty_message()
-                _LOGGER.debug("Ping result: %s", self.websocket_alive)
+                is_alive = await self.api.send_empty_message()
+                _LOGGER.debug("Ping result: %s", is_alive)
+                if self.websocket_alive != is_alive:
+                    self.websocket_alive = is_alive
+                    for ws_callback in self.websocket_callbacks:
+                        ws_callback(is_alive)
 
-                await asyncio.sleep(60)
+                await asyncio.sleep(PING_INTERVAL)
                 _LOGGER.debug("Websocket alive %s", self.websocket_alive)
                 if not self.websocket_alive:
                     _LOGGER.debug("No pong received → restart polling")
