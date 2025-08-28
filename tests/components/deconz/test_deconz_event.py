@@ -246,38 +246,95 @@ async def test_deconz_alarm_events(
 
     # Emergency event
     await sensor_ws_data({"state": {"action": AncillaryControlAction.EMERGENCY}})
+
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, "00:00:00:00:00:00:00:01")}
     )
     assert len(captured_events) == 1
-    assert captured_events[0].data[CONF_EVENT] == AncillaryControlAction.EMERGENCY.value
+    assert captured_events[0].data == {
+        CONF_ID: "keypad",
+        CONF_UNIQUE_ID: "00:00:00:00:00:00:00:01",
+        CONF_DEVICE_ID: device.id,
+        CONF_EVENT: AncillaryControlAction.EMERGENCY.value,
+    }
 
     # Fire event
     await sensor_ws_data({"state": {"action": AncillaryControlAction.FIRE}})
+    
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "00:00:00:00:00:00:00:01")}
+    )
+
     assert len(captured_events) == 2
+    assert captured_events[1].data == {
+        CONF_ID: "keypad",
+        CONF_UNIQUE_ID: "00:00:00:00:00:00:00:01",
+        CONF_DEVICE_ID: device.id,
+        CONF_EVENT: AncillaryControlAction.FIRE.value,
+    }
 
     # Invalid code event
     await sensor_ws_data({"state": {"action": AncillaryControlAction.INVALID_CODE}})
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "00:00:00:00:00:00:00:01")}
+    )
+
     assert len(captured_events) == 3
+    assert captured_events[2].data == {
+        CONF_ID: "keypad",
+        CONF_UNIQUE_ID: "00:00:00:00:00:00:00:01",
+        CONF_DEVICE_ID: device.id,
+        CONF_EVENT: AncillaryControlAction.INVALID_CODE.value,
+    }
 
     # Panic event
     await sensor_ws_data({"state": {"action": AncillaryControlAction.PANIC}})
-    assert len(captured_events) == 4
+    
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "00:00:00:00:00:00:00:01")}
+    )
 
-    # Ignored
+    assert len(captured_events) == 4
+    assert captured_events[3].data == {
+        CONF_ID: "keypad",
+        CONF_UNIQUE_ID: "00:00:00:00:00:00:00:01",
+        CONF_DEVICE_ID: device.id,
+        CONF_EVENT: AncillaryControlAction.PANIC.value,
+    }
+
+    # Only care for changes to specific action events
+
     await sensor_ws_data({"state": {"action": AncillaryControlAction.ARMED_AWAY}})
     assert len(captured_events) == 4
 
+    # Only care for action events
+
+    await sensor_ws_data({"state": {"panel": AncillaryControlPanel.ARMED_AWAY}})
+    assert len(captured_events) == 4
 
 @pytest.mark.parametrize(
     "sensor_payload",
     [
         {
-            "config": {"devicemode": "undirected", "on": True, "reachable": True},
+            "config": {
+                "devicemode": "undirected",
+                "on": True,
+                "reachable": True,
+                "sensitivity": 3,
+                "triggerdistance": "medium",
+            },
+            "etag": "13ff209f9401b317987d42506dd4cd79",
+            "lastannounced": None,
+            "lastseen": "2022-06-28T23:13Z",
             "manufacturername": "aqara",
             "modelid": "lumi.motion.ac01",
             "name": "Aqara FP1",
-            "state": {"presence": True, "presenceevent": "leave"},
+            "state": {
+                "lastupdated": "2022-06-28T23:13:38.577",
+                "presence": True,
+                "presenceevent": "leave",
+            },
             "swversion": "20210121",
             "type": "ZHAPresence",
             "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
@@ -294,16 +351,59 @@ async def test_deconz_presence_events(
     assert len(hass.states.async_all()) == 5
     assert len(dr.async_entries_for_config_entry(device_registry, config_entry_setup.entry_id)) == 2
 
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "xx:xx:xx:xx:xx:xx:xx:xx")}
+    )
+
+    captured_events = async_capture_events(hass, CONF_DECONZ_PRESENCE_EVENT)
+
+    for presence_event in (
+        PresenceStatePresenceEvent.ABSENTING,
+        PresenceStatePresenceEvent.APPROACHING,
+        PresenceStatePresenceEvent.ENTER,
+        PresenceStatePresenceEvent.ENTER_LEFT,
+        PresenceStatePresenceEvent.ENTER_RIGHT,
+        PresenceStatePresenceEvent.LEAVE,
+        PresenceStatePresenceEvent.LEFT_LEAVE,
+        PresenceStatePresenceEvent.RIGHT_LEAVE,
+    ):
+        await sensor_ws_data({"state": {"presenceevent": presence_event}})
+
+        assert len(captured_events) == 1
+        assert captured_events[0].data == {
+            CONF_ID: "aqara_fp1",
+            CONF_UNIQUE_ID: "xx:xx:xx:xx:xx:xx:xx:xx",
+            CONF_DEVICE_ID: device.id,
+            CONF_EVENT: presence_event.value,
+        }
+        captured_events.clear()
+
+    # Unsupported presence event
+
+    await sensor_ws_data({"state": {"presenceevent": PresenceStatePresenceEvent.NINE}})
+    assert len(captured_events) == 0
 
 @pytest.mark.parametrize(
     "sensor_payload",
     [
         {
-            "config": {"battery": 100, "on": True, "reachable": True},
+            "config": {
+                "battery": 100,
+                "on": True,
+                "reachable": True,
+            },
+            "etag": "463728970bdb7d04048fc4373654f45a",
+            "lastannounced": "2022-07-03T13:57:59Z",
+            "lastseen": "2022-07-03T14:02Z",
             "manufacturername": "Signify Netherlands B.V.",
             "modelid": "RDM002",
             "name": "RDM002 44",
-            "state": {"rotaryevent": 2},
+            "state": {
+                "expectedeventduration": 400,
+                "expectedrotation": 75,
+                "lastupdated": "2022-07-03T11:37:49.586",
+                "rotaryevent": 2,
+            },
             "swversion": "2.59.19",
             "type": "ZHARelativeRotary",
             "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-14-fc00",
@@ -320,6 +420,37 @@ async def test_deconz_relative_rotary_events(
     assert len(hass.states.async_all()) == 1
     assert len(dr.async_entries_for_config_entry(device_registry, config_entry_setup.entry_id)) == 2
 
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "xx:xx:xx:xx:xx:xx:xx:xx")}
+    )
+
+    captured_events = async_capture_events(hass, CONF_DECONZ_RELATIVE_ROTARY_EVENT)
+
+    for rotary_event, duration, rotation in ((1, 100, 50), (2, 200, -50)):
+        event_changed_sensor = {
+            "state": {
+                "rotaryevent": rotary_event,
+                "expectedeventduration": duration,
+                "expectedrotation": rotation,
+            }
+        }
+        await sensor_ws_data(event_changed_sensor)
+
+        assert len(captured_events) == 1
+        assert captured_events[0].data == {
+            CONF_ID: "rdm002_44",
+            CONF_UNIQUE_ID: "xx:xx:xx:xx:xx:xx:xx:xx",
+            CONF_DEVICE_ID: device.id,
+            CONF_EVENT: RELATIVE_ROTARY_DECONZ_TO_EVENT[rotary_event],
+            ATTR_DURATION: duration,
+            ATTR_ROTATION: rotation,
+        }
+        captured_events.clear()
+
+    # Unsupported relative rotary event
+
+    await sensor_ws_data({"name": "123"})
+    assert len(captured_events) == 0
 
 @pytest.mark.parametrize(
     "sensor_payload",
