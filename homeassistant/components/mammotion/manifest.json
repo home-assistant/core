@@ -15,10 +15,10 @@
   ],
   "codeowners": ["@mikey0000"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["bluetooth"],
   "documentation": "https://www.home-assistant.io/integrations/mammotion",
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["pymammotion"],
-  "requirements": ["pymammotion==0.5.10"]
+  "requirements": ["pymammotion==0.5.11"]
 }
