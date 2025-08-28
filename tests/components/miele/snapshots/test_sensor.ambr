@@ -2757,7 +2757,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'finish',
-    'unique_id': 'DummyAppliance_12-state_remaining_time_abs',
+    'unique_id': 'DummyAppliance_12-state_finish_timestamp',
     'unit_of_measurement': None,
   })
 # ---
@@ -3269,55 +3269,6 @@
     'state': 'own_program',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.oven_programmed_start-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.oven_programmed_start',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Programmed start',
-    'platform': 'miele',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'programmed_start',
-    'unique_id': 'DummyAppliance_12-state_start_time_abs',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_states[platforms0][sensor.oven_programmed_start-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Oven Programmed start',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.oven_programmed_start',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensor_states[platforms0][sensor.oven_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3369,6 +3320,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.oven_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.oven_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'DummyAppliance_12-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.oven_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Oven Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_start_in-entry]
@@ -3425,55 +3425,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
-  })
-# ---
-# name: test_sensor_states[platforms0][sensor.oven_started-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.oven_started',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Started',
-    'platform': 'miele',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'started',
-    'unique_id': 'DummyAppliance_12-state_elapsed_time_abs',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_states[platforms0][sensor.oven_started-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Oven Started',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.oven_started',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_target_temperature-entry]
@@ -4015,7 +3966,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'finish',
-    'unique_id': 'Dummy_Appliance_3-state_remaining_time_abs',
+    'unique_id': 'Dummy_Appliance_3-state_finish_timestamp',
     'unit_of_measurement': None,
   })
 # ---
@@ -4311,55 +4262,6 @@
     'state': 'normal_operation_mode',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_programmed_start-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.washing_machine_programmed_start',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Programmed start',
-    'platform': 'miele',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'programmed_start',
-    'unique_id': 'Dummy_Appliance_3-state_start_time_abs',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_programmed_start-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Washing machine Programmed start',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_programmed_start',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4462,6 +4364,55 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'Dummy_Appliance_3-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Washing machine Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_start_in-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4516,55 +4467,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
-  })
-# ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_started-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.washing_machine_started',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Started',
-    'platform': 'miele',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'started',
-    'unique_id': 'Dummy_Appliance_3-state_elapsed_time_abs',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_started-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Washing machine Started',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_started',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_target_temperature-entry]
@@ -5197,7 +5099,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'finish',
-    'unique_id': 'DummyAppliance_12-state_remaining_time_abs',
+    'unique_id': 'DummyAppliance_12-state_finish_timestamp',
     'unit_of_measurement': None,
   })
 # ---
@@ -5709,55 +5611,6 @@
     'state': 'own_program',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.oven_programmed_start-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.oven_programmed_start',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Programmed start',
-    'platform': 'miele',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'programmed_start',
-    'unique_id': 'DummyAppliance_12-state_start_time_abs',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_states_api_push[platforms0][sensor.oven_programmed_start-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Oven Programmed start',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.oven_programmed_start',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5809,6 +5662,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.oven_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.oven_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'DummyAppliance_12-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.oven_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Oven Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_start_in-entry]
@@ -5865,55 +5767,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
-  })
-# ---
-# name: test_sensor_states_api_push[platforms0][sensor.oven_started-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.oven_started',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Started',
-    'platform': 'miele',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'started',
-    'unique_id': 'DummyAppliance_12-state_elapsed_time_abs',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_states_api_push[platforms0][sensor.oven_started-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Oven Started',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.oven_started',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_target_temperature-entry]
@@ -6455,7 +6308,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'finish',
-    'unique_id': 'Dummy_Appliance_3-state_remaining_time_abs',
+    'unique_id': 'Dummy_Appliance_3-state_finish_timestamp',
     'unit_of_measurement': None,
   })
 # ---
@@ -6751,55 +6604,6 @@
     'state': 'normal_operation_mode',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_programmed_start-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.washing_machine_programmed_start',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Programmed start',
-    'platform': 'miele',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'programmed_start',
-    'unique_id': 'Dummy_Appliance_3-state_start_time_abs',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_programmed_start-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Washing machine Programmed start',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_programmed_start',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6902,6 +6706,55 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'Dummy_Appliance_3-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Washing machine Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_start_in-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6956,55 +6809,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
-  })
-# ---
-# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_started-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.washing_machine_started',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Started',
-    'platform': 'miele',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'started',
-    'unique_id': 'Dummy_Appliance_3-state_elapsed_time_abs',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_started-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Washing machine Started',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_started',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_target_temperature-entry]
@@ -7393,7 +7197,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'finish',
-    'unique_id': 'Dummy_Vacuum_1-state_remaining_time_abs',
+    'unique_id': 'Dummy_Vacuum_1-state_finish_timestamp',
     'unit_of_measurement': None,
   })
 # ---
@@ -7592,7 +7396,7 @@
     'state': '0',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_started-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7605,7 +7409,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.robot_vacuum_cleaner_started',
+    'entity_id': 'sensor.robot_vacuum_cleaner_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7617,24 +7421,24 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Started',
+    'original_name': 'Start',
     'platform': 'miele',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'started',
-    'unique_id': 'Dummy_Vacuum_1-state_elapsed_time_abs',
+    'translation_key': 'start',
+    'unique_id': 'Dummy_Vacuum_1-state_start_timestamp',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_started-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Robot vacuum cleaner Started',
+      'friendly_name': 'Robot vacuum cleaner Start',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.robot_vacuum_cleaner_started',
+    'entity_id': 'sensor.robot_vacuum_cleaner_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

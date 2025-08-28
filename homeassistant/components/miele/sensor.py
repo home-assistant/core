@@ -104,14 +104,23 @@ def _get_coffee_profile(value: MieleDevice) -> str | None:
     return None
 
 
-def _convert_timestamp(value_list: list[int], adding: bool = True) -> datetime | None:
-    """Convert raw values representing time into timestamp."""
+def _convert_start_timestamp(
+    elapsed_time_list: list[int], start_time_list: list[int]
+) -> datetime | None:
+    """Convert raw values representing time into start timestamp."""
     now = dt_util.now()
-    duration = _convert_duration(value_list)
-    if duration is None or duration == 0:
+    elapsed_duration = _convert_duration(elapsed_time_list)
+    delayed_start_duration = _convert_duration(start_time_list)
+    if (elapsed_duration is None or elapsed_duration == 0) and (
+        delayed_start_duration is None or delayed_start_duration == 0
+    ):
         return None
+    if elapsed_duration is not None and elapsed_duration > 0:
+        duration = -elapsed_duration
+    elif delayed_start_duration is not None and delayed_start_duration > 0:
+        duration = delayed_start_duration
     delta = timedelta(minutes=duration)
-    return (now + delta if adding else now - delta).replace(second=0, microsecond=0)
+    return (now + delta).replace(second=0, microsecond=0)
 
 
 def _convert_finish_timestamp(
@@ -400,34 +409,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
     MieleSensorDefinition(
         types=(
             MieleAppliance.WASHING_MACHINE,
-            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
-            MieleAppliance.TUMBLE_DRYER,
-            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
-            MieleAppliance.DISHWASHER,
-            MieleAppliance.OVEN,
-            MieleAppliance.OVEN_MICROWAVE,
-            MieleAppliance.STEAM_OVEN,
-            MieleAppliance.MICROWAVE,
-            MieleAppliance.ROBOT_VACUUM_CLEANER,
-            MieleAppliance.WASHER_DRYER,
-            MieleAppliance.STEAM_OVEN_COMBI,
-            MieleAppliance.STEAM_OVEN_MICRO,
-            MieleAppliance.DIALOG_OVEN,
-            MieleAppliance.STEAM_OVEN_MK2,
-        ),
-        description=MieleSensorDescription(
-            key="state_remaining_time_abs",
-            translation_key="finish",
-            value_fn=lambda value: _convert_finish_timestamp(
-                value.state_remaining_time, value.state_start_time
-            ),
-            device_class=SensorDeviceClass.TIMESTAMP,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-    ),
-    MieleSensorDefinition(
-        types=(
-            MieleAppliance.WASHING_MACHINE,
             MieleAppliance.TUMBLE_DRYER,
             MieleAppliance.DISHWASHER,
             MieleAppliance.OVEN,
@@ -448,32 +429,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             end_value_fn=lambda last_value: last_value,
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-    ),
-    MieleSensorDefinition(
-        types=(
-            MieleAppliance.WASHING_MACHINE,
-            MieleAppliance.TUMBLE_DRYER,
-            MieleAppliance.DISHWASHER,
-            MieleAppliance.OVEN,
-            MieleAppliance.OVEN_MICROWAVE,
-            MieleAppliance.STEAM_OVEN,
-            MieleAppliance.MICROWAVE,
-            MieleAppliance.WASHER_DRYER,
-            MieleAppliance.STEAM_OVEN_COMBI,
-            MieleAppliance.STEAM_OVEN_MICRO,
-            MieleAppliance.DIALOG_OVEN,
-            MieleAppliance.ROBOT_VACUUM_CLEANER,
-            MieleAppliance.STEAM_OVEN_MK2,
-        ),
-        description=MieleSensorDescription(
-            key="state_elapsed_time_abs",
-            translation_key="started",
-            value_fn=lambda value: _convert_timestamp(
-                value.state_elapsed_time, adding=False
-            ),
-            device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -513,7 +468,32 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             MieleAppliance.TUMBLE_DRYER,
             MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
             MieleAppliance.DISHWASHER,
-            MieleAppliance.DISH_WARMER,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN,
+            MieleAppliance.MICROWAVE,
+            MieleAppliance.ROBOT_VACUUM_CLEANER,
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.DIALOG_OVEN,
+            MieleAppliance.STEAM_OVEN_MK2,
+        ),
+        description=MieleSensorDescription(
+            key="state_finish_timestamp",
+            translation_key="finish",
+            value_fn=lambda value: _convert_finish_timestamp(
+                value.state_remaining_time, value.state_start_time
+            ),
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.DISHWASHER,
             MieleAppliance.OVEN,
             MieleAppliance.OVEN_MICROWAVE,
             MieleAppliance.STEAM_OVEN,
@@ -522,12 +502,15 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             MieleAppliance.STEAM_OVEN_COMBI,
             MieleAppliance.STEAM_OVEN_MICRO,
             MieleAppliance.DIALOG_OVEN,
+            MieleAppliance.ROBOT_VACUUM_CLEANER,
             MieleAppliance.STEAM_OVEN_MK2,
         ),
         description=MieleSensorDescription(
-            key="state_start_time_abs",
-            translation_key="programmed_start",
-            value_fn=lambda value: _convert_timestamp(value.state_start_time),
+            key="state_start_timestamp",
+            translation_key="start",
+            value_fn=lambda value: _convert_start_timestamp(
+                value.state_elapsed_time, value.state_start_time
+            ),
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -722,9 +705,8 @@ async def async_setup_entry(
             "state_program_phase": MielePhaseSensor,
             "state_plate_step": MielePlateSensor,
             "state_elapsed_time": MieleTimeSensor,
-            "state_remaining_time_abs": MieleAbsoluteTimeSensor,
-            "state_elapsed_time_abs": MieleAbsoluteTimeSensor,
-            "state_start_time_abs": MieleAbsoluteTimeSensor,
+            "state_start_timestamp": MieleAbsoluteTimeSensor,
+            "state_finish_timestamp": MieleAbsoluteTimeSensor,
         }.get(definition.description.key, MieleSensor)
 
     def _is_entity_registered(unique_id: str) -> bool:

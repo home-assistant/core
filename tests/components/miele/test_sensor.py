@@ -318,7 +318,7 @@ async def test_laundry_wash_scenario(
     check_sensor_state(hass, "sensor.washing_machine_remaining_time", "0", step)
     # OFF -> elapsed forced to unknown (some devices continue reporting last value of last cycle)
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "unknown", step)
-    check_sensor_state(hass, "sensor.washing_machine_started", "unknown", step)
+    check_sensor_state(hass, "sensor.washing_machine_start", "unknown", step)
     check_sensor_state(hass, "sensor.washing_machine_finish", "unknown", step)
 
     # Simulate program started
@@ -357,7 +357,7 @@ async def test_laundry_wash_scenario(
     # IN_USE -> elapsed time from API (normal case)
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "12", step)
     check_sensor_state(
-        hass, "sensor.washing_machine_started", "2025-05-31T12:18:00+00:00", step
+        hass, "sensor.washing_machine_start", "2025-05-31T12:18:00+00:00", step
     )
     check_sensor_state(
         hass, "sensor.washing_machine_finish", "2025-05-31T14:15:00+00:00", step
@@ -391,7 +391,7 @@ async def test_laundry_wash_scenario(
     # RINSE HOLD -> elapsed time from API (normal case)
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "109", step)
     check_sensor_state(
-        hass, "sensor.washing_machine_started", "2025-05-31T12:18:00+00:00", step
+        hass, "sensor.washing_machine_start", "2025-05-31T12:18:00+00:00", step
     )
     check_sensor_state(
         hass, "sensor.washing_machine_finish", "2025-05-31T14:15:00+00:00", step
@@ -427,7 +427,7 @@ async def test_laundry_wash_scenario(
     # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "109", step)
     check_sensor_state(
-        hass, "sensor.washing_machine_started", "2025-05-31T12:18:00+00:00", step
+        hass, "sensor.washing_machine_start", "2025-05-31T12:18:00+00:00", step
     )
     check_sensor_state(
         hass, "sensor.washing_machine_finish", "2025-05-31T14:15:00+00:00", step
@@ -464,7 +464,7 @@ async def test_laundry_wash_scenario(
     check_sensor_state(hass, "sensor.washing_machine_remaining_time", "119", step)
     # PROGRAMMED -> elapsed time from API (normal case)
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "0", step)
-    check_sensor_state(hass, "sensor.washing_machine_started", "unknown", step)
+    check_sensor_state(hass, "sensor.washing_machine_start", "unknown", step)
     check_sensor_state(
         hass, "sensor.washing_machine_finish", "2025-05-31T16:29:00+00:00", step
     )
@@ -494,7 +494,7 @@ async def test_laundry_dry_scenario(
     check_sensor_state(hass, "sensor.tumble_dryer_remaining_time", "0", step)
     # OFF -> elapsed forced to unknown (some devices continue reporting last value of last cycle)
     check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "unknown", step)
-    check_sensor_state(hass, "sensor.tumble_dryer_started", "unknown", step)
+    check_sensor_state(hass, "sensor.tumble_dryer_start", "unknown", step)
     check_sensor_state(hass, "sensor.tumble_dryer_finish", "unknown", step)
 
     # Simulate program started
@@ -526,7 +526,7 @@ async def test_laundry_dry_scenario(
     # IN_USE -> elapsed time from API (normal case)
     check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "20", step)
     check_sensor_state(
-        hass, "sensor.tumble_dryer_started", "2025-05-31T12:10:00+00:00", step
+        hass, "sensor.tumble_dryer_start", "2025-05-31T12:10:00+00:00", step
     )
     check_sensor_state(
         hass, "sensor.tumble_dryer_finish", "2025-05-31T13:19:00+00:00", step
@@ -559,7 +559,7 @@ async def test_laundry_dry_scenario(
     # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
     check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "20", step)
     check_sensor_state(
-        hass, "sensor.tumble_dryer_started", "2025-05-31T12:10:00+00:00", step
+        hass, "sensor.tumble_dryer_start", "2025-05-31T12:10:00+00:00", step
     )
     check_sensor_state(
         hass, "sensor.tumble_dryer_finish", "2025-05-31T13:19:00+00:00", step

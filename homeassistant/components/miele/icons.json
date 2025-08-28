@@ -92,10 +92,7 @@
       "water_forecast": {
         "default": "mdi:water-outline"
       },
-      "programmed_start": {
-        "default": "mdi:timeline-clock-outline"
-      },
-      "started": {
+      "start": {
         "default": "mdi:clock-start"
       },
       "finish": {
