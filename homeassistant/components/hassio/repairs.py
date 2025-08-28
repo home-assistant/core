@@ -18,6 +18,7 @@ from . import get_addons_info, get_issues_info
 from .const import (
     EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_BOOT_FAIL,
+    ISSUE_KEY_ADDON_DEPRECATED,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
@@ -209,6 +210,7 @@ async def async_create_fix_flow(
         ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
         ISSUE_KEY_ADDON_BOOT_FAIL,
         ISSUE_KEY_ADDON_PWNED,
+        ISSUE_KEY_ADDON_DEPRECATED,
     }:
         return AddonIssueRepairFlow(hass, issue_id)
 
