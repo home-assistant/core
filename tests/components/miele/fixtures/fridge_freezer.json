@@ -111,7 +111,7 @@
       "batteryLevel": null
     }
   },
-  "**DummyAppliance_Fridge_Freezer_Offline": {
+  "DummyAppliance_Fridge_Freezer_Offline": {
     "ident": {
       "type": {
         "key_localized": "Device type",

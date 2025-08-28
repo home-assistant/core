@@ -1647,7 +1647,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': '**DummyAppliance_Fridge_Freezer_Offline-state_status',
+    'unique_id': 'DummyAppliance_Fridge_Freezer_Offline-state_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1778,7 +1778,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '**DummyAppliance_Fridge_Freezer_Offline-state_temperature_1',
+    'unique_id': 'DummyAppliance_Fridge_Freezer_Offline-state_temperature_1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
