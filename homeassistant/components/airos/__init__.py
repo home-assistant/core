@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
 async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
     """Migrate old config entry."""
 
-	if entry.version > 1:
+    if entry.version > 1:
         # This means the user has downgraded from a future version
         return False
 

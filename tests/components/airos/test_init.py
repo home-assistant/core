@@ -118,6 +118,26 @@ async def test_migrate_entry(hass: HomeAssistant, mock_airos_client: MagicMock) 
     assert entry.data == MOCK_CONFIG_V1_2
 
 
+async def test_migrate_future_return(
+    hass: HomeAssistant, mock_airos_client: MagicMock
+) -> None:
+    """Test migrate entry unique id."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=MOCK_CONFIG_V1_2,
+        entry_id="1",
+        unique_id="airos_device",
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
 async def test_load_unload_entry(
     hass: HomeAssistant, mock_airos_client: MagicMock
 ) -> None:
