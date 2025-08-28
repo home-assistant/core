@@ -1553,7 +1553,7 @@ class EntityRegistry(BaseRegistry):
             def get_optional_enum[_EnumT: StrEnum](
                 cls: type[_EnumT], value: str | None
             ) -> _EnumT | UndefinedType | None:
-                """Convert disabled_by string to RegistryEntryDisabler or None."""
+                """Convert string to the passed enum, UNDEFINED or None."""
                 if value is None:
                     return None
                 if value == UNDEFINED_STR:
