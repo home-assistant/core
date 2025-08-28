@@ -327,7 +327,7 @@ async def test_remove_orphaned_entries_service(
     """Test service works and also don't remove more than expected."""
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry_setup.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "123")},
+        identifiers={(DOMAIN, BRIDGE_ID)},
     )
 
     assert (
