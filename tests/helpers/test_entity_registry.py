@@ -3310,7 +3310,7 @@ async def test_restore_migrated_entity_hidden_by(
     entity_registry: er.EntityRegistry,
     entity_hidden_by: er.RegistryEntryHider | None,
 ) -> None:
-    """Check how the disabled_by flag is treated when restoring an entity."""
+    """Check how the hidden_by flag is treated when restoring an entity."""
     update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     config_entry = MockConfigEntry(domain="light")
     config_entry.add_to_hass(hass)
@@ -3423,7 +3423,7 @@ async def test_restore_migrated_entity_initial_options(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Check how the disabled_by flag is treated when restoring an entity."""
+    """Check how the initial options is treated when restoring an entity."""
     update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     config_entry = MockConfigEntry(domain="light")
     config_entry.add_to_hass(hass)
