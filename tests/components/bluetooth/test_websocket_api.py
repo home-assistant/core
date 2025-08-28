@@ -22,6 +22,7 @@ from . import (
     generate_advertisement_data,
     generate_ble_device,
     inject_advertisement_with_source,
+    inject_advertisement_with_time_and_source_connectable,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -72,6 +73,7 @@ async def test_subscribe_advertisements(
                 "source": HCI0_SOURCE_ADDRESS,
                 "time": ANY,
                 "tx_power": -127,
+                "raw": None,
             }
         ]
     }
@@ -83,8 +85,15 @@ async def test_subscribe_advertisements(
         service_uuids=[],
         rssi=-80,
     )
-    inject_advertisement_with_source(
-        hass, switchbot_device_signal_100, switchbot_adv_signal_100, HCI1_SOURCE_ADDRESS
+    # Inject with raw bytes data
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        switchbot_device_signal_100,
+        switchbot_adv_signal_100,
+        time.monotonic(),
+        HCI1_SOURCE_ADDRESS,
+        True,
+        raw=b"\x02\x01\x06\x03\x03\x0f\x18",
     )
     async with asyncio.timeout(1):
         response = await client.receive_json()
@@ -101,6 +110,7 @@ async def test_subscribe_advertisements(
                 "source": HCI1_SOURCE_ADDRESS,
                 "time": ANY,
                 "tx_power": -127,
+                "raw": "02010603030f18",
             }
         ]
     }

@@ -13,6 +13,11 @@
         "default": "mdi:saw-blade"
       }
     },
+    "event": {
+      "message": {
+        "default": "mdi:alert-circle-check-outline"
+      }
+    },
     "number": {
       "cutting_height": {
         "default": "mdi:grass"

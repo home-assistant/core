@@ -9,15 +9,15 @@ from typing import TYPE_CHECKING, Any, Literal
 import openai
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
+    ChatCompletionFunctionToolParam,
     ChatCompletionMessage,
+    ChatCompletionMessageFunctionToolCallParam,
     ChatCompletionMessageParam,
-    ChatCompletionMessageToolCallParam,
     ChatCompletionSystemMessageParam,
     ChatCompletionToolMessageParam,
-    ChatCompletionToolParam,
     ChatCompletionUserMessageParam,
 )
-from openai.types.chat.chat_completion_message_tool_call_param import Function
+from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 from openai.types.shared_params import FunctionDefinition, ResponseFormatJSONSchema
 from openai.types.shared_params.response_format_json_schema import JSONSchema
 import voluptuous as vol
@@ -84,7 +84,7 @@ def _format_structured_output(
 def _format_tool(
     tool: llm.Tool,
     custom_serializer: Callable[[Any], Any] | None,
-) -> ChatCompletionToolParam:
+) -> ChatCompletionFunctionToolParam:
     """Format tool specification."""
     tool_spec = FunctionDefinition(
         name=tool.name,
@@ -92,7 +92,7 @@ def _format_tool(
     )
     if tool.description:
         tool_spec["description"] = tool.description
-    return ChatCompletionToolParam(type="function", function=tool_spec)
+    return ChatCompletionFunctionToolParam(type="function", function=tool_spec)
 
 
 def _convert_content_to_chat_message(
@@ -121,7 +121,7 @@ def _convert_content_to_chat_message(
         )
         if isinstance(content, conversation.AssistantContent) and content.tool_calls:
             param["tool_calls"] = [
-                ChatCompletionMessageToolCallParam(
+                ChatCompletionMessageFunctionToolCallParam(
                     type="function",
                     id=tool_call.id,
                     function=Function(
@@ -160,6 +160,7 @@ async def _transform_response(
                 tool_args=_decode_tool_arguments(tool_call.function.arguments),
             )
             for tool_call in message.tool_calls
+            if tool_call.type == "function"
         ]
     yield data
 
@@ -199,7 +200,7 @@ class OpenRouterEntity(Entity):
             "extra_body": {"require_parameters": True},
         }
 
-        tools: list[ChatCompletionToolParam] | None = None
+        tools: list[ChatCompletionFunctionToolParam] | None = None
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
