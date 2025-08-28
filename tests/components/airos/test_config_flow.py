@@ -10,7 +10,7 @@ from airos.exceptions import (
 )
 import pytest
 
-from homeassistant.components.airos.const import DOMAIN
+from homeassistant.components.airos.const import DOMAIN, SECTION_ADVANCED_SETTINSGS
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -24,52 +24,40 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-MOCK_CONFIG_BASIC = {
+MOCK_CONFIG = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: "ubnt",
     CONF_PASSWORD: "test-password",
-}
-MOCK_CONFIG_ADVANCED = {
-    CONF_HOST: "1.1.1.1",
-    CONF_USERNAME: "ubnt",
-    CONF_PASSWORD: "test-password",
-    CONF_SSL: True,
-    CONF_VERIFY_SSL: False,
+    SECTION_ADVANCED_SETTINSGS: {
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: False,
+    },
 }
 
 
-@pytest.mark.parametrize(
-    ("show_advanced_options", "mock_config"),
-    [
-        (False, MOCK_CONFIG_BASIC),
-        (True, MOCK_CONFIG_ADVANCED),
-    ],
-)
 async def test_form_creates_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_airos_client: AsyncMock,
     ap_fixture: dict[str, Any],
-    show_advanced_options: bool,
-    mock_config: dict[str, Any],
 ) -> None:
     """Test we get the form and create the appropriate entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER, "show_advanced_options": show_advanced_options},
+        context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        mock_config,
+        MOCK_CONFIG,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "NanoStation 5AC ap name"
     assert result["result"].unique_id == "01:23:45:67:89:AB"
-    assert result["data"] == mock_config
+    assert result["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -91,7 +79,7 @@ async def test_form_duplicate_entry(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        MOCK_CONFIG_BASIC,
+        MOCK_CONFIG,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -123,7 +111,7 @@ async def test_form_exception_handling(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        MOCK_CONFIG_BASIC,
+        MOCK_CONFIG,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -133,10 +121,10 @@ async def test_form_exception_handling(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        MOCK_CONFIG_BASIC,
+        MOCK_CONFIG,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "NanoStation 5AC ap name"
-    assert result["data"] == MOCK_CONFIG_BASIC
+    assert result["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
