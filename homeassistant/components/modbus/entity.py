@@ -281,7 +281,9 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         """Convert registers to proper result."""
 
         if self._swap:
-            registers = self._swap_registers(copy.copy(registers), self._slave_count)
+            registers = self._swap_registers(
+                copy.deepcopy(registers), self._slave_count
+            )
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
             return byte_string.decode()
