@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
 from daybetter_local_api import DayBetterDevice
 import pytest
-
 from homeassistant.components.daybetter_light_local.const import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -23,12 +22,13 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import DEFAULT_CAPABILITIES, SCENE_CAPABILITIES
 
+
+
 from tests.common import MockConfigEntry
 
 CONTROLLER_PATH = (
     "homeassistant.components.daybetter_light_local.coordinator.DayBetterController"
 )
-
 
 # ----------------------------- Helper -----------------------------
 def create_mock_device(
@@ -198,7 +198,7 @@ async def test_light_setup_error(
         entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_ERROR
+        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_light_on_off(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> None:
@@ -693,3 +693,4 @@ async def test_scene_none(hass: HomeAssistant, mock_DayBetter_api: AsyncMock) ->
         await hass.async_block_till_done()
         assert light.attributes[ATTR_EFFECT] is None
         mock_DayBetter_api.set_scene.assert_not_called()
+

@@ -40,15 +40,19 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     def discovery_callback(device: DayBetterDevice, is_new: bool) -> bool:
-        if is_new:
-            async_add_entities([DayBetterLight(coordinator, device)])
-        return True
+        return _handle_discovery(coordinator, device, is_new, async_add_entities)
 
     async_add_entities(
         DayBetterLight(coordinator, device) for device in coordinator.devices
     )
 
     await coordinator.set_discovery_callback(discovery_callback)
+
+def _handle_discovery(coordinator, device, is_new, async_add_entities) -> bool:
+    """Handle device discovery - separated for easier testing."""
+    if is_new:
+        async_add_entities([DayBetterLight(coordinator, device)])
+    return True
 
 
 class DayBetterLight(CoordinatorEntity[DayBetterLocalApiCoordinator], LightEntity):
@@ -108,10 +112,6 @@ class DayBetterLight(CoordinatorEntity[DayBetterLocalApiCoordinator], LightEntit
                 self._attr_supported_features = LightEntityFeature.EFFECT
                 self._attr_effect_list = [_NONE_SCENE, *capabilities.scenes.keys()]
 
-        self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
-        if len(self._attr_supported_color_modes) == 1:
-            # If the light supports only a single color mode, set it now
-            self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
 
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -148,10 +148,6 @@ class DayBetterLight(CoordinatorEntity[DayBetterLocalApiCoordinator], LightEntit
     @property
     def color_mode(self) -> ColorMode | str | None:
         """Return the color mode."""
-        if self._fixed_color_mode:
-            # The light supports only a single color mode, return it
-            return self._fixed_color_mode
-
         # The light supports both color temperature and RGB, determine which
         # mode the light is in
         if (
