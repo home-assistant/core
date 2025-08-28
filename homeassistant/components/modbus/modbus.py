@@ -359,6 +359,7 @@ class ModbusHub:
 
     async def async_close(self) -> None:
         """Disconnect client."""
+        self.event_connected.set()
         if not self._connect_task.done():
             self._connect_task.cancel()
 
