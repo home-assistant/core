@@ -30,9 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
 
-
     adapter = await network.async_get_source_ip(hass, network.PUBLIC_TARGET_IP)
-
 
     controller = DayBetterController(
         loop=hass.loop,
@@ -61,7 +59,9 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
         # Check if we found any devices that aren't already configured
         for device in controller.devices:
-            unique_id = getattr(device, "fingerprint", None) or getattr(device, "ip", None)
+            unique_id = getattr(device, "fingerprint", None) or getattr(
+                device, "ip", None
+            )
             if unique_id:
                 # Check if this device is already configured
                 await hass.config_entries.flow.async_init(
@@ -118,7 +118,9 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_discover_devices(self) -> bool:
         """Discover devices and check for unique IDs."""
         try:
-            adapter = await network.async_get_source_ip(self.hass, network.PUBLIC_TARGET_IP)
+            adapter = await network.async_get_source_ip(
+                self.hass, network.PUBLIC_TARGET_IP
+            )
         except (HomeAssistantError, ValueError, RuntimeError):
             adapter = "0.0.0.0"
 
@@ -148,12 +150,13 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Check each device and abort if already configured
             for device in controller.devices:
-                unique_id = getattr(device, "fingerprint", None) or getattr(device, "ip", None)
+                unique_id = getattr(device, "fingerprint", None) or getattr(
+                    device, "ip", None
+                )
                 if unique_id:
                     await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()
                     return True
-
 
         except OSError as ex:
             _LOGGER.error("Failed to start controller, errno: %d", ex.errno)

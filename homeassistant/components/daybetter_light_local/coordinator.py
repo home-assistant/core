@@ -40,8 +40,6 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
             update_interval=SCAN_INTERVAL,
         )
 
-
-
         self._controller = DayBetterController(
             loop=hass.loop,
             logger=_LOGGER,

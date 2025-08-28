@@ -11,10 +11,7 @@ import pytest
 from homeassistant.components.daybetter_light_local.coordinator import (
     DayBetterController,
 )
-
-from homeassistant.components.daybetter_light_local.light import (
-    DayBetterLight,
-)
+from homeassistant.components.daybetter_light_local.light import DayBetterLight
 
 
 @pytest.fixture(name="mock_DayBetter_api")
