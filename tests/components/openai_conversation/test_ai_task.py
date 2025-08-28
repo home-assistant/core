@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
-from . import create_message_item
+from . import create_image_gen_call_item, create_message_item
 
 from tests.common import MockConfigEntry
 
@@ -206,3 +206,54 @@ async def test_generate_data_with_attachments(
             "type": "input_image",
         },
     ]
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test AI Task image generation."""
+    entity_id = "ai_task.openai_ai_task"
+
+    # Ensure entity is linked to the subentry
+    entity_entry = entity_registry.async_get(entity_id)
+    ai_task_entry = next(
+        iter(
+            entry
+            for entry in mock_config_entry.subentries.values()
+            if entry.subentry_type == "ai_task_data"
+        )
+    )
+    assert entity_entry is not None
+    assert entity_entry.config_entry_id == mock_config_entry.entry_id
+    assert entity_entry.config_subentry_id == ai_task_entry.subentry_id
+
+    # Mock the OpenAI response stream
+    mock_create_stream.return_value = [
+        create_image_gen_call_item(id="ig_A", output_index=0),
+        create_message_item(id="msg_A", text="", output_index=1),
+    ]
+
+    assert hass.data[ai_task.DATA_IMAGES] == {}
+
+    result = await ai_task.async_generate_image(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.openai_ai_task",
+        instructions="Generate test image",
+    )
+
+    assert result["height"] == 1024
+    assert result["width"] == 1536
+    assert result["revised_prompt"] == "Mock revised prompt."
+    assert result["mime_type"] == "image/png"
+    assert result["model"] == "gpt-image-1"
+
+    assert len(hass.data[ai_task.DATA_IMAGES]) == 1
+    image_data = next(iter(hass.data[ai_task.DATA_IMAGES].values()))
+    assert image_data.data == b"A"
+    assert image_data.mime_type == "image/png"
+    assert image_data.title == "Mock revised prompt."

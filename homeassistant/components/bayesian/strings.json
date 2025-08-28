@@ -61,7 +61,7 @@
         },
         "data_description": {
           "probability_threshold": "The probability above which the sensor will show as 'on'. 50% should produce the most accurate result. Use numbers greater than 50% if avoiding false positives is important, or vice-versa.",
-          "prior": "The baseline probabilty the sensor should be 'on', this is usually the percentage of time it is true. For example, for a sensor 'Everyone sleeping' it might be 8 hours a day, 33%.",
+          "prior": "The baseline probability the sensor should be 'on', this is usually the percentage of time it is true. For example, for a sensor 'Everyone sleeping' it might be 8 hours a day, 33%.",
           "device_class": "Choose the device class you would like the sensor to show as."
         }
       },
