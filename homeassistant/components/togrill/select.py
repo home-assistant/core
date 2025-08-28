@@ -1,4 +1,4 @@
-"""Support for number entities."""
+"""Support for select entities."""
 
 from __future__ import annotations
 
@@ -134,7 +134,7 @@ async def async_setup_entry(
     entry: ToGrillConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up number based on a config entry."""
+    """Set up select based on a config entry."""
 
     coordinator = entry.runtime_data
 
@@ -146,7 +146,7 @@ async def async_setup_entry(
 
 
 class ToGrillSelect(ToGrillEntity, SelectEntity):
-    """Representation of a number."""
+    """Representation of a select entity."""
 
     entity_description: ToGrillSelectEntityDescription
 
