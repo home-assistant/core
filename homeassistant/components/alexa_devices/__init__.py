@@ -48,7 +48,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
         )
 
         # Convert country in domain
-        country = entry.data[CONF_COUNTRY]
+        country = entry.data[CONF_COUNTRY].lower()
         domain = COUNTRY_DOMAINS.get(country, country)
 
         # Add site to login data
