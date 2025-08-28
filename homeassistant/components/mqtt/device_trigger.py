@@ -105,7 +105,7 @@ class TriggerInstance:
             mqtt_config[CONF_PAYLOAD] = self.trigger.payload
         if self.trigger.value_template:
             mqtt_config[CONF_VALUE_TEMPLATE] = self.trigger.value_template
-        mqtt_config = await mqtt_trigger.MqttTrigger.async_validate_config(
+        mqtt_config = await mqtt_trigger.MqttTrigger.async_validate_complete_config(
             self.trigger.hass, mqtt_config
         )
 

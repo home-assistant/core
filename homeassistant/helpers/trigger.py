@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 import functools
 import inspect
 import logging
-from typing import TYPE_CHECKING, Any, ClassVar, Protocol, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
 
 import voluptuous as vol
 
@@ -178,25 +178,34 @@ _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 class Trigger(abc.ABC):
     """Trigger class."""
 
-    has_target: ClassVar[bool]
-
     @classmethod
-    async def async_validate_config(
+    async def async_validate_complete_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
-        """Validate config."""
+        """Validate complete config.
+
+        Should be overridden by triggers that need to migrate from old-style.
+        """
         config = _TRIGGER_SCHEMA(config)
-        config[CONF_DATA] = await cls.async_validate_data(hass, config.get(CONF_DATA))
-        if (CONF_TARGET in config) != cls.has_target:
-            if cls.has_target:
-                raise ValueError(f"Missing '{CONF_TARGET}' in trigger configuration")
-            raise ValueError(f"Unexpected '{CONF_TARGET}' in trigger configuration")
+
+        partial_config: ConfigType = {}
+        for key in (CONF_DATA, CONF_TARGET):
+            if key in config:
+                partial_config[key] = config.pop(key)
+        partial_config = await cls.async_validate_config(hass, partial_config)
+
+        for key in (CONF_DATA, CONF_TARGET):
+            if key in partial_config:
+                config[key] = partial_config[key]
+
         return config
 
     @classmethod
     @abc.abstractmethod
-    async def async_validate_data(cls, hass: HomeAssistant, data: Any) -> Any:
-        """Validate data."""
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
 
     def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize trigger."""
@@ -413,7 +422,7 @@ async def async_validate_trigger_config(
             )
             if not (trigger := trigger_descriptors.get(relative_trigger_key)):
                 raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified")
-            conf = await trigger.async_validate_config(hass, conf)
+            conf = await trigger.async_validate_complete_config(hass, conf)
         elif hasattr(platform, "async_validate_trigger_config"):
             conf = await platform.async_validate_trigger_config(hass, conf)
         else:
