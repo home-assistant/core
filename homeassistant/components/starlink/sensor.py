@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -76,7 +77,8 @@ class StarlinkRestoreSensor(StarlinkSensorEntity, RestoreSensor):
     def native_value(self) -> int | float:
         """Calculate the sensor value from current value and the entity description."""
         new_value = super().native_value
-        assert isinstance(new_value, (int, float))
+        if TYPE_CHECKING:
+            assert isinstance(new_value, (int, float))
         self._attr_native_value += new_value
         return self._attr_native_value
 
@@ -88,7 +90,8 @@ class StarlinkRestoreSensor(StarlinkSensorEntity, RestoreSensor):
         ) is not None and (
             last_native_value := last_sensor_data.native_value
         ) is not None:
-            assert isinstance(last_native_value, (int, float))
+            if TYPE_CHECKING:
+                assert isinstance(last_native_value, (int, float))
             self._attr_native_value = last_native_value
 
 
