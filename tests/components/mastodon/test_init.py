@@ -47,6 +47,22 @@ async def test_initialization_failure(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_integration_fallback_to_instance_v1(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test full flow where instance_v2 fails and falls back to instance_v1."""
+    mock_mastodon_client.instance_v2.side_effect = MastodonNotFoundError(
+        "Instance API v2 not found"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mastodon_client.instance_v2.assert_called_once()
+    mock_mastodon_client.instance_v1.assert_called_once()
+
+
 async def test_migrate(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
