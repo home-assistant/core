@@ -460,7 +460,9 @@ class DeletedRegistryEntry:
                     "config_subentry_id": self.config_subentry_id,
                     "created_at": self.created_at,
                     "device_class": self.device_class,
-                    "disabled_by": self.disabled_by,
+                    "disabled_by": self.disabled_by
+                    if self.disabled_by is not UNDEFINED
+                    else UNDEFINED_STR,
                     "entity_id": self.entity_id,
                     "hidden_by": self.hidden_by,
                     "icon": self.icon,
