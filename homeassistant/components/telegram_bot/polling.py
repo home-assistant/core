@@ -54,7 +54,7 @@ class PollBot(BaseTelegramBot):
         self, hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
     ) -> None:
         """Create Application to poll for updates."""
-        super().__init__(hass, config)
+        super().__init__(hass, config, bot)
         self.bot = bot
         self.application = ApplicationBuilder().bot(self.bot).build()
         self.application.add_handler(TypeHandler(Update, self.handle_update))

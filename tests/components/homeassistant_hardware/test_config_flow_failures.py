@@ -339,7 +339,7 @@ async def test_config_flow_thread_confirmation_fails(hass: HomeAssistant) -> Non
         )
 
         assert pick_thread_progress_result["type"] is FlowResultType.ABORT
-        assert pick_thread_progress_result["reason"] == "unsupported_firmware"
+        assert pick_thread_progress_result["reason"] == "fw_install_failed"
 
 
 @pytest.mark.parametrize(

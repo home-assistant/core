@@ -124,6 +124,16 @@ async def test_pet_weight_sensor(
     assert sensor.attributes["unit_of_measurement"] == UnitOfMass.POUNDS
 
 
+@pytest.mark.freeze_time("2025-06-15 12:00:00+00:00")
+async def test_pet_visits_today_sensor(
+    hass: HomeAssistant, mock_account_with_pet: MagicMock
+) -> None:
+    """Tests pet visits today sensors."""
+    await setup_integration(hass, mock_account_with_pet, PLATFORM_DOMAIN)
+    sensor = hass.states.get("sensor.kitty_visits_today")
+    assert sensor.state == "2"
+
+
 async def test_litterhopper_sensor(
     hass: HomeAssistant, mock_account_with_litterhopper: MagicMock
 ) -> None:

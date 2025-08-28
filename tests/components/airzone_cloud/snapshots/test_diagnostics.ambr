@@ -210,10 +210,35 @@
           'ws-connected': True,
         }),
       }),
+      'air-quality': dict({
+        'airqsensor1': dict({
+          'aq-active': False,
+          'aq-index': 1,
+          'aq-pm-1': 3,
+          'aq-pm-10': 3,
+          'aq-pm-2.5': 4,
+          'aq-present': True,
+          'aq-status': 'good',
+          'available': True,
+          'double-set-point': False,
+          'id': 'airqsensor1',
+          'installation': 'installation1',
+          'is-connected': True,
+          'name': 'CapteurQ',
+          'problems': False,
+          'system': 1,
+          'web-server': 'webserver1',
+          'ws-connected': True,
+          'zone': 1,
+        }),
+      }),
       'groups': dict({
         'group1': dict({
           'action': 1,
           'active': True,
+          'air-quality': list([
+            'airqsensor1',
+          ]),
           'available': True,
           'hot-water': list([
             'dhw1',
@@ -332,6 +357,9 @@
             'aidoo1',
             'aidoo_pro',
           ]),
+          'air-quality': list([
+            'airqsensor1',
+          ]),
           'available': True,
           'groups': list([
             'group1',
@@ -377,6 +405,7 @@
       }),
       'systems': dict({
         'system1': dict({
+          'aq-active': False,
           'aq-index': 1,
           'aq-pm-1': 3,
           'aq-pm-10': 3,
@@ -463,6 +492,7 @@
           'action': 1,
           'active': True,
           'air-demand': True,
+          'air-quality-id': 'airqsensor1',
           'aq-active': False,
           'aq-index': 1,
           'aq-mode-conf': 'auto',
@@ -528,19 +558,12 @@
           'action': 6,
           'active': False,
           'air-demand': False,
-          'aq-active': False,
-          'aq-index': 1,
           'aq-mode-conf': 'auto',
           'aq-mode-values': list([
             'off',
             'on',
             'auto',
           ]),
-          'aq-pm-1': 3,
-          'aq-pm-10': 3,
-          'aq-pm-2.5': 4,
-          'aq-present': True,
-          'aq-status': 'good',
           'available': True,
           'double-set-point': False,
           'floor-demand': False,

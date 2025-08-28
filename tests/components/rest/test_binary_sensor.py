@@ -667,3 +667,36 @@ async def test_availability_blocks_value_template(
     await hass.async_block_till_done()
 
     assert error in caplog.text
+
+
+async def test_setup_get_basic_auth_utf8(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with basic auth using UTF-8 characters including Unicode char \u2018."""
+    # Use a password with the Unicode character \u2018 (left single quotation mark)
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK, json={"key": "on"})
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.key }}",
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+                "authentication": "basic",
+                "username": "test_user",
+                "password": "test\u2018password",  # Password with Unicode char
+                "headers": {"Accept": CONTENT_TYPE_JSON},
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state.state == STATE_ON
