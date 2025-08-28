@@ -865,7 +865,6 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
     """Representation of a Sensor whose internal state can be restored."""
 
     _last_value: StateType | datetime
-    _initialized: bool
 
     def __init__(
         self,
@@ -876,7 +875,6 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         """Initialize the sensor."""
         super().__init__(coordinator, device_id, description)
         self._last_value = None
-        self._initialized = False
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -886,7 +884,6 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         last_value = await self.async_get_last_state()
         if last_value and last_value.state != STATE_UNKNOWN:
             self._restore_last_value(last_value.state)
-            self._initialized = True
 
     def _restore_last_value(self, last_value: str) -> None:
         """Restore the last value from cache."""
@@ -895,9 +892,6 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        if self._last_value is None and not self._initialized:
-            self._update_last_value()
-            self._initialized = True
         return self._last_value
 
     def _update_last_value(self) -> None:
@@ -908,7 +902,6 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_last_value()
-        self._initialized = True
         super()._handle_coordinator_update()
 
 
