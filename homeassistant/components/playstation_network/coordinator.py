@@ -173,7 +173,10 @@ class PlaystationNetworkGroupsUpdateCoordinator(
                 }
             )
         except PSNAWPForbiddenError as e:
-            error = json.loads(e.args[0])
+            try:
+                error = json.loads(e.args[0])
+            except json.JSONDecodeError as err:
+                raise PSNAWPServerError from err
             _LOGGER.info(
                 "Unable to retrieve group chats for %s from PlayStation Network "
                 "due to permissions: %s. This does not affect other integration features",

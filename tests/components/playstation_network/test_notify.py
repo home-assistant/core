@@ -137,7 +137,7 @@ async def test_send_message_exceptions(
     mock_psnawpapi.group.return_value.send_message.assert_called_once_with("henlo fren")
 
 
-async def test_notify_skip_fobidden(
+async def test_notify_skip_forbidden(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_psnawpapi: MagicMock,
