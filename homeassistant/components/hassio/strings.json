@@ -52,6 +52,19 @@
         }
       }
     },
+    "issue_addon_deprecated_addon": {
+      "title": "Installed add-on is deprecated",
+      "fix_flow": {
+        "step": {
+          "addon_execute_remove": {
+            "description": "Add-on {addon} is marked deprecated by the developer. This means it is no longer being maintained and so may break or become a security issue over time.\n\nSelecting **Submit** will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "Could not uninstall the add-on. Check the Supervisor logs for more details."
+        }
+      }
+    },
     "issue_mount_mount_failed": {
       "title": "Network storage device failed",
       "fix_flow": {

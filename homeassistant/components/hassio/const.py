@@ -117,6 +117,7 @@ ISSUE_KEY_ADDON_BOOT_FAIL = "issue_addon_boot_fail"
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
 ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING = "issue_addon_detached_addon_missing"
 ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED = "issue_addon_detached_addon_removed"
+ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
 
 CORE_CONTAINER = "homeassistant"
 SUPERVISOR_CONTAINER = "hassio_supervisor"
