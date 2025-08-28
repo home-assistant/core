@@ -992,7 +992,7 @@ ha-philipsjs==3.2.2
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.4.3
+habiticalib==0.4.4
 
 # homeassistant.components.bluetooth
 habluetooth==5.6.4
