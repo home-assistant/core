@@ -166,6 +166,17 @@ def _protect_entity_options(
     return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
 
 
+def _protect_optional_entity_options(
+    data: EntityOptionsType | UndefinedType | None,
+) -> ReadOnlyEntityOptionsType | UndefinedType:
+    """Protect entity options from being modified."""
+    if data is UNDEFINED:
+        return UNDEFINED
+    if data is None:
+        return ReadOnlyDict({})
+    return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
+
+
 @attr.s(frozen=True, kw_only=True, slots=True)
 class RegistryEntry:
     """Entity Registry Entry."""
@@ -424,7 +435,9 @@ class DeletedRegistryEntry:
     labels: set[str] = attr.ib()
     modified_at: datetime = attr.ib()
     name: str | None = attr.ib()
-    options: ReadOnlyEntityOptionsType = attr.ib(converter=_protect_entity_options)
+    options: ReadOnlyEntityOptionsType | UndefinedType = attr.ib(
+        converter=_protect_optional_entity_options
+    )
     orphaned_timestamp: float | None = attr.ib()
 
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
@@ -591,7 +604,7 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     entity["icon"] = None
                     entity["labels"] = []
                     entity["name"] = None
-                    entity["options"] = {}
+                    entity["options"] = UNDEFINED_STR
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -980,7 +993,10 @@ class EntityRegistry(BaseRegistry):
             icon = deleted_entity.icon
             labels = deleted_entity.labels
             name = deleted_entity.name
-            options = deleted_entity.options
+            if deleted_entity.options is not UNDEFINED:
+                options = deleted_entity.options
+            else:
+                options = get_initial_options() if get_initial_options else None
         else:
             aliases = set()
             area_id = None
@@ -1584,7 +1600,9 @@ class EntityRegistry(BaseRegistry):
                     labels=set(entity["labels"]),
                     modified_at=datetime.fromisoformat(entity["modified_at"]),
                     name=entity["name"],
-                    options=entity["options"],
+                    options=entity["options"]
+                    if entity["options"] is not UNDEFINED_STR
+                    else UNDEFINED,
                     orphaned_timestamp=entity["orphaned_timestamp"],
                     platform=entity["platform"],
                     unique_id=entity["unique_id"],
