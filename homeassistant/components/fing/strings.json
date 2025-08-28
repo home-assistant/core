@@ -9,7 +9,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "ip_address": "IP address of the Fing Agent.",
+          "ip_address": "IP address of the Fing agent.",
           "port": "Port number of the Fing API.",
           "api_key": "API key used to authenticate with the Fing API."
         }
