@@ -16,6 +16,9 @@
         "data_description": {
           "host": "Select a DayBetter device to add or enter IP address manually."
         }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {
