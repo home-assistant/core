@@ -11,7 +11,6 @@ import pytest
 from homeassistant.components.daybetter_light_local.coordinator import (
     DayBetterController,
 )
-from homeassistant.components.daybetter_light_local.light import DayBetterLight
 
 
 @pytest.fixture(name="mock_DayBetter_api")
@@ -26,7 +25,6 @@ def fixture_mock_DayBetter_api() -> Generator[AsyncMock]:
     mock_api.set_color = AsyncMock()
     mock_api.set_scene = AsyncMock()
     mock_api._async_update_data = AsyncMock()
-    mock_api = AsyncMock(spec=DayBetterLight)
     # 移除这个mock，因为 coordinator.data 是从其他地方获取的
     # mock_api._async_update_data = AsyncMock(return_value=[])
 
