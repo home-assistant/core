@@ -307,9 +307,9 @@ RPC_SENSORS: Final = {
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         entity_class=RpcPresenceBinarySensor,
     ),
-    "occupancy": RpcBinarySensorDescription(
+    "presencezone_state": RpcBinarySensorDescription(
         key="presencezone",
-        sub_key="value",
+        sub_key="state",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
 }
