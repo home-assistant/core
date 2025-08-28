@@ -34,6 +34,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME, default="ubnt"): str,
         vol.Required(CONF_PASSWORD): str,
+    }
+)
+STEP_ADVANCED_USER_DATA_SCHEMA = STEP_USER_DATA_SCHEMA.extend(
+    {
         vol.Required(CONF_SSL, default=DEFAULT_SSL): bool,
         vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
@@ -56,7 +60,8 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             # By default airOS 8 comes with self-signed SSL certificates,
             # with no option in the web UI to change or upload a custom certificate.
             session = async_get_clientsession(
-                self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
+                self.hass,
+                verify_ssl=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
             )
 
             airos_device = AirOS8(
@@ -64,7 +69,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
                 session=session,
-                use_ssl=user_input[CONF_SSL],
+                use_ssl=user_input.get(CONF_SSL, DEFAULT_SSL),
             )
             try:
                 await airos_device.login()
@@ -88,7 +93,9 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=airos_data.host.hostname, data=user_input
                 )
-
+        data_schema = STEP_USER_DATA_SCHEMA
+        if self.show_advanced_options:
+            data_schema = STEP_ADVANCED_USER_DATA_SCHEMA
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
