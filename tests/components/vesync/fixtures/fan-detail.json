@@ -9,7 +9,6 @@
     "code": 0,
     "result": {
       "powerSwitch": 0,
-      "filterLifePercent": 99,
       "workMode": "normal",
       "manualSpeedLevel": 1,
       "fanSpeedLevel": 0,
@@ -21,8 +20,6 @@
       "muteState": 1,
       "timerRemain": 0,
       "temperature": 717,
-      "humidity": 40,
-      "thermalComfort": 65,
       "errorCode": 0,
       "sleepPreference": {
         "sleepPreferenceType": 0,
