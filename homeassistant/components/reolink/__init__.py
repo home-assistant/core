@@ -450,6 +450,14 @@ def migrate_entity_ids(
             device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
             break
 
+        if device.disabled_by == "config_entry":
+            _LOGGER.warning(
+                "Reolink device %s is disabled by config entry while the config entry is enabled, "
+                "re-enabling the device",
+                device.name,
+            )
+            device_reg.async_update_device(device.id, disabled_by=None)
+
         if ch is None or is_chime:
             continue  # Do not consider the NVR itself or chimes
 

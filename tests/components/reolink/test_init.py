@@ -747,6 +747,38 @@ async def test_cleanup_hub_and_direct_connection(
     assert device.identifiers == start_identifiers
 
 
+async def test_disabled_by_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test re-enabling devices disabled by config entry."""
+    dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
+    start_identifiers = {
+        (DOMAIN, dev_id),
+    }
+
+    device_registry.async_get_or_create(
+        identifiers=start_identifiers,
+        connections={(CONNECTION_NETWORK_MAC, TEST_MAC_CAM)},
+        config_entry_id=config_entry.entry_id,
+        disabled_by="config_entry",
+    )
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    assert device
+    assert device.disabled_by == "config_entry"
+
+    # setup host entities/device
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    assert device
+    assert device.disabled_by is None
+
+
 async def test_no_repair_issue(
     hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
 ) -> None:
