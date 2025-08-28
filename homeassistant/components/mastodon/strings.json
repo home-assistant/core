@@ -42,12 +42,6 @@
       "message": "{media} is not a whitelisted directory."
     }
   },
-  "issues": {
-    "deprecated_notify_action": {
-      "title": "Deprecated Notify action used for Mastodon",
-      "description": "The Notify action for Mastodon is deprecated.\n\nUse the `mastodon.post` action instead."
-    }
-  },
   "entity": {
     "sensor": {
       "followers": {

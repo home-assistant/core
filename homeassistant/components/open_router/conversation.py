@@ -20,6 +20,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up conversation entities."""
     for subentry_id, subentry in config_entry.subentries.items():
+        if subentry.subentry_type != "conversation":
+            continue
         async_add_entities(
             [OpenRouterConversationEntity(config_entry, subentry)],
             config_subentry_id=subentry_id,

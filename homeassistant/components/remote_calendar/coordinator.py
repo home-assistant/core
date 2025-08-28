@@ -39,6 +39,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
             _LOGGER,
             name=f"{DOMAIN}_{config_entry.title}",
             update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
             always_update=True,
         )
         self._client = get_async_client(hass)

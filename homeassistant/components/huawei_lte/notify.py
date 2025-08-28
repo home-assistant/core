@@ -8,12 +8,12 @@ from typing import Any
 from huawei_lte_api.exceptions import ResponseErrorException
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
-from homeassistant.const import CONF_RECIPIENT
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import Router
-from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
