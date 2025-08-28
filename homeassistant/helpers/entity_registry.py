@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict
 
 import attr
 import voluptuous as vol
@@ -84,6 +84,8 @@ STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
 ORPHANED_ENTITY_KEEP_SECONDS = 3600 * 24 * 30
+
+UNDEFINED_STR: Final = "UNDEFINED"
 
 ENTITY_CATEGORY_VALUE_TO_INDEX: dict[EntityCategory | None, int] = {
     val: idx for idx, val in enumerate(EntityCategory)
@@ -414,9 +416,9 @@ class DeletedRegistryEntry:
     config_subentry_id: str | None = attr.ib()
     created_at: datetime = attr.ib()
     device_class: str | None = attr.ib()
-    disabled_by: RegistryEntryDisabler | None = attr.ib()
+    disabled_by: RegistryEntryDisabler | UndefinedType | None = attr.ib()
     domain: str = attr.ib(init=False, repr=False)
-    hidden_by: RegistryEntryHider | None = attr.ib()
+    hidden_by: RegistryEntryHider | UndefinedType | None = attr.ib()
     icon: str | None = attr.ib()
     id: str = attr.ib()
     labels: set[str] = attr.ib()
@@ -584,8 +586,8 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     entity["area_id"] = None
                     entity["categories"] = {}
                     entity["device_class"] = None
-                    entity["disabled_by"] = None
-                    entity["hidden_by"] = None
+                    entity["disabled_by"] = UNDEFINED_STR
+                    entity["hidden_by"] = UNDEFINED_STR
                     entity["icon"] = None
                     entity["labels"] = []
                     entity["name"] = None
@@ -958,21 +960,23 @@ class EntityRegistry(BaseRegistry):
             categories = deleted_entity.categories
             created_at = deleted_entity.created_at
             device_class = deleted_entity.device_class
-            disabled_by = deleted_entity.disabled_by
-            # Adjust disabled_by based on config entry state
-            if config_entry and config_entry is not UNDEFINED:
-                if config_entry.disabled_by:
-                    if disabled_by is None:
-                        disabled_by = RegistryEntryDisabler.CONFIG_ENTRY
+            if deleted_entity.disabled_by is not UNDEFINED:
+                disabled_by = deleted_entity.disabled_by
+                # Adjust disabled_by based on config entry state
+                if config_entry and config_entry is not UNDEFINED:
+                    if config_entry.disabled_by:
+                        if disabled_by is None:
+                            disabled_by = RegistryEntryDisabler.CONFIG_ENTRY
+                    elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                        disabled_by = None
                 elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
                     disabled_by = None
-            elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
-                disabled_by = None
             # Restore entity_id if it's available
             if self._entity_id_available(deleted_entity.entity_id):
                 entity_id = deleted_entity.entity_id
             entity_registry_id = deleted_entity.id
-            hidden_by = deleted_entity.hidden_by
+            if deleted_entity.hidden_by is not UNDEFINED:
+                hidden_by = deleted_entity.hidden_by
             icon = deleted_entity.icon
             labels = deleted_entity.labels
             name = deleted_entity.name
@@ -1546,6 +1550,20 @@ class EntityRegistry(BaseRegistry):
                     entity["platform"],
                     entity["unique_id"],
                 )
+
+                def get_optional_enum[_EnumT: StrEnum](
+                    cls: type[_EnumT], value: str | None
+                ) -> _EnumT | UndefinedType | None:
+                    """Convert disabled_by string to RegistryEntryDisabler or None."""
+                    if value is None:
+                        return None
+                    if value == UNDEFINED_STR:
+                        return UNDEFINED
+                    try:
+                        return cls(value)
+                    except ValueError:
+                        return None
+
                 deleted_entities[key] = DeletedRegistryEntry(
                     aliases=set(entity["aliases"]),
                     area_id=entity["area_id"],
@@ -1554,16 +1572,12 @@ class EntityRegistry(BaseRegistry):
                     config_subentry_id=entity["config_subentry_id"],
                     created_at=datetime.fromisoformat(entity["created_at"]),
                     device_class=entity["device_class"],
-                    disabled_by=(
-                        RegistryEntryDisabler(entity["disabled_by"])
-                        if entity["disabled_by"]
-                        else None
+                    disabled_by=get_optional_enum(
+                        RegistryEntryDisabler, entity["disabled_by"]
                     ),
                     entity_id=entity["entity_id"],
-                    hidden_by=(
-                        RegistryEntryHider(entity["hidden_by"])
-                        if entity["hidden_by"]
-                        else None
+                    hidden_by=get_optional_enum(
+                        RegistryEntryHider, entity["hidden_by"]
                     ),
                     icon=entity["icon"],
                     id=entity["id"],
