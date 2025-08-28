@@ -260,7 +260,7 @@ async def test_deconz_alarm_events(
 
     # Fire event
     await sensor_ws_data({"state": {"action": AncillaryControlAction.FIRE}})
-    
+
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, "00:00:00:00:00:00:00:01")}
     )
@@ -290,7 +290,7 @@ async def test_deconz_alarm_events(
 
     # Panic event
     await sensor_ws_data({"state": {"action": AncillaryControlAction.PANIC}})
-    
+
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, "00:00:00:00:00:00:00:01")}
     )
