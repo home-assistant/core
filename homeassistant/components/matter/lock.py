@@ -38,7 +38,6 @@ DOOR_LOCK_OPERATION_SOURCE = {
     10: "Aliro",  # [Aliro]
 }
 
-
 DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
 
 
@@ -115,13 +114,6 @@ class MatterLock(MatterEntity, LockEntity):
                 self._attr_changed_by = DOOR_LOCK_OPERATION_SOURCE.get(
                     operation_source, "Unknown"
                 )
-                self.async_write_ha_state()
-            case (
-                clusters.DoorLock.Events.LockOperationError.event_id
-            ):  # Lock cluster event 3
-                # if an operation error occurs, clear the optimistic state, leave jammed state
-                self._attr_is_opening = False
-                self._attr_is_locking = False
                 self.async_write_ha_state()
 
     @property
@@ -217,16 +209,16 @@ class MatterLock(MatterEntity, LockEntity):
         self._attr_is_opening = False
         self._attr_is_jammed = False
         if lock_state == clusters.DoorLock.Enums.DlLockState.kNotFullyLocked:
-            # State 0 - lock is an uncertain lock state, treat as jammed
+            # State 0 - NotFullyLocked: Lock state is not fully locked. Uncertain state - treat as jammed.
             self._attr_is_jammed = True
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
-            # State 1 - fully locked, latch/bolt not pulled
+            # State 1 - Locked: Lock state is fully locked.
             self._attr_is_locked = True
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlocked:  # state 2
-            # State 2 - unlocked, latch/bolt is not pulled, False states are correct here
+            # State 2 - Unlocked: Lock state is fully unlocked.
             pass
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
-            # State 3 - lock is unlocked and latch/bolt is pulled
+            # State 3 - Unlatched: Lock state is fully unlocked and the latch is pulled.
             self._attr_is_open = True
         else:
             # NOTE: A null state can happen during device startup. Treat as unknown.
@@ -237,7 +229,6 @@ class MatterLock(MatterEntity, LockEntity):
             self._attr_is_opening = None
             self._attr_is_jammed = None
             self._attr_changed_by = "Unknown"
-            self._attr_user_index = None
 
     @callback
     def _calculate_features(
