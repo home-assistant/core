@@ -133,6 +133,27 @@ async def test_lock(
     state = hass.states.get("lock.mock_door_lock")
     assert state.attributes[ATTR_CHANGED_BY] == "Keypad"
 
+    # test handling of a node DoorLockAlarm Jammed event
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=257,
+            event_id=0,
+            event_number=0,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={},
+        ),
+    )
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == LockState.JAMMED
+
 
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_lock_requires_pin(
