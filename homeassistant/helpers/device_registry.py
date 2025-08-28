@@ -936,6 +936,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     connections,
                     identifiers,
                 )
+                disabled_by = UNDEFINED
 
             self.devices[device.id] = device
             # If creating a new device, default to the config entry name
