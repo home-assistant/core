@@ -4066,6 +4066,7 @@ async def test_restore_disabled_by(
         config_subentry_id=None,
         configuration_url="http://config_url_new.bla",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        disabled_by=None,
         entry_type=None,
         hw_version="hw_version_new",
         identifiers={("bridgeid", "0123")},
