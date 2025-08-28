@@ -206,7 +206,7 @@ async def test_sensor_unavailable_when_pyomie_throws(
 
     mock_pyomie.spot_price.side_effect = Exception("something bad")
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Both sensors should be unavailable

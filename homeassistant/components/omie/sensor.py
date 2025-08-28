@@ -7,7 +7,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -16,7 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import DOMAIN
-from .coordinator import OMIECoordinator
+from .coordinator import OMIEConfigEntry, OMIECoordinator
 from .util import _current_hour_CET, _pick_series_cet
 
 PARALLEL_UPDATES = 0
@@ -86,11 +85,11 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OMIEConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OMIE from its config entry."""
-    coordinator: OMIECoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     device_info = DeviceInfo(
         configuration_url="https://www.omie.es/en/market-results",
@@ -105,4 +104,3 @@ async def async_setup_entry(
     ]
 
     async_add_entities(sensors)
-    await coordinator.async_config_entry_first_refresh()

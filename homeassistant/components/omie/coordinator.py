@@ -1,5 +1,7 @@
 """Coordinator for the OMIE - Spain and Portugal electricity prices integration."""
 
+from __future__ import annotations
+
 from collections.abc import Mapping
 import datetime as dt
 import logging
@@ -22,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 _SCHEDULE_MAX_DELAY = dt.timedelta(seconds=10)
 """To avoid thundering herd, we will fetch from OMIE up to this much time after the OMIE data becomes available."""
 
+type OMIEConfigEntry = ConfigEntry[OMIECoordinator]
+
 
 class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotData]]]):
     """Coordinator that manages OMIE data for yesterday, today, and tomorrow."""
@@ -29,7 +33,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OMIEConfigEntry,
     ) -> None:
         """Initialize OMIE coordinator."""
         super().__init__(
