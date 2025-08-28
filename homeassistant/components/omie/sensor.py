@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import OMIEConfigEntry, OMIECoordinator
@@ -43,6 +42,9 @@ class OMIEPriceEntityDescription(SensorEntityDescription):
 class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
     """OMIE price sensor."""
 
+    _attr_should_poll = False
+    _attr_attribution = _ATTRIBUTION
+
     def __init__(
         self,
         coordinator: OMIECoordinator,
@@ -50,12 +52,11 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
         pyomie_series_name: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, context=pyomie_series_name)
+        super().__init__(coordinator)
         self.entity_description = OMIEPriceEntityDescription(key=pyomie_series_name)
         self._attr_device_info = device_info
-        self._attr_unique_id = slugify(f"{pyomie_series_name}")
-        self._attr_should_poll = False
-        self._attr_attribution = _ATTRIBUTION
+        self._attr_unique_id = pyomie_series_name
+        self._pyomie_series_name = pyomie_series_name
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -76,7 +77,7 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
         current_date_cet = current_hour_cet.date()
 
         pyomie_results = self.coordinator.data.get(current_date_cet)
-        pyomie_hours = _pick_series_cet(pyomie_results, self.coordinator_context)
+        pyomie_hours = _pick_series_cet(pyomie_results, self._pyomie_series_name)
 
         # Convert to €/kWh
         value_mwh = pyomie_hours.get(current_hour_cet)
