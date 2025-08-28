@@ -8,7 +8,7 @@ class DeviceType(Enum):
 
     GENERIC = "mdi:lan-connect"
     MOBILE = PHONE = "mdi:cellphone"
-    TABLET = IPOD = EREADER = "mdi:table"
+    TABLET = IPOD = EREADER = "mdi:tablet"
     WATCH = WEARABLE = "mdi:watch"
     CAR = AUTOMOTIVE = "mdi:car-back"
     MEDIA_PLAYER = "mdi:volume-high"
