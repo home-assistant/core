@@ -1,11 +1,13 @@
 """Config flow for OMIE - Spain and Portugal electricity prices integration."""
 
-from typing import Any
+from typing import Any, Final
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
+
+DEFAULT_NAME: Final = "OMIE"
 
 
 class OMIEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

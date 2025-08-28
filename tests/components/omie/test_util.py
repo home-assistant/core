@@ -6,8 +6,7 @@ from zoneinfo import ZoneInfo
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.omie.const import CET
-from homeassistant.components.omie.util import _get_market_dates, _is_published
+from homeassistant.components.omie.util import CET, _get_market_dates, _is_published
 
 
 class TestGetMarketDates:

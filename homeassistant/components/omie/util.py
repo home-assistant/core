@@ -1,6 +1,7 @@
 """Utility functions for OMIE - Spain and Portugal electricity prices integration."""
 
 import datetime as dt
+from typing import Final
 from zoneinfo import ZoneInfo
 
 from pyomie.model import OMIEResults, _DataT
@@ -8,7 +9,7 @@ from pyomie.util import localize_hourly_data
 
 from homeassistant.util.dt import utcnow
 
-from .const import CET
+CET: Final = ZoneInfo("CET")
 
 _OMIE_PUBLISH_TIME_CET = dt.time(hour=13, minute=30)
 """The time by which day-ahead market results (for the next day) will have been published to omie.es."""
