@@ -57,7 +57,7 @@
       "fix_flow": {
         "step": {
           "addon_execute_remove": {
-            "description": "Add-on {addon} is marked deprecated by the developer. This means it is no longer being maintained and so may break or become a security issue over time.\n\nSelecting **Submit** will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+            "description": "Add-on {addon} is marked deprecated by the developer. This means it is no longer being maintained and so may break or become a security issue over time.\n\nReview the [readme](homeassistant://hassio/addon/{reference}/info) and [documentation](homeassistant://hassio/addon/{reference}/documentation) of the add-on to see if the developer provided instructions.\n\nSelecting **Submit** will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
           }
         },
         "abort": {
