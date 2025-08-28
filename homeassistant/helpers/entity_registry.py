@@ -1549,6 +1549,20 @@ class EntityRegistry(BaseRegistry):
                     previous_unique_id=entity["previous_unique_id"],
                     unit_of_measurement=entity["unit_of_measurement"],
                 )
+
+            def get_optional_enum[_EnumT: StrEnum](
+                cls: type[_EnumT], value: str | None
+            ) -> _EnumT | UndefinedType | None:
+                """Convert disabled_by string to RegistryEntryDisabler or None."""
+                if value is None:
+                    return None
+                if value == UNDEFINED_STR:
+                    return UNDEFINED
+                try:
+                    return cls(value)
+                except ValueError:
+                    return None
+
             for entity in data["deleted_entities"]:
                 try:
                     domain = split_entity_id(entity["entity_id"])[0]
@@ -1566,19 +1580,6 @@ class EntityRegistry(BaseRegistry):
                     entity["platform"],
                     entity["unique_id"],
                 )
-
-                def get_optional_enum[_EnumT: StrEnum](
-                    cls: type[_EnumT], value: str | None
-                ) -> _EnumT | UndefinedType | None:
-                    """Convert disabled_by string to RegistryEntryDisabler or None."""
-                    if value is None:
-                        return None
-                    if value == UNDEFINED_STR:
-                        return UNDEFINED
-                    try:
-                        return cls(value)
-                    except ValueError:
-                        return None
 
                 deleted_entities[key] = DeletedRegistryEntry(
                     aliases=set(entity["aliases"]),
