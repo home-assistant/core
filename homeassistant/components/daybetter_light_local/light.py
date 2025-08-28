@@ -15,7 +15,6 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
-    filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -47,6 +46,7 @@ async def async_setup_entry(
     )
 
     await coordinator.set_discovery_callback(discovery_callback)
+
 
 def _handle_discovery(coordinator, device, is_new, async_add_entities) -> bool:
     """Handle device discovery - separated for easier testing."""
@@ -111,7 +111,6 @@ class DayBetterLight(CoordinatorEntity[DayBetterLocalApiCoordinator], LightEntit
             ):
                 self._attr_supported_features = LightEntityFeature.EFFECT
                 self._attr_effect_list = [_NONE_SCENE, *capabilities.scenes.keys()]
-
 
         self._attr_device_info = DeviceInfo(
             identifiers={
