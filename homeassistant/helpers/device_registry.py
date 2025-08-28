@@ -9,7 +9,7 @@ from enum import StrEnum
 from functools import lru_cache
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict
 
 import attr
 from yarl import URL
@@ -67,6 +67,8 @@ CONNECTION_UPNP = "upnp"
 CONNECTION_ZIGBEE = "zigbee"
 
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
+
+UNDEFINED_STR: Final = "UNDEFINED"
 
 # Can be removed when suggested_area is removed from DeviceEntry
 RUNTIME_ONLY_ATTRS = {"suggested_area"}
@@ -463,7 +465,7 @@ class DeletedDeviceEntry:
         validator=_normalize_connections_validator
     )
     created_at: datetime = attr.ib()
-    disabled_by: DeviceEntryDisabler | None = attr.ib()
+    disabled_by: DeviceEntryDisabler | UndefinedType | None = attr.ib()
     id: str = attr.ib()
     identifiers: set[tuple[str, str]] = attr.ib()
     labels: set[str] = attr.ib()
@@ -478,15 +480,17 @@ class DeletedDeviceEntry:
         config_subentry_id: str | None,
         connections: set[tuple[str, str]],
         identifiers: set[tuple[str, str]],
+        disabled_by: DeviceEntryDisabler | None,
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
         # Adjust disabled_by based on config entry state
-        disabled_by = self.disabled_by
-        if config_entry.disabled_by:
-            if disabled_by is None:
-                disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
-        elif disabled_by == DeviceEntryDisabler.CONFIG_ENTRY:
-            disabled_by = None
+        if self.disabled_by is not UNDEFINED:
+            disabled_by = self.disabled_by
+            if config_entry.disabled_by:
+                if disabled_by is None:
+                    disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
+            elif disabled_by == DeviceEntryDisabler.CONFIG_ENTRY:
+                disabled_by = None
         return DeviceEntry(
             area_id=self.area_id,
             # type ignores: likely https://github.com/python/mypy/issues/8625
@@ -517,7 +521,9 @@ class DeletedDeviceEntry:
                     },
                     "connections": list(self.connections),
                     "created_at": self.created_at,
-                    "disabled_by": self.disabled_by,
+                    "disabled_by": self.disabled_by
+                    if self.disabled_by is not UNDEFINED
+                    else UNDEFINED_STR,
                     "identifiers": list(self.identifiers),
                     "id": self.id,
                     "labels": list(self.labels),
@@ -605,7 +611,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Introduced in 2025.6
                 for device in old_data["deleted_devices"]:
                     device["area_id"] = None
-                    device["disabled_by"] = None
+                    device["disabled_by"] = UNDEFINED_STR
                     device["labels"] = []
                     device["name_by_user"] = None
             if old_minor_version < 11:
@@ -935,6 +941,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     config_subentry_id if config_subentry_id is not UNDEFINED else None,
                     connections,
                     identifiers,
+                    disabled_by if disabled_by is not UNDEFINED else None,
                 )
 
             self.devices[device.id] = device
@@ -1501,7 +1508,21 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     sw_version=device["sw_version"],
                     via_device_id=device["via_device_id"],
                 )
+
             # Introduced in 0.111
+            def get_optional_enum[_EnumT: StrEnum](
+                cls: type[_EnumT], value: str | None
+            ) -> _EnumT | UndefinedType | None:
+                """Convert string to the passed enum, UNDEFINED or None."""
+                if value is None:
+                    return None
+                if value == UNDEFINED_STR:
+                    return UNDEFINED
+                try:
+                    return cls(value)
+                except ValueError:
+                    return None
+
             for device in data["deleted_devices"]:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     area_id=device["area_id"],
@@ -1514,10 +1535,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     },
                     connections={tuple(conn) for conn in device["connections"]},
                     created_at=datetime.fromisoformat(device["created_at"]),
-                    disabled_by=(
-                        DeviceEntryDisabler(device["disabled_by"])
-                        if device["disabled_by"]
-                        else None
+                    disabled_by=get_optional_enum(
+                        DeviceEntryDisabler, device["disabled_by"]
                     ),
                     identifiers={tuple(iden) for iden in device["identifiers"]},
                     id=device["id"],
