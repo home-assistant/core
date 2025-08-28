@@ -464,13 +464,17 @@ class DeletedRegistryEntry:
                     if self.disabled_by is not UNDEFINED
                     else UNDEFINED_STR,
                     "entity_id": self.entity_id,
-                    "hidden_by": self.hidden_by,
+                    "hidden_by": self.hidden_by
+                    if self.hidden_by is not UNDEFINED
+                    else UNDEFINED_STR,
                     "icon": self.icon,
                     "id": self.id,
                     "labels": list(self.labels),
                     "modified_at": self.modified_at,
                     "name": self.name,
-                    "options": self.options,
+                    "options": self.options
+                    if self.options is not UNDEFINED
+                    else UNDEFINED_STR,
                     "orphaned_timestamp": self.orphaned_timestamp,
                     "platform": self.platform,
                     "unique_id": self.unique_id,

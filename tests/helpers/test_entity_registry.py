@@ -963,9 +963,10 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
     assert entry.device_class is None
     assert entry.original_device_class == "best_class"
 
-    # Check we store migrated data
+    # Check migrated data
     await flush_store(registry._store)
-    assert hass_storage[er.STORAGE_KEY] == {
+    migrated_data = hass_storage[er.STORAGE_KEY]
+    assert migrated_data == {
         "version": er.STORAGE_VERSION_MAJOR,
         "minor_version": er.STORAGE_VERSION_MINOR,
         "key": er.STORAGE_KEY,
@@ -1007,6 +1008,11 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
             "deleted_entities": [],
         },
     }
+
+    # Serialize the migrated data again
+    registry.async_schedule_save()
+    await flush_store(registry._store)
+    assert hass_storage[er.STORAGE_KEY] == migrated_data
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -1152,7 +1158,8 @@ async def test_migration_1_11(
 
     # Check migrated data
     await flush_store(registry._store)
-    assert hass_storage[er.STORAGE_KEY] == {
+    migrated_data = hass_storage[er.STORAGE_KEY]
+    assert migrated_data == {
         "version": er.STORAGE_VERSION_MAJOR,
         "minor_version": er.STORAGE_VERSION_MINOR,
         "key": er.STORAGE_KEY,
@@ -1216,6 +1223,11 @@ async def test_migration_1_11(
             ],
         },
     }
+
+    # Serialize the migrated data again
+    registry.async_schedule_save()
+    await flush_store(registry._store)
+    assert hass_storage[er.STORAGE_KEY] == migrated_data
 
 
 async def test_update_entity_unique_id(
