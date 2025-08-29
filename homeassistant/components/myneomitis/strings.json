@@ -1,0 +1,64 @@
+{
+  "title": "MyNeomitis",
+  "description": "Connect the MyNeomitis devices (radiators, towel rails, relays, underfloor heating) to Home Assistant using the cloud API.",
+  "config_flow": {
+    "user": {
+      "title": "Connect to MyNeomitis"
+    }
+  },
+  "errors": {
+    "auth_failed": {
+      "title": "Authentication failed",
+      "description": "Please check your email address and password."
+    },
+    "connection_error": {
+      "title": "Connection error",
+      "description": "Could not connect to the MyNeomitis service. Please try again later."
+    },
+    "unknown_error": {
+      "title": "Unknown error",
+      "description": "An unexpected error occurred. Please try again."
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate_myneomitis": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "comfort": "Comfort",
+              "eco": "Eco",
+              "antifrost": "Frost protection",
+              "standby": "Standby",
+              "boost": "Boost",
+              "setpoint": "Setpoint",
+              "comfort +": "Comfort +",
+              "eco-1": "Eco -1",
+              "eco-2": "Eco -2",
+              "auto": "Auto"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "select_myneomitis": {
+        "state": {
+          "on": "On",
+          "off": "Off",
+          "auto": "Auto",
+          "boost": "Boost",
+          "comfort": "Comfort",
+          "eco": "Eco",
+          "eco-1": "Eco -1",
+          "eco-2": "Eco -2",
+          "antifrost": "Frost protection",
+          "standby": "Standby",
+          "heating": "Heating",
+          "cooling": "Cooling"
+        }
+      }
+    }
+  }
+}
+
