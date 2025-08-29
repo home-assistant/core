@@ -9,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntityFeature, LockState
-from homeassistant.const import ATTR_CODE, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_CODE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -77,21 +77,14 @@ async def test_lock(
     await hass.async_block_till_done()
     state = hass.states.get("lock.mock_door_lock")
     assert state
-    assert state.state == LockState.LOCKING
+    assert state.state == LockState.JAMMED
 
     set_node_attribute(matter_node, 1, 257, 0, 0)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock")
     assert state
-    assert state.state == LockState.UNLOCKED
-
-    set_node_attribute(matter_node, 1, 257, 0, 2)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("lock.mock_door_lock")
-    assert state
-    assert state.state == LockState.UNLOCKED
+    assert state.state == LockState.JAMMED
 
     set_node_attribute(matter_node, 1, 257, 0, 1)
     await trigger_subscription_callback(hass, matter_client)
@@ -100,12 +93,19 @@ async def test_lock(
     assert state
     assert state.state == LockState.LOCKED
 
-    set_node_attribute(matter_node, 1, 257, 0, None)
+    set_node_attribute(matter_node, 1, 257, 0, 2)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock")
     assert state
-    assert state.state == STATE_UNKNOWN
+    assert state.state == LockState.UNLOCKED
+
+    set_node_attribute(matter_node, 1, 257, 0, 3)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == LockState.OPEN
 
     # test featuremap update
     set_node_attribute(matter_node, 1, 257, 65532, 4096)
@@ -147,7 +147,7 @@ async def test_lock(
             priority=1,
             timestamp=0,
             timestamp_type=0,
-            data={},
+            data={"alarmCode": 0},
         ),
     )
     state = hass.states.get("lock.mock_door_lock")
@@ -270,6 +270,20 @@ async def test_lock_with_unbolt(
     assert state.state == LockState.OPENING
 
     set_node_attribute(matter_node, 1, 257, 0, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == LockState.JAMMED
+
+    set_node_attribute(matter_node, 1, 257, 0, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == LockState.LOCKED
+
+    set_node_attribute(matter_node, 1, 257, 0, 2)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock")
