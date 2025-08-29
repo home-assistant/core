@@ -79,9 +79,13 @@ from .const import (
     CameraState,
     StreamType,
 )
-from .helper import get_camera_from_entity_id, get_dynamic_camera_stream_settings
+from .helper import get_camera_from_entity_id
 from .img_util import scale_jpeg_camera_image
-from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
+from .prefs import (
+    CameraPreferences,
+    DynamicStreamSettings,  # noqa: F401
+    get_dynamic_camera_stream_settings,
+)
 from .webrtc import (
     DATA_ICE_SERVERS,
     CameraWebRTCProvider,

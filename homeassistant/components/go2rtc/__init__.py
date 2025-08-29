@@ -31,7 +31,7 @@ from homeassistant.components.camera import (
     WebRTCSendMessage,
     async_register_webrtc_provider,
 )
-from homeassistant.components.camera.helper import get_dynamic_camera_stream_settings
+from homeassistant.components.camera.prefs import get_dynamic_camera_stream_settings
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
 from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry

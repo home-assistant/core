@@ -7,11 +7,10 @@ from typing import TYPE_CHECKING
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DATA_CAMERA_PREFS, DATA_COMPONENT
+from .const import DATA_COMPONENT
 
 if TYPE_CHECKING:
     from . import Camera
-    from .prefs import DynamicStreamSettings
 
 
 def get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
@@ -27,12 +26,3 @@ def get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
         raise HomeAssistantError("Camera is off")
 
     return camera
-
-
-async def get_dynamic_camera_stream_settings(
-    hass: HomeAssistant, entity_id: str
-) -> DynamicStreamSettings:
-    """Get dynamic stream settings for a camera entity."""
-    if DATA_CAMERA_PREFS not in hass.data:
-        raise HomeAssistantError("Camera integration not set up")
-    return await hass.data[DATA_CAMERA_PREFS].get_dynamic_stream_settings(entity_id)

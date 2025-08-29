@@ -3,10 +3,10 @@
 import pytest
 
 from homeassistant.components.camera.const import DATA_CAMERA_PREFS
-from homeassistant.components.camera.helper import get_dynamic_camera_stream_settings
 from homeassistant.components.camera.prefs import (
     CameraPreferences,
     DynamicStreamSettings,
+    get_dynamic_camera_stream_settings,
 )
 from homeassistant.components.stream import Orientation
 from homeassistant.core import HomeAssistant
