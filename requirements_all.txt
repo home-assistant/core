@@ -346,7 +346,7 @@ aiopegelonline==0.1.1
 aiopulse==0.4.6
 
 # homeassistant.components.purpleair
-aiopurpleair==2023.12.0
+aiopurpleair==2023.08.1
 
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==3.1.1
