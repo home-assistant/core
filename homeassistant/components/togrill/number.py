@@ -49,9 +49,10 @@ def _get_temperature_descriptions(
 ) -> Generator[ToGrillNumberEntityDescription]:
     def _get_description(
         variant: str,
+        icon: str | None,
         set_packet: Callable[[ToGrillCoordinator, float], PacketWrite],
         get_value: Callable[[ToGrillCoordinator], float | None],
-    ):
+    ) -> ToGrillNumberEntityDescription:
         return ToGrillNumberEntityDescription(
             key=f"temperature_{variant}_{probe_number}",
             translation_key=f"temperature_{variant}",
@@ -103,16 +104,19 @@ def _get_temperature_descriptions(
 
     yield _get_description(
         "target",
+        None,
         _set_target,
         lambda x: _get_temperatures(x, AlarmType.TEMPERATURE_TARGET)[0],
     )
     yield _get_description(
         "minimum",
+        "mdi:thermometer-chevron-down",
         _set_minimum,
         lambda x: _get_temperatures(x, AlarmType.TEMPERATURE_RANGE)[0],
     )
     yield _get_description(
         "maximum",
+        "mdi:thermometer-chevron-up",
         _set_maximum,
         lambda x: _get_temperatures(x, AlarmType.TEMPERATURE_RANGE)[1],
     )
