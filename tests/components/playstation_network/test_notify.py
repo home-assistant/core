@@ -37,7 +37,7 @@ async def notify_only() -> AsyncGenerator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_psnawpapi")
+@pytest.mark.usefixtures("mock_psnawpapi", "entity_registry_enabled_by_default")
 async def test_notify_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -57,9 +57,13 @@ async def test_notify_platform(
 
 @pytest.mark.parametrize(
     "entity_id",
-    ["notify.testuser_group_publicuniversalfriend", "notify.testuser_direct_message"],
+    [
+        "notify.testuser_group_publicuniversalfriend",
+        "notify.testuser_direct_message_publicuniversalfriend",
+    ],
 )
 @freeze_time("2025-07-28T00:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
