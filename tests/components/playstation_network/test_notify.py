@@ -1,7 +1,6 @@
 """Tests for the PlayStation Network notify platform."""
 
 from collections.abc import AsyncGenerator
-import logging
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import freeze_time
@@ -19,11 +18,12 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
+from homeassistant.components.playstation_network.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -141,7 +141,7 @@ async def test_notify_skip_forbidden(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_psnawpapi: MagicMock,
-    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we skip creation of notifiers if forbidden by parental controls."""
 
@@ -158,5 +158,6 @@ async def test_notify_skip_forbidden(
     state = hass.states.get("notify.testuser_group_publicuniversalfriend")
     assert state is None
 
-    with caplog.at_level(logging.DEBUG):
-        assert "Not permitted by parental control" in caplog.text
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"group_chat_forbidden_{config_entry.entry_id}"
+    )
