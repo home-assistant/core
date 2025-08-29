@@ -32,6 +32,7 @@ ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR = "deprecated_yaml_import_issue_error"
 
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
+SERVICE_SEND_CHAT_ACTION = "send_chat_action"
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_SEND_PHOTO = "send_photo"
 SERVICE_SEND_STICKER = "send_sticker"
@@ -59,6 +60,7 @@ PARSER_MD = "markdown"
 PARSER_MD2 = "markdownv2"
 PARSER_PLAIN_TEXT = "plain_text"
 
+ATTR_CHAT_ACTION = "chat_action"
 ATTR_DATA = "data"
 ATTR_MESSAGE = "message"
 ATTR_TITLE = "title"

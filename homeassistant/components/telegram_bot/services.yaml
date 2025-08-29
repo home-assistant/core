@@ -66,6 +66,44 @@ send_message:
         number:
           mode: box
 
+send_chat_action:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    chat_action:
+      selector:
+        select:
+          options:
+            - "typing"
+            - "upload_photo"
+            - "record_video"
+            - "upload_video"
+            - "record_voice"
+            - "upload_voice"
+            - "upload_document"
+            - "choose_sticker"
+            - "find_location"
+            - "record_video_note"
+            - "upload_video_note"
+          translation_key: "chat_action"
+    target:
+      example: "[12345, 67890] or 12345"
+      selector:
+        text:
+          multiple: true
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    timeout:
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+
 send_photo:
   fields:
     config_entry_id:
