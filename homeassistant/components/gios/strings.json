@@ -34,18 +34,6 @@
           "moderate": "Moderate",
           "good": "Good",
           "very_good": "Very good"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
-              "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
-              "sufficient": "[%key:component::gios::entity::sensor::aqi::state::sufficient%]",
-              "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
-              "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
-              "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
-            }
-          }
         }
       },
       "c6h6": {
@@ -63,18 +51,6 @@
           "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
           "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
           "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
-              "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
-              "sufficient": "[%key:component::gios::entity::sensor::aqi::state::sufficient%]",
-              "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
-              "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
-              "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
-            }
-          }
         }
       },
       "nox": {
@@ -89,18 +65,6 @@
           "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
           "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
           "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
-              "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
-              "sufficient": "[%key:component::gios::entity::sensor::aqi::state::sufficient%]",
-              "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
-              "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
-              "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
-            }
-          }
         }
       },
       "pm10_index": {
@@ -112,18 +76,6 @@
           "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
           "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
           "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
-              "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
-              "sufficient": "[%key:component::gios::entity::sensor::aqi::state::sufficient%]",
-              "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
-              "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
-              "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
-            }
-          }
         }
       },
       "pm25_index": {
@@ -135,18 +87,6 @@
           "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
           "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
           "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
-              "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
-              "sufficient": "[%key:component::gios::entity::sensor::aqi::state::sufficient%]",
-              "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
-              "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
-              "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
-            }
-          }
         }
       },
       "so2_index": {
@@ -158,18 +98,6 @@
           "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
           "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
           "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
-              "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
-              "sufficient": "[%key:component::gios::entity::sensor::aqi::state::sufficient%]",
-              "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
-              "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
-              "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
-            }
-          }
         }
       }
     }
