@@ -677,7 +677,7 @@ debugpy==1.8.14
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==13.6.0
+deebot-client==13.7.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -853,7 +853,7 @@ freebox-api==1.2.2
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection[qr]==1.14.0
+fritzconnection[qr]==1.15.0
 
 # homeassistant.components.fyta
 fyta_cli==0.7.2
@@ -991,7 +991,7 @@ ha-philipsjs==3.2.2
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.4.3
+habiticalib==0.4.4
 
 # homeassistant.components.bluetooth
 habluetooth==5.1.0
@@ -1026,7 +1026,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250827.0
+home-assistant-frontend==20250828.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.8.27
@@ -1292,7 +1292,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==5.0.0
 
 # homeassistant.components.nexia
-nexia==2.10.0
+nexia==2.11.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
