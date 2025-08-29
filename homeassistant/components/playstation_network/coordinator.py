@@ -22,12 +22,14 @@ from psnawp_api.models.group.group_datatypes import GroupDetails
 from psnawp_api.models.trophies import TrophyTitle
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -177,11 +179,18 @@ class PlaystationNetworkGroupsUpdateCoordinator(
                 error = json.loads(e.args[0])
             except json.JSONDecodeError as err:
                 raise PSNAWPServerError from err
-            _LOGGER.info(
-                "Unable to retrieve group chats for %s from PlayStation Network "
-                "due to permissions: %s. This does not affect other integration features",
-                self.config_entry.title,
-                error["error"]["message"],
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"group_chat_forbidden_{self.config_entry.entry_id}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="group_chat_forbidden",
+                translation_placeholders={
+                    CONF_NAME: self.config_entry.title,
+                    "error_message": error["error"]["message"],
+                },
             )
             await self.async_shutdown()
             return {}
