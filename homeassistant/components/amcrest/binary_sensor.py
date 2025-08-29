@@ -357,8 +357,15 @@ class AmcrestCoordinatedBinarySensor(CoordinatorEntity, AmcrestBinarySensor):
         if key == _ONLINE_KEY:
             self._attr_is_on = coordinator_data.get("online", False)
         elif key.startswith(_AUDIO_DETECTED_KEY):
-            self._attr_is_on = coordinator_data.get("audio_detected", False)
+            self._attr_is_on = coordinator_data.get(
+                "audio_detected", coordinator_data.get("audio_detected_polled", False)
+            )
         elif key.startswith(_MOTION_DETECTED_KEY):
-            self._attr_is_on = coordinator_data.get("motion_detected", False)
+            self._attr_is_on = coordinator_data.get(
+                "motion_detected", coordinator_data.get("motion_detected_polled", False)
+            )
         elif key.startswith(_CROSSLINE_DETECTED_KEY):
-            self._attr_is_on = coordinator_data.get("crossline_detected", False)
+            self._attr_is_on = coordinator_data.get(
+                "crossline_detected",
+                coordinator_data.get("crossline_detected_polled", False),
+            )
