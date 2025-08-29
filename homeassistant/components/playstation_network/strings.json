@@ -164,5 +164,11 @@
         "name": "Direct message"
       }
     }
+  },
+  "issues": {
+    "group_chat_forbidden": {
+      "title": "Failed to retrieve group chats for {name}",
+      "description": "The PlayStation Network integration was unable to retrieve group chats for **{name}**.\n\nThis is likely due to insufficient permissions (Error: `{error_message}`).\n\nTo resolve this issue, please ensure the account's chat and messaging feature is not restricted by parental controls or other privacy settings.\n\nIf the restriction is intentional, you can safely ignore this message."
+    }
   }
 }
