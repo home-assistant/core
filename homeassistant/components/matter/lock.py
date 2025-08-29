@@ -143,7 +143,7 @@ class MatterLock(MatterEntity, LockEntity):
             self._attr_is_locking = True
             self.async_write_ha_state()
             # the lock should acknowledge the command with an attribute update
-            # but if it fails, then change from optimistic state 
+            # but if it fails, then change from optimistic state
             # based on the lockOperationError event.
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
@@ -202,25 +202,34 @@ class MatterLock(MatterEntity, LockEntity):
 
         LOGGER.debug("Lock state: %s for %s", lock_state, self.entity_id)
 
-        # start by setting all the lock operation attributes as False, then change as needed
-        self._attr_is_locked = False
-        self._attr_is_locking = False
-        self._attr_is_unlocking = False
-        self._attr_is_open = False
-        self._attr_is_opening = False
-        self._attr_is_jammed = False
-        if lock_state == clusters.DoorLock.Enums.DlLockState.kNotFullyLocked:
-            # State 0 - NotFullyLocked: Lock state is not fully locked. Uncertain state - treat as jammed.
-            self._attr_is_jammed = True
-        elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
+        # If LockState reports a value of 0 - NotFullyLocked - ignore it as it is not a reliable indicator.
+        # It can be transiently reported during normal operation, and might indicate either a
+        # is_locking, is_opening, or is_unlocking state, or possibly a jammed result.
+        # Instead, rely on the other states to determine the lock state or the events to determine jammed.
+        if lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
             # State 1 - Locked: Lock state is fully locked.
             self._attr_is_locked = True
+            self._attr_is_locking = False
+            self._attr_is_unlocking = False
+            self._attr_is_open = False
+            self._attr_is_opening = False
+            self._attr_is_jammed = False
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlocked:  # state 2
             # State 2 - Unlocked: Lock state is fully unlocked.
             self._attr_is_locked = False
+            self._attr_is_locking = False
+            self._attr_is_unlocking = False
+            self._attr_is_open = False
+            self._attr_is_opening = False
+            self._attr_is_jammed = False
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
             # State 3 - Unlatched: Lock state is fully unlocked and the latch is pulled.
+            self._attr_is_locked = False
+            self._attr_is_locking = False
+            self._attr_is_unlocking = False
             self._attr_is_open = True
+            self._attr_is_opening = False
+            self._attr_is_jammed = False
         else:
             # NOTE: A null state can happen during device startup. Treat as unknown.
             self._attr_is_locked = None

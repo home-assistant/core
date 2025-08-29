@@ -74,18 +74,6 @@ async def test_lock(
     )
     matter_client.send_device_command.reset_mock()
 
-    await hass.async_block_till_done()
-    state = hass.states.get("lock.mock_door_lock")
-    assert state
-    assert state.state == LockState.JAMMED
-
-    set_node_attribute(matter_node, 1, 257, 0, 0)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("lock.mock_door_lock")
-    assert state
-    assert state.state == LockState.JAMMED
-
     set_node_attribute(matter_node, 1, 257, 0, 1)
     await trigger_subscription_callback(hass, matter_client)
 
@@ -268,13 +256,6 @@ async def test_lock_with_unbolt(
     state = hass.states.get("lock.mock_door_lock")
     assert state
     assert state.state == LockState.OPENING
-
-    set_node_attribute(matter_node, 1, 257, 0, 0)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("lock.mock_door_lock")
-    assert state
-    assert state.state == LockState.JAMMED
 
     set_node_attribute(matter_node, 1, 257, 0, 1)
     await trigger_subscription_callback(hass, matter_client)
