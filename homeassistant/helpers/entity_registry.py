@@ -887,7 +887,7 @@ class EntityRegistry(BaseRegistry):
         # To influence entity ID generation
         calculated_object_id: str | None = None,
         suggested_object_id: str | None = None,
-        # To disable or hide an entity if it gets created, do not affect
+        # To disable or hide an entity if it gets created, does not affect
         # existing entities
         disabled_by: RegistryEntryDisabler | None = None,
         hidden_by: RegistryEntryHider | None = None,
