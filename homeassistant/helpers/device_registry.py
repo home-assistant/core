@@ -480,7 +480,7 @@ class DeletedDeviceEntry:
         config_subentry_id: str | None,
         connections: set[tuple[str, str]],
         identifiers: set[tuple[str, str]],
-        disabled_by: DeviceEntryDisabler | None,
+        disabled_by: DeviceEntryDisabler | UndefinedType | None,
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
         # Adjust disabled_by based on config entry state
@@ -491,6 +491,8 @@ class DeletedDeviceEntry:
                     disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
             elif disabled_by == DeviceEntryDisabler.CONFIG_ENTRY:
                 disabled_by = None
+        else:
+            disabled_by = disabled_by if disabled_by is not UNDEFINED else None
         return DeviceEntry(
             area_id=self.area_id,
             # type ignores: likely https://github.com/python/mypy/issues/8625
@@ -941,7 +943,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     config_subentry_id if config_subentry_id is not UNDEFINED else None,
                     connections,
                     identifiers,
-                    disabled_by if disabled_by is not UNDEFINED else None,
+                    disabled_by,
                 )
                 disabled_by = UNDEFINED
 

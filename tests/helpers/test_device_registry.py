@@ -22,7 +22,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_capture_events, flush_store
@@ -3839,12 +3839,13 @@ async def test_restore_device(
 
 
 @pytest.mark.parametrize(
-    ("device_disabled_by"),
+    ("device_disabled_by", "expected_disabled_by"),
     [
-        None,
-        dr.DeviceEntryDisabler.CONFIG_ENTRY,
-        dr.DeviceEntryDisabler.INTEGRATION,
-        dr.DeviceEntryDisabler.USER,
+        (None, None),
+        (dr.DeviceEntryDisabler.CONFIG_ENTRY, dr.DeviceEntryDisabler.CONFIG_ENTRY),
+        (dr.DeviceEntryDisabler.INTEGRATION, dr.DeviceEntryDisabler.INTEGRATION),
+        (dr.DeviceEntryDisabler.USER, dr.DeviceEntryDisabler.USER),
+        (UNDEFINED, None),
     ],
 )
 @pytest.mark.usefixtures("freezer")
@@ -3852,7 +3853,8 @@ async def test_restore_migrated_device_disabled_by(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-    device_disabled_by: dr.DeviceEntryDisabler | None,
+    device_disabled_by: dr.DeviceEntryDisabler | UndefinedType | None,
+    expected_disabled_by: dr.DeviceEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when restoring a device."""
     entry_id = mock_config_entry.entry_id
@@ -3916,7 +3918,7 @@ async def test_restore_migrated_device_disabled_by(
         configuration_url="http://config_url_new.bla",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
         created_at=utcnow(),
-        disabled_by=device_disabled_by,
+        disabled_by=expected_disabled_by,
         entry_type=None,
         hw_version="hw_version_new",
         id=entry.id,
