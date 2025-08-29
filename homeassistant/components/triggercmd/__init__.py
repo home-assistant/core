@@ -21,8 +21,9 @@ type TriggercmdConfigEntry = ConfigEntry[ha.Hub]
 async def async_setup_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> bool:
     """Set up TRIGGERcmd from a config entry."""
     hub = ha.Hub(entry.data[CONF_TOKEN])
+    await hub.async_init(hass)
 
-    status_code = await client.async_connection_test(entry.data[CONF_TOKEN])
+    status_code = await client.async_connection_test(entry.data[CONF_TOKEN], hass)
     if status_code != 200:
         raise ConfigEntryNotReady
 
