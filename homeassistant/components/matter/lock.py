@@ -216,7 +216,7 @@ class MatterLock(MatterEntity, LockEntity):
             self._attr_is_locked = True
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlocked:  # state 2
             # State 2 - Unlocked: Lock state is fully unlocked.
-            pass
+            self._attr_is_locked = False
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
             # State 3 - Unlatched: Lock state is fully unlocked and the latch is pulled.
             self._attr_is_open = True
