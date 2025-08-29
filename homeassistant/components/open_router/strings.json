@@ -1,5 +1,5 @@
 {
-  "title": "OpenRouter Fixed",
+  "title": "OpenRouter",
   "config": {
     "step": {
       "user": {
@@ -22,7 +22,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure OpenRouter Fixed"
+        "title": "Configure OpenRouter"
       }
     }
   },
