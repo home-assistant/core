@@ -6,7 +6,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.apcupsd.const import DOMAIN
-from homeassistant.components.apcupsd.coordinator import APCUPSdData
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -40,7 +39,7 @@ async def test_binary_sensor(
 
     # Ensure entities are correctly assigned to device
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, APCUPSdData(mock_request_status.return_value).serial_no)}
+        identifiers={(DOMAIN, mock_request_status.return_value["SERIALNO"])}
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
