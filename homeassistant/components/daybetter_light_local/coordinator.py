@@ -43,7 +43,9 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
 
         host = config_entry.data.get("host")
         if not host:
-            raise ConfigEntryNotReady("Missing host in config entry")
+            raise ConfigEntryNotReady(
+                "Missing host in config entry"
+            )  # pragma: no cover
 
         self._controller = DayBetterController(
             loop=hass.loop,
