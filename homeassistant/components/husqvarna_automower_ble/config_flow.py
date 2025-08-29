@@ -34,8 +34,12 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
         service == "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
         for service in discovery_info.service_uuids
     )
+    service_gardena = any(
+        service == "0000fd69-0000-1000-8000-00805f9b34fb"
+        for service in discovery_info.service_uuids
+    )
 
-    return manufacturer and service_husqvarna
+    return manufacturer and service_husqvarna and not service_gardena
 
 
 def _pin_valid(pin: str) -> bool:
@@ -61,9 +65,10 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
 
-        LOGGER.debug("Discovered device: %s", discovery_info)
         if not _is_supported(discovery_info):
             return self.async_abort(reason="no_devices_found")
+
+        LOGGER.debug("Discovered device: %s", discovery_info)
 
         self.address = discovery_info.address
         await self.async_set_unique_id(self.address)
