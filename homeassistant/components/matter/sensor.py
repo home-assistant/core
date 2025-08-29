@@ -1395,8 +1395,6 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=(lambda x: dt_util.utc_from_timestamp(x) if x > 0 else None),
         ),
         entity_class=MatterSensor,
-        required_attributes=(
-            clusters.ServiceArea.Attributes.EstimatedEndTime,
-        ),
+        required_attributes=(clusters.ServiceArea.Attributes.EstimatedEndTime,),
     ),
 ]
