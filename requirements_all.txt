@@ -453,7 +453,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.4.3
+airos==0.4.4
 
 # homeassistant.components.airthings_ble
 airthings-ble==0.9.2
@@ -528,7 +528,7 @@ arris-tg2492lg==2.2.0
 asmog==0.0.6
 
 # homeassistant.components.asuswrt
-asusrouter==1.20.0
+asusrouter==1.20.1
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -628,7 +628,7 @@ bizkaibus==0.1.1
 bleak-esphome==3.1.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==4.4.1
+bleak-retry-connector==4.4.3
 
 # homeassistant.components.bluetooth
 bleak==1.0.1
@@ -1133,7 +1133,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.4
 
 # homeassistant.components.bluetooth
-habluetooth==5.1.0
+habluetooth==5.2.0
 
 # homeassistant.components.cloud
 hass-nabucasa==1.0.0
