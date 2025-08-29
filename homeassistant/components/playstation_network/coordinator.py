@@ -194,8 +194,6 @@ class PlaystationNetworkGroupsUpdateCoordinator(
             )
             await self.async_shutdown()
             return {}
-        except PSNAWPError:
-            raise
 
 
 class PlaystationNetworkFriendDataCoordinator(
