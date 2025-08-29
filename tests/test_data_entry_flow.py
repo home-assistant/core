@@ -1229,7 +1229,13 @@ def test_section_in_serializer() -> None:
     ) == {
         "expanded": True,
         "schema": [
-            {"default": False, "name": "option_1", "optional": True, "type": "boolean"},
+            {
+                "default": False,
+                "name": "option_1",
+                "optional": True,
+                "required": False,
+                "type": "boolean",
+            },
             {"name": "option_2", "required": True, "type": "integer"},
         ],
         "type": "expandable",

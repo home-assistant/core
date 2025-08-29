@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bfd56f4718874ee8830xdw",
   "name": "Strip 2",
   "category": "dj",
   "product_id": "vqwcnabamzrc2kab",

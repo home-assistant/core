@@ -461,7 +461,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
             """Initialize trigger."""
 
         @classmethod
-        async def async_validate_trigger_config(
+        async def async_validate_config(
             cls, hass: HomeAssistant, config: ConfigType
         ) -> ConfigType:
             """Validate config."""
@@ -470,7 +470,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
     class MockTrigger1(MockTrigger):
         """Mock trigger 1."""
 
-        async def async_attach_trigger(
+        async def async_attach(
             self,
             action: TriggerActionType,
             trigger_info: TriggerInfo,
@@ -481,7 +481,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
     class MockTrigger2(MockTrigger):
         """Mock trigger 2."""
 
-        async def async_attach_trigger(
+        async def async_attach(
             self,
             action: TriggerActionType,
             trigger_info: TriggerInfo,

@@ -228,7 +228,9 @@ class HKDevice:
         _LOGGER.debug(
             "Called async_set_available_state with %s for %s", available, self.unique_id
         )
-        if self.available == available:
+        # Don't mark entities as unavailable during shutdown to preserve their last known state
+        # Also skip if the availability state hasn't changed
+        if (self.hass.is_stopping and not available) or self.available == available:
             return
         self.available = available
         for callback_ in self._availability_callbacks:
@@ -294,7 +296,6 @@ class HKDevice:
             await self.pairing.async_populate_accessories_state(
                 force_update=True, attempts=attempts
             )
-            self._async_start_polling()
 
         entry.async_on_unload(pairing.dispatcher_connect(self.process_new_events))
         entry.async_on_unload(
@@ -306,6 +307,12 @@ class HKDevice:
         entry.async_on_unload(self._async_cancel_subscription_timer)
 
         await self.async_process_entity_map()
+
+        if transport != Transport.BLE:
+            # Do a single poll to make sure the chars are
+            # up to date so we don't restore old data.
+            await self.async_update()
+            self._async_start_polling()
 
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
@@ -711,9 +718,11 @@ class HKDevice:
         """Stop interacting with device and prepare for removal from hass."""
         await self.pairing.shutdown()
 
-        await self.hass.config_entries.async_unload_platforms(
-            self.config_entry, self.platforms
-        )
+        # Skip platform unloading during shutdown to preserve entity states
+        if not self.hass.is_stopping:
+            await self.hass.config_entries.async_unload_platforms(
+                self.config_entry, self.platforms
+            )
 
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""

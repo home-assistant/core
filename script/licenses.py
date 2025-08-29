@@ -202,6 +202,7 @@ EXCEPTIONS = {
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
+    "ujson",  # https://github.com/ultrajson/ultrajson/blob/main/LICENSE.txt
 }
 
 # fmt: off

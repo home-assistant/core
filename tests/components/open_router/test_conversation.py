@@ -7,10 +7,10 @@ from openai.types import CompletionUsage
 from openai.types.chat import (
     ChatCompletion,
     ChatCompletionMessage,
-    ChatCompletionMessageToolCall,
+    ChatCompletionMessageFunctionToolCall,
 )
 from openai.types.chat.chat_completion import Choice
-from openai.types.chat.chat_completion_message_tool_call import Function
+from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -133,7 +133,7 @@ async def test_function_call(
                         role="assistant",
                         function_call=None,
                         tool_calls=[
-                            ChatCompletionMessageToolCall(
+                            ChatCompletionMessageFunctionToolCall(
                                 id="call_call_1",
                                 function=Function(
                                     arguments='{"param1":"call1"}',

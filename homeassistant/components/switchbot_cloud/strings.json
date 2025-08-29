@@ -16,5 +16,21 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "fan": {
+      "air_purifier": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "normal": "[%key:common::state::normal%]",
+              "auto": "[%key:common::state::auto%]",
+              "pet": "Pet",
+              "sleep": "Sleep"
+            }
+          }
+        }
+      }
+    }
   }
 }

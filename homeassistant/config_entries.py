@@ -3386,6 +3386,34 @@ class ConfigSubentryFlow(
         return result
 
     @callback
+    def _async_update(
+        self,
+        entry: ConfigEntry,
+        subentry: ConfigSubentry,
+        *,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
+    ) -> bool:
+        """Update config subentry and return result.
+
+        Internal to be used by update_and_abort and update_reload_and_abort methods only.
+        """
+
+        if data_updates is not UNDEFINED:
+            if data is not UNDEFINED:
+                raise ValueError("Cannot set both data and data_updates")
+            data = subentry.data | data_updates
+        return self.hass.config_entries.async_update_subentry(
+            entry=entry,
+            subentry=subentry,
+            unique_id=unique_id,
+            title=title,
+            data=data,
+        )
+
+    @callback
     def async_update_and_abort(
         self,
         entry: ConfigEntry,
@@ -3404,17 +3432,50 @@ class ConfigSubentryFlow(
         :param title: replace the title of the subentry
         :param unique_id: replace the unique_id of the subentry
         """
-        if data_updates is not UNDEFINED:
-            if data is not UNDEFINED:
-                raise ValueError("Cannot set both data and data_updates")
-            data = subentry.data | data_updates
-        self.hass.config_entries.async_update_subentry(
+        self._async_update(
             entry=entry,
             subentry=subentry,
             unique_id=unique_id,
             title=title,
             data=data,
+            data_updates=data_updates,
         )
+        return self.async_abort(reason="reconfigure_successful")
+
+    @callback
+    def async_update_reload_and_abort(
+        self,
+        entry: ConfigEntry,
+        subentry: ConfigSubentry,
+        *,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        reload_even_if_entry_is_unchanged: bool = True,
+    ) -> SubentryFlowResult:
+        """Update config subentry, reload config entry and finish subentry flow.
+
+        :param data: replace the subentry data with new data
+        :param data_updates: add items from data_updates to subentry data - existing
+        keys are overridden
+        :param title: replace the title of the subentry
+        :param unique_id: replace the unique_id of the subentry
+        :param reload_even_if_entry_is_unchanged: set this to `False` if the entry
+        should not be reloaded if it is unchanged
+        """
+        result = self._async_update(
+            entry=entry,
+            subentry=subentry,
+            unique_id=unique_id,
+            title=title,
+            data=data,
+            data_updates=data_updates,
+        )
+        if reload_even_if_entry_is_unchanged or result:
+            if entry.update_listeners:
+                raise ValueError("Cannot update and reload entry with update listeners")
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return self.async_abort(reason="reconfigure_successful")
 
     @property

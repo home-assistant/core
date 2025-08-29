@@ -40,6 +40,7 @@ from .chat_log import (
     ConverseError,
     SystemContent,
     ToolResultContent,
+    ToolResultContentDeltaDict,
     UserContent,
     async_get_chat_log,
 )
@@ -79,6 +80,7 @@ __all__ = [
     "ConverseError",
     "SystemContent",
     "ToolResultContent",
+    "ToolResultContentDeltaDict",
     "UserContent",
     "async_conversation_trace_append",
     "async_converse",
@@ -117,7 +119,7 @@ CONFIG_SCHEMA = vol.Schema(
                     {cv.string: vol.All(cv.ensure_list, [cv.string])}
                 )
             }
-        )
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -268,8 +270,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     entity_component = EntityComponent[ConversationEntity](_LOGGER, DOMAIN, hass)
     hass.data[DATA_COMPONENT] = entity_component
 
+    agent_config = config.get(DOMAIN, {})
     await async_setup_default_agent(
-        hass, entity_component, config.get(DOMAIN, {}).get("intents", {})
+        hass, entity_component, config_intents=agent_config.get("intents", {})
     )
 
     async def handle_process(service: ServiceCall) -> ServiceResponse:

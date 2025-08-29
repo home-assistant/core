@@ -173,18 +173,18 @@ class Trigger(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    async def async_validate_trigger_config(
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
 
     @abc.abstractmethod
-    async def async_attach_trigger(
+    async def async_attach(
         self,
         action: TriggerActionType,
         trigger_info: TriggerInfo,
     ) -> CALLBACK_TYPE:
-        """Attach a trigger."""
+        """Attach the trigger."""
 
 
 class TriggerProtocol(Protocol):
@@ -390,7 +390,7 @@ async def async_validate_trigger_config(
             )
             if not (trigger := trigger_descriptors.get(relative_trigger_key)):
                 raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified")
-            conf = await trigger.async_validate_trigger_config(hass, conf)
+            conf = await trigger.async_validate_config(hass, conf)
         elif hasattr(platform, "async_validate_trigger_config"):
             conf = await platform.async_validate_trigger_config(hass, conf)
         else:
@@ -495,7 +495,7 @@ async def async_initialize_triggers(
                 platform_domain, trigger_key
             )
             trigger = trigger_descriptors[relative_trigger_key](hass, conf)
-            coro = trigger.async_attach_trigger(action_wrapper, info)
+            coro = trigger.async_attach(action_wrapper, info)
         else:
             coro = platform.async_attach_trigger(hass, conf, action_wrapper, info)
 

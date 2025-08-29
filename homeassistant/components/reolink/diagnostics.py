@@ -24,7 +24,7 @@ async def async_get_config_entry_diagnostics(
         IPC_cam[ch]["hardware version"] = api.camera_hardware_version(ch)
         IPC_cam[ch]["firmware version"] = api.camera_sw_version(ch)
         IPC_cam[ch]["encoding main"] = await api.get_encoding(ch)
-        if (signal := api.wifi_signal(ch)) is not None:
+        if (signal := api.wifi_signal(ch)) is not None and api.wifi_connection(ch):
             IPC_cam[ch]["WiFi signal"] = signal
 
     chimes: dict[int, dict[str, Any]] = {}
@@ -43,7 +43,7 @@ async def async_get_config_entry_diagnostics(
         "HTTP(S) port": api.port,
         "Baichuan port": api.baichuan.port,
         "Baichuan only": api.baichuan_only,
-        "WiFi connection": api.wifi_connection,
+        "WiFi connection": api.wifi_connection(),
         "WiFi signal": api.wifi_signal(),
         "RTMP enabled": api.rtmp_enabled,
         "RTSP enabled": api.rtsp_enabled,

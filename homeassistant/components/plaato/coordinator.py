@@ -31,7 +31,6 @@ class PlaatoCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize."""
         self.api = Plaato(auth_token=auth_token)
-        self.hass = hass
         self.device_type = device_type
         self.platforms: list[Platform] = []
 

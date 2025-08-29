@@ -34,8 +34,6 @@ async def test_no_update(
     entity_name: str,
 ) -> None:
     """Test update state when no update available."""
-    reolink_host.camera_name.return_value = TEST_CAM_NAME
-
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.UPDATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -53,7 +51,6 @@ async def test_update_str(
     entity_name: str,
 ) -> None:
     """Test update state when update available with string from API."""
-    reolink_host.camera_name.return_value = TEST_CAM_NAME
     reolink_host.firmware_update_available.return_value = "New firmware available"
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.UPDATE]):
@@ -75,7 +72,6 @@ async def test_update_firm(
     entity_name: str,
 ) -> None:
     """Test update state when update available with firmware info from reolink.com."""
-    reolink_host.camera_name.return_value = TEST_CAM_NAME
     reolink_host.sw_upload_progress.return_value = 100
     reolink_host.camera_sw_version.return_value = "v1.1.0.0.0.0000"
     new_firmware = NewSoftwareVersion(
@@ -174,7 +170,6 @@ async def test_update_firm_keeps_available(
     entity_name: str,
 ) -> None:
     """Test update entity keeps being available during update."""
-    reolink_host.camera_name.return_value = TEST_CAM_NAME
     reolink_host.camera_sw_version.return_value = "v1.1.0.0.0.0000"
     new_firmware = NewSoftwareVersion(
         version_string="v3.3.0.226_23031644",

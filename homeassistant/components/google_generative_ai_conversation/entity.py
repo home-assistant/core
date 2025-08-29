@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import codecs
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, AsyncIterator, Callable
 from dataclasses import replace
 import mimetypes
 from pathlib import Path
@@ -15,6 +15,7 @@ from google.genai.errors import APIError, ClientError
 from google.genai.types import (
     AutomaticFunctionCallingConfig,
     Content,
+    ContentDict,
     File,
     FileState,
     FunctionDeclaration,
@@ -23,9 +24,11 @@ from google.genai.types import (
     GoogleSearch,
     HarmCategory,
     Part,
+    PartUnionDict,
     SafetySetting,
     Schema,
     Tool,
+    ToolListUnion,
 )
 import voluptuous as vol
 from voluptuous_openapi import convert
@@ -237,7 +240,7 @@ def _convert_content(
 
 
 async def _transform_stream(
-    result: AsyncGenerator[GenerateContentResponse],
+    result: AsyncIterator[GenerateContentResponse],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     new_message = True
     try:
@@ -342,7 +345,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         """Generate an answer for the chat log."""
         options = self.subentry.data
 
-        tools: list[Tool | Callable[..., Any]] | None = None
+        tools: ToolListUnion | None = None
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
@@ -373,7 +376,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         else:
             raise HomeAssistantError("Invalid prompt content")
 
-        messages: list[Content] = []
+        messages: list[Content | ContentDict] = []
 
         # Google groups tool results, we do not. Group them before sending.
         tool_results: list[conversation.ToolResultContent] = []
@@ -400,7 +403,10 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         # The SDK requires the first message to be a user message
         # This is not the case if user used `start_conversation`
         # Workaround from https://github.com/googleapis/python-genai/issues/529#issuecomment-2740964537
-        if messages and messages[0].role != "user":
+        if messages and (
+            (isinstance(messages[0], Content) and messages[0].role != "user")
+            or (isinstance(messages[0], dict) and messages[0]["role"] != "user")
+        ):
             messages.insert(
                 0,
                 Content(role="user", parts=[Part.from_text(text=" ")]),
@@ -440,14 +446,14 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         )
         user_message = chat_log.content[-1]
         assert isinstance(user_message, conversation.UserContent)
-        chat_request: str | list[Part] = user_message.content
+        chat_request: list[PartUnionDict] = [user_message.content]
         if user_message.attachments:
             files = await async_prepare_files_for_prompt(
                 self.hass,
                 self._genai_client,
                 [a.path for a in user_message.attachments],
             )
-            chat_request = [chat_request, *files]
+            chat_request = [*chat_request, *files]
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
@@ -464,15 +470,17 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 error = ERROR_GETTING_RESPONSE
                 raise HomeAssistantError(error) from err
 
-            chat_request = _create_google_tool_response_parts(
-                [
-                    content
-                    async for content in chat_log.async_add_delta_content_stream(
-                        self.entity_id,
-                        _transform_stream(chat_response_generator),
-                    )
-                    if isinstance(content, conversation.ToolResultContent)
-                ]
+            chat_request = list(
+                _create_google_tool_response_parts(
+                    [
+                        content
+                        async for content in chat_log.async_add_delta_content_stream(
+                            self.entity_id,
+                            _transform_stream(chat_response_generator),
+                        )
+                        if isinstance(content, conversation.ToolResultContent)
+                    ]
+                )
             )
 
             if not chat_log.unresponded_tool_results:
@@ -559,13 +567,13 @@ async def async_prepare_files_for_prompt(
                 await asyncio.sleep(FILE_POLLING_INTERVAL_SECONDS)
 
             uploaded_file = await client.aio.files.get(
-                name=uploaded_file.name,
+                name=uploaded_file.name or "",
                 config={"http_options": {"timeout": TIMEOUT_MILLIS}},
             )
 
         if uploaded_file.state == FileState.FAILED:
             raise HomeAssistantError(
-                f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message}"
+                f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message if uploaded_file.error else 'unknown'}"
             )
 
     prompt_parts = await hass.async_add_executor_job(upload_files)

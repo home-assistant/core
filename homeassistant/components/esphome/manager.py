@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import base64
 from functools import partial
 import logging
@@ -15,7 +14,6 @@ from aioesphomeapi import (
     APIVersion,
     DeviceInfo as EsphomeDeviceInfo,
     EncryptionPlaintextAPIError,
-    EntityInfo,
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
@@ -63,7 +61,6 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
-from homeassistant.util.async_ import create_eager_task
 
 from .bluetooth import async_connect_scanner
 from .const import (
@@ -425,14 +422,7 @@ class ESPHomeManager:
         unique_id_is_mac_address = unique_id and ":" in unique_id
         if entry.options.get(CONF_SUBSCRIBE_LOGS):
             self._async_subscribe_logs(self._async_get_equivalent_log_level())
-        results = await asyncio.gather(
-            create_eager_task(cli.device_info()),
-            create_eager_task(cli.list_entities_services()),
-        )
-
-        device_info: EsphomeDeviceInfo = results[0]
-        entity_infos_services: tuple[list[EntityInfo], list[UserService]] = results[1]
-        entity_infos, services = entity_infos_services
+        device_info, entity_infos, services = await cli.device_info_and_list_entities()
 
         device_mac = format_mac(device_info.mac_address)
         mac_address_matches = unique_id == device_mac
@@ -564,11 +554,11 @@ class ESPHomeManager:
             )
             entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
 
-        cli.subscribe_states(entry_data.async_update_state)
-        cli.subscribe_service_calls(self.async_on_service_call)
-        cli.subscribe_home_assistant_states(
-            self.async_on_state_subscription,
-            self.async_on_state_request,
+        cli.subscribe_home_assistant_states_and_services(
+            on_state=entry_data.async_update_state,
+            on_service_call=self.async_on_service_call,
+            on_state_sub=self.async_on_state_subscription,
+            on_state_request=self.async_on_state_request,
         )
 
         entry_data.async_save_to_store()

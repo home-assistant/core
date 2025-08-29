@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf4c0c538bfe408aa9gr2e",
   "name": "wallwasher front",
   "category": "cz",
   "product_id": "t0a4hwsf8anfsadp",

@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaus.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "eb10549aadfc74b7c8q2ti",
   "name": "Porch light E",
   "category": "dj",
   "product_id": "8szt7whdvwpmxglk",

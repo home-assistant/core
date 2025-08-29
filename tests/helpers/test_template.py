@@ -845,6 +845,23 @@ def test_as_function(hass: HomeAssistant) -> None:
     )
 
 
+def test_as_function_no_arguments(hass: HomeAssistant) -> None:
+    """Test as_function with no arguments."""
+    assert (
+        template.Template(
+            """
+            {%- macro macro_get_hello(returns) -%}
+            {%- do returns("Hello") -%}
+            {%- endmacro -%}
+            {%- set get_hello = macro_get_hello | as_function -%}
+            {{ get_hello() }}
+            """,
+            hass,
+        ).async_render()
+        == "Hello"
+    )
+
+
 def test_logarithm(hass: HomeAssistant) -> None:
     """Test logarithm."""
     tests = [

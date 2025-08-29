@@ -183,6 +183,7 @@ class ToolInput:
     tool_args: dict[str, Any]
     # Using lambda for default to allow patching in tests
     id: str = dc_field(default_factory=lambda: ulid_now())  # pylint: disable=unnecessary-lambda
+    external: bool = False
 
 
 class Tool:
@@ -827,7 +828,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "enum": options}
 
     if isinstance(schema, selector.TargetSelector):
-        return convert(cv.TARGET_SERVICE_FIELDS)
+        return convert(cv.TARGET_FIELDS)
 
     if isinstance(schema, selector.TemplateSelector):
         return {"type": "string", "format": "jinja2"}

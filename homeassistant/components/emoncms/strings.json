@@ -111,14 +111,6 @@
     }
   },
   "issues": {
-    "remove_value_template": {
-      "title": "The {domain} integration cannot start",
-      "description": "Configuring {domain} using YAML is being removed and the `{parameter}` parameter cannot be imported.\n\nPlease remove `{parameter}` from your `{domain}` yaml configuration and restart Home Assistant\n\nAlternatively, you may entirely remove the `{domain}` configuration from your configuration.yaml, restart Home Assistant, and add the {domain} integration manually."
-    },
-    "missing_include_only_feed_id": {
-      "title": "No feed synchronized with the {domain} sensor",
-      "description": "Configuring {domain} using YAML is being removed.\n\nPlease add manually the feeds you want to synchronize with the `configure` button of the integration."
-    },
     "migrate_database": {
       "title": "Upgrade your emoncms version",
       "description": "Your [emoncms]({url}) does not ship a unique identifier.\n\nPlease upgrade to at least version 11.5.7 and migrate your emoncms database.\n\nMore info in the [emoncms documentation]({doc_url})"

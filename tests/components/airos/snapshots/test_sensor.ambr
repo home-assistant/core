@@ -76,6 +76,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -131,6 +134,9 @@
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
@@ -141,7 +147,7 @@
     'supported_features': 0,
     'translation_key': 'wireless_polling_dl_capacity',
     'unique_id': '01:23:45:67:89:AB_wireless_polling_dl_capacity',
-    'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
   })
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_download_capacity-state]
@@ -150,14 +156,14 @@
       'device_class': 'data_rate',
       'friendly_name': 'NanoStation 5AC ap name Download capacity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_download_capacity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '647400',
+    'state': '647.4',
   })
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_network_role-entry]
@@ -245,6 +251,9 @@
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
@@ -255,7 +264,7 @@
     'supported_features': 0,
     'translation_key': 'wireless_throughput_rx',
     'unique_id': '01:23:45:67:89:AB_wireless_throughput_rx',
-    'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
   })
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_throughput_receive_actual-state]
@@ -264,14 +273,14 @@
       'device_class': 'data_rate',
       'friendly_name': 'NanoStation 5AC ap name Throughput receive (actual)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_throughput_receive_actual',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '9907',
+    'state': '9.907',
   })
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_throughput_transmit_actual-entry]
@@ -301,6 +310,9 @@
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
@@ -311,7 +323,7 @@
     'supported_features': 0,
     'translation_key': 'wireless_throughput_tx',
     'unique_id': '01:23:45:67:89:AB_wireless_throughput_tx',
-    'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
   })
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_throughput_transmit_actual-state]
@@ -320,14 +332,14 @@
       'device_class': 'data_rate',
       'friendly_name': 'NanoStation 5AC ap name Throughput transmit (actual)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_throughput_transmit_actual',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '222',
+    'state': '0.222',
   })
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_upload_capacity-entry]
@@ -357,6 +369,9 @@
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
@@ -367,7 +382,7 @@
     'supported_features': 0,
     'translation_key': 'wireless_polling_ul_capacity',
     'unique_id': '01:23:45:67:89:AB_wireless_polling_ul_capacity',
-    'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
   })
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_upload_capacity-state]
@@ -376,14 +391,126 @@
       'device_class': 'data_rate',
       'friendly_name': 'NanoStation 5AC ap name Upload capacity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_upload_capacity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '540540',
+    'state': '540.54',
+  })
+# ---
+# name: test_all_entities[sensor.nanostation_5ac_ap_name_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nanostation_5ac_ap_name_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'airos',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'host_uptime',
+    'unique_id': '01:23:45:67:89:AB_host_uptime',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+  })
+# ---
+# name: test_all_entities[sensor.nanostation_5ac_ap_name_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'NanoStation 5AC ap name Uptime',
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nanostation_5ac_ap_name_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.06583333333333',
+  })
+# ---
+# name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nanostation_5ac_ap_name_wireless_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Wireless distance',
+    'platform': 'airos',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wireless_distance',
+    'unique_id': '01:23:45:67:89:AB_wireless_distance',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'NanoStation 5AC ap name Wireless distance',
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nanostation_5ac_ap_name_wireless_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_frequency-entry]
@@ -437,6 +564,122 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5500',
+  })
+# ---
+# name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'point_to_point',
+        'point_to_multipoint',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nanostation_5ac_ap_name_wireless_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Wireless mode',
+    'platform': 'airos',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wireless_mode',
+    'unique_id': '01:23:45:67:89:AB_wireless_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'NanoStation 5AC ap name Wireless mode',
+      'options': list([
+        'point_to_point',
+        'point_to_multipoint',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nanostation_5ac_ap_name_wireless_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'point_to_point',
+  })
+# ---
+# name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'station',
+        'access_point',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nanostation_5ac_ap_name_wireless_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Wireless role',
+    'platform': 'airos',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wireless_role',
+    'unique_id': '01:23:45:67:89:AB_wireless_role',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'NanoStation 5AC ap name Wireless role',
+      'options': list([
+        'station',
+        'access_point',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nanostation_5ac_ap_name_wireless_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'access_point',
   })
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_ssid-entry]

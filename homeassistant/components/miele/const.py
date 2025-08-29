@@ -850,6 +850,14 @@ COFFEE_SYSTEM_PROGRAM_ID: dict[int, str] = {
     24813: "appliance_settings",  # modify profile name
 }
 
+COFFEE_SYSTEM_PROFILE: dict[range, str] = {
+    range(24000, 24032): "profile_1",
+    range(24032, 24064): "profile_2",
+    range(24064, 24096): "profile_3",
+    range(24096, 24128): "profile_4",
+    range(24128, 24160): "profile_5",
+}
+
 STEAM_OVEN_MICRO_PROGRAM_ID: dict[int, str] = {
     8: "steam_cooking",
     19: "microwave",
@@ -1330,4 +1338,5 @@ class PlatePowerStep(MieleEnum):
     plate_step_17 = 17
     plate_step_18 = 18
     plate_step_boost = 117, 118, 218
+    plate_step_boost_2 = 217
     missing2none = -9999

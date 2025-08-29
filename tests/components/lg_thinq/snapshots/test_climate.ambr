@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[climate.test_air_conditioner-entry]
+# name: test_climate_entities[air_conditioner][climate.test_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8,7 +8,7 @@
       'fan_modes': list([
         'low',
         'high',
-        'mid',
+        'medium',
       ]),
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -60,16 +60,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[climate.test_air_conditioner-state]
+# name: test_climate_entities[air_conditioner][climate.test_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 40,
       'current_temperature': 77,
-      'fan_mode': 'mid',
+      'fan_mode': 'medium',
       'fan_modes': list([
         'low',
         'high',
-        'mid',
+        'medium',
       ]),
       'friendly_name': 'Test air conditioner',
       'hvac_modes': list([

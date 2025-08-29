@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf9d5b7ea61ea4c9a6rom9",
   "name": "CAM PORCH",
   "category": "sp",
   "product_id": "rjKXWRohlvOTyLBu",

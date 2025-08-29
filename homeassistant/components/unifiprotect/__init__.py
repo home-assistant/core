@@ -8,7 +8,7 @@ import logging
 from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Bootstrap
-from uiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 
 # Import the test_util.anonymize module from the uiprotect package
 # in __init__ to ensure it gets imported in the executor since the
@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
             new_api_key = await protect.create_api_key(
                 name=f"Home Assistant ({hass.config.location_name})"
             )
-        except NotAuthorized as err:
+        except (NotAuthorized, BadRequest) as err:
             _LOGGER.error("Failed to create API key: %s", err)
         else:
             protect.set_api_key(new_api_key)

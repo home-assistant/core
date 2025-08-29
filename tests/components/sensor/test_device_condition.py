@@ -329,12 +329,14 @@ async def test_get_condition_capabilities(
                 "description": {"suffix": PERCENTAGE},
                 "name": "above",
                 "optional": True,
+                "required": False,
                 "type": "float",
             },
             {
                 "description": {"suffix": PERCENTAGE},
                 "name": "below",
                 "optional": True,
+                "required": False,
                 "type": "float",
             },
         ]
@@ -398,12 +400,14 @@ async def test_get_condition_capabilities_legacy(
                 "description": {"suffix": PERCENTAGE},
                 "name": "above",
                 "optional": True,
+                "required": False,
                 "type": "float",
             },
             {
                 "description": {"suffix": PERCENTAGE},
                 "name": "below",
                 "optional": True,
+                "required": False,
                 "type": "float",
             },
         ]

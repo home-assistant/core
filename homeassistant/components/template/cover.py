@@ -46,13 +46,13 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
-from .template_entity import (
+from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    TemplateEntity,
     make_template_entity_common_modern_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,7 +122,9 @@ COVER_YAML_SCHEMA = vol.All(
     )
     .extend(COVER_COMMON_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA)
-    .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema),
+    .extend(
+        make_template_entity_common_modern_schema(COVER_DOMAIN, DEFAULT_NAME).schema
+    ),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 

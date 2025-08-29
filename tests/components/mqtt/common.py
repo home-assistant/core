@@ -70,6 +70,78 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "configuration_url": "http://example.com",
 }
 
+MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_LOCAL_CODE = {
+    "4b06357ef8654e8d9c54cee5bb0e9391": {
+        "platform": "alarm_control_panel",
+        "name": "Alarm",
+        "entity_category": "config",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{action}}",
+        "value_template": "{{ value_json.value }}",
+        "code": "1234",
+        "code_arm_required": True,
+        "code_disarm_required": True,
+        "code_trigger_required": True,
+        "payload_arm_away": "ARM_AWAY",
+        "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+        "payload_arm_home": "ARM_HOME",
+        "payload_arm_night": "ARM_NIGHT",
+        "payload_arm_vacation": "ARM_VACATION",
+        "payload_trigger": "TRIGGER",
+        "supported_features": ["arm_home", "arm_away", "trigger"],
+        "retain": False,
+        "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9391",
+    },
+}
+MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE = {
+    "4b06357ef8654e8d9c54cee5bb0e9392": {
+        "platform": "alarm_control_panel",
+        "name": "Alarm",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{action}}",
+        "value_template": "{{ value_json.value }}",
+        "code": "REMOTE_CODE",
+        "code_arm_required": True,
+        "code_disarm_required": True,
+        "code_trigger_required": True,
+        "payload_arm_away": "ARM_AWAY",
+        "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+        "payload_arm_home": "ARM_HOME",
+        "payload_arm_night": "ARM_NIGHT",
+        "payload_arm_vacation": "ARM_VACATION",
+        "payload_trigger": "TRIGGER",
+        "supported_features": ["arm_home", "arm_away", "arm_custom_bypass"],
+        "retain": False,
+        "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9392",
+    },
+}
+MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE_TEXT = {
+    "4b06357ef8654e8d9c54cee5bb0e9393": {
+        "platform": "alarm_control_panel",
+        "name": "Alarm",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{action}}",
+        "value_template": "{{ value_json.value }}",
+        "code": "REMOTE_CODE_TEXT",
+        "code_arm_required": True,
+        "code_disarm_required": True,
+        "code_trigger_required": True,
+        "payload_arm_away": "ARM_AWAY",
+        "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+        "payload_arm_home": "ARM_HOME",
+        "payload_arm_night": "ARM_NIGHT",
+        "payload_arm_vacation": "ARM_VACATION",
+        "payload_trigger": "TRIGGER",
+        "supported_features": ["arm_home", "arm_away", "arm_vacation"],
+        "retain": False,
+        "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9393",
+    },
+}
 MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT = {
     "5b06357ef8654e8d9c54cee5bb0e939b": {
         "platform": "binary_sensor",
@@ -316,6 +388,31 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
     },
 }
 
+MOCK_SUBENTRY_LOCK_COMPONENT = {
+    "3faf1318016c46c5aea26707eeb6f100": {
+        "platform": "lock",
+        "name": "Lock",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "code_format": "^\\d{4}$",
+        "payload_open": "OPEN",
+        "payload_lock": "LOCK",
+        "payload_unlock": "UNLOCK",
+        "payload_reset": "None",
+        "state_jammed": "JAMMED",
+        "state_locked": "LOCKED",
+        "state_locking": "LOCKING",
+        "state_unlocked": "UNLOCKED",
+        "state_unlocking": "UNLOCKING",
+        "retain": False,
+        "entity_category": None,
+        "entity_picture": "https://example.com/3faf1318016c46c5aea26707eeb6f100",
+        "optimistic": True,
+    },
+}
+
 MOCK_SUBENTRY_SENSOR_COMPONENT = {
     "e9261f6feed443e7b7d5f3fbe2a47412": {
         "platform": "sensor",
@@ -419,6 +516,18 @@ MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 
+MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_LOCAL_CODE,
+}
+MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_TEXT_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
+    "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE_TEXT,
+}
+MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
+    "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE,
+}
 MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT,
@@ -458,6 +567,10 @@ MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME = {
 MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT,
+}
+MOCK_LOCK_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_LOCK_COMPONENT,
 }
 MOCK_SENSOR_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},

@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "10706550a4e57c88b93a",
   "name": "Ventilador Cama",
   "category": "fs",
   "product_id": "ibytpo6fpnugft1c",

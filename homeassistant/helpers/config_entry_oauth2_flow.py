@@ -155,7 +155,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def name(self) -> str:
         """Name of the implementation."""
-        return "Configuration.yaml"
+        return "Local application credentials"
 
     @property
     def domain(self) -> str:

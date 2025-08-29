@@ -104,7 +104,12 @@ def async_migrate_entities_unique_ids(
             f"{registry_entry.config_entry_id}_"
         ).removesuffix(f"_{registry_entry.translation_key}")
         if monitor := next(
-            (m for m in metrics.values() if m.monitor_name == name), None
+            (
+                m
+                for m in metrics.values()
+                if m.monitor_name == name and m.monitor_id is not None
+            ),
+            None,
         ):
             entity_registry.async_update_entity(
                 registry_entry.entity_id,

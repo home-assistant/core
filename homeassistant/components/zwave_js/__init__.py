@@ -115,11 +115,7 @@ from .const import (
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_UPDATED_EVENT,
 )
-from .discovery import (
-    ZwaveDiscoveryInfo,
-    async_discover_node_values,
-    async_discover_single_value,
-)
+from .discovery import async_discover_node_values, async_discover_single_value
 from .helpers import (
     async_disable_server_logging_if_needed,
     async_enable_server_logging_if_needed,
@@ -131,7 +127,7 @@ from .helpers import (
     get_valueless_base_unique_id,
 )
 from .migrate import async_migrate_discovered_value
-from .models import ZwaveJSConfigEntry, ZwaveJSData
+from .models import PlatformZwaveDiscoveryInfo, ZwaveJSConfigEntry, ZwaveJSData
 from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
@@ -776,7 +772,7 @@ class NodeEvents:
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
 
-        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo] = {}
 
         # run discovery on all node values and create/update entities
         await asyncio.gather(
@@ -858,8 +854,8 @@ class NodeEvents:
     async def async_handle_discovery_info(
         self,
         device: dr.DeviceEntry,
-        disc_info: ZwaveDiscoveryInfo,
-        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
+        disc_info: PlatformZwaveDiscoveryInfo,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
     ) -> None:
         """Handle discovery info and all dependent tasks."""
         platform = disc_info.platform
@@ -901,7 +897,9 @@ class NodeEvents:
         )
 
     async def async_on_value_added(
-        self, value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
+        self,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
+        value: Value,
     ) -> None:
         """Fire value updated event."""
         # If node isn't ready or a device for this node doesn't already exist, we can
@@ -1036,7 +1034,9 @@ class NodeEvents:
 
     @callback
     def async_on_value_updated_fire_event(
-        self, value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
+        self,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
+        value: Value,
     ) -> None:
         """Fire value updated event."""
         # Get the discovery info for the value that was updated. If there is

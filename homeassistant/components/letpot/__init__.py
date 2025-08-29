@@ -25,6 +25,7 @@ from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,

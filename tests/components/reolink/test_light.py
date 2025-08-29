@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import TEST_NVR_NAME
+from .conftest import TEST_CAM_NAME, TEST_NVR_NAME
 
 from tests.common import MockConfigEntry
 
@@ -45,7 +45,7 @@ async def test_light_state(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_floodlight"
+    entity_id = f"{Platform.LIGHT}.{TEST_CAM_NAME}_floodlight"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -63,7 +63,7 @@ async def test_light_turn_off(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_floodlight"
+    entity_id = f"{Platform.LIGHT}.{TEST_CAM_NAME}_floodlight"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -94,7 +94,7 @@ async def test_light_turn_on(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_floodlight"
+    entity_id = f"{Platform.LIGHT}.{TEST_CAM_NAME}_floodlight"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -128,7 +128,7 @@ async def test_light_turn_on_errors(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_floodlight"
+    entity_id = f"{Platform.LIGHT}.{TEST_CAM_NAME}_floodlight"
 
     reolink_host.set_whiteled.side_effect = exception
     with pytest.raises(HomeAssistantError):

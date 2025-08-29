@@ -10,7 +10,12 @@ from typing import Any, NotRequired, TypedDict
 from uuid import UUID
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import ContextType, Issue as SupervisorIssue
+from aiohasupervisor.models import (
+    ContextType,
+    Issue as SupervisorIssue,
+    UnhealthyReason,
+    UnsupportedReason,
+)
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -59,38 +64,9 @@ INFO_URL_UNSUPPORTED = "https://www.home-assistant.io/more-info/unsupported"
 
 PLACEHOLDER_KEY_REASON = "reason"
 
-UNSUPPORTED_REASONS = {
-    "apparmor",
-    "connectivity_check",
-    "content_trust",
-    "dbus",
-    "dns_server",
-    "docker_configuration",
-    "docker_version",
-    "cgroup_version",
-    "job_conditions",
-    "lxc",
-    "network_manager",
-    "os",
-    "os_agent",
-    "restart_policy",
-    "software",
-    "source_mods",
-    "supervisor_version",
-    "systemd",
-    "systemd_journal",
-    "systemd_resolved",
-}
 # Some unsupported reasons also mark the system as unhealthy. If the unsupported reason
 # provides no additional information beyond the unhealthy one then skip that repair.
 UNSUPPORTED_SKIP_REPAIR = {"privileged"}
-UNHEALTHY_REASONS = {
-    "docker",
-    "supervisor",
-    "setup",
-    "privileged",
-    "untrusted",
-}
 
 # Keys (type + context) of issues that when found should be made into a repair
 ISSUE_KEYS_FOR_REPAIRS = {
@@ -101,6 +77,7 @@ ISSUE_KEYS_FOR_REPAIRS = {
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+    "issue_system_disk_lifetime",
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -201,7 +178,7 @@ class SupervisorIssues:
     def unhealthy_reasons(self, reasons: set[str]) -> None:
         """Set unhealthy reasons. Create or delete repairs as necessary."""
         for unhealthy in reasons - self.unhealthy_reasons:
-            if unhealthy in UNHEALTHY_REASONS:
+            if unhealthy in UnhealthyReason:
                 translation_key = f"{ISSUE_KEY_UNHEALTHY}_{unhealthy}"
                 translation_placeholders = None
             else:
@@ -233,7 +210,7 @@ class SupervisorIssues:
     def unsupported_reasons(self, reasons: set[str]) -> None:
         """Set unsupported reasons. Create or delete repairs as necessary."""
         for unsupported in reasons - UNSUPPORTED_SKIP_REPAIR - self.unsupported_reasons:
-            if unsupported in UNSUPPORTED_REASONS:
+            if unsupported in UnsupportedReason:
                 translation_key = f"{ISSUE_KEY_UNSUPPORTED}_{unsupported}"
                 translation_placeholders = None
             else:

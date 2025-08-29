@@ -476,6 +476,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.FINE_DUST_SENSOR: {
+        Attribute.FINE_DUST_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.FINE_DUST_LEVEL,
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                state_class=SensorStateClass.MEASUREMENT,
+                device_class=SensorDeviceClass.PM25,
+            )
+        ]
+    },
     # Haven't seen at devices yet
     Capability.FORMALDEHYDE_MEASUREMENT: {
         Attribute.FORMALDEHYDE_LEVEL: [
