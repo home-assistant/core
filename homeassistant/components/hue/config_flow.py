@@ -9,7 +9,9 @@ from typing import Any
 import aiohttp
 from aiohue import LinkButtonNotPressed, create_app_key
 from aiohue.discovery import DiscoveredHueBridge, discover_bridge, discover_nupnp
+from aiohue.errors import AiohueException
 from aiohue.util import normalize_bridge_id
+from aiohue.v2 import HueBridgeV2
 import slugify as unicode_slug
 import voluptuous as vol
 
@@ -74,7 +76,10 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         """Return a DiscoveredHueBridge object."""
         try:
             bridge = await discover_bridge(
-                host, websession=aiohttp_client.async_get_clientsession(self.hass)
+                host,
+                websession=aiohttp_client.async_get_clientsession(
+                    self.hass, verify_ssl=False
+                ),
             )
         except aiohttp.ClientError as err:
             LOGGER.warning(
@@ -110,7 +115,9 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(5):
                 bridges = await discover_nupnp(
-                    websession=aiohttp_client.async_get_clientsession(self.hass)
+                    websession=aiohttp_client.async_get_clientsession(
+                        self.hass, verify_ssl=False
+                    )
                 )
         except TimeoutError:
             bridges = []
@@ -178,7 +185,9 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             app_key = await create_app_key(
                 bridge.host,
                 f"home-assistant#{device_name}",
-                websession=aiohttp_client.async_get_clientsession(self.hass),
+                websession=aiohttp_client.async_get_clientsession(
+                    self.hass, verify_ssl=False
+                ),
             )
         except LinkButtonNotPressed:
             errors["base"] = "register_failed"
@@ -228,7 +237,6 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: discovery_info.host}, reload_on_update=True
         )
-
         # we need to query the other capabilities too
         bridge = await self._get_bridge(
             discovery_info.host, discovery_info.properties["bridgeid"]
@@ -236,6 +244,10 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         if bridge is None:
             return self.async_abort(reason="cannot_connect")
         self.bridge = bridge
+        if bridge.supports_v2 and discovery_info.properties.get("modelid") == "BSB003":
+            # try to handle migration of BSB002 --> BSB003
+            await self._check_migrated_bridge(bridge)
+
         return await self.async_step_link()
 
     async def async_step_homekit(
@@ -271,6 +283,58 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         self.bridge = bridge
         return await self.async_step_link()
+
+    async def _check_migrated_bridge(self, bridge: DiscoveredHueBridge) -> None:
+        """Check if the discovered bridge is a migrated bridge."""
+        # Try to handle migration of BSB002 --> BSB003.
+        # Once we detect a BSB003 bridge on the network which has not yet been
+        # configured in HA (otherwise we would have had a unique id match),
+        # we check if we have any existing (BSB002) entries and if we can connect to the
+        # new bridge with our previously stored api key.
+        # If that succeeds, we migrate the entry to the new bridge.
+        for conf_entry in self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False, include_disabled=False
+        ):
+            if conf_entry.data.get(CONF_API_VERSION) != 2:
+                continue
+            if conf_entry.unique_id == bridge.id:
+                continue
+            if conf_entry.data.get(CONF_HOST) == bridge.host:
+                continue
+            # found an existing (BSB002) bridge entry,
+            # check if we can connect to the new BSB003 bridge using the old credentials
+            if not (old_app_key := conf_entry.data.get(CONF_API_KEY)):
+                continue  # guard
+            api = HueBridgeV2(bridge.host, old_app_key)
+            try:
+                await api.fetch_full_state()
+            except (AiohueException, aiohttp.ClientError):
+                continue
+            # found a matching entry, migrate it
+            self.hass.config_entries.async_update_entry(
+                conf_entry,
+                data={
+                    **conf_entry.data,
+                    CONF_HOST: bridge.host,
+                },
+                unique_id=bridge.id,
+            )
+            # also update the bridge device
+            dev_reg = dr.async_get(self.hass)
+            conf_entry_devices = dev_reg.devices.get_devices_for_config_entry_id(
+                conf_entry.entry_id
+            )
+            if bridge_device := next(
+                (d for d in conf_entry_devices if d.model_id == "BSB002"), None
+            ):
+                dev_reg.async_update_device(
+                    bridge_device.id,
+                    # overwrite identifiers with new bridge id
+                    new_identifiers={(DOMAIN, bridge.id)},
+                    # overwrite mac addresses with empty set to drop the old (incorrect) addresses
+                    # this will be auto corrected once the integration is loaded
+                    new_connections=set(),
+                )
 
 
 class HueV1OptionsFlowHandler(OptionsFlow):
