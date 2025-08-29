@@ -60,17 +60,7 @@
           'unit': '',
           'value': 'heat',
         }),
-        'hvac_mode2': dict({
-          'data_type': 1,
-          'desc': 'Reduziert',
-          'error': 0,
-          'name': 'Operating mode',
-          'precision': None,
-          'readonly': 0,
-          'readwrite': 0,
-          'unit': '',
-          'value': 2,
-        }),
+        'hvac_mode_changeover': None,
         'room1_temp_setpoint_boost': dict({
           'data_type': 1,
           'desc': 'Boost',
