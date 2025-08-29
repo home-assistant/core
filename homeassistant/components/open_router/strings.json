@@ -1,4 +1,5 @@
 {
+  "title": "OpenRouter Fixed",
   "config": {
     "step": {
       "user": {
@@ -18,6 +19,13 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure OpenRouter Fixed"
+      }
+    }
+  },
   "config_subentries": {
     "conversation": {
       "step": {
@@ -29,7 +37,7 @@
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]"
           },
           "data_description": {
-            "model": "The model to use for the conversation agent",
+            "model": "The model to use for the conversation agent. For image analysis, choose vision models like gpt-4-vision-preview, claude-3-haiku, claude-3-sonnet, or claude-3-opus.",
             "prompt": "Instruct how the LLM should respond. This can be a template."
           }
         }
@@ -46,8 +54,12 @@
     "ai_task_data": {
       "step": {
         "user": {
+          "description": "Configure the AI task for data generation. Use vision models for image analysis (camera snapshots, uploaded images, etc.)",
           "data": {
-            "model": "[%key:component::open_router::config_subentries::conversation::step::user::data::model%]"
+            "model": "Model"
+          },
+          "data_description": {
+            "model": "The model to use for AI tasks. For analyzing images/camera snapshots, choose vision models like gpt-4-vision-preview, claude-3-haiku, claude-3-sonnet, or claude-3-opus."
           }
         }
       },
@@ -58,6 +70,16 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "add_conversation_agent": {
+        "name": "Add conversation agent"
+      },
+      "add_ai_task": {
+        "name": "Add AI task"
       }
     }
   }
