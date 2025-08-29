@@ -214,11 +214,11 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.Schema(
         vol.Optional(ATTR_CAPTION): cv.string,
         vol.Required(ATTR_MEDIA_TYPE): vol.In(
             (
-                InputMediaType.ANIMATION,
-                InputMediaType.AUDIO,
-                InputMediaType.VIDEO,
-                InputMediaType.DOCUMENT,
-                InputMediaType.PHOTO,
+                str(InputMediaType.ANIMATION),
+                str(InputMediaType.AUDIO),
+                str(InputMediaType.VIDEO),
+                str(InputMediaType.DOCUMENT),
+                str(InputMediaType.PHOTO),
             )
         ),
         vol.Optional(ATTR_URL): cv.string,
