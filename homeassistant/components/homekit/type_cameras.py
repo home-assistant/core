@@ -1,10 +1,12 @@
 """Class to hold all camera accessories."""
 
 import asyncio
+import base64
 from datetime import timedelta
 import logging
 from typing import Any
 
+import gi
 from haffmpeg.core import FFMPEG_STDERR, HAFFmpeg
 from pyhap.camera import (
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
@@ -42,6 +44,7 @@ from .const import (
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
     CONF_STREAM_ADDRESS,
+    CONF_STREAM_BACKEND,  # ffmpeg || gstreamer
     CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
@@ -55,6 +58,7 @@ from .const import (
     DEFAULT_MAX_FPS,
     DEFAULT_MAX_HEIGHT,
     DEFAULT_MAX_WIDTH,
+    DEFAULT_STREAM_BACKEND,
     DEFAULT_STREAM_COUNT,
     DEFAULT_SUPPORT_AUDIO,
     DEFAULT_VIDEO_CODEC,
@@ -66,10 +70,14 @@ from .const import (
 from .doorbell import HomeDoorbellAccessory
 from .util import pid_is_alive, state_changed_event_is_same_state
 
+gi.require_version("Gst", "1.0")
+gi.require_version("GstRtp", "1.0")
+from gi.repository import Gst, GstRtp  # noqa: E402
+
 _LOGGER = logging.getLogger(__name__)
 
 
-VIDEO_OUTPUT = (
+FFMPEG_VIDEO_OUTPUT = (
     "-map {v_map} -an "
     "-c:v {v_codec} "
     "{v_profile}"
@@ -83,7 +91,7 @@ VIDEO_OUTPUT = (
     "localrtpport={v_port}&pkt_size={v_pkt_size}"
 )
 
-AUDIO_OUTPUT = (
+FFMPEG_AUDIO_OUTPUT = (
     "-map {a_map} -vn "
     "-c:a {a_encoder} "
     "{a_application}"
@@ -94,6 +102,29 @@ AUDIO_OUTPUT = (
     "-srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params {a_srtp_key} "
     "srtp://{address}:{a_port}?rtcpport={a_port}&"
     "localrtpport={a_port}&pkt_size={a_pkt_size}"
+)
+GSTREAMER_VIDEO_OUTPUT = (
+    'rtspsrc location="{stream_source}" name=src '
+    "src. ! rtph264depay ! h264parse ! avdec_h264 ! videorate ! "
+    "video/x-raw,framerate={fps}/1 ! "
+    "videoconvert ! videoscale ! "
+    "video/x-raw,width={width},height={height},framerate={fps}/1 ! "
+    "x264enc speed-preset=ultrafast tune=zerolatency key-int-max=60 bitrate={v_max_bitrate} threads=3 ! "
+    "video/x-h264,profile=baseline ! h264parse config-interval=1 ! "
+    "rtph264pay pt=99 ssrc={v_ssrc} ! "
+    "queue max-size-buffers=0 max-size-time=0 max-size-bytes=0 leaky=downstream ! "
+    "srtpenc key={v_srtp_key} rtp-cipher=aes-128-icm rtp-auth=hmac-sha1-80 ! "
+    "udpsink host={address} port={v_port} sync=false async=false"
+)
+GSTREAMER_AUDIO_OUTPUT = (
+    "src. ! application/x-rtp,media=audio,"
+    "payload=97,encoding-name=MPEG4-GENERIC,clock-rate={a_sample_rate} ! "
+    "rtpmp4gdepay ! avdec_aac ! audioconvert ! audioresample ! "
+    "audio/x-raw,rate={a_sample_rate},channels=1 ! "
+    "opusenc frame-size={a_packet_time} bitrate={a_sample_rate} ! "
+    "rtpopuspay name=pay pt=110 ssrc={a_ssrc} ! "
+    "srtpenc key={a_srtp_key} rtp-cipher=aes-128-icm rtp-auth=hmac-sha1-80 ! "
+    "udpsink host={address} port={a_port} sync=false async=false"
 )
 
 SLOW_RESOLUTIONS = [
@@ -134,6 +165,7 @@ CONFIG_DEFAULTS = {
     CONF_VIDEO_PROFILE_NAMES: DEFAULT_VIDEO_PROFILE_NAMES,
     CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
     CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
+    CONF_STREAM_BACKEND: DEFAULT_STREAM_BACKEND,
     CONF_STREAM_COUNT: DEFAULT_STREAM_COUNT,
 }
 
@@ -158,6 +190,10 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         for config_key, conf in CONFIG_DEFAULTS.items():
             if config_key not in config:
                 config[config_key] = conf
+
+        Gst.init(None)
+        self._pipeline = Gst.Pipeline.new("empty")
+        self._acc_ts = 0
 
         max_fps = config[CONF_MAX_FPS]
         max_width = config[CONF_MAX_WIDTH]
@@ -327,76 +363,155 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         if not (input_source := await self._async_get_stream_source()):
             _LOGGER.error("Camera has no stream source")
             return False
-        if "-i " not in input_source:
-            input_source = "-i " + input_source
-        video_profile = ""
-        if self.config[CONF_VIDEO_CODEC] != "copy":
-            video_profile = (
-                "-profile:v "
-                + self.config[CONF_VIDEO_PROFILE_NAMES][
-                    int.from_bytes(stream_config["v_profile_id"], byteorder="big")
-                ]
-                + " "
+
+        if self.config.get(CONF_STREAM_BACKEND) == "ffmpeg":
+            if "-i " not in input_source:
+                input_source = "-i " + input_source
+            video_profile = ""
+            if self.config[CONF_VIDEO_CODEC] != "copy":
+                video_profile = (
+                    "-profile:v "
+                    + self.config[CONF_VIDEO_PROFILE_NAMES][
+                        int.from_bytes(stream_config["v_profile_id"], byteorder="big")
+                    ]
+                    + " "
+                )
+            audio_application = ""
+            if self.config[CONF_AUDIO_CODEC] == "libopus":
+                audio_application = "-application lowdelay "
+            output_vars = stream_config.copy()
+            output_vars.update(
+                {
+                    "v_profile": video_profile,
+                    "v_bufsize": stream_config["v_max_bitrate"] * 4,
+                    "v_map": self.config[CONF_VIDEO_MAP],
+                    "v_pkt_size": self.config[CONF_VIDEO_PACKET_SIZE],
+                    "v_codec": self.config[CONF_VIDEO_CODEC],
+                    "a_bufsize": stream_config["a_max_bitrate"] * 4,
+                    "a_map": self.config[CONF_AUDIO_MAP],
+                    "a_pkt_size": self.config[CONF_AUDIO_PACKET_SIZE],
+                    "a_encoder": self.config[CONF_AUDIO_CODEC],
+                    "a_application": audio_application,
+                }
             )
-        audio_application = ""
-        if self.config[CONF_AUDIO_CODEC] == "libopus":
-            audio_application = "-application lowdelay "
-        output_vars = stream_config.copy()
-        output_vars.update(
-            {
-                "v_profile": video_profile,
-                "v_bufsize": stream_config["v_max_bitrate"] * 4,
-                "v_map": self.config[CONF_VIDEO_MAP],
-                "v_pkt_size": self.config[CONF_VIDEO_PACKET_SIZE],
-                "v_codec": self.config[CONF_VIDEO_CODEC],
-                "a_bufsize": stream_config["a_max_bitrate"] * 4,
-                "a_map": self.config[CONF_AUDIO_MAP],
-                "a_pkt_size": self.config[CONF_AUDIO_PACKET_SIZE],
-                "a_encoder": self.config[CONF_AUDIO_CODEC],
-                "a_application": audio_application,
-            }
-        )
-        output = VIDEO_OUTPUT.format(**output_vars)
-        if self.config[CONF_SUPPORT_AUDIO]:
-            output = output + " " + AUDIO_OUTPUT.format(**output_vars)
-        _LOGGER.debug("FFmpeg output settings: %s", output)
-        stream = HAFFmpeg(self._ffmpeg.binary)
-        opened = await stream.open(
-            cmd=[],
-            input_source=input_source,
-            output=output,
-            extra_cmd="-hide_banner -nostats",
-            stderr_pipe=True,
-            stdout_pipe=False,
-        )
-        if not opened:
-            _LOGGER.error("Failed to open ffmpeg stream")
-            return False
+            _LOGGER.info(output_vars)
+            output = FFMPEG_VIDEO_OUTPUT.format(**output_vars)
+            if self.config[CONF_SUPPORT_AUDIO]:
+                output = output + " " + FFMPEG_AUDIO_OUTPUT.format(**output_vars)
+            _LOGGER.debug("FFmpeg output settings: %s", output)
+            stream = HAFFmpeg(self._ffmpeg.binary)
+            opened = await stream.open(
+                cmd=[],
+                input_source=input_source,
+                output=output,
+                extra_cmd="-hide_banner -nostats",
+                stderr_pipe=True,
+                stdout_pipe=False,
+            )
+            if not opened:
+                _LOGGER.error("Failed to open ffmpeg stream")
+                return False
 
-        _LOGGER.debug(
-            "[%s] Started stream process - PID %d",
-            session_info["id"],
-            stream.process.pid,
-        )
+            _LOGGER.debug(
+                "[%s] Started stream process - PID %d",
+                session_info["id"],
+                stream.process.pid,
+            )
 
-        session_info["stream"] = stream
-        session_info[FFMPEG_PID] = stream.process.pid
+            session_info["stream"] = stream
+            session_info[FFMPEG_PID] = stream.process.pid
 
-        stderr_reader = await stream.get_reader(source=FFMPEG_STDERR)
+            stderr_reader = await stream.get_reader(source=FFMPEG_STDERR)
 
-        async def watch_session(_: Any) -> None:
-            await self._async_ffmpeg_watch(session_info["id"])
+            async def watch_session(_: Any) -> None:
+                await self._async_ffmpeg_watch(session_info["id"])
 
-        session_info[FFMPEG_LOGGER] = create_eager_task(
-            self._async_log_stderr_stream(stderr_reader)
-        )
-        session_info[FFMPEG_WATCHER] = async_track_time_interval(
-            self.hass,
-            watch_session,
-            FFMPEG_WATCH_INTERVAL,
-        )
+            session_info[FFMPEG_LOGGER] = create_eager_task(
+                self._async_log_stderr_stream(stderr_reader)
+            )
+            session_info[FFMPEG_WATCHER] = async_track_time_interval(
+                self.hass,
+                watch_session,
+                FFMPEG_WATCH_INTERVAL,
+            )
 
-        return await self._async_ffmpeg_watch(session_info["id"])
+            return await self._async_ffmpeg_watch(session_info["id"])
+
+        if self.config.get(CONF_STREAM_BACKEND) == "gstreamer":
+            output_vars = stream_config.copy()
+
+            output_vars.update(
+                {
+                    "stream_source": input_source,
+                    "v_srtp_key": base64.b64decode(session_info["v_srtp_key"]).hex(),
+                    "a_srtp_key": base64.b64decode(session_info["a_srtp_key"]).hex(),
+                    "a_sample_rate": stream_config["a_sample_rate"] * 1000,
+                    "a_max_bitrate": stream_config["a_max_bitrate"] * 1000,
+                    "v_max_bitrate": stream_config["v_max_bitrate"] * 1000,
+                }
+            )
+            pipeline_str = GSTREAMER_VIDEO_OUTPUT.format(**output_vars)
+
+            if self.config[CONF_SUPPORT_AUDIO]:
+                pipeline_str += " " + GSTREAMER_AUDIO_OUTPUT.format(**output_vars)
+
+            _LOGGER.debug("GStreamer pipeline: %s", pipeline_str)
+            self._pipeline = Gst.parse_launch(pipeline_str)
+            if self.config[CONF_SUPPORT_AUDIO]:
+                pay = self._pipeline.get_by_name("pay")
+                pad = pay.get_static_pad("src")
+
+                def on_rtp_packet(
+                    pad: Gst.Pad, info: Gst.PadProbeInfo
+                ) -> Gst.PadProbeReturn:
+                    buf = info.get_buffer()
+                    if buf is None:
+                        return Gst.PadProbeReturn.OK
+
+                    if not buf:
+                        return Gst.PadProbeReturn.OK
+
+                    rtp_buf = GstRtp.RTPBuffer()
+                    success, rtp_buf = GstRtp.RTPBuffer.map(buf, Gst.MAP_READWRITE)
+                    if not success:
+                        return Gst.PadProbeReturn.OK
+
+                    ts = rtp_buf.get_timestamp()
+                    hdr_len = rtp_buf.get_header_len()
+
+                    # Rewrite the timestamp to conform with RFC 3550
+                    time_inc = int(
+                        output_vars["a_sample_rate"]
+                        * output_vars["a_packet_time"]
+                        / 1000
+                    )
+                    self._acc_ts += time_inc
+                    rtp_buf.set_timestamp(self._acc_ts)
+                    rtp_buf.unmap()
+
+                    success2, mapinfo = buf.map(Gst.MapFlags.READ)
+                    toc = mapinfo.data[hdr_len]
+                    config = (toc & 0xF8) >> 3
+                    code = toc & 0x03
+                    buf.unmap(mapinfo)
+
+                    _LOGGER.debug(
+                        "Sample rate: %s, Old Timestamp: %s, Config: %s, Code: %s, Time inc: %s, New Timestamp: %s",
+                        output_vars["a_sample_rate"],
+                        ts,
+                        config,
+                        code,
+                        time_inc,
+                        self._acc_ts,
+                    )
+
+                    return Gst.PadProbeReturn.OK
+
+            pad.add_probe(Gst.PadProbeType.BUFFER, on_rtp_packet)
+        # Start streaming
+        self._pipeline.set_state(Gst.State.PLAYING)
+        _LOGGER.debug("Gstreamer stream started")
+        return True
 
     async def _async_log_stderr_stream(
         self, stderr_reader: asyncio.StreamReader
@@ -445,7 +560,10 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             _LOGGER.debug("No stream for session ID %s", session_id)
             return
 
-        self._async_stop_ffmpeg_watch(session_id)
+        if self.config.get(CONF_STREAM_BACKEND) == "ffmpeg":
+            self._async_stop_ffmpeg_watch(session_id)
+        elif self.config.get(CONF_STREAM_BACKEND) == "gstreamer":
+            self._pipeline.set_state(Gst.State.NULL)
 
         if not pid_is_alive(stream.process.pid):
             _LOGGER.warning("[%s] Stream already stopped", session_id)
