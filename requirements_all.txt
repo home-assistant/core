@@ -528,7 +528,7 @@ arris-tg2492lg==2.2.0
 asmog==0.0.6
 
 # homeassistant.components.asuswrt
-asusrouter==1.20.0
+asusrouter==1.20.1
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -1133,7 +1133,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.4
 
 # homeassistant.components.bluetooth
-habluetooth==5.1.0
+habluetooth==5.2.0
 
 # homeassistant.components.cloud
 hass-nabucasa==1.0.0
