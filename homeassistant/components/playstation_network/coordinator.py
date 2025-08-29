@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
+import json
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -21,12 +22,14 @@ from psnawp_api.models.group.group_datatypes import GroupDetails
 from psnawp_api.models.trophies import TrophyTitle
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -163,13 +166,34 @@ class PlaystationNetworkGroupsUpdateCoordinator(
 
     async def update_data(self) -> dict[str, GroupDetails]:
         """Update groups data."""
-        return await self.hass.async_add_executor_job(
-            lambda: {
-                group_info.group_id: group_info.get_group_information()
-                for group_info in self.psn.client.get_groups()
-                if not group_info.group_id.startswith("~")
-            }
-        )
+        try:
+            return await self.hass.async_add_executor_job(
+                lambda: {
+                    group_info.group_id: group_info.get_group_information()
+                    for group_info in self.psn.client.get_groups()
+                    if not group_info.group_id.startswith("~")
+                }
+            )
+        except PSNAWPForbiddenError as e:
+            try:
+                error = json.loads(e.args[0])
+            except json.JSONDecodeError as err:
+                raise PSNAWPServerError from err
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"group_chat_forbidden_{self.config_entry.entry_id}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="group_chat_forbidden",
+                translation_placeholders={
+                    CONF_NAME: self.config_entry.title,
+                    "error_message": error["error"]["message"],
+                },
+            )
+            await self.async_shutdown()
+            return {}
 
 
 class PlaystationNetworkFriendDataCoordinator(
