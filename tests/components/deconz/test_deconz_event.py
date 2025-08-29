@@ -77,8 +77,15 @@ async def test_deconz_events(
     """Test successful creation of deconz events."""
     assert len(hass.states.async_all()) == 3
     # 5 switches + 1 additional device for deconz gateway
-    assert len(dr.async_entries_for_config_entry(device_registry, config_entry_setup.entry_id)) == 6
-    
+    assert (
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_setup.entry_id
+            )
+        )
+        == 6
+    )
+
     assert hass.states.get("sensor.switch_2_battery").state == "100"
     assert hass.states.get("sensor.switch_3_battery").state == "100"
     assert hass.states.get("sensor.switch_4_battery").state == "100"
@@ -228,7 +235,14 @@ async def test_deconz_alarm_events(
     """Test successful creation of deconz alarm events."""
     assert len(hass.states.async_all()) == 4
     # 1 alarm control device + 1 additional device for deconz gateway
-    assert len(dr.async_entries_for_config_entry(device_registry, config_entry_setup.entry_id)) == 2
+    assert (
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_setup.entry_id
+            )
+        )
+        == 2
+    )
 
     captured_events = async_capture_events(hass, CONF_DECONZ_ALARM_EVENT)
 
@@ -342,7 +356,14 @@ async def test_deconz_presence_events(
 ) -> None:
     """Test successful creation of deconz presence events."""
     assert len(hass.states.async_all()) == 5
-    assert len(dr.async_entries_for_config_entry(device_registry, config_entry_setup.entry_id)) == 2
+    assert (
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_setup.entry_id
+            )
+        )
+        == 2
+    )
 
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, "xx:xx:xx:xx:xx:xx:xx:xx")}
@@ -411,7 +432,14 @@ async def test_deconz_relative_rotary_events(
 ) -> None:
     """Test successful creation of deconz relative rotary events."""
     assert len(hass.states.async_all()) == 1
-    assert len(dr.async_entries_for_config_entry(device_registry, config_entry_setup.entry_id)) == 2
+    assert (
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_setup.entry_id
+            )
+        )
+        == 2
+    )
 
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, "xx:xx:xx:xx:xx:xx:xx:xx")}
@@ -472,4 +500,11 @@ async def test_deconz_events_bad_unique_id(
 ) -> None:
     """Verify no devices are created if unique id is bad or missing."""
     assert len(hass.states.async_all()) == 1
-    assert len(dr.async_entries_for_config_entry(device_registry, config_entry_setup.entry_id)) == 1
+    assert (
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_setup.entry_id
+            )
+        )
+        == 1
+    )

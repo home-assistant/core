@@ -332,7 +332,11 @@ async def test_remove_orphaned_entries_service(
 
     assert (
         len(
-            [entry for entry in device_registry.devices.values() if config_entry_setup.entry_id in entry.config_entries]
+            [
+                entry
+                for entry in device_registry.devices.values()
+                if config_entry_setup.entry_id in entry.config_entries
+            ]
         )
         == 4  # Gateway, light, switch and orphan
     )
@@ -346,7 +350,14 @@ async def test_remove_orphaned_entries_service(
         device_id=device.id,
     )
 
-    assert len(er.async_entries_for_config_entry(entity_registry, config_entry_setup.entry_id)) == 3
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, config_entry_setup.entry_id
+            )
+        )
+        == 3  # Light, switch battery and orphan
+    )
 
     await hass.services.async_call(
         DOMAIN,
@@ -357,9 +368,20 @@ async def test_remove_orphaned_entries_service(
 
     assert (
         len(
-            [entry for entry in device_registry.devices.values() if config_entry_setup.entry_id in entry.config_entries]
+            [
+                entry
+                for entry in device_registry.devices.values()
+                if config_entry_setup.entry_id in entry.config_entries
+            ]
         )
         == 3  # Gateway, light and switch
     )
 
-    assert len(er.async_entries_for_config_entry(entity_registry, config_entry_setup.entry_id)) == 2
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, config_entry_setup.entry_id
+            )
+        )
+        == 2  # Light and switch battery
+    )
