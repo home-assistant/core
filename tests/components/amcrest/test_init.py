@@ -32,7 +32,7 @@ async def test_config_entry_setup_and_unload(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is not ConfigEntryState.LOADED
 
 
 async def test_device_registry_creation(

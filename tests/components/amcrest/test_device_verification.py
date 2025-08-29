@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 from homeassistant.components.amcrest.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -70,7 +70,7 @@ async def test_device_and_entity_creation_verification(
     )
 
     # The key device should be registered with serial number identifier
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "ABCD1234567890")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "ABCD1234567890")})  # type: ignore[assignment]
     assert device is not None, (
         "Device should be registered with serial number identifier"
     )

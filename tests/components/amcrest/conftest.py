@@ -4,19 +4,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def device_registry(hass):
+def device_registry(hass: HomeAssistant):
     """Return an empty device registry."""
     return dr.async_get(hass)
 
 
 @pytest.fixture
-def entity_registry(hass):
+def entity_registry(hass: HomeAssistant):
     """Return an empty entity registry."""
     return er.async_get(hass)
 
