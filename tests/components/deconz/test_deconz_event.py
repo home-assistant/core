@@ -85,7 +85,6 @@ async def test_deconz_events(
         )
         == 6
     )
-
     assert hass.states.get("sensor.switch_2_battery").state == "100"
     assert hass.states.get("sensor.switch_3_battery").state == "100"
     assert hass.states.get("sensor.switch_4_battery").state == "100"
@@ -320,6 +319,7 @@ async def test_deconz_alarm_events(
     await sensor_ws_data({"state": {"panel": AncillaryControlPanel.ARMED_AWAY}})
     assert len(captured_events) == 4
 
+
 @pytest.mark.parametrize(
     "sensor_payload",
     [
@@ -397,6 +397,7 @@ async def test_deconz_presence_events(
     await sensor_ws_data({"state": {"presenceevent": PresenceStatePresenceEvent.NINE}})
     assert len(captured_events) == 0
 
+
 @pytest.mark.parametrize(
     "sensor_payload",
     [
@@ -472,6 +473,7 @@ async def test_deconz_relative_rotary_events(
 
     await sensor_ws_data({"name": "123"})
     assert len(captured_events) == 0
+
 
 @pytest.mark.parametrize(
     "sensor_payload",
