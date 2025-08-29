@@ -247,7 +247,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==39.0.0
+aioesphomeapi==39.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -625,7 +625,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==3.1.0
+bleak-esphome==3.2.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.4.3
@@ -686,7 +686,7 @@ bring-api==1.1.0
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==5.0.1
+brother==5.1.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -1509,7 +1509,7 @@ nettigo-air-monitor==5.0.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.11.0
+nexia==2.11.1
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -2667,7 +2667,7 @@ renault-api==0.4.0
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.14.7
+reolink-aio==0.15.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
