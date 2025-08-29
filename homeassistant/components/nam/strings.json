@@ -101,17 +101,6 @@
           "medium": "[%key:common::state::medium%]",
           "high": "[%key:common::state::high%]",
           "very_high": "[%key:common::state::very_high%]"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "very_low": "[%key:common::state::very_low%]",
-              "low": "[%key:common::state::low%]",
-              "medium": "[%key:common::state::medium%]",
-              "high": "[%key:common::state::high%]",
-              "very_high": "[%key:common::state::very_high%]"
-            }
-          }
         }
       },
       "pmsx003_pm1": {
@@ -134,17 +123,6 @@
           "medium": "[%key:common::state::medium%]",
           "high": "[%key:common::state::high%]",
           "very_high": "[%key:common::state::very_high%]"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "very_low": "[%key:common::state::very_low%]",
-              "low": "[%key:common::state::low%]",
-              "medium": "[%key:common::state::medium%]",
-              "high": "[%key:common::state::high%]",
-              "very_high": "[%key:common::state::very_high%]"
-            }
-          }
         }
       },
       "sds011_pm10": {
@@ -170,17 +148,6 @@
           "medium": "[%key:common::state::medium%]",
           "high": "[%key:common::state::high%]",
           "very_high": "[%key:common::state::very_high%]"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "very_low": "[%key:common::state::very_low%]",
-              "low": "[%key:common::state::low%]",
-              "medium": "[%key:common::state::medium%]",
-              "high": "[%key:common::state::high%]",
-              "very_high": "[%key:common::state::very_high%]"
-            }
-          }
         }
       },
       "sps30_pm1": {
