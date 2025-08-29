@@ -75,8 +75,8 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
         self._attr_temperature_unit = data.coordinator.client.get_temperature_unit
         if data.coordinator.data.dhw.reduced_setpoint is not None:
             self._attr_min_temp = data.coordinator.data.dhw.reduced_setpoint.value
-        if data.coordinator.data.dhw.nominal_setpoint is not None:
-            self._attr_max_temp = data.coordinator.data.dhw.nominal_setpoint.value
+        if data.coordinator.data.dhw.nominal_setpoint_max is not None:
+            self._attr_max_temp = data.coordinator.data.dhw.nominal_setpoint_max.value
 
     @property
     def current_operation(self) -> str | None:
