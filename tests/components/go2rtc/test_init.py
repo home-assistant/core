@@ -746,7 +746,6 @@ async def _test_camera_orientation_webrtc(
 ) -> None:
     """Test camera orientation handling in go2rtc provider on WebRTC stream."""
 
-    # Ensure go2rtc provider is initialized
     async def camera_fn(hass: HomeAssistant, camera: MockCamera) -> None:
         """Mock function to simulate WebRTC offer handling."""
         receive_message_callback = Mock()
