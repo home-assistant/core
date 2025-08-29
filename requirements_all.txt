@@ -185,7 +185,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.0
 
 # homeassistant.components.alexa_devices
-aioamazondevices==5.0.0
+aioamazondevices==5.0.1
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -453,7 +453,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.4.3
+airos==0.4.4
 
 # homeassistant.components.airthings_ble
 airthings-ble==0.9.2
@@ -528,7 +528,7 @@ arris-tg2492lg==2.2.0
 asmog==0.0.6
 
 # homeassistant.components.asuswrt
-asusrouter==1.20.0
+asusrouter==1.20.1
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -628,7 +628,7 @@ bizkaibus==0.1.1
 bleak-esphome==3.1.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==4.4.1
+bleak-retry-connector==4.4.3
 
 # homeassistant.components.bluetooth
 bleak==1.0.1
@@ -777,7 +777,7 @@ decora-wifi==1.4
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==13.6.0
+deebot-client==13.7.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -983,7 +983,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection[qr]==1.14.0
+fritzconnection[qr]==1.15.0
 
 # homeassistant.components.fyta
 fyta_cli==0.7.2
@@ -999,6 +999,9 @@ gassist-text==0.0.14
 
 # homeassistant.components.google
 gcal-sync==8.0.0
+
+# homeassistant.components.aladdin_connect
+genie-partner-sdk==1.0.10
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1127,10 +1130,10 @@ ha-philipsjs==3.2.2
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.4.3
+habiticalib==0.4.4
 
 # homeassistant.components.bluetooth
-habluetooth==5.1.0
+habluetooth==5.2.0
 
 # homeassistant.components.cloud
 hass-nabucasa==1.0.0
@@ -1174,10 +1177,10 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250811.1
+home-assistant-frontend==20250828.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.7.30
+home-assistant-intents==2025.8.27
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.3.0
@@ -1506,7 +1509,7 @@ nettigo-air-monitor==5.0.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.10.0
+nexia==2.11.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
