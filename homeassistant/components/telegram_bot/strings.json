@@ -138,6 +138,21 @@
         "digest": "Digest",
         "bearer_token": "Bearer token"
       }
+    },
+    "chat_action": {
+      "options": {
+        "typing": "Typing",
+        "upload_photo": "Uploading photo",
+        "record_video": "Recording video",
+        "upload_video": "Uploading video",
+        "record_voice": "Recording voice",
+        "upload_voice": "Uploading voice",
+        "upload_document": "Uploading document",
+        "choose_sticker": "Choosing sticker",
+        "find_location": "Finding location",
+        "record_video_note": "Recording video note",
+        "upload_video_note": "Uploading video note"
+      }
     }
   },
   "services": {
@@ -196,6 +211,32 @@
         "message_thread_id": {
           "name": "Message thread ID",
           "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only."
+        }
+      }
+    },
+    "send_chat_action": {
+      "name": "Send chat action",
+      "description": "Sends a chat action.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to send the chat action."
+        },
+        "chat_action": {
+          "name": "Chat action",
+          "description": "Chat action to be sent."
+        },
+        "target": {
+          "name": "Target",
+          "description": "An array of pre-authorized chat IDs to send the chat action to. If not present, first allowed chat ID is the default."
+        },
+        "timeout": {
+          "name": "Read timeout",
+          "description": "Timeout for sending the chat action in seconds."
+        },
+        "message_thread_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
       }
     },
