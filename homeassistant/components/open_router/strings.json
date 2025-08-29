@@ -56,7 +56,7 @@
         "user": {
           "description": "Configure the AI task for data generation. Use vision models for image analysis (camera snapshots, uploaded images, etc.)",
           "data": {
-            "model": "Model"
+            "model": "[%key:component::open_router::config_subentries::conversation::step::user::data::model%]"
           },
           "data_description": {
             "model": "The model to use for AI tasks. For analyzing images/camera snapshots, choose vision models like gpt-4-vision-preview, claude-3-haiku, claude-3-sonnet, or claude-3-opus."
