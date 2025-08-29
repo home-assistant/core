@@ -21,7 +21,6 @@ async def test_camera_setup(
 ) -> None:
     """Test camera setup and device registration."""
     mock_config_entry.add_to_hass(hass)
-    print("Mock Entry id:", mock_config_entry.entry_id)
 
     with patch(
         "homeassistant.components.amcrest.AmcrestChecker", return_value=mock_amcrest_api
@@ -31,7 +30,6 @@ async def test_camera_setup(
 
     # Check what devices are actually in the registry
     all_devices = device_registry.devices
-    print(f"All devices: {all_devices}")
     assert len(all_devices) > 0
 
     # Verify device is created with serial number as identifier
@@ -39,11 +37,6 @@ async def test_camera_setup(
     assert device is not None
     assert device.name == "Living Room"
     assert device.manufacturer == "Amcrest"
-
-    # Also check by serial number
-    device_by_serial = device_registry.async_get_device(
-        identifiers={(DOMAIN, "ABCD1234567890")}
-    )
 
     # Verify camera entity is created
     camera_entities = hass.states.async_entity_ids(CAMERA_DOMAIN)

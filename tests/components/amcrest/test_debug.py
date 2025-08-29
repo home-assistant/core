@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import logging
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.amcrest.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def test_debug_device_creation(
@@ -45,36 +48,40 @@ async def test_debug_device_creation(
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        print(f"Setup result: {result}")
+        _LOGGER.debug("Setup result: %s", result)
 
         # List all devices
         devices = device_registry.devices
-        print(f"All device IDs: {list(devices.keys())}")
+        _LOGGER.debug("All device IDs: %s", list(devices.keys()))
 
         for device_id, device in devices.items():
-            print(
-                f"Device {device_id}: identifiers={device.identifiers}, name={device.name}"
+            _LOGGER.debug(
+                "Device %s: identifiers=%s, name=%s",
+                device_id,
+                device.identifiers,
+                device.name,
             )
 
         # Check for our specific device
-        device = device_registry.async_get_device(
+        device = device_registry.async_get_device(  # type: ignore[assignment]
             identifiers={(DOMAIN, mock_config_entry.entry_id)}
         )
-        print(f"Device with config entry ID: {device}")
+        _LOGGER.debug("Device with config entry ID: %s", device)
 
-        device = device_registry.async_get_device(
+        device = device_registry.async_get_device(  # type: ignore[assignment]
             identifiers={(DOMAIN, "ABCD1234567890")}
         )
-        print(f"Device with serial: {device}")
+        _LOGGER.debug("Device with serial: %s", device)
 
         # Check entities
-        from homeassistant.helpers import entity_registry as er
-
         entity_registry = er.async_get(hass)
         entities = entity_registry.entities
-        print(f"All entity IDs: {list(entities.keys())}")
+        _LOGGER.debug("All entity IDs: %s", list(entities.keys()))
 
         for entity_id, entity in entities.items():
-            print(
-                f"Entity {entity_id}: platform={entity.platform}, device_id={entity.device_id}"
+            _LOGGER.debug(
+                "Entity %s: platform=%s, device_id=%s",
+                entity_id,
+                entity.platform,
+                entity.device_id,
             )
