@@ -31,7 +31,6 @@ from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CHAT_ACTION = "chat_action"
 ATTR_KEYBOARD = "keyboard"
 ATTR_INLINE_KEYBOARD = "inline_keyboard"
 ATTR_PHOTO = "photo"
@@ -110,13 +109,7 @@ class TelegramNotificationService(BaseNotificationService):
             keys = keys if isinstance(keys, list) else [keys]
             service_data.update(inline_keyboard=keys)
 
-        # Send a chat action, photo, video, document, voice, or location
-        if data is not None and ATTR_CHAT_ACTION in data:
-            service_data.update(data.get(ATTR_CHAT_ACTION))
-            self.hass.services.call(
-                TELEGRAM_BOT_DOMAIN, "send_chat_action", service_data=service_data
-            )
-            return None
+        # Send a photo, video, document, voice, or location
         if data is not None and ATTR_PHOTO in data:
             photos = data.get(ATTR_PHOTO)
             photos = photos if isinstance(photos, list) else [photos]
