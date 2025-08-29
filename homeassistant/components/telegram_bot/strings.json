@@ -230,10 +230,6 @@
           "name": "Target",
           "description": "An array of pre-authorized chat IDs to send the chat action to. If not present, first allowed chat ID is the default."
         },
-        "timeout": {
-          "name": "Read timeout",
-          "description": "Timeout for sending the chat action in seconds."
-        },
         "message_thread_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
