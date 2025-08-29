@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import httpx_client
 
 from .const import CONF_TOKEN, DOMAIN
 
@@ -33,7 +34,8 @@ async def validate_input(hass: HomeAssistant, data: dict) -> str:
         raise InvalidToken
 
     try:
-        await client.async_connection_test(data[CONF_TOKEN], hass)
+        hass_client = httpx_client.get_async_client(hass)
+        await client.async_connection_test(data[CONF_TOKEN], hass_client)
     except Exception as e:
         raise TRIGGERcmdConnectionError from e
     else:

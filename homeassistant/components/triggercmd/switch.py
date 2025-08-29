@@ -82,6 +82,6 @@ class TRIGGERcmdSwitch(SwitchEntity):
                 "params": params,
                 "sender": "Home Assistant",
             },
-            self._switch.hub.hass,
+            self._switch.hub.hass_client,
         )
         _LOGGER.debug("TRIGGERcmd trigger response: %s", r.json())
