@@ -143,7 +143,8 @@ class MatterLock(MatterEntity, LockEntity):
             self._attr_is_locking = True
             self.async_write_ha_state()
             # the lock should acknowledge the command with an attribute update
-            # but if it fails, then change from optimistic state with the lockOperationError event.
+            # but if it fails, then change from optimistic state 
+            # based on the lockOperationError event.
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
