@@ -29,17 +29,6 @@
           "moderate": "Moderate",
           "unhealthy": "Unhealthy",
           "very_unhealthy": "Very unhealthy"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
-              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
-              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
-              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]",
-              "very_unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::very_unhealthy%]"
-            }
-          }
         }
       },
       "apparent_temperature": {
@@ -108,15 +97,6 @@
           "steady": "Steady",
           "rising": "Rising",
           "falling": "Falling"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "falling": "[%key:component::accuweather::entity::sensor::pressure_tendency::state::falling%]",
-              "rising": "[%key:component::accuweather::entity::sensor::pressure_tendency::state::rising%]",
-              "steady": "[%key:component::accuweather::entity::sensor::pressure_tendency::state::steady%]"
-            }
-          }
         }
       },
       "ragweed_pollen": {
