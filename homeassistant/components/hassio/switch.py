@@ -73,7 +73,7 @@ class HassioAddonSwitch(HassioAddonEntity, SwitchEntity):
             await supervisor_client.addons.start_addon(self._addon_slug)
         except SupervisorError as err:
             _LOGGER.error("Failed to start addon %s: %s", self._addon_slug, err)
-            raise HomeAssistantError from err
+            raise HomeAssistantError(err) from err
 
         await self.coordinator.force_addon_info_data_refresh(self._addon_slug)
 
@@ -84,6 +84,6 @@ class HassioAddonSwitch(HassioAddonEntity, SwitchEntity):
             await supervisor_client.addons.stop_addon(self._addon_slug)
         except SupervisorError as err:
             _LOGGER.error("Failed to stop addon %s: %s", self._addon_slug, err)
-            raise HomeAssistantError from err
+            raise HomeAssistantError(err) from err
 
         await self.coordinator.force_addon_info_data_refresh(self._addon_slug)
