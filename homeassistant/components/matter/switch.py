@@ -265,6 +265,26 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="DoorLockEnablePrivacyModeButton",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="privacy_mode",
+            device_to_ha={
+                0: False,
+                1: True,
+            }.get,
+            ha_to_device={
+                False: 0,
+                True: 1,
+            }.get,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(
+            clusters.DoorLock.Attributes.EnablePrivacyModeButton,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
         entity_description=MatterGenericCommandSwitchEntityDescription(
             key="EnergyEvseChargingSwitch",
             translation_key="evse_charging_switch",
