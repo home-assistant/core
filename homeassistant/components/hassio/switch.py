@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 ADDON_ENTITY_DESCRIPTIONS = (
     SwitchEntityDescription(
         key=ATTR_STATE,
-        translation_key="running",
+        name=None,
         icon="mdi:play-pause",
     ),
 )

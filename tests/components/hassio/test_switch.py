@@ -93,9 +93,9 @@ def mock_all(
                         "url": "https://github.com/home-assistant/addons/test",
                     },
                     {
-                        "name": "test2",
+                        "name": "test-two",
                         "state": "stopped",
-                        "slug": "test2",
+                        "slug": "test-two",
                         "installed": True,
                         "update_available": False,
                         "icon": True,
@@ -161,8 +161,8 @@ def mock_all(
 @pytest.mark.parametrize(
     ("entity_id", "expected", "addon_state"),
     [
-        ("switch.test_running", "on", "started"),
-        ("switch.test2_running", "off", "stopped"),
+        ("switch.test", "on", "started"),
+        ("switch.test_two", "off", "stopped"),
     ],
 )
 async def test_switch_state(
@@ -203,11 +203,11 @@ async def test_switch_turn_on(
     addon_installed: AsyncMock,
 ) -> None:
     """Test turning on addon switch."""
-    entity_id = "switch.test2_running"
+    entity_id = "switch.test_two"
     addon_installed.return_value.state = "stopped"
 
     # Mock the start addon API call
-    aioclient_mock.post("http://127.0.0.1/addons/test2/start", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/addons/test-two/start", json={"result": "ok"})
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -237,7 +237,7 @@ async def test_switch_turn_on(
     assert len(aioclient_mock.mock_calls) > 0
     start_call_found = False
     for call in aioclient_mock.mock_calls:
-        if call[1].path == "/addons/test2/start" and call[0] == "POST":
+        if call[1].path == "/addons/test-two/start" and call[0] == "POST":
             start_call_found = True
             break
     assert start_call_found
@@ -253,7 +253,7 @@ async def test_switch_turn_off(
     addon_installed: AsyncMock,
 ) -> None:
     """Test turning off addon switch."""
-    entity_id = "switch.test_running"
+    entity_id = "switch.test"
     addon_installed.return_value.state = "started"
 
     # Mock the stop addon API call
