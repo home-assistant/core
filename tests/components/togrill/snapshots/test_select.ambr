@@ -42,7 +42,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grill',
+    'original_icon': None,
     'original_name': 'Grill type',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -57,7 +57,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 1 Grill type',
-      'icon': 'mdi:grill',
       'options': list([
         'none',
         'beef',
@@ -118,7 +117,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:food-steak',
+    'original_icon': None,
     'original_name': 'Taste',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -133,7 +132,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 1 Taste',
-      'icon': 'mdi:food-steak',
       'options': list([
         'none',
         'rare',
@@ -194,7 +192,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grill',
+    'original_icon': None,
     'original_name': 'Grill type',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -209,7 +207,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 2 Grill type',
-      'icon': 'mdi:grill',
       'options': list([
         'none',
         'beef',
@@ -270,7 +267,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:food-steak',
+    'original_icon': None,
     'original_name': 'Taste',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -285,7 +282,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 2 Taste',
-      'icon': 'mdi:food-steak',
       'options': list([
         'none',
         'rare',
@@ -346,7 +342,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grill',
+    'original_icon': None,
     'original_name': 'Grill type',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -361,7 +357,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 1 Grill type',
-      'icon': 'mdi:grill',
       'options': list([
         'none',
         'beef',
@@ -422,7 +417,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:food-steak',
+    'original_icon': None,
     'original_name': 'Taste',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -437,7 +432,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 1 Taste',
-      'icon': 'mdi:food-steak',
       'options': list([
         'none',
         'rare',
@@ -498,7 +492,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grill',
+    'original_icon': None,
     'original_name': 'Grill type',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -513,7 +507,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 2 Grill type',
-      'icon': 'mdi:grill',
       'options': list([
         'none',
         'beef',
@@ -574,7 +567,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:food-steak',
+    'original_icon': None,
     'original_name': 'Taste',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -589,7 +582,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 2 Taste',
-      'icon': 'mdi:food-steak',
       'options': list([
         'none',
         'rare',
@@ -650,7 +642,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grill',
+    'original_icon': None,
     'original_name': 'Grill type',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -665,7 +657,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 1 Grill type',
-      'icon': 'mdi:grill',
       'options': list([
         'none',
         'beef',
@@ -726,7 +717,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:food-steak',
+    'original_icon': None,
     'original_name': 'Taste',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -741,7 +732,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 1 Taste',
-      'icon': 'mdi:food-steak',
       'options': list([
         'none',
         'rare',
@@ -802,7 +792,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grill',
+    'original_icon': None,
     'original_name': 'Grill type',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -817,7 +807,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 2 Grill type',
-      'icon': 'mdi:grill',
       'options': list([
         'none',
         'beef',
@@ -878,7 +867,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:food-steak',
+    'original_icon': None,
     'original_name': 'Taste',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -893,7 +882,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 2 Taste',
-      'icon': 'mdi:food-steak',
       'options': list([
         'none',
         'rare',
