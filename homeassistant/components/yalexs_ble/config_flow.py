@@ -78,7 +78,6 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
-        self._lock_cfg: ValidatedLockConfig | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -93,8 +92,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
                 None, discovery_info.name, discovery_info.address
             ),
         }
-        if lock_cfg := async_get_validated_config(self.hass, discovery_info.address):
-            self._lock_cfg = lock_cfg
+        if async_get_validated_config(self.hass, discovery_info.address):
             return await self.async_step_integration_discovery_confirm()
         return await self.async_step_key_slot()
 
@@ -142,7 +140,6 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             raise AbortFlow("already_in_progress")
 
-        self._lock_cfg = lock_cfg
         self.context["title_placeholders"] = {
             "name": human_readable_name(
                 lock_cfg.name, lock_cfg.local_name, self._discovery_info.address
@@ -173,15 +170,16 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a confirmation of discovered integration."""
         assert self._discovery_info is not None
-        assert self._lock_cfg is not None
+        lock_cfg = async_get_validated_config(self.hass, self._discovery_info.address)
+        assert lock_cfg is not None
         if user_input is not None:
             return self.async_create_entry(
-                title=self._lock_cfg.name,
+                title=lock_cfg.name,
                 data={
                     CONF_LOCAL_NAME: self._discovery_info.name,
                     CONF_ADDRESS: self._discovery_info.address,
-                    CONF_KEY: self._lock_cfg.key,
-                    CONF_SLOT: self._lock_cfg.slot,
+                    CONF_KEY: lock_cfg.key,
+                    CONF_SLOT: lock_cfg.slot,
                 },
             )
 
@@ -189,7 +187,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="integration_discovery_confirm",
             description_placeholders={
-                "name": self._lock_cfg.name,
+                "name": lock_cfg.name,
                 "address": self._discovery_info.address,
             },
         )
