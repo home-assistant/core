@@ -41,7 +41,7 @@ PLATFORMS: list[Platform] = [
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) -> bool:
-    """Try to set up a Yale Access Bluetooth config entry."""
+    """Set up Yale Access Bluetooth from a config entry."""
     local_name = entry.data[CONF_LOCAL_NAME]
     address = entry.data[CONF_ADDRESS]
     key = entry.data[CONF_KEY]
