@@ -302,24 +302,21 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_info = self._discovered_devices[address]
             return await self.async_step_key_slot()
 
-        if discovery := self._discovery_info:
+        current_addresses = self._async_current_ids(include_ignore=False)
+        current_unique_names = {
+            entry.data.get(CONF_LOCAL_NAME)
+            for entry in self._async_current_entries()
+            if local_name_is_unique(entry.data.get(CONF_LOCAL_NAME))
+        }
+        for discovery in async_discovered_service_info(self.hass):
+            if (
+                discovery.address in current_addresses
+                or discovery.name in current_unique_names
+                or discovery.address in self._discovered_devices
+                or YALE_MFR_ID not in discovery.manufacturer_data
+            ):
+                continue
             self._discovered_devices[discovery.address] = discovery
-        else:
-            current_addresses = self._async_current_ids(include_ignore=False)
-            current_unique_names = {
-                entry.data.get(CONF_LOCAL_NAME)
-                for entry in self._async_current_entries()
-                if local_name_is_unique(entry.data.get(CONF_LOCAL_NAME))
-            }
-            for discovery in async_discovered_service_info(self.hass):
-                if (
-                    discovery.address in current_addresses
-                    or discovery.name in current_unique_names
-                    or discovery.address in self._discovered_devices
-                    or YALE_MFR_ID not in discovery.manufacturer_data
-                ):
-                    continue
-                self._discovered_devices[discovery.address] = discovery
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
