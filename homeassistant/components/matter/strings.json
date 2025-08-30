@@ -508,8 +508,8 @@
       "evse_charging_switch": {
         "name": "Enable charging"
       },
-      "privacy_mode": {
-          "name": "Privacy mode"
+      "privacy_mode_button": {
+          "name": "Privacy mode button"
       }
     },
     "vacuum": {
