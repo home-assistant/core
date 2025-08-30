@@ -509,7 +509,7 @@
         "name": "Enable charging"
       },
       "privacy_mode_button": {
-          "name": "Privacy mode button"
+        "name": "Privacy mode button"
       }
     },
     "vacuum": {
