@@ -66,6 +66,8 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         original_name = super().name
 
         if original_name not in (UNDEFINED, None) or meta.fallback_name is None:
+            if meta.postfix is not None:
+                return f"{original_name} ({meta.postfix})"
             return original_name
 
         # This is to allow local development and to register niche devices, since
