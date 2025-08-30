@@ -1,6 +1,6 @@
 """Vitrea config flow test coverage."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -16,12 +16,13 @@ TEST_USER_INPUT = {CONF_HOST: "127.0.0.1", CONF_PORT: 80}
 
 
 @pytest.fixture(autouse=True)
-def patch_vitrea_client(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Patch VitreaClient for all config flow tests."""
-    monkeypatch.setattr(
-        "homeassistant.components.vitrea.config_flow.VitreaConfigFlow._async_test_connection",
-        lambda self, host, port: None,
-    )
+def patch_vitrea_client():
+    """Patch VitreaClient."""
+    with patch(
+        "homeassistant.components.vitrea.config_flow.VitreaClient", autospec=True
+    ) as client_mock:
+        client_mock.return_value.status_request = AsyncMock(return_value=None)
+        yield client_mock
 
 
 async def test_user_flow_success(hass: HomeAssistant) -> None:
@@ -32,16 +33,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         """Mock test connection that succeeds."""
         return
 
-    with (
-        patch(
-            "homeassistant.components.vitrea.config_flow.VitreaConfigFlow._async_test_connection",
-            new=async_test_connection,
-        ),
-        patch(
-            "homeassistant.components.vitrea.async_setup_entry",
-            return_value=True,
-        ),
-    ):
+    with patch("homeassistant.components.vitrea.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -70,25 +62,23 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         assert result2["data"] == TEST_USER_INPUT
 
 
-async def test_user_flow_connection_error(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
-) -> None:
+async def test_user_flow_connection_error(hass: HomeAssistant) -> None:
     """Test connection error in user config flow."""
-    monkeypatch.setattr(
-        "homeassistant.components.vitrea.config_flow.VitreaConfigFlow._async_test_connection",
-        lambda self, host, port: (_ for _ in ()).throw(ConnectionError("fail")),
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    with patch(
+        "homeassistant.components.vitrea.config_flow.VitreaClient"
+    ) as client_mock:
+        client_mock.return_value.connect.side_effect = ConnectionError
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TEST_USER_INPUT
-    )
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=TEST_USER_INPUT
+        )
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_user_flow_duplicate_entry(hass: HomeAssistant) -> None:
@@ -101,14 +91,9 @@ async def test_user_flow_duplicate_entry(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    # Now start the config flow
-    async def async_test_connection(self, host, port):
-        """Mock test connection that succeeds."""
-        return
-
     with patch(
-        "homeassistant.components.vitrea.config_flow.VitreaConfigFlow._async_test_connection",
-        new=async_test_connection,
+        "homeassistant.components.vitrea.config_flow.VitreaClient.connect",
+        new=lambda self, host, port: None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -53,9 +53,8 @@ class VitreaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unknown"
                 else:
                     await self.async_set_unique_id(f"vitrea_{host}_{port}")
-                    result = self._abort_if_unique_id_configured()
-                    if result is not None:
-                        return result
+                    self._abort_if_unique_id_configured()
+
                     return self.async_create_entry(
                         title=f"Vitrea {host}:{port}", data=user_input
                     )

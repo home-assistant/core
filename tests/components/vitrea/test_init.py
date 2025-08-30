@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -27,19 +29,28 @@ async def test_setup_entry(
     assert len(hass.config_entries.async_entries("vitrea")) == 1
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_exception"),
+    [
+        (ConnectionError, ConfigEntryState.SETUP_RETRY),
+        (TimeoutError, ConfigEntryState.SETUP_RETRY),
+        (RuntimeError, ConfigEntryState.SETUP_ERROR),
+    ],
+)
 async def test_setup_entry_connection_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vitrea_client: MagicMock,
+    side_effect: Exception,
+    expected_exception: Exception,
 ) -> None:
     """Test setup fails when connection fails."""
     mock_config_entry.add_to_hass(hass)
-    mock_vitrea_client.connect.side_effect = ConnectionError("Connection failed")
+    mock_vitrea_client.connect.side_effect = side_effect
     with patch("vitreaclient.client.VitreaClient", return_value=mock_vitrea_client):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-    # ConnectionError raises ConfigEntryNotReady, which results in SETUP_RETRY (correct behavior)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_exception
 
 
 async def test_unload_entry(
@@ -63,3 +74,29 @@ async def test_reload_entry(
         assert await hass.config_entries.async_reload(init_integration.entry_id)
         await hass.async_block_till_done()
         assert init_integration.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        ConnectionError("Connection error"),
+        TimeoutError("Timeout error"),
+    ],
+)
+async def test_unload_entry_error_handling(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_vitrea_client: MagicMock,
+    side_effect: Exception,
+) -> None:
+    """Test unload entry handles disconnect errors gracefully."""
+    assert init_integration.state is ConfigEntryState.LOADED
+
+    mock_vitrea_client.disconnect.side_effect = side_effect
+
+    with patch(
+        "homeassistant.components.vitrea.VitreaClient", return_value=mock_vitrea_client
+    ):
+        assert await hass.config_entries.async_unload(init_integration.entry_id)
+        await hass.async_block_till_done()
+        assert init_integration.state is ConfigEntryState.NOT_LOADED

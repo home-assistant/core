@@ -52,7 +52,7 @@ async def test_form_invalid_port(hass: HomeAssistant) -> None:
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "192.168.1.136",
+                CONF_HOST: "192.168.1.100",
                 CONF_PORT: 70000,  # Above max valid port (65535)
             },
         )
@@ -65,13 +65,13 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.vitrea.config_flow.VitreaConfigFlow._async_test_connection",
-        side_effect=ConnectionError("Connection failed"),
-    ):
+        "homeassistant.components.vitrea.config_flow.VitreaClient"
+    ) as client_mock:
+        client_mock.return_value.connect.side_effect = ConnectionError
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "192.168.1.136",
+                CONF_HOST: "192.168.1.100",
                 CONF_PORT: 11502,
             },
         )
@@ -106,8 +106,8 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test we abort if already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.136", CONF_PORT: 11502},
-        unique_id="vitrea_192.168.1.136_11502",
+        data={CONF_HOST: "192.168.1.100", CONF_PORT: 11502},
+        unique_id="vitrea_192.168.1.100_11502",
     )
     entry.add_to_hass(hass)
 
@@ -122,7 +122,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "192.168.1.136",
+                CONF_HOST: "192.168.1.100",
                 CONF_PORT: 11502,
             },
         )
@@ -150,16 +150,16 @@ async def test_form_success(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "192.168.1.136",
+                CONF_HOST: "192.168.1.100",
                 CONF_PORT: 11502,
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Vitrea 192.168.1.136:11502"
+    assert result2["title"] == "Vitrea 192.168.1.100:11502"
     assert result2["data"] == {
-        CONF_HOST: "192.168.1.136",
+        CONF_HOST: "192.168.1.100",
         CONF_PORT: 11502,
     }
     assert len(mock_setup_entry.mock_calls) == 1
