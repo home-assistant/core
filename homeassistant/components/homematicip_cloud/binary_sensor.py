@@ -88,9 +88,7 @@ async def async_setup_entry(
             entities.append(HomematicipTiltVibrationSensor(hap, device))
         if isinstance(device, WiredInput32):
             entities.extend(
-                HomematicipMultiContactInterface(
-                    hap, device, device.functionalChannels.index(channel)
-                )
+                HomematicipMultiContactInterface(hap, device, channel.index)
                 for channel in device.functionalChannels
                 if isinstance(channel, MultiModeInputChannel)
             )
