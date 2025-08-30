@@ -153,11 +153,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     # Register known device IDs
     device_registry = dr.async_get(hass)
     for device in manager.device_map.values():
+        LOGGER.debug(
+            "Register device %s (online: %s): %s (function: %s, status range: %s)",
+            device.id,
+            device.online,
+            device.status,
+            device.function,
+            device.status_range,
+        )
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.id)},
             manufacturer="Tuya",
             name=device.name,
+            # Note: the model is overridden via entity.device_info property
+            # when the entity is created. If no entities are generated, it will
+            # stay as unsupported
             model=f"{device.product_name} (unsupported)",
             model_id=device.product_id,
         )
@@ -221,9 +232,10 @@ class DeviceListener(SharingDeviceListener):
     ) -> None:
         """Update device status."""
         LOGGER.debug(
-            "Received update for device %s: %s (updated properties: %s)",
+            "Received update for device %s (online: %s): %s (updated properties: %s)",
             device.id,
-            self.manager.device_map[device.id].status,
+            device.online,
+            device.status,
             updated_status_properties,
         )
         dispatcher_send(
@@ -236,6 +248,15 @@ class DeviceListener(SharingDeviceListener):
         """Add device added listener."""
         # Ensure the device isn't present stale
         self.hass.add_job(self.async_remove_device, device.id)
+
+        LOGGER.debug(
+            "Add device %s (online: %s): %s (function: %s, status range: %s)",
+            device.id,
+            device.online,
+            device.status,
+            device.function,
+            device.status_range,
+        )
 
         dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
 
