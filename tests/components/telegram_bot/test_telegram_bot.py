@@ -323,7 +323,7 @@ async def test_send_chat_action(
             SERVICE_SEND_CHAT_ACTION,
             {
                 CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
-                ATTR_CHAT_ID: 123456,
+                ATTR_TARGET: [123456],
                 ATTR_CHAT_ACTION: CHAT_ACTION_TYPING,
             },
             blocking=True,
