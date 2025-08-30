@@ -16,6 +16,8 @@ from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_REGISTER,
+    CONF_COMMAND_CLOSE,
+    CONF_COMMAND_OPEN,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OPEN,
@@ -61,6 +63,9 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         self._state_opening = config[CONF_STATE_OPENING]
         self._status_register = config.get(CONF_STATUS_REGISTER)
         self._status_register_type = config[CONF_STATUS_REGISTER_TYPE]
+
+        self._command_close = config.get(CONF_COMMAND_CLOSE, self._state_closed)
+        self._command_open = config.get(CONF_COMMAND_OPEN, self._state_open)
 
         self._attr_is_closed = False
 
@@ -108,7 +113,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         result = await self._hub.async_pb_call(
-            self._slave, self._write_address, self._state_open, self._write_type
+            self._slave, self._write_address, self._command_open, self._write_type
         )
         self._attr_available = result is not None
         await self.async_local_update(cancel_pending_update=True)
@@ -116,7 +121,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         result = await self._hub.async_pb_call(
-            self._slave, self._write_address, self._state_closed, self._write_type
+            self._slave, self._write_address, self._command_close, self._write_type
         )
         self._attr_available = result is not None
         await self.async_local_update(cancel_pending_update=True)
