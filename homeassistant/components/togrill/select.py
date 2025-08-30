@@ -44,6 +44,8 @@ _ENUM = TypeVar("_ENUM", bound=Enum)
 
 def _get_enum_from_name(type_: type[_ENUM], value: str) -> _ENUM | None:
     """Return enum value or None."""
+    if value == OPTION_NONE:
+        return None
     return type_[value.upper()]
 
 

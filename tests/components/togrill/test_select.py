@@ -123,6 +123,20 @@ async def test_setup(
             PacketA303Write(probe=1, grill_type=GrillType.BEEF, taste=Taste.MEDIUM),
             id="taste",
         ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_TARGET,
+                    grill_type=GrillType.BEEF,
+                    taste=Taste.MEDIUM,
+                ),
+            ],
+            "select.probe_1_taste",
+            "none",
+            PacketA303Write(probe=1, grill_type=GrillType.BEEF, taste=None),
+            id="taste_none",
+        ),
     ],
 )
 async def test_set_option(
