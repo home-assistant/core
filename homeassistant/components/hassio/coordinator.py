@@ -550,9 +550,9 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         """Force refresh of addon info data for a specific addon."""
         try:
             slug, info = await self._update_addon_info(addon_slug)
-            if info is not None:
-                addon_data = self.hass.data.setdefault(DATA_ADDONS_INFO, {})
-                addon_data[slug] = info
-                await self.async_refresh()
+            if info is not None and DATA_KEY_ADDONS in self.data:
+                if slug in self.data[DATA_KEY_ADDONS]:
+                    self.data[DATA_KEY_ADDONS][slug].update(info)
+                    self.async_set_updated_data(self.data)
         except SupervisorError as err:
             _LOGGER.warning("Could not refresh info for %s: %s", addon_slug, err)
