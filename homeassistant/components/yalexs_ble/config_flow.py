@@ -33,6 +33,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.typing import DiscoveryInfoType
 
+from .config_cache import async_add_validated_config, async_get_config
 from .const import CONF_ALWAYS_CONNECTED, CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
 from .util import async_find_existing_service_info, human_readable_name
 
@@ -105,6 +106,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info["key"],
             discovery_info["slot"],
         )
+        async_add_validated_config(self.hass, lock_cfg.address, lock_cfg)
 
         address = lock_cfg.address
         self.local_name = lock_cfg.local_name
@@ -232,6 +234,59 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_key_slot(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the key and slot step."""
+        errors: dict[str, str] = {}
+        discovery_info = self._discovery_info
+        assert discovery_info is not None
+        address = discovery_info.address
+        validated_config = async_get_config(self.hass, address)
+
+        if user_input is not None or validated_config:
+            local_name = discovery_info.name
+            if validated_config:
+                key = validated_config.key
+                slot = validated_config.slot
+            else:
+                assert user_input is not None
+                key = user_input[CONF_KEY]
+                slot = user_input[CONF_SLOT]
+            await self.async_set_unique_id(address, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
+            if not (
+                errors := await async_validate_lock_or_error(
+                    local_name, discovery_info.device, key, slot
+                )
+            ):
+                return self.async_create_entry(
+                    title=validated_config.name
+                    if validated_config
+                    else human_readable_name(None, local_name, address),
+                    data={
+                        CONF_LOCAL_NAME: discovery_info.name,
+                        CONF_ADDRESS: discovery_info.address,
+                        CONF_KEY: key,
+                        CONF_SLOT: slot,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="key_slot",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_KEY): str,
+                    vol.Required(CONF_SLOT): int,
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "address": address,
+                "title": self._async_get_name_from_address(address),
+            },
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -241,38 +296,25 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.active = True
             address = user_input[CONF_ADDRESS]
-            discovery_info = self._discovered_devices[address]
-            local_name = discovery_info.name
-            key = user_input[CONF_KEY]
-            slot = user_input[CONF_SLOT]
-            await self.async_set_unique_id(
-                discovery_info.address, raise_on_progress=False
-            )
-            self._abort_if_unique_id_configured()
-            if not (
-                errors := await async_validate_lock_or_error(
-                    local_name, discovery_info.device, key, slot
-                )
-            ):
-                return self.async_create_entry(
-                    title=local_name,
-                    data={
-                        CONF_LOCAL_NAME: discovery_info.name,
-                        CONF_ADDRESS: discovery_info.address,
-                        CONF_KEY: key,
-                        CONF_SLOT: slot,
-                    },
-                )
+            self._discovery_info = self._discovered_devices[address]
+            return await self.async_step_key_slot()
 
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.address] = discovery
         else:
             current_addresses = self._async_current_ids(include_ignore=False)
+            _LOGGER.warning(
+                "No user input provided, current addresses: %s", current_addresses
+            )
             current_unique_names = {
                 entry.data.get(CONF_LOCAL_NAME)
                 for entry in self._async_current_entries()
                 if local_name_is_unique(entry.data.get(CONF_LOCAL_NAME))
             }
+            _LOGGER.warning(
+                "No unique local names found, current unique names: %s",
+                current_unique_names,
+            )
             for discovery in async_discovered_service_info(self.hass):
                 if (
                     discovery.address in current_addresses
@@ -290,14 +332,12 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_ADDRESS): vol.In(
                     {
-                        service_info.address: (
-                            f"{service_info.name} ({service_info.address})"
+                        service_info.address: self._async_get_name_from_address(
+                            service_info.address
                         )
                         for service_info in self._discovered_devices.values()
                     }
-                ),
-                vol.Required(CONF_KEY): str,
-                vol.Required(CONF_SLOT): int,
+                )
             }
         )
         return self.async_show_form(
@@ -305,6 +345,14 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors=errors,
         )
+
+    @callback
+    def _async_get_name_from_address(self, address: str) -> str:
+        """Get the name of a device from its address."""
+        if validated_config := async_get_config(self.hass, address):
+            return f"{validated_config.name} ({address})"
+        service_info = self._discovered_devices[address]
+        return f"{service_info.name} ({service_info.address})"
 
     @staticmethod
     @callback

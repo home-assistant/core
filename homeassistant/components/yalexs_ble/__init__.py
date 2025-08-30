@@ -19,6 +19,7 @@ from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .config_cache import async_get_config
 from .const import (
     CONF_ALWAYS_CONNECTED,
     CONF_KEY,
@@ -41,10 +42,39 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) -> bool:
     """Set up Yale Access Bluetooth from a config entry."""
+    try:
+        return await _async_try_setup_entry(
+            hass, entry, entry.data[CONF_KEY], entry.data[CONF_SLOT]
+        )
+    except ConfigEntryAuthFailed:
+        # If the key was rotated, try to fetch the key and slot from the cache.
+        address = entry.data[CONF_ADDRESS]
+        if (
+            (validated_config := async_get_config(hass, address))
+            and validated_config.key != entry.data[CONF_KEY]
+            and validated_config.slot != entry.data[CONF_SLOT]
+            and await _async_try_setup_entry(
+                hass, entry, validated_config.key, validated_config.slot
+            )
+        ):
+            # If we can use the cached key and slot, update the entry.
+            hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    CONF_KEY: validated_config.key,
+                    CONF_SLOT: validated_config.slot,
+                },
+            )
+            return True
+        raise
+
+
+async def _async_try_setup_entry(
+    hass: HomeAssistant, entry: YALEXSBLEConfigEntry, key: str, slot: int
+) -> bool:
+    """Try to set up a Yale Access Bluetooth config entry."""
     local_name = entry.data[CONF_LOCAL_NAME]
     address = entry.data[CONF_ADDRESS]
-    key = entry.data[CONF_KEY]
-    slot = entry.data[CONF_SLOT]
     has_unique_local_name = local_name_is_unique(local_name)
     always_connected = entry.options.get(CONF_ALWAYS_CONNECTED, False)
     push_lock = PushLock(
