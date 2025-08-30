@@ -87,7 +87,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
+    'original_icon': 'mdi:thermometer-chevron-up',
     'original_name': 'Maximum temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -103,6 +103,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Probe 1 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -146,7 +147,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
+    'original_icon': 'mdi:thermometer-chevron-down',
     'original_name': 'Minimum temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -162,6 +163,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Probe 1 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -205,7 +207,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
+    'original_icon': 'mdi:thermometer-check',
     'original_name': 'Target temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -221,6 +223,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Probe 1 Target temperature',
+      'icon': 'mdi:thermometer-check',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -264,7 +267,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
+    'original_icon': 'mdi:thermometer-chevron-up',
     'original_name': 'Maximum temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -280,6 +283,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Probe 2 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -323,7 +327,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
+    'original_icon': 'mdi:thermometer-chevron-down',
     'original_name': 'Minimum temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -339,6 +343,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Probe 2 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -382,7 +387,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
+    'original_icon': 'mdi:thermometer-check',
     'original_name': 'Target temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -398,6 +403,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Probe 2 Target temperature',
+      'icon': 'mdi:thermometer-check',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -500,7 +506,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
+    'original_icon': 'mdi:thermometer-chevron-up',
     'original_name': 'Maximum temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -516,6 +522,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Probe 1 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -559,7 +566,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
+    'original_icon': 'mdi:thermometer-chevron-down',
     'original_name': 'Minimum temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -575,6 +582,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Probe 1 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -618,7 +626,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
+    'original_icon': 'mdi:thermometer-check',
     'original_name': 'Target temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -634,6 +642,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Probe 1 Target temperature',
+      'icon': 'mdi:thermometer-check',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -677,7 +686,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
+    'original_icon': 'mdi:thermometer-chevron-up',
     'original_name': 'Maximum temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -693,6 +702,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Probe 2 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -736,7 +746,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
+    'original_icon': 'mdi:thermometer-chevron-down',
     'original_name': 'Minimum temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -752,6 +762,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Probe 2 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -795,7 +806,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
+    'original_icon': 'mdi:thermometer-check',
     'original_name': 'Target temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
@@ -811,6 +822,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Probe 2 Target temperature',
+      'icon': 'mdi:thermometer-check',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,

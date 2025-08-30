@@ -62,6 +62,7 @@ def _get_temperature_descriptions(
             native_min_value=0,
             native_max_value=250,
             mode=NumberMode.BOX,
+            icon=icon,
             set_packet=set_packet,
             get_value=get_value,
             entity_supported=lambda x: probe_number <= x[CONF_PROBE_COUNT],
@@ -104,7 +105,7 @@ def _get_temperature_descriptions(
 
     yield _get_description(
         "target",
-        None,
+        "mdi:thermometer-check",
         _set_target,
         lambda x: _get_temperatures(x, AlarmType.TEMPERATURE_TARGET)[0],
     )
