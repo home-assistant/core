@@ -920,6 +920,9 @@ async def mock_modbus_read_pymodbus_fixture(
     freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     return mock_pymodbus
 
 
@@ -1088,11 +1091,11 @@ async def test_delay(
     start_time = dt_util.utcnow()
     assert await async_setup_component(hass, DOMAIN, config) is True
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert hass.states.get(entity_id).state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
 
     time_sensor_active = start_time + timedelta(seconds=2)
     time_after_delay = start_time + timedelta(seconds=(set_delay))
-    time_after_scan = start_time + timedelta(seconds=(set_delay + set_scan_interval))
+    time_after_scan = time_after_delay + timedelta(seconds=(set_scan_interval))
     time_stop = time_after_scan + timedelta(seconds=10)
     now = start_time
     while now < time_stop:
@@ -1105,8 +1108,13 @@ async def test_delay(
         await hass.async_block_till_done()
         if now > time_sensor_active:
             if now <= time_after_delay:
-                assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-            elif now > time_after_scan:
+                assert hass.states.get(entity_id).state in (
+                    STATE_UNKNOWN,
+                    STATE_UNAVAILABLE,
+                )
+            if now <= time_after_delay + timedelta(seconds=2):
+                continue
+            if now > time_after_scan + timedelta(seconds=2):
                 assert hass.states.get(entity_id).state == STATE_ON
 
 

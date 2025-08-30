@@ -1,0 +1,92 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Siren",
+  "category": "sgbj",
+  "product_id": "im2eqqhj72suwwko",
+  "product_name": "Outdoor siren",
+  "online": true,
+  "sub": false,
+  "time_zone": "+10:00",
+  "active_time": "2025-08-24T05:42:34+00:00",
+  "create_time": "2025-08-24T05:42:34+00:00",
+  "update_time": "2025-08-24T05:42:34+00:00",
+  "function": {
+    "alarm_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["alarm_sound", "alarm_light", "alarm_sound_light", "normal"]
+      }
+    },
+    "alarm_volume": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high", "mute"]
+      }
+    },
+    "alarm_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 10,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "alarm_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["alarm_sound", "alarm_light", "alarm_sound_light", "normal"]
+      }
+    },
+    "alarm_volume": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high", "mute"]
+      }
+    },
+    "charge_state": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 10,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temper_alarm": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "alarm_state": "normal",
+    "alarm_volume": "low",
+    "charge_state": true,
+    "alarm_time": 1,
+    "battery_percentage": 77,
+    "temper_alarm": true
+  },
+  "set_up": true,
+  "support_local": true
+}
