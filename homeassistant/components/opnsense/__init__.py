@@ -13,7 +13,9 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_API_BASE_URL,
     CONF_API_SECRET,
+    CONF_API_VERIFY_CERT,
     CONF_TRACKER_INTERFACE,
     DATA_HASS_CONFIG,
     DOMAIN,
@@ -59,8 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_data = {
         CONF_API_KEY: entry.data[CONF_API_KEY],
         CONF_API_SECRET: entry.data[CONF_API_SECRET],
-        "base_url": entry.data[CONF_URL],
-        "verify_cert": entry.data[CONF_VERIFY_SSL],
+        CONF_API_BASE_URL: entry.data[CONF_URL],
+        CONF_API_VERIFY_CERT: entry.data[CONF_VERIFY_SSL],
     }
     tracker_interfaces = entry.data.get(CONF_TRACKER_INTERFACE)
 
