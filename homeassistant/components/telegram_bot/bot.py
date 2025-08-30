@@ -75,6 +75,8 @@ from .const import (
     ATTR_USER_ID,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CONF_ALLOW_ANY_RECEIVE,
+    CONF_ALLOW_ANY_REPLY,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     DOMAIN,
@@ -244,7 +246,6 @@ class TelegramNotificationService:
         app: BaseTelegramBot,
         bot: Bot,
         config: TelegramBotConfigEntry,
-        parser: str,
     ) -> None:
         """Initialize the service."""
         self.app = app
@@ -255,10 +256,12 @@ class TelegramNotificationService:
             PARSER_MD2: ParseMode.MARKDOWN_V2,
             PARSER_PLAIN_TEXT: None,
         }
-        self.parse_mode = self._parsers[parser]
+        self.parse_mode = self._parsers[config.options[ATTR_PARSER]]
         self.bot = bot
         self.hass = hass
         self._last_message_id: dict[int, int] = {}
+        self.allow_any_reply = config.options.get(CONF_ALLOW_ANY_REPLY, False)
+        self.allow_any_receive = config.options.get(CONF_ALLOW_ANY_RECEIVE, False)
 
     def _get_allowed_chat_ids(self) -> list[int]:
         allowed_chat_ids: list[int] = [
@@ -308,6 +311,17 @@ class TelegramNotificationService:
         :param target: optional list of integers ([12234, -12345])
         :return list of chat_id targets (integers)
         """
+
+        if self.allow_any_reply:
+            if target is None:
+                raise ServiceValidationError(
+                    "Target is required.",
+                    translation_domain=DOMAIN,
+                    translation_key="missing_input",
+                    translation_placeholders={"field": "Target"},
+                )
+            return [target] if isinstance(target, int) else target
+
         allowed_chat_ids: list[int] = self._get_allowed_chat_ids()
 
         if target is None:
