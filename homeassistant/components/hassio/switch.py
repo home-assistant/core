@@ -9,6 +9,7 @@ from aiohasupervisor import SupervisorError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -57,6 +58,16 @@ class HassioAddonSwitch(HassioAddonEntity, SwitchEntity):
         addon_data = self.coordinator.data[DATA_KEY_ADDONS].get(self._addon_slug, {})
         state = addon_data.get(self.entity_description.key)
         return state == ATTR_STARTED
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the icon of the add-on if any."""
+        if not self.available:
+            return None
+        addon_data = self.coordinator.data[DATA_KEY_ADDONS].get(self._addon_slug, {})
+        if addon_data.get(ATTR_ICON):
+            return f"/api/hassio/addons/{self._addon_slug}/icon"
+        return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
