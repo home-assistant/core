@@ -279,6 +279,11 @@
         "name": "Newest version"
       }
     },
+    "switch": {
+      "running": {
+        "name": "Running"
+      }
+    },
     "update": {
       "update": {
         "name": "[%key:component::update::title%]"
