@@ -19,7 +19,7 @@ from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .config_cache import async_get_config
+from .config_cache import async_get_validated_config
 from .const import (
     CONF_ALWAYS_CONNECTED,
     CONF_KEY,
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
         # If the key was rotated, try to fetch the key and slot from the cache.
         address = entry.data[CONF_ADDRESS]
         if (
-            (validated_config := async_get_config(hass, address))
+            (validated_config := async_get_validated_config(hass, address))
             and validated_config.key != entry.data[CONF_KEY]
             and validated_config.slot != entry.data[CONF_SLOT]
             and await _async_try_setup_entry(

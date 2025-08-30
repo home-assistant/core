@@ -33,7 +33,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .config_cache import async_add_validated_config, async_get_config
+from .config_cache import async_add_validated_config, async_get_validated_config
 from .const import CONF_ALWAYS_CONNECTED, CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
 from .util import async_find_existing_service_info, human_readable_name
 
@@ -242,7 +242,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         discovery_info = self._discovery_info
         assert discovery_info is not None
         address = discovery_info.address
-        validated_config = async_get_config(self.hass, address)
+        validated_config = async_get_validated_config(self.hass, address)
 
         if user_input is not None or validated_config:
             local_name = discovery_info.name
@@ -342,7 +342,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_get_name_from_address(self, address: str) -> str:
         """Get the name of a device from its address."""
-        if validated_config := async_get_config(self.hass, address):
+        if validated_config := async_get_validated_config(self.hass, address):
             return f"{validated_config.name} ({address})"
         if address in self._discovered_devices:
             service_info = self._discovered_devices[address]

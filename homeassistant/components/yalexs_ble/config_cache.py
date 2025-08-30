@@ -23,7 +23,7 @@ def async_add_validated_config(
 
 
 @callback
-def async_get_config(
+def async_get_validated_config(
     hass: HomeAssistant,
     address: str,
 ) -> ValidatedLockConfig | None:
