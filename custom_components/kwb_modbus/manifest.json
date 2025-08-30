@@ -1,0 +1,13 @@
+{
+  "domain": "kwb_modbus",
+  "name": "KWB Modbus",
+  "codeowners": ["@tobim99"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/kwb_modbus",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "requirements": ["pymodbus>=3.8.3"],
+  "after_dependencies": ["modbus"],
+  "version": "2025.08.22"
+}

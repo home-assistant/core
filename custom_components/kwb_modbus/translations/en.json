@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to KWB device",
+        "description": "Enter the Modbus TCP connection details for your KWB device.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "scan_interval": "Scan interval (seconds)"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the KWB controller.",
+          "port": "TCP port for Modbus (default: 502).",
+          "scan_interval": "Interval for polling Modbus data in seconds."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure connection",
+        "description": "Update the connection settings for this entry.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "scan_interval": "Scan interval (seconds)"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the KWB controller.",
+          "port": "TCP port for Modbus (default: 502).",
+          "scan_interval": "Interval for polling Modbus data in seconds."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Please check the IP address, port, and network connection.",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Device is already configured",
+      "reconfigure_successful": "Settings saved; integration has been reloaded."
+    }
+  }
+}
