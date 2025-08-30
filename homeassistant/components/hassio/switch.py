@@ -21,12 +21,10 @@ from .handler import get_supervisor_client
 _LOGGER = logging.getLogger(__name__)
 
 
-ADDON_ENTITY_DESCRIPTIONS = (
-    SwitchEntityDescription(
-        key=ATTR_STATE,
-        name=None,
-        icon="mdi:puzzle",
-    ),
+ENTITY_DESCRIPTION = SwitchEntityDescription(
+    key=ATTR_STATE,
+    name=None,
+    icon="mdi:puzzle",
 )
 
 
@@ -42,10 +40,9 @@ async def async_setup_entry(
         HassioAddonSwitch(
             addon=addon,
             coordinator=coordinator,
-            entity_description=entity_description,
+            entity_description=ENTITY_DESCRIPTION,
         )
         for addon in coordinator.data[DATA_KEY_ADDONS].values()
-        for entity_description in ADDON_ENTITY_DESCRIPTIONS
     )
 
 
