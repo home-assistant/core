@@ -58,9 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
             )
         ):
             # If we can use the cached key and slot, update the entry.
-            hass.config_entries.async_update_entry(
-                entry,
                 data={
+                    **entry.data,
                     CONF_KEY: validated_config.key,
                     CONF_SLOT: validated_config.slot,
                 },
