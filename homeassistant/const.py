@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 9
+MINOR_VERSION: Final = 10
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -784,6 +784,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     """Volume flow rate units."""
 
     CUBIC_METERS_PER_HOUR = "m³/h"
+    CUBIC_METERS_PER_MINUTE = "m³/min"
     CUBIC_METERS_PER_SECOND = "m³/s"
     CUBIC_FEET_PER_MINUTE = "ft³/min"
     LITERS_PER_HOUR = "L/h"

@@ -771,6 +771,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     # Units in terms of m³/h
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 1,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE: 1 / _HRS_TO_MINUTES,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND: 1 / _HRS_TO_SECS,
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _CUBIC_FOOT_TO_CUBIC_METER),
@@ -786,6 +787,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     VALID_UNITS = {
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
         UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
