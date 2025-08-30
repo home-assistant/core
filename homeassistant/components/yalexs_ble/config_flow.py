@@ -249,10 +249,12 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
             if validated_config:
                 key = validated_config.key
                 slot = validated_config.slot
+                title = validated_config.name
             else:
                 assert user_input is not None
                 key = user_input[CONF_KEY]
                 slot = user_input[CONF_SLOT]
+                title = human_readable_name(None, local_name, address)
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             if not (
@@ -261,9 +263,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             ):
                 return self.async_create_entry(
-                    title=validated_config.name
-                    if validated_config
-                    else human_readable_name(None, local_name, address),
+                    title=title,
                     data={
                         CONF_LOCAL_NAME: discovery_info.name,
                         CONF_ADDRESS: discovery_info.address,
@@ -347,11 +347,9 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         if address in self._discovered_devices:
             service_info = self._discovered_devices[address]
             return f"{service_info.name} ({service_info.address})"
-        # If we have discovery info (from Bluetooth discovery), use that
-        if self._discovery_info and self._discovery_info.address == address:
-            return f"{self._discovery_info.name} ({address})"
-        # Fallback
-        return address
+        assert self._discovery_info is not None
+        assert self._discovery_info.address == address
+        return f"{self._discovery_info.name} ({address})"
 
     @staticmethod
     @callback
