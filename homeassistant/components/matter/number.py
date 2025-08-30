@@ -422,4 +422,34 @@ DISCOVERY_SCHEMAS = [
             custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOn,
         ),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="DoorLockWrongCodeEntryLimit",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="wrong_code_entry_limit",
+            native_max_value=255,
+            native_min_value=1,
+            native_step=1,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.DoorLock.Attributes.WrongCodeEntryLimit,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="DoorLockUserCodeTemporaryDisableTime",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="user_code_temporary_disable_time",
+            native_max_value=255,
+            native_min_value=1,
+            native_step=1,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.DoorLock.Attributes.UserCodeTemporaryDisableTime,
+        ),
+    ),
 ]
