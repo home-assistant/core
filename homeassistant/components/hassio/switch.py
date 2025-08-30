@@ -25,7 +25,7 @@ ADDON_ENTITY_DESCRIPTIONS = (
     SwitchEntityDescription(
         key=ATTR_STATE,
         name=None,
-        icon="mdi:play-pause",
+        icon="mdi:puzzle",
     ),
 )
 
