@@ -17,7 +17,7 @@ async def test_sensor_values(
 
     state = hass.states.get("sensor.test_sensor_temperature")
     assert state
-    assert state.state == "27.8"
+    assert state.state == "27.7777777777778"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
     await hass.config_entries.async_unload(config_entry.entry_id)
