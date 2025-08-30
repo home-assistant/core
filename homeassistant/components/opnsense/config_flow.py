@@ -86,7 +86,7 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         if not user_input.get(CONF_URL):
-            protocol = f"http{'s' if user_input[CONF_SSL] else ''}"
+            protocol = "https" if user_input[CONF_SSL] else "http"
             url = f"{protocol}://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/api"
             user_input[CONF_URL] = url
 
