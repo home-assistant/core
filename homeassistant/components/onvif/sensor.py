@@ -70,7 +70,7 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
                 SensorDeviceClass, entry.original_device_class
             )
             self._attr_entity_category = entry.entity_category
-            self._attr_name = entry.name
+            self._attr_name = entry.name or entry.original_name
             self._attr_native_unit_of_measurement = entry.unit_of_measurement
         else:
             event = device.events.get_uid(uid)

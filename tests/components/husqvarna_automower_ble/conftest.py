@@ -7,7 +7,7 @@ from automower_ble.protocol import ResponseResult
 import pytest
 
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
-from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID
+from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 
 from . import AUTOMOWER_SERVICE_INFO
 
@@ -58,6 +58,7 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_ADDRESS: AUTOMOWER_SERVICE_INFO.address,
             CONF_CLIENT_ID: 1197489078,
+            CONF_PIN: "1234",
         },
         unique_id=AUTOMOWER_SERVICE_INFO.address,
     )
