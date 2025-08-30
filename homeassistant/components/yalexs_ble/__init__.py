@@ -105,7 +105,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
             validated_config.key != entry.data[CONF_KEY]
             or validated_config.slot != entry.data[CONF_SLOT]
         ):
+            assert shutdown_callback is not None
+            shutdown_callback()
             push_lock.set_lock_key(validated_config.key, validated_config.slot)
+            shutdown_callback = await push_lock.start()
             await _async_wait_for_first_update(push_lock, local_name)
             # If we can use the cached key and slot, update the entry.
             hass.config_entries.async_update_entry(
