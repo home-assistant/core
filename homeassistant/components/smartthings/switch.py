@@ -70,7 +70,7 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
 ] = {
     Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: SmartThingsCommandSwitchEntityDescription(
         key=Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING,
-        translation_key="air_conditioner_lighting",
+        translation_key="display_lighting",
         status_attribute=Attribute.LIGHTING,
         command=Command.SET_LIGHTING_LEVEL,
         entity_category=EntityCategory.CONFIG,

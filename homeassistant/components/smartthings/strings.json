@@ -604,8 +604,8 @@
       "bubble_soak": {
         "name": "Bubble Soak"
       },
-      "air_conditioner_lighting": {
-        "name": "Air conditioner lighting"
+      "display_lighting": {
+        "name": "Display lighting"
       },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"

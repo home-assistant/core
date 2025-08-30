@@ -106,7 +106,7 @@
           "on": "mdi:water"
         }
       },
-      "air_conditioner_lighting": {
+      "display_lighting": {
         "default": "mdi:lightbulb",
         "state": {
           "on": "mdi:lightbulb-on",
