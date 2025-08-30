@@ -42,6 +42,18 @@
     }
   },
   "entity": {
+    "event": {
+      "operation": {
+        "name": "Operation",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "activity": "Activity"
+            }
+          }
+        }
+      }
+    },
     "lock": {
       "secure_mode": {
         "name": "Secure mode"
