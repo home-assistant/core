@@ -246,14 +246,6 @@ MQTT_PUBLISH_SCHEMA = vol.Schema(
 )
 
 
-async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle signals of config entry being updated.
-
-    Causes for this is config entry options changing.
-    """
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 @callback
 def _async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
     """Unregister open config issues."""
@@ -435,9 +427,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 mqtt_data.subscriptions_to_restore
             )
             mqtt_data.subscriptions_to_restore = set()
-        mqtt_data.reload_dispatchers.append(
-            entry.add_update_listener(_async_config_entry_updated)
-        )
 
         return (mqtt_data, conf)
 
