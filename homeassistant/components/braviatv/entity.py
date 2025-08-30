@@ -19,9 +19,9 @@ class BraviaTVEntity(CoordinatorEntity[BraviaTVCoordinator]):
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            connections={(CONNECTION_NETWORK_MAC, coordinator.system_info["macAddr"])},
+            connections={(CONNECTION_NETWORK_MAC, coordinator.client.mac)},
             manufacturer=ATTR_MANUFACTURER,
-            model_id=coordinator.system_info["model"],
-            hw_version=coordinator.system_info["generation"],
-            serial_number=coordinator.system_info["serial"],
+            model_id=coordinator.system_info.get("model"),
+            hw_version=coordinator.system_info.get("generation"),
+            serial_number=coordinator.system_info.get("serial"),
         )
