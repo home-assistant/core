@@ -51,8 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
         address = entry.data[CONF_ADDRESS]
         if (
             (validated_config := async_get_validated_config(hass, address))
-            and validated_config.key != entry.data[CONF_KEY]
-            and validated_config.slot != entry.data[CONF_SLOT]
+            and (
+                validated_config.key != entry.data[CONF_KEY]
+                or validated_config.slot != entry.data[CONF_SLOT]
+            )
             and await _async_try_setup_entry(
                 hass, entry, validated_config.key, validated_config.slot
             )
@@ -61,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
             hass.config_entries.async_update_entry(
                 entry,
                 data={
+                    **entry.data,
                     CONF_KEY: validated_config.key,
                     CONF_SLOT: validated_config.slot,
                 },
