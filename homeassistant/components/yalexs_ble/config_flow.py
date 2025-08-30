@@ -93,6 +93,9 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
                 None, discovery_info.name, discovery_info.address
             ),
         }
+        if lock_cfg := async_get_validated_config(self.hass, discovery_info.address):
+            self._lock_cfg = lock_cfg
+            return await self.async_step_integration_discovery_confirm()
         return await self.async_step_key_slot()
 
     async def async_step_integration_discovery(
