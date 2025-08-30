@@ -33,8 +33,8 @@ async def validate_input(hass: HomeAssistant, data: dict) -> str:
     if not token_data["id"]:
         raise InvalidToken
 
+    hass_client = httpx_client.get_async_client(hass)
     try:
-        hass_client = httpx_client.get_async_client(hass)
         await client.async_connection_test(data[CONF_TOKEN], hass_client)
     except Exception as e:
         raise TRIGGERcmdConnectionError from e
