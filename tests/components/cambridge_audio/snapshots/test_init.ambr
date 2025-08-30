@@ -17,7 +17,6 @@
         '0020c2d8',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Cambridge Audio',
@@ -27,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '0020c2d8',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })

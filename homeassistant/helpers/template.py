@@ -1734,6 +1734,14 @@ def label_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     return None
 
 
+def label_description(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the label description from a label ID."""
+    label_reg = label_registry.async_get(hass)
+    if label := label_reg.async_get_label(lookup_value):
+        return label.description
+    return None
+
+
 def _label_id_or_name(hass: HomeAssistant, label_id_or_name: str) -> str | None:
     """Get the label ID from a label name or ID."""
     # If label_name returns a value, we know the input was an ID, otherwise we
@@ -2022,7 +2030,7 @@ def apply(value, fn, *args, **kwargs):
 def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
     """Turn a macro with a 'returns' keyword argument into a function that returns what that argument is called with."""
 
-    def wrapper(value, *args, **kwargs):
+    def wrapper(*args, **kwargs):
         return_value = None
 
         def returns(value):
@@ -2031,7 +2039,7 @@ def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
             return value
 
         # Call the callable with the value and other args
-        macro(value, *args, **kwargs, returns=returns)
+        macro(*args, **kwargs, returns=returns)
         return return_value
 
     # Remove "macro_" from the macro's name to avoid confusion in the wrapper's name
@@ -2626,9 +2634,14 @@ def ordinal(value):
     )
 
 
-def from_json(value):
+def from_json(value, default=_SENTINEL):
     """Convert a JSON string to an object."""
-    return json_loads(value)
+    try:
+        return json_loads(value)
+    except JSON_DECODE_EXCEPTIONS:
+        if default is _SENTINEL:
+            raise_no_default("from_json", value)
+        return default
 
 
 def _to_json_default(obj: Any) -> None:
@@ -3313,6 +3326,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["label_name"] = hassfunction(label_name)
         self.filters["label_name"] = self.globals["label_name"]
+
+        self.globals["label_description"] = hassfunction(label_description)
+        self.filters["label_description"] = self.globals["label_description"]
 
         self.globals["label_areas"] = hassfunction(label_areas)
         self.filters["label_areas"] = self.globals["label_areas"]

@@ -14,7 +14,7 @@
       "macaddress": "68A40E*"
     },
     {
-      "hostname": "(siemens|neff)-*",
+      "hostname": "(bosch|neff|siemens)-*",
       "macaddress": "38B4D3*"
     }
   ],
@@ -22,6 +22,6 @@
   "iot_class": "cloud_push",
   "loggers": ["aiohomeconnect"],
   "quality_scale": "platinum",
-  "requirements": ["aiohomeconnect==0.18.1"],
+  "requirements": ["aiohomeconnect==0.19.0"],
   "zeroconf": ["_homeconnect._tcp.local."]
 }
