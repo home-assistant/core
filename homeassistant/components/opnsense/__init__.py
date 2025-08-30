@@ -54,7 +54,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the OPNsense from a config entry."""
+    """Set up the OPNsense component from a config entry."""
 
     api_data = {
         CONF_API_KEY: entry.data[CONF_API_KEY],
