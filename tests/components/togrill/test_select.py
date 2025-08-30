@@ -134,7 +134,7 @@ async def test_set_option(
     value,
     write_packet,
 ) -> None:
-    """Test the number set."""
+    """Test the selection of option."""
 
     inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
 
