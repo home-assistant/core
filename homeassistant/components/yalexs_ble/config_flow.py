@@ -93,7 +93,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
                 None, discovery_info.name, discovery_info.address
             ),
         }
-        return await self.async_step_user()
+        return await self.async_step_key_slot()
 
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
@@ -303,18 +303,11 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovered_devices[discovery.address] = discovery
         else:
             current_addresses = self._async_current_ids(include_ignore=False)
-            _LOGGER.warning(
-                "No user input provided, current addresses: %s", current_addresses
-            )
             current_unique_names = {
                 entry.data.get(CONF_LOCAL_NAME)
                 for entry in self._async_current_entries()
                 if local_name_is_unique(entry.data.get(CONF_LOCAL_NAME))
             }
-            _LOGGER.warning(
-                "No unique local names found, current unique names: %s",
-                current_unique_names,
-            )
             for discovery in async_discovered_service_info(self.hass):
                 if (
                     discovery.address in current_addresses
@@ -351,8 +344,14 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the name of a device from its address."""
         if validated_config := async_get_config(self.hass, address):
             return f"{validated_config.name} ({address})"
-        service_info = self._discovered_devices[address]
-        return f"{service_info.name} ({service_info.address})"
+        if address in self._discovered_devices:
+            service_info = self._discovered_devices[address]
+            return f"{service_info.name} ({service_info.address})"
+        # If we have discovery info (from Bluetooth discovery), use that
+        if self._discovery_info and self._discovery_info.address == address:
+            return f"{self._discovery_info.name} ({address})"
+        # Fallback
+        return address
 
     @staticmethod
     @callback

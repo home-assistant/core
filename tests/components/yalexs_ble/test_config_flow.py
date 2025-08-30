@@ -61,6 +61,16 @@ async def test_user_step_success(hass: HomeAssistant, slot: int) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "key_slot"
+    assert result2["errors"] == {}
+
     with (
         patch(
             "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
@@ -70,25 +80,24 @@ async def test_user_step_success(hass: HomeAssistant, slot: int) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
-                CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
                 CONF_SLOT: slot,
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
-    assert result2["data"] == {
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == f"{YALE_ACCESS_LOCK_DISCOVERY_INFO.name} (EEFF)"
+    assert result3["data"] == {
         CONF_LOCAL_NAME: YALE_ACCESS_LOCK_DISCOVERY_INFO.name,
         CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
         CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
         CONF_SLOT: slot,
     }
-    assert result2["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
+    assert result3["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -113,6 +122,16 @@ async def test_user_step_from_ignored(hass: HomeAssistant, slot: int) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "key_slot"
+    assert result2["errors"] == {}
+
     with (
         patch(
             "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
@@ -122,25 +141,24 @@ async def test_user_step_from_ignored(hass: HomeAssistant, slot: int) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
-                CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
                 CONF_SLOT: slot,
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
-    assert result2["data"] == {
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == f"{YALE_ACCESS_LOCK_DISCOVERY_INFO.name} (EEFF)"
+    assert result3["data"] == {
         CONF_LOCAL_NAME: YALE_ACCESS_LOCK_DISCOVERY_INFO.name,
         CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
         CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
         CONF_SLOT: slot,
     }
-    assert result2["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
+    assert result3["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -198,37 +216,44 @@ async def test_user_step_invalid_keys(hass: HomeAssistant) -> None:
         result["flow_id"],
         {
             CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
-            CONF_KEY: "dog",
-            CONF_SLOT: 66,
         },
     )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "user"
-    assert result2["errors"] == {CONF_KEY: "invalid_key_format"}
+    assert result2["step_id"] == "key_slot"
+    assert result2["errors"] == {}
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         {
-            CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
-            CONF_KEY: "qfd51b8621c6a139eaffbedcb846b60f",
+            CONF_KEY: "dog",
             CONF_SLOT: 66,
         },
     )
     assert result3["type"] is FlowResultType.FORM
-    assert result3["step_id"] == "user"
+    assert result3["step_id"] == "key_slot"
     assert result3["errors"] == {CONF_KEY: "invalid_key_format"}
 
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"],
         {
-            CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+            CONF_KEY: "qfd51b8621c6a139eaffbedcb846b60f",
+            CONF_SLOT: 66,
+        },
+    )
+    assert result4["type"] is FlowResultType.FORM
+    assert result4["step_id"] == "key_slot"
+    assert result4["errors"] == {CONF_KEY: "invalid_key_format"}
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"],
+        {
             CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
             CONF_SLOT: 999,
         },
     )
-    assert result4["type"] is FlowResultType.FORM
-    assert result4["step_id"] == "user"
-    assert result4["errors"] == {CONF_SLOT: "invalid_key_index"}
+    assert result5["type"] is FlowResultType.FORM
+    assert result5["step_id"] == "key_slot"
+    assert result5["errors"] == {CONF_SLOT: "invalid_key_index"}
 
     with (
         patch(
@@ -239,25 +264,24 @@ async def test_user_step_invalid_keys(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result5 = await hass.config_entries.flow.async_configure(
-            result4["flow_id"],
+        result6 = await hass.config_entries.flow.async_configure(
+            result5["flow_id"],
             {
-                CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
                 CONF_SLOT: 66,
             },
         )
         await hass.async_block_till_done()
 
-    assert result5["type"] is FlowResultType.CREATE_ENTRY
-    assert result5["title"] == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
-    assert result5["data"] == {
+    assert result6["type"] is FlowResultType.CREATE_ENTRY
+    assert result6["title"] == f"{YALE_ACCESS_LOCK_DISCOVERY_INFO.name} (EEFF)"
+    assert result6["data"] == {
         CONF_LOCAL_NAME: YALE_ACCESS_LOCK_DISCOVERY_INFO.name,
         CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
         CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
         CONF_SLOT: 66,
     }
-    assert result5["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
+    assert result6["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -274,23 +298,32 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "key_slot"
+    assert result2["errors"] == {}
+
     with patch(
         "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
         side_effect=BleakError,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
-                CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
                 CONF_SLOT: 66,
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "key_slot"
+    assert result3["errors"] == {"base": "cannot_connect"}
 
     with (
         patch(
@@ -301,25 +334,24 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
             {
-                CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
                 CONF_SLOT: 66,
             },
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
-    assert result3["data"] == {
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == f"{YALE_ACCESS_LOCK_DISCOVERY_INFO.name} (EEFF)"
+    assert result4["data"] == {
         CONF_LOCAL_NAME: YALE_ACCESS_LOCK_DISCOVERY_INFO.name,
         CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
         CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
         CONF_SLOT: 66,
     }
-    assert result3["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
+    assert result4["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -336,23 +368,32 @@ async def test_user_step_auth_exception(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "key_slot"
+    assert result2["errors"] == {}
+
     with patch(
         "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
         side_effect=AuthError,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
-                CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
                 CONF_SLOT: 66,
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "user"
-    assert result2["errors"] == {CONF_KEY: "invalid_auth"}
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "key_slot"
+    assert result3["errors"] == {CONF_KEY: "invalid_auth"}
 
     with (
         patch(
@@ -363,25 +404,24 @@ async def test_user_step_auth_exception(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
             {
-                CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
                 CONF_SLOT: 66,
             },
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
-    assert result3["data"] == {
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == f"{YALE_ACCESS_LOCK_DISCOVERY_INFO.name} (EEFF)"
+    assert result4["data"] == {
         CONF_LOCAL_NAME: YALE_ACCESS_LOCK_DISCOVERY_INFO.name,
         CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
         CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
         CONF_SLOT: 66,
     }
-    assert result3["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
+    assert result4["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -398,23 +438,32 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "key_slot"
+    assert result2["errors"] == {}
+
     with patch(
         "homeassistant.components.yalexs_ble.config_flow.PushLock.validate",
         side_effect=RuntimeError,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
-                CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
                 CONF_SLOT: 66,
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "unknown"}
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "key_slot"
+    assert result3["errors"] == {"base": "unknown"}
 
     with (
         patch(
@@ -425,25 +474,24 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
             {
-                CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
                 CONF_SLOT: 66,
             },
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
-    assert result3["data"] == {
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == f"{YALE_ACCESS_LOCK_DISCOVERY_INFO.name} (EEFF)"
+    assert result4["data"] == {
         CONF_LOCAL_NAME: YALE_ACCESS_LOCK_DISCOVERY_INFO.name,
         CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
         CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
         CONF_SLOT: 66,
     }
-    assert result3["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
+    assert result4["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -455,7 +503,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
         data=YALE_ACCESS_LOCK_DISCOVERY_INFO,
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "key_slot"
     assert result["errors"] == {}
 
     with (
@@ -470,7 +518,6 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
                 CONF_SLOT: 66,
             },
@@ -478,7 +525,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
+    assert result2["title"] == f"{YALE_ACCESS_LOCK_DISCOVERY_INFO.name} (EEFF)"
     assert result2["data"] == {
         CONF_LOCAL_NAME: YALE_ACCESS_LOCK_DISCOVERY_INFO.name,
         CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
@@ -563,7 +610,7 @@ async def test_integration_discovery_takes_precedence_over_bluetooth(
         data=YALE_ACCESS_LOCK_DISCOVERY_INFO,
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "key_slot"
     assert result["errors"] == {}
     flows = list(hass.config_entries.flow._handler_progress_index[DOMAIN])
     assert len(flows) == 1
@@ -774,7 +821,7 @@ async def test_integration_discovery_takes_precedence_over_bluetooth_uuid_addres
         data=LOCK_DISCOVERY_INFO_UUID_ADDRESS,
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "key_slot"
     assert result["errors"] == {}
     flows = list(hass.config_entries.flow._handler_progress_index[DOMAIN])
     assert len(flows) == 1
@@ -850,7 +897,7 @@ async def test_integration_discovery_takes_precedence_over_bluetooth_non_unique_
         data=OLD_FIRMWARE_LOCK_DISCOVERY_INFO,
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "key_slot"
     assert result["errors"] == {}
     flows = list(hass.config_entries.flow._handler_progress_index[DOMAIN])
     assert len(flows) == 1
@@ -907,6 +954,15 @@ async def test_user_is_setting_up_lock_and_discovery_happens_in_the_middle(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "key_slot"
+
     user_flow_event = asyncio.Event()
     valdidate_started = asyncio.Event()
 
@@ -926,9 +982,8 @@ async def test_user_is_setting_up_lock_and_discovery_happens_in_the_middle(
     ):
         user_flow_task = asyncio.create_task(
             hass.config_entries.flow.async_configure(
-                result["flow_id"],
+                result2["flow_id"],
                 {
-                    CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
                     CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
                     CONF_SLOT: 66,
                 },
@@ -959,7 +1014,7 @@ async def test_user_is_setting_up_lock_and_discovery_happens_in_the_middle(
         user_flow_result = await user_flow_task
 
     assert user_flow_result["type"] is FlowResultType.CREATE_ENTRY
-    assert user_flow_result["title"] == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
+    assert user_flow_result["title"] == f"{YALE_ACCESS_LOCK_DISCOVERY_INFO.name} (EEFF)"
     assert user_flow_result["data"] == {
         CONF_LOCAL_NAME: YALE_ACCESS_LOCK_DISCOVERY_INFO.name,
         CONF_ADDRESS: YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
