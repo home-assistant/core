@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from voip_utils import CallInfo
+from voip_utils.sip import SipEndpoint
 
 from homeassistant.components.voip import DOMAIN
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
@@ -61,6 +64,69 @@ async def test_device_registry_info_from_unknown_phone(
     assert device.manufacturer is None
     assert device.model == "Unknown"
     assert device.sw_version is None
+
+
+async def test_device_registry_info_update_contact(
+    hass: HomeAssistant,
+    voip_devices: VoIPDevices,
+    call_info: CallInfo,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test info in device registry."""
+    voip_device = voip_devices.async_get_or_create(call_info)
+    assert not voip_device.async_allow_call(hass)
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, call_info.caller_endpoint.uri)}
+    )
+    assert device is not None
+    assert device.name == call_info.caller_endpoint.host
+    assert device.manufacturer == "Grandstream"
+    assert device.model == "HT801"
+    assert device.sw_version == "1.0.17.5"
+
+    # Test we update the device if the fw updates
+    call_info.headers["user-agent"] = "Grandstream HT801 2.0.0.0"
+    call_info.contact_endpoint = SipEndpoint("Test <sip:example.com:5061>")
+    voip_device = voip_devices.async_get_or_create(call_info)
+
+    assert voip_device.contact == SipEndpoint("Test <sip:example.com:5061>")
+    assert not voip_device.async_allow_call(hass)
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, call_info.caller_endpoint.uri)}
+    )
+    assert device.sw_version == "2.0.0.0"
+
+
+async def test_device_load_contact(
+    hass: HomeAssistant,
+    call_info: CallInfo,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test loading contact endpoint from Store."""
+    mock_store = AsyncMock()
+    mock_store.async_load.return_value = {"contact": "Test <sip:example.com:5061>"}
+
+    # Initialize voip device
+    voip_id = call_info.caller_endpoint.uri
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, voip_id)},
+        name=call_info.caller_endpoint.host,
+        manufacturer="Grandstream",
+        model="HT801",
+        sw_version="1.0.0.0",
+        configuration_url=f"http://{call_info.caller_ip}",
+    )
+
+    with patch("homeassistant.components.voip.devices.Store", return_value=mock_store):
+        voip = VoIPDevices(hass, config_entry)
+
+        await voip.async_setup()
+        voip_device = voip.devices.get(voip_id)
+        assert voip_device.contact == SipEndpoint("Test <sip:example.com:5061>")
 
 
 async def test_remove_device_registry_entry(

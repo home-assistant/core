@@ -4,15 +4,20 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
+import logging
 from typing import Any
 
 from voip_utils import CallInfo, VoipDatagramProtocol
+from voip_utils.sip import SipEndpoint
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN
+from .const import DOMAIN, STORAGE_VER
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -24,6 +29,7 @@ class VoIPDevice:
     is_active: bool = False
     update_listeners: list[Callable[[VoIPDevice], None]] = field(default_factory=list)
     protocol: VoipDatagramProtocol | None = None
+    contact: SipEndpoint | None = None
 
     @callback
     def set_is_active(self, active: bool) -> None:
@@ -80,9 +86,9 @@ class VoIPDevices:
         self.config_entry = config_entry
         self._new_device_listeners: list[Callable[[VoIPDevice], None]] = []
         self.devices: dict[str, VoIPDevice] = {}
+        self.device_stores: dict[str, Store] = {}
 
-    @callback
-    def async_setup(self) -> None:
+    async def async_setup(self) -> None:
         """Set up devices."""
         for device in dr.async_entries_for_config_entry(
             dr.async_get(self.hass), self.config_entry.entry_id
@@ -92,9 +98,16 @@ class VoIPDevices:
             )
             if voip_id is None:
                 continue
+            device_store = self.device_stores[voip_id] = Store(
+                self.hass, STORAGE_VER, f"voip-device-{voip_id}"
+            )
+            device_data: dict[str, Any] = await device_store.async_load() or {}
             self.devices[voip_id] = VoIPDevice(
                 voip_id=voip_id,
                 device_id=device.id,
+                contact=SipEndpoint(device_data.get("contact"))
+                if device_data.get("contact")
+                else None,
             )
 
         @callback
@@ -185,16 +198,44 @@ class VoIPDevices:
         )
 
         if voip_device is not None:
+            if voip_device.contact is None and call_info.contact_endpoint is not None:
+                # Update VOIP device with contact information from call info
+                voip_device.contact = call_info.contact_endpoint
+                self.hass.async_create_task(
+                    self.async_update_device_store(
+                        voip_id, call_info.contact_endpoint.sip_header
+                    )
+                )
             return voip_device
 
         voip_device = self.devices[voip_id] = VoIPDevice(
-            voip_id=voip_id,
-            device_id=device.id,
+            voip_id=voip_id, device_id=device.id, contact=call_info.contact_endpoint
         )
+        if call_info.contact_endpoint is not None:
+            self.hass.async_create_task(
+                self.async_update_device_store(
+                    voip_id, call_info.contact_endpoint.sip_header
+                )
+            )
+
         for listener in self._new_device_listeners:
             listener(voip_device)
 
         return voip_device
+
+    async def async_update_device_store(self, voip_id: str, contact_header: str):
+        """Update the device store with the contact information."""
+        _LOGGER.debug("Saving new VOIP device %s contact %s", voip_id, contact_header)
+        if voip_id not in self.device_stores:
+            _LOGGER.debug("Creating store for %s", voip_id)
+            self.device_stores[voip_id] = Store(
+                self.hass, STORAGE_VER, f"voip-device-{voip_id}"
+            )
+        device_store = self.device_stores[voip_id]
+        device_data: dict[str, Any] = await device_store.async_load() or {}
+        device_data["contact"] = contact_header
+        await device_store.async_save(device_data)
+        _LOGGER.debug("Saved new VOIP device contact")
 
     def __iter__(self) -> Iterator[VoIPDevice]:
         """Iterate over devices."""

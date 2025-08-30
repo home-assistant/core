@@ -254,7 +254,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         )
 
         try:
-            # VoIP ID is SIP header
+            # VoIP ID is SIP header - This represents what is set as the To header
             destination_endpoint = SipEndpoint(self.voip_device.voip_id)
         except ValueError:
             # VoIP ID is IP address
@@ -269,10 +269,12 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
         # Make the call
         sip_protocol: SipDatagramProtocol = self.hass.data[DOMAIN].protocol
+        _LOGGER.debug("Outgoing call to contact %s", self.voip_device.contact)
         call_info = sip_protocol.outgoing_call(
             source=source_endpoint,
             destination=destination_endpoint,
             rtp_port=self._rtp_port,
+            contact=self.voip_device.contact,
         )
 
         # Check if caller didn't pick up
