@@ -268,7 +268,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterNumericSwitchEntityDescription(
             key="DoorLockEnablePrivacyModeButton",
             entity_category=EntityCategory.CONFIG,
-            translation_key="privacy_mode",
+            translation_key="privacy_mode_button",
             device_to_ha={
                 0: False,
                 1: True,
@@ -279,9 +279,7 @@ DISCOVERY_SCHEMAS = [
             }.get,
         ),
         entity_class=MatterNumericSwitch,
-        required_attributes=(
-            clusters.DoorLock.Attributes.EnablePrivacyModeButton,
-        ),
+        required_attributes=(clusters.DoorLock.Attributes.EnablePrivacyModeButton,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
