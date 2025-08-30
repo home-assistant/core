@@ -624,18 +624,22 @@ class TelegramNotificationService:
         context: Context | None = None,
         **kwargs: Any,
     ) -> dict[int, int]:
-        """Send a chat action to a pre-allowed chat ID."""
-        chat_id = self.get_target_chat_ids(target)[0]
-        _LOGGER.debug("Send action %chat_action in chat ID %s", chat_action, chat_id)
-        is_successful = await self._send_msg(
-            self.bot.send_chat_action,
-            "Error sending action",
-            None,
-            chat_id=chat_id,
-            action=chat_action,
-            context=context,
-        )
-        return {chat_id: is_successful}
+        """Send a chat action to pre-allowed chat IDs."""
+        result = {}
+        for chat_id in self.get_target_chat_ids(target):
+            _LOGGER.debug(
+                "Send action %chat_action in chat ID %s", chat_action, chat_id
+            )
+            is_successful = await self._send_msg(
+                self.bot.send_chat_action,
+                "Error sending action",
+                None,
+                chat_id=chat_id,
+                action=chat_action,
+                context=context,
+            )
+            result[chat_id] = is_successful
+        return result
 
     async def send_file(
         self,
