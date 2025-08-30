@@ -6,129 +6,94 @@ from datetime import timedelta
 from typing import Any
 
 from TransportNSW import TransportNSW
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, CONF_API_KEY, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
-ATTR_STOP_ID = "stop_id"
-ATTR_ROUTE = "route"
-ATTR_DUE_IN = "due"
-ATTR_DELAY = "delay"
-ATTR_REAL_TIME = "real_time"
-ATTR_DESTINATION = "destination"
-
-CONF_STOP_ID = "stop_id"
-CONF_ROUTE = "route"
-CONF_DESTINATION = "destination"
-
-DEFAULT_NAME = "Next Bus"
-ICONS = {
-    "Train": "mdi:train",
-    "Lightrail": "mdi:tram",
-    "Bus": "mdi:bus",
-    "Coach": "mdi:bus",
-    "Ferry": "mdi:ferry",
-    "Schoolbus": "mdi:bus",
-    "n/a": "mdi:clock",
-    None: "mdi:clock",
-}
+from .const import (
+    ATTR_DELAY,
+    ATTR_DESTINATION,
+    ATTR_DUE_IN,
+    ATTR_REAL_TIME,
+    ATTR_ROUTE,
+    ATTR_STOP_ID,
+    CONF_DESTINATION,
+    CONF_ROUTE,
+    CONF_STOP_ID,
+    DOMAIN,
+    TRANSPORT_ICONS,
+)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_STOP_ID): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_ROUTE, default=""): cv.string,
-        vol.Optional(CONF_DESTINATION, default=""): cv.string,
-    }
-)
-
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Transport NSW sensor."""
-    stop_id = config[CONF_STOP_ID]
-    api_key = config[CONF_API_KEY]
-    route = config.get(CONF_ROUTE)
-    destination = config.get(CONF_DESTINATION)
-    name = config.get(CONF_NAME)
+    """Set up Transport NSW sensor from a config entry."""
+    coordinator = TransportNSWCoordinator(hass, config_entry)
+    await coordinator.async_config_entry_first_refresh()
 
-    data = PublicTransportData(stop_id, route, destination, api_key)
-    add_entities([TransportNSWSensor(data, stop_id, name)], True)
+    async_add_entities([TransportNSWSensor(coordinator, config_entry)], True)
 
 
-class TransportNSWSensor(SensorEntity):
-    """Implementation of an Transport NSW sensor."""
+class TransportNSWCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching Transport NSW data."""
 
-    _attr_attribution = "Data provided by Transport NSW"
-    _attr_device_class = SensorDeviceClass.DURATION
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        """Initialize the coordinator."""
+        self.config_entry = config_entry
+        self.api_key = config_entry.data[CONF_API_KEY]
+        self.stop_id = config_entry.data[CONF_STOP_ID]
+        self.route = config_entry.options.get(CONF_ROUTE, "")
+        self.destination = config_entry.options.get(CONF_DESTINATION, "")
+        self.transport_nsw = TransportNSW()
 
-    def __init__(self, data, stop_id, name):
-        """Initialize the sensor."""
-        self.data = data
-        self._name = name
-        self._stop_id = stop_id
-        self._times = self._state = None
-        self._icon = ICONS[None]
+        super().__init__(
+            hass,
+            logger=__name__,
+            name=f"Transport NSW {self.stop_id}",
+            update_interval=SCAN_INTERVAL,
+        )
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch data from Transport NSW."""
+        try:
+            data = await self.hass.async_add_executor_job(
+                self.transport_nsw.get_departures,
+                self.stop_id,
+                self.route,
+                self.destination,
+                self.api_key,
+            )
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
+            if data is None:
+                raise UpdateFailed("No data returned from Transport NSW API")
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        if self._times is not None:
             return {
-                ATTR_DUE_IN: self._times[ATTR_DUE_IN],
-                ATTR_STOP_ID: self._stop_id,
-                ATTR_ROUTE: self._times[ATTR_ROUTE],
-                ATTR_DELAY: self._times[ATTR_DELAY],
-                ATTR_REAL_TIME: self._times[ATTR_REAL_TIME],
-                ATTR_DESTINATION: self._times[ATTR_DESTINATION],
-                ATTR_MODE: self._times[ATTR_MODE],
+                ATTR_ROUTE: _get_value(data.get("route")),
+                ATTR_DUE_IN: _get_value(data.get("due")),
+                ATTR_DELAY: _get_value(data.get("delay")),
+                ATTR_REAL_TIME: _get_value(data.get("real_time")),
+                ATTR_DESTINATION: _get_value(data.get("destination")),
+                ATTR_MODE: _get_value(data.get("mode")),
             }
-        return None
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return UnitOfTime.MINUTES
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    def update(self) -> None:
-        """Get the latest data from Transport NSW and update the states."""
-        self.data.update()
-        self._times = self.data.info
-        self._state = self._times[ATTR_DUE_IN]
-        self._icon = ICONS[self._times[ATTR_MODE]]
+        except Exception as exc:
+            raise UpdateFailed(f"Error communicating with Transport NSW API: {exc}") from exc
 
 
 def _get_value(value):
@@ -136,35 +101,55 @@ def _get_value(value):
     return None if (value is None or value == "n/a") else value
 
 
-class PublicTransportData:
-    """The Class for handling the data retrieval."""
+class TransportNSWSensor(CoordinatorEntity, SensorEntity):
+    """Implementation of an Transport NSW sensor."""
 
-    def __init__(self, stop_id, route, destination, api_key):
-        """Initialize the data object."""
-        self._stop_id = stop_id
-        self._route = route
-        self._destination = destination
-        self._api_key = api_key
-        self.info = {
-            ATTR_ROUTE: self._route,
-            ATTR_DUE_IN: None,
-            ATTR_DELAY: None,
-            ATTR_REAL_TIME: None,
-            ATTR_DESTINATION: None,
-            ATTR_MODE: None,
-        }
-        self.tnsw = TransportNSW()
+    _attr_attribution = "Data provided by Transport NSW"
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
-    def update(self):
-        """Get the next leave time."""
-        _data = self.tnsw.get_departures(
-            self._stop_id, self._route, self._destination, self._api_key
+    def __init__(self, coordinator: TransportNSWCoordinator, config_entry: ConfigEntry) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.config_entry = config_entry
+        self._attr_name = config_entry.data[CONF_NAME]
+        self._attr_unique_id = f"{DOMAIN}_{config_entry.entry_id}"
+
+        # Device info for grouping entities
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.data[CONF_STOP_ID])},
+            name=f"Transport NSW Stop {config_entry.data[CONF_STOP_ID]}",
+            manufacturer="Transport NSW",
+            entry_type=DeviceEntryType.SERVICE,
         )
-        self.info = {
-            ATTR_ROUTE: _get_value(_data["route"]),
-            ATTR_DUE_IN: _get_value(_data["due"]),
-            ATTR_DELAY: _get_value(_data["delay"]),
-            ATTR_REAL_TIME: _get_value(_data["real_time"]),
-            ATTR_DESTINATION: _get_value(_data["destination"]),
-            ATTR_MODE: _get_value(_data["mode"]),
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the sensor."""
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.get(ATTR_DUE_IN)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        if self.coordinator.data is None:
+            return None
+
+        return {
+            ATTR_STOP_ID: self.config_entry.data[CONF_STOP_ID],
+            ATTR_ROUTE: self.coordinator.data.get(ATTR_ROUTE),
+            ATTR_DELAY: self.coordinator.data.get(ATTR_DELAY),
+            ATTR_REAL_TIME: self.coordinator.data.get(ATTR_REAL_TIME),
+            ATTR_DESTINATION: self.coordinator.data.get(ATTR_DESTINATION),
+            ATTR_MODE: self.coordinator.data.get(ATTR_MODE),
         }
+
+    @property
+    def icon(self) -> str:
+        """Icon to use in the frontend, if any."""
+        if self.coordinator.data is None:
+            return TRANSPORT_ICONS[None]
+        mode = self.coordinator.data.get(ATTR_MODE)
+        return TRANSPORT_ICONS.get(mode, TRANSPORT_ICONS[None])

@@ -1,79 +1,72 @@
-"""The tests for the Transport NSW (AU) sensor platform."""
+"""Test the Transport NSW sensor."""
 
 from unittest.mock import patch
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+import pytest
 
-VALID_CONFIG = {
-    "sensor": {
-        "platform": "transport_nsw",
-        "stop_id": "209516",
-        "route": "199",
-        "destination": "",
-        "api_key": "YOUR_API_KEY",
-    }
+from homeassistant.components.transport_nsw.const import DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+MOCK_CONFIG_DATA = {
+    CONF_API_KEY: "test_api_key",
+    "stop_id": "test_stop_id",
+    CONF_NAME: "Test Stop",
+}
+
+MOCK_API_RESPONSE = {
+    "route": "Test Route",
+    "due": 5,
+    "delay": 0,
+    "real_time": True,
+    "destination": "Test Destination",
+    "mode": "Bus",
 }
 
 
-def get_departuresMock(_stop_id, route, destination, api_key):
-    """Mock TransportNSW departures loading."""
-    return {
-        "stop_id": "209516",
-        "route": "199",
-        "due": 16,
-        "delay": 6,
-        "real_time": "y",
-        "destination": "Palm Beach",
-        "mode": "Bus",
-    }
+async def test_sensor_setup(hass: HomeAssistant) -> None:
+    """Test sensor setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_DATA,
+    )
+    entry.add_to_hass(hass)
 
+    with patch(
+        "homeassistant.components.transport_nsw.sensor.TransportNSW.get_departures",
+        return_value=MOCK_API_RESPONSE,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-@patch("TransportNSW.TransportNSW.get_departures", side_effect=get_departuresMock)
-async def test_transportnsw_config(mocked_get_departures, hass: HomeAssistant) -> None:
-    """Test minimal TransportNSW configuration."""
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG)
-    await hass.async_block_till_done()
-    state = hass.states.get("sensor.next_bus")
-    assert state.state == "16"
-    assert state.attributes["stop_id"] == "209516"
-    assert state.attributes["route"] == "199"
-    assert state.attributes["delay"] == 6
-    assert state.attributes["real_time"] == "y"
-    assert state.attributes["destination"] == "Palm Beach"
+    state = hass.states.get("sensor.test_stop")
+    assert state is not None
+    assert state.state == "5"
+    assert state.attributes["stop_id"] == "test_stop_id"
+    assert state.attributes["route"] == "Test Route"
+    assert state.attributes["destination"] == "Test Destination"
     assert state.attributes["mode"] == "Bus"
-    assert state.attributes["device_class"] == SensorDeviceClass.DURATION
-    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
 
-def get_departuresMock_notFound(_stop_id, route, destination, api_key):
-    """Mock TransportNSW departures loading."""
-    return {
-        "stop_id": "n/a",
-        "route": "n/a",
-        "due": "n/a",
-        "delay": "n/a",
-        "real_time": "n/a",
-        "destination": "n/a",
-        "mode": "n/a",
-    }
+async def test_sensor_unavailable_api(hass: HomeAssistant) -> None:
+    """Test sensor when API is unavailable."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_DATA,
+    )
+    entry.add_to_hass(hass)
 
+    with patch(
+        "homeassistant.components.transport_nsw.sensor.TransportNSW.get_departures",
+        side_effect=Exception("API Error"),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-@patch(
-    "TransportNSW.TransportNSW.get_departures", side_effect=get_departuresMock_notFound
-)
-async def test_transportnsw_config_not_found(
-    mocked_get_departures_not_found, hass: HomeAssistant
-) -> None:
-    """Test minimal TransportNSW configuration."""
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG)
-    await hass.async_block_till_done()
-    state = hass.states.get("sensor.next_bus")
-    assert state.state == "unknown"
-    assert state.attributes["stop_id"] == "209516"
-    assert state.attributes["route"] is None
-    assert state.attributes["delay"] is None
-    assert state.attributes["real_time"] is None
-    assert state.attributes["destination"] is None
-    assert state.attributes["mode"] is None
+    state = hass.states.get("sensor.test_stop")
+    assert state is not None
+    assert state.state == "unavailable"

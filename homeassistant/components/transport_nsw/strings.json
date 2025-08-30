@@ -1,0 +1,31 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Transport NSW",
+                "description": "Set up Transport NSW to get real-time departure information.",
+                "data": {
+                    "api_key": "API Key",
+                    "stop_id": "Stop ID",
+                    "name": "Name"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to Transport NSW API. Please check your API key and stop ID.",
+            "unknown": "Unexpected error occurred."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Transport NSW Options",
+                "description": "Configure filtering options for departures.",
+                "data": {
+                    "route": "Route Filter (optional)",
+                    "destination": "Destination Filter (optional)"
+                }
+            }
+        }
+    }
+}
