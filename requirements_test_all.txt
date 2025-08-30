@@ -235,7 +235,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==39.0.0
+aioesphomeapi==39.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -328,7 +328,7 @@ aiopegelonline==0.1.1
 aiopulse==0.4.6
 
 # homeassistant.components.purpleair
-aiopurpleair==2023.12.0
+aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==3.1.1
@@ -559,7 +559,7 @@ bimmer-connected[china]==0.17.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==3.1.0
+bleak-esphome==3.2.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.4.3
@@ -613,7 +613,7 @@ bring-api==1.1.0
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==5.0.1
+brother==5.1.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -827,7 +827,7 @@ fitbit==0.3.1
 fivem-api==0.1.2
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==2.3.2
+fjaraskupan==2.3.3
 
 # homeassistant.components.flexit_bacnet
 flexit_bacnet==2.2.3
@@ -994,7 +994,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.4
 
 # homeassistant.components.bluetooth
-habluetooth==5.2.0
+habluetooth==5.2.1
 
 # homeassistant.components.cloud
 hass-nabucasa==1.0.0
@@ -1029,7 +1029,7 @@ holidays==0.79
 home-assistant-frontend==20250828.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.8.27
+home-assistant-intents==2025.8.29
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.3.0
@@ -1292,7 +1292,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==5.0.0
 
 # homeassistant.components.nexia
-nexia==2.11.0
+nexia==2.11.1
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -2213,7 +2213,7 @@ renault-api==0.4.0
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.14.7
+reolink-aio==0.15.0
 
 # homeassistant.components.rflink
 rflink==0.0.67
