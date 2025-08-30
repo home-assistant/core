@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tracker_interfaces = entry.data.get(CONF_TRACKER_INTERFACE)
 
     hass.data[OPNSENSE_DATA] = {
-        "interface_client": diagnostics.InterfaceClient(**api_data),
+        CONF_INTERFACE_CLIENT: diagnostics.InterfaceClient(**api_data),
         CONF_TRACKER_INTERFACE: tracker_interfaces,
     }
 
