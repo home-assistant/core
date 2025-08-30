@@ -50,7 +50,6 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     STATE_CLASS_UNITS,
     SensorDeviceClass,
-    SensorStateClass,
 )
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import (
@@ -107,6 +106,7 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    DeviceClassSelectorConfig,
     FileSelector,
     FileSelectorConfig,
     NumberSelector,
@@ -117,6 +117,9 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    SensorDeviceClassSelector,
+    SensorStateClassSelector,
+    SensorStateClassSelectorConfig,
     TemplateSelector,
     TemplateSelectorConfig,
     TextSelector,
@@ -533,14 +536,7 @@ ENTITY_CATEGORY_SELECTOR = SelectSelector(
 )
 
 # Sensor specific selectors
-SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in SensorDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_sensor",
-        sort=True,
-    )
-)
+SENSOR_DEVICE_CLASS_SELECTOR = SensorDeviceClassSelector(DeviceClassSelectorConfig())
 BINARY_SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[device_class.value for device_class in BinarySensorDeviceClass],
@@ -574,19 +570,9 @@ COVER_DEVICE_CLASS_SELECTOR = SelectSelector(
         sort=True,
     )
 )
-SENSOR_STATE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in SensorStateClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key=CONF_STATE_CLASS,
-    )
-)
+SENSOR_STATE_CLASS_SELECTOR = SensorStateClassSelector(SensorStateClassSelectorConfig())
 OPTIONS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[],
-        custom_value=True,
-        multiple=True,
-    )
+    SelectSelectorConfig(options=[], custom_value=True, multiple=True)
 )
 SUGGESTED_DISPLAY_PRECISION_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=9)
