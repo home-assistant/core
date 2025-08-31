@@ -207,7 +207,9 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
         if not self._update_task or self._update_task.done():
             self._update_task = (
                 self.coordinator.config_entry.async_create_background_task(
-                    self.hass, self.update_position(), "Shelly cover update"
+                    self.hass,
+                    self.update_position(),
+                    f"Shelly cover update [{self._id} - {self.name}]",
                 )
             )
 
