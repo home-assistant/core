@@ -57,6 +57,7 @@ async def async_setup_entry(
             for mower_id in restored_mowers
             if mower_id in coordinator.data
         )
+        coordinator.api.unregister_ws_ready_callback(_on_ws_ready)
 
     coordinator.api.register_ws_ready_callback(_on_ws_ready)
 
