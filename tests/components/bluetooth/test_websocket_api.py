@@ -436,7 +436,7 @@ async def test_subscribe_scanner_details_invalid_config_entry_id(
         response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "invalid_config_entry_id"
-    assert response["error"]["message"] == "Invalid config entry id: non_existent"
+    assert response["error"]["message"] == "Config entry non_existent not found"
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
