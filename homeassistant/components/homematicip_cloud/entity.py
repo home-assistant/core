@@ -84,15 +84,25 @@ class HomematicipGenericEntity(Entity):
         post: str | None = None,
         channel: int | None = None,
         is_multi_channel: bool | None = False,
+        channel_real_index: int | None = None,
     ) -> None:
         """Initialize the generic entity."""
         self._hap = hap
         self._home: AsyncHome = hap.home
-        self._device = device
-        self._post = post
-        self._channel = channel
+        self._device: Device = device
+        self._post: str | None = post
+        self._channel: int | None = channel
+
+        # channel_real_index represents the actual index of the devices channel.
+        # Accessing a functionalChannel by the channel parameter or array index is unreliable,
+        # because the functionalChannels array is sorted as strings, not numbers.
+        # For example, channels are ordered as: 1, 10, 11, 12, 2, 3, ...
+        # Using channel_real_index ensures you reference the correct channel.
+        self._channel_real_index: int | None = channel_real_index
+
         self._is_multi_channel = is_multi_channel
         self.functional_channel = self.get_current_channel()
+
         # Marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = False
 
@@ -187,11 +197,11 @@ class HomematicipGenericEntity(Entity):
 
         name = None
         # Try to get a label from a channel.
-        if hasattr(self._device, "functionalChannels"):
+        if self.functional_channel is not None:
             if self._is_multi_channel:
-                name = self._device.functionalChannels[self._channel].label
+                name = str(self.functional_channel.label)
             elif len(self._device.functionalChannels) > 1:
-                name = self._device.functionalChannels[1].label
+                name = str(self._device.functionalChannels[1].label)
 
         # Use device label, if name is not defined by channel label.
         if not name:
@@ -199,7 +209,7 @@ class HomematicipGenericEntity(Entity):
             if self._post:
                 name = f"{name} {self._post}"
             elif self._is_multi_channel:
-                name = f"{name} Channel{self._channel}"
+                name = f"{name} Channel{self.get_channel_index()}"
 
         # Add a prefix to the name if the homematic ip home has a name.
         if name and self._home.name:
@@ -217,9 +227,7 @@ class HomematicipGenericEntity(Entity):
         """Return a unique ID."""
         unique_id = f"{self.__class__.__name__}_{self._device.id}"
         if self._is_multi_channel:
-            unique_id = (
-                f"{self.__class__.__name__}_Channel{self._channel}_{self._device.id}"
-            )
+            unique_id = f"{self.__class__.__name__}_Channel{self.get_channel_index()}_{self._device.id}"
 
         return unique_id
 
@@ -257,9 +265,30 @@ class HomematicipGenericEntity(Entity):
         """Return the FunctionalChannel for device."""
         if hasattr(self._device, "functionalChannels"):
             if self._is_multi_channel:
+                if self._channel_real_index is not None:
+                    return next(
+                        channel
+                        for channel in self._device.functionalChannels
+                        if channel.index == self._channel_real_index
+                    )
+
                 return self._device.functionalChannels[self._channel]
 
             if len(self._device.functionalChannels) > 1:
                 return self._device.functionalChannels[1]
 
         return None
+
+    def get_channel_index(self) -> int:
+        """Return the correct channel index for this entity.
+
+        Prefers channel_real_index if set, otherwise returns channel.
+        This ensures the correct channel is used even if the functionalChannels list is not numerically ordered.
+        """
+        if self._channel_real_index is not None:
+            return self._channel_real_index
+
+        if self._channel is not None:
+            return self._channel
+
+        return 1

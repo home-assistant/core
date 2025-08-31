@@ -88,7 +88,9 @@ async def async_setup_entry(
             entities.append(HomematicipTiltVibrationSensor(hap, device))
         if isinstance(device, WiredInput32):
             entities.extend(
-                HomematicipMultiContactInterface(hap, device, channel.index)
+                HomematicipMultiContactInterface(
+                    hap, device, channel_real_index=channel.index
+                )
                 for channel in device.functionalChannels
                 if isinstance(channel, MultiModeInputChannel)
             )
@@ -229,21 +231,23 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
         device,
         channel=1,
         is_multi_channel=True,
+        channel_real_index=None,
     ) -> None:
         """Initialize the multi contact entity."""
         super().__init__(
-            hap, device, channel=channel, is_multi_channel=is_multi_channel
+            hap,
+            device,
+            channel=channel,
+            is_multi_channel=is_multi_channel,
+            channel_real_index=channel_real_index,
         )
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the contact interface is on/open."""
-        if self._device.functionalChannels[self._channel].windowState is None:
+        if self.functional_channel.windowState is None:
             return None
-        return (
-            self._device.functionalChannels[self._channel].windowState
-            != WindowState.CLOSED
-        )
+        return self.functional_channel.windowState != WindowState.CLOSED
 
 
 class HomematicipContactInterface(HomematicipMultiContactInterface, BinarySensorEntity):

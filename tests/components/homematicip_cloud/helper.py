@@ -63,12 +63,21 @@ async def async_manipulate_test_data(
     new_value: Any,
     channel: int = 1,
     fire_device: HomeMaticIPObject | None = None,
+    channel_real_index: int | None = None,
 ):
     """Set new value on hmip device."""
     if channel == 1:
         setattr(hmip_device, attribute, new_value)
     if hasattr(hmip_device, "functionalChannels"):
-        functional_channel = hmip_device.functionalChannels[channel]
+        if channel_real_index is not None:
+            functional_channel = next(
+                ch
+                for ch in hmip_device.functionalChannels
+                if ch.index == channel_real_index
+            )
+        else:
+            functional_channel = hmip_device.functionalChannels[channel]
+
         setattr(functional_channel, attribute, new_value)
 
     fire_target = hmip_device if fire_device is None else fire_device
