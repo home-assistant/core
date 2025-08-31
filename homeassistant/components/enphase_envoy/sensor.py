@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING
 from pyenphase import (
     EnvoyACBPower,
     EnvoyBatteryAggregate,
+    EnvoyC6CC,
+    EnvoyCollar,
     EnvoyEncharge,
     EnvoyEnchargeAggregate,
     EnvoyEnchargePower,
@@ -790,6 +792,58 @@ ENPOWER_SENSORS = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class EnvoyCollarSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy Collar sensor entity."""
+
+    value_fn: Callable[[EnvoyCollar], datetime.datetime | int | float | str]
+
+
+COLLAR_SENSORS = (
+    EnvoyCollarSensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        value_fn=attrgetter("temperature"),
+    ),
+    EnvoyCollarSensorEntityDescription(
+        key=LAST_REPORTED_KEY,
+        translation_key=LAST_REPORTED_KEY,
+        native_unit_of_measurement=None,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda collar: dt_util.utc_from_timestamp(collar.last_report_date),
+    ),
+    EnvoyCollarSensorEntityDescription(
+        key="grid_state",
+        translation_key="grid_status",
+        value_fn=lambda collar: collar.grid_state,
+    ),
+    EnvoyCollarSensorEntityDescription(
+        key="mid_state",
+        translation_key="mid_state",
+        value_fn=lambda collar: collar.mid_state,
+    ),
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class EnvoyC6CCSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy C6 Combiner controller sensor entity."""
+
+    value_fn: Callable[[EnvoyC6CC], datetime.datetime]
+
+
+C6CC_SENSORS = (
+    EnvoyC6CCSensorEntityDescription(
+        key=LAST_REPORTED_KEY,
+        translation_key=LAST_REPORTED_KEY,
+        native_unit_of_measurement=None,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda c6cc: dt_util.utc_from_timestamp(c6cc.last_report_date),
+    ),
+)
+
+
 @dataclass(frozen=True)
 class EnvoyEnchargeAggregateRequiredKeysMixin:
     """Mixin for required keys."""
@@ -1049,6 +1103,15 @@ async def async_setup_entry(
         entities.extend(
             AggregateBatteryEntity(coordinator, description)
             for description in AGGREGATE_BATTERY_SENSORS
+        )
+    if envoy_data.collar:
+        entities.extend(
+            EnvoyCollarEntity(coordinator, description)
+            for description in COLLAR_SENSORS
+        )
+    if envoy_data.c6cc:
+        entities.extend(
+            EnvoyC6CCEntity(coordinator, description) for description in C6CC_SENSORS
         )
 
     async_add_entities(entities)
@@ -1488,3 +1551,70 @@ class AggregateBatteryEntity(EnvoySystemSensorEntity):
         battery_aggregate = self.data.battery_aggregate
         assert battery_aggregate is not None
         return self.entity_description.value_fn(battery_aggregate)
+
+
+class EnvoyCollarEntity(EnvoySensorBaseEntity):
+    """Envoy Collar sensor entity."""
+
+    entity_description: EnvoyCollarSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EnvoyCollarSensorEntityDescription,
+    ) -> None:
+        """Initialize Collar entity."""
+        super().__init__(coordinator, description)
+        collar_data = self.data.collar
+        assert collar_data is not None
+        self._serial_number = collar_data.serial_number
+        self._attr_unique_id = f"{collar_data.serial_number}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, collar_data.serial_number)},
+            manufacturer="Enphase",
+            model="IQ Meter Collar",
+            name=f"Collar {collar_data.serial_number}",
+            sw_version=str(collar_data.firmware_version),
+            via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=collar_data.serial_number,
+        )
+
+    @property
+    def native_value(self) -> datetime.datetime | int | float | str:
+        """Return the state of the collar sensors."""
+        collar_data = self.data.collar
+        assert collar_data is not None
+        return self.entity_description.value_fn(collar_data)
+
+
+class EnvoyC6CCEntity(EnvoySensorBaseEntity):
+    """Envoy C6CC sensor entity."""
+
+    entity_description: EnvoyC6CCSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EnvoyC6CCSensorEntityDescription,
+    ) -> None:
+        """Initialize Encharge entity."""
+        super().__init__(coordinator, description)
+        c6cc_data = self.data.c6cc
+        assert c6cc_data is not None
+        self._attr_unique_id = f"{c6cc_data.serial_number}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, c6cc_data.serial_number)},
+            manufacturer="Enphase",
+            model="C6 COMBINER CONTROLLER",
+            name=f"C6 Combiner {c6cc_data.serial_number}",
+            sw_version=str(c6cc_data.firmware_version),
+            via_device=(DOMAIN, self.envoy_serial_num),
+            serial_number=c6cc_data.serial_number,
+        )
+
+    @property
+    def native_value(self) -> datetime.datetime:
+        """Return the state of the c6cc inventory sensors."""
+        c6cc_data = self.data.c6cc
+        assert c6cc_data is not None
+        return self.entity_description.value_fn(c6cc_data)

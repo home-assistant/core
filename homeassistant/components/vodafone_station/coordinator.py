@@ -187,4 +187,5 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             model=sensors_data.get("sys_model_name"),
             hw_version=sensors_data["sys_hardware_version"],
             sw_version=sensors_data["sys_firmware_version"],
+            serial_number=self.serial_number,
         )

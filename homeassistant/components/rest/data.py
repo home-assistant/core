@@ -45,6 +45,7 @@ class RestData:
         self._method = method
         self._resource = resource
         self._encoding = encoding
+        self._force_use_set_encoding = False
 
         # Convert auth tuple to aiohttp.BasicAuth if needed
         if isinstance(auth, tuple) and len(auth) == 2:
@@ -152,10 +153,19 @@ class RestData:
                 # Read the response
                 # Only use configured encoding if no charset in Content-Type header
                 # If charset is present in Content-Type, let aiohttp use it
-                if response.charset:
+                if self._force_use_set_encoding is False and response.charset:
                     # Let aiohttp use the charset from Content-Type header
-                    self.data = await response.text()
-                else:
+                    try:
+                        self.data = await response.text()
+                    except UnicodeDecodeError as ex:
+                        self._force_use_set_encoding = True
+                        _LOGGER.debug(
+                            "Response charset came back as %s but could not be decoded, continue with configured encoding %s. %s",
+                            response.charset,
+                            self._encoding,
+                            ex,
+                        )
+                if self._force_use_set_encoding or not response.charset:
                     # Use configured encoding as fallback
                     self.data = await response.text(encoding=self._encoding)
                 self.headers = response.headers

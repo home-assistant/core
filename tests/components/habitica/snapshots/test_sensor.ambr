@@ -1114,7 +1114,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '500.0',
   })
 # ---
 # name: test_sensors[sensor.test_user_s_party_boss_health_remaining-entry]
@@ -1167,7 +1167,115 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '50.0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_boss_rage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_s_party_boss_rage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Boss rage',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.BOSS_RAGE: 'boss_rage'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_1e87097c-4c03-4f8c-a475-67cc7da7f409_boss_rage',
+    'unit_of_measurement': 'rage',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_boss_rage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSItMiAtMiAxOCAyMCI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48ZyBmaWxsLXJ1bGU9Im5vbnplcm8iPjxnPjxnPjxnPjxwYXRoIGZpbGw9IiMyNENDOEYiIGQ9Ik0wIDZMNS44MzMgMCAxMS42NjcgNiA1LjgzMyAxNnoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iIzI0Q0M4RiIgZD0iTTAgNkw1LjgzMyAwIDExLjY2NyA2IDUuODMzIDE2eiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMTAuMTUgNi4yTDUuODMzIDUuMiA1LjgzMyAxLjh6IiBvcGFjaXR5PSIuMjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTUuODMzIDUuMkwxLjUxNyA2LjIgNS44MzMgMS44eiIgb3BhY2l0eT0iLjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iIzVBRTRCMiIgZD0iTTUuODMzIDUuMkw1LjgzMyAxMy42IDEuNTE3IDYuMnoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iIzFCOTk2QiIgZD0iTTEwLjE1IDYuMkw1LjgzMyAxMy42IDUuODMzIDUuMnoiIG9wYWNpdHk9Ii4zNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRjQ3ODI1IiBkPSJNMTEuNjY3IDZMNS44MzMgMCAwIDYgMS4xNjcgOCAwIDEwIDUuODMzIDE2IDExLjY2NyAxMCAxMC41IDh6IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTI0IC0yMDcwKSB0cmFuc2xhdGUoNDg0IDE2MzIpIHRyYW5zbGF0ZSg0MCA0MzgpIHRyYW5zbGF0ZSguODc1KSI+PC9wYXRoPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0xMC4xNSA2LjJMNS44MzMgNS4yIDUuODMzIDEuOHoiIG9wYWNpdHk9Ii4yNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNNS44MzMgNS4yTDEuNTE3IDYuMiA1LjgzMyAxLjh6IiBvcGFjaXR5PSIuNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNNS44MzMgNS4yTDUuODMzIDEzLjYgNC42OTkgMTEuNjUzIDEuNTE3IDYuMnpNNS44MzMgMTAuOEw1LjgzMyAyLjQgNi45NjggNC4zNDcgMTAuMTUgOS44eiIgb3BhY2l0eT0iLjI1IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTI0IC0yMDcwKSB0cmFuc2xhdGUoNDg0IDE2MzIpIHRyYW5zbGF0ZSg0MCA0MzgpIHRyYW5zbGF0ZSguODc1KSI+PC9wYXRoPjxwYXRoIGZpbGw9IiNCNDU5MUIiIGQ9Ik0xMC4xNSA2LjJMNS44MzMgMTMuNiA1LjgzMyA1LjJ6TTEuNTE3IDkuOEw1LjgzMyAxMC44IDUuODMzIDE0LjJ6IiBvcGFjaXR5PSIuMzUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTUuODMzIDEwLjhMMTAuMTUgOS44IDUuODMzIDE0LjJ6IiBvcGFjaXR5PSIuNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMS41MTcgOS44TDUuODMzIDIuNCA1LjgzMyAxMC44eiIgb3BhY2l0eT0iLjI1IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTI0IC0yMDcwKSB0cmFuc2xhdGUoNDg0IDE2MzIpIHRyYW5zbGF0ZSg0MCA0MzgpIHRyYW5zbGF0ZSguODc1KSI+PC9wYXRoPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0zLjA2MyA5LjUzM0wzLjk3MyA4IDMuMDYzIDYuNDY3IDUuODMzIDMuNjY3IDguNjA0IDYuNDY3IDcuNjk0IDggOC42MDQgOS41MzMgNS44MzMgMTIuMzMzeiIgb3BhY2l0eT0iLjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PC9nPjwvZz48L2c+PC9nPjwvZz48L3N2Zz4=',
+      'friendly_name': "test-user's Party Boss rage",
+      'unit_of_measurement': 'rage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_s_party_boss_rage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.14',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_boss_rage_limit_break-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_s_party_boss_rage_limit_break',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Boss rage limit break',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.BOSS_RAGE_LIMIT: 'boss_rage_limit'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_1e87097c-4c03-4f8c-a475-67cc7da7f409_boss_rage_limit',
+    'unit_of_measurement': 'rage',
+  })
+# ---
+# name: test_sensors[sensor.test_user_s_party_boss_rage_limit_break-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'effect': 'skill effect',
+      'entity_picture': 'data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSItMiAtMiAxOCAyMCI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48ZyBmaWxsLXJ1bGU9Im5vbnplcm8iPjxnPjxnPjxnPjxwYXRoIGZpbGw9IiMyNENDOEYiIGQ9Ik0wIDZMNS44MzMgMCAxMS42NjcgNiA1LjgzMyAxNnoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iIzI0Q0M4RiIgZD0iTTAgNkw1LjgzMyAwIDExLjY2NyA2IDUuODMzIDE2eiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMTAuMTUgNi4yTDUuODMzIDUuMiA1LjgzMyAxLjh6IiBvcGFjaXR5PSIuMjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTUuODMzIDUuMkwxLjUxNyA2LjIgNS44MzMgMS44eiIgb3BhY2l0eT0iLjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iIzVBRTRCMiIgZD0iTTUuODMzIDUuMkw1LjgzMyAxMy42IDEuNTE3IDYuMnoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iIzFCOTk2QiIgZD0iTTEwLjE1IDYuMkw1LjgzMyAxMy42IDUuODMzIDUuMnoiIG9wYWNpdHk9Ii4zNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRjQ3ODI1IiBkPSJNMTEuNjY3IDZMNS44MzMgMCAwIDYgMS4xNjcgOCAwIDEwIDUuODMzIDE2IDExLjY2NyAxMCAxMC41IDh6IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTI0IC0yMDcwKSB0cmFuc2xhdGUoNDg0IDE2MzIpIHRyYW5zbGF0ZSg0MCA0MzgpIHRyYW5zbGF0ZSguODc1KSI+PC9wYXRoPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0xMC4xNSA2LjJMNS44MzMgNS4yIDUuODMzIDEuOHoiIG9wYWNpdHk9Ii4yNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNNS44MzMgNS4yTDEuNTE3IDYuMiA1LjgzMyAxLjh6IiBvcGFjaXR5PSIuNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNNS44MzMgNS4yTDUuODMzIDEzLjYgNC42OTkgMTEuNjUzIDEuNTE3IDYuMnpNNS44MzMgMTAuOEw1LjgzMyAyLjQgNi45NjggNC4zNDcgMTAuMTUgOS44eiIgb3BhY2l0eT0iLjI1IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTI0IC0yMDcwKSB0cmFuc2xhdGUoNDg0IDE2MzIpIHRyYW5zbGF0ZSg0MCA0MzgpIHRyYW5zbGF0ZSguODc1KSI+PC9wYXRoPjxwYXRoIGZpbGw9IiNCNDU5MUIiIGQ9Ik0xMC4xNSA2LjJMNS44MzMgMTMuNiA1LjgzMyA1LjJ6TTEuNTE3IDkuOEw1LjgzMyAxMC44IDUuODMzIDE0LjJ6IiBvcGFjaXR5PSIuMzUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTUuODMzIDEwLjhMMTAuMTUgOS44IDUuODMzIDE0LjJ6IiBvcGFjaXR5PSIuNSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTUyNCAtMjA3MCkgdHJhbnNsYXRlKDQ4NCAxNjMyKSB0cmFuc2xhdGUoNDAgNDM4KSB0cmFuc2xhdGUoLjg3NSkiPjwvcGF0aD48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMS41MTcgOS44TDUuODMzIDIuNCA1LjgzMyAxMC44eiIgb3BhY2l0eT0iLjI1IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNTI0IC0yMDcwKSB0cmFuc2xhdGUoNDg0IDE2MzIpIHRyYW5zbGF0ZSg0MCA0MzgpIHRyYW5zbGF0ZSguODc1KSI+PC9wYXRoPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0zLjA2MyA5LjUzM0wzLjk3MyA4IDMuMDYzIDYuNDY3IDUuODMzIDMuNjY3IDguNjA0IDYuNDY3IDcuNjk0IDggOC42MDQgOS41MzMgNS44MzMgMTIuMzMzeiIgb3BhY2l0eT0iLjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC01MjQgLTIwNzApIHRyYW5zbGF0ZSg0ODQgMTYzMikgdHJhbnNsYXRlKDQwIDQzOCkgdHJhbnNsYXRlKC44NzUpIj48L3BhdGg+PC9nPjwvZz48L2c+PC9nPjwvZz48L3N2Zz4=',
+      'friendly_name': "test-user's Party Boss rage limit break",
+      'rage_skill': 'rage skill name',
+      'unit_of_measurement': 'rage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_s_party_boss_rage_limit_break',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.0',
   })
 # ---
 # name: test_sensors[sensor.test_user_s_party_collected_quest_items-entry]
@@ -1415,7 +1523,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'boss name',
   })
 # ---
 # name: test_sensors[sensor.test_user_saddles-entry]

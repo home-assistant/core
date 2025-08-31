@@ -21,7 +21,7 @@
       'source': 'user',
       'subentries': list([
       ]),
-      'title': 'Mock Title',
+      'title': 'BRAVIA TV-Model',
       'unique_id': 'very_unique_string',
       'version': 1,
     }),

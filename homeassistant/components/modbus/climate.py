@@ -490,6 +490,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     if hvac_mode == value:
                         self._attr_hvac_mode = mode
                         break
+        else:
+            # since there are no hvac_mode_register, this
+            # integration should not touch the attr.
+            # However it lacks in the climate component.
+            self._attr_hvac_mode = HVACMode.AUTO
 
         # Read the HVAC action register if defined
         if self._hvac_action_register is not None:

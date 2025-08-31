@@ -27,4 +27,5 @@ class ZeversolarEntity(
             identifiers={(DOMAIN, coordinator.data.serial_number)},
             name="Zeversolar Sensor",
             manufacturer="Zeversolar",
+            serial_number=coordinator.data.serial_number,
         )

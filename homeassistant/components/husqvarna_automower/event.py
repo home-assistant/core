@@ -1,6 +1,7 @@
 """Creates the event entities for supported mowers."""
 
 from collections.abc import Callable
+import logging
 
 from aioautomower.model import SingleMessageData
 
@@ -18,6 +19,7 @@ from .const import ERROR_KEYS
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
+_LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 ATTR_SEVERITY = "severity"
@@ -80,6 +82,12 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
         """Initialize Automower message event entity."""
         super().__init__(mower_id, coordinator)
         self._attr_unique_id = f"{mower_id}_message"
+        self.websocket_alive: bool = coordinator.websocket_alive
+
+    @property
+    def available(self) -> bool:
+        """Return True if the entity is available."""
+        return self.websocket_alive and self.mower_id in self.coordinator.data
 
     @callback
     def _handle(self, msg: SingleMessageData) -> None:
@@ -102,7 +110,17 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
         """Register callback when entity is added to hass."""
         await super().async_added_to_hass()
         self.coordinator.api.register_single_message_callback(self._handle)
+        self.coordinator.websocket_callbacks.append(self._handle_websocket_update)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister WebSocket callback when entity is removed."""
         self.coordinator.api.unregister_single_message_callback(self._handle)
+        self.coordinator.websocket_callbacks.remove(self._handle_websocket_update)
+
+    def _handle_websocket_update(self, is_alive: bool) -> None:
+        """Handle websocket status changes."""
+        if self.websocket_alive == is_alive:
+            return
+        self.websocket_alive = is_alive
+        _LOGGER.debug("WebSocket status changed to %s, updating entity state", is_alive)
+        self.async_write_ha_state()

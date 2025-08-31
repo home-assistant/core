@@ -107,7 +107,15 @@ class SchemaFlowMenuStep(SchemaFlowStep):
     """Define a config or options flow menu step."""
 
     # Menu options
-    options: Container[str]
+    options: (
+        Container[str]
+        | Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, Container[str]]]
+    )
+    """Menu options, or function which returns menu options.
+
+    - If a function is specified, the function will be passed the current
+    `SchemaCommonFlowHandler`.
+    """
 
 
 class SchemaCommonFlowHandler:
@@ -151,6 +159,11 @@ class SchemaCommonFlowHandler:
         if isinstance(self._flow[step_id], SchemaFlowFormStep):
             return await self._async_form_step(step_id, user_input)
         return await self._async_menu_step(step_id, user_input)
+
+    async def _get_options(self, form_step: SchemaFlowMenuStep) -> Container[str]:
+        if isinstance(form_step.options, Container):
+            return form_step.options
+        return await form_step.options(self)
 
     async def _get_schema(self, form_step: SchemaFlowFormStep) -> vol.Schema | None:
         if form_step.schema is None:
@@ -255,7 +268,7 @@ class SchemaCommonFlowHandler:
             menu_step = cast(SchemaFlowMenuStep, self._flow[next_step_id])
             return self._handler.async_show_menu(
                 step_id=next_step_id,
-                menu_options=menu_step.options,
+                menu_options=await self._get_options(menu_step),
             )
 
         form_step = cast(SchemaFlowFormStep, self._flow[next_step_id])
@@ -308,7 +321,7 @@ class SchemaCommonFlowHandler:
         menu_step: SchemaFlowMenuStep = cast(SchemaFlowMenuStep, self._flow[step_id])
         return self._handler.async_show_menu(
             step_id=step_id,
-            menu_options=menu_step.options,
+            menu_options=await self._get_options(menu_step),
         )
 
 

@@ -157,7 +157,7 @@ SENSORS: dict[str | None, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "µg/m³": SensorEntityDescription(
+    "μg/m³": SensorEntityDescription(
         key="concentration|microgram_per_cubic_meter",
         translation_key="concentration",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,

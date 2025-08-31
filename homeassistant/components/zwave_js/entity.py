@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from zwave_js_server.exceptions import BaseZwaveJSServerError
@@ -18,14 +19,31 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN, EVENT_VALUE_UPDATED, LOGGER
-from .discovery import ZwaveDiscoveryInfo
+from .discovery_data_template import BaseDiscoverySchemaDataTemplate
 from .helpers import get_device_id, get_unique_id, get_valueless_base_unique_id
+from .models import PlatformZwaveDiscoveryInfo, ZwaveDiscoveryInfo
 
 EVENT_VALUE_REMOVED = "value removed"
+
+
+@dataclass(kw_only=True)
+class NewZwaveDiscoveryInfo(PlatformZwaveDiscoveryInfo):
+    """Info discovered from (primary) ZWave Value to create entity.
+
+    This is the new discovery info that will replace ZwaveDiscoveryInfo.
+    """
+
+    entity_class: type[ZWaveBaseEntity]
+    # the entity description to use
+    entity_description: EntityDescription
+    # helper data to use in platform setup
+    platform_data: Any = None
+    # data template to use in platform logic
+    platform_data_template: BaseDiscoverySchemaDataTemplate | None = None
 
 
 class ZWaveBaseEntity(Entity):
@@ -35,7 +53,10 @@ class ZWaveBaseEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self,
+        config_entry: ConfigEntry,
+        driver: Driver,
+        info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo,
     ) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
@@ -52,12 +73,14 @@ class ZWaveBaseEntity(Entity):
         # Entity class attributes
         self._attr_name = self.generate_name()
         self._attr_unique_id = get_unique_id(driver, self.info.primary_value.value_id)
-        if self.info.entity_registry_enabled_default is False:
-            self._attr_entity_registry_enabled_default = False
-        if self.info.entity_category is not None:
-            self._attr_entity_category = self.info.entity_category
-        if self.info.assumed_state:
-            self._attr_assumed_state = True
+        if isinstance(info, NewZwaveDiscoveryInfo):
+            self.entity_description = info.entity_description
+        else:
+            if (enabled_default := info.entity_registry_enabled_default) is False:
+                self._attr_entity_registry_enabled_default = enabled_default
+            if (entity_category := info.entity_category) is not None:
+                self._attr_entity_category = entity_category
+        self._attr_assumed_state = self.info.assumed_state
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
             identifiers={get_device_id(driver, self.info.node)},

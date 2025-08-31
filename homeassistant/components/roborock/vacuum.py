@@ -148,10 +148,14 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start the vacuum."""
-        if self._device_status.in_cleaning == 2:
+        if self._device_status.in_returning == 1:
+            await self.send(RoborockCommand.APP_CHARGE)
+        elif self._device_status.in_cleaning == 2:
             await self.send(RoborockCommand.RESUME_ZONED_CLEAN)
         elif self._device_status.in_cleaning == 3:
             await self.send(RoborockCommand.RESUME_SEGMENT_CLEAN)
+        elif self._device_status.in_cleaning == 4:
+            await self.send(RoborockCommand.APP_RESUME_BUILD_MAP)
         else:
             await self.send(RoborockCommand.APP_START)
 

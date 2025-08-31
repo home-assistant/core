@@ -1,13 +1,17 @@
 """Test REST data module logging improvements."""
 
+from datetime import timedelta
 import logging
+from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.rest import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -87,6 +91,59 @@ async def test_rest_data_no_warning_on_200_with_wrong_content_type(
     assert (
         "REST request to http://example.com/api returned status 200" not in caplog.text
     )
+
+
+async def test_rest_data_with_incorrect_charset_in_header(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that we can handle sites which provides an incorrect charset."""
+    aioclient_mock.get(
+        "http://example.com/api",
+        status=200,
+        text="<p>Some html</p>",
+        headers={"Content-Type": "text/html; charset=utf-8"},
+    )
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "resource": "http://example.com/api",
+                "method": "GET",
+                "encoding": "windows-1250",
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value }}",
+                    }
+                ],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "tests.test_util.aiohttp.AiohttpClientMockResponse.text",
+        side_effect=UnicodeDecodeError("utf-8", b"", 1, 0, ""),
+    ):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    log_text = "Response charset came back as utf-8 but could not be decoded, continue with configured encoding windows-1250."
+    assert log_text in caplog.text
+
+    caplog.clear()
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Only log once as we only try once with automatic decoding
+    assert log_text not in caplog.text
 
 
 async def test_rest_data_no_warning_on_success_json(

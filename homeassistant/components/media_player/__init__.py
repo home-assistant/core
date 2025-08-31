@@ -161,6 +161,8 @@ CACHE_LOCK: Final = "lock"
 CACHE_URL: Final = "url"
 CACHE_CONTENT: Final = "content"
 
+ATTR_MEDIA = "media"
+
 
 class MediaPlayerEnqueue(StrEnum):
     """Enqueue types for playing media."""
@@ -198,6 +200,24 @@ _DEPRECATED_DEVICE_CLASS_RECEIVER = DeprecatedConstantEnum(
     MediaPlayerDeviceClass.RECEIVER, "2025.10"
 )
 DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]
+
+
+def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
+    """If 'media' key exists, promote its fields to the top level."""
+    if ATTR_MEDIA in data and isinstance(data[ATTR_MEDIA], dict):
+        if ATTR_MEDIA_CONTENT_TYPE in data or ATTR_MEDIA_CONTENT_ID in data:
+            raise vol.Invalid(
+                f"Play media cannot contain '{ATTR_MEDIA}' and '{ATTR_MEDIA_CONTENT_ID}' or '{ATTR_MEDIA_CONTENT_TYPE}'"
+            )
+        media_data = data[ATTR_MEDIA]
+
+        if ATTR_MEDIA_CONTENT_TYPE in media_data:
+            data[ATTR_MEDIA_CONTENT_TYPE] = media_data[ATTR_MEDIA_CONTENT_TYPE]
+        if ATTR_MEDIA_CONTENT_ID in media_data:
+            data[ATTR_MEDIA_CONTENT_ID] = media_data[ATTR_MEDIA_CONTENT_ID]
+
+        del data[ATTR_MEDIA]
+    return data
 
 
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
@@ -436,6 +456,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA,
         vol.All(
+            _promote_media_fields,
             cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
             _rewrite_enqueue,
             _rename_keys(

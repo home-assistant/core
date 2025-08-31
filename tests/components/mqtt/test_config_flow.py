@@ -33,6 +33,9 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .common import (
+    MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA_SINGLE,
+    MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA_SINGLE,
+    MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_TEXT_SUBENTRY_DATA_SINGLE,
     MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE,
     MOCK_BUTTON_SUBENTRY_DATA_SINGLE,
     MOCK_CLIMATE_HIGH_LOW_SUBENTRY_DATA_SINGLE,
@@ -41,6 +44,7 @@ from .common import (
     MOCK_COVER_SUBENTRY_DATA_SINGLE,
     MOCK_FAN_SUBENTRY_DATA_SINGLE,
     MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
+    MOCK_LOCK_SUBENTRY_DATA_SINGLE,
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
     MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
@@ -2665,6 +2669,113 @@ async def test_migrate_of_incompatible_config_entry(
     ),
     [
         (
+            MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Alarm"},
+            {
+                "entity_category": "config",
+                "supported_features": ["arm_home", "arm_away", "trigger"],
+                "alarm_control_panel_code_mode": "local_code",
+            },
+            (),
+            {
+                "command_topic": "test-topic",
+                "state_topic": "test-topic",
+                "command_template": "{{action}}",
+                "value_template": "{{ value_json.value }}",
+                "code": "1234",
+                "code_arm_required": True,
+                "code_disarm_required": True,
+                "code_trigger_required": True,
+                "retain": False,
+                "alarm_control_panel_payload_settings": {
+                    "payload_arm_away": "ARM_AWAY",
+                    "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+                    "payload_arm_home": "ARM_HOME",
+                    "payload_arm_night": "ARM_NIGHT",
+                    "payload_arm_vacation": "ARM_VACATION",
+                    "payload_trigger": "TRIGGER",
+                },
+            },
+            (
+                (
+                    {
+                        "state_topic": "test-topic",
+                        "command_topic": "test-topic#invalid",
+                    },
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Alarm",
+        ),
+        (
+            MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
+            {"name": "Alarm"},
+            {
+                "supported_features": ["arm_home", "arm_away", "arm_custom_bypass"],
+                "alarm_control_panel_code_mode": "remote_code",
+            },
+            (),
+            {
+                "command_topic": "test-topic",
+                "state_topic": "test-topic",
+                "command_template": "{{action}}",
+                "value_template": "{{ value_json.value }}",
+                "code_arm_required": True,
+                "code_disarm_required": True,
+                "code_trigger_required": True,
+                "retain": False,
+                "alarm_control_panel_payload_settings": {
+                    "payload_arm_away": "ARM_AWAY",
+                    "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+                    "payload_arm_home": "ARM_HOME",
+                    "payload_arm_night": "ARM_NIGHT",
+                    "payload_arm_vacation": "ARM_VACATION",
+                    "payload_trigger": "TRIGGER",
+                },
+            },
+            (),
+            "Milk notifier Alarm",
+        ),
+        (
+            MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_TEXT_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 2}},
+            {"name": "Alarm"},
+            {
+                "supported_features": ["arm_home", "arm_away", "arm_vacation"],
+                "alarm_control_panel_code_mode": "remote_code_text",
+            },
+            (),
+            {
+                "command_topic": "test-topic",
+                "state_topic": "test-topic",
+                "command_template": "{{action}}",
+                "value_template": "{{ value_json.value }}",
+                "code_arm_required": True,
+                "code_disarm_required": True,
+                "code_trigger_required": True,
+                "retain": False,
+                "alarm_control_panel_payload_settings": {
+                    "payload_arm_away": "ARM_AWAY",
+                    "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+                    "payload_arm_home": "ARM_HOME",
+                    "payload_arm_night": "ARM_NIGHT",
+                    "payload_arm_vacation": "ARM_VACATION",
+                    "payload_trigger": "TRIGGER",
+                },
+            },
+            (),
+            "Milk notifier Alarm",
+        ),
+        (
             MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 2}},
             {"name": "Hatch"},
@@ -3347,8 +3458,60 @@ async def test_migrate_of_incompatible_config_entry(
             ),
             "Milk notifier Basic light",
         ),
+        (
+            MOCK_LOCK_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Lock"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "code_format": "^\\d{4}$",
+                "optimistic": True,
+                "retain": False,
+                "lock_payload_settings": {
+                    "payload_open": "OPEN",
+                    "payload_lock": "LOCK",
+                    "payload_unlock": "UNLOCK",
+                    "payload_reset": "None",
+                    "state_jammed": "JAMMED",
+                    "state_locked": "LOCKED",
+                    "state_locking": "LOCKING",
+                    "state_unlocked": "UNLOCKED",
+                    "state_unlocking": "UNLOCKING",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "code_format": "(",
+                    },
+                    {"code_format": "invalid_regular_expression"},
+                ),
+            ),
+            "Milk notifier Lock",
+        ),
+        # MOCK_LOCK_SUBENTRY_DATA_SINGLE
     ],
     ids=[
+        "alarm_control_panel_local_code",
+        "alarm_control_panel_remote_code",
+        "alarm_control_panel_remote_code_text",
         "binary_sensor",
         "button",
         "climate_single",
@@ -3362,11 +3525,13 @@ async def test_migrate_of_incompatible_config_entry(
         "sensor_total",
         "switch",
         "light_basic_kelvin",
+        "lock",
     ],
 )
 async def test_subentry_configflow(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    mock_reload_after_entry_update: MagicMock,
     config_subentries_data: dict[str, Any],
     mock_device_user_input: dict[str, Any],
     mock_entity_user_input: dict[str, Any],
@@ -3501,6 +3666,10 @@ async def test_subentry_configflow(
         assert subentry_device_data[option] == value
 
     await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Assert the entry is reloaded to set up the entity
+    assert len(mock_reload_after_entry_update.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -3641,6 +3810,7 @@ async def test_subentry_reconfigure_remove_entity(
 async def test_subentry_reconfigure_edit_entity_multi_entitites(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    mock_reload_after_entry_update: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     user_input_mqtt: dict[str, Any],
@@ -3758,6 +3928,10 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     for key, value in user_input_mqtt.items():
         assert new_components[object_list[1]][key] == value
 
+    # Assert the entry is reloaded to set up the entity
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(mock_reload_after_entry_update.mock_calls) == 1
+
 
 @pytest.mark.parametrize(
     (
@@ -3769,6 +3943,67 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
         "removed_options",
     ),
     [
+        (
+            (
+                ConfigSubentryData(
+                    data=MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA_SINGLE,
+                    subentry_type="device",
+                    title="Mock subentry",
+                ),
+            ),
+            (),
+            {
+                "alarm_control_panel_code_mode": "remote_code",
+                "supported_features": ["arm_home", "arm_away", "arm_custom_bypass"],
+            },
+            {
+                "command_topic": "test-topic1-updated",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic1-updated",
+                "value_template": "{{ value }}",
+                "retain": True,
+            },
+            {
+                "command_topic": "test-topic1-updated",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic1-updated",
+                "value_template": "{{ value }}",
+                "retain": True,
+                "code": "REMOTE_CODE",
+            },
+            {"entity_picture"},
+        ),
+        (
+            (
+                ConfigSubentryData(
+                    data=MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA_SINGLE,
+                    subentry_type="device",
+                    title="Mock subentry",
+                ),
+            ),
+            (),
+            {
+                "alarm_control_panel_code_mode": "local_code",
+                "supported_features": ["arm_home", "arm_away", "arm_custom_bypass"],
+            },
+            {
+                "command_topic": "test-topic1-updated",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic1-updated",
+                "value_template": "{{ value }}",
+                "code": "1234",
+                "retain": True,
+            },
+            {
+                "command_topic": "test-topic1-updated",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic1-updated",
+                "value_template": "{{ value }}",
+                "code": "1234",
+                "retain": True,
+            },
+            {"entity_picture"},
+        ),
         (
             (
                 ConfigSubentryData(
@@ -3992,7 +4227,15 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
             {"entity_picture"},
         ),
     ],
-    ids=["notify", "sensor", "light_basic", "climate_single", "climate_high_low"],
+    ids=[
+        "alarm_control_panel_local_code",
+        "alarm_control_panel_remote_code",
+        "notify",
+        "sensor",
+        "light_basic",
+        "climate_single",
+        "climate_high_low",
+    ],
 )
 async def test_subentry_reconfigure_edit_entity_single_entity(
     hass: HomeAssistant,
@@ -4062,7 +4305,6 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
         user_input={},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "entity_platform_config"
 
     # entity platform config flow step
     assert result["step_id"] == "entity_platform_config"

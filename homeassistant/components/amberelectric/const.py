@@ -21,3 +21,5 @@ SERVICE_GET_FORECASTS = "get_forecasts"
 GENERAL_CHANNEL = "general"
 CONTROLLED_LOAD_CHANNEL = "controlled_load"
 FEED_IN_CHANNEL = "feed_in"
+
+REQUEST_TIMEOUT = 15

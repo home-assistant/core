@@ -9,6 +9,8 @@ import multidict
 from pyenphase import (
     EnvoyACBPower,
     EnvoyBatteryAggregate,
+    EnvoyC6CC,
+    EnvoyCollar,
     EnvoyData,
     EnvoyEncharge,
     EnvoyEnchargeAggregate,
@@ -260,6 +262,10 @@ def _load_json_2_encharge_enpower_data(
             )
     if item := json_fixture["data"].get("battery_aggregate"):
         mocked_data.battery_aggregate = EnvoyBatteryAggregate(**item)
+    if item := json_fixture["data"].get("collar"):
+        mocked_data.collar = EnvoyCollar(**item)
+    if item := json_fixture["data"].get("c6cc"):
+        mocked_data.c6cc = EnvoyC6CC(**item)
 
 
 def _load_json_2_raw_data(mocked_data: EnvoyData, json_fixture: dict[str, Any]) -> None:

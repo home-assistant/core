@@ -15,6 +15,7 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: {
             "/type": [b"DS2405"],
             "/PIO": [b"    1"],
+            "/sensed": [b"    1"],
         },
     },
     "10.111111111111": {

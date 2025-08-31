@@ -1,6 +1,6 @@
 """Define tests for the NextDNS config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
@@ -14,8 +14,12 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import PROFILES, init_integration, mock_nextdns
 
+from tests.common import MockConfigEntry
 
-async def test_form_create_entry(hass: HomeAssistant) -> None:
+
+async def test_form_create_entry(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -24,14 +28,9 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with (
-        patch(
-            "homeassistant.components.nextdns.NextDns.get_profiles",
-            return_value=PROFILES,
-        ),
-        patch(
-            "homeassistant.components.nextdns.async_setup_entry", return_value=True
-        ) as mock_setup_entry,
+    with patch(
+        "homeassistant.components.nextdns.NextDns.get_profiles",
+        return_value=PROFILES,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -44,12 +43,12 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PROFILE_NAME: "Fake Profile"}
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Fake Profile"
     assert result["data"][CONF_API_KEY] == "fake_api_key"
     assert result["data"][CONF_PROFILE_ID] == "xyz12"
+    assert result["result"].unique_id == "xyz12"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -64,24 +63,55 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     ],
 )
 async def test_form_errors(
-    hass: HomeAssistant, exc: Exception, base_error: str
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, exc: Exception, base_error: str
 ) -> None:
     """Test we handle errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
     with patch(
         "homeassistant.components.nextdns.NextDns.get_profiles", side_effect=exc
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_API_KEY: "fake_api_key"},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "fake_api_key"},
         )
 
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": base_error}
 
+    with patch(
+        "homeassistant.components.nextdns.NextDns.get_profiles",
+        return_value=PROFILES,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "fake_api_key"},
+        )
 
-async def test_form_already_configured(hass: HomeAssistant) -> None:
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "profiles"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PROFILE_NAME: "Fake Profile"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Fake Profile"
+    assert result["data"][CONF_API_KEY] == "fake_api_key"
+    assert result["data"][CONF_PROFILE_ID] == "xyz12"
+    assert result["result"].unique_id == "xyz12"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test that errors are shown when duplicates are added."""
-    await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -103,11 +133,13 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth_successful(hass: HomeAssistant) -> None:
+async def test_reauth_successful(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test starting a reauthentication flow."""
-    entry = await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
-    result = await entry.start_reauth_flow(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -122,7 +154,6 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_API_KEY: "new_api_key"},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -139,12 +170,15 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
     ],
 )
 async def test_reauth_errors(
-    hass: HomeAssistant, exc: Exception, base_error: str
+    hass: HomeAssistant,
+    exc: Exception,
+    base_error: str,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauthentication flow with errors."""
-    entry = await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
-    result = await entry.start_reauth_flow(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -155,6 +189,20 @@ async def test_reauth_errors(
             result["flow_id"],
             user_input={CONF_API_KEY: "new_api_key"},
         )
-        await hass.async_block_till_done()
 
     assert result["errors"] == {"base": base_error}
+
+    with (
+        patch(
+            "homeassistant.components.nextdns.NextDns.get_profiles",
+            return_value=PROFILES,
+        ),
+        mock_nextdns(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "new_api_key"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

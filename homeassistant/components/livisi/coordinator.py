@@ -45,7 +45,6 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             name="Livisi devices",
             update_interval=timedelta(seconds=DEVICE_POLLING_DELAY),
         )
-        self.hass = hass
         self.aiolivisi = aiolivisi
         self.websocket = Websocket(aiolivisi)
         self.devices: set[str] = set()

@@ -975,6 +975,7 @@ async def test_submitting_legacy_integrations(
     assert snapshot == submitted_data
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_devices_payload(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -984,14 +985,17 @@ async def test_devices_payload(
     assert await async_setup_component(hass, "analytics", {})
     assert await async_devices_payload(hass) == {
         "version": "home-assistant:1",
-        "no_model_id": [],
+        "home_assistant": MOCK_VERSION,
         "devices": [],
     }
 
     mock_config_entry = MockConfigEntry(domain="hue")
     mock_config_entry.add_to_hass(hass)
 
-    # Normal entry
+    mock_custom_config_entry = MockConfigEntry(domain="test")
+    mock_custom_config_entry.add_to_hass(hass)
+
+    # Normal device with all fields
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("device", "1")},
@@ -1005,7 +1009,7 @@ async def test_devices_payload(
         configuration_url="http://example.com/config",
     )
 
-    # Ignored because service type
+    # Service type device
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("device", "2")},
@@ -1014,7 +1018,7 @@ async def test_devices_payload(
         entry_type=dr.DeviceEntryType.SERVICE,
     )
 
-    # Ignored because no model id
+    # Device without model_id
     no_model_id_config_entry = MockConfigEntry(domain="no_model_id")
     no_model_id_config_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
@@ -1023,14 +1027,14 @@ async def test_devices_payload(
         manufacturer="test-manufacturer",
     )
 
-    # Ignored because no manufacturer
+    # Device without manufacturer
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("device", "5")},
         model_id="test-model-id",
     )
 
-    # Entry with via device
+    # Device with via_device reference
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("device", "6")},
@@ -1039,9 +1043,17 @@ async def test_devices_payload(
         via_device=("device", "1"),
     )
 
+    # Device from custom integration
+    device_registry.async_get_or_create(
+        config_entry_id=mock_custom_config_entry.entry_id,
+        identifiers={("device", "7")},
+        manufacturer="test-manufacturer7",
+        model_id="test-model-id7",
+    )
+
     assert await async_devices_payload(hass) == {
         "version": "home-assistant:1",
-        "no_model_id": [],
+        "home_assistant": MOCK_VERSION,
         "devices": [
             {
                 "manufacturer": "test-manufacturer",
@@ -1053,6 +1065,42 @@ async def test_devices_payload(
                 "is_custom_integration": False,
                 "has_configuration_url": True,
                 "via_device": None,
+                "entry_type": None,
+            },
+            {
+                "manufacturer": "test-manufacturer",
+                "model_id": "test-model-id",
+                "model": None,
+                "sw_version": None,
+                "hw_version": None,
+                "integration": "hue",
+                "is_custom_integration": False,
+                "has_configuration_url": False,
+                "via_device": None,
+                "entry_type": "service",
+            },
+            {
+                "manufacturer": "test-manufacturer",
+                "model_id": None,
+                "model": None,
+                "sw_version": None,
+                "hw_version": None,
+                "integration": "no_model_id",
+                "has_configuration_url": False,
+                "via_device": None,
+                "entry_type": None,
+            },
+            {
+                "manufacturer": None,
+                "model_id": "test-model-id",
+                "model": None,
+                "sw_version": None,
+                "hw_version": None,
+                "integration": "hue",
+                "is_custom_integration": False,
+                "has_configuration_url": False,
+                "via_device": None,
+                "entry_type": None,
             },
             {
                 "manufacturer": "test-manufacturer6",
@@ -1064,6 +1112,20 @@ async def test_devices_payload(
                 "is_custom_integration": False,
                 "has_configuration_url": False,
                 "via_device": 0,
+                "entry_type": None,
+            },
+            {
+                "entry_type": None,
+                "has_configuration_url": False,
+                "hw_version": None,
+                "integration": "test",
+                "manufacturer": "test-manufacturer7",
+                "model": None,
+                "model_id": "test-model-id7",
+                "sw_version": None,
+                "via_device": None,
+                "is_custom_integration": True,
+                "custom_integration_version": "1.2.3",
             },
         ],
     }

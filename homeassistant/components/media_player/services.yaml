@@ -131,17 +131,11 @@ play_media:
       supported_features:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
   fields:
-    media_content_id:
+    media:
       required: true
-      example: "https://home-assistant.io/images/cast/splash.png"
       selector:
-        text:
-
-    media_content_type:
-      required: true
-      example: "music"
-      selector:
-        text:
+        media:
+      example: '{"media_content_id": "https://home-assistant.io/images/cast/splash.png", "media_content_type": "music"}'
 
     enqueue:
       filter:

@@ -8,9 +8,13 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.components.tuya import ManagerCompat
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -55,11 +59,11 @@ async def test_set_value(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            "entity_id": entity_id,
-            "value": 18,
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_VALUE: 18,
         },
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [{"code": "delay_set", "value": 18}]
     )
@@ -91,8 +95,8 @@ async def test_set_value_no_function(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {
-                "entity_id": entity_id,
-                "value": 18,
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_VALUE: 18,
             },
             blocking=True,
         )

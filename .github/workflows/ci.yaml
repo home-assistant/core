@@ -37,10 +37,10 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 4
+  CACHE_VERSION: 7
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2025.9"
+  HA_SHORT_VERSION: "2025.10"
   DEFAULT_PYTHON: "3.13"
   ALL_PYTHON_VERSIONS: "['3.13']"
   # 10.3 is the oldest supported version
@@ -653,7 +653,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v5.0.0
       - name: Dependency review
-        uses: actions/dependency-review-action@v4.7.1
+        uses: actions/dependency-review-action@v4.7.3
         with:
           license-check: false # We use our own license audit checks
 
@@ -1341,7 +1341,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v5.5.0
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1491,7 +1491,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v5.5.0
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}

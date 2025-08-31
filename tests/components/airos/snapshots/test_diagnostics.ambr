@@ -16,8 +16,10 @@
         'access_point': True,
         'mac': '**REDACTED**',
         'mac_interface': 'br0',
+        'mode': 'point_to_point',
         'ptmp': False,
         'ptp': True,
+        'role': 'access_point',
         'station': False,
       }),
       'firewall': dict({
