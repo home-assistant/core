@@ -112,6 +112,28 @@ class MatterEntity(Entity):
             if self._platform_translation_key and not self.translation_key:
                 self._attr_translation_key = self._platform_translation_key
 
+        # Use TagList attribute and namespaces to generate postfix name
+        for tag_attr in (clusters.Descriptor.Attributes.TagList,):
+            if not (tag_attr := self.get_matter_attribute_value(tag_attr)):
+                continue
+
+            tagList = cast(
+                # cast to the generic SemanticTagStruct type just to help typing
+                list[clusters.Descriptor.Structs.SemanticTagStruct],
+                tag_attr,
+            )
+            number: int | None = None
+            for tag in tagList:
+                if tag.namespaceID == 7:  # Common Number Semantic Tag (7)
+                    number = tag.tag
+                else:
+                    break  # no other namespaces are supported
+
+            # self._attr_name = entity_name
+            if number is not None:
+                # we have only number, use it
+                self._name_postfix = str(number)
+
         # prefer the label attribute for the entity name
         # Matter has a way for users and/or vendors to specify a name for an endpoint
         # which is always preferred over a standard HA (generated) name
