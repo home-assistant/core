@@ -333,6 +333,7 @@ async def test_subscribe_scanner_details(
                 "connectable": False,
                 "name": "hci0 (00:00:00:00:00:01)",
                 "source": "00:00:00:00:00:01",
+                "scanner_type": "unknown",
             }
         ]
     }
@@ -350,6 +351,7 @@ async def test_subscribe_scanner_details(
                 "connectable": False,
                 "name": "hci3 (AA:BB:CC:DD:EE:33)",
                 "source": "AA:BB:CC:DD:EE:33",
+                "scanner_type": "unknown",
             }
         ]
     }
@@ -363,6 +365,7 @@ async def test_subscribe_scanner_details(
                 "connectable": False,
                 "name": "hci3 (AA:BB:CC:DD:EE:33)",
                 "source": "AA:BB:CC:DD:EE:33",
+                "scanner_type": "unknown",
             }
         ]
     }
@@ -400,6 +403,7 @@ async def test_subscribe_scanner_details_specific_scanner(
                 "connectable": False,
                 "name": "hci3 (AA:BB:CC:DD:EE:33)",
                 "source": "AA:BB:CC:DD:EE:33",
+                "scanner_type": "unknown",
             }
         ]
     }
@@ -413,6 +417,7 @@ async def test_subscribe_scanner_details_specific_scanner(
                 "connectable": False,
                 "name": "hci3 (AA:BB:CC:DD:EE:33)",
                 "source": "AA:BB:CC:DD:EE:33",
+                "scanner_type": "unknown",
             }
         ]
     }
