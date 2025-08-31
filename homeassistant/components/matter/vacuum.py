@@ -6,6 +6,7 @@ from enum import IntEnum
 from typing import TYPE_CHECKING, Any, cast
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Objects import NullValue
 from matter_server.client.models import device_types
 import voluptuous as vol
 
@@ -105,6 +106,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     _attr_areas: dict[str, Any] | None = None
     _attr_current_area: int | None = None
     _attr_selected_areas: list[int] | None = None
+    _attr_supported_maps: list[dict[str, Any]] | None = None
     entity_description: StateVacuumEntityDescription
     _platform_translation_key = "vacuum"
 
@@ -230,9 +232,10 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     async def async_handle_get_areas(self, **kwargs: Any) -> ServiceResponse:
         """Get available area and map IDs from vacuum appliance."""
 
-        supported_areas = self.get_matter_attribute_value(
-            clusters.ServiceArea.Attributes.SupportedAreas
-        )
+        if self.get_matter_attribute_value(clusters.ServiceArea.Attributes.SupportedAreas):
+            supported_areas = self.get_matter_attribute_value(
+                clusters.ServiceArea.Attributes.SupportedAreas
+            )
         if not supported_areas:
             raise HomeAssistantError("Can't get areas from the device.")
 
@@ -248,17 +251,20 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 if location_info is not None:
                     location_name = getattr(location_info, "locationName", None)
             if area_id is not None:
-                areas[area_id] = {"map_id": map_id, "name": location_name}
+                if map_id is NullValue:
+                    areas[area_id] = {"name": location_name}
+                else:
+                    areas[area_id] = {"map_id": map_id, "name": location_name}
 
         # Optionally, also extract supported maps if available
         supported_maps = self.get_matter_attribute_value(
             clusters.ServiceArea.Attributes.SupportedMaps
         )
         maps = []
-        if supported_maps:
+        if supported_maps != NullValue:  # chip.clusters.Types.Nullable
             maps = [
                 {
-                    "map_id": getattr(m, "mapID", None),
+                    "map_id": getattr(m, "mapID", None) if getattr(m, "mapID", None) != NullValue else None,
                     "name": getattr(m, "name", None),
                 }
                 for m in supported_maps
