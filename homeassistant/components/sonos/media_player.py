@@ -276,7 +276,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def group_members(self) -> list[str] | None:
         """List of entity_ids which are currently grouped together."""
-        return self.speaker.sonos_group_entities
+        # Guard against early startup where group list may contain None
+        members = self.speaker.sonos_group_entities or []
+        members = [eid for eid in members if eid]
+        return members or [self.entity_id]
 
     def __hash__(self) -> int:
         """Return a hash of self."""

@@ -4,29 +4,33 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
+import time
 from typing import cast
 
+from soco.core import SoCo
 from soco.exceptions import SoCoException
 
 from homeassistant.components.number import NumberEntity, NumberMode
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
-from .const import SONOS_CREATE_LEVELS, SONOS_SPEAKER_ACTIVITY, SONOS_STATE_UPDATED
+from .const import (
+    SONOS_CREATE_LEVELS,
+    SONOS_GROUP_VOLUME_REFRESHED,
+    SONOS_GROUP_VOLUME_REQUEST,
+    SONOS_SPEAKER_ACTIVITY,
+    SONOS_STATE_UPDATED,
+)
 from .entity import SonosEntity
 from .helpers import SonosConfigEntry, soco_error
 from .speaker import SonosSpeaker
 
-_LOGGER = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------
-# Standard level types (direct SoCo attributes on a player)
-# ---------------------------------------------------------------------
 LEVEL_TYPES = {
     "audio_delay": (0, 5),
     "bass": (-10, 10),
@@ -37,16 +41,20 @@ LEVEL_TYPES = {
     "surround_level": (-15, 15),
     "music_surround_level": (-15, 15),
 }
+
+GV_REFRESH_DELAY = 0.5  # seconds to coalesce group-volume refresh after events
+
 type SocoFeatures = list[tuple[str, tuple[int, int]]]
 
-# ---------------------------------------------------------------------
-# Group-volume fan-out (no caching; just notify peers with fresh value)
-# ---------------------------------------------------------------------
-_GV_SIGNAL_BASE = "sonos.group_volume.refreshed"  # suffixed by group_uid
+_LOGGER = logging.getLogger(__name__)
 
 
-def _gv_signal(gid: str) -> str:
-    return f"{_GV_SIGNAL_BASE}-{gid}"
+def _gv_signal(group_uid: str) -> str:
+    return f"{SONOS_GROUP_VOLUME_REFRESHED}-{group_uid}"
+
+
+def _gv_req_signal(group_uid: str) -> str:
+    return f"{SONOS_GROUP_VOLUME_REQUEST}-{group_uid}"
 
 
 def _balance_to_number(state: tuple[int, int]) -> float:
@@ -105,7 +113,7 @@ async def async_setup_entry(
             available_soco_attributes, speaker
         )
 
-        # Standard SoCo‑backed level controls
+        # Standard SoCo-backed level controls
         for level_type, valid_range in available_features:
             _LOGGER.debug(
                 "Creating %s number control on %s", level_type, speaker.zone_name
@@ -187,32 +195,140 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         self._coord_uid: str | None = None
         self._group_uid: str | None = None
 
-        self._unsub_coord: Callable[[], None] | None = None
-        self._unsub_activity: Callable[[], None] | None = None
-        self._unsub_stop: Callable[[], None] | None = None
-        self._unsub_gv_signal: Callable[[], None] | None = None
+        self._unsubscribe_coord: Callable[[], None] | None = None
+        self._unsubscribe_member: Callable[[], None] | None = None
+        self._unsubscribe_activity: Callable[[], None] | None = None
+        self._unsubscribe_gv_signal: Callable[[], None] | None = None
+        self._unsubscribe_gv_req: Callable[[], None] | None = None
+        self._delay_unsubscribe: Callable[[], None] | None = None
 
-        # Internal cache of our last value (UI render)
         self._value: int | None = None
+        self._last_rebind: float = 0.0
 
-    # ---------------------- helpers ----------------------
-
-    def _current_group_uid(self) -> str:
-        return self.soco.group.uid
-
-    def _is_grouped(self) -> bool:
-        """Return True if the player is in a group with 2+ members."""
-        group = getattr(self.soco, "group", None)
-        if group is None:
-            return False
-        members = getattr(group, "members", None)
-        return bool(members and len(members) > 1)
-
-    def _coordinator_soco(self):
-        # member or coordinator: this returns the coordinator SoCo
+    def _coordinator_soco(self) -> SoCo:
+        """Return the coordinator SoCo for this speaker."""
         return (self.speaker.coordinator or self.speaker).soco
 
-    # ------------------ HA entity bits -------------------
+    def _current_group_uid(self) -> str | None:
+        group = getattr(self._coordinator_soco(), "group", None)
+        return getattr(group, "uid", None)
+
+    def _is_grouped(self) -> bool:
+        """Return True if grouped with 2+ members."""
+        if (group := getattr(self._coordinator_soco(), "group", None)) and (
+            members := getattr(group, "members", None)
+        ):
+            return len(members) > 1
+        return False
+
+    def _is_coordinator(self) -> bool:
+        return (self.speaker.coordinator or self.speaker).uid == self.speaker.uid
+
+    def _schedule_delayed_refresh(self, seconds: float = 0.4) -> None:
+        """Schedule a short delayed refresh to catch Sonos settling after joins/leaves."""
+        if self._delay_unsubscribe is not None:
+            self._delay_unsubscribe()
+            self._delay_unsubscribe = None
+
+        def _delayed_refresh(_now) -> None:
+            self._delay_unsubscribe = None
+            self._rebind_for_topology_change()
+            self.hass.add_job(self._async_refresh_from_device)
+
+        self._delay_unsubscribe = async_call_later(self.hass, seconds, _delayed_refresh)
+
+    def _subscribe_group_fanout(self, group_uid: str | None) -> None:
+        """Subscribe to current group's fan-out signal."""
+        if self._unsubscribe_gv_signal is not None:
+            self._unsubscribe_gv_signal()
+            self._unsubscribe_gv_signal = None
+        if group_uid:
+            self._unsubscribe_gv_signal = async_dispatcher_connect(
+                self.hass, _gv_signal(group_uid), self._on_group_volume_fanned
+            )
+            self.async_on_remove(self._unsubscribe_gv_signal)
+
+    def _subscribe_group_requests_if_coord(self, group_uid: str | None) -> None:
+        """If we are the coordinator, listen for group refresh requests."""
+        if self._unsubscribe_gv_req is not None:
+            self._unsubscribe_gv_req()
+            self._unsubscribe_gv_req = None
+        if group_uid and self._is_grouped() and self._is_coordinator():
+            self._unsubscribe_gv_req = async_dispatcher_connect(
+                self.hass, _gv_req_signal(group_uid), self._on_group_volume_request
+            )
+            self.async_on_remove(self._unsubscribe_gv_req)
+
+    def _rebind_for_topology_change(self) -> None:
+        """Re-evaluate coordinator/group, rebind signals, then refresh appropriately."""
+        # rate-limit check.
+        now = time.monotonic()
+        old_grouped = self._is_grouped()
+        old_coord_flag = self._is_coordinator()
+        new_coord_uid = (self.speaker.coordinator or self.speaker).uid
+        new_group_uid = self._current_group_uid()
+        no_change = (
+            new_coord_uid == self._coord_uid
+            and new_group_uid == self._group_uid
+            and old_grouped == self._is_grouped()
+            and old_coord_flag == self._is_coordinator()
+        )
+        if no_change and (now - self._last_rebind) < 1.2:
+            return
+
+        # Rebind coord state hook if changed
+        if new_coord_uid != self._coord_uid:
+            self._coord_uid = new_coord_uid
+            if self._unsubscribe_coord is not None:
+                self._unsubscribe_coord()
+                self._unsubscribe_coord = None
+            self._unsubscribe_coord = async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_STATE_UPDATED}-{new_coord_uid}",
+                self._on_coord_state_updated,
+            )
+            self.async_on_remove(self._unsubscribe_coord)
+
+        # Always ensure we listen to our own member state
+        if self._unsubscribe_member is None:
+            self._unsubscribe_member = async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_STATE_UPDATED}-{self.speaker.uid}",
+                self._on_member_state_updated,
+            )
+            self.async_on_remove(self._unsubscribe_member)
+
+        # Group binding
+        if new_group_uid != self._group_uid:
+            self._group_uid = new_group_uid
+            self._subscribe_group_fanout(new_group_uid)
+
+        # (Re)bind coordinator-request listener if we are coordinator
+        self._subscribe_group_requests_if_coord(new_group_uid)
+
+        self._last_rebind = time.monotonic()
+
+        if self._is_grouped():
+            if self._is_coordinator():
+                # Authoritative read + fan-out (use single scheduled refresh)
+                self._schedule_delayed_refresh(GV_REFRESH_DELAY)
+            elif new_group_uid:
+                self.hass.add_job(
+                    async_dispatcher_send,
+                    self.hass,
+                    _gv_req_signal(new_group_uid),
+                    None,
+                )
+                self._schedule_delayed_refresh()
+        else:
+            # Ungrouped: cancel any group listeners and mirror own value
+            if self._unsubscribe_gv_req is not None:
+                self._unsubscribe_gv_req()
+                self._unsubscribe_gv_req = None
+            if self._unsubscribe_gv_signal is not None:
+                self._unsubscribe_gv_signal()
+                self._unsubscribe_gv_signal = None
+            self.hass.add_job(self._async_refresh_from_device)
 
     @property
     def available(self) -> bool:
@@ -224,76 +340,82 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         """Return the current group volume (0–100) or None if unknown."""
         return None if self._value is None else float(self._value)
 
-    # ------------------ read / write ---------------------
-
     @soco_error()
     def set_native_value(self, value: float) -> None:
         """Set group volume (0–100). If not grouped, set player volume."""
-        level = int(round(max(0.0, min(100.0, float(value)))))
-
+        clamped = max(0.0, min(100.0, float(value)))
+        level = int(clamped + 0.5)
         if self._is_grouped():
-            # Set at the coordinator
-            try:
-                coord = self._coordinator_soco()
-                coord.group.volume = level  # native Sonos GroupRenderingControl
-            finally:
-                # After writing, trigger one fresh read to fan-out the true value
-                self.hass.loop.call_soon_threadsafe(
-                    self.hass.async_create_task, self._async_refresh_from_device()
+            coord = self._coordinator_soco()
+            coord.group.volume = level
+            new_group_uid = self._current_group_uid()
+            if new_group_uid:
+                # schedule dispatcher on loop (thread-safe)
+                self.hass.add_job(
+                    async_dispatcher_send,
+                    self.hass,
+                    _gv_req_signal(new_group_uid),
+                    None,
                 )
+                self._schedule_delayed_refresh()
         else:
             # Not grouped → act as player volume mirror
             self.soco.volume = level
-            # Write-through to UI immediately
-            self._value = level
-            self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
     async def _async_fallback_poll(self) -> None:
         await self._async_refresh_from_device()
 
     async def _async_refresh_from_device(self) -> None:
         """Read the *native* volume (group or player) and propagate to peers."""
-        gid_actual = self.soco.group.uid
+        group_uid_actual = self._current_group_uid()
 
-        def _get() -> int | None:
+        if self._is_grouped():
+            if not self._is_coordinator():
+                return  # coordinator is authoritative and will fan-out
+
+            def _get_group() -> int | None:
+                try:
+                    return int(self._coordinator_soco().group.volume)
+                except (SoCoException, OSError) as err:
+                    _LOGGER.debug(
+                        "Failed to read group volume for %s: %s",
+                        self.speaker.zone_name,
+                        err,
+                    )
+                    return None
+
+            if (vol := await self.hass.async_add_executor_job(_get_group)) is None:
+                return
+
+            if self._value != vol:
+                self._value = vol
+                self.async_write_ha_state()
+                if group_uid_actual:
+                    self.hass.add_job(
+                        async_dispatcher_send,
+                        self.hass,
+                        _gv_signal(group_uid_actual),
+                        (group_uid_actual, vol),
+                    )
+            return
+
+        def _get_player() -> int | None:
             try:
-                if self._is_grouped():
-                    # Any member can query; SoCo will address the coordinator
-                    return int(self.soco.group.volume)
-                # Ungrouped: mirror player volume
                 return int(self.soco.volume)
             except (SoCoException, OSError) as err:
                 _LOGGER.debug(
-                    "Failed to read volume for %s: %s", self.speaker.zone_name, err
+                    "Failed to read player volume for %s: %s",
+                    self.speaker.zone_name,
+                    err,
                 )
                 return None
 
-        vol = await self.hass.async_add_executor_job(_get)
-        if vol is None:
+        if (vol := await self.hass.async_add_executor_job(_get_player)) is None:
             return
 
-        changed = self._value != vol
-        self._value = vol
-        self.async_write_ha_state()
-
-        # Fan-out the fresh *group* value so peers update immediately
-        if self._is_grouped() and gid_actual:
-            async_dispatcher_send(self.hass, _gv_signal(gid_actual), vol)
-            if changed:
-                _LOGGER.debug(
-                    "GV refresh: zone=%s grouped=True gid=%s vol=%s",
-                    self.speaker.zone_name,
-                    gid_actual,
-                    vol,
-                )
-        elif changed:
-            _LOGGER.debug(
-                "GV refresh: zone=%s grouped=False vol=%s",
-                self.speaker.zone_name,
-                vol,
-            )
-
-    # ------------------ wiring & lifecycle ----------------
+        if self._value != vol:
+            self._value = vol
+            self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Finish setup: bind signals and perform an initial refresh."""
@@ -302,74 +424,85 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         self._coord_uid = (self.speaker.coordinator or self.speaker).uid
         self._group_uid = self._current_group_uid()
 
-        # Any activity from any speaker → check if topology changed, refresh once
-        self._unsub_activity = async_dispatcher_connect(
+        # Rebind/refresh on any speaker activity
+        self._unsubscribe_activity = async_dispatcher_connect(
             self.hass, SONOS_SPEAKER_ACTIVITY, self._on_any_activity
         )
-        self.async_on_remove(self._unsub_activity)
+        self.async_on_remove(self._unsubscribe_activity)
 
-        # Coordinator state updates → refresh once
-        self._bind_coordinator_state(self._coord_uid)
-
-        # Subscribe to fan-out for our current group
-        if self._group_uid:
-            self._unsub_gv_signal = async_dispatcher_connect(
-                self.hass, _gv_signal(self._group_uid), self._on_group_volume_fanned
-            )
-            self.async_on_remove(self._unsub_gv_signal)
-
-        # Cancel nothing on HA stop (defensive placeholder)
-        @callback
-        def _on_stop(_event) -> None:
-            # nothing pending; left for symmetry / future use
-            return
-
-        self._unsub_stop = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _on_stop
+        # Coordinator state updates
+        self._unsubscribe_coord = async_dispatcher_connect(
+            self.hass,
+            f"{SONOS_STATE_UPDATED}-{self._coord_uid}",
+            self._on_coord_state_updated,
         )
-        self.async_on_remove(self._unsub_stop)
+        self.async_on_remove(self._unsubscribe_coord)
 
-        # Initial read
-        await self._async_refresh_from_device()
+        # This member's own updates
+        self._unsubscribe_member = async_dispatcher_connect(
+            self.hass,
+            f"{SONOS_STATE_UPDATED}-{self.speaker.uid}",
+            self._on_member_state_updated,
+        )
+        self.async_on_remove(self._unsubscribe_member)
+
+        # Subscribe to current group fan-out (if any)
+        self._subscribe_group_fanout(self._group_uid)
+
+        # Coordinator listens for refresh requests for its group (if applicable)
+        self._subscribe_group_requests_if_coord(self._group_uid)
+
+        # Kick an initial rebind/refresh
+        self._rebind_for_topology_change()
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up signal subscriptions on removal."""
         await super().async_will_remove_from_hass()
 
-        if self._unsub_gv_signal is not None:
-            self._unsub_gv_signal()
-            self._unsub_gv_signal = None
-        if self._unsub_coord is not None:
-            self._unsub_coord()
-            self._unsub_coord = None
-        if self._unsub_activity is not None:
-            self._unsub_activity()
-            self._unsub_activity = None
-        if self._unsub_stop is not None:
-            self._unsub_stop()
-            self._unsub_stop = None
+        if self._unsubscribe_gv_signal is not None:
+            self._unsubscribe_gv_signal()
+            self._unsubscribe_gv_signal = None
+        if self._unsubscribe_gv_req is not None:
+            self._unsubscribe_gv_req()
+            self._unsubscribe_gv_req = None
+        if self._unsubscribe_coord is not None:
+            self._unsubscribe_coord()
+            self._unsubscribe_coord = None
+        if self._unsubscribe_member is not None:
+            self._unsubscribe_member()
+            self._unsubscribe_member = None
+        if self._unsubscribe_activity is not None:
+            self._unsubscribe_activity()
+            self._unsubscribe_activity = None
+        if self._delay_unsubscribe is not None:
+            self._delay_unsubscribe()
+            self._delay_unsubscribe = None
 
-    # ------------------ signal handlers ------------------
-
-    def _bind_coordinator_state(self, coord_uid: str) -> None:
-        if self._unsub_coord is not None:
-            self._unsub_coord()
-            self._unsub_coord = None
-        self._unsub_coord = async_dispatcher_connect(
-            self.hass,
-            f"{SONOS_STATE_UPDATED}-{coord_uid}",
-            self._on_coord_state_updated,
-        )
-        self.async_on_remove(self._unsub_coord)
+    @callback
+    def _on_group_volume_request(self, *_: object) -> None:
+        """Coordinator-only: a member asked for a group-volume refresh."""
+        if not (self._is_grouped() and self._is_coordinator()):
+            return
+        self._schedule_delayed_refresh(GV_REFRESH_DELAY)
 
     @callback
     def _on_coord_state_updated(self, *_: object) -> None:
-        # Coordinator state changed — fetch once
-        self.hass.async_create_task(self._async_refresh_from_device())
+        """Coordinator state changed — request refresh from coordinator entity."""
+        self._rebind_for_topology_change()
 
     @callback
-    def _on_group_volume_fanned(self, level: int) -> None:
-        """Receive a peer's fresh group volume and update instantly."""
+    def _on_member_state_updated(self, *_: object) -> None:
+        """This member's state changed — rebind and then request/mirror."""
+        self._rebind_for_topology_change()
+
+    @callback
+    def _on_group_volume_fanned(self, payload: tuple[str, int]) -> None:
+        """Receive the coordinator's fresh group volume and update instantly."""
+        group_uid, level = payload
+        current_group_uid = self._current_group_uid()
+        if group_uid != current_group_uid:
+            self._rebind_for_topology_change()
+            return
         if not self._is_grouped():
             return
         if self._value != level:
@@ -378,26 +511,5 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
 
     @callback
     def _on_any_activity(self, *_: object) -> None:
-        """Any speaker activity — rebind if coordinator/group changed, then refresh once."""
-        new_coord_uid = (self.speaker.coordinator or self.speaker).uid
-        if new_coord_uid != self._coord_uid:
-            self._coord_uid = new_coord_uid
-            self._bind_coordinator_state(new_coord_uid)
-
-        new_group_uid = self._current_group_uid()
-        if new_group_uid != self._group_uid:
-            # Rebind fan-out subscription to the new group
-            if self._unsub_gv_signal is not None:
-                self._unsub_gv_signal()
-                self._unsub_gv_signal = None
-
-            self._group_uid = new_group_uid
-
-            if self._group_uid:
-                self._unsub_gv_signal = async_dispatcher_connect(
-                    self.hass, _gv_signal(self._group_uid), self._on_group_volume_fanned
-                )
-                self.async_on_remove(self._unsub_gv_signal)
-
-        # One fresh read
-        self.hass.async_create_task(self._async_refresh_from_device())
+        """Any speaker activity — rebind if coordinator/group changed, then refresh."""
+        self._rebind_for_topology_change()
