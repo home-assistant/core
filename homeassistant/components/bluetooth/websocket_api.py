@@ -308,6 +308,7 @@ async def ws_subscribe_scanner_state(
     """Handle subscribe scanner state websocket command."""
     ws_msg_id = msg["id"]
     config_entry_id = msg.get("config_entry_id")
+    source = _async_get_source_from_config_entry(
         hass, connection, ws_msg_id, config_entry_id, validate_source=False
     )
     if config_entry_id and source is None:
