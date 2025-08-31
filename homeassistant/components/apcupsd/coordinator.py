@@ -100,6 +100,7 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
             name=self.data.name or "APC UPS",
             hw_version=self.data.get("FIRMWARE"),
             sw_version=self.data.get("VERSION"),
+            serial_number=self.data.serial_no,
         )
 
     async def _async_update_data(self) -> APCUPSdData:
