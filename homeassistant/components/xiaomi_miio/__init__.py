@@ -182,19 +182,22 @@ def _async_update_data_default(
                 _LOGGER.debug("Got new state: %s", state)
                 return state
 
-        try:
-            return await _async_fetch_data()
-        except DeviceException as ex:
-            if getattr(ex, "code", None) != -9999:
-                raise UpdateFailed(ex) from ex
-            _LOGGER.error(
-                "Got exception while fetching the state, trying again: %s", ex
-            )
-        # Try to fetch the data a second time after error code -9999
-        try:
-            return await _async_fetch_data()
-        except DeviceException as ex:
-            raise UpdateFailed(ex) from ex
+        for consider_retry in [True, True, False]:
+            try:
+                return await _async_fetch_data()
+            except DeviceException as ex:
+                if not consider_retry or (
+                    getattr(ex, "code", None) != -9999
+                    and not (
+                        device.model == "zhimi.airpurifier.mb3"
+                        and "discovery failed" in str(ex)
+                    )
+                ):
+                    raise UpdateFailed(ex) from ex
+                _LOGGER.exception(
+                    "Got exception while fetching the state, trying again"
+                )
+        raise UpdateFailed("Updating failed")  # keep ruff happy
 
     return update
 
