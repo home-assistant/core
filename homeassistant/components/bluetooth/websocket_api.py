@@ -64,7 +64,7 @@ def _async_get_source_from_config_entry(
         connection.send_error(
             msg_id,
             "invalid_config_entry_id",
-            f"Invalid config entry id: {config_entry_id}",
+            f"Config entry {config_entry_id} not found",
         )
         return None
     return entry.unique_id
