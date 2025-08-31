@@ -23,7 +23,6 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
     _attr_device_class = CoverDeviceClass.SHADE
@@ -43,10 +42,6 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
         await self._smartbridge.set_value(self.device_id, 0)
         await self.async_update()
         self.async_write_ha_state()
-
-    async def async_stop_cover(self, **kwargs: Any) -> None:
-        """Stop the cover."""
-        await self._smartbridge.stop_cover(self.device_id)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
