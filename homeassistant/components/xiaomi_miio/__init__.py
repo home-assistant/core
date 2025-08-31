@@ -333,6 +333,8 @@ async def async_create_miio_device_and_coordinator(
     if model in MODELS_HUMIDIFIER_MIOT:
         device = AirHumidifierMiot(host, token, lazy_discover=lazy_discover)
         migrate = True
+        update_interval = timedelta(seconds=40)
+        polling_timeout_sec = update_interval.seconds - 5
     elif model in MODELS_HUMIDIFIER_MJJSQ:
         device = AirHumidifierMjjsq(
             host, token, lazy_discover=lazy_discover, model=model
