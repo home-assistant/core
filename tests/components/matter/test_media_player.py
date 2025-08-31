@@ -10,7 +10,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from .common import snapshot_matter_entities
 
@@ -32,8 +31,6 @@ async def test_media_player_actions(
     matter_node: MatterNode,
 ) -> None:
     """Test media_player entity actions."""
-    # Fetch translations
-    await async_setup_component(hass, "homeassistant", {})
     entity_id = "media_player.mock_speaker"
     state = hass.states.get(entity_id)
     assert state
