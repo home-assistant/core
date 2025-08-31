@@ -391,10 +391,12 @@ class ApparentPowerConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfApparentPower.MILLIVOLT_AMPERE: 1 * 1000,
         UnitOfApparentPower.VOLT_AMPERE: 1,
+        UnitOfApparentPower.KILO_VOLT_AMPERE: 1 / 1000,
     }
     VALID_UNITS = {
         UnitOfApparentPower.MILLIVOLT_AMPERE,
         UnitOfApparentPower.VOLT_AMPERE,
+        UnitOfApparentPower.KILO_VOLT_AMPERE,
     }
 
 

@@ -34,7 +34,7 @@ class ToGrillEventEntity(ToGrillEntity, EventEntity):
 
     def __init__(self, coordinator: ToGrillCoordinator, probe_number: int) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator=coordinator, probe_number=probe_number)
 
         self._attr_translation_key = "event"
         self._attr_translation_placeholders = {"probe_number": f"{probe_number}"}
