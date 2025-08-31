@@ -36,6 +36,7 @@ from .models import MatterDiscoverySchema
 ATTR_CURRENT_AREA = "current_area"
 ATTR_SELECTED_AREAS = "selected_areas"
 
+
 class OperationalState(IntEnum):
     """Operational State of the vacuum cleaner.
 
@@ -232,7 +233,9 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     async def async_handle_get_areas(self, **kwargs: Any) -> ServiceResponse:
         """Get available area and map IDs from vacuum appliance."""
 
-        if self.get_matter_attribute_value(clusters.ServiceArea.Attributes.SupportedAreas):
+        if self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.SupportedAreas
+        ):
             supported_areas = self.get_matter_attribute_value(
                 clusters.ServiceArea.Attributes.SupportedAreas
             )
@@ -264,7 +267,9 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         if supported_maps != NullValue:  # chip.clusters.Types.Nullable
             maps = [
                 {
-                    "map_id": getattr(m, "mapID", None) if getattr(m, "mapID", None) != NullValue else None,
+                    "map_id": getattr(m, "mapID", None)
+                    if getattr(m, "mapID", None) != NullValue
+                    else None,
                     "name": getattr(m, "name", None),
                 }
                 for m in supported_maps
