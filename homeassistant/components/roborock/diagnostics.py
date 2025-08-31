@@ -21,15 +21,19 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinators = config_entry.runtime_data
 
+    coordinators_diag: dict[str, Any] = {}
+    for i, coordinator in enumerate(coordinators.values()):
+        api_diag = dict(coordinator.api.diagnostic_data)
+        # Backwards-compat: older snapshots expect a 'misc_info' mapping.
+        api_diag.setdefault("misc_info", {})
+        coordinators_diag[f"**REDACTED-{i}**"] = {
+            "roborock_device_info": async_redact_data(
+                coordinator.roborock_device_info.as_dict(), TO_REDACT_COORD
+            ),
+            "api": api_diag,
+        }
+
     return {
         "config_entry": async_redact_data(config_entry.data, TO_REDACT_CONFIG),
-        "coordinators": {
-            f"**REDACTED-{i}**": {
-                "roborock_device_info": async_redact_data(
-                    coordinator.roborock_device_info.as_dict(), TO_REDACT_COORD
-                ),
-                "api": coordinator.api.diagnostic_data,
-            }
-            for i, coordinator in enumerate(coordinators.values())
-        },
+        "coordinators": coordinators_diag,
     }

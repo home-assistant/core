@@ -24,6 +24,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Roborock image platform."""
 
+    # Ensure maps are initialized before creating entities (robust to API changes)
+    for coord in config_entry.runtime_data.v1:
+        if not coord.maps:
+            await coord.refresh_coordinator_map()
+
     async_add_entities(
         (
             RoborockMap(
