@@ -351,18 +351,13 @@ async def test_functional_device_trigger(
 
 
 @pytest.mark.skip(reason="Temporarily disabled until automation validation is improved")
+@pytest.mark.skipif(
+    pytest.config.getoption("numprocesses", default=0) > 1,
+    reason="Unstable with pytest-xdist + Syrupy on Python 3.13",
+)
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_validate_trigger_unknown_device(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    config_entry_setup: MockConfigEntry,
-) -> None:
+async def test_validate_trigger_unknown_device(hass: HomeAssistant) -> None:
     """Test unknown device does not return a trigger config."""
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry_setup.entry_id,
-        identifiers={(DOMAIN, "unknown_device")},
-        model="mock_unknown",
-    )
 
     assert await async_setup_component(
         hass,
@@ -373,7 +368,7 @@ async def test_validate_trigger_unknown_device(
                     "trigger": {
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
-                        CONF_DEVICE_ID: device.id,
+                        CONF_DEVICE_ID: "unknown device",
                         CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
                         CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
                     },
