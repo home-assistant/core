@@ -71,9 +71,15 @@ async def async_manipulate_test_data(
     if hasattr(hmip_device, "functionalChannels"):
         if channel_real_index is not None:
             functional_channel = next(
-                ch
-                for ch in hmip_device.functionalChannels
-                if ch.index == channel_real_index
+                (
+                    ch
+                    for ch in hmip_device.functionalChannels
+                    if ch.index == channel_real_index
+                ),
+                None,
+            )
+            assert functional_channel is not None, (
+                f"No functional channel with index {channel_real_index} found in hmip_device.functionalChannels"
             )
         else:
             functional_channel = hmip_device.functionalChannels[channel]

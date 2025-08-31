@@ -197,7 +197,7 @@ class HomematicipGenericEntity(Entity):
 
         name = None
         # Try to get a label from a channel.
-        if self.functional_channel is not None:
+        if hasattr(self._device, "functionalChannels") and self.functional_channel:
             if self._is_multi_channel:
                 name = str(self.functional_channel.label)
             elif len(self._device.functionalChannels) > 1:
@@ -267,9 +267,12 @@ class HomematicipGenericEntity(Entity):
             if self._is_multi_channel:
                 if self._channel_real_index is not None:
                     return next(
-                        channel
-                        for channel in self._device.functionalChannels
-                        if channel.index == self._channel_real_index
+                        (
+                            channel
+                            for channel in self._device.functionalChannels
+                            if channel.index == self._channel_real_index
+                        ),
+                        None,
                     )
 
                 return self._device.functionalChannels[self._channel]
