@@ -17,7 +17,7 @@
   "requirements": [
     "bleak==1.0.1",
     "bleak-retry-connector==4.4.3",
-    "bluetooth-adapters==2.0.0",
+    "bluetooth-adapters==2.1.0",
     "bluetooth-auto-recovery==1.5.2",
     "bluetooth-data-tools==1.28.2",
     "dbus-fast==2.44.3",
