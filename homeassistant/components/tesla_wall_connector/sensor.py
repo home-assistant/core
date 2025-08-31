@@ -16,6 +16,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfPower,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -39,6 +40,20 @@ EVSE_STATE = {
     10: "charging_reduced",
     11: "charging",
 }
+
+
+def _get_total_power(data: dict[str, Any]) -> float | None:
+    """Calculate total active power from three phases."""
+    vitals = data[WALLCONNECTOR_DATA_VITALS]
+    if not vitals:
+        return None
+
+    return round(
+        (vitals.voltageA_v * vitals.currentA_a)
+        + (vitals.voltageB_v * vitals.currentB_a)
+        + (vitals.voltageC_v * vitals.currentC_a),
+        1,
+    )
 
 
 @dataclass(frozen=True)
@@ -163,6 +178,15 @@ WALL_CONNECTOR_SENSORS = [
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    WallConnectorSensorDescription(
+        key="total_power_w",
+        translation_key="total_power_w",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        value_fn=_get_total_power,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     WallConnectorSensorDescription(
         key="session_energy_wh",
