@@ -40,7 +40,7 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self._smartbridge.lower_cover(self.device_id)
+        await self._smartbridge.set_value(self.device_id, 0)
         await self.async_update()
         self.async_write_ha_state()
 
@@ -50,7 +50,7 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._smartbridge.raise_cover(self.device_id)
+        await self._smartbridge.set_value(self.device_id, 100)
         await self.async_update()
         self.async_write_ha_state()
 
