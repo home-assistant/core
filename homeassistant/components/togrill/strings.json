@@ -43,6 +43,12 @@
       "temperature_target": {
         "name": "Target temperature"
       },
+      "temperature_minimum": {
+        "name": "Minimum temperature"
+      },
+      "temperature_maximum": {
+        "name": "Maximum temperature"
+      },
       "alarm_interval": {
         "name": "Alarm interval"
       }

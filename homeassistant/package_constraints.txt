@@ -20,7 +20,7 @@ audioop-lts==0.2.1
 av==13.1.0
 awesomeversion==25.5.0
 bcrypt==4.3.0
-bleak-retry-connector==4.4.1
+bleak-retry-connector==4.4.3
 bleak==1.0.1
 bluetooth-adapters==2.0.0
 bluetooth-auto-recovery==1.5.2
@@ -34,12 +34,12 @@ dbus-fast==2.44.3
 fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
-habluetooth==5.1.0
+habluetooth==5.2.1
 hass-nabucasa==1.0.0
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20250827.0
-home-assistant-intents==2025.8.27
+home-assistant-frontend==20250828.0
+home-assistant-intents==2025.8.29
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -223,3 +223,7 @@ pymodbus==3.11.1
 
 # Some packages don't support gql 4.0.0 yet
 gql<4.0.0
+
+# pytest-rerunfailures 16.0 breaks pytest, pin 15.1 until resolved
+# https://github.com/pytest-dev/pytest-rerunfailures/issues/302
+pytest-rerunfailures==15.1
