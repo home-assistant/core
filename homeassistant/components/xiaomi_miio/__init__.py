@@ -169,13 +169,15 @@ def get_platforms(config_entry):
     return []
 
 
-def _async_update_data_default(hass, device):
+def _async_update_data_default(
+    hass: HomeAssistant, device: Any, polling_time_out: int = POLLING_TIMEOUT_SEC
+):
     async def update():
         """Fetch data from the device using async_add_executor_job."""
 
         async def _async_fetch_data():
             """Fetch data from the device."""
-            async with asyncio.timeout(POLLING_TIMEOUT_SEC):
+            async with asyncio.timeout(polling_time_out):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
@@ -233,7 +235,9 @@ class VacuumCoordinatorDataAttributes:
 
 
 def _async_update_data_vacuum(
-    hass: HomeAssistant, device: RoborockVacuum
+    hass: HomeAssistant,
+    device: RoborockVacuum,
+    polling_time_out: int = POLLING_TIMEOUT_SEC,
 ) -> Callable[[], Coroutine[Any, Any, VacuumCoordinatorData]]:
     def update() -> VacuumCoordinatorData:
         timer = []
@@ -264,7 +268,7 @@ def _async_update_data_vacuum(
         """Fetch data from the device using async_add_executor_job."""
 
         async def execute_update() -> VacuumCoordinatorData:
-            async with asyncio.timeout(POLLING_TIMEOUT_SEC):
+            async with asyncio.timeout(polling_time_out):
                 state = await hass.async_add_executor_job(update)
                 _LOGGER.debug("Got new vacuum state: %s", state)
                 return state
@@ -297,6 +301,8 @@ async def async_create_miio_device_and_coordinator(
     name = entry.title
     migrate = False
     update_method = _async_update_data_default
+    polling_timeout_sec: int = POLLING_TIMEOUT_SEC
+    update_interval: timedelta = UPDATE_INTERVAL
     coordinator_class: type[DataUpdateCoordinator[Any]] = DataUpdateCoordinator
 
     # List of models requiring specific lazy_discover setting
@@ -387,9 +393,9 @@ async def async_create_miio_device_and_coordinator(
         _LOGGER,
         config_entry=entry,
         name=name,
-        update_method=update_method(hass, device),
+        update_method=update_method(hass, device, polling_timeout_sec),
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=UPDATE_INTERVAL,
+        update_interval=update_interval,
     )
 
     # Trigger first data fetch
