@@ -197,6 +197,7 @@ def _async_update_data_default(
                 _LOGGER.exception(
                     "Got exception while fetching the state, trying again"
                 )
+                await asyncio.sleep(1)
         raise UpdateFailed("Updating failed")  # keep ruff happy
 
     return update
