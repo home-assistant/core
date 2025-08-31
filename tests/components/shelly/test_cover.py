@@ -3,6 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.cover import (
@@ -21,11 +22,12 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER_TILT,
     CoverState,
 )
+from homeassistant.components.shelly.const import RPC_COVER_UPDATE_TIME_SEC
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, mutate_rpc_device_status
+from . import init_integration, mock_rest_update, mutate_rpc_device_status
 
 ROLLER_BLOCK_ID = 1
 
@@ -283,7 +285,10 @@ async def test_rpc_cover_tilt(
 
 
 async def test_update_position_closing(
-    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test update_position while the cover is closing."""
     entity_id = "cover.test_name_test_cover_0"
@@ -300,34 +305,48 @@ async def test_update_position_closing(
     assert state.state == CoverState.CLOSING
     assert state.attributes[ATTR_CURRENT_POSITION] == 40
 
+    # Simulate position decrement
+    async def simulated_update(*args, **kwargs):
+        pos = mock_rpc_device.status["cover:0"]["current_pos"]
+        if pos > 0:
+            mutate_rpc_device_status(
+                monkeypatch, mock_rpc_device, "cover:0", "current_pos", pos - 10
+            )
+        else:
+            mutate_rpc_device_status(
+                monkeypatch, mock_rpc_device, "cover:0", "current_pos", 0
+            )
+            mutate_rpc_device_status(
+                monkeypatch, mock_rpc_device, "cover:0", "state", "closed"
+            )
+
+    # Patching the mock update_status method
+    monkeypatch.setattr(mock_rpc_device, "update_status", simulated_update)
+
     # Simulate position updates during closing
     for position in range(40, -1, -10):
-        mutate_rpc_device_status(
-            monkeypatch, mock_rpc_device, "cover:0", "current_pos", position
-        )
-        mock_rpc_device.mock_update()
-
         assert (state := hass.states.get(entity_id))
         assert state.attributes[ATTR_CURRENT_POSITION] == position
         assert state.state == CoverState.CLOSING
+        await mock_rest_update(hass, freezer, RPC_COVER_UPDATE_TIME_SEC)
 
     # Final state should be closed
-    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
-    mock_rpc_device.mock_update()
-
     assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
 
 async def test_update_position_opening(
-    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test update_position while the cover is opening."""
     entity_id = "cover.test_name_test_cover_0"
     await init_integration(hass, 2)
 
-    # Set initial state to opening
+    # Set initial state to opening at 60
     mutate_rpc_device_status(
         monkeypatch, mock_rpc_device, "cover:0", "state", "opening"
     )
@@ -338,21 +357,32 @@ async def test_update_position_opening(
     assert state.state == CoverState.OPENING
     assert state.attributes[ATTR_CURRENT_POSITION] == 60
 
-    # Simulate position updates during opening
-    for position in range(60, 101, 10):
-        mutate_rpc_device_status(
-            monkeypatch, mock_rpc_device, "cover:0", "current_pos", position
-        )
-        mock_rpc_device.mock_update()
+    # Simulate position increment
+    async def simulated_update(*args, **kwargs):
+        pos = mock_rpc_device.status["cover:0"]["current_pos"]
+        if pos < 100:
+            mutate_rpc_device_status(
+                monkeypatch, mock_rpc_device, "cover:0", "current_pos", pos + 10
+            )
+        else:
+            mutate_rpc_device_status(
+                monkeypatch, mock_rpc_device, "cover:0", "current_pos", 100
+            )
+            mutate_rpc_device_status(
+                monkeypatch, mock_rpc_device, "cover:0", "state", "open"
+            )
 
+    # Patching the mock update_status method
+    monkeypatch.setattr(mock_rpc_device, "update_status", simulated_update)
+
+    # Check position updates during opening
+    for position in range(60, 101, 10):
         assert (state := hass.states.get(entity_id))
         assert state.attributes[ATTR_CURRENT_POSITION] == position
         assert state.state == CoverState.OPENING
+        await mock_rest_update(hass, freezer, RPC_COVER_UPDATE_TIME_SEC)
 
     # Final state should be open
-    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "open")
-    mock_rpc_device.mock_update()
-
     assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
