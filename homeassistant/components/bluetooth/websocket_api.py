@@ -48,29 +48,26 @@ def _async_get_source_from_config_entry(
     if validate_source:
         # Use the full validation that checks if scanner exists
         try:
-            source = config_entry_id_to_source(hass, config_entry_id)
+            return config_entry_id_to_source(hass, config_entry_id)
         except InvalidConfigEntryID as err:
             connection.send_error(msg_id, "invalid_config_entry_id", str(err))
             return None
         except InvalidSource as err:
             connection.send_error(msg_id, "invalid_source", str(err))
             return None
-    else:
-        # Just check if config entry exists and belongs to bluetooth
-        if (
-            not (entry := hass.config_entries.async_get_entry(config_entry_id))
-            or entry.domain != DOMAIN
-        ):
-            connection.send_error(
-                msg_id,
-                "invalid_config_entry_id",
-                f"Invalid config entry id: {config_entry_id}",
-            )
-            return None
-        assert entry.unique_id is not None
-        source = entry.unique_id
 
-    return source
+    # Just check if config entry exists and belongs to bluetooth
+    if (
+        not (entry := hass.config_entries.async_get_entry(config_entry_id))
+        or entry.domain != DOMAIN
+    ):
+        connection.send_error(
+            msg_id,
+            "invalid_config_entry_id",
+            f"Invalid config entry id: {config_entry_id}",
+        )
+        return None
+    return entry.unique_id
 
 
 @callback
