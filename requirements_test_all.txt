@@ -192,7 +192,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.2.0
+aioautomower==2.2.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -328,7 +328,7 @@ aiopegelonline==0.1.1
 aiopulse==0.4.6
 
 # homeassistant.components.purpleair
-aiopurpleair==2023.12.0
+aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==3.1.1
@@ -827,7 +827,7 @@ fitbit==0.3.1
 fivem-api==0.1.2
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==2.3.2
+fjaraskupan==2.3.3
 
 # homeassistant.components.flexit_bacnet
 flexit_bacnet==2.2.3
@@ -1029,7 +1029,7 @@ holidays==0.79
 home-assistant-frontend==20250828.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.8.27
+home-assistant-intents==2025.8.29
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.3.0
@@ -1384,7 +1384,7 @@ openhomedevice==2.2.0
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.15.3
+opower==0.15.4
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
