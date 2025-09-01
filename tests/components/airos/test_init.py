@@ -119,7 +119,8 @@ async def test_migrate_entry(hass: HomeAssistant, mock_airos_client: MagicMock) 
 
 
 async def test_migrate_future_return(
-    hass: HomeAssistant, mock_airos_client: MagicMock
+    hass: HomeAssistant,
+    mock_airos_client: MagicMock,
 ) -> None:
     """Test migrate entry unique id."""
     entry = MockConfigEntry(
