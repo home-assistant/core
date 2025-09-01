@@ -56,7 +56,7 @@ async def test_configure_service_with_field(
         {
             "name": "Test",
             "state": {"reachable": True},
-            "type": "Light",
+            "type": "Dimmable light",
             "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
@@ -85,7 +85,7 @@ async def test_configure_service_with_entity(
         {
             "name": "Test",
             "state": {"reachable": True},
-            "type": "Light",
+            "type": "Dimmable light",
             "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
@@ -204,7 +204,7 @@ async def test_service_refresh_devices(
             "1": {
                 "name": "Light 1 name",
                 "state": {"reachable": True},
-                "type": "Light",
+                "type": "Dimmable light",
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             }
         },
@@ -270,7 +270,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
             "1": {
                 "name": "Light 1 name",
                 "state": {"reachable": True},
-                "type": "Light",
+                "type": "Dimmable light",
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             }
         },
@@ -301,7 +301,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
         {
             "name": "Light 0 name",
             "state": {"reachable": True},
-            "type": "Light",
+            "type": "Dimmable light",
             "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
@@ -330,30 +330,6 @@ async def test_remove_orphaned_entries_service(
         identifiers={(DOMAIN, BRIDGE_ID)},
     )
 
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry_setup.entry_id,
-        identifiers={(DOMAIN, "light_1")},
-    )
-
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry_setup.entry_id,
-        identifiers={(DOMAIN, "switch_1")},
-    )
-
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry_setup.entry_id,
-        identifiers={(DOMAIN, "orphan_1")},
-    )
-
-    entity_registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "12345",
-        suggested_object_id="Orphaned sensor",
-        config_entry=config_entry_setup,
-        device_id=device.id,
-    )
-
     assert (
         len(
             [
@@ -363,6 +339,15 @@ async def test_remove_orphaned_entries_service(
             ]
         )
         == 4  # Gateway, light, switch and orphan
+    )
+
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "12345",
+        suggested_object_id="Orphaned sensor",
+        config_entry=config_entry_setup,
+        device_id=device.id,
     )
 
     assert (
