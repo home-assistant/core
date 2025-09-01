@@ -244,11 +244,11 @@
     },
     "date_deprecated": {
       "title": "{entity_name} sensor is deprecated",
-      "description": "The {entity_name} sensor ({entity_id}) is deprecated as it shows the date and time the APC network response was written, which can be obtained from last updated time of any entities of this integration.\n\nTo resolve this issue, disable this entity. You can do this by going to Settings > Devices & Services > APC UPS Daemon > {entity_name} and toggling the entity off, and updating all references to it in automations and scripts."
+      "description": "The {entity_name} sensor ({entity_id}) is deprecated as it shows the date and time the APC network response was written, which can be obtained from last updated time of any entities of this integration.\n\nTo resolve this issue, disable this entity. You can do this by going to Settings > Devices & Services > APC UPS Daemon > {entity_name}, toggling the entity off, and updating all references to it in automations and scripts."
     },
     "available_via_device_info": {
       "title": "{entity_name} sensor is deprecated",
-      "description": "The {entity_name} sensor ({entity_id}) is deprecated as this information is now available via device information (`device_attr(\"{device_id}\", \"{available_via_device_attr}\")`).\n\nTo resolve this issue, disable this entity. You can do this by going to Settings > Devices & Services > APC UPS Daemon > {entity_name} and toggling the entity off, and updating all references to it in automations and scripts."
+      "description": "The {entity_name} sensor ({entity_id}) is deprecated as this information is now available via device information (`device_attr(\"{device_id}\", \"{available_via_device_attr}\")`).\n\nTo resolve this issue, disable this entity. You can do this by going to Settings > Devices & Services > APC UPS Daemon > {entity_name}, toggling the entity off, and updating all references to it in automations and scripts."
     }
   },
   "exceptions": {
