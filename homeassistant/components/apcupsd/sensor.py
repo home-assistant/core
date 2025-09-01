@@ -556,7 +556,6 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
                 DOMAIN,
                 f"{issue_key}_{self.entity_id}",
                 is_fixable=False,
-                issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key=issue_key,
                 translation_placeholders=placeholders,
