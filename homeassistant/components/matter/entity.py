@@ -101,20 +101,20 @@ class MatterEntity(Entity):
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
         self._attr_available = self._endpoint.node.available
-        # mark endpoint postfix if the device has the primary attribute on multiple endpoints
+        # For multi-endpoing devices, need to show how entities on the web UI relate to the endpoint,
+        # so add the endpoint postfix if the device has the same cluster on multiple endpoints,
+        # but endpoint numbers may be unclear to user, so overwrite with a FixedLabel if available.
         if not self._endpoint.node.is_bridge_device and any(
             ep
             for ep in self._endpoint.node.endpoints.values()
             if ep != self._endpoint
-            and ep.has_attribute(None, entity_info.primary_attribute)
+            and ep.has_cluster(entity_info.primary_attribute.cluster_id)
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
             if self._platform_translation_key and not self.translation_key:
                 self._attr_translation_key = self._platform_translation_key
 
-        # prefer the label attribute for the entity name
-        # Matter has a way for users and/or vendors to specify a name for an endpoint
-        # which is always preferred over a standard HA (generated) name
+        # But overwrite postfixed endpoint with FixedLabel if it is available
         for attr in (
             clusters.FixedLabel.Attributes.LabelList,
             clusters.UserLabel.Attributes.LabelList,
@@ -122,16 +122,18 @@ class MatterEntity(Entity):
             if not (labels := self.get_matter_attribute_value(attr)):
                 continue
             for label in labels:
-                if label.label not in ["Label", "Button"]:
+                if label.label.lower() not in [
+                    "label",
+                    "button",
+                    "orientation",
+                    "name",
+                    "light",
+                ]:
                     continue
                 # fixed or user label found: use it
                 label_value: str = label.value
                 # in the case the label is only the label id, use it as postfix only
-                if label_value.isnumeric():
-                    self._name_postfix = label_value
-                else:
-                    self._attr_name = label_value
-                break
+                self._name_postfix = label_value
 
         # make sure to update the attributes once
         self._update_from_device()
