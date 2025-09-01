@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -94,9 +94,11 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         """Run when entity about to be added."""
         await super().async_added_to_hass()
 
-        if (
-            not (last_state := await self.async_get_last_state())
-            or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+        if not (
+            last_state := await self.async_get_last_state()
+        ) or last_state.state in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
         ):
             return
         _LOGGER.debug("Last state attributes: %s", last_state.attributes)
