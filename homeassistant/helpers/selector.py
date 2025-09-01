@@ -22,8 +22,8 @@ from . import config_validation as cv
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
 
 
-def _get_selector_class(config: Any) -> type[Selector]:
-    """Get selector class type."""
+def _get_selector_type_and_class(config: Any) -> tuple[str, type[Selector]]:
+    """Get selector type and class."""
     if not isinstance(config, dict):
         raise vol.Invalid("Expected a dictionary")
 
@@ -35,25 +35,22 @@ def _get_selector_class(config: Any) -> type[Selector]:
     if (selector_class := SELECTORS.get(selector_type)) is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
 
-    return selector_class
+    return selector_type, selector_class
 
 
 def selector(config: Any) -> Selector:
     """Instantiate a selector."""
-    selector_class = _get_selector_class(config)
-    selector_type = list(config)[0]
-
+    selector_type, selector_class = _get_selector_type_and_class(config)
     return selector_class(config[selector_type])
 
 
 def validate_selector(config: Any) -> dict:
     """Validate a selector."""
-    selector_class = _get_selector_class(config)
-    selector_type = list(config)[0]
+    selector_type, selector_class = _get_selector_type_and_class(config)
 
     # Selectors can be empty
     if config[selector_type] is None:
-        return {selector_type: {}}
+        config = {selector_type: {}}
 
     return {
         selector_type: cast(dict, selector_class.CONFIG_SCHEMA(config[selector_type]))
@@ -161,16 +158,14 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 # is provided for backwards compatibility and remains feature frozen.
 # New filtering features should be added under the `filter` key instead.
 # https://github.com/home-assistant/frontend/pull/15302
-LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
-    {
-        # Integration that provided the entity
-        vol.Optional("integration"): str,
-        # Domain the entity belongs to
-        vol.Optional("domain"): vol.All(cv.ensure_list, [str]),
-        # Device class of the entity
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
-    }
-)
+_LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA_DICT = {
+    # Integration that provided the entity
+    vol.Optional("integration"): str,
+    # Domain the entity belongs to
+    vol.Optional("domain"): vol.All(cv.ensure_list, [str]),
+    # Device class of the entity
+    vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
+}
 
 
 class EntityFilterSelectorConfig(TypedDict, total=False):
@@ -200,16 +195,14 @@ DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 # is provided for backwards compatibility and remains feature frozen.
 # New filtering features should be added under the `filter` key instead.
 # https://github.com/home-assistant/frontend/pull/15302
-LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
-    {
-        # Integration linked to it with a config entry
-        vol.Optional("integration"): str,
-        # Manufacturer of device
-        vol.Optional("manufacturer"): str,
-        # Model of device
-        vol.Optional("model"): str,
-    }
-)
+_LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA_DICT = {
+    # Integration linked to it with a config entry
+    vol.Optional("integration"): str,
+    # Manufacturer of device
+    vol.Optional("manufacturer"): str,
+    # Model of device
+    vol.Optional("model"): str,
+}
 
 
 class DeviceFilterSelectorConfig(TypedDict, total=False):
@@ -696,9 +689,8 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
     selector_type = "device"
 
     CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
-        LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA.schema
-    ).extend(
         {
+            **_LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA_DICT,
             # Device has to contain entities matching this selector
             vol.Optional("entity"): vol.All(
                 cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
@@ -781,9 +773,8 @@ class EntitySelector(Selector[EntitySelectorConfig]):
     selector_type = "entity"
 
     CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
-        LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA.schema
-    ).extend(
         {
+            **_LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA_DICT,
             vol.Optional("exclude_entities"): [str],
             vol.Optional("include_entities"): [str],
             vol.Optional("multiple", default=False): cv.boolean,
@@ -1333,6 +1324,7 @@ class StateSelectorConfig(BaseSelectorConfig, total=False):
 
     entity_id: str
     hide_states: list[str]
+    multiple: bool
 
 
 @SELECTORS.register("state")
@@ -1350,6 +1342,7 @@ class StateSelector(Selector[StateSelectorConfig]):
             # selectors into two types: one for state and one for attribute.
             # Limiting the public use, prevents breaking changes in the future.
             # vol.Optional("attribute"): str,
+            vol.Optional("multiple", default=False): cv.boolean,
         }
     )
 
@@ -1357,10 +1350,14 @@ class StateSelector(Selector[StateSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> str:
+    def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
-        state: str = vol.Schema(str)(data)
-        return state
+        if not self.config["multiple"]:
+            state: str = vol.Schema(str)(data)
+            return state
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class StatisticSelectorConfig(BaseSelectorConfig, total=False):

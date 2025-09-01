@@ -99,7 +99,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 ),
             }
         )
-        self.add_suggested_values_to_schema(
+        data_schema = self.add_suggested_values_to_schema(
             data_schema,
             {"section_1": {"int": self.config_entry.options.get(CONF_INT, 10)}},
         )
@@ -146,7 +146,7 @@ class SubentryFlowHandler(ConfigSubentryFlow):
         """Reconfigure a sensor."""
         if user_input is not None:
             title = user_input.pop("name")
-            return self.async_update_and_abort(
+            return self.async_update_reload_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),
                 data=user_input,

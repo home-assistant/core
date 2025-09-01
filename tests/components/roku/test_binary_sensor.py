@@ -9,7 +9,11 @@ from homeassistant.components.binary_sensor import STATE_OFF, STATE_ON
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from . import UPNP_SERIAL
 
@@ -77,12 +81,13 @@ async def test_roku_binary_sensors(
     assert device_entry.entry_type is None
     assert device_entry.sw_version == "7.5.0"
     assert device_entry.hw_version == "4200X"
-    assert device_entry.suggested_area is None
+    assert device_entry.area_id is None
 
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_rokutv_binary_sensors(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
@@ -158,4 +163,6 @@ async def test_rokutv_binary_sensors(
     assert device_entry.entry_type is None
     assert device_entry.sw_version == "9.2.0"
     assert device_entry.hw_version == "7820X"
-    assert device_entry.suggested_area == "Living room"
+    assert (
+        device_entry.area_id == area_registry.async_get_area_by_name("Living room").id
+    )

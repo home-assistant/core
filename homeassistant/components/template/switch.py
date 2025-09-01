@@ -44,13 +44,13 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
-from .template_entity import (
+from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    TemplateEntity,
     make_template_entity_common_modern_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
@@ -71,7 +71,7 @@ SWITCH_COMMON_SCHEMA = vol.Schema(
 
 SWITCH_YAML_SCHEMA = SWITCH_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
-).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+).extend(make_template_entity_common_modern_schema(SWITCH_DOMAIN, DEFAULT_NAME).schema)
 
 SWITCH_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),

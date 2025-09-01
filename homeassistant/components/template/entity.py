@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 from collections.abc import Sequence
+import logging
 from typing import Any
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_OPTIMISTIC, CONF_STATE
@@ -12,7 +13,9 @@ from homeassistant.helpers.script import Script, _VarsType
 from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_OBJECT_ID
+from .const import CONF_DEFAULT_ENTITY_ID
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AbstractTemplateEntity(Entity):
@@ -20,6 +23,7 @@ class AbstractTemplateEntity(Entity):
 
     _entity_id_format: str
     _optimistic_entity: bool = False
+    _extra_optimistic_options: tuple[str, ...] | None = None
     _template: Template | None = None
 
     def __init__(
@@ -33,13 +37,23 @@ class AbstractTemplateEntity(Entity):
         self._action_scripts: dict[str, Script] = {}
 
         if self._optimistic_entity:
+            optimistic = config.get(CONF_OPTIMISTIC)
+
             self._template = config.get(CONF_STATE)
 
-            self._attr_assumed_state = self._template is None or config.get(
-                CONF_OPTIMISTIC, False
+            assumed_optimistic = self._template is None
+            if self._extra_optimistic_options:
+                assumed_optimistic = assumed_optimistic and all(
+                    config.get(option) is None
+                    for option in self._extra_optimistic_options
+                )
+
+            self._attr_assumed_state = optimistic or (
+                optimistic is None and assumed_optimistic
             )
 
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+        if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
+            _, _, object_id = default_entity_id.partition(".")
             self.entity_id = async_generate_entity_id(
                 self._entity_id_format, object_id, hass=self.hass
             )

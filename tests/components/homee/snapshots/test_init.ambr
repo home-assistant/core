@@ -21,7 +21,6 @@
         '00055511EECC',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'homee',
@@ -31,7 +30,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.2.3',
     'via_device_id': None,
   })
@@ -54,7 +52,6 @@
         '00055511EECC-3',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -64,7 +61,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.54',
     'via_device_id': <ANY>,
   })
