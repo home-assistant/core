@@ -562,7 +562,7 @@
     },
     "clean_area": {
       "name": "Clean area",
-      "description": "Cleans the specified area on the Matter vacuum cleaner.",
+      "description": "Instructs the Matter vacuum cleaner to clean the specified areas.",
       "fields": {
         "areas": {
           "name": "Areas",
