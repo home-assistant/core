@@ -119,7 +119,9 @@ def _service_schema(targeted: bool, custom: bool) -> vol.Schema:
     }
 
     if targeted:
-        schema_dict[vol.Required("target")] = selector.TargetSelector.CONFIG_SCHEMA
+        schema_dict[vol.Required("target")] = vol.Any(
+            selector.TargetSelector.CONFIG_SCHEMA, None
+        )
 
     if custom:
         schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT

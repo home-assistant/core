@@ -38,7 +38,9 @@ FIELD_SCHEMA = vol.Schema(
 TRIGGER_SCHEMA = vol.Any(
     vol.Schema(
         {
-            vol.Optional("target"): selector.TargetSelector.CONFIG_SCHEMA,
+            vol.Optional("target"): vol.Any(
+                selector.TargetSelector.CONFIG_SCHEMA, None
+            ),
             vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
         }
     ),
