@@ -5,26 +5,44 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "community": "SNMP Community",
           "type": "Type of the printer"
         },
         "data_description": {
-          "host": "The hostname or IP address of the Brother printer to control."
+          "host": "The hostname or IP address of the Brother printer to control.",
+          "port": "The SNMP port of your printer.",
+          "community": "The SNMP community string.",
+          "type": "Brother printer type."
         }
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the printer {model} with serial number `{serial_number}` to Home Assistant?",
         "title": "Discovered Brother Printer",
         "data": {
+          "port": "[%key:common::config_flow::data::port%]",
+          "community": "[%key:component::brother::config::step::user::data::community%]",
           "type": "[%key:component::brother::config::step::user::data::type%]"
+        },
+        "data_description": {
+          "host": "[%key:component::brother::config::step::user::data_description::host%]",
+          "port": "[%key:component::brother::config::step::user::data_description::port%]",
+          "community": "[%key:component::brother::config::step::user::data_description::community%]",
+          "type": "[%key:component::brother::config::step::user::data_description::type%]"
         }
       },
       "reconfigure": {
         "description": "Update configuration for {printer_name}.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "community": "[%key:component::brother::config::step::user::data::community%]"
         },
         "data_description": {
-          "host": "[%key:component::brother::config::step::user::data_description::host%]"
+          "host": "[%key:component::brother::config::step::user::data_description::host%]",
+          "port": "[%key:component::brother::config::step::user::data_description::port%]",
+          "community": "[%key:component::brother::config::step::user::data_description::community%]",
+          "type": "[%key:component::brother::config::step::user::data_description::type%]"
         }
       }
     },
