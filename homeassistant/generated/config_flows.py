@@ -708,7 +708,6 @@ FLOWS = {
         "volumio",
         "volvo",
         "volvooncall",
-        "vulcan",
         "wake_on_lan",
         "wallbox",
         "waqi",
