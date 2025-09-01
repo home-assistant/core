@@ -6,10 +6,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Smart-grid',
-        'Backup',
-        'On-grid',
-        'Off-grid',
+        'smart-grid',
+        'backup',
+        'on-grid',
+        'off-grid',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -46,10 +46,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Imeon inverter Inverter mode',
       'options': list([
-        'Smart-grid',
-        'Backup',
-        'On-grid',
-        'Off-grid',
+        'smart-grid',
+        'backup',
+        'on-grid',
+        'off-grid',
       ]),
     }),
     'context': <ANY>,

@@ -10,10 +10,10 @@ PLATFORMS = [
 ]
 ATTR_BATTERY_STATUS = ["charging", "discharging", "charged"]
 ATTR_INVERTER_MODE = {
-    "smg": "Smart-grid",
-    "bup": "Backup",
-    "ong": "On-grid",
-    "ofg": "Off-grid",
+    "smg": "smart-grid",
+    "bup": "backup",
+    "ong": "on-grid",
+    "ofg": "off-grid",
 }
 INVERTER_MODE_OPTIONS = {v: k for k, v in ATTR_INVERTER_MODE.items()}
 ATTR_INVERTER_STATE = [
