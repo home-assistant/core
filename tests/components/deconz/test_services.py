@@ -330,6 +330,11 @@ async def test_remove_orphaned_entries_service(
         identifiers={(DOMAIN, BRIDGE_ID)},
     )
 
+    device_registry.async_get_or_create(
+    config_entry_id=config_entry_setup.entry_id,
+    identifiers={(DOMAIN, "orphaned")},
+    )
+
     assert (
         len(
             [

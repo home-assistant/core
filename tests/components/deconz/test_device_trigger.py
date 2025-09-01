@@ -351,10 +351,6 @@ async def test_functional_device_trigger(
 
 
 @pytest.mark.skip(reason="Temporarily disabled until automation validation is improved")
-@pytest.mark.skipif(
-    pytest.config.getoption("numprocesses", default=0) > 1,
-    reason="Unstable with pytest-xdist + Syrupy on Python 3.13",
-)
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_validate_trigger_unknown_device(hass: HomeAssistant) -> None:
     """Test unknown device does not return a trigger config."""
