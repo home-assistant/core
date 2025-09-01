@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 from typing import TypeVar
@@ -31,7 +32,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_PROBE_COUNT
+from .const import CONF_PROBE_COUNT, DOMAIN
 
 type ToGrillConfigEntry = ConfigEntry[ToGrillCoordinator]
 
@@ -73,10 +74,17 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             name="ToGrill",
             update_interval=SCAN_INTERVAL,
         )
-        self.address = config_entry.data[CONF_ADDRESS]
+        self.address: str = config_entry.data[CONF_ADDRESS]
         self.data = {}
-        self.device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, self.address)}
+        self._packet_listeners: list[Callable[[Packet], None]] = []
+
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(CONNECTION_BLUETOOTH, self.address)},
+            identifiers={(DOMAIN, self.address)},
+            name=config_entry.data[CONF_MODEL],
+            model_id=config_entry.data[CONF_MODEL],
         )
 
         config_entry.async_on_unload(
@@ -87,6 +95,40 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
                 BluetoothScanningMode.ACTIVE,
             )
         )
+
+    def get_device_info(self, probe_number: int | None) -> DeviceInfo:
+        """Return device info."""
+
+        if probe_number is None:
+            return DeviceInfo(
+                identifiers={(DOMAIN, self.address)},
+            )
+
+        return DeviceInfo(
+            translation_key="probe",
+            translation_placeholders={
+                "probe_number": str(probe_number),
+            },
+            identifiers={(DOMAIN, f"{self.address}_{probe_number}")},
+            via_device=(DOMAIN, self.address),
+        )
+
+    @callback
+    def async_add_packet_listener(
+        self, packet_callback: Callable[[Packet], None]
+    ) -> Callable[[], None]:
+        """Add a listener for a given packet type."""
+
+        def _unregister():
+            self._packet_listeners.remove(packet_callback)
+
+        self._packet_listeners.append(packet_callback)
+        return _unregister
+
+    def async_update_packet_listeners(self, packet: Packet):
+        """Update all packet listeners."""
+        for listener in self._packet_listeners:
+            listener(packet)
 
     async def _connect_and_update_registry(self) -> Client:
         """Update device registry data."""
@@ -113,9 +155,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
-            connections={(CONNECTION_BLUETOOTH, self.address)},
-            name=config_entry.data[CONF_MODEL],
-            model_id=config_entry.data[CONF_MODEL],
+            identifiers={(DOMAIN, self.address)},
             sw_version=get_version_string(packet_a0),
         )
 
@@ -151,6 +191,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
     def _notify_callback(self, packet: Packet):
         probe = getattr(packet, "probe", None)
         self.data[(packet.type, probe)] = packet
+        self.async_update_packet_listeners(packet)
         self.async_update_listeners()
 
     async def _async_update_data(self) -> dict[tuple[int, int | None], Packet]:
