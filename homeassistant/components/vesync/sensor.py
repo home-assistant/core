@@ -59,8 +59,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="air-quality",
         translation_key="air_quality",
         value_fn=lambda device: device.state.air_quality_string,
-        exists_fn=lambda device: rgetattr(device, "state.air_quality_string")
-        is not None,
+        exists_fn=(
+            lambda device: rgetattr(device, "state.air_quality_string") is not None
+        ),
     ),
     VeSyncSensorEntityDescription(
         key="pm25",
