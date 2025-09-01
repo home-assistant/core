@@ -428,7 +428,11 @@ class ZeroconfDiscovery:
         issue_id = "duplicate_instance_id"
         local_addresses = await network.async_get_announce_addresses(self.hass)
         discovered_ip = (
-            str(info.ip_address) if info.ip_address else str(info.ip_addresses[0])
+            str(info.ip_address)
+            if info.ip_address
+            else str(info.ip_addresses[0])
+            if info.ip_addresses
+            else None
         )
         is_same_ip = discovered_ip in local_addresses if discovered_ip else False
 
@@ -444,7 +448,7 @@ class ZeroconfDiscovery:
                 translation_key=issue_id,
                 translation_placeholders={
                     "instance_id": discovered_instance_id,
-                    "other_ip": discovered_ip,
+                    "other_ip": discovered_ip or "unknown",
                     "other_host_url": info.hostname.rstrip("."),
                 },
             )
