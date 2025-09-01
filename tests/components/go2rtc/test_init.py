@@ -790,21 +790,34 @@ async def _test_camera_orientation_get_image(
 
 @pytest.mark.usefixtures("init_integration", "ws_client")
 @pytest.mark.parametrize(
-    ("orientation", "expected_suffix"),
+    ("orientation", "expected_stream_source"),
     [
-        (Orientation.MIRROR, "#video=h264#audio=copy#raw=-vf hflip"),
-        (Orientation.ROTATE_180, "#video=h264#audio=copy#rotate=180"),
-        (Orientation.FLIP, "#video=h264#audio=copy#raw=-vf vflip"),
+        (
+            Orientation.MIRROR,
+            "ffmpeg:rtsp://stream#video=h264#audio=copy#raw=-vf hflip",
+        ),
+        (
+            Orientation.ROTATE_180,
+            "ffmpeg:rtsp://stream#video=h264#audio=copy#rotate=180",
+        ),
+        (Orientation.FLIP, "ffmpeg:rtsp://stream#video=h264#audio=copy#raw=-vf vflip"),
         (
             Orientation.ROTATE_LEFT_AND_FLIP,
-            "#video=h264#audio=copy#raw=-vf transpose=2,vflip",
+            "ffmpeg:rtsp://stream#video=h264#audio=copy#raw=-vf transpose=2,vflip",
         ),
-        (Orientation.ROTATE_LEFT, "#video=h264#audio=copy#rotate=-90"),
+        (
+            Orientation.ROTATE_LEFT,
+            "ffmpeg:rtsp://stream#video=h264#audio=copy#rotate=-90",
+        ),
         (
             Orientation.ROTATE_RIGHT_AND_FLIP,
-            "#video=h264#audio=copy#raw=-vf transpose=1,vflip",
+            "ffmpeg:rtsp://stream#video=h264#audio=copy#raw=-vf transpose=1,vflip",
         ),
-        (Orientation.ROTATE_RIGHT, "#video=h264#audio=copy#rotate=90"),
+        (
+            Orientation.ROTATE_RIGHT,
+            "ffmpeg:rtsp://stream#video=h264#audio=copy#rotate=90",
+        ),
+        (Orientation.NO_TRANSFORM, "rtsp://stream"),
     ],
 )
 @pytest.mark.parametrize(
@@ -819,14 +832,13 @@ async def test_stream_orientation(
     rest_client: AsyncMock,
     init_test_integration: MockCamera,
     orientation: Orientation,
-    expected_suffix: str,
+    expected_stream_source: str,
     test_fn: Callable[
         [HomeAssistant, MockCamera, Orientation, AsyncMock, str], Awaitable[None]
     ],
 ) -> None:
     """Test WebRTC provider applies correct orientation filters."""
     camera = init_test_integration
-    expected_stream_source = f"ffmpeg:rtsp://stream{expected_suffix}"
 
     await test_fn(
         hass,
@@ -839,44 +851,30 @@ async def test_stream_orientation(
 
 @pytest.mark.usefixtures("init_integration", "ws_client")
 @pytest.mark.parametrize(
-    ("orientation", "stream_source", "expected_go2rtc_stream_source"),
-    [
-        (Orientation.NO_TRANSFORM, "rtsp://stream", "rtsp://stream"),
-        (
-            Orientation.ROTATE_LEFT,
-            "ffmpeg:rtsp://test.stream",
-            "ffmpeg:rtsp://test.stream#video=h264#audio=copy#rotate=-90",
-        ),
-    ],
-)
-@pytest.mark.parametrize(
     "test_fn",
     [
         _test_camera_orientation_webrtc,
         _test_camera_orientation_get_image,
     ],
 )
-async def test_stream_orientation_other_cases(
+async def test_stream_orientation_stream_source_starts_ffmpeg(
     hass: HomeAssistant,
     rest_client: AsyncMock,
     init_test_integration: MockCamera,
-    orientation: Orientation,
-    stream_source: str,
-    expected_go2rtc_stream_source: str,
     test_fn: Callable[
         [HomeAssistant, MockCamera, Orientation, AsyncMock, str], Awaitable[None]
     ],
 ) -> None:
-    """Test WebRTC provider with no orientation transform."""
+    """Test WebRTC provider applies correct orientation filters when a stream source already starts with ffmpeg."""
     camera = init_test_integration
-    camera.set_stream_source(stream_source)
+    camera.set_stream_source("ffmpeg:rtsp://test.stream")
 
     await test_fn(
         hass,
         camera,
-        orientation,
+        Orientation.ROTATE_LEFT,
         rest_client,
-        expected_go2rtc_stream_source,
+        "ffmpeg:rtsp://test.stream#video=h264#audio=copy#rotate=-90",
     )
 
 

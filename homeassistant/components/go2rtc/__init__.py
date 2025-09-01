@@ -334,14 +334,12 @@ class WebRTCProvider(CameraWebRTCProvider):
                 case Orientation.FLIP:
                     stream_source += "#raw=-vf vflip"
                 case Orientation.ROTATE_LEFT_AND_FLIP:
-                    # Cannot use any filter when using raw -vf
-                    # https://github.com/AlexxIT/go2rtc/issues/487
+                    # Cannot use any filter when using raw one
                     stream_source += "#raw=-vf transpose=2,vflip"
                 case Orientation.ROTATE_LEFT:
                     stream_source += "#rotate=-90"
                 case Orientation.ROTATE_RIGHT_AND_FLIP:
-                    # Cannot use any filter when using raw -vf
-                    # https://github.com/AlexxIT/go2rtc/issues/487
+                    # Cannot use any filter when using raw one
                     stream_source += "#raw=-vf transpose=1,vflip"
                 case Orientation.ROTATE_RIGHT:
                     stream_source += "#rotate=90"
