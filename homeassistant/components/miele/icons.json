@@ -45,7 +45,7 @@
         "default": "mdi:tray-full"
       },
       "elapsed_time": {
-        "default": "mdi:timelapse"
+        "default": "mdi:timer-outline"
       },
       "start_time": {
         "default": "mdi:clock-start"
