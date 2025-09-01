@@ -23,8 +23,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+import homeassistant.helpers.issue_registry as ir
 
-from .const import LAST_S_TEST
+from .const import AVAILABLE_VIA_DEVICE_ATTR, DEPRECATED_SENSORS, DOMAIN, LAST_S_TEST
 from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
 from .entity import APCUPSdEntity
 
@@ -508,10 +509,6 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
         # Initial update of attributes.
         self._update_attrs()
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -532,3 +529,42 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
         self._attr_native_value, inferred_unit = infer_unit(self.coordinator.data[key])
         if not self.native_unit_of_measurement:
             self._attr_native_unit_of_measurement = inferred_unit
+
+    async def async_added_to_hass(self) -> None:
+        """Handle when entity is added to Home Assistant.
+
+        If this is a deprecated sensor entity, create a repair issue to guide
+        the user to disable it.
+        """
+        await super().async_added_to_hass()
+
+        if not self.enabled:
+            return
+
+        if issue_key := DEPRECATED_SENSORS.get(self.entity_description.key):
+            placeholders = {
+                "entity_name": str(self.name or self.entity_id),
+                "entity_id": self.entity_id,
+            }
+            if via_attr := AVAILABLE_VIA_DEVICE_ATTR.get(self.entity_description.key):
+                placeholders["available_via_device_attr"] = via_attr
+            if device_entry := self.device_entry:
+                placeholders["device_id"] = device_entry.id
+
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{issue_key}_{self.entity_id}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=issue_key,
+                translation_placeholders=placeholders,
+            )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle when entity will be removed from Home Assistant."""
+        if issue_key := DEPRECATED_SENSORS.get(self.entity_description.key):
+            ir.async_delete_issue(self.hass, DOMAIN, f"{issue_key}_{self.entity_id}")
+
+        await super().async_will_remove_from_hass()
