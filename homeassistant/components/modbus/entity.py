@@ -114,13 +114,13 @@ class BasePlatform(Entity):
 
     async def async_update(self, now: datetime | None = None) -> None:
         """Update the entity state."""
-        await self.async_local_update(retrigger=True)
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_local_update(
-        self, now: datetime | None = None, retrigger: bool = False
+        self, now: datetime | None = None, cancel_pending_update: bool = False
     ) -> None:
         """Update the entity state."""
-        if retrigger and self._cancel_call:
+        if cancel_pending_update and self._cancel_call:
             self._cancel_call()
         await self._async_update()
         self.async_write_ha_state()
@@ -148,7 +148,7 @@ class BasePlatform(Entity):
     async def async_await_connection(self, _now: Any) -> None:
         """Wait for first connect."""
         await self._hub.event_connected.wait()
-        await self.async_local_update(retrigger=True)
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -360,7 +360,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
                 self.hass, self._verify_delay, self.async_update
             )
             return
-        await self.async_local_update(retrigger=True)
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set switch off."""
