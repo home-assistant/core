@@ -11,13 +11,13 @@ from homeassistant.util.yaml.loader import parse_yaml
 from script.hassfest import triggers
 from script.hassfest.model import Config, Integration
 
-TRIGGER_DESCPRITION_FILENAME = "triggers.yaml"
+TRIGGER_DESCRIPTION_FILENAME = "triggers.yaml"
 TRIGGER_ICONS_FILENAME = "icons.json"
 TRIGGER_STRINGS_FILENAME = "strings.json"
 
 TRIGGER_DESCRIPTIONS = {
     "valid": {
-        TRIGGER_DESCPRITION_FILENAME: """
+        TRIGGER_DESCRIPTION_FILENAME: """
             _:
               fields:
                 event:
@@ -48,7 +48,7 @@ TRIGGER_DESCRIPTIONS = {
         "errors": [],
     },
     "yaml_missing_colon": {
-        TRIGGER_DESCPRITION_FILENAME: """
+        TRIGGER_DESCRIPTION_FILENAME: """
             test:
               fields
                 entity:
@@ -58,7 +58,7 @@ TRIGGER_DESCRIPTIONS = {
         "errors": ["Invalid triggers.yaml"],
     },
     "invalid_triggers_schema": {
-        TRIGGER_DESCPRITION_FILENAME: """
+        TRIGGER_DESCRIPTION_FILENAME: """
             invalid_trigger:
               fields:
                 entity:
@@ -68,7 +68,7 @@ TRIGGER_DESCRIPTIONS = {
         "errors": ["Unknown selector type invalid_selector"],
     },
     "missing_strings_and_icons": {
-        TRIGGER_DESCPRITION_FILENAME: """
+        TRIGGER_DESCRIPTION_FILENAME: """
             sun:
               fields:
                 event:
@@ -145,7 +145,7 @@ def test_validate(config: Config) -> None:
 
     def _load_yaml(fname, secrets=None):
         domain, yaml_file = fname.split("/")
-        assert yaml_file == TRIGGER_DESCPRITION_FILENAME
+        assert yaml_file == TRIGGER_DESCRIPTION_FILENAME
 
         trigger_descriptions = TRIGGER_DESCRIPTIONS[domain][yaml_file]
         with io.StringIO(trigger_descriptions) as file:
