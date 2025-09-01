@@ -444,9 +444,7 @@ class ValveBase(HomeAccessory):
             return None
         return state.state
 
-    def _get_linked_duration_property(
-        self, attr: str, fallback_value: int
-    ) -> int | None:
+    def _get_linked_duration_property(self, attr: str, fallback_value: int) -> int:
         """Get property from linked duration entity attribute."""
         if attr not in VALVE_LINKED_DURATION_PROPERTIES:
             return fallback_value
