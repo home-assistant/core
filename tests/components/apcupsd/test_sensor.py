@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
-    issue_registry as ir
+    issue_registry as ir,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
@@ -175,6 +175,7 @@ async def test_deprecated_sensor_issue(
     entity_registry: er.EntityRegistry,
     entity_key: str,
     issue_key: str,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Each deprecated sensor creates an issue when enabled and removes it when disabled."""
     issue_registry = ir.async_get(hass)
@@ -184,24 +185,15 @@ async def test_deprecated_sensor_issue(
         f"entity_id for {entity_key} (via unique id '{unique_id}') not found"
     )
     entry = entity_registry.async_get(entity_id)
-    assert entry is not None
-
-    # Enable if currently disabled so we can assert issue creation
-    if entry.disabled:
-        entity_registry.async_update_entity(entity_id, disabled_by=None)
-    await hass.async_block_till_done()
+    assert entry is not None, f"entity registry entry for {entity_id} not found"
+    assert not entry.disabled, f"entity registry entry for {entity_id} is disabled"
 
     issue_id = f"{issue_key}_{entity_id}"
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
-    assert not issue.is_fixable
-    assert issue.translation_key == issue_key
-    assert issue.translation_placeholders
-    assert "entity_id" in issue.translation_placeholders
-    assert "entity_name" in issue.translation_placeholders
+    issue.translation_placeholders["device_id"] = "<ANY>"
+    assert issue == snapshot
 
-    # Disable and verify the issue is removed
+    # Disable and verify the issue is removed.
     entity_registry.async_update_entity(
         entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
