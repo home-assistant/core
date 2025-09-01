@@ -627,9 +627,7 @@ class TelegramNotificationService:
         """Send a chat action to pre-allowed chat IDs."""
         result = {}
         for chat_id in self.get_target_chat_ids(target):
-            _LOGGER.debug(
-                "Send action %chat_action in chat ID %s", chat_action, chat_id
-            )
+            _LOGGER.debug("Send action %s in chat ID %s", chat_action, chat_id)
             is_successful = await self._send_msg(
                 self.bot.send_chat_action,
                 "Error sending action",
