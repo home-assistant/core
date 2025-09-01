@@ -18,7 +18,7 @@ from homeassistant.config_entries import SOURCE_BLUETOOTH, ConfigFlow, ConfigFlo
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN, LOGGER, MANUFACTURER
+from .const import DOMAIN, LOGGER
 
 BLUETOOTH_SCHEMA = vol.Schema(
     {
@@ -81,7 +81,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
 
         self.context["title_placeholders"] = {
-            "name": MANUFACTURER,
+            "name": discovery_info.name,
             "address": discovery_info.address,
         }
         self.address = discovery_info.address
