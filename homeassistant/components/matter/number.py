@@ -445,6 +445,7 @@ DISCOVERY_SCHEMAS = [
             native_max_value=255,
             native_min_value=1,
             native_step=1,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
         ),
         entity_class=MatterNumber,
