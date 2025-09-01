@@ -101,7 +101,7 @@ class MatterEntity(Entity):
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
         self._attr_available = self._endpoint.node.available
-        # For multi-endpoing devices, need to show how entities on the web UI relate to the endpoint,
+        # For multi-endpoint devices, need to show how entities on the web UI relate to the endpoint,
         # so add the endpoint postfix if the device has the same cluster on multiple endpoints,
         # but endpoint numbers may be unclear to user, so overwrite with a FixedLabel if available.
         if not self._endpoint.node.is_bridge_device and any(
