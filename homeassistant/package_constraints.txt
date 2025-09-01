@@ -22,7 +22,7 @@ awesomeversion==25.5.0
 bcrypt==4.3.0
 bleak-retry-connector==4.4.3
 bleak==1.0.1
-bluetooth-adapters==2.0.0
+bluetooth-adapters==2.1.0
 bluetooth-auto-recovery==1.5.2
 bluetooth-data-tools==1.28.2
 cached-ipaddress==0.10.0
@@ -34,12 +34,12 @@ dbus-fast==2.44.3
 fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
-habluetooth==5.2.0
+habluetooth==5.3.0
 hass-nabucasa==1.0.0
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1
 home-assistant-frontend==20250829.0
-home-assistant-intents==2025.8.27
+home-assistant-intents==2025.8.29
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -109,7 +109,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.9.0
+anyio==4.10.0
 h11==0.16.0
 httpcore==1.0.9
 
