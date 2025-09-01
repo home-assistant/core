@@ -1163,6 +1163,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "dali_center": {
+      "name": "Dali Center",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "danfoss_air": {
       "name": "Danfoss Air",
       "integration_type": "hub",

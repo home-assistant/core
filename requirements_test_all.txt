@@ -80,6 +80,9 @@ PyQRCode==1.2.1
 # homeassistant.components.rmvtransport
 PyRMVtransport==0.3.3
 
+# homeassistant.components.dali_center
+PySrDaliGateway==0.6.5
+
 # homeassistant.components.switchbot
 PySwitchbot==0.69.0
 

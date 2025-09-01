@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up your DALI Center gateway integration. This will discover available gateways on your network."
+      },
+      "discovery": {
+        "title": "Select DALI Gateway",
+        "description": "Select the DALI gateway you want to configure.",
+        "data": {
+          "selected_gateway": "Gateway"
+        },
+        "data_description": {
+          "selected_gateway": "Choose the DALI gateway to add to Home Assistant"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "discovery_failed": "Failed to discover DALI gateways on the network",
+      "no_devices_found": "No DALI gateways found on the network",
+      "device_not_found": "Selected gateway not found",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
