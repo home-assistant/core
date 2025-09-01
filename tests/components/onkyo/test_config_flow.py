@@ -288,6 +288,8 @@ async def test_eiscp_discovery_replace_ignored_entry(
     assert result["result"].unique_id == RECEIVER_INFO.identifier
     assert result["title"] == RECEIVER_INFO.model_name
 
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_ssdp_discovery(
