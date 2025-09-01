@@ -27,6 +27,14 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             INTENT_SET,
             DOMAIN,
             SERVICE_TURN_ON,
+            required_slots={
+                # At least one of color, temperature, or brightness must be provided
+                vol.Required(vol.Any("color", "temperature", "brightness")): vol.Any(
+                    color_util.color_name_to_rgb,  # for color
+                    cv.positive_int,  # for temperature
+                    vol.All(vol.Coerce(int), vol.Range(0, 100)),  # for brightness
+                )
+            },
             optional_slots={
                 "color": intent.IntentSlotInfo(
                     service_data_name=ATTR_RGB_COLOR,

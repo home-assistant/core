@@ -38,7 +38,8 @@ from .typing import VolSchemaType
 _LOGGER = logging.getLogger(__name__)
 type _SlotsType = dict[str, Any]
 type _IntentSlotsType = dict[
-    str | tuple[str, str], IntentSlotInfo | VolSchemaType | Callable[[Any], Any]
+    str | tuple[str, str] | vol.Marker,
+    IntentSlotInfo | VolSchemaType | Callable[[Any], Any],
 ]
 
 INTENT_TURN_OFF = "HassTurnOff"
@@ -889,7 +890,7 @@ class IntentSlotInfo:
 
 
 def _convert_slot_info(
-    key: str | tuple[str, str],
+    key: str | tuple[str, str] | vol.Marker,
     value: IntentSlotInfo | VolSchemaType | Callable[[Any], Any],
 ) -> tuple[str, IntentSlotInfo]:
     """Create an IntentSlotInfo from the various supported input arguments."""
@@ -899,6 +900,18 @@ def _convert_slot_info(
         return key, value
     if isinstance(key, tuple):
         return key[0], IntentSlotInfo(service_data_name=key[1], value_schema=value)
+    if isinstance(key, vol.Marker):
+        # Handle voluptuous markers (like vol.Required(vol.Any(...)))
+        if hasattr(key, "schema") and isinstance(key.schema, vol.Any):
+            # Concatenate all validators to create a more expressive key name
+            validators = (
+                [str(v) for v in key.schema.validators]
+                if key.schema.validators
+                else ["unknown"]
+            )
+            concatenated_key = "_".join(validators)
+            return concatenated_key, IntentSlotInfo(value_schema=value)
+        return str(key.schema), IntentSlotInfo(value_schema=value)
     return key, IntentSlotInfo(value_schema=value)
 
 
