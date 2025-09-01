@@ -20,11 +20,21 @@ async def test_template_entity_requires_hass_set(hass: HomeAssistant) -> None:
     assert len(entity._template_attrs.get(tpl_with_hass, [])) == 1
 
 
-async def test_object_id(hass: HomeAssistant) -> None:
-    """Test template entity creates suggested entity_id from the object_id."""
+async def test_default_entity_id(hass: HomeAssistant) -> None:
+    """Test template entity creates suggested entity_id from the default_entity_id."""
 
     class TemplateTest(template_entity.TemplateEntity):
         _entity_id_format = "test.{}"
 
-    entity = TemplateTest(hass, {"object_id": "test"}, "a")
+    entity = TemplateTest(hass, {"default_entity_id": "test.test"}, "a")
+    assert entity.entity_id == "test.test"
+
+
+async def test_bad_default_entity_id(hass: HomeAssistant) -> None:
+    """Test template entity creates suggested entity_id from the default_entity_id."""
+
+    class TemplateTest(template_entity.TemplateEntity):
+        _entity_id_format = "test.{}"
+
+    entity = TemplateTest(hass, {"default_entity_id": "bad.test"}, "a")
     assert entity.entity_id == "test.test"
