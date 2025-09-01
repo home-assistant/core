@@ -24,6 +24,7 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_register_callback,
+    async_track_unavailable,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_MODEL
@@ -32,7 +33,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_PROBE_COUNT, DOMAIN
+from .const import CONF_ACTIVE_BY_DEFAULT, CONF_PROBE_COUNT, DOMAIN
 
 type ToGrillConfigEntry = ConfigEntry[ToGrillCoordinator]
 
@@ -49,6 +50,10 @@ def get_version_string(packet: PacketA0Notify) -> str:
 
 class DeviceNotFound(UpdateFailed):
     """Update failed due to device disconnected."""
+
+
+class DeviceNotActive(UpdateFailed):
+    """Update failed due to device being disabled."""
 
 
 class DeviceFailed(UpdateFailed):
@@ -76,6 +81,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         )
         self.address: str = config_entry.data[CONF_ADDRESS]
         self.data = {}
+        self._active: bool | None = None
         self._packet_listeners: list[Callable[[Packet], None]] = []
 
         device_registry = dr.async_get(self.hass)
@@ -93,6 +99,15 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
                 self._async_handle_bluetooth_event,
                 BluetoothCallbackMatcher(address=self.address, connectable=True),
                 BluetoothScanningMode.ACTIVE,
+            )
+        )
+
+        config_entry.async_on_unload(
+            async_track_unavailable(
+                hass,
+                self._async_handle_unavailable,
+                self.address,
+                connectable=True,
             )
         )
 
@@ -136,10 +151,21 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             self.hass, self.address, connectable=True
         )
         if not device:
+            self._active = None
             raise DeviceNotFound("Unable to find device")
 
+        if self._active is None:
+            self._active = self.config_entry.options[CONF_ACTIVE_BY_DEFAULT]
+
+        if not self._active:
+            raise DeviceNotActive("Device is currently not active")
+
         try:
-            client = await Client.connect(device, self._notify_callback)
+            client = await Client.connect(
+                device,
+                self._notify_callback,
+                disconnected_callback=self._disconnected_callback,
+            )
         except BleakError as exc:
             self.logger.debug("Connection failed", exc_info=True)
             raise DeviceNotFound("Unable to connect to device") from exc
@@ -169,7 +195,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         self.client = None
 
     async def _get_connected_client(self) -> Client:
-        if self.client and not self.client.is_connected:
+        if self.client and (not self.client.is_connected or not self._active):
             await self.client.disconnect()
             self.client = None
         if self.client:
@@ -188,6 +214,23 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             return packet
         return None
 
+    @property
+    def active(self) -> bool | None:
+        """Return if the device is active."""
+        return self._active
+
+    async def async_activate(self) -> None:
+        """Activate the device."""
+        assert self._active is not None
+        self._active = True
+        await self.async_request_refresh()
+
+    async def async_deactivate(self) -> None:
+        """Deactivate the device."""
+        assert self._active is not None
+        self._active = False
+        await self.async_request_refresh()
+
     def _notify_callback(self, packet: Packet):
         probe = getattr(packet, "probe", None)
         self.data[(packet.type, probe)] = packet
@@ -196,7 +239,11 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
 
     async def _async_update_data(self) -> dict[tuple[int, int | None], Packet]:
         """Poll the device."""
-        client = await self._get_connected_client()
+        try:
+            client = await self._get_connected_client()
+        except DeviceNotActive:
+            return {}
+
         try:
             await client.request(PacketA0Notify)
             await client.request(PacketA1Notify)
@@ -207,6 +254,20 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         return self.data
 
     @callback
+    def _disconnected_callback(self) -> None:
+        """Handle Bluetooth device being disconnected."""
+        if self.client:
+            self.hass.async_create_task(self.async_request_refresh())
+
+    @callback
+    def _async_handle_unavailable(
+        self, service_info: BluetoothServiceInfoBleak
+    ) -> None:
+        """Handle Bluetooth device becoming unavailable."""
+        if self.client:
+            self.hass.async_create_task(self.async_request_refresh())
+
+    @callback
     def _async_handle_bluetooth_event(
         self,
         service_info: BluetoothServiceInfoBleak,
@@ -214,4 +275,4 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
     ) -> None:
         """Handle a Bluetooth event."""
         if not self.client and isinstance(self.last_exception, DeviceNotFound):
-            self.hass.async_create_task(self.async_refresh())
+            self.hass.async_create_task(self.async_request_refresh())

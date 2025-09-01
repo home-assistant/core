@@ -22,6 +22,18 @@
       "failed_to_read_config": "Failed to read config from device"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "active_by_default": "Control active by default"
+        },
+        "data_description": {
+          "active_by_default": "The device only support a single connection at a time. If you intend to use the normal phone application as the normal means of control, this should be disabled. You can connect the device manually using the `Control active` switch entity."
+        }
+      }
+    }
+  },
   "device": {
     "probe": {
       "name": "Probe {probe_number}"
@@ -108,6 +120,11 @@
           "mark_b": "Mark B",
           "mark_c": "Mark C"
         }
+      }
+    },
+    "switch": {
+      "active": {
+        "name": "Control active"
       }
     }
   }
