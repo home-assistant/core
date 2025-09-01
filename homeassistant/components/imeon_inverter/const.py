@@ -15,7 +15,7 @@ ATTR_INVERTER_MODE = {
     "ong": "On-grid",
     "ofg": "Off-grid",
 }
-INVERTER_MODE_OPTIONS = list(ATTR_INVERTER_MODE.values())
+INVERTER_MODE_OPTIONS = {v: k for k, v in ATTR_INVERTER_MODE.items()}
 ATTR_INVERTER_STATE = [
     "unsynchronized",
     "grid_consumption",

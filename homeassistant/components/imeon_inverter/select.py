@@ -30,8 +30,10 @@ SELECT_DESCRIPTIONS: tuple[ImeonSelectEntityDescription, ...] = (
     ImeonSelectEntityDescription(
         key="manager_inverter_mode",
         translation_key="manager_inverter_mode",
-        options=INVERTER_MODE_OPTIONS,
-        set_value_fn=lambda api, mode: api.set_inverter_mode(mode),
+        options=list(INVERTER_MODE_OPTIONS),
+        set_value_fn=lambda api, mode: api.set_inverter_mode(
+            INVERTER_MODE_OPTIONS[mode]
+        ),
     ),
 )
 
@@ -42,7 +44,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create each select for a given config entry."""
-
     coordinator = entry.runtime_data
     async_add_entities(
         InverterSelect(coordinator, entry, description)
@@ -60,17 +61,10 @@ class InverterSelect(InverterEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the state of the select."""
         value = self.coordinator.data.get(self.data_key)
-        return (
-            ATTR_INVERTER_MODE.get(str(value), str(value))
-            if value is not None
-            else None
-        )
+        if isinstance(value, str):
+            return ATTR_INVERTER_MODE.get(value)
+        return None
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        reverse_map = {v: k for k, v in ATTR_INVERTER_MODE.items()}
-        api_code = reverse_map.get(option, option)
-        await self.entity_description.set_value_fn(
-            self.coordinator.api,
-            api_code,
-        )
+        await self.entity_description.set_value_fn(self.coordinator.api, option)
