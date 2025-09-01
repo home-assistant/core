@@ -7,7 +7,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as DOMAIN_HOMEASSISTANT,
     SERVICE_HOMEASSISTANT_RESTART,
 )
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import RepairsFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import instance_id, issue_registry as ir
 
@@ -55,4 +55,6 @@ async def async_create_fix_flow(
     if issue_id == "duplicate_instance_id":
         return DuplicateInstanceIDRepairFlow()
 
-    return ConfirmRepairFlow()
+    # If Zeroconf adds confirm-only repairs in the future, this should be changed
+    # to return a ConfirmRepairFlow instead of raising a ValueError
+    raise ValueError(f"unknown repair {issue_id}")

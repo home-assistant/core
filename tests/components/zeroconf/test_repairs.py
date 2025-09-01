@@ -8,7 +8,7 @@ from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
-from homeassistant.components.zeroconf import DOMAIN, discovery
+from homeassistant.components.zeroconf import DOMAIN, discovery, repairs
 from homeassistant.components.zeroconf.discovery import ZEROCONF_TYPE
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
@@ -136,6 +136,13 @@ async def test_instance_id_no_conflict_no_repair_issue(
             )
             is None
         )
+
+
+async def test_create_fix_flow_raises_on_unknown_issue_id(hass: HomeAssistant) -> None:
+    """Test create_fix_flow raises on unknown issue_id."""
+
+    with pytest.raises(ValueError):
+        await repairs.async_create_fix_flow(hass, "no_such_issue", None)
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")

@@ -436,22 +436,23 @@ class ZeroconfDiscovery:
         )
         is_same_ip = discovered_ip in local_addresses if discovered_ip else False
 
-        if discovered_instance_id == local_instance_id and not is_same_ip:
-            # Conflict detected, create repair issue
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                issue_id,
-                is_fixable=True,
-                is_persistent=False,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key=issue_id,
-                translation_placeholders={
-                    "instance_id": discovered_instance_id,
-                    "other_ip": discovered_ip or "unknown",
-                    "other_host_url": info.hostname.rstrip("."),
-                },
-            )
-        else:
+        if discovered_instance_id != local_instance_id or is_same_ip:
             # No conflict, remove repair issue if present
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            return
+
+        # Conflict detected, create repair issue
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=issue_id,
+            translation_placeholders={
+                "instance_id": discovered_instance_id,
+                "other_ip": discovered_ip or "unknown",
+                "other_host_url": info.hostname.rstrip("."),
+            },
+        )
