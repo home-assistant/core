@@ -17,9 +17,16 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> bool:
     """Set up Brother from a config entry."""
+    # Update config entry to ensure COMMUNITY and PORT are present
+    if CONF_COMMUNITY not in entry.data:
+        new_data = entry.data.copy()
+        new_data[CONF_COMMUNITY] = DEFAULT_COMMUNITY
+        new_data[CONF_PORT] = DEFAULT_PORT
+        hass.config_entries.async_update_entry(entry, data=new_data)
+
     host = entry.data[CONF_HOST]
-    port = entry.data.get(CONF_PORT, DEFAULT_PORT)
-    community = entry.data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
+    port = entry.data[CONF_PORT]
+    community = entry.data[CONF_COMMUNITY]
     printer_type = entry.data[CONF_TYPE]
 
     snmp_engine = await async_get_snmp_engine(hass)
