@@ -91,7 +91,7 @@
       "grill_type": {
         "name": "Grill type",
         "state": {
-          "none": "Not set",
+          "none": "[%key:component::togrill::entity::select::taste::state::none%]",
           "beef": "Beef",
           "veal": "Veal",
           "lamb": "Lamb",
