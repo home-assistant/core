@@ -1,0 +1,854 @@
+{
+  "nodeId": 3,
+  "index": 0,
+  "installerIcon": 3073,
+  "userIcon": 3073,
+  "status": 1,
+  "ready": true,
+  "isListening": false,
+  "isRouting": true,
+  "isSecure": true,
+  "manufacturerId": 312,
+  "productId": 3,
+  "productType": 1,
+  "firmwareVersion": "11.0.0",
+  "zwavePlusVersion": 1,
+  "deviceConfig": {
+    "filename": "/data/db/devices/0x0138/zcombo-g.json",
+    "isEmbedded": true,
+    "manufacturer": "First Alert (BRK Brands Inc)",
+    "manufacturerId": 312,
+    "label": "ZCOMBO",
+    "description": "ZCombo-G Smoke/CO Alarm",
+    "devices": [
+      {
+        "productType": 1,
+        "productId": 3
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "preferred": false,
+    "associations": {},
+    "paramInformation": {
+      "_map": {}
+    },
+    "metadata": {
+      "wakeup": "WAKEUP\n1. Slide battery door open and then closed with the batteries inserted.",
+      "inclusion": "ADD\n1. Slide battery door open.\n2. Insert batteries checking the correct orientation.\n3. Press and hold the test button. Keep it held down as you slide the battery drawer closed. You may then release the button.\nNOTE: Use only your finger or thumb on the test button. The use of any other instrument is strictly prohibited",
+      "exclusion": "REMOVE\n1. Slide battery door open.\n2. Remove and re-insert batteries checking the correct orientation.\n3. Press and hold the test button. Keep it held down as you slide the battery drawer closed. You may then release the button.\nNOTE: Use only your finger or thumb on the test button. The use of any other instrument is strictly prohibited",
+      "reset": "RESET DEVICE\nIf the device is powered up with the test button held down for 10+ seconds, the device will reset all Z-Wave settings and leave the network.\nUpon completion of the Reset operation, the LED will glow and the horn will sound for ~1 second.\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable",
+      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3886/User_Manual_M08-0456-173833_D2.pdf"
+    }
+  },
+  "label": "ZCOMBO",
+  "interviewAttempts": 0,
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 6,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing End Node"
+    },
+    "generic": {
+      "key": 7,
+      "label": "Notification Sensor"
+    },
+    "specific": {
+      "key": 1,
+      "label": "Notification Sensor"
+    }
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0138:0x0001:0x0003:11.0.0",
+  "statistics": {
+    "commandsTX": 1,
+    "commandsRX": 4,
+    "commandsDroppedRX": 1,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 0,
+    "lwr": {
+      "protocolDataRate": 3,
+      "repeaters": [],
+      "rssi": -79,
+      "repeaterRSSI": []
+    },
+    "lastSeen": "2024-11-11T21:36:45.802Z",
+    "rtt": 28.9,
+    "rssi": -79
+  },
+  "highestSecurityClass": 1,
+  "isControllerNode": false,
+  "keepAwake": false,
+  "lastSeen": "2024-11-11T19:17:39.916Z",
+  "protocol": 0,
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 1,
+      "propertyName": "Supervision Report Timeout",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "ZCOMBO will send the message over Supervision Command Class and it will wait for the Supervision report from the Controller for the Supervision report timeout time.",
+        "label": "Supervision Report Timeout",
+        "default": 1500,
+        "min": 500,
+        "max": 5000,
+        "unit": "ms",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1500
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 2,
+      "propertyName": "Supervision Retry Count",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "If the Supervision report is not received within the Supervision report timeout time, the ZCOMBO will retry sending the message again. Upon exceeding the max retry, the ZCOMBO device will send the next message available in the queue.",
+        "label": "Supervision Retry Count",
+        "default": 1,
+        "min": 0,
+        "max": 5,
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyName": "Supervision Wait Time",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Before retrying the message, ZCOMBO will wait for the Supervision wait time. Actual wait time is calculated using the formula: Wait Time = Supervision wait time base-value + random-value + (attempt-count x 5 seconds). The random value will be between 100 and 1100 milliseconds.",
+        "label": "Supervision Wait Time",
+        "default": 5,
+        "min": 1,
+        "max": 60,
+        "unit": "seconds",
+        "valueSize": 2,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 5
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Smoke Alarm",
+      "propertyKey": "Sensor status",
+      "propertyName": "Smoke Alarm",
+      "propertyKeyName": "Sensor status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Sensor status",
+        "ccSpecific": {
+          "notificationType": 1
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "2": "Smoke detected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Smoke Alarm",
+      "propertyKey": "Alarm status",
+      "propertyName": "Smoke Alarm",
+      "propertyKeyName": "Alarm status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm status",
+        "ccSpecific": {
+          "notificationType": 1
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "3": "Smoke alarm test",
+          "6": "Alarm silenced"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "CO Alarm",
+      "propertyKey": "Sensor status",
+      "propertyName": "CO Alarm",
+      "propertyKeyName": "Sensor status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Sensor status",
+        "ccSpecific": {
+          "notificationType": 2
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "2": "Carbon monoxide detected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "CO Alarm",
+      "propertyKey": "Maintenance status",
+      "propertyName": "CO Alarm",
+      "propertyKeyName": "Maintenance status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Maintenance status",
+        "ccSpecific": {
+          "notificationType": 2
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "5": "Replacement required, End-of-life"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "CO Alarm",
+      "propertyKey": "Alarm status",
+      "propertyName": "CO Alarm",
+      "propertyKeyName": "Alarm status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm status",
+        "ccSpecific": {
+          "notificationType": 2
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "6": "Alarm silenced"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "System",
+      "propertyKey": "Hardware status",
+      "propertyName": "System",
+      "propertyKeyName": "Hardware status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Hardware status",
+        "ccSpecific": {
+          "notificationType": 9
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "System hardware failure"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmType",
+      "propertyName": "alarmType",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Type",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmLevel",
+      "propertyName": "alarmLevel",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Level",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 312
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "level",
+      "propertyName": "level",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Battery level",
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 92
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "isLow",
+      "propertyName": "isLow",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Low battery level",
+        "stateful": true,
+        "secret": false
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 132,
+      "commandClassName": "Wake Up",
+      "property": "wakeUpInterval",
+      "propertyName": "wakeUpInterval",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "default": 4200,
+        "readable": false,
+        "writeable": true,
+        "min": 4200,
+        "max": 4200,
+        "steps": 0,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 4200
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 132,
+      "commandClassName": "Wake Up",
+      "property": "controllerNodeId",
+      "propertyName": "controllerNodeId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Node ID of the controller",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 6
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "6.7"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions",
+        "stateful": true,
+        "secret": false
+      },
+      "value": ["11.0", "7.0"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "sdkVersion",
+      "propertyName": "sdkVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "SDK version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "6.81.6"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationFrameworkAPIVersion",
+      "propertyName": "applicationFrameworkAPIVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave application framework API version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "4.3.0"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationFrameworkBuildNumber",
+      "propertyName": "applicationFrameworkBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave application framework API build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 52445
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hostInterfaceVersion",
+      "propertyName": "hostInterfaceVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Serial API version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "unused"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hostInterfaceBuildNumber",
+      "propertyName": "hostInterfaceBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Serial API build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "zWaveProtocolVersion",
+      "propertyName": "zWaveProtocolVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "6.7.0"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "zWaveProtocolBuildNumber",
+      "propertyName": "zWaveProtocolBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 97
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationVersion",
+      "propertyName": "applicationVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Application version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "11.0.0"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationBuildNumber",
+      "propertyName": "applicationBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Application build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    }
+  ],
+  "endpoints": [
+    {
+      "nodeId": 3,
+      "index": 0,
+      "installerIcon": 3073,
+      "userIcon": 3073,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing End Node"
+        },
+        "generic": {
+          "key": 7,
+          "label": "Notification Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Notification Sensor"
+        }
+      },
+      "commandClasses": [
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 85,
+          "name": "Transport Service",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": true
+        },
+        {
+          "id": 132,
+          "name": "Wake Up",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        }
+      ]
+    }
+  ]
+}

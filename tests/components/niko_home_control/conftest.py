@@ -45,7 +45,7 @@ def dimmable_light() -> NHCLight:
     mock.is_dimmable = True
     mock.name = "dimmable light"
     mock.suggested_area = "room"
-    mock.state = 100
+    mock.state = 255
     return mock
 
 
@@ -79,6 +79,7 @@ def mock_niko_home_control_connection(
         client = mock_client.return_value
         client.lights = [light, dimmable_light]
         client.covers = [cover]
+        client.connect = AsyncMock(return_value=True)
         yield client
 
 

@@ -106,6 +106,7 @@ SUPPORTED_DOMAINS = [
     "sensor",
     "switch",
     "vacuum",
+    "lawn_mower",
     "water_heater",
     VALVE_DOMAIN,
 ]
@@ -123,6 +124,7 @@ DEFAULT_DOMAINS = [
     REMOTE_DOMAIN,
     "switch",
     "vacuum",
+    "lawn_mower",
     "water_heater",
 ]
 

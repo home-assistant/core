@@ -3,15 +3,43 @@
     "step": {
       "user": {
         "data": {
-          "utility": "Utility name",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "utility": "Utility name"
+        },
+        "data_description": {
+          "utility": "The name of your utility provider"
         }
       },
-      "mfa": {
-        "description": "The TOTP secret below is not one of the 6 digit time-based numeric codes. It is a string of around 16 characters containing the shared secret that enables your authenticator app to generate the correct time-based code at the appropriate time. See the documentation.",
+      "credentials": {
+        "title": "Enter credentials",
         "data": {
-          "totp_secret": "TOTP Secret"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "totp_secret": "TOTP secret"
+        },
+        "data_description": {
+          "username": "The username for your utility account",
+          "password": "The password for your utility account",
+          "totp_secret": "This is not a 6-digit code. It is a string of around 16 characters containing the shared secret that enables your authenticator app to generate the correct time-based code at the appropriate time. See the documentation."
+        }
+      },
+      "mfa_options": {
+        "title": "Multi-factor authentication",
+        "description": "Your account requires multi-factor authentication (MFA). Select a method to receive your security code.",
+        "data": {
+          "mfa_method": "MFA method"
+        },
+        "data_description": {
+          "mfa_method": "How to receive your security code"
+        }
+      },
+      "mfa_code": {
+        "title": "Enter security code",
+        "description": "Please enter the security code below to complete login.",
+        "data": {
+          "mfa_code": "Security code"
+        },
+        "data_description": {
+          "mfa_code": "Typically a 6-digit code"
         }
       },
       "reauth_confirm": {
@@ -19,17 +47,92 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "totp_secret": "TOTP Secret"
+          "totp_secret": "[%key:component::opower::config::step::credentials::data::totp_secret%]"
+        },
+        "data_description": {
+          "username": "[%key:component::opower::config::step::credentials::data_description::username%]",
+          "password": "[%key:component::opower::config::step::credentials::data_description::password%]",
+          "totp_secret": "[%key:component::opower::config::step::credentials::data_description::totp_secret%]"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_mfa_code": "The security code is incorrect. Please try again."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "issues": {
+    "return_to_grid_migration": {
+      "title": "Return to grid statistics for account: {utility_account_id}",
+      "description": "We found negative values in your existing consumption statistics, likely because you have solar. We split those in separate return statistics for a better experience in the Energy dashboard.\n\nPlease visit the [Energy configuration page]({energy_settings}) to add the following statistics in the **Return to grid** section:\n\n{target_ids}\n\nOnce you have added them, ignore this issue."
+    },
+    "unsupported_utility": {
+      "title": "Unsupported utility: {utility}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::opower::issues::unsupported_utility::title%]",
+            "description": "The utility `{utility}` used by entry `{title}` is no longer supported by the Opower integration. Select **Submit** to remove this integration entry now."
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "elec_usage_to_date": {
+        "name": "Current bill electric usage to date"
+      },
+      "elec_forecasted_usage": {
+        "name": "Current bill electric forecasted usage"
+      },
+      "elec_typical_usage": {
+        "name": "Typical monthly electric usage"
+      },
+      "elec_cost_to_date": {
+        "name": "Current bill electric cost to date"
+      },
+      "elec_forecasted_cost": {
+        "name": "Current bill electric forecasted cost"
+      },
+      "elec_typical_cost": {
+        "name": "Typical monthly electric cost"
+      },
+      "elec_start_date": {
+        "name": "Current bill electric start date"
+      },
+      "elec_end_date": {
+        "name": "Current bill electric end date"
+      },
+      "gas_usage_to_date": {
+        "name": "Current bill gas usage to date"
+      },
+      "gas_forecasted_usage": {
+        "name": "Current bill gas forecasted usage"
+      },
+      "gas_typical_usage": {
+        "name": "Typical monthly gas usage"
+      },
+      "gas_cost_to_date": {
+        "name": "Current bill gas cost to date"
+      },
+      "gas_forecasted_cost": {
+        "name": "Current bill gas forecasted cost"
+      },
+      "gas_typical_cost": {
+        "name": "Typical monthly gas cost"
+      },
+      "gas_start_date": {
+        "name": "Current bill gas start date"
+      },
+      "gas_end_date": {
+        "name": "Current bill gas end date"
+      }
     }
   }
 }

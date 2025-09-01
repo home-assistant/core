@@ -26,7 +26,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_fixture,
+    async_load_fixture,
     snapshot_platform,
 )
 from tests.typing import WebSocketGenerator
@@ -221,8 +221,6 @@ async def test_moving_todo_item(
             display=None,
             checked=False,
             position=1,
-            is_food=False,
-            disable_amount=None,
             quantity=2.0,
             label_id=None,
             food_id=None,
@@ -341,7 +339,7 @@ async def test_runtime_management(
 ) -> None:
     """Test for creating and deleting shopping lists."""
     response = ShoppingListsResponse.from_json(
-        load_fixture("get_shopping_lists.json", DOMAIN)
+        await async_load_fixture(hass, "get_shopping_lists.json", DOMAIN)
     ).items
     mock_mealie_client.get_shopping_lists.return_value = ShoppingListsResponse(
         items=[response[0]]

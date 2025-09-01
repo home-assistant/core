@@ -229,6 +229,17 @@
     'type': 'result',
   })
 # ---
+# name: test_can_decrypt_on_download_get_backup_returns_none
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Backup abc123 not found in agent test.remote',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
 # name: test_can_decrypt_on_download_with_agent_error[BackupAgentError]
   dict({
     'error': dict({
@@ -281,6 +292,61 @@
           'days': list([
           ]),
           'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_load_config_info[with_hassio-storage_data10]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+          'test-agent1': dict({
+            'protected': True,
+            'retention': dict({
+              'copies': 3,
+              'days': None,
+            }),
+          }),
+          'test-agent2': dict({
+            'protected': False,
+            'retention': dict({
+              'copies': None,
+              'days': 7,
+            }),
+          }),
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': False,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-17T04:55:00+01:00',
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+            'mon',
+            'sun',
+          ]),
+          'recurrence': 'custom_days',
           'time': None,
         }),
       }),
@@ -545,9 +611,11 @@
         'agents': dict({
           'test-agent1': dict({
             'protected': True,
+            'retention': None,
           }),
           'test-agent2': dict({
             'protected': False,
+            'retention': None,
           }),
         }),
         'automatic_backups_configured': False,
@@ -695,6 +763,61 @@
           'days': list([
           ]),
           'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_load_config_info[without_hassio-storage_data10]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+          'test-agent1': dict({
+            'protected': True,
+            'retention': dict({
+              'copies': 3,
+              'days': None,
+            }),
+          }),
+          'test-agent2': dict({
+            'protected': False,
+            'retention': dict({
+              'copies': None,
+              'days': 7,
+            }),
+          }),
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': False,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-17T04:55:00+01:00',
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+            'mon',
+            'sun',
+          ]),
+          'recurrence': 'custom_days',
           'time': None,
         }),
       }),
@@ -955,9 +1078,11 @@
         'agents': dict({
           'test-agent1': dict({
             'protected': True,
+            'retention': None,
           }),
           'test-agent2': dict({
             'protected': False,
+            'retention': None,
           }),
         }),
         'automatic_backups_configured': False,
@@ -1181,13 +1306,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -1298,13 +1422,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -1415,13 +1538,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -1471,9 +1593,11 @@
         'agents': dict({
           'test-agent1': dict({
             'protected': True,
+            'retention': None,
           }),
           'test-agent2': dict({
             'protected': False,
+            'retention': None,
           }),
         }),
         'automatic_backups_configured': False,
@@ -1516,9 +1640,11 @@
         'agents': dict({
           'test-agent1': dict({
             'protected': True,
+            'retention': None,
           }),
           'test-agent2': dict({
             'protected': False,
+            'retention': None,
           }),
         }),
         'automatic_backups_configured': False,
@@ -1542,13 +1668,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -1598,9 +1723,11 @@
         'agents': dict({
           'test-agent1': dict({
             'protected': True,
+            'retention': None,
           }),
           'test-agent2': dict({
             'protected': False,
+            'retention': None,
           }),
         }),
         'automatic_backups_configured': False,
@@ -1642,9 +1769,11 @@
         'agents': dict({
           'test-agent1': dict({
             'protected': False,
+            'retention': None,
           }),
           'test-agent2': dict({
             'protected': True,
+            'retention': None,
           }),
         }),
         'automatic_backups_configured': False,
@@ -1680,6 +1809,104 @@
 # ---
 # name: test_config_update[commands13].3
   dict({
+    'id': 7,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+          'test-agent1': dict({
+            'protected': False,
+            'retention': dict({
+              'copies': 3,
+              'days': None,
+            }),
+          }),
+          'test-agent2': dict({
+            'protected': True,
+            'retention': None,
+          }),
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[commands13].4
+  dict({
+    'id': 9,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+          'test-agent1': dict({
+            'protected': False,
+            'retention': None,
+          }),
+          'test-agent2': dict({
+            'protected': True,
+            'retention': dict({
+              'copies': None,
+              'days': 7,
+            }),
+          }),
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[commands13].5
+  dict({
     'data': dict({
       'backups': list([
       ]),
@@ -1687,9 +1914,14 @@
         'agents': dict({
           'test-agent1': dict({
             'protected': False,
+            'retention': None,
           }),
           'test-agent2': dict({
             'protected': True,
+            'retention': dict({
+              'copies': None,
+              'days': 7,
+            }),
           }),
         }),
         'automatic_backups_configured': False,
@@ -1713,13 +1945,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -1828,13 +2059,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -1943,13 +2173,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2060,13 +2289,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': '06:00:00',
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2179,13 +2407,12 @@
             'mon',
           ]),
           'recurrence': 'custom_days',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2296,13 +2523,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2417,13 +2643,12 @@
             'sun',
           ]),
           'recurrence': 'custom_days',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2542,13 +2767,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2659,13 +2883,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2776,13 +2999,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2893,13 +3115,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -3010,13 +3231,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 5,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -3211,6 +3431,158 @@
   })
 # ---
 # name: test_config_update_errors[command11].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command12]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command12].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command13]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command13].1
   dict({
     'id': 3,
     'result': dict({
@@ -3940,9 +4312,9 @@
       }),
       'backups': list([
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -3970,9 +4342,9 @@
       }),
       'backups': list([
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4009,7 +4381,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4021,9 +4397,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4051,9 +4427,9 @@
       }),
       'backups': list([
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4090,7 +4466,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4102,9 +4482,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4152,7 +4532,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4164,9 +4548,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4198,7 +4582,11 @@
             'instance_id': 'unknown_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4210,9 +4598,9 @@
           'with_automatic_settings': None,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4255,7 +4643,11 @@
             'instance_id': 'unknown_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4267,9 +4659,9 @@
           'with_automatic_settings': None,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4310,7 +4702,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4322,9 +4718,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4372,7 +4768,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4384,9 +4784,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4435,7 +4835,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4447,9 +4851,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4498,8 +4902,18 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+            dict({
+              'name': 'Test add-on',
+              'slug': 'test_addon',
+              'version': '1.0.0',
+            }),
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
+            'ssl',
           ]),
           'folders': list([
             'media',
@@ -4511,9 +4925,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4561,7 +4975,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4573,9 +4991,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4623,7 +5041,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4635,9 +5057,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4686,7 +5108,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4698,9 +5124,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4749,8 +5175,18 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+            dict({
+              'name': 'Test add-on',
+              'slug': 'test_addon',
+              'version': '1.0.0',
+            }),
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
+            'ssl',
           ]),
           'folders': list([
             'media',
@@ -4762,9 +5198,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -4812,7 +5248,11 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -4855,7 +5295,11 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -4914,7 +5358,11 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -4925,6 +5373,18 @@
         'name': 'Test',
         'with_automatic_settings': True,
       }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_details_get_backup_returns_none
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -4958,7 +5418,11 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -5002,7 +5466,11 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -5046,7 +5514,11 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -5315,7 +5787,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5327,9 +5803,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -5366,7 +5842,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5378,9 +5858,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -5421,7 +5901,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5433,9 +5917,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -5467,7 +5951,11 @@
             'instance_id': 'unknown_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5499,7 +5987,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5511,9 +6003,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -5551,7 +6043,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5563,9 +6059,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -5603,7 +6099,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5615,9 +6115,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -5655,7 +6155,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5667,9 +6171,9 @@
           'with_automatic_settings': True,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -5728,6 +6232,17 @@
 # name: test_restore_remote_agent[remote_agents1-backups1].1
   1
 # ---
+# name: test_restore_remote_agent_get_backup_returns_none
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Backup abc123 not found in agent test.remote',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
 # name: test_restore_wrong_password
   dict({
     'error': dict({
@@ -5766,22 +6281,5 @@
     }),
     'id': 1,
     'type': 'event',
-  })
-# ---
-# name: test_subscribe_event_early
-  dict({
-    'event': dict({
-      'manager_state': 'idle',
-    }),
-    'id': 1,
-    'type': 'event',
-  })
-# ---
-# name: test_subscribe_event_early.1
-  dict({
-    'id': 1,
-    'result': None,
-    'success': True,
-    'type': 'result',
   })
 # ---

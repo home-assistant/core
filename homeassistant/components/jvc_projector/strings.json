@@ -56,7 +56,7 @@
           "on": "[%key:common::state::on%]",
           "warming": "Warming",
           "cooling": "Cooling",
-          "error": "Error"
+          "error": "[%key:common::state::error%]"
         }
       }
     }

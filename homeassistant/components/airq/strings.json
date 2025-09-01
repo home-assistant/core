@@ -35,6 +35,11 @@
     }
   },
   "entity": {
+    "number": {
+      "airq_led_brightness": {
+        "name": "LED brightness"
+      }
+    },
     "sensor": {
       "acetaldehyde": {
         "name": "Acetaldehyde"
@@ -91,10 +96,7 @@
         "name": "Hydrogen fluoride"
       },
       "health_index": {
-        "name": "Health Index"
-      },
-      "absolute_humidity": {
-        "name": "Absolute humidity"
+        "name": "Health index"
       },
       "hydrogen": {
         "name": "Hydrogen"
@@ -112,10 +114,10 @@
         "name": "Oxygen"
       },
       "performance_index": {
-        "name": "Performance Index"
+        "name": "Performance index"
       },
       "hydrogen_phosphide": {
-        "name": "Hydrogen Phosphide"
+        "name": "Hydrogen phosphide"
       },
       "relative_pressure": {
         "name": "Relative pressure"
@@ -127,22 +129,22 @@
         "name": "Refrigerant"
       },
       "silicon_hydride": {
-        "name": "Silicon Hydride"
+        "name": "Silicon hydride"
       },
       "noise": {
         "name": "Noise"
       },
       "maximum_noise": {
-        "name": "Noise (Maximum)"
+        "name": "Noise (maximum)"
       },
       "radon": {
         "name": "Radon"
       },
       "industrial_volatile_organic_compounds": {
-        "name": "VOCs (Industrial)"
+        "name": "VOCs (industrial)"
       },
       "virus_index": {
-        "name": "Virus Index"
+        "name": "Virus index"
       }
     }
   }

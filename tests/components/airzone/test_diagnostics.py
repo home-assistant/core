@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from aioairzone.const import RAW_HVAC, RAW_VERSION, RAW_WEBSERVER
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.airzone.const import DOMAIN

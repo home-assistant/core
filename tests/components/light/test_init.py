@@ -21,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import frame
 from homeassistant.setup import async_setup_component
 from homeassistant.util import color as color_util
 
@@ -963,28 +962,55 @@ async def test_light_brightness_step(hass: HomeAssistant) -> None:
         "light",
         "turn_on",
         {
-            "entity_id": [entity0.entity_id, entity1.entity_id],
-            "brightness_step_pct": 10,
-        },
-        blocking=True,
-    )
-
-    _, data = entity0.last_call("turn_on")
-    assert data["brightness"] == 116  # 90 + (255 * 0.10)
-    _, data = entity1.last_call("turn_on")
-    assert data["brightness"] == 66  # 40 + (255 * 0.10)
-
-    await hass.services.async_call(
-        "light",
-        "turn_on",
-        {
             "entity_id": entity0.entity_id,
             "brightness_step": -126,
         },
         blocking=True,
     )
 
-    assert entity0.state == "off"  # 126 - 126; brightness is 0, light should turn off
+    assert entity0.state == "off"  # 40 - 126; brightness is 0, light should turn off
+
+
+async def test_light_brightness_step_pct(hass: HomeAssistant) -> None:
+    """Test that percentage based brightness steps work as expected."""
+    entity = MockLight("Test_0", STATE_ON)
+
+    setup_test_component_platform(hass, light.DOMAIN, [entity])
+
+    entity.supported_features = light.SUPPORT_BRIGHTNESS
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity.supported_color_modes = None
+    entity.color_mode = None
+    entity.brightness = 255
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.attributes["brightness"] == 255  # 100%
+
+    def reduce_brightness_by_ten_percent():
+        return hass.services.async_call(
+            "light",
+            "turn_on",
+            {
+                "entity_id": [entity.entity_id],
+                "brightness_step_pct": -10,
+            },
+            blocking=True,
+        )
+
+    await reduce_brightness_by_ten_percent()
+    _, data = entity.last_call("turn_on")
+    assert round(data["brightness"] / 2.55) == 90  # 100% - 10% = 90%
+
+    await reduce_brightness_by_ten_percent()
+    _, data = entity.last_call("turn_on")
+    assert round(data["brightness"] / 2.55) == 80  # 90% - 10% = 80%
+
+    await reduce_brightness_by_ten_percent()
+    _, data = entity.last_call("turn_on")
+    assert round(data["brightness"] / 2.55) == 70  # 80% - 10% = 70%
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
@@ -2846,7 +2872,6 @@ def test_report_invalid_color_modes(
     ],
     ids=["with_kelvin", "with_mired_values", "with_mired_defaults"],
 )
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 def test_missing_kelvin_property_warnings(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,

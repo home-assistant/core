@@ -117,13 +117,39 @@ async def test_commands(
         assert mock_send_command.call_args[0][1] == called_params
 
 
+async def test_cloud_command(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test sending commands to the vacuum."""
+
+    vacuum = hass.states.get(ENTITY_ID)
+    assert vacuum
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "command": "get_map_v1"}
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.send_command"
+    ) as mock_send_command:
+        await hass.services.async_call(
+            Platform.VACUUM,
+            SERVICE_SEND_COMMAND,
+            data,
+            blocking=True,
+        )
+        assert mock_send_command.call_count == 1
+        assert mock_send_command.call_args[0][0] == RoborockCommand.GET_MAP_V1
+
+
 @pytest.mark.parametrize(
-    ("in_cleaning_int", "expected_command"),
+    ("in_cleaning_int", "in_returning_int", "expected_command"),
     [
-        (0, RoborockCommand.APP_START),
-        (1, RoborockCommand.APP_START),
-        (2, RoborockCommand.RESUME_ZONED_CLEAN),
-        (3, RoborockCommand.RESUME_SEGMENT_CLEAN),
+        (0, 1, RoborockCommand.APP_CHARGE),
+        (0, 0, RoborockCommand.APP_START),
+        (1, 0, RoborockCommand.APP_START),
+        (2, 0, RoborockCommand.RESUME_ZONED_CLEAN),
+        (3, 0, RoborockCommand.RESUME_SEGMENT_CLEAN),
+        (4, 0, RoborockCommand.APP_RESUME_BUILD_MAP),
     ],
 )
 async def test_resume_cleaning(
@@ -131,11 +157,13 @@ async def test_resume_cleaning(
     bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
     in_cleaning_int: int,
+    in_returning_int: int,
     expected_command: RoborockCommand,
 ) -> None:
     """Test resuming clean on start button when a clean is paused."""
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = in_cleaning_int
+    prop.status.in_returning = in_returning_int
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
         return_value=prop,
@@ -237,7 +265,7 @@ async def test_get_current_position(
             return_value=b"",
         ),
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
     ):
@@ -267,7 +295,9 @@ async def test_get_current_position_no_map_data(
             "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
             return_value=None,
         ),
-        pytest.raises(HomeAssistantError, match="Failed to retrieve map data."),
+        pytest.raises(
+            HomeAssistantError, match="Something went wrong creating the map"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -292,7 +322,7 @@ async def test_get_current_position_no_robot_position(
             return_value=b"",
         ),
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
         pytest.raises(HomeAssistantError, match="Robot position not found"),

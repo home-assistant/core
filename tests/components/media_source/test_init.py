@@ -114,7 +114,6 @@ async def test_async_resolve_media(hass: HomeAssistant) -> None:
     assert media.mime_type == "audio/mpeg"
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_async_resolve_media_no_entity(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -242,7 +241,7 @@ async def test_websocket_resolve_media(
     # Validate url is relative and signed.
     assert msg["result"]["url"][0] == "/"
     parsed = yarl.URL(msg["result"]["url"])
-    assert parsed.path == getattr(media, "url")
+    assert parsed.path == media.url
     assert "authSig" in parsed.query
 
     with patch(

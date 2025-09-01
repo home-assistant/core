@@ -1,0 +1,102 @@
+{
+  "items": [
+    {
+      "deviceId": "286ba274-4093-4bcb-849c-a1a3efe7b1e5",
+      "name": "thermostat",
+      "label": "Radiator Thermostat II [+M] Wohnzimmer",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "2a1c9915-f61b-3f3a-a02b-703b8cccf3d6",
+      "deviceManufacturerCode": "BOSCH",
+      "locationId": "0b6618a6-c3ab-4b6e-968d-59cc8c2761bc",
+      "ownerId": "8a20b799-9d87-ecdc-39de-c93c6e4d3ea1",
+      "roomId": "11374ab5-9b4e-416b-91d1-745bbf9b6db4",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatMode",
+              "version": 1
+            },
+            {
+              "id": "thermostatHeatingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            },
+            {
+              "id": "firmwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Thermostat",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2024-11-29T19:55:00.910Z",
+      "parentDeviceId": "61bd280e-71c4-44fb-9b6e-53fdf14718a2",
+      "profile": {
+        "id": "4da5d086-111e-3084-a039-616974326833"
+      },
+      "matter": {
+        "driverId": "5f3c42eb-5704-4c95-9705-c51c1a6764bf",
+        "hubId": "61bd280e-71c4-44fb-9b6e-53fdf14718a2",
+        "provisioningState": "PROVISIONED",
+        "networkId": "8EF2CF7A212285B2-46C6B9F266A4521A",
+        "executingLocally": true,
+        "uniqueId": "8475B3FEFF6748D4",
+        "vendorId": 4617,
+        "productId": 12306,
+        "serialNumber": "D44867FFFEB37584",
+        "listeningType": "SLEEPY",
+        "supportedNetworkInterfaces": ["THREAD"],
+        "version": {
+          "hardware": 18,
+          "hardwareLabel": "1.2.0",
+          "software": 20009,
+          "softwareLabel": "2.00.09"
+        },
+        "endpoints": [
+          {
+            "endpointId": 0,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 22
+              }
+            ]
+          },
+          {
+            "endpointId": 1,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 769
+              }
+            ]
+          }
+        ],
+        "syncDrivers": true
+      },
+      "type": "MATTER",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

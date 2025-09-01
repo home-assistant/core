@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 import xml.etree.ElementTree as ET
 
-from env_canada import ECAirQuality, ECRadar, ECWeather, ec_exc
+from env_canada import ECAirQuality, ECRadar, ECWeather, ECWeatherUpdateFailed, ec_exc
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -65,6 +65,6 @@ class ECDataUpdateCoordinator[DataT: ECDataType](DataUpdateCoordinator[DataT]):
         """Fetch data from EC."""
         try:
             await self.ec_data.update()
-        except (ET.ParseError, ec_exc.UnknownStationId) as ex:
+        except (ET.ParseError, ECWeatherUpdateFailed, ec_exc.UnknownStationId) as ex:
             raise UpdateFailed(f"Error fetching {self.name} data: {ex}") from ex
         return self.ec_data

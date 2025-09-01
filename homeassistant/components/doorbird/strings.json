@@ -3,10 +3,10 @@
     "step": {
       "init": {
         "data": {
-          "events": "Comma separated list of events."
+          "events": "Comma-separated list of events."
         },
         "data_description": {
-          "events": "Add an comma separated event name for each event you wish to track. After entering them here, use the DoorBird app to assign them to a specific event.\n\nExample: somebody_pressed_the_button, motion"
+          "events": "Add a comma-separated event name for each event you wish to track. After entering them here, use the DoorBird app to assign them to a specific event.\n\nExample: somebody_pressed_the_button, motion"
         }
       }
     }

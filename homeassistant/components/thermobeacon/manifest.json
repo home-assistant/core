@@ -54,5 +54,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/thermobeacon",
   "iot_class": "local_push",
-  "requirements": ["thermobeacon-ble==0.8.1"]
+  "requirements": ["thermobeacon-ble==0.10.0"]
 }

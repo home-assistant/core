@@ -39,8 +39,9 @@ async def test_get_integration_logger(
 @pytest.mark.usefixtures("enable_custom_integrations", "hass")
 async def test_extract_frame_resolve_module() -> None:
     """Test extracting the current frame from integration context."""
-    # pylint: disable-next=import-outside-toplevel
-    from custom_components.test_integration_frame import call_get_integration_frame
+    from custom_components.test_integration_frame import (  # noqa: PLC0415
+        call_get_integration_frame,
+    )
 
     integration_frame = call_get_integration_frame()
 
@@ -56,8 +57,9 @@ async def test_extract_frame_resolve_module() -> None:
 @pytest.mark.usefixtures("enable_custom_integrations", "hass")
 async def test_get_integration_logger_resolve_module() -> None:
     """Test getting the logger from integration context."""
-    # pylint: disable-next=import-outside-toplevel
-    from custom_components.test_integration_frame import call_get_integration_logger
+    from custom_components.test_integration_frame import (  # noqa: PLC0415
+        call_get_integration_logger,
+    )
 
     logger = call_get_integration_logger(__name__)
 
@@ -376,7 +378,6 @@ async def test_report_usage_find_issue_tracker_other_thread(
     assert reports == snapshot
 
 
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 @pytest.mark.usefixtures("hass", "mock_integration_frame")
 async def test_prevent_flooding(
     caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
@@ -408,7 +409,6 @@ async def test_prevent_flooding(
     assert len(frame._REPORTED_INTEGRATIONS) == 1
 
 
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 @pytest.mark.usefixtures("hass", "mock_integration_frame")
 async def test_breaks_in_ha_version(
     caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
@@ -538,21 +538,21 @@ async def test_report_error_if_integration(
             False,
             id="custom integration",
         ),
-        # Assert integration found in stack frame has priority over integration_domain
+        # Assert integration_domain has priority over integration found in stack frame
         pytest.param(
             "core_integration_behavior",
             "sensor",
             "homeassistant/components/hue",
-            "that integration 'hue'",
+            "that integration 'sensor'",
             False,
             id="core integration stack mismatch",
         ),
-        # Assert integration found in stack frame has priority over integration_domain
+        # Assert integration_domain has priority over integration found in stack frame
         pytest.param(
             "custom_integration_behavior",
             "test_package",
             "custom_components/hue",
-            "that custom integration 'hue'",
+            "that custom integration 'test_package'",
             False,
             id="custom integration stack mismatch",
         ),

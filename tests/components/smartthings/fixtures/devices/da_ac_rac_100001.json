@@ -1,0 +1,112 @@
+{
+  "items": [
+    {
+      "deviceId": "F8042E25-0E53-0000-0000-000000000000",
+      "name": "Room A/C",
+      "label": "Corridor A/C",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-AC-RAC-100001",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "5df0730b-38ed-43e4-b291-ec14feb3224c",
+      "ownerId": "63b9c79b-90fe-5262-9a6a-5e24db90915e",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "deviceTypeName": "Samsung OCF Air Conditioner",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "airConditionerMode",
+              "version": 1
+            },
+            {
+              "id": "airConditionerFanMode",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "airQualitySensor",
+              "version": 1
+            },
+            {
+              "id": "dustSensor",
+              "version": 1
+            },
+            {
+              "id": "odorSensor",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverState",
+              "version": 1
+            },
+            {
+              "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "AirConditioner",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2024-11-25T22:17:38.129Z",
+      "profile": {
+        "id": "9e3e03b1-7f8c-3ea2-8568-6902b79b99dd"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.airconditioner",
+        "name": "Room A/C",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "TP6X_RAC_15K",
+        "vendorId": "DA-AC-RAC-100001",
+        "lastSignupTime": "2024-11-25T22:17:37.928118320Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

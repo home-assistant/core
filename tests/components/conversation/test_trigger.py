@@ -104,6 +104,7 @@ async def test_response(hass: HomeAssistant) -> None:
                 "trigger": {
                     "platform": "conversation",
                     "command": ["Open the pod bay door Hal"],
+                    "variables": {"name": "Dr. David Bowman"},
                 },
                 "action": {
                     "set_conversation_response": response,

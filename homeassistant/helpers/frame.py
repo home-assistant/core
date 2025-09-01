@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import enum
 import functools
+import inspect
 import linecache
 import logging
 import sys
@@ -180,11 +180,26 @@ def report_usage(
     breaking version
     :param exclude_integrations: skip specified integration when reviewing the stack.
     If no integration is found, the core behavior will be applied
-    :param integration_domain: fallback for identifying the integration if the
-    frame is not found
+    :param integration_domain: domain of the integration causing the issue. If None, the
+    stack frame will be searched to identify the integration causing the issue.
     """
     if (hass := _hass.hass) is None:
         raise RuntimeError("Frame helper not set up")
+    integration_frame: IntegrationFrame | None = None
+    integration_frame_err: MissingIntegrationFrame | None = None
+    if not integration_domain:
+        try:
+            integration_frame = get_integration_frame(
+                exclude_integrations=exclude_integrations
+            )
+        except MissingIntegrationFrame as err:
+            # We need to be careful with assigning the error here as it affects the
+            # cleanup of objects referenced from the stack trace as seen in
+            # https://github.com/home-assistant/core/pull/148021#discussion_r2182379834
+            # When core_behavior is ReportBehavior.ERROR, we will re-raise the error,
+            # so we can safely assign it to integration_frame_err.
+            if core_behavior is ReportBehavior.ERROR:
+                integration_frame_err = err
     _report_usage_partial = functools.partial(
         _report_usage,
         hass,
@@ -193,8 +208,9 @@ def report_usage(
         core_behavior=core_behavior,
         core_integration_behavior=core_integration_behavior,
         custom_integration_behavior=custom_integration_behavior,
-        exclude_integrations=exclude_integrations,
         integration_domain=integration_domain,
+        integration_frame=integration_frame,
+        integration_frame_err=integration_frame_err,
         level=level,
     )
     if hass.loop_thread_id != threading.get_ident():
@@ -212,21 +228,18 @@ def _report_usage(
     core_behavior: ReportBehavior,
     core_integration_behavior: ReportBehavior,
     custom_integration_behavior: ReportBehavior,
-    exclude_integrations: set[str] | None,
     integration_domain: str | None,
+    integration_frame: IntegrationFrame | None,
+    integration_frame_err: MissingIntegrationFrame | None,
     level: int,
 ) -> None:
     """Report incorrect code usage.
 
     Must be called from the event loop.
     """
-    try:
-        integration_frame = get_integration_frame(
-            exclude_integrations=exclude_integrations
-        )
-    except MissingIntegrationFrame as err:
+    if integration_domain:
         if integration := async_get_issue_integration(hass, integration_domain):
-            _report_integration_domain(
+            _report_usage_integration_domain(
                 hass,
                 what,
                 breaks_in_ha_version,
@@ -236,16 +249,13 @@ def _report_usage(
                 level,
             )
             return
-        msg = f"Detected code that {what}. Please report this issue"
-        if core_behavior is ReportBehavior.ERROR:
-            raise RuntimeError(msg) from err
-        if core_behavior is ReportBehavior.LOG:
-            if breaks_in_ha_version:
-                msg = (
-                    f"Detected code that {what}. This will stop working in Home "
-                    f"Assistant {breaks_in_ha_version}, please report this issue"
-                )
-            _LOGGER.warning(msg, stack_info=True)
+        _report_usage_no_integration(what, core_behavior, breaks_in_ha_version, None)
+        return
+
+    if not integration_frame:
+        _report_usage_no_integration(
+            what, core_behavior, breaks_in_ha_version, integration_frame_err
+        )
         return
 
     integration_behavior = core_integration_behavior
@@ -253,7 +263,7 @@ def _report_usage(
         integration_behavior = custom_integration_behavior
 
     if integration_behavior is not ReportBehavior.IGNORE:
-        _report_integration_frame(
+        _report_usage_integration_frame(
             hass,
             what,
             breaks_in_ha_version,
@@ -263,7 +273,7 @@ def _report_usage(
         )
 
 
-def _report_integration_domain(
+def _report_usage_integration_domain(
     hass: HomeAssistant | None,
     what: str,
     breaks_in_ha_version: str | None,
@@ -313,7 +323,7 @@ def _report_integration_domain(
         )
 
 
-def _report_integration_frame(
+def _report_usage_integration_frame(
     hass: HomeAssistant,
     what: str,
     breaks_in_ha_version: str | None,
@@ -362,9 +372,32 @@ def _report_integration_frame(
     )
 
 
+def _report_usage_no_integration(
+    what: str,
+    core_behavior: ReportBehavior,
+    breaks_in_ha_version: str | None,
+    err: MissingIntegrationFrame | None,
+) -> None:
+    """Report incorrect usage without an integration.
+
+    This could happen because the offending call happened outside of an integration,
+    or because the integration could not be identified.
+    """
+    msg = f"Detected code that {what}. Please report this issue"
+    if core_behavior is ReportBehavior.ERROR:
+        raise RuntimeError(msg) from err
+    if core_behavior is ReportBehavior.LOG:
+        if breaks_in_ha_version:
+            msg = (
+                f"Detected code that {what}. This will stop working in Home "
+                f"Assistant {breaks_in_ha_version}, please report this issue"
+            )
+        _LOGGER.warning(msg, stack_info=True)
+
+
 def warn_use[_CallableT: Callable](func: _CallableT, what: str) -> _CallableT:
     """Mock a function to warn when it was about to be used."""
-    if asyncio.iscoroutinefunction(func):
+    if inspect.iscoroutinefunction(func):
 
         @functools.wraps(func)
         async def report_use(*args: Any, **kwargs: Any) -> None:

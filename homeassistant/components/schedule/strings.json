@@ -28,7 +28,7 @@
     },
     "get_schedule": {
       "name": "Get schedule",
-      "description": "Retrieve one or multiple schedules."
+      "description": "Retrieves the configured time ranges of one or multiple schedules."
     }
   }
 }

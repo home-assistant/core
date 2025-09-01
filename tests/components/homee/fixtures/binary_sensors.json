@@ -1,0 +1,891 @@
+{
+  "id": 1,
+  "name": "Test Binary Sensor",
+  "profile": 4026,
+  "image": "default",
+  "favorite": 0,
+  "order": 20,
+  "protocol": 1,
+  "routing": 0,
+  "state": 1,
+  "state_changed": 1709379826,
+  "added": 1676199446,
+  "history": 1,
+  "cube_type": 1,
+  "note": "",
+  "services": 5,
+  "phonetic_name": "",
+  "owner": 2,
+  "security": 0,
+  "attributes": [
+    {
+      "id": 1,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 69,
+      "state": 1,
+      "last_changed": 1706461181,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 2,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 17,
+      "state": 1,
+      "last_changed": 1691668428,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 3,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 132,
+      "state": 1,
+      "last_changed": 1691668428,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 4,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 1.0,
+      "target_value": 1.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 228,
+      "state": 1,
+      "last_changed": 1691668428,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 5,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 1.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 12,
+      "state": 1,
+      "last_changed": 1699456267,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 6,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 52,
+      "state": 1,
+      "last_changed": 1694176210,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 7,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 68,
+      "state": 1,
+      "last_changed": 1694176210,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 8,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 1.0,
+      "target_value": 1.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 139,
+      "state": 1,
+      "last_changed": 1650402359,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 9,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 1.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 232,
+      "state": 1,
+      "last_changed": 1711897362,
+      "changed_by": 4,
+      "changed_by_id": 5,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 35,
+          "week": 5,
+          "month": 1,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 10,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 1.0,
+      "target_value": 1.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 54,
+      "state": 1,
+      "last_changed": 1650402359,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 11,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 70,
+      "state": 1,
+      "last_changed": 1738231378,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 4,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 12,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 78,
+      "state": 1,
+      "last_changed": 1738231378,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 4,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 13,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 77,
+      "state": 1,
+      "last_changed": 1735964135,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 14,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 1.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 25,
+      "state": 1,
+      "last_changed": 1709933563,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 35,
+          "week": 5,
+          "month": 1,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 15,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 1.0,
+      "target_value": 1.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 330,
+      "state": 1,
+      "last_changed": 1709933563,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 35,
+          "week": 5,
+          "month": 1,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 16,
+      "node_id": 1,
+      "instance": 2,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 1,
+      "state": 1,
+      "last_changed": 1694024544,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "can_observe": [300],
+        "automations": ["reset"],
+        "history": {
+          "day": 35,
+          "week": 5,
+          "month": 1,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 17,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 14,
+      "state": 1,
+      "last_changed": 1739320320,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "history": {
+          "day": 35,
+          "week": 5,
+          "month": 1,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 18,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 143,
+      "state": 1,
+      "last_changed": 1694992768,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 19,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 140,
+      "state": 1,
+      "last_changed": 1718900928,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 20,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 76,
+      "state": 1,
+      "last_changed": 1718900928,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 21,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 182,
+      "state": 1,
+      "last_changed": 1718900928,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 22,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 101,
+      "state": 1,
+      "last_changed": 1700056646,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "history": {
+          "day": 35,
+          "week": 5,
+          "month": 1,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 23,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "n%2Fa",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 289,
+      "state": 1,
+      "last_changed": 1736106312,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 24,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 2,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 1.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 16,
+      "state": 1,
+      "last_changed": 1616314530,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 25,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 2,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 1.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 181,
+      "state": 1,
+      "last_changed": 1616314530,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 26,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 138,
+      "state": 1,
+      "last_changed": 1700747644,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 27,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 30,
+      "state": 1,
+      "last_changed": 1709933563,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 28,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 141,
+      "state": 1,
+      "last_changed": 1700747644,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 29,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 80,
+      "state": 1,
+      "last_changed": 1700747644,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["reset"],
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    }
+  ]
+}

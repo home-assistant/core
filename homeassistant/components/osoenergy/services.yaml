@@ -237,6 +237,20 @@ set_v40_min:
           max: 550
           step: 1
           unit_of_measurement: L
+turn_away_mode_on:
+  target:
+    entity:
+      domain: water_heater
+  fields:
+    duration_days:
+      required: true
+      example: 7
+      selector:
+        number:
+          min: 1
+          max: 365
+          step: 1
+          unit_of_measurement: days
 turn_off:
   target:
     entity:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 from pytradfri import Gateway, RequestError
@@ -54,7 +54,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = user_input.get(CONF_HOST, self._host)
+            host = cast(str, user_input.get(CONF_HOST, self._host))
             try:
                 auth = await authenticate(
                     self.hass, host, user_input[KEY_SECURITY_CODE]

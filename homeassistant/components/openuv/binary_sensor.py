@@ -49,6 +49,10 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update the entity from the latest data."""
+        self._update_attrs()
+        super()._handle_coordinator_update()
+
+    def _update_attrs(self) -> None:
         data = self.coordinator.data
 
         for key in ("from_time", "to_time", "from_uv", "to_uv"):
@@ -78,5 +82,3 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
                     ATTR_PROTECTION_WINDOW_STARTING_TIME: as_local(from_dt),
                 }
             )
-
-        super()._handle_coordinator_update()

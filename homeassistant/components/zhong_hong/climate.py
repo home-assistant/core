@@ -216,12 +216,12 @@ class ZhongHongClimate(ClimateEntity):
         return self._device.fan_list
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._device.min_temp
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.max_temp
 

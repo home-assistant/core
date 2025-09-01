@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.ondilo_ico.const import DOMAIN
+from homeassistant.util.json import JsonArrayType
 
 from tests.common import (
     MockConfigEntry,
@@ -71,7 +72,7 @@ def ico_details2() -> dict[str, Any]:
 
 
 @pytest.fixture(scope="package")
-def last_measures() -> list[dict[str, Any]]:
+def last_measures() -> JsonArrayType:
     """Pool measurements."""
     return load_json_array_fixture("last_measures.json", DOMAIN)
 

@@ -388,6 +388,18 @@
             "count": 20
           }
         },
+        "boss": {
+          "name": "boss name",
+          "hp": 500,
+          "rage": {
+            "title": "rage skill name",
+            "description": "description",
+            "value": 50,
+            "effect": "skill effect"
+          },
+          "str": 1,
+          "def": 1
+        },
         "drop": {
           "items": [
             {
@@ -656,6 +668,31 @@
         "notes": "Lässt eines Deiner Haustiere augenblicklich zum Reittier heranwachsen.",
         "canDrop": false,
         "key": "Saddle"
+      }
+    },
+    "loginIncentives": {
+      "0": {
+        "nextRewardAt": 1
+      },
+      "1": {
+        "rewardKey": ["armor_special_bardRobes"],
+        "reward": [
+          {
+            "text": "Bardic Robes",
+            "notes": "These colorful robes may be conspicuous, but you can sing your way out of any situation. Increases Perception by 3.",
+            "per": 3,
+            "value": 0,
+            "type": "armor",
+            "key": "armor_special_bardRobes",
+            "set": "special-bardRobes",
+            "klass": "special",
+            "index": "bardRobes",
+            "str": 0,
+            "int": 0,
+            "con": 0
+          }
+        ],
+        "nextRewardAt": 2
       }
     }
   },

@@ -29,6 +29,9 @@ from .const import (
 )
 from .entity import LMSStatusEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_ALBUMS,
@@ -43,6 +46,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_GENRES,
@@ -84,7 +88,7 @@ async def async_setup_entry(
 
 
 class ServerStatusSensor(LMSStatusEntity, SensorEntity):
-    """LMS Status based sensor from LMS via cooridnatior."""
+    """LMS Status based sensor from LMS via coordinator."""
 
     @property
     def native_value(self) -> StateType:

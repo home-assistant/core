@@ -24,6 +24,8 @@ from .entity import RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RoborockSwitchDescription(SwitchEntityDescription):
@@ -35,6 +37,8 @@ class RoborockSwitchDescription(SwitchEntityDescription):
     update_value: Callable[[AttributeCache, bool], Coroutine[Any, Any, None]]
     # Attribute from cache
     attribute: str
+    # If it is a dock entity
+    is_dock_entity: bool = False
 
 
 SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
@@ -47,6 +51,7 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         key="child_lock",
         translation_key="child_lock",
         entity_category=EntityCategory.CONFIG,
+        is_dock_entity=True,
     ),
     RoborockSwitchDescription(
         cache_key=CacheableAttribute.flow_led_status,
@@ -57,6 +62,7 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         key="status_indicator",
         translation_key="status_indicator",
         entity_category=EntityCategory.CONFIG,
+        is_dock_entity=True,
     ),
     RoborockSwitchDescription(
         cache_key=CacheableAttribute.dnd_timer,
@@ -147,7 +153,13 @@ class RoborockSwitch(RoborockEntityV1, SwitchEntity):
     ) -> None:
         """Initialize the entity."""
         self.entity_description = entity_description
-        super().__init__(unique_id, coordinator.device_info, coordinator.api)
+        super().__init__(
+            unique_id,
+            coordinator.device_info
+            if not entity_description.is_dock_entity
+            else coordinator.dock_device_info,
+            coordinator.api,
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""

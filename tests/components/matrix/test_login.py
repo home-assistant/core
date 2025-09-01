@@ -1,6 +1,7 @@
 """Test MatrixBot._login."""
 
-from pydantic.dataclasses import dataclass
+from dataclasses import dataclass
+
 import pytest
 
 from homeassistant.components.matrix import MatrixBot
@@ -17,7 +18,7 @@ class LoginTestParameters:
     access_token: dict[str, str]
     expected_login_state: bool
     expected_caplog_messages: set[str]
-    expected_expection: type(Exception) | None = None
+    expected_expection: type[Exception] | None = None
 
 
 good_password_missing_token = LoginTestParameters(

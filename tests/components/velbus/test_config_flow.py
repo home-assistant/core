@@ -59,43 +59,30 @@ def mock_controller_connection_failed():
 
 
 @pytest.mark.usefixtures("controller")
-async def test_user_network_succes(hass: HomeAssistant) -> None:
-    """Test user network config."""
-    # inttial menu show
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result
-    assert result.get("flow_id")
-    assert result.get("type") is FlowResultType.MENU
-    assert result.get("step_id") == "user"
-    assert result.get("menu_options") == ["network", "usbselect"]
-    # select the network option
-    result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"),
-        {"next_step_id": "network"},
-    )
-    assert result.get("type") is FlowResultType.FORM
-    # fill in the network form
-    result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"),
-        {
-            CONF_TLS: False,
-            CONF_HOST: "velbus",
-            CONF_PORT: 6000,
-            CONF_PASSWORD: "",
-        },
-    )
-    assert result
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Velbus Network"
-    data = result.get("data")
-    assert data
-    assert data[CONF_PORT] == "velbus:6000"
-
-
-@pytest.mark.usefixtures("controller")
-async def test_user_network_succes_tls(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("inputParams", "expected"),
+    [
+        (
+            {
+                CONF_TLS: True,
+                CONF_PASSWORD: "password",
+            },
+            "tls://password@velbus:6000",
+        ),
+        (
+            {
+                CONF_TLS: True,
+                CONF_PASSWORD: "",
+            },
+            "tls://velbus:6000",
+        ),
+        ({CONF_TLS: True}, "tls://velbus:6000"),
+        ({CONF_TLS: False}, "velbus:6000"),
+    ],
+)
+async def test_user_network_succes(
+    hass: HomeAssistant, inputParams: str, expected: str
+) -> None:
     """Test user network config."""
     # inttial menu show
     result = await hass.config_entries.flow.async_init(
@@ -116,10 +103,9 @@ async def test_user_network_succes_tls(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result.get("flow_id"),
         {
-            CONF_TLS: True,
             CONF_HOST: "velbus",
             CONF_PORT: 6000,
-            CONF_PASSWORD: "password",
+            **inputParams,
         },
     )
     assert result
@@ -127,7 +113,7 @@ async def test_user_network_succes_tls(hass: HomeAssistant) -> None:
     assert result.get("title") == "Velbus Network"
     data = result.get("data")
     assert data
-    assert data[CONF_PORT] == "tls://password@velbus:6000"
+    assert data[CONF_PORT] == expected
 
 
 @pytest.mark.usefixtures("controller")

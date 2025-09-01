@@ -9,6 +9,7 @@ from typing import Any
 
 from pyforked_daapd import ForkedDaapdAPI
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -21,6 +22,8 @@ from .const import (
     SIGNAL_UPDATE_PLAYER,
     SIGNAL_UPDATE_QUEUE,
 )
+
+type ForkedDaapdConfigEntry = ConfigEntry[ForkedDaapdUpdater]
 
 _LOGGER = logging.getLogger(__name__)
 

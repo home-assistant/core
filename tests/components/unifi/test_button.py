@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.unifi.const import CONF_SITE_ID

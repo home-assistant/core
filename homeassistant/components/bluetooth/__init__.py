@@ -385,24 +385,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Bluetooth adapter {adapter} with address {address} not found"
         )
     passive = entry.options.get(CONF_PASSIVE)
+    adapters = await manager.async_get_bluetooth_adapters()
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
     scanner = HaScanner(mode, adapter, address)
     scanner.async_setup()
-    try:
-        await scanner.async_start()
-    except (RuntimeError, ScannerStartError) as err:
-        raise ConfigEntryNotReady(
-            f"{adapter_human_name(adapter, address)}: {err}"
-        ) from err
-    adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
     if entry.title == address:
         hass.config_entries.async_update_entry(
             entry, title=adapter_title(adapter, details)
         )
     slots: int = details.get(ADAPTER_CONNECTION_SLOTS) or DEFAULT_CONNECTION_SLOTS
+    # Register the scanner before starting so
+    # any raw advertisement data can be processed
     entry.async_on_unload(async_register_scanner(hass, scanner, connection_slots=slots))
     await async_update_device(hass, entry, adapter, details)
+    try:
+        await scanner.async_start()
+    except (RuntimeError, ScannerStartError) as err:
+        raise ConfigEntryNotReady(
+            f"{adapter_human_name(adapter, address)}: {err}"
+        ) from err
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     entry.async_on_unload(scanner.async_stop)
     return True

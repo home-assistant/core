@@ -16,7 +16,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import DOMAIN, LLM_API, LLM_API_NAME
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,18 +32,18 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        errors: dict[str, str] = {}
         llm_apis = {api.id: api.name for api in llm.async_get_apis(self.hass)}
-        if LLM_API not in llm_apis:
-            # MCP server component is not loaded yet, so make the LLM API a choice.
-            llm_apis = {
-                LLM_API: LLM_API_NAME,
-                **llm_apis,
-            }
-
         if user_input is not None:
-            return self.async_create_entry(
-                title=llm_apis[user_input[CONF_LLM_HASS_API]], data=user_input
-            )
+            if not user_input[CONF_LLM_HASS_API]:
+                errors[CONF_LLM_HASS_API] = "llm_api_required"
+            else:
+                return self.async_create_entry(
+                    title=", ".join(
+                        llm_apis[api_id] for api_id in user_input[CONF_LLM_HASS_API]
+                    ),
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -51,7 +51,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Optional(
                         CONF_LLM_HASS_API,
-                        default=llm.LLM_API_ASSIST,
+                        default=[llm.LLM_API_ASSIST],
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=[
@@ -60,10 +60,12 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
                                     value=llm_api_id,
                                 )
                                 for llm_api_id, name in llm_apis.items()
-                            ]
+                            ],
+                            multiple=True,
                         )
                     ),
                 }
             ),
             description_placeholders={"more_info_url": MORE_INFO_URL},
+            errors=errors,
         )

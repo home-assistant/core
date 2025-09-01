@@ -234,10 +234,12 @@ class IdleTimer:
         hass: HomeAssistant,
         timeout: int,
         idle_callback: Callable[[], Coroutine[Any, Any, None]],
+        startup_timeout: int | None = None,
     ) -> None:
         """Initialize IdleTimer."""
         self._hass = hass
         self._timeout = timeout
+        self._startup_timeout = startup_timeout or timeout
         self._callback = idle_callback
         self._unsub: CALLBACK_TYPE | None = None
         self.idle = False
@@ -246,7 +248,7 @@ class IdleTimer:
         """Start the idle timer if not already started."""
         self.idle = False
         if self._unsub is None:
-            self._unsub = async_call_later(self._hass, self._timeout, self.fire)
+            self._unsub = async_call_later(self._hass, self._startup_timeout, self.fire)
 
     def awake(self) -> None:
         """Keep the idle time alive by resetting the timeout."""
@@ -439,8 +441,9 @@ class KeyFrameConverter:
 
         # Keep import here so that we can import stream integration
         # without installing reqs
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.camera.img_util import TurboJPEGSingleton
+        from homeassistant.components.camera.img_util import (  # noqa: PLC0415
+            TurboJPEGSingleton,
+        )
 
         self._packet: Packet | None = None
         self._event: asyncio.Event = asyncio.Event()
@@ -471,8 +474,7 @@ class KeyFrameConverter:
 
         # Keep import here so that we can import stream integration without
         # installing reqs
-        # pylint: disable-next=import-outside-toplevel
-        from av import CodecContext
+        from av import CodecContext  # noqa: PLC0415
 
         self._codec_context = cast(
             "VideoCodecContext", CodecContext.create(codec_context.name, "r")

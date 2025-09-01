@@ -2,11 +2,10 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from mastodon.Mastodon import MastodonAPIError
+from mastodon.Mastodon import MastodonAPIError, MediaAttachment
 import pytest
 
 from homeassistant.components.mastodon.const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_CONTENT_WARNING,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
@@ -15,6 +14,7 @@ from homeassistant.components.mastodon.const import (
     DOMAIN,
 )
 from homeassistant.components.mastodon.services import SERVICE_POST
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -106,7 +106,9 @@ async def test_service_post(
 
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch.object(mock_mastodon_client, "media_post", return_value={"id": "1"}),
+        patch.object(
+            mock_mastodon_client, "media_post", return_value=MediaAttachment(id="1")
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -163,7 +165,7 @@ async def test_post_service_failed(
     await hass.async_block_till_done()
 
     hass.config.is_allowed_path = Mock(return_value=True)
-    mock_mastodon_client.media_post.return_value = {"id": "1"}
+    mock_mastodon_client.media_post.return_value = MediaAttachment(id="1")
 
     mock_mastodon_client.status_post.side_effect = MastodonAPIError
 
