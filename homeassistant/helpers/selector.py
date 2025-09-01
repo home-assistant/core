@@ -50,7 +50,7 @@ def validate_selector(config: Any) -> dict:
 
     # Selectors can be empty
     if config[selector_type] is None:
-        return {selector_type: {}}
+        config = {selector_type: {}}
 
     return {
         selector_type: cast(dict, selector_class.CONFIG_SCHEMA(config[selector_type]))
