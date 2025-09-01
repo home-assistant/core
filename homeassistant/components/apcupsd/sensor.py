@@ -555,6 +555,7 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
                 self.hass,
                 DOMAIN,
                 f"{issue_key}_{self.entity_id}",
+                breaks_in_ha_version="2026.4.0",
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key=issue_key,
