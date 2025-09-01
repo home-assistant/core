@@ -501,14 +501,13 @@ async def test_add_friend_flow_no_friends(
     mock_psnawpapi: MagicMock,
 ) -> None:
     """Test we abort add friend subentry flow when the user has no friends."""
+    mock_psnawpapi.user.return_value.friends_list.return_value = []
 
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-
-    mock_psnawpapi.user.return_value.friends_list.return_value = []
 
     result = await hass.config_entries.subentries.async_init(
         (config_entry.entry_id, "friend"),

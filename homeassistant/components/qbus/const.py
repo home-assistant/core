@@ -6,6 +6,7 @@ from homeassistant.const import Platform
 
 DOMAIN: Final = "qbus"
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
