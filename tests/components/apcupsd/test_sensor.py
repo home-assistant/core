@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.apcupsd.const import DOMAIN
+from homeassistant.components.apcupsd.const import DEPRECATED_SENSORS, DOMAIN
 from homeassistant.components.apcupsd.coordinator import REQUEST_REFRESH_COOLDOWN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -15,7 +15,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
@@ -161,3 +165,45 @@ async def test_sensor_unknown(
     await hass.async_block_till_done()
     # The state should become unknown again.
     assert hass.states.get(last_self_test_id).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(("entity_key", "issue_key"), DEPRECATED_SENSORS.items())
+async def test_deprecated_sensor_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_request_status: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    entity_key: str,
+    issue_key: str,
+) -> None:
+    """Each deprecated sensor creates an issue when enabled and removes it when disabled."""
+    issue_registry = ir.async_get(hass)
+    unique_id = f"{mock_request_status.return_value['SERIALNO']}_{entity_key}"
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert entity_id is not None, (
+        f"entity_id for {entity_key} (via unique id '{unique_id}') not found"
+    )
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+
+    # Enable if currently disabled so we can assert issue creation
+    if entry.disabled:
+        entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    issue_id = f"{issue_key}_{entity_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert not issue.is_fixable
+    assert issue.translation_key == issue_key
+    assert issue.translation_placeholders
+    assert "entity_id" in issue.translation_placeholders
+    assert "entity_name" in issue.translation_placeholders
+
+    # Disable and verify the issue is removed
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

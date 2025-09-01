@@ -508,6 +508,10 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
         # Initial update of attributes.
         self._update_attrs()
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

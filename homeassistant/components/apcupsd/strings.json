@@ -237,6 +237,24 @@
       }
     }
   },
+  "issues": {
+    "status_data_deprecated": {
+      "title": "APC UPS status data sensor is deprecated",
+      "description": "The {entity_name} sensor ({entity_id}) is deprecated as it only shows the number of records following the APC statement, which does not provide useful information in Home Assistant.\n\nTo resolve this issue, disable this entity. You can do this by going to Settings > Devices & Services > APC UPS Daemon > {entity_name} and toggling the entity off."
+    },
+    "status_date_deprecated": {
+      "title": "APC UPS status date sensor is deprecated",
+      "description": "The {entity_name} sensor ({entity_id}) is deprecated as it shows the date and time the APC network response was written. You can use the last updated time of binary_sensor.myups_online_status instead.\n\nTo resolve this issue, disable this entity. You can do this by going to Settings > Devices & Services > APC UPS Daemon > {entity_name} and toggling the entity off."
+    },
+    "date_time_deprecated": {
+      "title": "APC UPS date and time sensor is deprecated",
+      "description": "The {entity_name} sensor ({entity_id}) is deprecated. You can use the last updated time of binary_sensor.myups_online_status instead.\n\nTo resolve this issue, disable this entity. You can do this by going to Settings > Devices & Services > APC UPS Daemon > {entity_name} and toggling the entity off."
+    },
+    "available_via_device_info": {
+      "title": "APC UPS sensor is deprecated (available via device information)",
+      "description": "The {entity_name} sensor ({entity_id}) is deprecated as this information is now available via device information.\n\nTo resolve this issue, disable this entity. You can do this by going to Settings > Devices & Services > APC UPS Daemon > {entity_name} and toggling the entity off."
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Cannot connect to APC UPS Daemon."
