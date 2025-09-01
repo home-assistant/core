@@ -354,7 +354,6 @@ async def test_functional_device_trigger(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_validate_trigger_unknown_device(hass: HomeAssistant) -> None:
     """Test unknown device does not return a trigger config."""
-
     assert await async_setup_component(
         hass,
         AUTOMATION_DOMAIN,
