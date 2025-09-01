@@ -460,7 +460,7 @@
     'state': '60',
   })
 # ---
-# name: test_numbers[door_lock][number.mock_door_lock_user_code_temporary_disable_time-entry]
+# name: test_numbers[door_lock][number.mock_door_lock_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -478,7 +478,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_user_code_temporary_disable_time',
+    'entity_id': 'number.mock_door_lock_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -490,64 +490,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'User code temporary disable time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[door_lock][number.mock_door_lock_user_code_temporary_disable_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock User code temporary disable time',
-      'max': 255,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_user_code_temporary_disable_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10',
-  })
-# ---
-# name: test_numbers[door_lock][number.mock_door_lock_wrong_code_limit-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_wrong_code_limit',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Wrong code limit',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -557,21 +500,79 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[door_lock][number.mock_door_lock_wrong_code_limit-state]
+# name: test_numbers[door_lock][number.mock_door_lock_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Wrong code limit',
+      'friendly_name': 'Mock Door Lock None',
       'max': 255,
       'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_wrong_code_limit',
+    'entity_id': 'number.mock_door_lock_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
+  })
+# ---
+# name: test_numbers[door_lock][number.mock_door_lock_none_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_none_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_code_temporary_disable_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[door_lock][number.mock_door_lock_none_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock None',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_none_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
   })
 # ---
 # name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_autorelock_time-entry]
@@ -632,7 +633,7 @@
     'state': '60',
   })
 # ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_user_code_temporary_disable_time-entry]
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -650,7 +651,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_user_code_temporary_disable_time',
+    'entity_id': 'number.mock_door_lock_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -662,64 +663,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'User code temporary disable time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_user_code_temporary_disable_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock User code temporary disable time',
-      'max': 255,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_user_code_temporary_disable_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10',
-  })
-# ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_wrong_code_limit-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_wrong_code_limit',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Wrong code limit',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -729,21 +673,79 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_wrong_code_limit-state]
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Wrong code limit',
+      'friendly_name': 'Mock Door Lock None',
       'max': 255,
       'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_wrong_code_limit',
+    'entity_id': 'number.mock_door_lock_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
+  })
+# ---
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_none_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_none_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_code_temporary_disable_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_none_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock None',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_none_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
   })
 # ---
 # name: test_numbers[eve_thermo][number.eve_thermo_temperature_offset-entry]
@@ -2594,7 +2596,7 @@
     'state': '4.0',
   })
 # ---
-# name: test_numbers[valve][number.valve_default_open_duration-entry]
+# name: test_numbers[valve][number.valve_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2612,7 +2614,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.valve_default_open_duration',
+    'entity_id': 'number.valve_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2624,7 +2626,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Default open duration',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2634,10 +2636,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[valve][number.valve_default_open_duration-state]
+# name: test_numbers[valve][number.valve_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Valve Default open duration',
+      'friendly_name': 'Valve None',
       'max': 65534,
       'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
@@ -2645,7 +2647,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.valve_default_open_duration',
+    'entity_id': 'number.valve_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
