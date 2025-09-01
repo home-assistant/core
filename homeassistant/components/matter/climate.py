@@ -165,6 +165,8 @@ class ThermostatRunningState(IntEnum):
     Heat = 1  # 1 << 0 = 1
     Cool = 2  # 1 << 1 = 2
     Fan = 4  # 1 << 2 = 4
+    HeatFan = 5
+    CoolFan = 6
     HeatStage2 = 8  # 1 << 3 = 8
     CoolStage2 = 16  # 1 << 4 = 16
     FanStage2 = 32  # 1 << 5 = 32
@@ -298,11 +300,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
             ):
                 match running_state_value:
                     case (
-                        ThermostatRunningState.Heat | ThermostatRunningState.HeatStage2
+                        ThermostatRunningState.Heat | ThermostatRunningState.HeatStage2 | ThermostatRunningState.HeatFan
                     ):
                         self._attr_hvac_action = HVACAction.HEATING
                     case (
-                        ThermostatRunningState.Cool | ThermostatRunningState.CoolStage2
+                        ThermostatRunningState.Cool | ThermostatRunningState.CoolStage2 | ThermostatRunningState.CoolFan
                     ):
                         self._attr_hvac_action = HVACAction.COOLING
                     case (
