@@ -10,6 +10,8 @@ from automower_ble.mower import Mower
 from automower_ble.protocol import ResponseResult
 from bleak import BleakError
 from bleak_retry_connector import get_device
+from gardena_bluetooth.const import ScanService
+from gardena_bluetooth.parse import ManufacturerData, ProductType
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -22,20 +24,21 @@ from .const import DOMAIN, LOGGER
 
 def _is_supported(discovery_info: BluetoothServiceInfo):
     """Check if device is supported."""
+    if ScanService not in discovery_info.service_uuids:
+        return False
 
-    LOGGER.debug(
-        "%s manufacturer data: %s",
-        discovery_info.address,
-        discovery_info.manufacturer_data,
-    )
+    if not (data := discovery_info.manufacturer_data.get(ManufacturerData.company)):
+        LOGGER.debug("Missing manufacturer data: %s", discovery_info)
+        return False
 
-    manufacturer = any(key == 1062 for key in discovery_info.manufacturer_data)
-    service_husqvarna = any(
-        service == "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
-        for service in discovery_info.service_uuids
-    )
+    manufacturer_data = ManufacturerData.decode(data)
+    product_type = ProductType.from_manufacturer_data(manufacturer_data)
 
-    return manufacturer and service_husqvarna
+    if product_type not in (ProductType.MOWER, None):
+        LOGGER.debug("Unsupported device: %s", manufacturer_data)
+        return False
+
+    return True
 
 
 def _pin_valid(pin: str) -> bool:
