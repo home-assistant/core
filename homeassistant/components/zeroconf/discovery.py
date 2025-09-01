@@ -15,10 +15,12 @@ from zeroconf import BadTypeInNameException, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo
 
 from homeassistant import config_entries
+from homeassistant.components import network
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import discovery_flow, instance_id as ha_instance_id
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import homeassistant.helpers.issue_registry as ir
 from homeassistant.helpers.service_info.zeroconf import (
     ZeroconfServiceInfo as _ZeroconfServiceInfo,
 )
@@ -336,6 +338,15 @@ class ZeroconfDiscovery:
             return
         _LOGGER.debug("Discovered new device %s %s", name, info)
         props: dict[str, str | None] = info.properties
+
+        # Instance ID conflict detection for Home Assistant core
+        if service_type == ZEROCONF_TYPE:
+            discovered_instance_id = props.get("uuid")
+            if discovered_instance_id:
+                self.hass.async_create_task(
+                    self._async_check_instance_id_conflict(discovered_instance_id, info)
+                )
+
         discovery_key = DiscoveryKey(
             domain=DOMAIN,
             key=(info.type, info.name),
@@ -408,3 +419,35 @@ class ZeroconfDiscovery:
                 info,
                 discovery_key=discovery_key,
             )
+
+    async def _async_check_instance_id_conflict(
+        self, discovered_instance_id: str, info: _ZeroconfServiceInfo
+    ) -> None:
+        """Check for instance ID conflicts and create repair issues if needed."""
+        local_instance_id = await ha_instance_id.async_get(self.hass)
+        issue_id = "duplicate_instance_id"
+        local_addresses = await network.async_get_announce_addresses(self.hass)
+        discovered_ip = (
+            str(info.ip_address) if info.ip_address else str(info.ip_addresses[0])
+        )
+        is_same_ip = discovered_ip in local_addresses if discovered_ip else False
+
+        if discovered_instance_id == local_instance_id and not is_same_ip:
+            # Conflict detected, create repair issue
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                issue_id,
+                is_fixable=True,
+                is_persistent=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key=issue_id,
+                translation_placeholders={
+                    "instance_id": discovered_instance_id,
+                    "other_ip": discovered_ip,
+                    "other_host_url": info.hostname.rstrip("."),
+                },
+            )
+        else:
+            # No conflict, remove repair issue if present
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
