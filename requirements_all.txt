@@ -310,7 +310,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==0.10.1
+aiomealie==0.10.2
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1177,7 +1177,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250829.0
+home-assistant-frontend==20250901.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.8.29
@@ -1350,6 +1350,9 @@ libpyfoscamcgi==0.0.7
 
 # homeassistant.components.vivotek
 libpyvivotek==0.4.0
+
+# homeassistant.components.libre_hardware_monitor
+librehardwaremonitor-api==1.3.1
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
@@ -3189,7 +3192,7 @@ youtubeaio==2.0.0
 yt-dlp[default]==2025.08.11
 
 # homeassistant.components.zabbix
-zabbix-utils==2.0.2
+zabbix-utils==2.0.3
 
 # homeassistant.components.zamg
 zamg==0.3.6
