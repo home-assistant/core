@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from datetime import datetime
+from functools import partial
 import logging
 from typing import Any
 import uuid
 
 import caldav
-from icalendar import Calendar, Event
+from caldav.lib.error import DAVError
+import requests
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -27,6 +29,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
@@ -214,29 +217,26 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """Create a new event in the calendar."""
         _LOGGER.debug("Event: %s", kwargs)
 
-        event = Event()
-        event.add("summary", kwargs.get("summary"))
-        event.add("dtstart", kwargs.get("dtstart"))
-        event.add("dtend", kwargs.get("dtend"))
-        event.add("dtstamp", dt_util.utcnow())
-        event.add("description", kwargs.get("description"))
-        event.add("location", kwargs.get("location"))
-        event.add("uid", str(uuid.uuid4()))
-
+        item_data: dict[str, Any] = {}
+        item_data["summary"] = kwargs.get("summary")
+        item_data["dtstart"] = kwargs.get("dtstart")
+        item_data["dtend"] = kwargs.get("dtend")
+        item_data["dtstamp"] = dt_util.utcnow()
+        item_data["description"] = kwargs.get("description")
+        item_data["location"] = kwargs.get("location")
+        item_data["uid"] = str(uuid.uuid4())
         if rrule := kwargs.get("rrule"):
-            event.add("rrule", rrule)
+            item_data["rrule"] = rrule
+        item_data["language"] = "EN"
 
-        cal = Calendar()
-        cal.add("prodid", "-//homeassistant.io//CALDAV//EN")
-        cal.add("version", "2.0")
-        cal.add_component(event)
-        ics_data = cal.to_ical().decode("utf-8")
+        _LOGGER.debug("ICS data %s", item_data)
 
-        _LOGGER.debug("ICS data %s", ics_data)
-
-        await self.hass.async_add_executor_job(
-            self.coordinator.calendar.add_event, ics_data
-        )
+        try:
+            await self.hass.async_add_executor_job(
+                partial(self.coordinator.calendar.add_event, **item_data),
+            )
+        except (requests.ConnectionError, DAVError) as err:
+            raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
     @callback
     def _handle_coordinator_update(self) -> None:

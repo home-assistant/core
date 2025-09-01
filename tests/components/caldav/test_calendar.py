@@ -1175,14 +1175,14 @@ async def test_config_entry_supported_components(
                 "description": "Test Description",
                 "location": "Test Location",
             },
-            [
-                "SUMMARY:Test Event",
-                "DTSTART:20250806T100000",
-                "DTEND:20250806T110000",
-                "DESCRIPTION:Test Description",
-                "LOCATION:Test Location",
-                "PRODID:-//homeassistant.io//CALDAV//EN",
-            ],
+            {
+                "description": "Test Description",
+                "dtend": datetime.datetime(2025, 8, 6, 11, 0),
+                "dtstart": datetime.datetime(2025, 8, 6, 10, 0),
+                "language": "EN",
+                "location": "Test Location",
+                "summary": "Test Event",
+            },
         ),
         # Event with only required fields
         (
@@ -1191,12 +1191,12 @@ async def test_config_entry_supported_components(
                 "start_date_time": datetime.datetime(2025, 8, 7, 9, 0, 0),
                 "end_date_time": datetime.datetime(2025, 8, 7, 10, 0, 0),
             },
-            [
-                "SUMMARY:Required Only",
-                "DTSTART:20250807T090000",
-                "DTEND:20250807T100000",
-                "PRODID:-//homeassistant.io//CALDAV//EN",
-            ],
+            {
+                "summary": "Required Only",
+                "dtstart": datetime.datetime(2025, 8, 7, 9, 0),
+                "dtend": datetime.datetime(2025, 8, 7, 10, 0),
+                "language": "EN",
+            },
         ),
         # All-day event (date only)
         (
@@ -1205,12 +1205,12 @@ async def test_config_entry_supported_components(
                 "start_date": datetime.date(2025, 8, 8),
                 "end_date": datetime.date(2025, 8, 9),
             },
-            [
-                "SUMMARY:All Day Event",
-                "DTSTART;VALUE=DATE:20250808",
-                "DTEND;VALUE=DATE:20250809",
-                "PRODID:-//homeassistant.io//CALDAV//EN",
-            ],
+            {
+                "summary": "All Day Event",
+                "dtstart": datetime.date(2025, 8, 8),
+                "dtend": datetime.date(2025, 8, 9),
+                "language": "EN",
+            },
         ),
         # Rrule is not supported in API (async_call) calls.
     ],
@@ -1238,7 +1238,7 @@ async def test_add_vevent(
 
     calendars[0].add_event.assert_called_once()
     assert calendars[0].add_event.call_args
-    resulting_ics = calendars[0].add_event.call_args[0][0]
+    resulting_ics = calendars[0].add_event.call_args[1]
 
     missing_fields = [
         field for field in expected_ics_fields if field not in resulting_ics
