@@ -122,7 +122,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             if not _pin_valid(user_input[CONF_PIN]):
                 errors["base"] = "invalid_pin"
             else:
-                self.address = format_mac(user_input[CONF_ADDRESS]).upper()
+                self.address = format_mac(user_input[CONF_ADDRESS])
                 self.pin = user_input[CONF_PIN]
                 await self.async_set_unique_id(self.address, raise_on_progress=False)
                 self._abort_if_unique_id_configured()
