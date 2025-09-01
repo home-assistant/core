@@ -20,7 +20,7 @@ ATTR_INVERTER_STATE = [
     "unsynchronized",
     "grid_consumption",
     "grid_injection",
-    "grid_synchronized_but_not_used",
+    "grid_synchronised_but_not_used",
 ]
 ATTR_TIMELINE_STATUS = [
     "com_lost",
