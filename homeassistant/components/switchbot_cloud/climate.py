@@ -108,7 +108,7 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
             ATTR_TEMPERATURE, self._attr_target_temperature
         )
 
-    def _get_mode(self, hvac_mode: HVACMode | None = None) -> int:
+    def _get_mode(self, hvac_mode: HVACMode | None) -> int:
         new_hvac_mode = hvac_mode or self._attr_hvac_mode
         _LOGGER.debug(
             "Received hvac_mode: %s (Currently set as %s)",
