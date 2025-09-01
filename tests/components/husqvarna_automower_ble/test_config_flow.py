@@ -292,15 +292,13 @@ async def test_bluetooth_invalid(
 ) -> None:
     """Test bluetooth device discovery with invalid data."""
 
-    inject_bluetooth_service_info(
-        hass, AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO
-    )
+    inject_bluetooth_service_info(hass, service_info)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO,
+        data=service_info,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
