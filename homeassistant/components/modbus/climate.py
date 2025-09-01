@@ -363,7 +363,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                         )
                     break
 
-        await self.async_local_update(restart=True)
+        await self.async_local_update(retrigger=True)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -385,7 +385,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     CALL_TYPE_WRITE_REGISTER,
                 )
 
-        await self.async_local_update(restart=True)
+        await self.async_local_update(retrigger=True)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
@@ -408,7 +408,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                             CALL_TYPE_WRITE_REGISTER,
                         )
                     break
-        await self.async_local_update(restart=True)
+        await self.async_local_update(retrigger=True)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -463,7 +463,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 CALL_TYPE_WRITE_REGISTERS,
             )
         self._attr_available = result is not None
-        await self.async_local_update(restart=True)
+        await self.async_local_update(retrigger=True)
 
     async def _async_update(self) -> None:
         """Update Target & Current Temperature."""
