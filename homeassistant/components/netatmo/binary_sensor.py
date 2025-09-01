@@ -25,7 +25,7 @@ from .const import (
     CONF_URL_WEATHER,
     NETATMO_CREATE_BINARY_SENSOR,
 )
-from .data_handler import NetatmoDevice
+from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
 from .entity import NetatmoModuleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def process_opening_status(module: Module) -> bool | None:
 
     if status == "closed":
         return False
-    if status in ["open", "not_detected", "no_news"]:
+    if status == "open":
         return True
     return None
 
@@ -95,6 +95,7 @@ class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     category_fn: Callable[[NetatmoDevice], BinarySensorDeviceClass] | None = None
     netatmo_name: str | None = None
+    publisher_name: str | None = None
     value_fn: Callable[[Module], bool | None] = lambda device: None
 
 
@@ -121,6 +122,7 @@ OPENING_BINARY_SENSOR_DESCRIPTIONS: Final[
         translation_key="Opening",
         device_class=BinarySensorDeviceClass.OPENING,
         netatmo_name="status",
+        # publisher_name=OPENING,
         value_fn=process_opening_status,
         category_fn=process_opening_category,
     ),
@@ -270,6 +272,17 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
 
         super().__init__(netatmo_device)
         self.entity_description = description
+
+        publisher_name = self.entity_description.publisher_name or HOME
+        self._publishers.extend(
+            [
+                {
+                    "name": publisher_name,
+                    "home_id": netatmo_device.device.home.entity_id,
+                    SIGNAL_NAME: netatmo_device.signal_name,
+                },
+            ]
+        )
 
     @property
     def is_on(self) -> bool | None:
