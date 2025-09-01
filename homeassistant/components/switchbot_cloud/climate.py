@@ -94,7 +94,10 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         """Run when entity about to be added."""
         await super().async_added_to_hass()
 
-        if not (last_state := await self.async_get_last_state()):
+        if (
+            not (last_state := await self.async_get_last_state())
+            or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+        ):
             return
         _LOGGER.debug("Last state attributes: %s", last_state.attributes)
         self._attr_hvac_mode = HVACMode(last_state.state)
