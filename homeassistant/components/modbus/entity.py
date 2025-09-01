@@ -257,9 +257,20 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         return registers
 
     def __process_raw_value(
-        self, entry: float | str | bytes, skip_transform: bool | None = False
+        self,
+        entry: float | str | bytes,
+        scale: float | None = None,
+        offset: float | None = None,
     ) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
+        if scale is None:
+            scale = self._scale
+        if offset is None:
+            offset = self._offset
+
+        assert scale is not None
+        assert offset is not None
+
         if self._nan_value and entry in (self._nan_value, -self._nan_value):
             return None
         if isinstance(entry, bytes):
@@ -267,9 +278,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         if entry != entry:  # noqa: PLR0124
             # NaN float detection replace with None
             return None
-        val: float | int = cast(float | int, entry)
-        if not skip_transform:
-            val = self._scale * entry + self._offset
+        val: float | int = scale * float(entry) + offset
         if self._min_value is not None and val < self._min_value:
             val = self._min_value
         if self._max_value is not None and val > self._max_value:
@@ -281,7 +290,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         return f"{float(val):.{self._precision}f}"
 
     def unpack_structure_result(
-        self, registers: list[int], skip_transform: bool | None = False
+        self, registers: list[int], scale: float | None, offset: float | None
     ) -> str | None:
         """Convert registers to proper result."""
 
@@ -304,7 +313,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             # Apply scale, precision, limits to floats and ints
             v_result = []
             for entry in val:
-                v_temp = self.__process_raw_value(entry, skip_transform)
+                v_temp = self.__process_raw_value(entry, scale, offset)
                 if self._data_type != DataType.CUSTOM:
                     v_result.append(str(v_temp))
                 else:
@@ -312,7 +321,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             return ",".join(map(str, v_result))
 
         # Apply scale, precision, limits to floats and ints
-        return self.__process_raw_value(val[0], skip_transform)
+        return self.__process_raw_value(val[0], scale, offset)
 
 
 class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
