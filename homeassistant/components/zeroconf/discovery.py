@@ -341,10 +341,10 @@ class ZeroconfDiscovery:
         props: dict[str, str | None] = info.properties
 
         # Instance ID conflict detection for Home Assistant core
-        if service_type == ZEROCONF_TYPE:
-            discovered_instance_id = props.get("uuid")
-            if discovered_instance_id:
-                self._async_check_instance_id_conflict(discovered_instance_id, info)
+        if service_type == ZEROCONF_TYPE and (
+            discovered_instance_id := props.get("uuid")
+        ):
+            self._async_check_instance_id_conflict(discovered_instance_id, info)
 
         discovery_key = DiscoveryKey(
             domain=DOMAIN,
@@ -431,21 +431,13 @@ class ZeroconfDiscovery:
             return
 
         issue_id = "duplicate_instance_id"
-        discovered_ip = (
-            str(info.ip_address)
-            if info.ip_address
-            else str(info.ip_addresses[0])
-            if info.ip_addresses
-            else None
-        )
-        is_same_ip = (
-            discovered_ip in self._local_service_info.addresses
-            if discovered_ip
-            else False
-        )
+        discovered_ips = set(info.addresses)
+        local_ips = set(self._local_service_info.addresses)
         local_instance_id = self._local_service_info.properties.get("uuid")
 
-        if discovered_instance_id != local_instance_id or is_same_ip:
+        if discovered_instance_id != local_instance_id or local_ips.issuperset(
+            discovered_ips
+        ):
             # No conflict, remove repair issue if present
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
             return
@@ -461,7 +453,7 @@ class ZeroconfDiscovery:
             translation_key=issue_id,
             translation_placeholders={
                 "instance_id": discovered_instance_id,
-                "other_ip": discovered_ip or "unknown",
+                "other_ip": ", ".join(discovered_ips) or "unknown",
                 "other_host_url": info.hostname.rstrip("."),
             },
         )
