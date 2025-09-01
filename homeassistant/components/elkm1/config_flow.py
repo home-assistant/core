@@ -229,7 +229,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during reconfiguration")
                 errors["base"] = "unknown"
             else:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Successfully reconfigured ElkM1 integration with host %s using %s protocol",
                     user_input[CONF_ADDRESS],
                     user_input[CONF_PROTOCOL],
