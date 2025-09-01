@@ -5,7 +5,7 @@
         "description": "Set up your DALI Center gateway integration. This will discover available gateways on your network."
       },
       "discovery": {
-        "title": "Select DALI Gateway",
+        "title": "Select DALI gateway",
         "description": "Select the DALI gateway you want to configure.",
         "data": {
           "selected_gateway": "Gateway"
