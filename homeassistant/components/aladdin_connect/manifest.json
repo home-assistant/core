@@ -4,6 +4,11 @@
   "codeowners": ["@swcloudgenie"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
+  "dhcp": [
+    {
+      "hostname": "gdocntl-*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/aladdin_connect",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
