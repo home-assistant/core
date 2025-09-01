@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from copy import deepcopy
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -552,7 +553,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             slug, info = await self._update_addon_info(addon_slug)
             if info is not None and DATA_KEY_ADDONS in self.data:
                 if slug in self.data[DATA_KEY_ADDONS]:
-                    self.data[DATA_KEY_ADDONS][slug].update(info)
-                    self.async_set_updated_data(self.data)
+                    data = deepcopy(self.data)
+                    data[DATA_KEY_ADDONS][slug].update(info)
+                    self.async_set_updated_data(data)
         except SupervisorError as err:
             _LOGGER.warning("Could not refresh info for %s: %s", addon_slug, err)
