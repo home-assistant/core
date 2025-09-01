@@ -15,9 +15,8 @@ from zeroconf import BadTypeInNameException, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo
 
 from homeassistant import config_entries
-from homeassistant.components import network
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import discovery_flow, instance_id as ha_instance_id
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.issue_registry as ir
@@ -185,6 +184,7 @@ class ZeroconfDiscovery:
         zeroconf_types: dict[str, list[ZeroconfMatcher]],
         homekit_model_lookups: dict[str, HomeKitDiscoveredIntegration],
         homekit_model_matchers: dict[re.Pattern, HomeKitDiscoveredIntegration],
+        local_service_info: AsyncServiceInfo,
     ) -> None:
         """Init discovery."""
         self.hass = hass
@@ -195,6 +195,7 @@ class ZeroconfDiscovery:
         self.async_service_browser: AsyncServiceBrowser | None = None
         self._service_update_listeners: set[Callable[[AsyncServiceInfo], None]] = set()
         self._service_removed_listeners: set[Callable[[str], None]] = set()
+        self._local_service_info = info_from_service(local_service_info)
 
     @callback
     def async_register_service_update_listener(
@@ -343,9 +344,7 @@ class ZeroconfDiscovery:
         if service_type == ZEROCONF_TYPE:
             discovered_instance_id = props.get("uuid")
             if discovered_instance_id:
-                self.hass.async_create_task(
-                    self._async_check_instance_id_conflict(discovered_instance_id, info)
-                )
+                self._async_check_instance_id_conflict(discovered_instance_id, info)
 
         discovery_key = DiscoveryKey(
             domain=DOMAIN,
@@ -420,13 +419,18 @@ class ZeroconfDiscovery:
                 discovery_key=discovery_key,
             )
 
-    async def _async_check_instance_id_conflict(
+    @callback
+    def _async_check_instance_id_conflict(
         self, discovered_instance_id: str, info: _ZeroconfServiceInfo
     ) -> None:
         """Check for instance ID conflicts and create repair issues if needed."""
-        local_instance_id = await ha_instance_id.async_get(self.hass)
+        if not self._local_service_info:
+            _LOGGER.debug(
+                "No local service info, cannot check for instance ID conflicts"
+            )
+            return
+
         issue_id = "duplicate_instance_id"
-        local_addresses = await network.async_get_announce_addresses(self.hass)
         discovered_ip = (
             str(info.ip_address)
             if info.ip_address
@@ -434,7 +438,12 @@ class ZeroconfDiscovery:
             if info.ip_addresses
             else None
         )
-        is_same_ip = discovered_ip in local_addresses if discovered_ip else False
+        is_same_ip = (
+            discovered_ip in self._local_service_info.addresses
+            if discovered_ip
+            else False
+        )
+        local_instance_id = self._local_service_info.properties.get("uuid")
 
         if discovered_instance_id != local_instance_id or is_same_ip:
             # No conflict, remove repair issue if present
