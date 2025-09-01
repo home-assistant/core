@@ -50,10 +50,12 @@ from .const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    GO2RTC_HLS_PROVIDER,
     HA_MANAGED_URL,
     RECOMMENDED_VERSION,
 )
 from .server import Server
+from .web import Go2RtcHlsView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -193,14 +195,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
         _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
 
-    provider = entry.runtime_data = WebRTCProvider(hass, url, session, client)
-    entry.async_on_unload(async_register_webrtc_provider(hass, provider))
+    webrtc_provider = WebRTCProvider(hass, url, session, client)
+    
+    # Set up HLS support in the WebRTC provider
+    await webrtc_provider.async_setup_hls()
+    
+    entry.runtime_data = webrtc_provider
+    entry.async_on_unload(async_register_webrtc_provider(hass, webrtc_provider))
+    
+    # Store provider for access in camera integration
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN]["hls_provider"] = webrtc_provider
+    
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
     """Unload a go2rtc config entry."""
     await entry.runtime_data.teardown()
+    
+    # Clean up HLS provider reference
+    if DOMAIN in hass.data and "hls_provider" in hass.data[DOMAIN]:
+        del hass.data[DOMAIN]["hls_provider"]
+        
     return True
 
 
@@ -210,7 +227,7 @@ async def _get_binary(hass: HomeAssistant) -> str | None:
 
 
 class WebRTCProvider(CameraWebRTCProvider):
-    """WebRTC provider."""
+    """WebRTC provider with HLS support."""
 
     def __init__(
         self,
@@ -225,6 +242,12 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._session = session
         self._rest_client = rest_client
         self._sessions: dict[str, Go2RtcWsClient] = {}
+        self._hls_view: Go2RtcHlsView | None = None
+
+    async def async_setup_hls(self) -> None:
+        """Set up HLS support."""
+        self._hls_view = Go2RtcHlsView(self._hass, self._url)
+        self._hass.http.register_view(self._hls_view)
 
     @property
     def domain(self) -> str:
@@ -235,6 +258,14 @@ class WebRTCProvider(CameraWebRTCProvider):
     def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
         return stream_source.partition(":")[0] in _SUPPORTED_STREAMS
+
+    async def async_get_stream_url(self, camera: Camera) -> str:
+        """Get HLS stream URL for the camera."""
+        # Ensure stream is configured in go2rtc
+        await self._update_stream_source(camera)
+        
+        # Return the HLS playlist URL through our proxy
+        return f"/api/go2rtc/hls/{camera.entity_id}/playlist.m3u8"
 
     async def async_handle_async_webrtc_offer(
         self,

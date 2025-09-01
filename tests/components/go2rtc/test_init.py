@@ -696,3 +696,51 @@ async def test_generic_workaround(
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
         ],
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_hls_provider_setup(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test HLS provider is properly set up."""
+    from homeassistant.components.go2rtc.const import DOMAIN as GO2RTC_DOMAIN
+    
+    # Check that HLS provider is available in hass.data
+    assert GO2RTC_DOMAIN in hass.data
+    assert "hls_provider" in hass.data[GO2RTC_DOMAIN]
+    
+    hls_provider = hass.data[GO2RTC_DOMAIN]["hls_provider"]
+    assert hls_provider is not None
+    
+    # Test that the provider supports common stream sources
+    assert hls_provider.async_is_supported("rtsp://example.com/stream")
+    assert hls_provider.async_is_supported("http://example.com/stream.m3u8")
+    assert not hls_provider.async_is_supported("invalid://stream")
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_hls_stream_url_generation(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test HLS stream URL generation."""
+    from homeassistant.components.go2rtc.const import DOMAIN as GO2RTC_DOMAIN
+    
+    camera = init_test_integration
+    hls_provider = hass.data[GO2RTC_DOMAIN]["hls_provider"]
+    
+    # Test URL generation
+    url = await hls_provider.async_get_stream_url(camera)
+    expected_url = f"/api/go2rtc/hls/{camera.entity_id}/playlist.m3u8"
+    assert url == expected_url
+    
+    # Verify stream was configured in go2rtc
+    rest_client.streams.add.assert_called_with(
+        camera.entity_id,
+        [
+            "rtsp://stream",
+            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+        ],
+    )
