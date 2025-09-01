@@ -455,6 +455,16 @@ class NetatmoCommonSensor(NetatmoModuleEntity, SensorEntity):
         super().__init__(netatmo_device)
         self.entity_description = description
 
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": netatmo_device.device.home.entity_id,
+                    SIGNAL_NAME: netatmo_device.signal_name,
+                },
+            ]
+        )
+
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
