@@ -555,10 +555,6 @@ class BayesianBinarySensor(BinarySensorEntity):
         for observation in self._observations:
             if observation.value_template is None:
                 continue
-            if isinstance(observation.value_template, str):
-                observation.value_template = Template(
-                    observation.value_template, hass=self.hass
-                )
             template = observation.value_template
             observations_by_template.setdefault(template, []).append(observation)
 
