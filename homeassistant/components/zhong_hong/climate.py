@@ -2,62 +2,36 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
-import voluptuous as vol
-from zhong_hong_hvac.hub import ZhongHongGateway
-from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
-
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_HOST,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from . import ZhongHongConfigEntry
+from .const import (
+    DOMAIN,
+    MANUFACTURER,
+    MODEL,
+    ZHONG_HONG_MODE_COOL,
+    ZHONG_HONG_MODE_DRY,
+    ZHONG_HONG_MODE_FAN_ONLY,
+    ZHONG_HONG_MODE_HEAT,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from .coordinator import ZhongHongDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_GATEWAY_ADDRRESS = "gateway_address"
-
-DEFAULT_PORT = 9999
-DEFAULT_GATEWAY_ADDRRESS = 1
-
-SIGNAL_DEVICE_ADDED = "zhong_hong_device_added"
-SIGNAL_ZHONG_HONG_HUB_START = "zhong_hong_hub_start"
-
-PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(
-            CONF_GATEWAY_ADDRRESS, default=DEFAULT_GATEWAY_ADDRRESS
-        ): cv.positive_int,
-    }
-)
-
-ZHONG_HONG_MODE_COOL = "cool"
-ZHONG_HONG_MODE_HEAT = "heat"
-ZHONG_HONG_MODE_DRY = "dry"
-ZHONG_HONG_MODE_FAN_ONLY = "fan_only"
-
-
+# Mode mapping
 MODE_TO_STATE = {
     ZHONG_HONG_MODE_COOL: HVACMode.COOL,
     ZHONG_HONG_MODE_HEAT: HVACMode.HEAT,
@@ -65,60 +39,29 @@ MODE_TO_STATE = {
     ZHONG_HONG_MODE_FAN_ONLY: HVACMode.FAN_ONLY,
 }
 
+STATE_TO_MODE = {v: k for k, v in MODE_TO_STATE.items()}
 
-def setup_platform(
+
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ZhongHongConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the ZhongHong HVAC platform."""
+    """Set up ZhongHong climate entities."""
+    coordinator = entry.runtime_data
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    gw_addr = config.get(CONF_GATEWAY_ADDRRESS)
-    hub = ZhongHongGateway(host, port, gw_addr)
-    devices = [
-        ZhongHongClimate(hub, addr_out, addr_in)
-        for (addr_out, addr_in) in hub.discovery_ac()
+    entities = [
+        ZhongHongClimate(coordinator, device_id, device)
+        for device_id, device in coordinator.devices.items()
     ]
 
-    _LOGGER.debug("We got %s zhong_hong climate devices", len(devices))
-
-    hub_is_initialized = False
-
-    def _start_hub():
-        """Start the hub socket and query status of all devices."""
-        hub.start_listen()
-        hub.query_all_status()
-
-    async def startup():
-        """Start hub socket after all climate entity is set up."""
-        nonlocal hub_is_initialized
-        if not all(device.is_initialized for device in devices):
-            return
-
-        if hub_is_initialized:
-            return
-
-        _LOGGER.debug("zhong_hong hub start listen event")
-        await hass.async_add_executor_job(_start_hub)
-        hub_is_initialized = True
-
-    async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, startup)
-
-    # add devices after SIGNAL_DEVICE_SETTED_UP event is listened
-    add_entities(devices)
-
-    def stop_listen(event):
-        """Stop ZhongHongHub socket."""
-        hub.stop_listen()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen)
+    async_add_entities(entities)
 
 
-class ZhongHongClimate(ClimateEntity):
-    """Representation of a ZhongHong controller support HVAC."""
+class ZhongHongClimate(
+    CoordinatorEntity[ZhongHongDataUpdateCoordinator], ClimateEntity
+):
+    """Representation of a ZhongHong HVAC controller."""
 
     _attr_hvac_modes = [
         HVACMode.COOL,
@@ -127,7 +70,6 @@ class ZhongHongClimate(ClimateEntity):
         HVACMode.FAN_ONLY,
         HVACMode.OFF,
     ]
-    _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -135,124 +77,170 @@ class ZhongHongClimate(ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature_step = 1.0
 
-    def __init__(self, hub, addr_out, addr_in):
-        """Set up the ZhongHong climate devices."""
+    def __init__(
+        self,
+        coordinator: ZhongHongDataUpdateCoordinator,
+        device_id: str,
+        device,
+    ) -> None:
+        """Initialize the ZhongHong climate entity."""
+        super().__init__(coordinator)
 
-        self._device = ZhongHongHVAC(hub, addr_out, addr_in)
-        self._hub = hub
-        self._current_operation = None
-        self._current_temperature = None
-        self._target_temperature = None
-        self._current_fan_mode = None
-        self.is_initialized = False
+        self.device_id = device_id
+        self._device = device
+        addr_out, addr_in = device_id.split("_")
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self._device.register_update_callback(self._after_update)
-        self.is_initialized = True
-        async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADDED)
+        self._attr_name = f"Zhong Hong HVAC {addr_out}_{addr_in}"
+        self._attr_unique_id = f"zhong_hong_hvac_{device_id}"
 
-    def _after_update(self, climate):
-        """Handle state update."""
-        _LOGGER.debug("async update ha state")
-        if self._device.current_operation:
-            self._current_operation = MODE_TO_STATE[
-                self._device.current_operation.lower()
-            ]
-        if self._device.current_temperature:
-            self._current_temperature = self._device.current_temperature
-        if self._device.current_fan_mode:
-            self._current_fan_mode = self._device.current_fan_mode
-        if self._device.target_temperature:
-            self._target_temperature = self._device.target_temperature
-        self.schedule_update_ha_state()
+        # Device info for grouping
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, f"{coordinator.host}_{device_id}")},
+            "name": self._attr_name,
+            "manufacturer": MANUFACTURER,
+            "model": MODEL,
+            "sw_version": "1.0",
+            "via_device": (DOMAIN, f"{coordinator.host}_{coordinator.gateway_address}"),
+        }
 
     @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self.unique_id
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the HVAC."""
-        return f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.last_update_success and self.coordinator.hub_connected()
 
     @property
     def hvac_mode(self) -> HVACMode:
-        """Return current operation ie. heat, cool, idle."""
-        if self.is_on:
-            return self._current_operation
+        """Return current operation mode."""
+        if not self.is_on:
+            return HVACMode.OFF
+
+        data = self.coordinator.data.get(self.device_id, {})
+        operation = data.get("current_operation")
+        if operation:
+            return MODE_TO_STATE.get(operation.lower(), HVACMode.OFF)
         return HVACMode.OFF
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._current_temperature
+        data = self.coordinator.data.get(self.device_id, {})
+        return data.get("current_temperature")
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self._target_temperature
+        data = self.coordinator.data.get(self.device_id, {})
+        return data.get("target_temperature")
 
     @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 1
+    def is_on(self) -> bool:
+        """Return true if the device is on."""
+        data = self.coordinator.data.get(self.device_id, {})
+        return data.get("is_on", False)
 
     @property
-    def is_on(self):
-        """Return true if on."""
-        return self._device.is_on
-
-    @property
-    def fan_mode(self):
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        return self._current_fan_mode
+        data = self.coordinator.data.get(self.device_id, {})
+        return data.get("current_fan_mode")
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
-        return self._device.fan_list
+        return getattr(self._device, "fan_list", None)
 
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self._device.min_temp
+        return getattr(self._device, "min_temp", 16.0)
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self._device.max_temp
+        return getattr(self._device, "max_temp", 30.0)
 
-    def turn_on(self) -> None:
-        """Turn on ac."""
-        return self._device.turn_on()
+    async def async_turn_on(self) -> None:
+        """Turn on the AC."""
+        success = await self.coordinator.async_send_command(self.device_id, "turn_on")
+        if success:
+            await self.coordinator.async_request_refresh()
 
-    def turn_off(self) -> None:
-        """Turn off ac."""
-        return self._device.turn_off()
+    async def async_turn_off(self) -> None:
+        """Turn off the AC."""
+        success = await self.coordinator.async_send_command(self.device_id, "turn_off")
+        if success:
+            await self.coordinator.async_request_refresh()
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            self._device.set_temperature(temperature)
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
 
-        if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
-            self.set_hvac_mode(operation_mode)
+        tasks = []
 
-    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        if temperature is not None:
+            tasks.append(
+                self.coordinator.async_send_command(
+                    self.device_id, "set_temperature", temperature
+                )
+            )
+
+        if hvac_mode is not None:
+            if hvac_mode == HVACMode.OFF:
+                tasks.append(
+                    self.coordinator.async_send_command(self.device_id, "turn_off")
+                )
+            else:
+                # Turn on if not already on
+                if not self.is_on:
+                    tasks.append(
+                        self.coordinator.async_send_command(self.device_id, "turn_on")
+                    )
+                mode_str = STATE_TO_MODE.get(hvac_mode, "").upper()
+                if mode_str:
+                    tasks.append(
+                        self.coordinator.async_send_command(
+                            self.device_id, "set_operation_mode", mode_str
+                        )
+                    )
+
+        if tasks:
+            # Wait for all commands to complete
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            if any(isinstance(r, Exception) for r in results):
+                _LOGGER.error("Some commands failed for %s", self.device_id)
+            else:
+                await self.coordinator.async_request_refresh()
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
-            if self.is_on:
-                self.turn_off()
+            await self.async_turn_off()
             return
 
+        success = True
+
         if not self.is_on:
-            self.turn_on()
+            success = await self.coordinator.async_send_command(
+                self.device_id, "turn_on"
+            )
 
-        self._device.set_operation_mode(hvac_mode.upper())
+        if success:
+            mode_str = STATE_TO_MODE.get(hvac_mode, "").upper()
+            if mode_str:
+                success = await self.coordinator.async_send_command(
+                    self.device_id, "set_operation_mode", mode_str
+                )
 
-    def set_fan_mode(self, fan_mode: str) -> None:
+        if success:
+            await self.coordinator.async_request_refresh()
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        self._device.set_fan_mode(fan_mode)
+        success = await self.coordinator.async_send_command(
+            self.device_id, "set_fan_mode", fan_mode
+        )
+        if success:
+            await self.coordinator.async_request_refresh()

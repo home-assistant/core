@@ -7725,7 +7725,7 @@
     "zhong_hong": {
       "name": "ZhongHong",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "ziggo_mediabox_xl": {
