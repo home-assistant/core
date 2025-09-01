@@ -24,6 +24,7 @@ class ImeonSelectEntityDescription(SelectEntityDescription):
     """Class to describe an Imeon inverter select entity."""
 
     set_value_fn: Callable[[Inverter, str], Awaitable[bool]]
+    values: dict[str, str]
 
 
 SELECT_DESCRIPTIONS: tuple[ImeonSelectEntityDescription, ...] = (
@@ -31,6 +32,7 @@ SELECT_DESCRIPTIONS: tuple[ImeonSelectEntityDescription, ...] = (
         key="manager_inverter_mode",
         translation_key="manager_inverter_mode",
         options=list(INVERTER_MODE_OPTIONS),
+        values=ATTR_INVERTER_MODE,
         set_value_fn=lambda api, mode: api.set_inverter_mode(
             INVERTER_MODE_OPTIONS[mode]
         ),
@@ -61,9 +63,9 @@ class InverterSelect(InverterEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the state of the select."""
         value = self.coordinator.data.get(self.data_key)
-        if isinstance(value, str):
-            return ATTR_INVERTER_MODE.get(value)
-        return None
+        if not isinstance(value, str):
+            return None
+        return self.entity_description.values.get(value)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
