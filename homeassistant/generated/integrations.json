@@ -187,6 +187,12 @@
         }
       }
     },
+    "aladdin_connect": {
+      "name": "Aladdin Connect",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "alarmdecoder": {
       "name": "AlarmDecoder",
       "integration_type": "device",
@@ -2145,7 +2151,7 @@
       ]
     },
     "fritzbox": {
-      "name": "FRITZ!Box",
+      "name": "FRITZ!",
       "integrations": {
         "fritz": {
           "integration_type": "hub",
