@@ -11,7 +11,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Any
+from typing import Any, TypedDict
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from tqdm import tqdm
@@ -98,11 +98,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
     "apple_tv": {"pyatv": {"async-timeout"}},
-    "azure_devops": {
-        # https://github.com/timmo001/aioazuredevops/issues/67
-        # aioazuredevops > incremental > setuptools
-        "incremental": {"setuptools"}
-    },
     "blackbird": {
         # https://github.com/koolsb/pyblackbird/issues/12
         # pyblackbird > pyserial-asyncio
@@ -112,11 +107,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
         # pycmus > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
-    "concord232": {
-        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
-        # concord232 > stevedore > pbr > setuptools
         "pbr": {"setuptools"}
     },
     "delijn": {"pydelijn": {"async-timeout"}},
@@ -174,7 +164,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # universal-silabs-flasher > zigpy > pyserial-asyncio
         "zigpy": {"pyserial-asyncio"},
     },
-    "homekit": {"hap-python": {"async-timeout"}},
     "homewizard": {"python-homewizard-energy": {"async-timeout"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
     "influxdb": {
@@ -204,11 +193,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "async-upnp-client": {"async-timeout"},
     },
     "loqed": {"loqedapi": {"async-timeout"}},
-    "lyric": {
-        # https://github.com/timmo001/aiolyric/issues/115
-        # aiolyric > incremental > setuptools
-        "incremental": {"setuptools"}
-    },
     "matter": {"python-matter-server": {"async-timeout"}},
     "mediaroom": {"pymediaroom": {"async-timeout"}},
     "met": {"pymetno": {"async-timeout"}},
@@ -236,11 +220,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
-    "nx584": {
-        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
-        # pynx584 > stevedore > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
     "opengarage": {"open-garage": {"async-timeout"}},
     "openhome": {"async-upnp-client": {"async-timeout"}},
     "opensensemap": {"opensensemap-api": {"async-timeout"}},
@@ -295,6 +274,9 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
 }
 
+FORBIDDEN_FILE_NAMES: set[str] = {
+    "py.typed",  # should be placed inside a package
+}
 FORBIDDEN_PACKAGE_NAMES: set[str] = {
     "doc",
     "docs",
@@ -364,7 +346,15 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
 }
 
-_packages_checked_files_cache: dict[str, set[str]] = {}
+
+class _PackageFilesCheckResult(TypedDict):
+    """Data structure to store results of package files check."""
+
+    top_level: set[str]
+    file_names: set[str]
+
+
+_packages_checked_files_cache: dict[str, _PackageFilesCheckResult] = {}
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
@@ -733,24 +723,33 @@ def check_dependency_files(
     pkg: str,
     package_exceptions: Collection[str],
 ) -> bool:
-    """Check dependency files for forbidden package names."""
+    """Check dependency files for forbidden files and forbidden package names."""
     if (results := _packages_checked_files_cache.get(pkg)) is None:
         top_level: set[str] = set()
+        file_names: set[str] = set()
         for file in files(pkg) or ():
-            top = file.parts[0].lower()
-            if top.endswith((".dist-info", ".py")):
-                continue
-            top_level.add(top)
-        results = FORBIDDEN_PACKAGE_NAMES & top_level
+            if not (top := file.parts[0].lower()).endswith((".dist-info", ".py")):
+                top_level.add(top)
+            if (name := str(file)).lower() in FORBIDDEN_FILE_NAMES:
+                file_names.add(name)
+        results = _PackageFilesCheckResult(
+            top_level=FORBIDDEN_PACKAGE_NAMES & top_level,
+            file_names=file_names,
+        )
         _packages_checked_files_cache[pkg] = results
-    if not results:
+    if not (results["top_level"] or results["file_names"]):
         return True
 
-    for dir_name in results:
+    for dir_name in results["top_level"]:
         integration.add_warning_or_error(
             pkg in package_exceptions,
             "requirements",
-            f"Package {pkg} has a forbidden top level directory {dir_name} in {package}",
+            f"Package {pkg} has a forbidden top level directory '{dir_name}' in {package}",
+        )
+    for file_name in results["file_names"]:
+        integration.add_error(
+            "requirements",
+            f"Package {pkg} has a forbidden file '{file_name}' in {package}",
         )
     return False
 

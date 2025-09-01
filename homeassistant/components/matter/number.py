@@ -302,7 +302,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterNumberEntityDescription(
             key="PIROccupiedToUnoccupiedDelay",
             entity_category=EntityCategory.CONFIG,
-            translation_key="pir_occupied_to_unoccupied_delay",
+            translation_key="hold_time",  # pir_occupied_to_unoccupied_delay for old revisions
             native_max_value=65534,
             native_min_value=0,
             native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -312,6 +312,38 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.OccupancySensing.Attributes.PIROccupiedToUnoccupiedDelay,
         ),
+        absent_attributes=(clusters.OccupancySensing.Attributes.HoldTime,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="OccupancySensingHoldTime",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="hold_time",
+            native_max_value=65534,
+            native_min_value=1,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.OccupancySensing.Attributes.HoldTime,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="ValveConfigurationAndControlDefaultOpenDuration",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="valve_configuration_and_control_default_open_duration",
+            native_max_value=65534,
+            native_min_value=1,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.ValveConfigurationAndControl.Attributes.DefaultOpenDuration,
+        ),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
