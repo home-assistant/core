@@ -3417,7 +3417,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_start_in-entry]
@@ -3473,7 +3473,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_target_temperature-entry]
@@ -4312,7 +4312,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_spin_speed-entry]
@@ -4417,7 +4417,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_target_temperature-entry]
@@ -6458,7 +6458,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_spin_speed-entry]
@@ -6563,7 +6563,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_target_temperature-entry]
@@ -7099,6 +7099,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
