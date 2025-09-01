@@ -1351,6 +1351,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'not_connected',
         'unsynchronized',
         'grid_consumption',
         'grid_injection',
@@ -1392,6 +1393,7 @@
       'device_class': 'enum',
       'friendly_name': 'Imeon inverter Inverter state',
       'options': list([
+        'not_connected',
         'unsynchronized',
         'grid_consumption',
         'grid_injection',
