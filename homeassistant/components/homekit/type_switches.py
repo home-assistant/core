@@ -100,6 +100,17 @@ VALVE_TYPE: dict[str, ValveInfo] = {
     TYPE_VALVE: ValveInfo(CATEGORY_FAUCET, 0),
 }
 
+VALVE_LINKED_DURATION_PROPERTIES = {
+    INPUT_NUMBER_CONF_MIN,
+    INPUT_NUMBER_CONF_MAX,
+    INPUT_NUMBER_CONF_STEP,
+}
+
+VALVE_DURATION_MIN_DEFAULT = 0
+VALVE_DURATION_MAX_DEFAULT = 3600
+VALVE_DURATION_STEP_DEFAULT = 1
+VALVE_REMAINING_TIME_MAX_DEFAULT = 60 * 60 * 48
+
 
 ACTIVATE_ONLY_SWITCH_DOMAINS = {"button", "input_button", "scene", "script"}
 
@@ -321,13 +332,13 @@ class ValveBase(HomeAccessory):
                 # Properties are set to match the linked duration entity configuration
                 properties={
                     PROP_MIN_VALUE: self._get_linked_duration_property(
-                        INPUT_NUMBER_CONF_MIN, 0
+                        INPUT_NUMBER_CONF_MIN, VALVE_DURATION_MIN_DEFAULT
                     ),
                     PROP_MAX_VALUE: self._get_linked_duration_property(
-                        INPUT_NUMBER_CONF_MAX, 3600
+                        INPUT_NUMBER_CONF_MAX, VALVE_DURATION_MAX_DEFAULT
                     ),
                     PROP_MIN_STEP: self._get_linked_duration_property(
-                        INPUT_NUMBER_CONF_STEP, 1
+                        INPUT_NUMBER_CONF_STEP, VALVE_DURATION_STEP_DEFAULT
                     ),
                 },
             )
@@ -344,7 +355,7 @@ class ValveBase(HomeAccessory):
                     # pyhap truncates the remaining time to maxValue of the characteristic (pyhap default is 1 hour).
                     # This can potentially show a remaining duration that is lower than the actual remaining duration.
                     PROP_MAX_VALUE: self._get_linked_duration_property(
-                        INPUT_NUMBER_CONF_MAX, 60 * 60 * 48
+                        INPUT_NUMBER_CONF_MAX, VALVE_REMAINING_TIME_MAX_DEFAULT
                     ),
                 },
             )
@@ -437,11 +448,7 @@ class ValveBase(HomeAccessory):
         self, attr: str, fallback_value: int
     ) -> int | None:
         """Get property from linked duration entity attribute."""
-        if attr not in [
-            INPUT_NUMBER_CONF_MIN,
-            INPUT_NUMBER_CONF_MAX,
-            INPUT_NUMBER_CONF_STEP,
-        ]:
+        if attr not in VALVE_LINKED_DURATION_PROPERTIES:
             return fallback_value
         if self.linked_duration_entity is None:
             return fallback_value
