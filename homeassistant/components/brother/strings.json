@@ -12,8 +12,8 @@
         "data_description": {
           "host": "The hostname or IP address of the Brother printer to control.",
           "port": "The SNMP port of the Brother printer.",
-          "community": "The SNMP Community string.",
-          "type": "Brother printer type."
+          "community": "A simple password for devices to communicate to each other.",
+          "type": "Brother printer type: ink or laser."
         }
       },
       "zeroconf_confirm": {
