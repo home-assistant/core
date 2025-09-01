@@ -41,7 +41,6 @@ from .const import (
     DEFAULT_REALM,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    PROXMOX_CLIENTS,
     TYPE_CONTAINER,
     TYPE_VM,
     UPDATE_INTERVAL,
@@ -92,35 +91,24 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a ProxmoxVE instance from a config entry."""
 
-    def build_client() -> ProxmoxAPI:
-        """Build the Proxmox client connection."""
-        hass.data[PROXMOX_CLIENTS] = {}
-
+    def build_client() -> ProxmoxClient | None:
+        """Build and return the Proxmox client connection."""
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
         user = entry.data[CONF_USERNAME]
         realm = entry.data[CONF_REALM]
         password = entry.data[CONF_PASSWORD]
         verify_ssl = entry.data[CONF_VERIFY_SSL]
-
-        hass.data[PROXMOX_CLIENTS][host] = None
-
         try:
-            # Construct an API client with the given data for the given host
-            proxmox_client = ProxmoxClient(
-                host, port, user, realm, password, verify_ssl
-            )
-            proxmox_client.build_client()
+            client = ProxmoxClient(host, port, user, realm, password, verify_ssl)
+            client.build_client()
         except AuthenticationError:
             _LOGGER.warning(
                 "Invalid credentials for proxmox instance %s:%d", host, port
             )
         except SSLError:
             _LOGGER.error(
-                (
-                    "Unable to verify proxmox server SSL. "
-                    'Try using "verify_ssl: false" for proxmox instance %s:%d'
-                ),
+                "Unable to verify proxmox server SSL. Try using 'verify_ssl: false' for proxmox instance %s:%d",
                 host,
                 port,
             )
@@ -128,22 +116,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.warning("Connection to host %s timed out during setup", host)
         except requests.exceptions.ConnectionError:
             _LOGGER.warning("Host %s is not reachable", host)
+        else:
+            return client
+        return None
 
-        hass.data[PROXMOX_CLIENTS][host] = proxmox_client
-
-    await hass.async_add_executor_job(build_client)
+    proxmox_client = await hass.async_add_executor_job(build_client)
+    if proxmox_client is None:
+        return False
 
     coordinators: dict[
-        str, Any
-    ] = {}  # Explicit Any, should be updated once we make a dedicated DUC
+        str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]
+    ] = {}
     entry.runtime_data = coordinators
 
-    # Create a coordinator for each vm/container
     host_name = entry.data[CONF_HOST]
     coordinators[host_name] = {}
 
-    proxmox_client: ProxmoxAPI = hass.data[PROXMOX_CLIENTS][host_name]
-    proxmox = proxmox_client.get_api_client()
+    proxmox: ProxmoxAPI = proxmox_client.get_api_client()
 
     updated_nodes: list[dict[str, Any]] = []
     for node_config in entry.data[CONF_NODES]:

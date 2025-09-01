@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_CONTAINERS, CONF_NODE, CONF_NODES, CONF_VMS, PROXMOX_CLIENTS
+from .const import CONF_CONTAINERS, CONF_NODE, CONF_NODES, CONF_VMS
 from .entity import ProxmoxEntity
 
 
@@ -26,9 +26,6 @@ async def async_setup_entry(
 
     host_name = entry.data[CONF_HOST]
     host_name_coordinators = entry.runtime_data[host_name]
-
-    if hass.data[PROXMOX_CLIENTS][host_name] is None:
-        return
 
     for node_config in entry.data[CONF_NODES]:
         node_name = node_config[CONF_NODE]
