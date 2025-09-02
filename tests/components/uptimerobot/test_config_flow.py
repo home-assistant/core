@@ -296,3 +296,42 @@ async def test_reauthentication_failure_account_not_matching(
     assert result2["step_id"] == "reauth_confirm"
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "reauth_failed_matching_account"
+
+
+async def test_reconfigure_successful(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the entry can be reconfigured."""
+    config_entry = MockConfigEntry(
+        **{**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA, "unique_id": None}
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+    assert result["step_id"] == "reconfigure"
+
+    new_key = "u0242ac120003-new"
+
+    with (
+        patch(
+            "pyuptimerobot.UptimeRobot.async_get_account_details",
+            return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ACCOUNT),
+        ),
+        patch(
+            "homeassistant.components.uptimerobot.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: new_key},
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
+    # changed entry
+    assert config_entry.data[CONF_API_KEY] == new_key
