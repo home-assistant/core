@@ -75,7 +75,6 @@ FAN_MODE_MAP = {
     FAN_LOW: "LOW",
     FAN_MEDIUM: "MID",
     FAN_HIGH: "HIGH",
-    FAN_TOP: "HIGH",
     FAN_MIDDLE: "MID",
     "medium_high": "MIDHIGH",
     "medium_low": "MIDLOW",
