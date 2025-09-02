@@ -77,7 +77,7 @@ class TestNSAPIWrapper:
     @pytest.mark.asyncio
     async def test_validate_api_key_value_error(self, api_wrapper, mock_hass):
         """Test API key validation with ValueError (treated as connection error)."""
-        # Mock ValueError (no more string parsing)
+        # Simulate a generic ValueError raised during API key validation (should be treated as a connection error)
         mock_hass.async_add_executor_job.side_effect = ValueError("API error")
         with pytest.raises(NSAPIConnectionError, match="Failed to connect to NS API"):
             await api_wrapper.validate_api_key()
