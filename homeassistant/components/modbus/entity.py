@@ -213,8 +213,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         self._swap = config[CONF_SWAP]
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
-        self._scale = config[CONF_SCALE]
-        self._offset = config[CONF_OFFSET]
+        self._scale: float | int = config[CONF_SCALE]
+        self._offset: float | int = config[CONF_OFFSET]
         self._slave_count = config.get(CONF_SLAVE_COUNT) or config.get(
             CONF_VIRTUAL_COUNT, 0
         )
@@ -259,18 +259,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
     def __process_raw_value(
         self,
         entry: float | str | bytes,
-        scale: float | None = None,
-        offset: float | None = None,
+        scale: float,
+        offset: float,
     ) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
-        if scale is None:
-            scale = self._scale
-        if offset is None:
-            offset = self._offset
-
-        assert scale is not None
-        assert offset is not None
-
         if self._nan_value and entry in (self._nan_value, -self._nan_value):
             return None
         if isinstance(entry, bytes):
@@ -290,7 +282,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         return f"{float(val):.{self._precision}f}"
 
     def unpack_structure_result(
-        self, registers: list[int], scale: float | None, offset: float | None
+        self, registers: list[int], scale: float, offset: float
     ) -> str | None:
         """Convert registers to proper result."""
 
