@@ -227,7 +227,7 @@
         "name": "Alarm minimum"
       },
       "backup_reserve": {
-        "name": "Backup reserve"
+        "name": "Battery backup reserve"
       },
       "installation_height": {
         "name": "Installation height"
@@ -236,7 +236,7 @@
         "name": "Maximum liquid depth"
       },
       "output_power_limit": {
-        "name": "Output power limit"
+        "name": "Inverter output power limit"
       }
     },
     "select": {
@@ -932,7 +932,7 @@
         "name": "Frost protection"
       },
       "feedin_power_limit_enable": {
-        "name": "Feed-in power limit enable"
+        "name": "Enable output power limit"
       }
     },
     "valve": {
