@@ -134,7 +134,7 @@
   "issues": {
     "integration_yaml_migration": {
       "title": "Nederlandse Spoorwegen YAML configuration migrated",
-      "description": "Your Nederlandse Spoorwegen integration configuration has been automatically migrated from YAML to the new config entry format. To complete this migration: 1) Verify the integration is working correctly in the integrations page, 2) Remove the 'nederlandse_spoorwegen:' section from your configuration.yaml file, 3) Restart Home Assistant to clear this notification. The integration will continue to work normally during this transition."
+      "description": "Your Nederlandse Spoorwegen integration configuration has been automatically migrated from YAML to the new config entry format.\nTo complete this migration:\n1. Verify the integration is working correctly in the integrations page.\n2. Remove the 'nederlandse_spoorwegen:' section from your configuration.yaml file.\n3. Restart Home Assistant to clear this notification.\nThe integration will continue to work normally during this transition."
     },
     "platform_yaml_migration": {
       "title": "Nederlandse Spoorwegen platform configuration migrated",
