@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, cast
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import DOOR_STATUS_PROPERTY
 from zwave_js_server.const.command_class.notification import (
     CC_SPECIFIC_NOTIFICATION_TYPE,
+    NotificationEvent,
+    NotificationType,
+    SmokeAlarmNotificationEvent,
 )
 from zwave_js_server.model.driver import Driver
 
@@ -60,8 +64,8 @@ NOTIFICATION_GAS = "18"
 class NotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
     """Represent a Z-Wave JS binary sensor entity description."""
 
-    not_states: set[str] = field(default_factory=lambda: {"0"})
-    states: tuple[str, ...] | None = None
+    not_states: set[NotificationEvent | int] = field(default_factory=lambda: {0})
+    states: set[NotificationEvent | int] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -118,17 +122,24 @@ class NewNotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
 # - Replace water filter
 # - Sump pump failure
 
+
+# This set can be removed once all notification sensors have been migrated
+# to use the new discovery schema and we've removed the old discovery code.
+MIGRATED_NOTIFICATION_TYPES = {
+    NotificationType.SMOKE_ALARM,
+}
+
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
     NotificationZWaveJSEntityDescription(
         # NotificationType 2: Carbon Monoxide - State Id's 1 and 2
         key=NOTIFICATION_CARBON_MONOOXIDE,
-        states=("1", "2"),
+        states={1, 2},
         device_class=BinarySensorDeviceClass.CO,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 2: Carbon Monoxide - State Id 4, 5, 7
         key=NOTIFICATION_CARBON_MONOOXIDE,
-        states=("4", "5", "7"),
+        states={4, 5, 7},
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -140,13 +151,13 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
     NotificationZWaveJSEntityDescription(
         # NotificationType 3: Carbon Dioxide - State Id's 1 and 2
         key=NOTIFICATION_CARBON_DIOXIDE,
-        states=("1", "2"),
+        states={1, 2},
         device_class=BinarySensorDeviceClass.GAS,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 3: Carbon Dioxide - State Id's 4, 5, 7
         key=NOTIFICATION_CARBON_DIOXIDE,
-        states=("4", "5", "7"),
+        states={4, 5, 7},
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -158,13 +169,13 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
     NotificationZWaveJSEntityDescription(
         # NotificationType 4: Heat - State Id's 1, 2, 5, 6 (heat/underheat)
         key=NOTIFICATION_HEAT,
-        states=("1", "2", "5", "6"),
+        states={1, 2, 5, 6},
         device_class=BinarySensorDeviceClass.HEAT,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 4: Heat - State ID's 8, A, B
         key=NOTIFICATION_HEAT,
-        states=("8", "10", "11"),
+        states={8, 10, 11},
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -176,13 +187,13 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
     NotificationZWaveJSEntityDescription(
         # NotificationType 5: Water - State Id's 1, 2, 3, 4, 6, 7, 8, 9, 0A
         key=NOTIFICATION_WATER,
-        states=("1", "2", "3", "4", "6", "7", "8", "9", "10"),
+        states={1, 2, 3, 4, 6, 7, 8, 9, 10},
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 5: Water - State Id's B
         key=NOTIFICATION_WATER,
-        states=("11",),
+        states={11},
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -194,54 +205,54 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
     NotificationZWaveJSEntityDescription(
         # NotificationType 6: Access Control - State Id's 1, 2, 3, 4 (Lock)
         key=NOTIFICATION_ACCESS_CONTROL,
-        states=("1", "2", "3", "4"),
+        states={1, 2, 3, 4},
         device_class=BinarySensorDeviceClass.LOCK,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 6: Access Control - State Id's 11 (Lock jammed)
         key=NOTIFICATION_ACCESS_CONTROL,
-        states=("11",),
+        states={11},
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 6: Access Control - State Id 22 (door/window open)
         key=NOTIFICATION_ACCESS_CONTROL,
-        not_states={"23"},
-        states=("22",),
+        not_states={23},
+        states={22},
         device_class=BinarySensorDeviceClass.DOOR,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 7: Home Security - State Id's 1, 2 (intrusion)
         key=NOTIFICATION_HOME_SECURITY,
-        states=("1", "2"),
+        states={1, 2},
         device_class=BinarySensorDeviceClass.SAFETY,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 7: Home Security - State Id's 3, 4, 9 (tampering)
         key=NOTIFICATION_HOME_SECURITY,
-        states=("3", "4", "9"),
+        states={3, 4, 9},
         device_class=BinarySensorDeviceClass.TAMPER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 7: Home Security - State Id's 5, 6 (glass breakage)
         key=NOTIFICATION_HOME_SECURITY,
-        states=("5", "6"),
+        states={5, 6},
         device_class=BinarySensorDeviceClass.SAFETY,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 7: Home Security - State Id's 7, 8 (motion)
         key=NOTIFICATION_HOME_SECURITY,
-        states=("7", "8"),
+        states={7, 8},
         device_class=BinarySensorDeviceClass.MOTION,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 8: Power Management -
         # State Id's 2, 3 (Mains status)
         key=NOTIFICATION_POWER_MANAGEMENT,
-        not_states={"2"},
-        states=("3",),
+        not_states={2},
+        states={3},
         device_class=BinarySensorDeviceClass.PLUG,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -249,7 +260,7 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         # NotificationType 8: Power Management -
         # State Id's 6, 7, 8, 9 (power status)
         key=NOTIFICATION_POWER_MANAGEMENT,
-        states=("6", "7", "8", "9"),
+        states={6, 7, 8, 9},
         device_class=BinarySensorDeviceClass.SAFETY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -257,39 +268,39 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         # NotificationType 8: Power Management -
         # State Id's 10, 11, 17 (Battery maintenance status)
         key=NOTIFICATION_POWER_MANAGEMENT,
-        states=("10", "11", "17"),
+        states={10, 11, 17},
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 9: System - State Id's 1, 2, 3, 4, 6, 7
         key=NOTIFICATION_SYSTEM,
-        states=("1", "2", "3", "4", "6", "7"),
+        states={1, 2, 3, 4, 6, 7},
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 10: Emergency - State Id's 1, 2, 3
         key=NOTIFICATION_EMERGENCY,
-        states=("1", "2", "3"),
+        states={1, 2, 3},
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 14: Siren
         key=NOTIFICATION_SIREN,
-        states=("1",),
+        states={1},
         device_class=BinarySensorDeviceClass.SOUND,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 18: Gas - State Id's 1, 2, 3, 4
         key=NOTIFICATION_GAS,
-        states=("1", "2", "3", "4"),
+        states={1, 2, 3, 4},
         device_class=BinarySensorDeviceClass.GAS,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 18: Gas - State Id 6
         key=NOTIFICATION_GAS,
-        states=("6",),
+        states={6},
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -386,10 +397,10 @@ async def async_setup_entry(
                     config_entry, driver, info, state_key, info.entity_description
                 )
                 for state_key in info.primary_value.metadata.states
-                if state_key not in info.entity_description.not_states
+                if int(state_key) not in info.entity_description.not_states
                 and (
                     not info.entity_description.states
-                    or state_key in info.entity_description.states
+                    or int(state_key) in info.entity_description.states
                 )
             )
         elif isinstance(info, NewZwaveDiscoveryInfo):
@@ -398,8 +409,16 @@ async def async_setup_entry(
             # ensure the notification CC Value is valid as binary sensor
             if not is_valid_notification_binary_sensor(info):
                 return
+            if (
+                notification_type := info.primary_value.metadata.cc_specific[
+                    CC_SPECIFIC_NOTIFICATION_TYPE
+                ]
+            ) in MIGRATED_NOTIFICATION_TYPES:
+                return
             # Get all sensors from Notification CC states
             for state_key in info.primary_value.metadata.states:
+                if TYPE_CHECKING:
+                    state_key = cast(str, state_key)
                 # ignore idle key (0)
                 if state_key == "0":
                     continue
@@ -408,18 +427,15 @@ async def async_setup_entry(
                     NotificationZWaveJSEntityDescription | None
                 ) = None
                 for description in NOTIFICATION_SENSOR_MAPPINGS:
-                    if (
-                        int(description.key)
-                        == info.primary_value.metadata.cc_specific[
-                            CC_SPECIFIC_NOTIFICATION_TYPE
-                        ]
-                    ) and (not description.states or state_key in description.states):
+                    if (int(description.key) == notification_type) and (
+                        not description.states or int(state_key) in description.states
+                    ):
                         notification_description = description
                         break
 
                 if (
                     notification_description
-                    and state_key in notification_description.not_states
+                    and int(state_key) in notification_description.not_states
                 ):
                     continue
                 entities.append(
@@ -571,14 +587,22 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
                 CommandClass.NOTIFICATION,
             },
             type={ValueType.NUMBER},
-            any_available_states_keys={1, 2},
-            any_available_cc_specific={(CC_SPECIFIC_NOTIFICATION_TYPE, 1)},
+            any_available_states_keys={
+                SmokeAlarmNotificationEvent.SENSOR_STATUS_SMOKE_DETECTED_LOCATION_PROVIDED,
+                SmokeAlarmNotificationEvent.SENSOR_STATUS_SMOKE_DETECTED,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.SMOKE_ALARM)
+            },
         ),
         allow_multi=True,
         entity_description=NotificationZWaveJSEntityDescription(
             # NotificationType 1: Smoke Alarm - State Id's 1 and 2 - Smoke detected
             key=NOTIFICATION_SMOKE_ALARM,
-            states=("1", "2"),
+            states={
+                SmokeAlarmNotificationEvent.SENSOR_STATUS_SMOKE_DETECTED_LOCATION_PROVIDED,
+                SmokeAlarmNotificationEvent.SENSOR_STATUS_SMOKE_DETECTED,
+            },
             device_class=BinarySensorDeviceClass.SMOKE,
         ),
         entity_class=ZWaveNotificationBinarySensor,
@@ -590,14 +614,26 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
                 CommandClass.NOTIFICATION,
             },
             type={ValueType.NUMBER},
-            any_available_states_keys={4, 5, 7, 8},
-            any_available_cc_specific={(CC_SPECIFIC_NOTIFICATION_TYPE, 1)},
+            any_available_states_keys={
+                SmokeAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+                SmokeAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                SmokeAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+                SmokeAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.SMOKE_ALARM)
+            },
         ),
         allow_multi=True,
         entity_description=NotificationZWaveJSEntityDescription(
             # NotificationType 1: Smoke Alarm - State Id's 4, 5, 7, 8
             key=NOTIFICATION_SMOKE_ALARM,
-            states=("4", "5", "7", "8"),
+            states={
+                SmokeAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+                SmokeAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                SmokeAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+                SmokeAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
+            },
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -610,7 +646,9 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
                 CommandClass.NOTIFICATION,
             },
             type={ValueType.NUMBER},
-            any_available_cc_specific={(CC_SPECIFIC_NOTIFICATION_TYPE, 1)},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.SMOKE_ALARM)
+            },
         ),
         allow_multi=True,
         entity_description=NotificationZWaveJSEntityDescription(
@@ -618,12 +656,12 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key=NOTIFICATION_SMOKE_ALARM,
             entity_category=EntityCategory.DIAGNOSTIC,
             not_states={
-                "1",
-                "2",
-                "4",
-                "5",
-                "7",
-                "8",
+                SmokeAlarmNotificationEvent.SENSOR_STATUS_SMOKE_DETECTED_LOCATION_PROVIDED,
+                SmokeAlarmNotificationEvent.SENSOR_STATUS_SMOKE_DETECTED,
+                SmokeAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+                SmokeAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                SmokeAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+                SmokeAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
             },
         ),
         entity_class=ZWaveNotificationBinarySensor,
