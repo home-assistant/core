@@ -25,10 +25,17 @@ from .const import DOMAIN, LOGGER
 def _is_supported(discovery_info: BluetoothServiceInfo):
     """Check if device is supported."""
     if ScanService not in discovery_info.service_uuids:
+        LOGGER.debug(
+            "Unsupported device, missing service %s: %s", ScanService, discovery_info
+        )
         return False
 
     if not (data := discovery_info.manufacturer_data.get(ManufacturerData.company)):
-        LOGGER.debug("Missing manufacturer data: %s", discovery_info)
+        LOGGER.debug(
+            "Unsupported device, missing manufacturer data %s: %s",
+            ManufacturerData.company,
+            discovery_info,
+        )
         return False
 
     manufacturer_data = ManufacturerData.decode(data)
@@ -37,9 +44,10 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
     # Some mowers only expose the serial number in the manufacturer data
     # and not the product type, so we allow None here as well.
     if product_type not in (ProductType.MOWER, None):
-        LOGGER.debug("Unsupported device: %s", manufacturer_data)
+        LOGGER.debug("Unsupported device: %s (%s)", manufacturer_data, discovery_info)
         return False
 
+    LOGGER.debug("Supported device: %s", manufacturer_data)
     return True
 
 
