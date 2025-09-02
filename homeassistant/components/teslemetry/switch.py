@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from itertools import chain
 from typing import Any
 
 from tesla_fleet_api.const import AutoSeat, Scope
@@ -152,6 +151,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="guest_mode_enabled",
+        polling=False,
         unique_id="guest_mode_enabled",
         streaming_listener=lambda vehicle, callback: vehicle.listen_GuestModeEnabled(
             callback
@@ -170,35 +170,40 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry Switch platform from a config entry."""
 
-    async_add_entities(
-        chain(
-            (
-                TeslemetryVehiclePollingVehicleSwitchEntity(
-                    vehicle, description, entry.runtime_data.scopes
+    entities: list[SwitchEntity] = []
+
+    for vehicle in entry.runtime_data.vehicles:
+        for description in VEHICLE_DESCRIPTIONS:
+            if vehicle.poll or vehicle.firmware < description.streaming_firmware:
+                if description.polling:
+                    entities.append(
+                        TeslemetryVehiclePollingVehicleSwitchEntity(
+                            vehicle, description, entry.runtime_data.scopes
+                        )
+                    )
+            else:
+                entities.append(
+                    TeslemetryStreamingVehicleSwitchEntity(
+                        vehicle, description, entry.runtime_data.scopes
+                    )
                 )
-                if vehicle.poll or vehicle.firmware < description.streaming_firmware
-                else TeslemetryStreamingVehicleSwitchEntity(
-                    vehicle, description, entry.runtime_data.scopes
-                )
-                for vehicle in entry.runtime_data.vehicles
-                for description in VEHICLE_DESCRIPTIONS
-            ),
-            (
-                TeslemetryChargeFromGridSwitchEntity(
-                    energysite,
-                    entry.runtime_data.scopes,
-                )
-                for energysite in entry.runtime_data.energysites
-                if energysite.info_coordinator.data.get("components_battery")
-                and energysite.info_coordinator.data.get("components_solar")
-            ),
-            (
-                TeslemetryStormModeSwitchEntity(energysite, entry.runtime_data.scopes)
-                for energysite in entry.runtime_data.energysites
-                if energysite.info_coordinator.data.get("components_storm_mode_capable")
-            ),
+
+    entities.extend(
+        TeslemetryChargeFromGridSwitchEntity(
+            energysite,
+            entry.runtime_data.scopes,
         )
+        for energysite in entry.runtime_data.energysites
+        if energysite.info_coordinator.data.get("components_battery")
+        and energysite.info_coordinator.data.get("components_solar")
     )
+    entities.extend(
+        TeslemetryStormModeSwitchEntity(energysite, entry.runtime_data.scopes)
+        for energysite in entry.runtime_data.energysites
+        if energysite.info_coordinator.data.get("components_storm_mode_capable")
+    )
+
+    async_add_entities(entities)
 
 
 class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
