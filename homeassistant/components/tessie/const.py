@@ -6,6 +6,13 @@ from enum import IntEnum, StrEnum
 
 DOMAIN = "tessie"
 
+SERVICE_SHARE = "share"
+
+CONF_VALUE = "value"
+CONF_LOCALE = "locale"
+CONF_RETRY_DURATION = "retry_duration"
+CONF_WAIT_FOR_COMPLETION = "wait_for_completion"
+
 MODELS = {
     "model3": "Model 3",
     "modelx": "Model X",
