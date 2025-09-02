@@ -188,7 +188,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.add_suggested_values_to_schema(
-                    USER_SCHEMA, {CONF_ADDRESS: self.address}
+                    USER_SCHEMA,
+                    {
+                        CONF_ADDRESS: self.address,
+                        CONF_PIN: self.pin,
+                    },
                 ),
                 errors={"base": "cannot_connect"},
             )
