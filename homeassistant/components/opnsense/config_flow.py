@@ -24,13 +24,10 @@ from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
     """OPNsense config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-    data: Any | None = None
 
     async def _show_setup_form(
         self,
