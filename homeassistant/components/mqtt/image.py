@@ -25,6 +25,13 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
+from .const import (
+    CONF_CONTENT_TYPE,
+    CONF_IMAGE_ENCODING,
+    CONF_IMAGE_TOPIC,
+    CONF_URL_TEMPLATE,
+    CONF_URL_TOPIC,
+)
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     DATA_MQTT,
@@ -38,12 +45,6 @@ from .util import valid_subscribe_topic
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-CONF_CONTENT_TYPE = "content_type"
-CONF_IMAGE_ENCODING = "image_encoding"
-CONF_IMAGE_TOPIC = "image_topic"
-CONF_URL_TEMPLATE = "url_template"
-CONF_URL_TOPIC = "url_topic"
 
 DEFAULT_NAME = "MQTT Image"
 
