@@ -12,8 +12,15 @@
           'title_id': 'PPSA07784_00',
           'title_name': 'STAR WARS Jedi: Survivor™',
         }),
+        'PSVITA': dict({
+          'format': 'PSVITA',
+          'media_image_url': 'https://image.api.playstation.com/trophy/np/NPWR03134_00_0008206095F67FD3BB385E9E00A7C9CFE6F5A4AB96/5F87A6997DD23D1C4D4CC0D1F958ED79CB905331.PNG',
+          'platform': 'PSVITA',
+          'status': 'online',
+          'title_id': 'PCSB00074_00',
+          'title_name': "Assassin's Creed® III Liberation",
+        }),
       }),
-      'available': True,
       'presence': dict({
         'basicPresence': dict({
           'availability': 'availableToPlay',
@@ -26,6 +33,7 @@
               'titleName': 'STAR WARS Jedi: Survivor™',
             }),
           ]),
+          'lastAvailableDate': '2025-06-30T01:42:15.391Z',
           'primaryPlatformInfo': dict({
             'onlineStatus': 'online',
             'platform': 'PS5',
@@ -60,7 +68,9 @@
       }),
       'registered_platforms': list([
         'PS5',
+        'PSVITA',
       ]),
+      'shareable_profile_link': '**REDACTED**',
       'trophy_summary': dict({
         'account_id': '**REDACTED**',
         'earned_trophies': dict({
@@ -74,6 +84,14 @@
         'trophy_level': 1079,
       }),
       'username': '**REDACTED**',
+    }),
+    'groups': dict({
+      'test-groupid': dict({
+        'groupName': dict({
+          'value': '',
+        }),
+        'members': '**REDACTED**',
+      }),
     }),
   })
 # ---

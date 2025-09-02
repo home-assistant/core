@@ -97,6 +97,7 @@ def mock_module_subdevices() -> AsyncMock:
     """Mock a velbus module."""
     module = AsyncMock(spec=Module)
     module.get_type_name.return_value = "VMB2BLE"
+    module.get_type.return_value = "123"
     module.get_addresses.return_value = [88]
     module.get_name.return_value = "Kitchen"
     module.get_serial.return_value = "a1b2c3d4e5f6"
@@ -138,7 +139,7 @@ def mock_temperature() -> AsyncMock:
     channel.get_module_sw_version.return_value = "3.0.0"
     channel.get_module_serial.return_value = "asdfghjk"
     channel.get_module_type.return_value = 1
-    channel.is_sub_device.return_value = False
+    channel.is_sub_device.return_value = True
     channel.is_counter_channel.return_value = False
     channel.get_class.return_value = "temperature"
     channel.get_unit.return_value = "°C"
@@ -184,7 +185,7 @@ def mock_select() -> AsyncMock:
     channel.get_full_name.return_value = "Kitchen"
     channel.get_module_sw_version.return_value = "1.1.1"
     channel.get_module_serial.return_value = "qwerty1234567"
-    channel.is_sub_device.return_value = False
+    channel.is_sub_device.return_value = True
     channel.get_options.return_value = ["none", "summer", "winter", "holiday"]
     channel.get_selected_program.return_value = "winter"
     return channel

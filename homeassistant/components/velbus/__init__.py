@@ -20,7 +20,7 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .services import setup_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions for the Velbus component."""
-    setup_services(hass)
+    async_setup_services(hass)
     return True
 
 

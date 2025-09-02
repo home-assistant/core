@@ -36,7 +36,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
     start,
 )
-from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
 
@@ -372,12 +371,10 @@ class BackupManager:
         # Latest backup event and backup event subscribers
         self.last_event: ManagerStateEvent = BlockedEvent()
         self.last_action_event: ManagerStateEvent | None = None
-        self._backup_event_subscriptions = hass.data[
-            DATA_BACKUP
-        ].backup_event_subscriptions
-        self._backup_platform_event_subscriptions = hass.data[
-            DATA_BACKUP
-        ].backup_platform_event_subscriptions
+        self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
+        self._backup_platform_event_subscriptions: list[
+            Callable[[BackupPlatformEvent], None]
+        ] = []
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
@@ -899,7 +896,8 @@ class BackupManager:
         )
         agent_errors = {
             backup_id: error
-            for backup_id, error in zip(backup_ids, delete_results, strict=True)
+            for backup_id, error_dict in zip(backup_ids, delete_results, strict=True)
+            for error in error_dict.values()
             if error and not isinstance(error, BackupNotFound)
         }
         if agent_errors:
@@ -1122,7 +1120,7 @@ class BackupManager:
             )
         if unavailable_agents:
             LOGGER.warning(
-                "Backup agents %s are not available, will backupp to %s",
+                "Backup agents %s are not available, will backup to %s",
                 unavailable_agents,
                 available_agents,
             )
@@ -1384,6 +1382,32 @@ class BackupManager:
             self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
+
+    @callback
+    def async_subscribe_events(
+        self,
+        on_event: Callable[[ManagerStateEvent], None],
+    ) -> Callable[[], None]:
+        """Subscribe events."""
+
+        def remove_subscription() -> None:
+            self._backup_event_subscriptions.remove(on_event)
+
+        self._backup_event_subscriptions.append(on_event)
+        return remove_subscription
+
+    @callback
+    def async_subscribe_platform_events(
+        self,
+        on_event: Callable[[BackupPlatformEvent], None],
+    ) -> Callable[[], None]:
+        """Subscribe to backup platform events."""
+
+        def remove_subscription() -> None:
+            self._backup_platform_event_subscriptions.remove(on_event)
+
+        self._backup_platform_event_subscriptions.append(on_event)
+        return remove_subscription
 
     def _create_automatic_backup_failed_issue(
         self, translation_key: str, translation_placeholders: dict[str, str] | None

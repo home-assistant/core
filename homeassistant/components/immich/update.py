@@ -44,7 +44,7 @@ class ImmichUpdateEntity(ImmichEntity, UpdateEntity):
         return self.coordinator.data.server_about.version
 
     @property
-    def latest_version(self) -> str:
+    def latest_version(self) -> str | None:
         """Available new immich server version."""
         assert self.coordinator.data.server_version_check
         return self.coordinator.data.server_version_check.release_version

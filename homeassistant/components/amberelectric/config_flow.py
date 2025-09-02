@@ -16,7 +16,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_SITE_ID, CONF_SITE_NAME, DOMAIN
+from .const import CONF_SITE_ID, CONF_SITE_NAME, DOMAIN, REQUEST_TIMEOUT
 
 API_URL = "https://app.amber.com.au/developers"
 
@@ -64,7 +64,9 @@ class AmberElectricConfigFlow(ConfigFlow, domain=DOMAIN):
         api = amberelectric.AmberApi(api_client)
 
         try:
-            sites: list[Site] = filter_sites(api.get_sites())
+            sites: list[Site] = filter_sites(
+                api.get_sites(_request_timeout=REQUEST_TIMEOUT)
+            )
         except amberelectric.ApiException as api_exception:
             if api_exception.status == 403:
                 self._errors[CONF_API_TOKEN] = "invalid_api_token"

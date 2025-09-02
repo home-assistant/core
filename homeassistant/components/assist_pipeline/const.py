@@ -3,7 +3,6 @@
 DOMAIN = "assist_pipeline"
 
 DATA_CONFIG = f"{DOMAIN}.config"
-DATA_MIGRATIONS = f"{DOMAIN}_migrations"
 
 DEFAULT_PIPELINE_TIMEOUT = 60 * 5  # seconds
 

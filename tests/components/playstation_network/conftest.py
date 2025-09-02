@@ -1,12 +1,21 @@
 """Common fixtures for the Playstation Network tests."""
 
 from collections.abc import Generator
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from psnawp_api.models.trophies import TrophySet, TrophySummary
+from psnawp_api.models import User
+from psnawp_api.models.group.group import Group
+from psnawp_api.models.trophies import (
+    PlatformType,
+    TrophySet,
+    TrophySummary,
+    TrophyTitle,
+)
 import pytest
 
 from homeassistant.components.playstation_network.const import CONF_NPSSO, DOMAIN
+from homeassistant.config_entries import ConfigSubentryData
 
 from tests.common import MockConfigEntry
 
@@ -25,6 +34,15 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_NPSSO: NPSSO_TOKEN,
         },
         unique_id=PSN_ID,
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_id="ABCDEF",
+                subentry_type="friend",
+                title="PublicUniversalFriend",
+                unique_id="fren-psn-id",
+            )
+        ],
     )
 
 
@@ -64,6 +82,7 @@ def mock_user() -> Generator[MagicMock]:
                         "conceptIconUrl": "https://image.api.playstation.com/vulcan/ap/rnd/202211/2222/l8QTN7ThQK3lRBHhB3nX1s7h.png",
                     }
                 ],
+                "lastAvailableDate": "2025-06-30T01:42:15.391Z",
             }
         }
 
@@ -82,13 +101,14 @@ def mock_psnawpapi(mock_user: MagicMock) -> Generator[MagicMock]:
 
         client.user.return_value = mock_user
         client.me.return_value.get_account_devices.return_value = [
+            {"deviceType": "PSVITA"},
             {
                 "deviceId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234",
                 "deviceType": "PS5",
                 "activationType": "PRIMARY",
                 "activationDate": "2021-01-14T18:00:00.000Z",
                 "accountDeviceVector": "abcdefghijklmnopqrstuv",
-            }
+            },
         ]
         client.me.return_value.trophy_summary.return_value = TrophySummary(
             PSN_ID, 1079, 19, 10, TrophySet(14450, 8722, 11754, 1398)
@@ -117,6 +137,56 @@ def mock_psnawpapi(mock_user: MagicMock) -> Generator[MagicMock]:
             "isOfficiallyVerified": False,
             "isMe": True,
         }
+        client.user.return_value.trophy_titles.return_value = [
+            TrophyTitle(
+                np_service_name="trophy",
+                np_communication_id="NPWR03134_00",
+                trophy_set_version="01.03",
+                title_name="Assassin's Creed® III Liberation",
+                title_detail="Assassin's Creed® III Liberation",
+                title_icon_url="https://image.api.playstation.com/trophy/np/NPWR03134_00_0008206095F67FD3BB385E9E00A7C9CFE6F5A4AB96/5F87A6997DD23D1C4D4CC0D1F958ED79CB905331.PNG",
+                title_platform=frozenset({PlatformType.PS_VITA}),
+                has_trophy_groups=False,
+                progress=28,
+                hidden_flag=False,
+                earned_trophies=TrophySet(bronze=4, silver=8, gold=0, platinum=0),
+                defined_trophies=TrophySet(bronze=22, silver=21, gold=1, platinum=1),
+                last_updated_datetime=datetime(2016, 10, 6, 18, 5, 8, tzinfo=UTC),
+                np_title_id=None,
+            )
+        ]
+        client.me.return_value.get_profile_legacy.return_value = {
+            "profile": {
+                "presences": [
+                    {
+                        "onlineStatus": "online",
+                        "platform": "PSVITA",
+                        "npTitleId": "PCSB00074_00",
+                        "titleName": "Assassin's Creed® III Liberation",
+                        "hasBroadcastData": False,
+                    }
+                ]
+            }
+        }
+        client.me.return_value.get_shareable_profile_link.return_value = {
+            "shareImageUrl": "https://xxxxx.cloudfront.net/profile-testuser?Expires=1753304493"
+        }
+        group = MagicMock(spec=Group, group_id="test-groupid")
+
+        group.get_group_information.return_value = {
+            "groupName": {"value": ""},
+            "members": [
+                {"onlineId": "PublicUniversalFriend", "accountId": "fren-psn-id"},
+                {"onlineId": "testuser", "accountId": PSN_ID},
+            ],
+        }
+        client.me.return_value.get_groups.return_value = [group]
+        fren = MagicMock(
+            spec=User, account_id="fren-psn-id", online_id="PublicUniversalFriend"
+        )
+        fren.get_presence.return_value = mock_user.get_presence.return_value
+
+        client.user.return_value.friends_list.return_value = [fren]
 
         yield client
 
