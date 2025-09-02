@@ -8,20 +8,20 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.solaredge_modules.const import CONF_SITE_ID, DOMAIN
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(
+async def test_user_flow(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_solar_edge_web: AsyncMock,
 ) -> None:
-    """Test we get the form."""
+    """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -31,7 +31,6 @@ async def test_form(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "test-name",
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
             CONF_SITE_ID: "123456",
@@ -39,12 +38,13 @@ async def test_form(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test-name"
+    assert result["title"] == "SolarEdge"
     assert result["data"] == {
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
         CONF_SITE_ID: "123456",
     }
+    assert result["result"].unique_id == "123456"
     assert len(mock_setup_entry.mock_calls) == 1
     mock_solar_edge_web.async_get_equipment.assert_awaited_once()
 
@@ -77,7 +77,6 @@ async def test_form_exceptions(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "test-name",
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
             CONF_SITE_ID: "123456",
@@ -94,7 +93,6 @@ async def test_form_exceptions(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "test-name",
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
             CONF_SITE_ID: "123456",
@@ -102,7 +100,7 @@ async def test_form_exceptions(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test-name"
+    assert result["title"] == "SolarEdge"
     assert result["data"] == {
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
@@ -125,7 +123,6 @@ async def test_form_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "test-name",
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
             CONF_SITE_ID: mock_config_entry.data[CONF_SITE_ID],
@@ -152,7 +149,6 @@ async def test_form_not_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "test-name",
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
             CONF_SITE_ID: "654321",
@@ -160,7 +156,7 @@ async def test_form_not_already_configured(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test-name"
+    assert result["title"] == "SolarEdge"
     assert result["data"] == {
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",

@@ -1,21 +1,18 @@
 """Tests for the SolarEdge Modules coordinator."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from solaredge_web import EnergyData
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.statistics import statistics_during_period
-from homeassistant.components.solaredge_modules.coordinator import (
-    SolarEdgeModulesCoordinator,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
@@ -24,11 +21,10 @@ async def test_coordinator_first_run(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_solar_edge_web: AsyncMock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the coordinator on its first run with no existing statistics."""
-    coordinator = SolarEdgeModulesCoordinator(hass, mock_config_entry)
-    await coordinator._async_update_data()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)
     stats = await hass.async_add_executor_job(
@@ -44,25 +40,52 @@ async def test_coordinator_first_run(
         None,
         {"state", "sum"},
     )
-    assert stats == snapshot
+    assert stats == {
+        "solaredge_modules:123456_1001": [
+            {
+                "start": 1735783200.0,
+                "end": 1735786800.0,
+                "state": 11.5,
+                "sum": 11.5,
+            },
+            {
+                "start": 1735786800.0,
+                "end": 1735790400.0,
+                "state": 15.5,
+                "sum": 27.0,
+            },
+        ],
+        "solaredge_modules:123456_1002": [
+            {
+                "start": 1735783200.0,
+                "end": 1735786800.0,
+                "state": 21.5,
+                "sum": 21.5,
+            },
+            {
+                "start": 1735786800.0,
+                "end": 1735790400.0,
+                "state": 25.5,
+                "sum": 47.0,
+            },
+        ],
+    }
 
 
 async def test_coordinator_subsequent_run(
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_solar_edge_web: AsyncMock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the coordinator correctly updates statistics on subsequent runs."""
     mock_solar_edge_web.async_get_equipment.return_value = {
         1001: {"displayName": "1.1"},
     }
 
-    coordinator = SolarEdgeModulesCoordinator(hass, mock_config_entry)
-
-    # Run the coordinator for the first time to create initial statistics
-    await coordinator._async_update_data()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
     mock_solar_edge_web.async_get_energy_data.return_value = [
@@ -102,8 +125,9 @@ async def test_coordinator_subsequent_run(
         ),
     ]
 
-    # Run the coordinator again to process the new data
-    await coordinator._async_update_data()
+    freezer.tick(timedelta(hours=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)
     stats = await hass.async_add_executor_job(
@@ -119,25 +143,44 @@ async def test_coordinator_subsequent_run(
         None,
         {"state", "sum"},
     )
-    assert stats == snapshot
+    assert stats == {
+        "solaredge_modules:123456_1001": [
+            {
+                "start": 1735783200.0,
+                "end": 1735786800.0,
+                "state": 11.5,
+                "sum": 11.5,
+            },
+            {
+                "start": 1735786800.0,
+                "end": 1735790400.0,
+                "state": 25.5,
+                "sum": 37.0,
+            },
+            {
+                "start": 1735790400.0,
+                "end": 1735794000.0,
+                "state": 29.5,
+                "sum": 66.5,
+            },
+        ]
+    }
 
 
 async def test_coordinator_subsequent_run_with_gap(
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_solar_edge_web: AsyncMock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the coordinator correctly updates statistics on subsequent runs with a gap in data."""
     mock_solar_edge_web.async_get_equipment.return_value = {
         1001: {"displayName": "1.1"},
     }
 
-    coordinator = SolarEdgeModulesCoordinator(hass, mock_config_entry)
-
-    # Run the coordinator for the first time to create initial statistics
-    await coordinator._async_update_data()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
     mock_solar_edge_web.async_get_energy_data.return_value = [
@@ -160,8 +203,9 @@ async def test_coordinator_subsequent_run_with_gap(
         ),
     ]
 
-    # Run the coordinator again to process the new data
-    await coordinator._async_update_data()
+    freezer.tick(timedelta(hours=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)
     stats = await hass.async_add_executor_job(
@@ -177,7 +221,28 @@ async def test_coordinator_subsequent_run_with_gap(
         None,
         {"state", "sum"},
     )
-    assert stats == snapshot
+    assert stats == {
+        "solaredge_modules:123456_1001": [
+            {
+                "start": 1735783200.0,
+                "end": 1735786800.0,
+                "state": 11.5,
+                "sum": 11.5,
+            },
+            {
+                "start": 1735786800.0,
+                "end": 1735790400.0,
+                "state": 15.5,
+                "sum": 27.0,
+            },
+            {
+                "start": 1738465200.0,
+                "end": 1738468800.0,
+                "state": 25.5,
+                "sum": 52.5,
+            },
+        ]
+    }
 
 
 async def test_coordinator_no_energy_data(
@@ -190,8 +255,8 @@ async def test_coordinator_no_energy_data(
     """Test the coordinator handles an empty energy data response from the API."""
     mock_solar_edge_web.async_get_energy_data.return_value = []
 
-    coordinator = SolarEdgeModulesCoordinator(hass, mock_config_entry)
-    await coordinator._async_update_data()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert "No data received from SolarEdge API" in caplog.text
 

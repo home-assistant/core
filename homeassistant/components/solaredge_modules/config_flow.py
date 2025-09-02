@@ -10,7 +10,7 @@ from solaredge_web import SolarEdgeWeb
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
@@ -22,7 +22,6 @@ DEFAULT_NAME = "SolarEdge"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_SITE_ID): str,
@@ -82,7 +81,7 @@ class SolarEdgeModulesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title=DEFAULT_NAME,
                     data={
                         CONF_SITE_ID: user_input[CONF_SITE_ID],
                         CONF_USERNAME: user_input[CONF_USERNAME],
