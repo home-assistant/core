@@ -15,6 +15,11 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_HIGH,
+    FAN_TOP,
+    FAN_MIDDLE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -67,23 +72,15 @@ MODE_TO_STATE = {
 
 # HA → zhong_hong
 FAN_MODE_MAP = {
-    "low": "LOW",
-    "medium": "MID",
-    "high": "HIGH",
-    "auto": "MIDHIGH",
-    "top": "HIGH",
-    "middle": "MID",
-    "focus": "MIDHIGH",
-    "diffuse": "MIDLOW",
+    FAN_LOW: "LOW",
+    FAN_MEDIUM: "MID",
+    FAN_HIGH: "HIGH",
+    FAN_TOP: "HIGH",
+    FAN_MIDDLE: "MID",
+    "MIDHIGH": "MIDHIGH",
+    "MIDLOW": "MIDLOW",
 }
-# zhong_hong → HA
-FAN_MODE_REVERSE_MAP = {
-    "LOW": "low",
-    "MID": "medium",
-    "HIGH": "high",
-    "MIDHIGH": "auto",
-    "MIDLOW": "diffuse",
-}
+FAN_MODE_REVERSE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 
 def setup_platform(
     hass: HomeAssistant,
@@ -230,7 +227,7 @@ class ZhongHongClimate(ClimateEntity):
         if not self._current_fan_mode:
             return None
         return FAN_MODE_REVERSE_MAP.get(
-            self._current_fan_mode.upper(), self._current_fan_mode.lower()
+            self._current_fan_mode, self._current_fan_mode
         )
 
     @property
@@ -239,7 +236,7 @@ class ZhongHongClimate(ClimateEntity):
         if not self._device.fan_list:
             return []
         return list(
-            {FAN_MODE_REVERSE_MAP.get(x.upper(), x.lower()) for x in self._device.fan_list}
+            {FAN_MODE_REVERSE_MAP.get(x, x) for x in self._device.fan_list}
         )
 
     @property
@@ -282,7 +279,7 @@ class ZhongHongClimate(ClimateEntity):
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        mapped_mode = FAN_MODE_MAP.get(fan_mode.lower())
+        mapped_mode = FAN_MODE_MAP.get(fan_mode)
         if not mapped_mode:
-            raise ValueError(f"Unsupported fan mode: {fan_mode}")
+            _LOGGER.error("Unsupported fan mode: %s", fan_mode)
         self._device.set_fan_mode(mapped_mode)
