@@ -292,7 +292,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==0.10.1
+aiomealie==0.10.2
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1026,7 +1026,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250829.0
+home-assistant-frontend==20250901.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.8.29
@@ -1166,6 +1166,9 @@ letpot==0.6.2
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.7
+
+# homeassistant.components.libre_hardware_monitor
+librehardwaremonitor-api==1.3.1
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
@@ -1712,7 +1715,7 @@ pyipp==0.17.0
 pyiqvia==2022.04.0
 
 # homeassistant.components.iskra
-pyiskra==0.1.21
+pyiskra==0.1.26
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -2537,9 +2540,6 @@ volvooncall==0.10.3
 
 # homeassistant.components.verisure
 vsure==2.6.7
-
-# homeassistant.components.vulcan
-vulcan-api==2.4.2
 
 # homeassistant.components.vultr
 vultr==0.1.2
