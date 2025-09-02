@@ -17,6 +17,7 @@ class TestEntity(trigger_entity.TriggerEntity):
     """Test entity class."""
 
     __test__ = False
+    _entity_id_format = "test.{}"
     extra_template_keys = (CONF_STATE,)
 
     @property
@@ -134,3 +135,17 @@ async def test_script_variables_from_coordinator(hass: HomeAssistant) -> None:
     coordinator._execute_update({"value": STATE_ON})
 
     assert entity._render_script_variables() == {"value": STATE_ON}
+
+
+async def test_default_entity_id(hass: HomeAssistant) -> None:
+    """Test template entity creates suggested entity_id from the default_entity_id."""
+    coordinator = TriggerUpdateCoordinator(hass, {})
+    entity = TestEntity(hass, coordinator, {"default_entity_id": "test.test"})
+    assert entity.entity_id == "test.test"
+
+
+async def test_bad_default_entity_id(hass: HomeAssistant) -> None:
+    """Test template entity creates suggested entity_id from the default_entity_id."""
+    coordinator = TriggerUpdateCoordinator(hass, {})
+    entity = TestEntity(hass, coordinator, {"default_entity_id": "bad.test"})
+    assert entity.entity_id == "test.test"

@@ -408,7 +408,7 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
 
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, user_input[CONF_TOPIC]),
-                    data=user_input,
+                    data={CONF_TOPIC: user_input[CONF_TOPIC]},
                     unique_id=user_input[CONF_TOPIC],
                 )
         return self.async_show_form(

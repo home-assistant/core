@@ -5703,6 +5703,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[t88qaeyydamm9xhsddx]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        't88qaeyydamm9xhsddx',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Five way ceiling lamp',
+    'model_id': 'shx9mmadyyeaq88t',
+    'name': 'Plafond bureau ',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[tcdk0skzcpisexj2zc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -6440,6 +6471,37 @@
     'model': 'Contact Sensor',
     'model_id': '6ywsnauy',
     'name': 'Fenêtre cuisine',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[yybgnzr3ztws]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'yybgnzr3ztws',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Cooking Thermometer (unsupported)',
+    'model_id': '3rzngbyy',
+    'name': 'Grillhőmérő',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
