@@ -1395,6 +1395,12 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
+            key=DPCode.POWER_TOTAL,
+            translation_key="total_power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
             key=DPCode.TOTAL_POWER,
             translation_key="total_power",
             device_class=SensorDeviceClass.POWER,
