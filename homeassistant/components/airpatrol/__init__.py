@@ -13,10 +13,8 @@ type AirPatrolConfigEntry = ConfigEntry[AirPatrolDataUpdateCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirPatrolConfigEntry) -> bool:
     """Set up AirPatrol from a config entry."""
-    # Create coordinator and store it in runtime_data
     coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
 
-    # Fetch initial data
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

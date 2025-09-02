@@ -9,7 +9,7 @@ from airpatrol.api import AirPatrolAPI, AirPatrolAuthenticationError, AirPatrolE
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -74,8 +74,7 @@ class AirPatrolConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             access_token, unique_id, errors = await validate_api(self.hass, user_input)
             if access_token and unique_id:
-                # Store the access token in the config entry
-                user_input["access_token"] = access_token
+                user_input[CONF_ACCESS_TOKEN] = access_token
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -99,12 +98,11 @@ class AirPatrolConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-            # If the user confirmed, proceed with reauthentication
             access_token, unique_id, errors = await validate_api(self.hass, user_input)
             if access_token and unique_id:
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_mismatch()
-                user_input["access_token"] = access_token
+                user_input[CONF_ACCESS_TOKEN] = access_token
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(), data_updates=user_input
                 )

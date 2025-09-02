@@ -1,156 +1,133 @@
 """Test the AirPatrol data update coordinator."""
 
-from unittest.mock import AsyncMock, patch
+from datetime import timedelta
+from unittest.mock import AsyncMock
 
-from airpatrol.api import AirPatrolAPI, AirPatrolAuthenticationError, AirPatrolError
-import pytest
+from airpatrol.api import AirPatrolAuthenticationError, AirPatrolError
+from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.airpatrol.const import DOMAIN
-from homeassistant.components.airpatrol.coordinator import (
-    SCAN_INTERVAL,
-    AirPatrolDataUpdateCoordinator,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import ConfigEntryAuthFailed, UpdateFailed
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant, State
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-def make_config_entry(data=None):
-    """Helper to create a MockConfigEntry with custom data."""
-    if data is None:
-        data = {"email": "test@example.com", "password": "pw"}
-    return MockConfigEntry(
-        domain=DOMAIN,
-        entry_id="test_entry_id",
-        data=data,
-        unique_id="uniqueid",
-        title=data["email"],
-    )
-
-
-@pytest.fixture
-def mock_api():
-    """Mock AirPatrol API."""
-    api = AsyncMock(spec=AirPatrolAPI)
-    api.get_data.return_value = [{"unit_id": "unit1"}]
-    api.get_access_token.return_value = "token"
-    api.get_unique_id.return_value = "uniqueid"
-    api.authenticate = AsyncMock()
-    return api
-
-
-@pytest.mark.asyncio
-async def test_update_data_with_stored_token(hass: HomeAssistant, mock_api) -> None:
-    """Test data update with stored access token."""
-    entry = make_config_entry(
-        {"email": "test@example.com", "password": "pw", "access_token": "token"}
-    )
-    entry.add_to_hass(hass)
-    with (
-        patch(
-            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI",
-            return_value=mock_api,
-        ),
-        patch(
-            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI.authenticate",
-            new_callable=AsyncMock,
-            return_value=mock_api,
-        ),
-    ):
-        coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
-        await coordinator._async_setup()
-        result = await coordinator._async_update_data()
-        assert result == {"unit1": {"unit_id": "unit1"}}
-        mock_api.get_data.assert_awaited()
-
-
-@pytest.mark.asyncio
-async def test_update_data_refresh_token_success(
-    hass: HomeAssistant, mock_api: AsyncMock
+async def test_update_data_with_stored_token(
+    hass: HomeAssistant,
+    mock_api_response: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    get_data,
 ) -> None:
-    """Test data update with expired token and successful refresh."""
-    entry = make_config_entry({"email": "test@example.com", "password": "pw"})
-    entry.add_to_hass(hass)
-    with (
-        patch(
-            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI.authenticate",
-            new_callable=AsyncMock,
-            return_value=mock_api,
-        ),
-        patch.object(hass.config_entries, "async_update_entry") as mock_update_entry,
-    ):
-        coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
-        await coordinator._async_setup()
-        result = await coordinator._async_update_data()
-        assert result == {"unit1": {"unit_id": "unit1"}}
-        mock_api.get_data.assert_awaited()
-        mock_update_entry.assert_called_once()
+    """Test data update with stored access token."""
+    mock_api_response.return_value = get_data()
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_api_response.assert_called()
+    assert mock_api_response.call_count == 2
+    state: State | None = hass.states.get("climate.living_room")
+    assert state
+    assert state.state == "cool"
+    assert state.attributes["temperature"] == 22.0
+    assert state.attributes["current_temperature"] == 22.5
+    assert state.attributes["current_humidity"] == 45.0
 
 
-@pytest.mark.asyncio
-async def test_update_data_auth_failure(hass: HomeAssistant) -> None:
+async def test_update_data_refresh_token_success(
+    hass: HomeAssistant,
+    get_data,
+    mock_config_entry: MockConfigEntry,
+    mock_api_authentication: AsyncMock,
+    mock_api_response: AsyncMock,
+) -> None:
+    """Test data update with expired token and successful token refresh."""
+    mock_api_response.side_effect = [AirPatrolAuthenticationError("fail"), get_data()]
+    mock_api_authentication.return_value.get_data = mock_api_response
+
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_api_response.call_count == 2
+
+    state: State | None = hass.states.get("climate.living_room")
+    assert state
+    assert state.state == "cool"
+    assert state.attributes["temperature"] == 22.0
+    assert state.attributes["current_temperature"] == 22.5
+    assert state.attributes["current_humidity"] == 45.0
+
+
+async def test_update_data_auth_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_authentication: AsyncMock,
+    mock_api_response: AsyncMock,
+) -> None:
     """Test permanent authentication failure."""
-    entry = make_config_entry()
-    entry.add_to_hass(hass)
-    api = AsyncMock(spec=AirPatrolAPI)
-    api.get_access_token.return_value = "token"
-    api.get_unique_id.return_value = "uniqueid"
-    with (
-        patch(
-            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI",
-            return_value=api,
-        ),
-        patch(
-            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI.authenticate",
-            new_callable=AsyncMock,
-            return_value=api,
-        ),
-    ):
-        coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
-        await coordinator._async_setup()
-        api.get_data.side_effect = AirPatrolAuthenticationError("fail")
-        with pytest.raises(ConfigEntryAuthFailed):
-            await coordinator._async_update_data()
+    mock_config_entry.add_to_hass(hass)
+    mock_api_authentication.side_effect = AirPatrolAuthenticationError("fail")
+    mock_api_response.side_effect = AirPatrolAuthenticationError("fail")
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state: State | None = hass.states.get("climate.living_room")
+    assert state is None
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Authentication with AirPatrol failed"
 
 
-@pytest.mark.asyncio
-async def test_update_data_api_error(hass: HomeAssistant) -> None:
+async def test_update_data_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_response: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    get_data,
+) -> None:
     """Test API error handling."""
-    entry = make_config_entry(
-        {"email": "test@example.com", "password": "pw", "access_token": "token"}
-    )
-    entry.add_to_hass(hass)
-    api = AsyncMock(spec=AirPatrolAPI)
-    api.get_data.side_effect = AirPatrolError("fail")
-    api.get_access_token.return_value = "new_token"  # Return proper string
+    mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI",
-            return_value=api,
-        ),
-        patch(
-            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI.authenticate",
-            new_callable=AsyncMock,
-            return_value=api,
-        ),
-    ):
-        coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
-        await coordinator._async_setup()
+    mock_api_response.side_effect = [get_data(), get_data(), AirPatrolError("fail")]
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        with pytest.raises(
-            UpdateFailed, match="Error communicating with AirPatrol API: fail"
-        ):
-            await coordinator._async_update_data()
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_api_response.call_count == 3
+    state: State | None = hass.states.get("climate.living_room")
+    assert state
+    assert state.state == "unavailable"
 
 
-def test_coordinator_update_interval(hass: HomeAssistant) -> None:
-    """Test coordinator update interval and initialization."""
-    entry = make_config_entry()
-    entry.add_to_hass(hass)
-    coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
-    assert coordinator.update_interval == SCAN_INTERVAL
-    assert coordinator.config_entry == entry
-    # Accept both 'AirPatrol' and 'Airpatrol' for compatibility with coordinator capitalization
-    assert coordinator.name == f"{DOMAIN.capitalize()} {entry.data['email']}"
+async def test_update_data_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_authentication: AsyncMock,
+    mock_api_response: AsyncMock,
+    get_data,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test authentication error handling on data update."""
+    mock_config_entry.add_to_hass(hass)
+    mock_api_authentication.side_effect = AirPatrolAuthenticationError("fail")
+    mock_api_response.side_effect = [
+        get_data(),
+        get_data(),
+        AirPatrolAuthenticationError("fail"),
+    ]
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+
+    state: State | None = hass.states.get("climate.living_room")
+    assert state
+    assert state.state == "unavailable"

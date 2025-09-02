@@ -24,30 +24,24 @@ from .entity import AirPatrolEntity
 
 PARALLEL_UPDATES = 0
 
-# HVAC modes supported by AirPatrol
 AP_TO_HA_HVAC_MODES = {
     "heat": HVACMode.HEAT,
     "cool": HVACMode.COOL,
     "off": HVACMode.OFF,
 }
-
 HA_TO_AP_HVAC_MODES = {value: key for key, value in AP_TO_HA_HVAC_MODES.items()}
 
-# Fan speeds supported by AirPatrol
 AP_TO_HA_FAN_MODES = {
     "min": FAN_LOW,
     "max": FAN_HIGH,
     "auto": FAN_AUTO,
 }
-
 HA_TO_AP_FAN_MODES = {value: key for key, value in AP_TO_HA_FAN_MODES.items()}
 
-# Swing modes supported by AirPatrol
 AP_TO_HA_SWING_MODES = {
     "on": SWING_ON,
     "off": SWING_OFF,
 }
-
 HA_TO_AP_SWING_MODES = {value: key for key, value in AP_TO_HA_SWING_MODES.items()}
 
 
@@ -58,7 +52,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up AirPatrol climate entities."""
     coordinator = config_entry.runtime_data
-    # Create climate entities for each unit
     units = coordinator.data
 
     async_add_entities(
@@ -136,9 +129,9 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
         pump_power = params.get("PumpPower")
         pump_mode = params.get("PumpMode")
 
-        if pump_power == "off":
-            return HVACMode.OFF
-        return AP_TO_HA_HVAC_MODES.get(pump_mode)
+        if pump_power == "on" and pump_mode:
+            return AP_TO_HA_HVAC_MODES.get(pump_mode)
+        return HVACMode.OFF
 
     @property
     def fan_mode(self) -> str | None:
@@ -159,11 +152,9 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
         params = self.params().copy()
 
         if ATTR_TEMPERATURE in kwargs:
-            # Convert temperature to AirPatrol format (string with 3 decimal places)
             temp = kwargs[ATTR_TEMPERATURE]
             params["PumpTemp"] = f"{temp:.3f}"
 
-        # Update the climate data
         await self._async_set_params(params)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -174,20 +165,15 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
             params["PumpPower"] = "off"
         else:
             params["PumpPower"] = "on"
-            # Map HVAC mode to pump mode
             params["PumpMode"] = HA_TO_AP_HVAC_MODES.get(hvac_mode)
 
-        # Update the climate data
         await self._async_set_params(params)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         params = self.params().copy()
-
-        # Map fan mode to AirPatrol fan speed
         params["FanSpeed"] = HA_TO_AP_FAN_MODES.get(fan_mode)
 
-        # Update the climate data
         await self._async_set_params(params)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
@@ -195,12 +181,13 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
         params = self.params().copy()
         params["Swing"] = HA_TO_AP_SWING_MODES.get(swing_mode)
 
-        # Update the climate data
         await self._async_set_params(params)
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        await self.async_set_hvac_mode(HVACMode.HEAT)
+        params = self.params().copy()
+        if mode := AP_TO_HA_HVAC_MODES.get(params["PumpMode"]):
+            await self.async_set_hvac_mode(mode)
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
