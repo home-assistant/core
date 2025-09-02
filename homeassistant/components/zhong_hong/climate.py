@@ -65,6 +65,25 @@ MODE_TO_STATE = {
     ZHONG_HONG_MODE_FAN_ONLY: HVACMode.FAN_ONLY,
 }
 
+# HA → zhong_hong
+FAN_MODE_MAP = {
+    "low": "LOW",
+    "medium": "MID",
+    "high": "HIGH",
+    "auto": "MIDHIGH",
+    "top": "HIGH",
+    "middle": "MID",
+    "focus": "MIDHIGH",
+    "diffuse": "MIDLOW",
+}
+# zhong_hong → HA
+FAN_MODE_REVERSE_MAP = {
+    "LOW": "low",
+    "MID": "medium",
+    "HIGH": "high",
+    "MIDHIGH": "auto",
+    "MIDLOW": "diffuse",
+}
 
 def setup_platform(
     hass: HomeAssistant,
@@ -208,12 +227,20 @@ class ZhongHongClimate(ClimateEntity):
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        return self._current_fan_mode
+        if not self._current_fan_mode:
+            return None
+        return FAN_MODE_REVERSE_MAP.get(
+            self._current_fan_mode.upper(), self._current_fan_mode.lower()
+        )
 
     @property
     def fan_modes(self):
         """Return the list of available fan modes."""
-        return self._device.fan_list
+        if not self._device.fan_list:
+            return []
+        return list(
+            {FAN_MODE_REVERSE_MAP.get(x.upper(), x.lower()) for x in self._device.fan_list}
+        )
 
     @property
     def min_temp(self) -> float:
@@ -255,4 +282,7 @@ class ZhongHongClimate(ClimateEntity):
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        self._device.set_fan_mode(fan_mode)
+        mapped_mode = FAN_MODE_MAP.get(fan_mode.lower())
+        if not mapped_mode:
+            raise ValueError(f"Unsupported fan mode: {fan_mode}")
+        self._device.set_fan_mode(mapped_mode)
