@@ -21,7 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_platform
-from .const import SLIDE_INFO_DATA
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -48,7 +47,7 @@ async def test_connection_error(
     """Test connection error."""
     await setup_platform(hass, mock_config_entry, [Platform.COVER])
 
-    mock_slide_api.slide_info.side_effect = [ClientConnectionError, SLIDE_INFO_DATA]
+    mock_slide_api.slide_info.side_effect = ClientConnectionError
 
     freezer.tick(delta=timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -56,11 +55,13 @@ async def test_connection_error(
 
     assert hass.states.get("cover.slide_bedroom").state == STATE_UNAVAILABLE
 
+    mock_slide_api.slide_info.side_effect = None
+
     freezer.tick(delta=timedelta(minutes=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("cover.slide_bedroom").state == CoverState.OPEN
+    assert hass.states.get("cover.slide_bedroom").state == CoverState.CLOSED
 
 
 async def test_state_change(
@@ -69,15 +70,10 @@ async def test_state_change(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test connection error."""
+    """Test state changes."""
     await setup_platform(hass, mock_config_entry, [Platform.COVER])
 
-    mock_slide_api.slide_info.side_effect = [
-        dict(SLIDE_INFO_DATA, pos=0.0),
-        dict(SLIDE_INFO_DATA, pos=0.4),
-        dict(SLIDE_INFO_DATA, pos=1.0),
-        dict(SLIDE_INFO_DATA, pos=0.8),
-    ]
+    mock_slide_api.slide_info.return_value["pos"] = 0.0
 
     freezer.tick(delta=timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -85,17 +81,23 @@ async def test_state_change(
 
     assert hass.states.get("cover.slide_bedroom").state == CoverState.OPEN
 
+    mock_slide_api.slide_info.return_value["pos"] = 0.4
+
     freezer.tick(delta=timedelta(seconds=15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get("cover.slide_bedroom").state == CoverState.CLOSING
 
+    mock_slide_api.slide_info.return_value["pos"] = 1.0
+
     freezer.tick(delta=timedelta(seconds=15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get("cover.slide_bedroom").state == CoverState.CLOSED
+
+    mock_slide_api.slide_info.return_value["pos"] = 0.8
 
     freezer.tick(delta=timedelta(seconds=15))
     async_fire_time_changed(hass)
@@ -171,12 +173,7 @@ async def test_set_position(
 
     await setup_platform(hass, mock_config_entry, [Platform.COVER])
 
-    mock_slide_api.slide_info.side_effect = [
-        dict(SLIDE_INFO_DATA, pos=0.0),
-        dict(SLIDE_INFO_DATA, pos=1.0),
-        dict(SLIDE_INFO_DATA, pos=1.0),
-        dict(SLIDE_INFO_DATA, pos=0.0),
-    ]
+    mock_slide_api.slide_info.return_value["pos"] = 0.0
 
     freezer.tick(delta=timedelta(seconds=15))
     async_fire_time_changed(hass)
@@ -188,6 +185,8 @@ async def test_set_position(
         {ATTR_ENTITY_ID: "cover.slide_bedroom", ATTR_POSITION: 1.0},
         blocking=True,
     )
+
+    mock_slide_api.slide_info.return_value["pos"] = 1.0
 
     freezer.tick(delta=timedelta(seconds=15))
     async_fire_time_changed(hass)
@@ -205,6 +204,8 @@ async def test_set_position(
         {ATTR_ENTITY_ID: "cover.slide_bedroom", ATTR_POSITION: 0.0},
         blocking=True,
     )
+
+    mock_slide_api.slide_info.return_value["pos"] = 0.0
 
     freezer.tick(delta=timedelta(seconds=15))
     async_fire_time_changed(hass)

@@ -8,9 +8,9 @@ import pytest
 from homeassistant.components.slide_local.const import CONF_INVERT_POSITION, DOMAIN
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_MAC
 
-from .const import HOST, SLIDE_INFO_DATA
+from .const import HOST
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -48,7 +48,9 @@ def mock_slide_api() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_slide_local_api.return_value
-        client.slide_info.return_value = SLIDE_INFO_DATA
+        client.slide_info.return_value = load_json_object_fixture(
+            "slide_1.json", DOMAIN
+        )
         yield client
 
 
