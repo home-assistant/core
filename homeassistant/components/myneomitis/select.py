@@ -33,7 +33,16 @@ SUB_MODELES = ["UFH"]
 
 PRESET_OPTIONS = {
     "relais": ["on", "off", "auto"],
-    "pilote": ["boost", "auto", "comfort", "eco-2", "eco-1", "eco", "antifrost", "standby"],
+    "pilote": [
+        "boost",
+        "auto",
+        "comfort",
+        "eco-2",
+        "eco-1",
+        "eco",
+        "antifrost",
+        "standby",
+    ],
     "UFH": ["cooling", "heating"],
 }
 
@@ -41,7 +50,9 @@ PRESET_OPTIONS = {
 class MyNeoSelect(SelectEntity):
     """Select entity for MyNeomitis devices."""
 
-    def __init__(self, api: Any, device: dict[str, Any], devices: list[dict[str, Any]]) -> None:
+    def __init__(
+        self, api: Any, device: dict[str, Any], devices: list[dict[str, Any]]
+    ) -> None:
         """Initialize the MyNeoSelect entity.
 
         Args:
@@ -55,24 +66,42 @@ class MyNeoSelect(SelectEntity):
         self._attr_name = f"MyNeo {device['name']}"
         self._attr_unique_id = f"myneo_{device['_id']}"
         self._attr_available = device["connected"]
-        self._parents = parents_to_dict(device["parents"]) if "parents" in device else {}
-        self._primary_parent = get_device_by_rfid(devices, self._parents["primary"]) if "primary" in self._parents else {}
+        self._parents = (
+            parents_to_dict(device["parents"]) if "parents" in device else {}
+        )
+        self._primary_parent = (
+            get_device_by_rfid(devices, self._parents["primary"])
+            if "primary" in self._parents
+            else {}
+        )
         self._is_sub_device = device["model"] in SUB_MODELES
         self._attr_translation_key = "select_myneomitis"
 
         if device["model"] == "EWS":
-            self._type = "relais" if "relayMode" in device.get("state", {}) else "pilote"
-            self._preset_mode_map = PRESET_MODE_MAP_RELAIS if self._type == "relais" else PRESET_MODE_MAP
-            self._reverse_preset_mode_map = REVERSE_PRESET_MODE_MAP_RELAIS if self._type == "relais" else REVERSE_PRESET_MODE_MAP
+            self._type = (
+                "relais" if "relayMode" in device.get("state", {}) else "pilote"
+            )
+            self._preset_mode_map = (
+                PRESET_MODE_MAP_RELAIS if self._type == "relais" else PRESET_MODE_MAP
+            )
+            self._reverse_preset_mode_map = (
+                REVERSE_PRESET_MODE_MAP_RELAIS
+                if self._type == "relais"
+                else REVERSE_PRESET_MODE_MAP
+            )
             self._attr_options = PRESET_OPTIONS.get(self._type)
-            self._attr_current_option = self._reverse_preset_mode_map.get(device.get("state", {}).get("targetMode"), STATE_UNKNOWN)
+            self._attr_current_option = self._reverse_preset_mode_map.get(
+                device.get("state", {}).get("targetMode"), STATE_UNKNOWN
+            )
 
         elif device["model"] == "UFH":
             self._type = "UFH"
             self._preset_mode_map = PRESET_MODE_MAP_UFH
             self._reverse_preset_mode_map = REVERSE_PRESET_MODE_MAP_UFH
             self._attr_options = PRESET_OPTIONS.get(self._type)
-            self._attr_current_option = self._reverse_preset_mode_map.get(device.get("state", {}).get("changeOverUser"), STATE_UNKNOWN)
+            self._attr_current_option = self._reverse_preset_mode_map.get(
+                device.get("state", {}).get("changeOverUser"), STATE_UNKNOWN
+            )
 
         self._program = device.get("program", {}).get("data", {})
 
@@ -119,13 +148,17 @@ class MyNeoSelect(SelectEntity):
         if "changeOverUser" in state:
             mode = state.get("changeOverUser")
             if mode is not None:
-                self._attr_current_option = self._reverse_preset_mode_map.get(mode, STATE_UNKNOWN)
+                self._attr_current_option = self._reverse_preset_mode_map.get(
+                    mode, STATE_UNKNOWN
+                )
                 log_ws_update_ufh(self._attr_name, state)
 
         if "targetMode" in state:
             mode = state.get("targetMode")
             if mode is not None:
-                self._attr_current_option = self._reverse_preset_mode_map.get(mode, STATE_UNKNOWN)
+                self._attr_current_option = self._reverse_preset_mode_map.get(
+                    mode, STATE_UNKNOWN
+                )
                 log_ws_update_switch(self._attr_name, state)
 
         self.async_write_ha_state()
@@ -138,11 +171,13 @@ class MyNeoSelect(SelectEntity):
         """
         attributes = {
             "ws_status": "connected" if self._api.sio.connected else "disconnected",
-            "is_connected": "True" if self._attr_available else "False"
+            "is_connected": "True" if self._attr_available else "False",
         }
 
         if self._program:
-            week_planning = format_week_schedule(self._program, isRelais=(self._type == "relais"))
+            week_planning = format_week_schedule(
+                self._program, isRelais=(self._type == "relais")
+            )
             for day, planning in week_planning.items():
                 attributes[f"planning_{day.lower()}"] = planning
 
@@ -177,14 +212,26 @@ class MyNeoSelect(SelectEntity):
         """
         if self._is_sub_device:
             if self._device["model"] == "UFH":
-                return await self._api.set_sub_device_mode_ufh(self._parents["gateway"], self._device["rfid"], self._preset_mode_map[mode])
+                return await self._api.set_sub_device_mode_ufh(
+                    self._parents["gateway"],
+                    self._device["rfid"],
+                    self._preset_mode_map[mode],
+                )
 
-            return await self._api.set_sub_device_mode(self._parents["gateway"], self._device["rfid"], self._preset_mode_map[mode])
+            return await self._api.set_sub_device_mode(
+                self._parents["gateway"],
+                self._device["rfid"],
+                self._preset_mode_map[mode],
+            )
 
-        return await self._api.set_device_mode(self._device["_id"], self._preset_mode_map[mode])
+        return await self._api.set_device_mode(
+            self._device["_id"], self._preset_mode_map[mode]
+        )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: Any, async_add_entities: Any) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: Any, async_add_entities: Any
+) -> None:
     """Set up Select entities from a config entry.
 
     Args:
@@ -232,7 +279,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: Any, async_add_en
             added_ids.discard(device_id)
             entities_by_id.pop(uid, None)
 
-    api.register_discovery_callback(lambda dev: hass.async_create_task(add_new_entity(dev)))
-    api.register_removal_callback(lambda dev_id: hass.async_create_task(remove_entity(dev_id)))
-
-
+    api.register_discovery_callback(
+        lambda dev: hass.async_create_task(add_new_entity(dev))
+    )
+    api.register_removal_callback(
+        lambda dev_id: hass.async_create_task(remove_entity(dev_id))
+    )

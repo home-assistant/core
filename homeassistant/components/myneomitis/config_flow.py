@@ -15,6 +15,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class MyNeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the configuration flow for the MyNeomitis integration."""
 
@@ -72,7 +73,9 @@ class MyNeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("MyNeomitis : Connection error: %s", e)
                 errors["base"] = "connection_error"
             except aiohttp.ClientError as e:
-                _LOGGER.error("MyNeomitis : Unexpected aiohttp client error during login: %s", e)
+                _LOGGER.error(
+                    "MyNeomitis : Unexpected aiohttp client error during login: %s", e
+                )
                 errors["base"] = "unknown_error"
             except RuntimeError as e:
                 _LOGGER.error("MyNeomitis : Runtime error during login: %s", e)
