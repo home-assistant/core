@@ -1421,6 +1421,13 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_class=RpcBluTrvSensor,
     ),
+    "presence_num_objects": RpcSensorDescription(
+        key="presence",
+        sub_key="num_objects",
+        translation_key="detected_objects",
+        name="Detected objects",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 

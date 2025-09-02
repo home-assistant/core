@@ -141,6 +141,9 @@
       }
     },
     "sensor": {
+      "detected_objects": {
+        "unit_of_measurement": "objects"
+      },
       "gas_detected": {
         "state": {
           "none": "None",
