@@ -1,7 +1,8 @@
 """Tests for the SolarEdge Modules coordinator."""
 
+import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -9,11 +10,42 @@ from solaredge_web import EnergyData
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.statistics import statistics_during_period
+from homeassistant.components.solaredge_modules.coordinator import (
+    SolarEdgeModulesCoordinator,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
+
+
+async def _trigger_and_wait_for_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    coordinator: SolarEdgeModulesCoordinator,
+) -> None:
+    """Trigger a coordinator refresh and wait for it to complete."""
+    # The coordinator refresh runs in the background.
+    # To reliably assert the result, we need to wait for the refresh to complete.
+    # We patch the coordinator's update method to signal completion via an asyncio.Event.
+    refresh_done = asyncio.Event()
+    original_update = coordinator._async_update_data
+
+    async def wrapped_update_data() -> None:
+        """Wrap original update and set event."""
+        await original_update()
+        refresh_done.set()
+
+    with patch.object(
+        coordinator,
+        "_async_update_data",
+        side_effect=wrapped_update_data,
+        autospec=True,
+    ):
+        freezer.tick(timedelta(hours=12))
+        async_fire_time_changed(hass)
+        await asyncio.wait_for(refresh_done.wait(), timeout=5)
 
 
 async def test_coordinator_first_run(
@@ -125,9 +157,8 @@ async def test_coordinator_subsequent_run(
         ),
     ]
 
-    freezer.tick(timedelta(hours=12))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    coordinator: SolarEdgeModulesCoordinator = mock_config_entry.runtime_data
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
 
     await async_wait_recording_done(hass)
     stats = await hass.async_add_executor_job(
@@ -203,9 +234,8 @@ async def test_coordinator_subsequent_run_with_gap(
         ),
     ]
 
-    freezer.tick(timedelta(hours=12))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    coordinator: SolarEdgeModulesCoordinator = mock_config_entry.runtime_data
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
 
     await async_wait_recording_done(hass)
     stats = await hass.async_add_executor_job(
