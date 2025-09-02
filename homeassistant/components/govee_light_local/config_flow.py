@@ -52,14 +52,9 @@ async def _async_discover(hass: HomeAssistant, adapter_ip: IPv4Address) -> bool:
         _LOGGER.debug("No devices found with IP %s", adapter_ip)
 
     devices_count = len(controller.devices)
-    cleanup_complete_events: list[asyncio.Event] = []
+    cleanup_complete: asyncio.Event = controller.cleanup()
     with suppress(TimeoutError):
-        await asyncio.gather(
-            *[
-                asyncio.wait_for(cleanup_complete_event.wait(), 1)
-                for cleanup_complete_event in cleanup_complete_events
-            ]
-        )
+        await asyncio.wait_for(cleanup_complete.wait(), 1)
 
     return devices_count > 0
 
