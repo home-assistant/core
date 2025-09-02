@@ -38,7 +38,7 @@ class TestValidateRouteStructure:
         """Test invalid route - not a dict (regression test for UTG_HT issue)."""
         # This was the exact issue: string passed instead of dict
         route = "UTG_HT"  # type: ignore[arg-type]
-        assert validate_route_structure(route) is False
+        assert validate_route_structure(route) is False  # type: ignore  # noqa: PGH003
 
     def test_invalid_route_missing_from(self) -> None:
         """Test invalid route - missing 'from' field."""
