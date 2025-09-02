@@ -283,6 +283,13 @@ RPC_SENSORS: Final = {
         name="Mute",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "presence": RpcBinarySensorDescription(
+        key="presence",
+        sub_key="num_objects",
+        value=lambda status, _: bool(int(status)),
+        name="Occupancy",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+    ),
 }
 
 
