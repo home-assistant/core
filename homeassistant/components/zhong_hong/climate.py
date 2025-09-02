@@ -11,15 +11,14 @@ from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_MIDDLE,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
-    FAN_LOW,
-    FAN_MEDIUM,
-    FAN_HIGH,
-    FAN_TOP,
-    FAN_MIDDLE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -80,6 +79,7 @@ FAN_MODE_MAP = {
     "medium_low": "MIDLOW",
 }
 FAN_MODE_REVERSE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
+
 
 def setup_platform(
     hass: HomeAssistant,
@@ -225,18 +225,14 @@ class ZhongHongClimate(ClimateEntity):
         """Return the fan setting."""
         if not self._current_fan_mode:
             return None
-        return FAN_MODE_REVERSE_MAP.get(
-            self._current_fan_mode, self._current_fan_mode
-        )
+        return FAN_MODE_REVERSE_MAP.get(self._current_fan_mode, self._current_fan_mode)
 
     @property
     def fan_modes(self):
         """Return the list of available fan modes."""
         if not self._device.fan_list:
             return []
-        return list(
-            {FAN_MODE_REVERSE_MAP.get(x, x) for x in self._device.fan_list}
-        )
+        return list({FAN_MODE_REVERSE_MAP.get(x, x) for x in self._device.fan_list})
 
     @property
     def min_temp(self) -> float:
