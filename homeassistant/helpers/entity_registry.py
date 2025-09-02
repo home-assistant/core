@@ -1609,7 +1609,7 @@ class EntityRegistry(BaseRegistry):
                     modified_at=datetime.fromisoformat(entity["modified_at"]),
                     name=entity["name"],
                     options=entity["options"]
-                    if entity["options"] is not UNDEFINED_STR
+                    if entity["options"] != UNDEFINED_STR
                     else UNDEFINED,
                     orphaned_timestamp=entity["orphaned_timestamp"],
                     platform=entity["platform"],
