@@ -142,8 +142,8 @@
           "intent_reconfigure": "Re-configure the current adapter"
         },
         "menu_option_descriptions": {
-          "intent_migrate": "This will move your Z-Wave network to a new adapter",
-          "intent_reconfigure": "This will let you change the integration options"
+          "intent_migrate": "This will move your Z-Wave network to a new adapter.",
+          "intent_reconfigure": "This will let you change the adapter configuration."
         }
       },
       "instruct_unplug": {
