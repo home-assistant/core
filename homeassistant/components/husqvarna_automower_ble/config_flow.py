@@ -26,8 +26,9 @@ BLUETOOTH_SCHEMA = vol.Schema(
     }
 )
 
-USER_SCHEMA = BLUETOOTH_SCHEMA.extend(
+USER_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_PIN): str,
         vol.Required(CONF_ADDRESS): str,
     }
 )
