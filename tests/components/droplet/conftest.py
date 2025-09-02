@@ -1,11 +1,8 @@
 """Common fixtures for the Droplet tests."""
 
 from collections.abc import Generator
-from enum import Enum, auto
-import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-import aiohttp
 import pytest
 
 from homeassistant.components.droplet.const import DOMAIN
@@ -13,73 +10,78 @@ from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
+MOCK_CODE = "11223"
+MOCK_HOST = "192.168.1.2"
+MOCK_PORT = 443
+MOCK_DEVICE_ID = "Droplet-1234"
+MOCK_MANUFACTURER = "Hydrific, part of LIXIL"
+MOCK_SN = "1234"
+MOCK_SW_VERSION = "v1.0.0"
+MOCK_MODEL = "Droplet 1.0"
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.2"},
-        unique_id="Droplet-1234",
-    )
-
-
-class MockClientBehaviors(Enum):
-    """Options for a mocked WS client."""
-
-    GOOD = auto()
-    FAIL_OPEN = auto()
-    NO_DEVICE_ID = auto()
-
-
-class MockWSConnection:
-    """Mock a websocket connection."""
-
-    def __init__(self, behavior) -> None:
-        """Initialize mock websocket connection."""
-        self.action = behavior
-        self.closed = False
-
-    async def receive(self, timeout):
-        """Mock receiving a message."""
-        match self.action:
-            case MockClientBehaviors.GOOD | MockClientBehaviors.NO_DEVICE_ID:
-                return aiohttp.WSMessage(
-                    aiohttp.WSMsgType.TEXT,
-                    data=json.dumps({"flow": "1.01"}),
-                    extra=None,
-                )
-            case MockClientBehaviors.FAIL_OPEN:
-                return aiohttp.WSMessage(aiohttp.WSMsgType.CLOSED, data="", extra=None)
-
-    async def receive_json(self, timeout):
-        """Mock the receive_json websockets function."""
-        match self.action:
-            case MockClientBehaviors.GOOD:
-                return {"ids": "Droplet-1234"}
-            case _:
-                raise json.JSONDecodeError("error", "", 0)
-
-    async def close(self) -> bool:
-        """Mock closing websocket."""
-        self.closed = True
-        return True
-
-
-def mock_try_connect(behavior):
-    """Return a mocked websocket connection."""
-    return patch(
-        "pydroplet.droplet.DropletConnection.get_client",
-        return_value=MockWSConnection(behavior),
+        data={CONF_HOST: MOCK_HOST},
+        unique_id=MOCK_DEVICE_ID,
     )
 
 
 @pytest.fixture
-def mock_droplet() -> Generator[MagicMock]:
-    """Return a mocked Droplet client."""
-    with patch("pydroplet.droplet.Droplet", autospec=True) as droplet_mock:
-        droplet = droplet_mock.return_value
-        yield droplet
+def mock_droplet() -> Generator[AsyncMock]:
+    """Mock a Droplet client."""
+    with (
+        patch(
+            "homeassistant.components.droplet.coordinator.Droplet",
+            autospec=True,
+        ) as mock_client,
+    ):
+        client = mock_client.return_value
+        client.get_signal_quality.return_value = "strong_signal"
+        client.get_server_status.return_value = "connected"
+        client.get_flow_rate.return_value = 0.1
+        client.get_manufacturer.return_value = MOCK_MANUFACTURER
+        client.get_model.return_value = MOCK_MODEL
+        client.get_fw_version.return_value = MOCK_SW_VERSION
+        client.get_sn.return_value = MOCK_SN
+        yield client
+
+
+@pytest.fixture
+def mock_droplet_connection() -> Generator[AsyncMock]:
+    """Mock a Droplet connection."""
+    with (
+        patch(
+            "homeassistant.components.droplet.config_flow.DropletConnection",
+            autospec=True,
+        ) as mock_client,
+    ):
+        client = mock_client.return_value
+        yield client
+
+
+@pytest.fixture
+def mock_droplet_discovery(request: pytest.FixtureRequest) -> Generator[AsyncMock]:
+    """Mock a DropletDiscovery."""
+    with (
+        patch(
+            "homeassistant.components.droplet.config_flow.DropletDiscovery",
+            autospec=True,
+        ) as mock_client,
+    ):
+        client = mock_client.return_value
+        # Not all tests set this value
+        try:
+            client.host = request.param
+        except AttributeError:
+            client.host = MOCK_HOST
+        client.port = MOCK_PORT
+        client.try_connect.return_value = True
+        client.get_device_id.return_value = MOCK_DEVICE_ID
+        yield client
 
 
 def mock_setup():
