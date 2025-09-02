@@ -47,7 +47,9 @@ async def test_connection_error(
     """Test connection error."""
     await setup_platform(hass, mock_config_entry, [Platform.COVER])
 
-    mock_slide_api.slide_info.side_effect = ClientConnectionError
+    assert hass.states.get("cover.slide_bedroom").state == CoverState.OPEN
+
+    mock_slide_api.slide_info.side_effect = [ClientConnectionError, get_data()]
 
     freezer.tick(delta=timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -55,13 +57,11 @@ async def test_connection_error(
 
     assert hass.states.get("cover.slide_bedroom").state == STATE_UNAVAILABLE
 
-    mock_slide_api.slide_info.side_effect = None
-
     freezer.tick(delta=timedelta(minutes=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("cover.slide_bedroom").state == CoverState.CLOSED
+    assert hass.states.get("cover.slide_bedroom").state == CoverState.OPEN
 
 
 async def test_state_change(
