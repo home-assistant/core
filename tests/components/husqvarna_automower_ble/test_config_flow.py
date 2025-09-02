@@ -13,7 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    AUTOMOWER_CHARGING_STATION_SERVICE_INFO,
     AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO,
+    AUTOMOWER_REFERENCE_STATION_SERVICE_INFO,
     AUTOMOWER_SERVICE_INFO,
     AUTOMOWER_UNNAMED_SERVICE_INFO,
 )
@@ -503,3 +505,16 @@ async def test_exception_connect(
     )
 
     assert result["type"] is FlowResultType.ABORT
+
+
+async def test_unsupported_devices(
+    hass: HomeAssistant,
+) -> None:
+    """Test that unsupported devices are not detected."""
+
+    inject_bluetooth_service_info(hass, AUTOMOWER_REFERENCE_STATION_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, AUTOMOWER_CHARGING_STATION_SERVICE_INFO)
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 0
