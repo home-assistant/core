@@ -1,6 +1,8 @@
 Home Assistant |Chat Status|
 =================================================================================
 
+# This fork is made for DAT266 Software Evolution Project course.
+
 Open source home automation that puts local control and privacy first. Powered by a worldwide community of tinkerers and DIY enthusiasts. Perfect to run on a Raspberry Pi or a local server.
 
 Check out `home-assistant.io <https://home-assistant.io>`__ for `a
