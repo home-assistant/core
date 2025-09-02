@@ -120,7 +120,7 @@ class SensorDeviceClass(StrEnum):
     APPARENT_POWER = "apparent_power"
     """Apparent power.
 
-    Unit of measurement: `mVA`, `VA`
+    Unit of measurement: `mVA`, `VA`, `kVA`
     """
 
     AQI = "aqi"

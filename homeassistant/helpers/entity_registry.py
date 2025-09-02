@@ -887,7 +887,8 @@ class EntityRegistry(BaseRegistry):
         # To influence entity ID generation
         calculated_object_id: str | None = None,
         suggested_object_id: str | None = None,
-        # To disable or hide an entity if it gets created
+        # To disable or hide an entity if it gets created, does not affect
+        # existing entities
         disabled_by: RegistryEntryDisabler | None = None,
         hidden_by: RegistryEntryHider | None = None,
         # Function to generate initial entity options if it gets created
@@ -1187,7 +1188,7 @@ class EntityRegistry(BaseRegistry):
             return
 
         # Ignore device disabled by config entry, this is handled by
-        # async_config_entry_disabled
+        # async_config_entry_disabled_by_changed
         if device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY:
             return
 

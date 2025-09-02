@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from .conftest import TEST_CAM_NAME
+from .conftest import TEST_CAM_NAME, TEST_NVR_NAME
 
 from tests.common import MockConfigEntry
 
@@ -134,3 +134,41 @@ async def test_siren_turn_off_errors(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+
+async def test_host_siren(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+) -> None:
+    """Test siren entity."""
+    config_entry.is_hub = True
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SIREN]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.SIREN}.{TEST_NVR_NAME}_siren"
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    # test siren turn on
+    await hass.services.async_call(
+        SIREN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    reolink_host.set_hub_audio.assert_not_called()
+    reolink_host.set_siren.assert_called_with()
+
+    reolink_host.set_siren.reset_mock()
+
+    await hass.services.async_call(
+        SIREN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VOLUME_LEVEL: 0.85},
+        blocking=True,
+    )
+    reolink_host.set_hub_audio.assert_called_with(alarm_volume=85)
+    reolink_host.set_siren.assert_not_called()
