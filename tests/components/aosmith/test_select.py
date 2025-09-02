@@ -46,10 +46,10 @@ async def test_state(
 @pytest.mark.parametrize(
     ("hass_level", "aosmith_level"),
     [
-        ("Off", 0),
-        ("1", 1),
-        ("2", 2),
-        ("3", 3),
+        ("off", 0),
+        ("level1", 1),
+        ("level2", 2),
+        ("level3", 3),
     ],
 )
 async def test_set_hot_water_plus_level(

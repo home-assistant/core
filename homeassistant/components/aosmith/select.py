@@ -9,10 +9,10 @@ from .coordinator import AOSmithStatusCoordinator
 from .entity import AOSmithStatusEntity
 
 HWP_LEVEL_HA_TO_AOSMITH = {
-    "Off": 0,
-    "1": 1,
-    "2": 2,
-    "3": 3,
+    "off": 0,
+    "level1": 1,
+    "level2": 2,
+    "level3": 3,
 }
 HWP_LEVEL_AOSMITH_TO_HA = {value: key for key, value in HWP_LEVEL_HA_TO_AOSMITH.items()}
 
@@ -26,11 +26,9 @@ async def async_setup_entry(
     data = entry.runtime_data
 
     async_add_entities(
-        [
-            AOSmithHotWaterPlusSelectEntity(data.status_coordinator, device.junction_id)
-            for device in data.status_coordinator.data.values()
-            if device.supports_hot_water_plus
-        ]
+        AOSmithHotWaterPlusSelectEntity(data.status_coordinator, device.junction_id)
+        for device in data.status_coordinator.data.values()
+        if device.supports_hot_water_plus
     )
 
 
@@ -38,13 +36,12 @@ class AOSmithHotWaterPlusSelectEntity(AOSmithStatusEntity, SelectEntity):
     """Class for the Hot Water+ select entity."""
 
     _attr_translation_key = "hot_water_plus_level"
-    _attr_icon = "mdi:water-plus"
     _attr_options = list(HWP_LEVEL_HA_TO_AOSMITH)
 
     def __init__(self, coordinator: AOSmithStatusCoordinator, junction_id: str) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, junction_id)
-        self._attr_unique_id = junction_id
+        self._attr_unique_id = f"hot_water_plus_level_{junction_id}"
 
     @property
     def suggested_object_id(self) -> str | None:

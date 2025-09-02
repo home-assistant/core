@@ -6,10 +6,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Off',
-        '1',
-        '2',
-        '3',
+        'off',
+        'level1',
+        'level2',
+        'level3',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -30,14 +30,14 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water-plus',
+    'original_icon': None,
     'original_name': 'Hot Water+ level',
     'platform': 'aosmith',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hot_water_plus_level',
-    'unique_id': 'junctionId',
+    'unique_id': 'hot_water_plus_level_junctionId',
     'unit_of_measurement': None,
   })
 # ---
@@ -45,12 +45,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'My water heater Hot Water+ level',
-      'icon': 'mdi:water-plus',
       'options': list([
-        'Off',
-        '1',
-        '2',
-        '3',
+        'off',
+        'level1',
+        'level2',
+        'level3',
       ]),
     }),
     'context': <ANY>,
@@ -58,6 +57,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': 'level1',
   })
 # ---
