@@ -57,15 +57,30 @@ AUTOMOWER_UNSUPPORTED_GROUP_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-AUTOMOWER_UNSUPPORTED_NAME_SERVICE_INFO = BluetoothServiceInfo(
+# Husqvarna Automower EPOS reference station
+AUTOMOWER_REFERENCE_STATION_SERVICE_INFO = BluetoothServiceInfo(
     name="ReferenceStation",
     address="00000000-0000-0000-0002-000000000005",
-    rssi=-63,
+    rssi=-88,
     service_data={},
-    manufacturer_data={1062: b"\x05\x04\xbf\xcf\xbb\r"},
+    manufacturer_data={1062: b"\x05\x04\x03[\xf2\x0e"},
+    service_uuids=[
+        "00001800-0000-1000-8000-00805f9b34fb",
+        "00001801-0000-1000-8000-00805f9b34fb",
+        "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
+    ],
+    source="local",
+)
+
+# Husqvarna Automower charging station
+AUTOMOWER_CHARGING_STATION_SERVICE_INFO = BluetoothServiceInfo(
+    name="ChargingStation",
+    address="00000000-0000-0000-0002-000000000006",
+    rssi=-80,
+    service_data={},
+    manufacturer_data={1062: b"\x05\x04\x81j\xea\x0e"},
     service_uuids=[
         "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
-        "00001800-0000-1000-8000-00805f9b34fb",
     ],
     source="local",
 )
