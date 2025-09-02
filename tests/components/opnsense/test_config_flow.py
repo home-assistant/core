@@ -5,7 +5,7 @@ from unittest.mock import patch
 from pyopnsense.exceptions import APIException
 
 from homeassistant import data_entry_flow
-from homeassistant.components.opnsense.const import CONF_TRACKER_INTERFACE, DOMAIN
+from homeassistant.components.opnsense.const import CONF_TRACKER_INTERFACES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -119,7 +119,7 @@ async def test_on_api_error(hass: HomeAssistant) -> None:
 async def test_on_invalid_interface(hass: HomeAssistant) -> None:
     """Test when we have invalid interface(s)."""
     config_data = CONFIG_DATA.copy()
-    config_data[CONF_TRACKER_INTERFACE] = "WRONG"
+    config_data[CONF_TRACKER_INTERFACES] = "WRONG"
 
     with patch(
         "homeassistant.components.opnsense.config_flow.diagnostics"

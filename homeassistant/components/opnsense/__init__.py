@@ -16,7 +16,8 @@ from .const import (
     CONF_API_BASE_URL,
     CONF_API_SECRET,
     CONF_API_VERIFY_CERT,
-    CONF_TRACKER_INTERFACE,
+    CONF_INTERFACE_CLIENT,
+    CONF_TRACKER_INTERFACES,
     DATA_HASS_CONFIG,
     DOMAIN,
     OPNSENSE_DATA,
@@ -30,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_API_KEY): cv.string,
                 vol.Required(CONF_API_SECRET): cv.string,
                 vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
-                vol.Optional(CONF_TRACKER_INTERFACE, default=[]): vol.All(
+                vol.Optional(CONF_TRACKER_INTERFACES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
             }
@@ -64,11 +65,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_API_BASE_URL: entry.data[CONF_URL],
         CONF_API_VERIFY_CERT: entry.data[CONF_VERIFY_SSL],
     }
-    tracker_interfaces = entry.data.get(CONF_TRACKER_INTERFACE)
+    tracker_interfaces = entry.data.get(CONF_TRACKER_INTERFACES)
 
     hass.data[OPNSENSE_DATA] = {
         CONF_INTERFACE_CLIENT: diagnostics.InterfaceClient(**api_data),
-        CONF_TRACKER_INTERFACE: tracker_interfaces,
+        CONF_TRACKER_INTERFACES: tracker_interfaces,
     }
 
     if tracker_interfaces:

@@ -8,7 +8,7 @@ from homeassistant.components.device_tracker import DeviceScanner
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_INTERFACE_CLIENT, CONF_TRACKER_INTERFACE, OPNSENSE_DATA
+from .const import CONF_INTERFACE_CLIENT, CONF_TRACKER_INTERFACES, OPNSENSE_DATA
 
 DeviceDetails = NewType("DeviceDetails", dict[str, Any])
 DeviceDetailsByMAC = NewType("DeviceDetailsByMAC", dict[str, DeviceDetails])
@@ -20,7 +20,7 @@ async def async_get_scanner(
     """Configure the OPNsense device_tracker."""
     return OPNsenseDeviceScanner(
         hass.data[OPNSENSE_DATA][CONF_INTERFACE_CLIENT],
-        hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACE],
+        hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACES],
     )
 
 

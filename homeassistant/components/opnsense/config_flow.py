@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACE, DOMAIN
+from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, False)
                     ): bool,
-                    vol.Optional(CONF_TRACKER_INTERFACE): str,
+                    vol.Optional(CONF_TRACKER_INTERFACES): str,
                 }
             ),
             errors=errors or {},
@@ -90,10 +90,10 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             url = f"{protocol}://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/api"
             user_input[CONF_URL] = url
 
-        tracker_interfaces = user_input.get(CONF_TRACKER_INTERFACE, None)
+        tracker_interfaces = user_input.get(CONF_TRACKER_INTERFACES, None)
         if isinstance(tracker_interfaces, str):
             tracker_interfaces = tracker_interfaces.replace(" ", "").split(",")
-            user_input[CONF_TRACKER_INTERFACE] = tracker_interfaces
+            user_input[CONF_TRACKER_INTERFACES] = tracker_interfaces
 
         api_data = {
             CONF_API_KEY: user_input[CONF_API_KEY],

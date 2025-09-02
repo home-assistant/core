@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.opnsense.const import (
     CONF_API_SECRET,
-    CONF_TRACKER_INTERFACE,
+    CONF_TRACKER_INTERFACES,
 )
 from homeassistant.const import (
     CONF_API_KEY,
@@ -23,14 +23,14 @@ CONFIG_DATA = {
     CONF_API_SECRET: "secret",
     CONF_SSL: False,
     CONF_VERIFY_SSL: False,
-    CONF_TRACKER_INTERFACE: "LAN",
+    CONF_TRACKER_INTERFACES: "LAN",
 }
 CONFIG_DATA_IMPORT = {
     CONF_URL: "http://router.lan/api",
     CONF_API_KEY: "key",
     CONF_API_SECRET: "secret",
     CONF_VERIFY_SSL: False,
-    CONF_TRACKER_INTERFACE: ["LAN"],
+    CONF_TRACKER_INTERFACES: ["LAN"],
 }
 
 ARP = [
