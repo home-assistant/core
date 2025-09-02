@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from brother import Brother, SnmpError
 
 from homeassistant.components.snmp import async_get_snmp_engine
@@ -18,20 +20,13 @@ from .const import (
 )
 from .coordinator import BrotherConfigEntry, BrotherDataUpdateCoordinator
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> bool:
     """Set up Brother from a config entry."""
-    # Update config entry to ensure COMMUNITY and PORT are present
-    if SECTION_ADVANCED_SETTINGS not in entry.data:
-        new_data = entry.data.copy()
-        new_data[SECTION_ADVANCED_SETTINGS] = {
-            CONF_PORT: DEFAULT_PORT,
-            CONF_COMMUNITY: DEFAULT_COMMUNITY,
-        }
-        hass.config_entries.async_update_entry(entry, data=new_data)
-
     host = entry.data[CONF_HOST]
     port = entry.data[SECTION_ADVANCED_SETTINGS][CONF_PORT]
     community = entry.data[SECTION_ADVANCED_SETTINGS][CONF_COMMUNITY]
@@ -65,3 +60,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> bool:
+    """Migrate an old entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        new_data = entry.data.copy()
+        new_data[SECTION_ADVANCED_SETTINGS] = {
+            CONF_PORT: DEFAULT_PORT,
+            CONF_COMMUNITY: DEFAULT_COMMUNITY,
+        }
+        hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
+
+    _LOGGER.info(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True

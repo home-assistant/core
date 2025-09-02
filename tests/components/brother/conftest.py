@@ -7,8 +7,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from brother import BrotherSensors
 import pytest
 
-from homeassistant.components.brother.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.components.brother.const import (
+    CONF_COMMUNITY,
+    DOMAIN,
+    SECTION_ADVANCED_SETTINGS,
+)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 
 from tests.common import MockConfigEntry
 
@@ -122,5 +126,10 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="HL-L2340DW 0123456789",
         unique_id="0123456789",
-        data={CONF_HOST: "localhost", CONF_TYPE: "laser"},
+        data={
+            CONF_HOST: "localhost",
+            CONF_TYPE: "laser",
+            SECTION_ADVANCED_SETTINGS: {CONF_PORT: 161, CONF_COMMUNITY: "public"},
+        },
+        minor_version=2,
     )
