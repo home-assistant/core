@@ -252,16 +252,10 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                     reconfigure_entry,
                     data_updates={
                         CONF_HOST: info[CONF_HOST],
-                        CONF_USERNAME: validate_input_data.get(
-                            CONF_USERNAME, existing_data.get(CONF_USERNAME, "")
-                        ),
-                        CONF_PASSWORD: validate_input_data.get(
-                            CONF_PASSWORD, existing_data.get(CONF_PASSWORD, "")
-                        ),
+                        CONF_USERNAME: validate_input_data[CONF_USERNAME],
+                        CONF_PASSWORD: validate_input_data[CONF_PASSWORD],
                         CONF_PREFIX: info[CONF_PREFIX],
-                        CONF_AUTO_CONFIGURE: existing_data.get(
-                            CONF_AUTO_CONFIGURE, True
-                        ),
+                        CONF_AUTO_CONFIGURE: True,
                     },
                 )
 
