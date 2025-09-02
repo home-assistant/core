@@ -123,7 +123,10 @@ class FitbitApi(ABC):
         response: dict[str, Any] = await self._run(_time_series)
         _LOGGER.debug("time_series(%s)=%s", resource_type, response)
         key = resource_type.replace("/", "-")
-        dated_results: list[dict[str, Any]] = response[key]
+        dated_results: list[dict[str, Any]] = response.get(key, [])
+        if not dated_results:
+            self._logger.debug("No data returned for key %s", key)
+            return {}
         return dated_results[-1]
 
     async def _run[_T](self, func: Callable[[], _T]) -> _T:
