@@ -2,7 +2,7 @@
 # name: test_deprecated_sensor_issue[apc-apc_deprecated]
   IssueRegistryItemSnapshot({
     'active': True,
-    'breaks_in_ha_version': None,
+    'breaks_in_ha_version': '2026.4.0',
     'created': <ANY>,
     'data': None,
     'dismissed_version': None,
@@ -24,7 +24,7 @@
 # name: test_deprecated_sensor_issue[apcmodel-available_via_device_info]
   IssueRegistryItemSnapshot({
     'active': True,
-    'breaks_in_ha_version': None,
+    'breaks_in_ha_version': '2026.4.0',
     'created': <ANY>,
     'data': None,
     'dismissed_version': None,
@@ -47,7 +47,7 @@
 # name: test_deprecated_sensor_issue[date-date_deprecated]
   IssueRegistryItemSnapshot({
     'active': True,
-    'breaks_in_ha_version': None,
+    'breaks_in_ha_version': '2026.4.0',
     'created': <ANY>,
     'data': None,
     'dismissed_version': None,
@@ -69,7 +69,7 @@
 # name: test_deprecated_sensor_issue[end apc-date_deprecated]
   IssueRegistryItemSnapshot({
     'active': True,
-    'breaks_in_ha_version': None,
+    'breaks_in_ha_version': '2026.4.0',
     'created': <ANY>,
     'data': None,
     'dismissed_version': None,
@@ -91,7 +91,7 @@
 # name: test_deprecated_sensor_issue[firmware-available_via_device_info]
   IssueRegistryItemSnapshot({
     'active': True,
-    'breaks_in_ha_version': None,
+    'breaks_in_ha_version': '2026.4.0',
     'created': <ANY>,
     'data': None,
     'dismissed_version': None,
@@ -114,7 +114,7 @@
 # name: test_deprecated_sensor_issue[model-available_via_device_info]
   IssueRegistryItemSnapshot({
     'active': True,
-    'breaks_in_ha_version': None,
+    'breaks_in_ha_version': '2026.4.0',
     'created': <ANY>,
     'data': None,
     'dismissed_version': None,
@@ -137,7 +137,7 @@
 # name: test_deprecated_sensor_issue[serialno-available_via_device_info]
   IssueRegistryItemSnapshot({
     'active': True,
-    'breaks_in_ha_version': None,
+    'breaks_in_ha_version': '2026.4.0',
     'created': <ANY>,
     'data': None,
     'dismissed_version': None,
@@ -160,7 +160,7 @@
 # name: test_deprecated_sensor_issue[upsname-available_via_device_info]
   IssueRegistryItemSnapshot({
     'active': True,
-    'breaks_in_ha_version': None,
+    'breaks_in_ha_version': '2026.4.0',
     'created': <ANY>,
     'data': None,
     'dismissed_version': None,
@@ -183,7 +183,7 @@
 # name: test_deprecated_sensor_issue[version-available_via_device_info]
   IssueRegistryItemSnapshot({
     'active': True,
-    'breaks_in_ha_version': None,
+    'breaks_in_ha_version': '2026.4.0',
     'created': <ANY>,
     'data': None,
     'dismissed_version': None,
