@@ -1796,16 +1796,11 @@ async def test_reconfigure_nonsecure(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Mock the validation function and prevent reload
+    # Mock elk library to simulate successful connection
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
     with (
-        patch(
-            "homeassistant.components.elkm1.config_flow.validate_input",
-            return_value={
-                "title": "Test Title",
-                CONF_HOST: "elk://1.2.3.4",
-                CONF_PREFIX: "",
-            },
-        ),
+        _patch_elk(mocked_elk),
         patch(
             "homeassistant.components.elkm1.async_setup_entry",
             return_value=True,
@@ -1835,6 +1830,10 @@ async def test_reconfigure_nonsecure(
     # Verify the setup was called during reload
     mock_setup_entry.assert_called_once()
 
+    # Verify the elk library was initialized and connected
+    assert mocked_elk.connect.call_count == 1
+    assert mocked_elk.disconnect.call_count == 1
+
 
 @pytest.mark.usefixtures("socket_enabled")
 async def test_reconfigure_tls(
@@ -1851,16 +1850,11 @@ async def test_reconfigure_tls(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Mock the validation function and prevent reload
+    # Mock elk library to simulate successful connection
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
     with (
-        patch(
-            "homeassistant.components.elkm1.config_flow.validate_input",
-            return_value={
-                "title": "Test Title",
-                CONF_HOST: "elksv1_2://127.0.0.1",
-                CONF_PREFIX: "",
-            },
-        ),
+        _patch_elk(mocked_elk),
         patch(
             "homeassistant.components.elkm1.async_setup_entry",
             return_value=True,
@@ -1966,6 +1960,37 @@ async def test_reconfigure_invalid_auth(
 
 
 @pytest.mark.usefixtures("socket_enabled")
+async def test_reconfigure_different_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Abort reconfigure if the device unique_id differs."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=MOCK_MAC)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    different_device = ElkSystem("bb:cc:dd:ee:ff:aa", "1.2.3.4", 2601)
+    elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_discovery(device=different_device), _patch_elk(elk):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test",
+                CONF_PASSWORD: "test",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unique_id_mismatch"
+
+
 async def test_reconfigure_unknown_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

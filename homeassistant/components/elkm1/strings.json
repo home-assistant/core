@@ -54,7 +54,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "An Elk-M1 with this prefix is already configured",
       "address_already_configured": "An Elk-M1 with this address is already configured",
-      "reconfigure_successful": "Successfully reconfigured Elk-M1 integration"
+      "reconfigure_successful": "Successfully reconfigured Elk-M1 integration",
+      "unique_id_mismatch": "Reconfigure should be used for the same device not a new one"
     }
   },
   "services": {

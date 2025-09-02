@@ -120,6 +120,14 @@ def _make_url_from_data(data: dict[str, str]) -> str:
     return f"{protocol}{address}"
 
 
+def _get_protocol_from_url(url: str) -> str:
+    """Get protocol from URL. Returns the configured protocol from URL or the default secure protocol."""
+    return next(
+        (k for k, v in PROTOCOL_MAP.items() if url.startswith(v)),
+        DEFAULT_SECURE_PROTOCOL,
+    )
+
+
 def _placeholders_from_device(device: ElkSystem) -> dict[str, str]:
     return {
         "mac_address": _short_mac(device.mac_address),
@@ -211,13 +219,13 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of the integration."""
         errors: dict[str, str] = {}
         reconfigure_entry = self._get_reconfigure_entry()
+        existing_data = reconfigure_entry.data
 
         if user_input is not None:
+            validate_input_data = dict(user_input)
+            validate_input_data[CONF_PREFIX] = existing_data.get(CONF_PREFIX, "")
+
             try:
-                validate_input_data = dict(user_input)
-                validate_input_data[CONF_PREFIX] = reconfigure_entry.data.get(
-                    CONF_PREFIX, ""
-                )
                 info = await validate_input(
                     validate_input_data, reconfigure_entry.unique_id
                 )
@@ -229,38 +237,38 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during reconfiguration")
                 errors["base"] = "unknown"
             else:
-                _LOGGER.debug(
-                    "Successfully reconfigured ElkM1 integration with host %s using %s protocol",
-                    user_input[CONF_ADDRESS],
-                    user_input[CONF_PROTOCOL],
+                # Discover the device at the provided address to obtain its MAC (unique_id)
+                device = await async_discover_device(
+                    self.hass, validate_input_data[CONF_ADDRESS]
                 )
-                self.hass.config_entries.async_update_entry(
+                if device is not None and device.mac_address:
+                    await self.async_set_unique_id(dr.format_mac(device.mac_address))
+                    self._abort_if_unique_id_mismatch()  # aborts if user tried to switch devices
+                else:
+                    # If we cannot confirm identity, keep existing behavior (don’t block reconfigure)
+                    await self.async_set_unique_id(reconfigure_entry.unique_id)
+
+                return self.async_update_reload_and_abort(
                     reconfigure_entry,
-                    data={
+                    data_updates={
                         CONF_HOST: info[CONF_HOST],
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_AUTO_CONFIGURE: reconfigure_entry.data.get(
-                            CONF_AUTO_CONFIGURE, True
+                        CONF_USERNAME: validate_input_data.get(
+                            CONF_USERNAME, existing_data.get(CONF_USERNAME, "")
+                        ),
+                        CONF_PASSWORD: validate_input_data.get(
+                            CONF_PASSWORD, existing_data.get(CONF_PASSWORD, "")
                         ),
                         CONF_PREFIX: info[CONF_PREFIX],
+                        CONF_AUTO_CONFIGURE: existing_data.get(
+                            CONF_AUTO_CONFIGURE, True
+                        ),
                     },
                 )
-                await self.hass.config_entries.async_reload(reconfigure_entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
 
-        existing_data = reconfigure_entry.data
+        # Build defaults for the form from current entry
         current_host = hostname_from_url(existing_data[CONF_HOST])
-        current_proto = next(
-            (
-                k
-                for k, v in PROTOCOL_MAP.items()
-                if existing_data[CONF_HOST].startswith(v)
-            ),
-            DEFAULT_SECURE_PROTOCOL,
-        )
-        # Extract just the IP/hostname part from the current host URL
-        current_address = current_host.split("://")[-1]
+        current_proto = _get_protocol_from_url(existing_data[CONF_HOST])
+        current_address = current_host
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -285,11 +293,6 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-            description_placeholders={
-                "current_host": current_host,
-                "current_protocol": current_proto,
-                "device_info": f"Reconfiguring ElkM1 at {current_address} (currently using {current_proto} connection)",
-            },
         )
 
     async def async_step_user(
