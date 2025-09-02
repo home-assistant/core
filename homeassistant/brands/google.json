@@ -2,6 +2,7 @@
   "domain": "google",
   "name": "Google",
   "integrations": [
+    "google_air_quality",
     "google_assistant",
     "google_assistant_sdk",
     "google_cloud",
