@@ -11,6 +11,7 @@ from homeassistant.components.snmp import async_get_snmp_engine
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_host_valid
@@ -21,28 +22,50 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
     PRINTER_TYPES,
+    SECTION_ADVANCED_SETTINGS,
 )
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
         vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+                },
+            ),
+            {"collapsed": True},
+        ),
     }
 )
 ZEROCONF_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
         vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+                },
+            ),
+            {"collapsed": True},
+        ),
     }
 )
 RECONFIGURE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+                },
+            ),
+            {"collapsed": True},
+        ),
     }
 )
 
@@ -58,8 +81,8 @@ async def validate_input(
 
     brother = await Brother.create(
         user_input[CONF_HOST],
-        user_input[CONF_PORT],
-        user_input[CONF_COMMUNITY],
+        user_input[SECTION_ADVANCED_SETTINGS][CONF_PORT],
+        user_input[SECTION_ADVANCED_SETTINGS][CONF_COMMUNITY],
         snmp_engine=snmp_engine,
     )
     await brother.async_update()

@@ -5,42 +5,69 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "community": "SNMP Community",
           "type": "Type of the printer"
         },
         "data_description": {
           "host": "The hostname or IP address of the Brother printer to control.",
-          "port": "The SNMP port of the Brother printer.",
-          "community": "A simple password for devices to communicate to each other.",
           "type": "Brother printer type: ink or laser."
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "Advanced settings",
+            "data": {
+              "port": "[%key:common::config_flow::data::port%]",
+              "community": "SNMP Community"
+            },
+            "data_description": {
+              "port": "The SNMP port of the Brother printer.",
+              "community": "A simple password for devices to communicate to each other."
+            }
+          }
         }
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the printer {model} with serial number `{serial_number}` to Home Assistant?",
         "title": "Discovered Brother Printer",
         "data": {
-          "port": "[%key:common::config_flow::data::port%]",
-          "community": "[%key:component::brother::config::step::user::data::community%]",
           "type": "[%key:component::brother::config::step::user::data::type%]"
         },
         "data_description": {
-          "port": "[%key:component::brother::config::step::user::data_description::port%]",
-          "community": "[%key:component::brother::config::step::user::data_description::community%]",
           "type": "[%key:component::brother::config::step::user::data_description::type%]"
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "Advanced settings",
+            "data": {
+              "port": "[%key:common::config_flow::data::port%]",
+              "community": "SNMP Community"
+            },
+            "data_description": {
+              "port": "The SNMP port of the Brother printer.",
+              "community": "A simple password for devices to communicate to each other."
+            }
+          }
         }
       },
       "reconfigure": {
         "description": "Update configuration for {printer_name}.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "community": "[%key:component::brother::config::step::user::data::community%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "[%key:component::brother::config::step::user::data_description::host%]",
-          "port": "[%key:component::brother::config::step::user::data_description::port%]",
-          "community": "[%key:component::brother::config::step::user::data_description::community%]"
+          "host": "[%key:component::brother::config::step::user::data_description::host%]"
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "Advanced settings",
+            "data": {
+              "port": "[%key:common::config_flow::data::port%]",
+              "community": "SNMP Community"
+            },
+            "data_description": {
+              "port": "The SNMP port of the Brother printer.",
+              "community": "A simple password for devices to communicate to each other."
+            }
+          }
         }
       }
     },
