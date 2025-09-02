@@ -15,6 +15,7 @@ from . import (
     AUTOMOWER_SERVICE_INFO,
     AUTOMOWER_UNNAMED_SERVICE_INFO,
     AUTOMOWER_UNSUPPORTED_GROUP_SERVICE_INFO,
+    AUTOMOWER_UNSUPPORTED_NAME_SERVICE_INFO,
 )
 
 from tests.common import MockConfigEntry
@@ -196,3 +197,15 @@ async def test_exception_connect(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_unsupported_devices(
+    hass: HomeAssistant,
+) -> None:
+    """Test that unsupported devices are not detected."""
+
+    inject_bluetooth_service_info(hass, AUTOMOWER_UNSUPPORTED_NAME_SERVICE_INFO)
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 0

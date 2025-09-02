@@ -26,6 +26,11 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
         discovery_info.manufacturer_data,
     )
 
+    # ignore Husqvarna EPOS reference station and Automower charging station
+    if discovery_info.name in {"ReferenceStation", "ChargingStation"}:
+        LOGGER.debug("Unsupported device: %s", discovery_info)
+        return False
+
     manufacturer = any(key == 1062 for key in discovery_info.manufacturer_data)
     service_husqvarna = any(
         service == "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"

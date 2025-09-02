@@ -60,6 +60,19 @@ AUTOMOWER_UNSUPPORTED_GROUP_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+AUTOMOWER_UNSUPPORTED_NAME_SERVICE_INFO = BluetoothServiceInfo(
+    name="ReferenceStation",
+    address="00000000-0000-0000-0002-000000000005",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={1062: b"\x05\x04\xbf\xcf\xbb\r"},
+    service_uuids=[
+        "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
+        "00001800-0000-1000-8000-00805f9b34fb",
+    ],
+    source="local",
+)
+
 
 async def setup_entry(
     hass: HomeAssistant, mock_entry: MockConfigEntry, platforms: list[Platform]
