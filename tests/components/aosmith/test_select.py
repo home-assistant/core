@@ -57,9 +57,9 @@ async def test_set_hot_water_plus_level(
     mock_client: MagicMock,
     init_integration: MockConfigEntry,
     hass_level: str,
-    aosmith_level: str,
+    aosmith_level: int,
 ) -> None:
-    """Test setting the operation mode."""
+    """Test setting the Hot Water+ level."""
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
