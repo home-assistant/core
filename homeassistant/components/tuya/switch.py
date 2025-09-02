@@ -873,15 +873,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Micro Storage Inverter
-    # Energy storage and solar PV inverter system with monitoring capabilities
-    "xnyjcn": (
-        SwitchEntityDescription(
-            key=DPCode.FEEDIN_POWER_LIMIT_ENABLE,
-            translation_key="feedin_power_limit_enable",
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
     # Diffuser
     # https://developer.tuya.com/en/docs/iot/categoryxxj?id=Kaiuz1f9mo6bl
     "xxj": (

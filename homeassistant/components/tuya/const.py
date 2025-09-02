@@ -112,7 +112,6 @@ class DPCode(StrEnum):
     ARM_DOWN_PERCENT = "arm_down_percent"
     ARM_UP_PERCENT = "arm_up_percent"
     ATMOSPHERIC_PRESSTURE = "atmospheric_pressture"  # Typo is in Tuya API
-    BACKUP_RESERVE = "backup_reserve"
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
     BASIC_FLIP = "basic_flip"
@@ -220,7 +219,6 @@ class DPCode(StrEnum):
     FAULT = "fault"
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
-    FEEDIN_POWER_LIMIT_ENABLE = "feedin_power_limit_enable"
     FILTER = "filter"
     FILTER_DURATION = "filter_life"  # Filter duration (hours)
     FILTER_LIFE = "filter"  # Filter life (percentage)
@@ -276,7 +274,6 @@ class DPCode(StrEnum):
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
     OPPOSITE = "opposite"
-    OUTPUT_POWER_LIMIT = "output_power_limit"
     OXYGEN = "oxygen"  # Oxygen bar
     PAUSE = "pause"
     PERCENT_CONTROL = "percent_control"
