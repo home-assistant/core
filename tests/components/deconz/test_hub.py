@@ -33,12 +33,6 @@ async def test_device_registry_entry(
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, config_entry_setup.unique_id)}
     )
-    data = dict(device_entry.as_dict())
-    data.pop("via_device_id", None)
-
-    snapshot_data = dict(snapshot.as_dict())
-    snapshot_data.pop("via_device_id", None)
-
     assert device_entry == snapshot
 
 
