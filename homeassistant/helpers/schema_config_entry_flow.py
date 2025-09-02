@@ -117,6 +117,11 @@ class SchemaFlowMenuStep(SchemaFlowStep):
     `SchemaCommonFlowHandler`.
     """
 
+    sort: bool = False
+    """If true, menu options will be sorted in the user's language, by the
+      'menu_sort_values' key (if defined), otherwise by the option label.
+    """
+
 
 class SchemaCommonFlowHandler:
     """Handle a schema based config or options flow."""
@@ -269,6 +274,7 @@ class SchemaCommonFlowHandler:
             return self._handler.async_show_menu(
                 step_id=next_step_id,
                 menu_options=await self._get_options(menu_step),
+                sort=menu_step.sort,
             )
 
         form_step = cast(SchemaFlowFormStep, self._flow[next_step_id])
@@ -322,6 +328,7 @@ class SchemaCommonFlowHandler:
         return self._handler.async_show_menu(
             step_id=step_id,
             menu_options=await self._get_options(menu_step),
+            sort=menu_step.sort,
         )
 
 
