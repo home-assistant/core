@@ -29,7 +29,7 @@
           "active_by_default": "Control active by default"
         },
         "data_description": {
-          "active_by_default": "The device only support a single connection at a time. If you intend to use the normal phone application as the normal means of control, this should be disabled. You can connect the device manually using the `Control active` switch entity."
+          "active_by_default": "The device only supports a single connection at a time. If you intend to use the ToGrill phone application as the normal means of control, this should be disabled. You can connect the device manually using the `Control active` switch entity."
         }
       }
     }
