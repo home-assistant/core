@@ -7,7 +7,11 @@ import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.min_max.const import DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.components.sensor import (
+    ATTR_ENTITY_ID,
+    ATTR_STATE_CLASS,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
@@ -59,6 +63,7 @@ async def test_default_name_sensor(hass: HomeAssistant) -> None:
 
     assert str(float(MIN_VALUE)) == state.state
     assert entity_ids[2] == state.attributes.get("min_entity_id")
+    assert state.attributes.get(ATTR_ENTITY_ID) == entity_ids
 
 
 async def test_min_sensor(
