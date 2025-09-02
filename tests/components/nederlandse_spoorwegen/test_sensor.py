@@ -295,6 +295,7 @@ class TestNSCoordinatorSensor:
         sensor = NSCoordinatorSensor(mock_coordinator, "test_route", route_info)
         attributes = sensor.extra_state_attributes
 
+        assert attributes is not None
         assert attributes["going"] is True
         assert attributes["departure_time_planned"] == departure_planned
         assert attributes["departure_time_actual"] == departure_actual
@@ -337,6 +338,7 @@ class TestNSCoordinatorSensor:
         sensor = NSCoordinatorSensor(mock_coordinator, "test_route", route_info)
         attributes = sensor.extra_state_attributes
 
+        assert attributes is not None
         assert attributes["departure_delay"] is False
         assert attributes["departure_delay_minutes"] == 0
 
@@ -364,6 +366,7 @@ class TestNSCoordinatorSensor:
         sensor = NSCoordinatorSensor(mock_coordinator, "test_route", route_info)
         attributes = sensor.extra_state_attributes
 
+        assert attributes is not None
         assert attributes["departure_delay"] is False
         assert attributes["departure_delay_minutes"] == -5
 
@@ -388,6 +391,7 @@ class TestNSCoordinatorSensor:
         sensor = NSCoordinatorSensor(mock_coordinator, "test_route", route_info)
         attributes = sensor.extra_state_attributes
 
+        assert attributes is not None
         assert attributes["departure_delay"] is False
         assert "departure_delay_minutes" not in attributes
 
@@ -418,6 +422,7 @@ class TestNSCoordinatorSensor:
         attributes = sensor.extra_state_attributes
 
         # Should only include first 5 trips
+        assert attributes is not None
         assert "trips" in attributes
         assert len(attributes["trips"]) == 5
 
@@ -453,15 +458,16 @@ class TestNSCoordinatorSensor:
 
         # Should handle missing attributes gracefully
         assert attributes is not None
-        assert attributes["going"] is False
-        assert attributes["departure_delay"] is False
-        assert attributes["route"] == route_info
+        if attributes is not None:
+            assert attributes["going"] is False
+            assert attributes["departure_delay"] is False
+            assert attributes["route"] == route_info
 
-        # trips should handle missing attributes with None values
-        assert "trips" in attributes
-        trip_info = attributes["trips"][0]
-        assert trip_info["departure_time_planned"] is None
-        assert trip_info["status"] is None
+            # trips should handle missing attributes with None values
+            assert "trips" in attributes
+            trip_info = attributes["trips"][0]
+            assert trip_info["departure_time_planned"] is None
+            assert trip_info["status"] is None
 
 
 async def test_async_setup_platform_legacy_warning(
