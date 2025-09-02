@@ -18,6 +18,7 @@ from . import (
     AUTOMOWER_SERVICE_INFO_MOWER,
     AUTOMOWER_SERVICE_INFO_SERIAL,
     AUTOMOWER_UNNAMED_SERVICE_INFO,
+    MISSING_SERVICE_SERVICE_INFO,
     WATER_TIMER_SERVICE_INFO,
 )
 
@@ -285,7 +286,11 @@ async def test_bluetooth_not_paired(
 
 @pytest.mark.parametrize(
     "service_info",
-    [AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO, WATER_TIMER_SERVICE_INFO],
+    [
+        AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO,
+        MISSING_SERVICE_SERVICE_INFO,
+        WATER_TIMER_SERVICE_INFO,
+    ],
 )
 async def test_bluetooth_invalid(
     hass: HomeAssistant, service_info: BluetoothServiceInfo

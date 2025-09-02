@@ -59,6 +59,17 @@ AUTOMOWER_UNSUPPORTED_GROUP_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+MISSING_SERVICE_SERVICE_INFO = BluetoothServiceInfo(
+    name="Blah",
+    address="00000000-0000-0000-0000-000000000001",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={},
+    service_uuids=[],
+    source="local",
+)
+
+
 WATER_TIMER_SERVICE_INFO = BluetoothServiceInfo(
     name="Timer",
     address="00000000-0000-0000-0000-000000000001",
