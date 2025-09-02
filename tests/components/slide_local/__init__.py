@@ -26,6 +26,6 @@ async def setup_platform(
 def get_data() -> dict[str, Any]:
     """Return the default state data.
 
-    The coordinator mutates the returned API data, so we can't return a glocal dict. 
+    The coordinator mutates the returned API data, so we can't return a glocal dict.
     """
     return load_json_object_fixture("slide_1.json", DOMAIN)
