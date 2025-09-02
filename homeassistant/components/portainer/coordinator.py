@@ -1,11 +1,10 @@
-"""Data Updace Coordinator for Portainer."""
+"""Data Update Coordinator for Portainer."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from pyportainer import (
     Portainer,
@@ -16,6 +15,7 @@ from pyportainer import (
 from pyportainer.models.docker import DockerContainer
 from pyportainer.models.portainer import Endpoint
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
@@ -23,8 +23,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-if TYPE_CHECKING:
-    from . import PortainerConfigEntry
+type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
