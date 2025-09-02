@@ -43,7 +43,7 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
             logger=_LOGGER,
         )
         assert entry.unique_id is not None
-        self.metadata: dict[str, str] = {"unique_id": entry.unique_id}
+        self.unique_id = entry.unique_id
 
     async def _async_setup(self) -> None:
         if not await self.setup():
@@ -56,14 +56,6 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
             if time.time() > end:
                 _LOGGER.warning("Failed to get version info from Droplet")
                 return
-        self.metadata.update(
-            {
-                "manufacturer": self.droplet.get_manufacturer(),
-                "model": self.droplet.get_model(),
-                "sw_version": self.droplet.get_fw_version(),
-                "serial_number": self.droplet.get_sn(),
-            }
-        )
 
     async def _async_update_data(self) -> None:
         if not self.droplet.connected:

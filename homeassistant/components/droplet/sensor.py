@@ -107,6 +107,13 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
 
         unique_id = coordinator.config_entry.unique_id
         self._attr_unique_id = f"{unique_id}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.unique_id)},
+            manufacturer=self.coordinator.droplet.get_manufacturer(),
+            model=self.coordinator.droplet.get_model(),
+            sw_version=self.coordinator.droplet.get_fw_version(),
+            serial_number=self.coordinator.droplet.get_sn(),
+        )
 
     @property
     def available(self) -> bool:
@@ -122,14 +129,3 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
     def last_reset(self) -> datetime | None:
         """Return the last reset of the sensor, if applicable."""
         return self.entity_description.last_reset_fn(self.coordinator.droplet)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.metadata.get("unique_id", ""))},
-            manufacturer=self.coordinator.metadata.get("manufacturer"),
-            model=self.coordinator.metadata.get("model"),
-            sw_version=self.coordinator.metadata.get("sw_version"),
-            serial_number=self.coordinator.metadata.get("serial_number"),
-        )
