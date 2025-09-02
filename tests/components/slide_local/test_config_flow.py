@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import setup_platform
+from . import get_data, setup_platform
 from .const import HOST
 
 from tests.common import MockConfigEntry
@@ -84,7 +84,7 @@ async def test_user_api_1(
 
     mock_slide_api.slide_info.side_effect = [
         None,
-        mock_slide_api.slide_info.return_value,
+        get_data(),
     ]
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -134,7 +134,7 @@ async def test_user_api_error(
 
     mock_slide_api.slide_info.side_effect = [
         None,
-        mock_slide_api.slide_info.return_value,
+        get_data(),
     ]
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -196,7 +196,7 @@ async def test_api_1_exceptions(
     # tests with all provided
     mock_slide_api.slide_info.side_effect = [
         None,
-        mock_slide_api.slide_info.return_value,
+        get_data(),
     ]
 
     result = await hass.config_entries.flow.async_configure(

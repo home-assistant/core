@@ -20,7 +20,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_platform
+from . import get_data, setup_platform
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -73,7 +73,10 @@ async def test_state_change(
     """Test state changes."""
     await setup_platform(hass, mock_config_entry, [Platform.COVER])
 
-    mock_slide_api.slide_info.return_value["pos"] = 0.0
+    mock_slide_api.slide_info.return_value = {
+        **get_data(),
+        "pos": 0.0,
+    }
 
     freezer.tick(delta=timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -81,7 +84,7 @@ async def test_state_change(
 
     assert hass.states.get("cover.slide_bedroom").state == CoverState.OPEN
 
-    mock_slide_api.slide_info.return_value["pos"] = 0.4
+    mock_slide_api.slide_info.return_value = {**get_data(), "pos": 0.4}
 
     freezer.tick(delta=timedelta(seconds=15))
     async_fire_time_changed(hass)
@@ -89,7 +92,7 @@ async def test_state_change(
 
     assert hass.states.get("cover.slide_bedroom").state == CoverState.CLOSING
 
-    mock_slide_api.slide_info.return_value["pos"] = 1.0
+    mock_slide_api.slide_info.return_value = {**get_data(), "pos": 1.0}
 
     freezer.tick(delta=timedelta(seconds=15))
     async_fire_time_changed(hass)
@@ -97,7 +100,7 @@ async def test_state_change(
 
     assert hass.states.get("cover.slide_bedroom").state == CoverState.CLOSED
 
-    mock_slide_api.slide_info.return_value["pos"] = 0.8
+    mock_slide_api.slide_info.return_value = {**get_data(), "pos": 0.8}
 
     freezer.tick(delta=timedelta(seconds=15))
     async_fire_time_changed(hass)
@@ -173,7 +176,7 @@ async def test_set_position(
 
     await setup_platform(hass, mock_config_entry, [Platform.COVER])
 
-    mock_slide_api.slide_info.return_value["pos"] = 0.0
+    mock_slide_api.slide_info.return_value = {**get_data(), "pos": 0.0}
 
     freezer.tick(delta=timedelta(seconds=15))
     async_fire_time_changed(hass)
@@ -186,7 +189,7 @@ async def test_set_position(
         blocking=True,
     )
 
-    mock_slide_api.slide_info.return_value["pos"] = 1.0
+    mock_slide_api.slide_info.return_value = {**get_data(), "pos": 1.0}
 
     freezer.tick(delta=timedelta(seconds=15))
     async_fire_time_changed(hass)
@@ -205,7 +208,7 @@ async def test_set_position(
         blocking=True,
     )
 
-    mock_slide_api.slide_info.return_value["pos"] = 0.0
+    mock_slide_api.slide_info.return_value = {**get_data(), "pos": 0.0}
 
     freezer.tick(delta=timedelta(seconds=15))
     async_fire_time_changed(hass)
