@@ -364,6 +364,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_remaining_time",
             translation_key="remaining_time",
             value_fn=lambda value: _convert_duration(value.state_remaining_time),
+            end_value_fn=lambda last_value: 0,
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -417,6 +418,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_start_time",
             translation_key="start_time",
             value_fn=lambda value: _convert_duration(value.state_start_time),
+            end_value_fn=lambda last_value: None,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             device_class=SensorDeviceClass.DURATION,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -614,6 +616,8 @@ async def async_setup_entry(
             "state_program_phase": MielePhaseSensor,
             "state_plate_step": MielePlateSensor,
             "state_elapsed_time": MieleTimeSensor,
+            "state_remaining_time": MieleTimeSensor,
+            "state_start_time": MieleTimeSensor,
         }.get(definition.description.key, MieleSensor)
 
     def _is_entity_registered(unique_id: str) -> bool:
@@ -769,7 +773,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         """When entity is added to hass."""
         await super().async_added_to_hass()
 
-        # recover last value from cache
+        # recover last value from cache when adding entity
         last_value = await self.async_get_last_state()
         if last_value and last_value.state != STATE_UNKNOWN:
             self._last_value = last_value.state
@@ -778,6 +782,16 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._last_value
+
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
+        self._last_value = self.entity_description.value_fn(self.device)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_last_value()
+        super()._handle_coordinator_update()
 
 
 class MielePlateSensor(MieleSensor):
@@ -886,9 +900,8 @@ class MieleProgramIdSensor(MieleSensor):
 class MieleTimeSensor(MieleRestorableSensor):
     """Representation of time sensors keeping state from cache."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
 
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
@@ -911,5 +924,3 @@ class MieleTimeSensor(MieleRestorableSensor):
         # otherwise, cache value and return it
         else:
             self._last_value = current_value
-
-        super()._handle_coordinator_update()
