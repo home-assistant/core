@@ -77,8 +77,8 @@ FAN_MODE_MAP = {
     FAN_HIGH: "HIGH",
     FAN_TOP: "HIGH",
     FAN_MIDDLE: "MID",
-    "MIDHIGH": "MIDHIGH",
-    "MIDLOW": "MIDLOW",
+    "medium_high": "MIDHIGH",
+    "medim_low": "MIDLOW",
 }
 FAN_MODE_REVERSE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 
