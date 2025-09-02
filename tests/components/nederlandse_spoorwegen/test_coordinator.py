@@ -160,7 +160,9 @@ async def test_update_data_with_routes(
     assert route_data["route"]["from"] == "AMS"
     assert route_data["route"]["to"] == "UTR"
     assert "trips" in route_data
-    assert route_data["trips"] == []  # Mock returns empty since no proper mocking
+    assert (
+        route_data["trips"] == []
+    )  # Expected empty trips list from mocked API response
 
 
 async def test_update_data_with_via_routes(

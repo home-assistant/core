@@ -88,7 +88,7 @@ async def test_async_setup_entry_no_initial_data(
 
     # Should refresh to get initial data
     mock_coordinator.async_request_refresh.assert_called_once()
-    # Should add empty entities list
+    # Should add no entities initially when no data is available
     async_add_entities.assert_called_once_with([])
 
 
