@@ -122,7 +122,6 @@ OPENING_BINARY_SENSOR_DESCRIPTIONS: Final[
         translation_key="Opening",
         device_class=BinarySensorDeviceClass.OPENING,
         netatmo_name="status",
-        # publisher_name=OPENING,
         value_fn=process_opening_status,
         category_fn=process_opening_category,
     ),

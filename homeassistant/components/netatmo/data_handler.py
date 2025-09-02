@@ -62,7 +62,6 @@ HOME = "home"
 WEATHER = "weather"
 AIR_CARE = "air_care"
 PUBLIC = NetatmoDeviceType.public
-OPENING = "opening"
 BINARY_SENSOR = BINARY_SENSOR_DOMAIN
 EVENT = "event"
 
@@ -72,7 +71,6 @@ PUBLISHERS = {
     WEATHER: "async_update_weather_stations",
     AIR_CARE: "async_update_air_care",
     PUBLIC: "async_update_public_weather",
-    # OPENING: "async_update_opening", # Once implemented in pyatmo
     EVENT: "async_update_events",
 }
 
@@ -87,7 +85,6 @@ DEFAULT_INTERVALS = {
     WEATHER: 600,
     AIR_CARE: 300,
     PUBLIC: 600,
-    # OPENING: 60,
     EVENT: 600,
 }
 SCAN_INTERVAL = 60
@@ -342,7 +339,6 @@ class NetatmoDataHandler:
 
             await self.subscribe(HOME, signal_home, None, home_id=home.entity_id)
             await self.subscribe(EVENT, signal_home, None, home_id=home.entity_id)
-            # await self.subscribe(OPENING, signal_home, None, home_id=home.entity_id)
 
             self.setup_climate_schedule_select(home, signal_home)
             self.setup_rooms(home, signal_home)
