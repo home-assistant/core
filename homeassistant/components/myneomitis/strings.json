@@ -21,26 +21,6 @@
     }
   },
   "entity": {
-    "climate": {
-      "climate_myneomitis": {
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "comfort": "Comfort",
-              "eco": "Eco",
-              "antifrost": "Frost protection",
-              "standby": "Standby",
-              "boost": "Boost",
-              "setpoint": "Setpoint",
-              "comfort +": "Comfort +",
-              "eco-1": "Eco -1",
-              "eco-2": "Eco -2",
-              "auto": "Auto"
-            }
-          }
-        }
-      }
-    },
     "select": {
       "select_myneomitis": {
         "state": {

@@ -3,6 +3,7 @@
 This module provides helper functions to process and format data
 for the MyNeomitis integration, such as formatting weekly schedules.
 """
+
 from typing import Any
 
 PRESET_MODE_MAP = {
@@ -51,7 +52,9 @@ def seconds_to_hhmm(seconds: int) -> str:
     return f"{hours:02}:{minutes:02}"
 
 
-def format_week_schedule(schedule: dict[str, list[dict[str, Any]]], isRelais: bool = False) -> dict[str, str]:
+def format_week_schedule(
+    schedule: dict[str, list[dict[str, Any]]], isRelais: bool = False
+) -> dict[str, str]:
     """Format the entire week's schedule for a device, sorted by start time.
 
     Args:
@@ -62,7 +65,15 @@ def format_week_schedule(schedule: dict[str, list[dict[str, Any]]], isRelais: bo
         dict[str, str]: A dictionary where keys are weekday names and values are formatted schedules.
 
     """
-    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    days = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]
     week_schedule = {}
 
     for i, day_name in enumerate(days):
@@ -107,7 +118,9 @@ def parents_to_dict(parents_str: str) -> dict[str, str | None]:
     return result
 
 
-def get_device_by_rfid(devices: list[dict[str, Any]], rfid: str) -> dict[str, Any] | None:
+def get_device_by_rfid(
+    devices: list[dict[str, Any]], rfid: str
+) -> dict[str, Any] | None:
     """Return the device dictionary matching the given RFID.
 
     Args:
@@ -169,7 +182,12 @@ class CtnType:
 class Sensors:
     """Represents a collection of sensors with their types."""
 
-    def __init__(self, ctn0: int = CtnType.NONE, ctn1: int = CtnType.NONE, ctn2: int = CtnType.NONE) -> None:
+    def __init__(
+        self,
+        ctn0: int = CtnType.NONE,
+        ctn1: int = CtnType.NONE,
+        ctn2: int = CtnType.NONE,
+    ) -> None:
         """Initialize the Sensors instance with sensor types.
 
         Args:

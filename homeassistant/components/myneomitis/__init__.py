@@ -14,7 +14,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate", "select", "sensor"]
+PLATFORMS = ["select"]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up from configuration.yaml (not used)."""
@@ -47,7 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         devices: list[dict] = await api.get_devices()
 
     except Exception as err:
-        raise ConfigEntryNotReady(f"MyNeomitis : Error Login/Websocket : {err}") from err
+        raise ConfigEntryNotReady(
+            f"MyNeomitis : Error Login/Websocket : {err}"
+        ) from err
 
     hass.data[DOMAIN][entry.entry_id] = {
         "api": api,
@@ -58,6 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle the unloading of a configuration entry.
@@ -89,6 +93,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Remove the entry
             domain_data.pop(entry.entry_id)
     return unload_ok
+
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the config entry.
