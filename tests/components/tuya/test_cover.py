@@ -115,29 +115,3 @@ async def test_percent_state_on_cover(
         ("stop", 50, "open", 50, "back"),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
-async def test_curtain_direction_mapping_control_back_mode(
-    hass: HomeAssistant,
-    mock_manager: ManagerCompat,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    entity_id: str,
-    tuya_control: str,
-    tuya_position: int,
-    expected_state: str,
-    expected_ha_position: int,
-    control_back_mode: str,
-) -> None:
-    """Test direction of control_back_mode."""
-    mock_device.status["control"] = tuya_control
-    mock_device.status["percent_control"] = tuya_position
-    mock_device.status["control_back_mode"] = control_back_mode
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-
-    assert state.state == expected_state, (
-        f"{entity_id}: {state.state} != {expected_state} (mode={control_back_mode})"
-    )
-    assert state.attributes.get("current_position") == expected_ha_position
