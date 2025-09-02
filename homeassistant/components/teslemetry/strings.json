@@ -1084,6 +1084,9 @@
       },
       "vehicle_state_valet_mode": {
         "name": "Valet mode"
+      },
+      "guest_mode_enabled": {
+        "name": "Guest mode"
       }
     },
     "update": {

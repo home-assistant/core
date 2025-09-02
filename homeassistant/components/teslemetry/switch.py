@@ -38,6 +38,7 @@ PARALLEL_UPDATES = 0
 class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
     """Describes Teslemetry Switch entity."""
 
+    polling: bool = False
     on_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
     off_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
     scopes: list[Scope]
@@ -53,6 +54,7 @@ class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
 VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     TeslemetrySwitchEntityDescription(
         key="vehicle_state_sentry_mode",
+        polling=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_SentryMode(
             lambda value: callback(None if value is None else value != "Off")
         ),
@@ -62,6 +64,18 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="vehicle_state_valet_mode",
+        polling=True,
+        streaming_listener=lambda vehicle, value: vehicle.listen_ValetModeEnabled(
+            value
+        ),
+        streaming_firmware="2024.44.25",
+        on_func=lambda api: api.set_valet_mode(on=True, password=""),
+        off_func=lambda api: api.set_valet_mode(on=False, password=""),
+        scopes=[Scope.VEHICLE_CMDS],
+    ),
+    TeslemetrySwitchEntityDescription(
+        key="vehicle_state_valet_mode",
+        polling=True,
         streaming_listener=lambda vehicle, value: vehicle.listen_ValetModeEnabled(
             value
         ),
@@ -72,6 +86,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="climate_state_auto_seat_climate_left",
+        polling=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_AutoSeatClimateLeft(
             callback
         ),
@@ -85,6 +100,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="climate_state_auto_seat_climate_right",
+        polling=True,
         streaming_listener=lambda vehicle,
         callback: vehicle.listen_AutoSeatClimateRight(callback),
         on_func=lambda api: api.remote_auto_seat_climate_request(
@@ -97,6 +113,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="climate_state_auto_steering_wheel_heat",
+        polling=True,
         streaming_listener=lambda vehicle,
         callback: vehicle.listen_HvacSteeringWheelHeatAuto(callback),
         on_func=lambda api: api.remote_auto_steering_wheel_heat_climate_request(
@@ -109,6 +126,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="climate_state_defrost_mode",
+        polling=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_DefrostMode(
             lambda value: callback(None if value is None else value != "Off")
         ),
@@ -120,6 +138,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="charge_state_charging_state",
+        polling=True,
         unique_id="charge_state_user_charge_enable_request",
         value_func=lambda state: state in {"Starting", "Charging"},
         streaming_listener=lambda vehicle, callback: vehicle.listen_DetailedChargeState(
@@ -130,6 +149,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
         on_func=lambda api: api.charge_start(),
         off_func=lambda api: api.charge_stop(),
         scopes=[Scope.VEHICLE_CMDS, Scope.VEHICLE_CHARGING_CMDS],
+    ),
+    TeslemetrySwitchEntityDescription(
+        key="guest_mode_enabled",
+        unique_id="guest_mode_enabled",
+        streaming_listener=lambda vehicle, callback: vehicle.listen_GuestModeEnabled(
+            callback
+        ),
+        on_func=lambda api: api.guest_mode(True),
+        off_func=lambda api: api.guest_mode(False),
+        scopes=[Scope.VEHICLE_CMDS],
     ),
 )
 
