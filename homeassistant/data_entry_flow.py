@@ -855,7 +855,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         *,
         step_id: str | None = None,
         menu_options: Container[str],
-        sort: bool,
+        sort: bool = False,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> _FlowResultT:
         """Show a navigation menu to the user.
