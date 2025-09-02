@@ -14,6 +14,7 @@ from homeassistant.components.myneomitis.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+import pyaxencoapi
 
 
 class DummyEntry:
@@ -49,7 +50,7 @@ async def test_minimal_setup(hass: HomeAssistant) -> None:
     await hass.config_entries.async_add(entry)
 
     with (
-        patch("myneomitis.pyaxencoapi.PyAxencoAPI") as mock_api_class,
+        patch(pyaxencoapi.PyAxencoAPI) as mock_api_class,
         patch.object(
             hass.config_entries,
             "async_forward_entry_setups",
@@ -71,7 +72,7 @@ async def test_setup_entry_raises_on_login_fail(hass: HomeAssistant) -> None:
     """Test that async_setup_entry raises ConfigEntryNotReady if login fails."""
     entry = DummyEntry("test-entry", {"email": "a@b.c", "password": "pw"})
 
-    with patch("myneomitis.pyaxencoapi.PyAxencoAPI") as api_cls:
+    with patch(pyaxencoapi.PyAxencoAPI) as api_cls:
         api = api_cls.return_value
         api.login = AsyncMock(side_effect=Exception("fail-login"))
 
@@ -119,8 +120,12 @@ async def test_reload_entry_calls_unload_and_setup(
     mock_unload = AsyncMock()
     mock_setup = AsyncMock()
 
-    monkeypatch.setattr("myneomitis.async_unload_entry", mock_unload)
-    monkeypatch.setattr("myneomitis.async_setup_entry", mock_setup)
+    monkeypatch.setattr(
+        "homeassistant.components.myneomitis.async_unload_entry", mock_unload
+    )
+    monkeypatch.setattr(
+        "homeassistant.components.myneomitis.async_setup_entry", mock_setup
+    )
 
     await async_reload_entry(hass, entry)
 
@@ -142,7 +147,7 @@ async def test_setup_entry_success_populates_data_and_forwards(
     entry = DummyEntry("e1", {"email": "u@d.e", "password": "pw"})
 
     with (
-        patch("myneomitis.pyaxencoapi.PyAxencoAPI") as api_cls,
+        patch(pyaxencoapi.PyAxencoAPI) as api_cls,
         patch.object(
             hass.config_entries,
             "async_forward_entry_setups",
@@ -171,7 +176,7 @@ async def test_setup_entry_failure_raises_on_any_api_error(
 ) -> None:
     """If any API method fails, ConfigEntryNotReady is raised."""
     entry = DummyEntry("e2", {"email": "a@b.c", "password": "pw"})
-    with patch("myneomitis.pyaxencoapi.PyAxencoAPI") as api_cls:
+    with patch(pyaxencoapi.PyAxencoAPI) as api_cls:
         api = api_cls.return_value
         setattr(api, fail_method, AsyncMock(side_effect=Exception("boom")))
 

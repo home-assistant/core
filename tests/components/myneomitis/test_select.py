@@ -215,7 +215,7 @@ async def test_dynamic_select_removed_on_unlink_event(
     def fake_add(entities):
         added.extend(entities)
 
-    with patch("myneomitis.select.MyNeoSelect", DummySelect):
+    with patch("homeassistant.components.myneomitis.select.MyNeoSelect", DummySelect):
         await async_setup_entry(hass, entry, fake_add)
 
     assert len(added) == 1
@@ -275,6 +275,8 @@ async def test_select_option_with_invalid_option(hass: HomeAssistant) -> None:
     mock_api.sio.connected = True
     select = MyNeoSelect(mock_api, device, [device])
 
-    with patch("myneomitis.select._LOGGER.warning") as mock_warn:
+    with patch(
+        "homeassistant.components.myneomitis.select._LOGGER.warning"
+    ) as mock_warn:
         await select.async_select_option("invalid_mode")
         mock_warn.assert_called_once()

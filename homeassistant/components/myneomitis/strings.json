@@ -44,16 +44,16 @@
     "select": {
       "select_myneomitis": {
         "state": {
-          "on": "On",
-          "off": "Off",
-          "auto": "Auto",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]",
+          "auto": "[%key:common::state::auto%]",
           "boost": "Boost",
           "comfort": "Comfort",
           "eco": "Eco",
           "eco-1": "Eco -1",
           "eco-2": "Eco -2",
           "antifrost": "Frost protection",
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "heating": "Heating",
           "cooling": "Cooling"
         }

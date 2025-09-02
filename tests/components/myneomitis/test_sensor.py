@@ -192,7 +192,9 @@ async def test_dynamic_sensor_removed_on_unlink_event(hass: HomeAssistant) -> No
     def fake_add(entities):
         added.extend(entities)
 
-    with patch("myneomitis.sensor.DevicesEnergySensor", DummySensor):
+    with patch(
+        "homeassistant.components.myneomitis.sensor.DevicesEnergySensor", DummySensor
+    ):
         await async_setup_entry(hass, entry, fake_add)
 
     assert len(added) == 1
