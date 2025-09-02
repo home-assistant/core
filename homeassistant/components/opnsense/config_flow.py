@@ -82,13 +82,12 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form(user_input, None)
 
-        await self.async_set_unique_id(user_input[CONF_API_KEY])
-        self._abort_if_unique_id_configured()
-
         if not user_input.get(CONF_URL):
             protocol = "https" if user_input[CONF_SSL] else "http"
             url = f"{protocol}://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/api"
             user_input[CONF_URL] = url
+
+        self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
 
         tracker_interfaces = user_input.get(CONF_TRACKER_INTERFACES, None)
         if isinstance(tracker_interfaces, str):

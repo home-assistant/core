@@ -3,6 +3,7 @@
 import logging
 
 from pyopnsense import diagnostics
+from pyopnsense.exceptions import APIException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -67,8 +68,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
     tracker_interfaces = entry.data.get(CONF_TRACKER_INTERFACES)
 
+    interfaces_client = diagnostics.InterfaceClient(**api_data)
+
+    # Test connection
+    try:
+        interfaces_client.get_arp()
+    except APIException:
+        _LOGGER.exception("Failure while connecting to OPNsense API endpoint")
+        return False
+
     hass.data[OPNSENSE_DATA] = {
-        CONF_INTERFACE_CLIENT: diagnostics.InterfaceClient(**api_data),
+        CONF_INTERFACE_CLIENT: interfaces_client,
         CONF_TRACKER_INTERFACES: tracker_interfaces,
     }
 

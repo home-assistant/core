@@ -7,7 +7,6 @@ from pyopnsense.exceptions import APIException
 from homeassistant import data_entry_flow
 from homeassistant.components.opnsense.const import CONF_TRACKER_INTERFACES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from . import CONFIG_DATA, CONFIG_DATA_IMPORT, TITLE, setup_mock_diagnostics
@@ -36,7 +35,6 @@ async def test_import(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["result"].unique_id == CONFIG_DATA[CONF_API_KEY]
         assert result["title"] == TITLE
 
         assert len(mock_setup_entry.mock_calls) == 1
@@ -69,7 +67,6 @@ async def test_user(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["result"].unique_id == CONFIG_DATA[CONF_API_KEY]
         assert result["title"] == TITLE
 
         assert len(mock_setup_entry.mock_calls) == 1
@@ -80,7 +77,6 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
-        unique_id=CONFIG_DATA[CONF_API_KEY],
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
