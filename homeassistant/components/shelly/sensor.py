@@ -1429,6 +1429,13 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENUM,
         options=["dark", "twilight", "bright"],
     ),
+    "presence_num_objects": RpcSensorDescription(
+        key="presence",
+        sub_key="num_objects",
+        translation_key="detected_objects",
+        name="Detected objects",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
