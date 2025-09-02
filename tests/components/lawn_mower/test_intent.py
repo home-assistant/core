@@ -5,8 +5,10 @@ from homeassistant.components.lawn_mower import (
     SERVICE_DOCK,
     SERVICE_START_MOWING,
     LawnMowerActivity,
+    LawnMowerEntityFeature,
     intent as lawn_mower_intent,
 )
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
@@ -18,7 +20,11 @@ async def test_start_lawn_mower_intent(hass: HomeAssistant) -> None:
     await lawn_mower_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_lawn_mower"
-    hass.states.async_set(entity_id, LawnMowerActivity.DOCKED)
+    hass.states.async_set(
+        entity_id,
+        LawnMowerActivity.DOCKED,
+        {ATTR_SUPPORTED_FEATURES: LawnMowerEntityFeature.START_MOWING},
+    )
     calls = async_mock_service(hass, DOMAIN, SERVICE_START_MOWING)
 
     response = await intent.async_handle(
@@ -42,7 +48,11 @@ async def test_start_lawn_mower_without_name(hass: HomeAssistant) -> None:
     await lawn_mower_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_lawn_mower"
-    hass.states.async_set(entity_id, LawnMowerActivity.DOCKED)
+    hass.states.async_set(
+        entity_id,
+        LawnMowerActivity.DOCKED,
+        {ATTR_SUPPORTED_FEATURES: LawnMowerEntityFeature.START_MOWING},
+    )
     calls = async_mock_service(hass, DOMAIN, SERVICE_START_MOWING)
 
     response = await intent.async_handle(
@@ -63,7 +73,11 @@ async def test_stop_lawn_mower_intent(hass: HomeAssistant) -> None:
     await lawn_mower_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_lawn_mower"
-    hass.states.async_set(entity_id, LawnMowerActivity.MOWING)
+    hass.states.async_set(
+        entity_id,
+        LawnMowerActivity.MOWING,
+        {ATTR_SUPPORTED_FEATURES: LawnMowerEntityFeature.DOCK},
+    )
     calls = async_mock_service(hass, DOMAIN, SERVICE_DOCK)
 
     response = await intent.async_handle(
@@ -87,7 +101,11 @@ async def test_stop_lawn_mower_without_name(hass: HomeAssistant) -> None:
     await lawn_mower_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_lawn_mower"
-    hass.states.async_set(entity_id, LawnMowerActivity.MOWING)
+    hass.states.async_set(
+        entity_id,
+        LawnMowerActivity.MOWING,
+        {ATTR_SUPPORTED_FEATURES: LawnMowerEntityFeature.DOCK},
+    )
     calls = async_mock_service(hass, DOMAIN, SERVICE_DOCK)
 
     response = await intent.async_handle(
