@@ -10,8 +10,10 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any, Concatenate
 
-import pychromecast
+import pychromecast.config
+import pychromecast.const
 from pychromecast.controllers.homeassistant import HomeAssistantController
+import pychromecast.controllers.media
 from pychromecast.controllers.media import (
     MEDIA_PLAYER_ERROR_CODES,
     MEDIA_PLAYER_STATE_BUFFERING,
