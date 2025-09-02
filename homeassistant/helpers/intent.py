@@ -150,7 +150,9 @@ async def async_handle(
         result = await handler.async_handle(intent)
     except vol.Invalid as err:
         _LOGGER.warning("Received invalid slot info for %s: %s", intent_type, err)
-        raise InvalidSlotInfo(f"Received invalid slot info for {intent_type}") from err
+        raise InvalidSlotInfo(
+            f"Received invalid slot info for {intent_type}: {err}"
+        ) from err
     except IntentError:
         raise  # bubble up intent related errors
     except Exception as err:
@@ -1184,6 +1186,8 @@ class DynamicServiceIntentHandler(IntentHandler):
         service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
         if self.required_slots:
             for key, slot_info in self.required_slots.items():
+                if isinstance(key, vol.Any):
+                    continue
                 service_data[slot_info.service_data_name or key] = intent_obj.slots[
                     key
                 ]["value"]
