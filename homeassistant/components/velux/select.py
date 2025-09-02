@@ -58,12 +58,10 @@ class VeluxCoverVelocitySelect(VeluxCoordinatorEntity, SelectEntity):
     @property
     def current_option(self) -> str:
         """Return the currently selected velocity."""
-        velocity = self.coordinator.get_velocity(str(self._attr_device_info))
+        velocity = self.coordinator.get_velocity(self.device_info_str)
         return velocity.name.lower()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected velocity option."""
         if option in VELOCITY_MAP:
-            self.coordinator.set_velocity(
-                str(self._attr_device_info), VELOCITY_MAP[option]
-            )
+            self.coordinator.set_velocity(self.device_info_str, VELOCITY_MAP[option])

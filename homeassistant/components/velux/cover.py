@@ -76,7 +76,7 @@ class VeluxCover(VeluxCoordinatorEntity, CoverEntity):
     def _get_velocity(self) -> Velocity:
         """Get PyVLX velocity object for current setting."""
         # Get velocity from coordinator
-        return self.coordinator.get_velocity(str(self._attr_device_info))
+        return self.coordinator.get_velocity(self.device_info_str)
 
     @property
     def current_cover_velocity(self) -> str:
