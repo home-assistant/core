@@ -26,7 +26,7 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
         """Initialize a Portainer endpoint."""
         super().__init__(coordinator)
         self._device_info = device_info
-        self.device_id = self._device_info.endpoint.id
+        self.device_id = device_info.endpoint.id
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_{self.device_id}")
