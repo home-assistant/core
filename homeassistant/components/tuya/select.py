@@ -353,7 +353,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.CONTROL_BACK_MODE,
             entity_category=EntityCategory.CONFIG,
-            translation_key="control_back_mode",
+            translation_key="motor_reverse_mode",
         ),
     ),
 }
