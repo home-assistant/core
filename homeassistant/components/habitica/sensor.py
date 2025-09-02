@@ -2,50 +2,38 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from dataclasses import asdict, dataclass
+from collections.abc import Callable
+from dataclasses import dataclass
 from enum import StrEnum
 import logging
 from typing import Any
 
-from habiticalib import (
-    ContentData,
-    HabiticaClass,
-    TaskData,
-    TaskType,
-    UserData,
-    deserialize_task,
-    ha,
-)
+from habiticalib import ContentData, GroupData, HabiticaClass, TaskData, UserData, ha
 
-from homeassistant.components.automation import automations_with_entity
-from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import ASSETS_URL, DOMAIN
-from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
-from .entity import HabiticaBase
+from . import HABITICA_KEY
+from .const import ASSETS_URL
+from .coordinator import HabiticaConfigEntry
+from .entity import HabiticaBase, HabiticaPartyBase
 from .util import (
+    collected_quest_items,
     get_attribute_points,
     get_attributes_total,
     inventory_list,
     pending_damage,
     pending_quest_items,
+    quest_attributes,
+    quest_boss,
+    rage_attributes,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +61,17 @@ class HabiticaSensorEntityDescription(SensorEntityDescription):
 
 
 @dataclass(kw_only=True, frozen=True)
+class HabiticaPartySensorEntityDescription(SensorEntityDescription):
+    """Habitica Party Sensor Description."""
+
+    value_fn: Callable[[GroupData, ContentData], StateType]
+    entity_picture: Callable[[GroupData], str | None] | str | None = None
+    attributes_fn: Callable[[GroupData, ContentData], dict[str, Any] | None] | None = (
+        None
+    )
+
+
+@dataclass(kw_only=True, frozen=True)
 class HabiticaTaskSensorEntityDescription(SensorEntityDescription):
     """Habitica Task Sensor Description."""
 
@@ -84,7 +83,6 @@ class HabiticaSensorEntity(StrEnum):
 
     DISPLAY_NAME = "display_name"
     HEALTH = "health"
-    HEALTH_MAX = "health_max"
     MANA = "mana"
     MANA_MAX = "mana_max"
     EXPERIENCE = "experience"
@@ -107,6 +105,15 @@ class HabiticaSensorEntity(StrEnum):
     QUEST_SCROLLS = "quest_scrolls"
     PENDING_DAMAGE = "pending_damage"
     PENDING_QUEST_ITEMS = "pending_quest_items"
+    MEMBER_COUNT = "member_count"
+    GROUP_LEADER = "group_leader"
+    QUEST = "quest"
+    BOSS = "boss"
+    BOSS_HP = "boss_hp"
+    BOSS_HP_REMAINING = "boss_hp_remaining"
+    COLLECTED_ITEMS = "collected_items"
+    BOSS_RAGE = "boss_rage"
+    BOSS_RAGE_LIMIT = "boss_rage_limit"
 
 
 SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
@@ -135,12 +142,6 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         value_fn=lambda user, _: user.stats.hp,
         entity_picture=ha.HP,
-    ),
-    HabiticaSensorEntityDescription(
-        key=HabiticaSensorEntity.HEALTH_MAX,
-        translation_key=HabiticaSensorEntity.HEALTH_MAX,
-        entity_registry_enabled_default=False,
-        value_fn=lambda user, _: 50,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.MANA,
@@ -286,55 +287,84 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
 )
 
 
-TASKS_MAP_ID = "id"
-TASKS_MAP = {
-    "repeat": "repeat",
-    "challenge": "challenge",
-    "group": "group",
-    "frequency": "frequency",
-    "every_x": "everyX",
-    "streak": "streak",
-    "up": "up",
-    "down": "down",
-    "counter_up": "counterUp",
-    "counter_down": "counterDown",
-    "next_due": "nextDue",
-    "yester_daily": "yesterDaily",
-    "completed": "completed",
-    "collapse_checklist": "collapseChecklist",
-    "type": "Type",
-    "notes": "notes",
-    "tags": "tags",
-    "value": "value",
-    "priority": "priority",
-    "start_date": "startDate",
-    "days_of_month": "daysOfMonth",
-    "weeks_of_month": "weeksOfMonth",
-    "created_at": "createdAt",
-    "text": "text",
-    "is_due": "isDue",
-}
-
-
-TASK_SENSOR_DESCRIPTION: tuple[HabiticaTaskSensorEntityDescription, ...] = (
-    HabiticaTaskSensorEntityDescription(
-        key=HabiticaSensorEntity.HABITS,
-        translation_key=HabiticaSensorEntity.HABITS,
-        value_fn=lambda tasks: [r for r in tasks if r.Type is TaskType.HABIT],
+SENSOR_DESCRIPTIONS_PARTY: tuple[HabiticaPartySensorEntityDescription, ...] = (
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.MEMBER_COUNT,
+        translation_key=HabiticaSensorEntity.MEMBER_COUNT,
+        value_fn=lambda party, _: party.memberCount,
+        entity_picture=ha.PARTY,
     ),
-    HabiticaTaskSensorEntityDescription(
-        key=HabiticaSensorEntity.REWARDS,
-        translation_key=HabiticaSensorEntity.REWARDS,
-        value_fn=lambda tasks: [r for r in tasks if r.Type is TaskType.REWARD],
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.GROUP_LEADER,
+        translation_key=HabiticaSensorEntity.GROUP_LEADER,
+        value_fn=lambda party, _: party.leader.profile.name,
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.QUEST,
+        translation_key=HabiticaSensorEntity.QUEST,
+        value_fn=lambda p, c: c.quests[p.quest.key].text if p.quest.key else None,
+        attributes_fn=quest_attributes,
+        entity_picture=(
+            lambda party: f"inventory_quest_scroll_{party.quest.key}.png"
+            if party.quest.key
+            else None
+        ),
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.BOSS,
+        translation_key=HabiticaSensorEntity.BOSS,
+        value_fn=lambda p, c: boss.name if (boss := quest_boss(p, c)) else None,
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.BOSS_HP,
+        translation_key=HabiticaSensorEntity.BOSS_HP,
+        value_fn=lambda p, c: boss.hp if (boss := quest_boss(p, c)) else None,
+        entity_picture=ha.HP,
+        suggested_display_precision=0,
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.BOSS_HP_REMAINING,
+        translation_key=HabiticaSensorEntity.BOSS_HP_REMAINING,
+        value_fn=lambda p, _: p.quest.progress.hp,
+        entity_picture=ha.HP,
+        suggested_display_precision=2,
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.COLLECTED_ITEMS,
+        translation_key=HabiticaSensorEntity.COLLECTED_ITEMS,
+        value_fn=(
+            lambda p, _: sum(n for n in p.quest.progress.collect.values())
+            if p.quest.progress.collect
+            else None
+        ),
+        attributes_fn=collected_quest_items,
+        entity_picture=(
+            lambda p: f"quest_{p.quest.key}_{k}.png"
+            if p.quest.progress.collect
+            and (k := next(iter(p.quest.progress.collect), None))
+            else None
+        ),
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.BOSS_RAGE,
+        translation_key=HabiticaSensorEntity.BOSS_RAGE,
+        value_fn=lambda p, _: p.quest.progress.rage,
+        entity_picture=ha.RAGE,
+        suggested_display_precision=2,
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.BOSS_RAGE_LIMIT,
+        translation_key=HabiticaSensorEntity.BOSS_RAGE_LIMIT,
+        value_fn=(
+            lambda p, c: boss.rage.value
+            if (boss := quest_boss(p, c)) and boss.rage
+            else None
+        ),
+        entity_picture=ha.RAGE,
+        suggested_display_precision=0,
+        attributes_fn=rage_attributes,
     ),
 )
-
-
-def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Get list of related automations and scripts."""
-    used_in = automations_with_entity(hass, entity_id)
-    used_in += scripts_with_entity(hass, entity_id)
-    return used_in
 
 
 async def async_setup_entry(
@@ -345,59 +375,22 @@ async def async_setup_entry(
     """Set up the habitica sensors."""
 
     coordinator = config_entry.runtime_data
-    ent_reg = er.async_get(hass)
-    entities: list[SensorEntity] = []
-    description: SensorEntityDescription
 
-    def add_deprecated_entity(
-        description: SensorEntityDescription,
-        entity_cls: Callable[
-            [HabiticaDataUpdateCoordinator, SensorEntityDescription], SensorEntity
-        ],
-    ) -> None:
-        """Add deprecated entities."""
-        if entity_id := ent_reg.async_get_entity_id(
-            SENSOR_DOMAIN,
-            DOMAIN,
-            f"{config_entry.unique_id}_{description.key}",
-        ):
-            entity_entry = ent_reg.async_get(entity_id)
-            if entity_entry and entity_entry.disabled:
-                ent_reg.async_remove(entity_id)
-                async_delete_issue(
-                    hass,
-                    DOMAIN,
-                    f"deprecated_entity_{description.key}",
-                )
-            elif entity_entry:
-                entities.append(entity_cls(coordinator, description))
-                if entity_used_in(hass, entity_id):
-                    async_create_issue(
-                        hass,
-                        DOMAIN,
-                        f"deprecated_entity_{description.key}",
-                        breaks_in_ha_version="2025.8.0",
-                        is_fixable=False,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="deprecated_entity",
-                        translation_placeholders={
-                            "name": str(
-                                entity_entry.name or entity_entry.original_name
-                            ),
-                            "entity": entity_id,
-                        },
-                    )
+    async_add_entities(
+        HabiticaSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
+    )
 
-    for description in SENSOR_DESCRIPTIONS:
-        if description.key is HabiticaSensorEntity.HEALTH_MAX:
-            add_deprecated_entity(description, HabiticaSensor)
-        else:
-            entities.append(HabiticaSensor(coordinator, description))
-
-    for description in TASK_SENSOR_DESCRIPTION:
-        add_deprecated_entity(description, HabiticaTaskSensor)
-
-    async_add_entities(entities, True)
+    if party := coordinator.data.user.party.id:
+        party_coordinator = hass.data[HABITICA_KEY][party]
+        async_add_entities(
+            HabiticaPartySensor(
+                party_coordinator,
+                config_entry,
+                description,
+                coordinator.content,
+            )
+            for description in SENSOR_DESCRIPTIONS_PARTY
+        )
 
 
 class HabiticaSensor(HabiticaBase, SensorEntity):
@@ -443,29 +436,37 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
         return None
 
 
-class HabiticaTaskSensor(HabiticaBase, SensorEntity):
-    """A Habitica task sensor."""
+class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
+    """Habitica party sensor."""
 
-    entity_description: HabiticaTaskSensorEntityDescription
+    entity_description: HabiticaPartySensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
 
-        return len(self.entity_description.value_fn(self.coordinator.data.tasks))
+        return self.entity_description.value_fn(self.coordinator.data, self.content)
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the state attributes of all user tasks."""
-        attrs = {}
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend, if any."""
+        pic = self.entity_description.entity_picture
 
-        # Map tasks to TASKS_MAP
-        for task_data in self.entity_description.value_fn(self.coordinator.data.tasks):
-            received_task = deserialize_task(asdict(task_data))
-            task_id = received_task[TASKS_MAP_ID]
-            task = {}
-            for map_key, map_value in TASKS_MAP.items():
-                if value := received_task.get(map_value):
-                    task[map_key] = value
-            attrs[str(task_id)] = task
-        return attrs
+        entity_picture = (
+            pic if isinstance(pic, str) or pic is None else pic(self.coordinator.data)
+        )
+
+        return (
+            None
+            if not entity_picture
+            else entity_picture
+            if entity_picture.startswith("data:image")
+            else f"{ASSETS_URL}{entity_picture}"
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return entity specific state attributes."""
+        if func := self.entity_description.attributes_fn:
+            return func(self.coordinator.data, self.content)
+        return None
