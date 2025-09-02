@@ -1,0 +1,144 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nederlandse Spoorwegen setup",
+        "description": "Set up your Nederlandse Spoorwegen integration.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your NS API key."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Nederlandse Spoorwegen",
+        "description": "Update your NS API key.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your NS API key."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to NS API. Check your API key.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_api_key%]",
+      "missing_fields": "Please fill in all required fields.",
+      "no_stations_available": "Unable to load station list. Please check your connection and API key.",
+      "same_station": "Departure and arrival stations must be different.",
+      "invalid_station": "Please select a valid station from the list.",
+      "invalid_time_format": "Invalid time format. Use HH:MM or HH:MM:SS (24h format)",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_api_key": "No API key found in YAML configuration.",
+      "invalid_api_key": "Invalid API key in YAML configuration.",
+      "no_longer_present": "The configuration entry is no longer present."
+    }
+  },
+  "options": {
+    "step": {
+      "route_management": {
+        "title": "Manage routes",
+        "description": "You currently have {current_routes} route(s) configured. Choose an action:",
+        "data": {
+          "action": "Action"
+        }
+      },
+      "add_route": {
+        "title": "Add route",
+        "description": "Select your departure and destination stations from the dropdown lists. Time is optional and if omitted, the next available train will be shown.",
+        "data": {
+          "name": "Route name",
+          "from": "From station",
+          "to": "To station",
+          "via": "Via station (optional)",
+          "time": "Departure time (optional)"
+        },
+        "data_description": {
+          "name": "A name for this route.",
+          "from": "Select the departure station",
+          "to": "Select the destination station",
+          "via": "Optional intermediate station",
+          "time": "Optional departure time in HH:MM or HH:MM:SS (24h)"
+        }
+      },
+      "remove_route": {
+        "title": "Remove route",
+        "description": "Select a route to remove:",
+        "data": {
+          "route_to_remove": "Route to remove"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:component::nederlandse_spoorwegen::config::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_api_key%]",
+      "missing_fields": "[%key:component::nederlandse_spoorwegen::config::error::missing_fields%]",
+      "no_stations_available": "[%key:component::nederlandse_spoorwegen::config::error::no_stations_available%]",
+      "same_station": "[%key:component::nederlandse_spoorwegen::config::error::same_station%]",
+      "invalid_station": "[%key:component::nederlandse_spoorwegen::config::error::invalid_station%]",
+      "invalid_time_format": "[%key:component::nederlandse_spoorwegen::config::error::invalid_time_format%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "departure_platform_planned": {
+        "name": "Departure platform planned"
+      },
+      "departure_platform_actual": {
+        "name": "Departure platform actual"
+      },
+      "arrival_platform_planned": {
+        "name": "Arrival platform planned"
+      },
+      "arrival_platform_actual": {
+        "name": "Arrival platform actual"
+      },
+      "departure_time_planned": {
+        "name": "Departure time planned"
+      },
+      "departure_time_actual": {
+        "name": "Departure time actual"
+      },
+      "arrival_time_planned": {
+        "name": "Arrival time planned"
+      },
+      "arrival_time_actual": {
+        "name": "Arrival time actual"
+      },
+      "next_departure": {
+        "name": "Next departure"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "transfers": {
+        "name": "Transfers"
+      },
+      "route_from": {
+        "name": "Route from"
+      },
+      "route_to": {
+        "name": "Route to"
+      },
+      "route_via": {
+        "name": "Route via"
+      }
+    }
+  },
+  "issues": {
+    "integration_yaml_migration": {
+      "title": "Nederlandse Spoorwegen YAML configuration migrated",
+      "description": "Your Nederlandse Spoorwegen integration configuration has been automatically migrated from YAML to the new config entry format. To complete this migration: 1) Verify the integration is working correctly in the integrations page, 2) Remove the 'nederlandse_spoorwegen:' section from your configuration.yaml file, 3) Restart Home Assistant to clear this notification. The integration will continue to work normally during this transition."
+    },
+    "platform_yaml_migration": {
+      "title": "Nederlandse Spoorwegen platform configuration migrated",
+      "description": "Your Nederlandse Spoorwegen sensor platform configuration has been automatically migrated to the new config entry format. To complete this migration: 1) Verify the integration is working correctly in the integrations page, 2) Remove the 'nederlandse_spoorwegen' platform from your sensor configuration in configuration.yaml, 3) Restart Home Assistant to clear this notification. The integration will continue to work normally during this transition."
+    }
+  }
+}
