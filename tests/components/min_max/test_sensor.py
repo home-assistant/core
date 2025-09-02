@@ -7,12 +7,9 @@ import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.min_max.const import DOMAIN
-from homeassistant.components.sensor import (
-    ATTR_ENTITY_ID,
-    ATTR_STATE_CLASS,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     SERVICE_RELOAD,
