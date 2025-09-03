@@ -17,7 +17,6 @@
         '01JG00V55WEVTJ0CJHM0GAD7PC',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,

@@ -24,7 +24,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Sleekpoint Innovations',
@@ -364,14 +363,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_2576_2580',
-            'unit_of_measurement': 'µg/m³',
+            'unit_of_measurement': 'μg/m³',
           }),
           'state': dict({
             'attributes': dict({
               'device_class': 'pm25',
               'friendly_name': 'Airversa AP2 1808 PM2.5 Density',
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-              'unit_of_measurement': 'µg/m³',
+              'unit_of_measurement': 'μg/m³',
             }),
             'entity_id': 'sensor.airversa_ap2_1808_pm2_5_density',
             'state': '3.0',
@@ -654,7 +653,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Anker',
@@ -735,7 +733,6 @@
             '00:00:00:00:00:00:aid:4',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Anker',
@@ -903,7 +900,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery-20',
             'original_name': 'eufyCam2-0000 Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -992,7 +989,6 @@
             '00:00:00:00:00:00:aid:2',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Anker',
@@ -1160,7 +1156,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery-40',
             'original_name': 'eufyCam2-000A Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -1249,7 +1245,6 @@
             '00:00:00:00:00:00:aid:3',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Anker',
@@ -1417,7 +1412,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery-alert',
             'original_name': 'eufyCam2-000A Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -1510,7 +1505,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Aqara',
@@ -1730,7 +1724,6 @@
             '00:00:00:00:00:00:aid:33',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Aqara',
@@ -1855,7 +1848,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Contact Sensor Battery Sensor',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -1906,7 +1899,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Aqara',
@@ -2197,7 +2189,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Aqara',
@@ -2279,7 +2270,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Programmable Switch Battery Sensor',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -2330,7 +2321,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netgear, Inc',
@@ -2611,7 +2601,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery-80',
             'original_name': 'ArloBabyA0 Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -2843,7 +2833,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ConnectSense',
@@ -3314,7 +3303,6 @@
             '00:00:00:00:00:00:aid:4',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -3488,7 +3476,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -3969,7 +3956,6 @@
             '00:00:00:00:00:00:aid:2',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -4143,7 +4129,6 @@
             '00:00:00:00:00:00:aid:3',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -4321,7 +4306,6 @@
             '00:00:00:00:00:00:aid:4295608960',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -4489,7 +4473,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Basement Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -4586,7 +4570,6 @@
             '00:00:00:00:00:00:aid:4298360914',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -4797,7 +4780,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Basement Window 1 Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -4844,7 +4827,6 @@
             '00:00:00:00:00:00:aid:4298360921',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -5055,7 +5037,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Deck Door Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -5102,7 +5084,6 @@
             '00:00:00:00:00:00:aid:4298527970',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -5313,7 +5294,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Front Door Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -5360,7 +5341,6 @@
             '00:00:00:00:00:00:aid:4298527962',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -5571,7 +5551,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Garage Door Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -5618,7 +5598,6 @@
             '00:00:00:00:00:00:aid:4295016858',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -5786,7 +5765,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Living Room Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -5883,7 +5862,6 @@
             '00:00:00:00:00:00:aid:4298360712',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -6094,7 +6072,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Living Room Window 1 Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -6141,7 +6119,6 @@
             '00:00:00:00:00:00:aid:4298649931',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -6352,7 +6329,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Loft window Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -6399,7 +6376,6 @@
             '00:00:00:00:00:00:aid:4295608971',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -6567,7 +6543,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Master BR Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -6664,7 +6640,6 @@
             '00:00:00:00:00:00:aid:4298584118',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -6875,7 +6850,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Master BR Window Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -6922,7 +6897,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -7321,7 +7295,6 @@
             '00:00:00:00:00:00:aid:4295016969',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -7489,7 +7462,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Upstairs BR Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -7586,7 +7559,6 @@
             '00:00:00:00:00:00:aid:4298568508',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -7797,7 +7769,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Upstairs BR Window Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -7848,7 +7820,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -8333,7 +8304,6 @@
             '00:00:00:00:00:00:aid:4',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -8457,7 +8427,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -8757,7 +8726,6 @@
             '00:00:00:00:00:00:aid:2',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -8931,7 +8899,6 @@
             '00:00:00:00:00:00:aid:3',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -9109,7 +9076,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -9603,7 +9569,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -9913,7 +9878,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Elgato',
@@ -10147,7 +10111,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery-60',
             'original_name': 'Eve Degree AA11 Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -10295,7 +10259,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Elgato',
@@ -10665,7 +10628,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'José A. Jiménez Campos',
@@ -10886,7 +10848,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'José A. Jiménez Campos',
@@ -11013,7 +10974,6 @@
             '00:00:00:00:00:00:aid:123016423',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -11139,7 +11099,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Family Room North Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -11186,7 +11146,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -11267,7 +11226,6 @@
             '00:00:00:00:00:00:aid:878448248',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -11393,7 +11351,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Kitchen Window Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -11444,7 +11402,6 @@
             '00:00:00:00:00:00:aid:766313939',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -11576,7 +11533,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -11657,7 +11613,6 @@
             '00:00:00:00:00:00:aid:1256851357',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -11794,7 +11749,6 @@
             '00:00:00:00:00:00:aid:1233851541',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Lookin',
@@ -12141,7 +12095,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -12226,7 +12179,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -12307,7 +12259,6 @@
             '00:00:00:00:00:00:aid:3982136094',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'FirstAlert',
@@ -12441,7 +12392,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Laundry Smoke ED78 Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -12492,7 +12443,6 @@
             '00:00:00:00:00:00:aid:123016423',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -12618,7 +12568,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Family Room North Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -12665,7 +12615,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -12746,7 +12695,6 @@
             '00:00:00:00:00:00:aid:878448248',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -12872,7 +12820,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Kitchen Window Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -12923,7 +12871,6 @@
             '00:00:00:00:00:00:aid:766313939',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -13055,7 +13002,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -13136,7 +13082,6 @@
             '00:00:00:00:00:00:aid:1256851357',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -13274,7 +13219,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -13355,7 +13299,6 @@
             '00:00:00:00:00:00:aid:1256851357',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -13493,7 +13436,6 @@
             '00:00:00:00:00:00:aid:1233851541',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Lookin',
@@ -13849,7 +13791,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -13934,7 +13875,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -14015,7 +13955,6 @@
             '00:00:00:00:00:00:aid:293334836',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'switchbot',
@@ -14207,7 +14146,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -14288,7 +14226,6 @@
             '00:00:00:00:00:00:aid:293334836',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'switchbot',
@@ -14480,7 +14417,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -14561,7 +14497,6 @@
             '00:00:00:00:00:00:aid:3982136094',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'FirstAlert',
@@ -14710,7 +14645,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Laundry Smoke ED78 Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -14761,7 +14696,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Garzola Marco',
@@ -14974,7 +14908,6 @@
             '00:00:00:00:00:00:aid:6623462395276914',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -15120,7 +15053,6 @@
             '00:00:00:00:00:00:aid:6623462395276939',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -15266,7 +15198,6 @@
             '00:00:00:00:00:00:aid:6623462403113447',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -15412,7 +15343,6 @@
             '00:00:00:00:00:00:aid:6623462403233419',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -15558,7 +15488,6 @@
             '00:00:00:00:00:00:aid:6623462412411853',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -15714,7 +15643,6 @@
             '00:00:00:00:00:00:aid:6623462412413293',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -15870,7 +15798,6 @@
             '00:00:00:00:00:00:aid:6623462389072572',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -16156,7 +16083,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Hue dimmer switch battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -16203,7 +16130,6 @@
             '00:00:00:00:00:00:aid:6623462378982941',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -16336,7 +16262,6 @@
             '00:00:00:00:00:00:aid:6623462378983942',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -16469,7 +16394,6 @@
             '00:00:00:00:00:00:aid:6623462379122122',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -16602,7 +16526,6 @@
             '00:00:00:00:00:00:aid:6623462379123707',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -16735,7 +16658,6 @@
             '00:00:00:00:00:00:aid:6623462383114163',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -16868,7 +16790,6 @@
             '00:00:00:00:00:00:aid:6623462383114193',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -17001,7 +16922,6 @@
             '00:00:00:00:00:00:aid:6623462385996792',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -17134,7 +17054,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips Lighting',
@@ -17219,7 +17138,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Koogeek',
@@ -17371,7 +17289,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Koogeek',
@@ -17549,7 +17466,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Koogeek',
@@ -17768,7 +17684,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Lennox',
@@ -18067,7 +17982,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'LG Electronics',
@@ -18258,7 +18172,6 @@
             '00:00:00:00:00:00:aid:21474836482',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Lutron Electronics Co., Inc',
@@ -18390,7 +18303,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Lutron Electronics Co., Inc',
@@ -18475,7 +18387,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Meross',
@@ -18770,7 +18681,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Meross',
@@ -18907,7 +18817,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Empowered Homes Inc.',
@@ -19256,7 +19165,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Nanoleaf',
@@ -19540,7 +19448,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -19850,7 +19757,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -20021,7 +19927,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -20346,7 +20251,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Green Electronics LLC',
@@ -20791,7 +20695,6 @@
             '00:00:00:00:00:00:aid:2',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -20917,7 +20820,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'Master Bath South RYSE Shade Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -20964,7 +20867,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21045,7 +20947,6 @@
             '00:00:00:00:00:00:aid:3',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21171,7 +21072,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'RYSE SmartShade RYSE Shade Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -21222,7 +21123,6 @@
             '00:00:00:00:00:00:aid:4',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21348,7 +21248,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'BR Left RYSE Shade Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -21395,7 +21295,6 @@
             '00:00:00:00:00:00:aid:2',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21521,7 +21420,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery-90',
             'original_name': 'LR Left RYSE Shade Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -21568,7 +21467,6 @@
             '00:00:00:00:00:00:aid:3',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21694,7 +21592,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery',
             'original_name': 'LR Right RYSE Shade Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -21741,7 +21639,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21822,7 +21719,6 @@
             '00:00:00:00:00:00:aid:5',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21948,7 +21844,7 @@
             'options': dict({
             }),
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-            'original_icon': 'mdi:battery-unknown',
+            'original_icon': 'mdi:battery-alert',
             'original_name': 'RZSS RYSE Shade Battery',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -21999,7 +21895,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Schlage ',
@@ -22127,7 +22022,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Hunter Fan',
@@ -22316,7 +22210,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -22446,7 +22339,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Moen Incorporated',
@@ -22860,7 +22752,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -23089,7 +22980,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'VELUX',
@@ -23170,7 +23060,6 @@
             '00:00:00:00:00:00:aid:2',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'VELUX',
@@ -23395,7 +23284,6 @@
             '00:00:00:00:00:00:aid:3',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'VELUX',
@@ -23525,7 +23413,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -23655,7 +23542,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -23784,7 +23670,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'VOCOlinc',
@@ -24104,7 +23989,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'VOCOlinc',

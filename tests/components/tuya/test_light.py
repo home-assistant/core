@@ -10,57 +10,35 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
 from homeassistant.components.tuya import ManagerCompat
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import DEVICE_MOCKS, initialize_entry
+from . import initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize(
-    "mock_device_code",
-    [k for k, v in DEVICE_MOCKS.items() if Platform.LIGHT in v],
-)
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.LIGHT])
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
+    mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test platform setup and discovery."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-@pytest.mark.parametrize(
-    "mock_device_code",
-    [k for k, v in DEVICE_MOCKS.items() if Platform.LIGHT not in v],
-)
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.LIGHT])
-async def test_platform_setup_no_discovery(
-    hass: HomeAssistant,
-    mock_manager: ManagerCompat,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test platform setup without discovery."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    assert not er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
 
 
 @pytest.mark.parametrize(
@@ -72,7 +50,7 @@ async def test_platform_setup_no_discovery(
     [
         (
             {
-                "white": True,
+                ATTR_WHITE: True,
             },
             [
                 {"code": "switch_led", "value": True},
@@ -82,7 +60,7 @@ async def test_platform_setup_no_discovery(
         ),
         (
             {
-                "brightness": 150,
+                ATTR_BRIGHTNESS: 150,
             },
             [
                 {"code": "switch_led", "value": True},
@@ -91,8 +69,8 @@ async def test_platform_setup_no_discovery(
         ),
         (
             {
-                "white": True,
-                "brightness": 150,
+                ATTR_WHITE: True,
+                ATTR_BRIGHTNESS: 150,
             },
             [
                 {"code": "switch_led", "value": True},
@@ -102,7 +80,7 @@ async def test_platform_setup_no_discovery(
         ),
         (
             {
-                "white": 150,
+                ATTR_WHITE: 150,
             },
             [
                 {"code": "switch_led", "value": True},
@@ -130,11 +108,11 @@ async def test_turn_on_white(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            "entity_id": entity_id,
+            ATTR_ENTITY_ID: entity_id,
             **turn_on_input,
         },
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id,
         expected_commands,
@@ -161,10 +139,10 @@ async def test_turn_off(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
         {
-            "entity_id": entity_id,
+            ATTR_ENTITY_ID: entity_id,
         },
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [{"code": "switch_led", "value": False}]
     )

@@ -17,7 +17,6 @@
         'XXXXXXXXXXXX',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'APC',
@@ -49,7 +48,6 @@
         'XXXX',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'APC',
@@ -81,7 +79,6 @@
         'mocked-config-entry-id',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'APC',
@@ -113,7 +110,6 @@
         'mocked-config-entry-id',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'APC',

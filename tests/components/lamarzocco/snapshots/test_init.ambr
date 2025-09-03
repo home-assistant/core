@@ -25,7 +25,6 @@
         'GS012345',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'La Marzocco',

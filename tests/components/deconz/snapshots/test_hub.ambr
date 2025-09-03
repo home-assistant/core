@@ -17,10 +17,9 @@
         '01234E56789A',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
-    'manufacturer': 'Dresden Elektronik',
+    'manufacturer': 'dresden elektronik',
     'model': 'deCONZ',
     'model_id': None,
     'name': 'deCONZ mock gateway',

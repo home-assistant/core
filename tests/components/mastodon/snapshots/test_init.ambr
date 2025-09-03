@@ -17,7 +17,6 @@
         'trwnh_mastodon_social',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Mastodon gGmbH',

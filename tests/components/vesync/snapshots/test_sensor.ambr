@@ -18,7 +18,6 @@
           'air-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -152,7 +151,6 @@
           'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -240,7 +238,6 @@
           '400s-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -358,7 +355,7 @@
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '400s-purifier-pm25',
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
   ])
 # ---
@@ -396,7 +393,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Air Purifier 400s PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_400s_pm2_5',
@@ -425,7 +422,6 @@
           '600s-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -543,7 +539,7 @@
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '600s-purifier-pm25',
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
   ])
 # ---
@@ -581,7 +577,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Air Purifier 600s PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_600s_pm2_5',
@@ -610,7 +606,6 @@
           'dimmable-bulb',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -648,7 +643,6 @@
           'dimmable-switch',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -686,7 +680,6 @@
           '200s-humidifier4321',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -775,7 +768,6 @@
           '600s-humidifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -864,7 +856,6 @@
           'outlet',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -1226,7 +1217,6 @@
           'smarttowerfan',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -1264,7 +1254,6 @@
           'tunable-bulb',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -1302,7 +1291,6 @@
           'switch',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',

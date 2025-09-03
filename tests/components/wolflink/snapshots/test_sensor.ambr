@@ -17,7 +17,6 @@
         '1234',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WOLF GmbH',

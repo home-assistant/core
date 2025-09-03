@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from typing import Any, Final, cast
 
 from awesomeversion import AwesomeVersion
-from zwave_js_server.const import NodeStatus
 from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedZWaveCommand
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.firmware import (
@@ -192,7 +191,6 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
         self.entity_description = entity_description
         self.node = node
         self._latest_version_firmware: FirmwareUpdateInfo | None = None
-        self._status_unsub: Callable[[], None] | None = None
         self._poll_unsub: Callable[[], None] | None = None
         self._progress_unsub: Callable[[], None] | None = None
         self._finished_unsub: Callable[[], None] | None = None
@@ -212,12 +210,6 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
     def extra_restore_state_data(self) -> ZWaveFirmwareUpdateExtraStoredData:
         """Return ZWave Node Firmware Update specific state data to be restored."""
         return ZWaveFirmwareUpdateExtraStoredData(self._latest_version_firmware)
-
-    @callback
-    def _update_on_status_change(self, _: dict[str, Any]) -> None:
-        """Update the entity when node is awake."""
-        self._status_unsub = None
-        self.hass.async_create_task(self._async_update())
 
     @callback
     def update_progress(self, event: dict[str, Any]) -> None:
@@ -268,14 +260,6 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
             self._poll_unsub = async_call_later(
                 self.hass, timedelta(days=1), self._async_update
             )
-            return
-
-        # If device is asleep, wait for it to wake up before attempting an update
-        if self.node.status == NodeStatus.ASLEEP:
-            if not self._status_unsub:
-                self._status_unsub = self.node.once(
-                    "wake up", self._update_on_status_change
-                )
             return
 
         try:
@@ -437,10 +421,6 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed."""
-        if self._status_unsub:
-            self._status_unsub()
-            self._status_unsub = None
-
         if self._poll_unsub:
             self._poll_unsub()
             self._poll_unsub = None

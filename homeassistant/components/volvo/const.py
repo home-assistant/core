@@ -3,12 +3,9 @@
 from homeassistant.const import Platform
 
 DOMAIN = "volvo"
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-ATTR_API_TIMESTAMP = "api_timestamp"
-
+API_NONE_VALUE = "UNSPECIFIED"
 CONF_VIN = "vin"
-
 DATA_BATTERY_CAPACITY = "battery_capacity_kwh"
-
 MANUFACTURER = "Volvo"
