@@ -43,19 +43,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Firefly III sensor platform."""
     coordinator = entry.runtime_data
-    entities: list[SensorEntity] = []
-
-    entities.extend(
-        [
-            FireflyAccountEntity(
-                coordinator=coordinator,
-                entity_description=description,
-                account=account,
-            )
-            for account in coordinator.data.accounts
-            for description in ACCOUNT_SENSORS
-        ]
-    )
+    entities: list[SensorEntity] = [
+        FireflyAccountEntity(
+            coordinator=coordinator,
+            entity_description=description,
+            account=account,
+        )
+        for account in coordinator.data.accounts
+        for description in ACCOUNT_SENSORS
+    ]
 
     entities.extend(
         [
