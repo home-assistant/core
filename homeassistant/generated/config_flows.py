@@ -499,6 +499,7 @@ FLOWS = {
         "probe_plus",
         "profiler",
         "progettihwsw",
+        "proliphix",
         "prosegur",
         "proximity",
         "prusalink",

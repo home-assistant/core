@@ -1,0 +1,123 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not have any custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: todo
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not have any configuration parameters.
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: todo
+    comment: Climate entity does not implement availability checks for device connectivity.
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: Integration does not log when device becomes unavailable.
+  parallel-updates:
+    status: todo
+    comment: No PARALLEL_UPDATES setting configured for platform.
+  reauthentication-flow:
+    status: todo
+    comment: Config flow does not implement reauthentication support.
+  test-coverage:
+    status: todo
+    comment: Test coverage needs to be improved.
+
+  # Gold
+  devices:
+    status: todo
+    comment: Integration does not create device entries in device registry.
+  diagnostics:
+    status: todo
+    comment: Integration does not provide diagnostic data collection.
+  discovery-update-info:
+    status: exempt
+    comment: Integration does not support discovery.
+  discovery:
+    status: exempt
+    comment: Integration does not support discovery.
+  docs-data-update:
+    status: todo
+    comment: Documentation needs data update information.
+  docs-examples:
+    status: todo
+    comment: Documentation needs usage examples.
+  docs-known-limitations:
+    status: todo
+    comment: Documentation needs known limitations section.
+  docs-supported-devices:
+    status: todo
+    comment: Documentation needs supported devices list.
+  docs-supported-functions:
+    status: todo
+    comment: Documentation needs supported functions description.
+  docs-troubleshooting:
+    status: todo
+    comment: Documentation needs troubleshooting section.
+  docs-use-cases:
+    status: todo
+    comment: Documentation needs use cases section.
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This integration connects to a single device.
+  entity-category:
+    status: todo
+    comment: Entities should have appropriate categories assigned.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: All entities should be enabled by default for this integration.
+  entity-translations:
+    status: todo
+    comment: Entity names should use translation keys.
+  exception-translations:
+    status: todo
+    comment: User-facing exceptions should use translation keys.
+  icon-translations:
+    status: todo
+    comment: Dynamic icons based on state should be implemented.
+  reconfiguration-flow:
+    status: todo
+    comment: Config flow should support reconfiguration.
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: |
+      This integration connects to a single device.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo
