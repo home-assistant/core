@@ -118,8 +118,7 @@ class SchemaFlowMenuStep(SchemaFlowStep):
     """
 
     sort: bool = False
-    """If true, menu options will be sorted in the user's language, by the
-      'menu_sort_values' key (if defined), otherwise by the option label.
+    """If true, menu options will be alphabetically sorted by the option label.
     """
 
 
