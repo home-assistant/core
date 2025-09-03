@@ -88,10 +88,7 @@ def _report_existing_instance(lock_file_path: Path, config_dir: str) -> None:
     # Try to read information about the existing instance
     try:
         with open(lock_file_path, encoding="utf-8") as f:
-            content = f.read()
-            if (
-                content.strip()
-            ):  # Check for non-empty content after stripping whitespace
+            if content := f.read().strip():
                 existing_info = json.loads(content)
                 start_dt = datetime.fromtimestamp(existing_info["start_ts"])
                 # Format with timezone abbreviation if available, otherwise add local time indicator
