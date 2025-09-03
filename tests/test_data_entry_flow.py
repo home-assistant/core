@@ -1071,11 +1071,11 @@ async def test_manager_abort_calls_async_flow_removed(manager: MockFlowManager) 
 
 
 @pytest.mark.parametrize(
-    ("menu_options", "sort"),
+    ("menu_options", "sort", "expect_sort"),
     [
-        (["target1", "target2"], None),
-        ({"target1": "Target 1", "target2": "Target 2"}, False),
-        (["target2", "target1"], True),
+        (["target1", "target2"], None, None),
+        ({"target1": "Target 1", "target2": "Target 2"}, False, None),
+        (["target2", "target1"], True, True),
     ],
 )
 async def test_show_menu(
@@ -1083,6 +1083,7 @@ async def test_show_menu(
     manager: MockFlowManager,
     menu_options: list[str] | dict[str, str],
     sort: bool | None,
+    expect_sort: bool | None,
 ) -> None:
     """Test show menu."""
     manager.hass = hass
@@ -1111,7 +1112,7 @@ async def test_show_menu(
     assert result["type"] == data_entry_flow.FlowResultType.MENU
     assert result["menu_options"] == menu_options
     assert result["description_placeholders"] == {"name": "Paulus"}
-    assert result.get("sort") == (True if sort else None)
+    assert result.get("sort") == expect_sort
     assert len(manager.async_progress()) == 1
     assert len(manager.async_progress_by_handler("test")) == 1
     assert manager.async_get(result["flow_id"])["handler"] == "test"
