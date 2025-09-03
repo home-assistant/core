@@ -1391,7 +1391,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PV_POWER_CHANNEL_2,
-            translation_key="pv_port_power",
+            translation_key="pv_channel_power",
             translation_placeholders={"index": "2"},
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
