@@ -17,7 +17,6 @@
     'id': <ANY>,
     'identifiers': set({
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Innovation in Motion',

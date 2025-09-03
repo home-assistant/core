@@ -18,7 +18,6 @@
           'e4:5d:51:00:11:22',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': None,
@@ -150,7 +149,6 @@
           'e4:5d:51:00:11:22',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': None,

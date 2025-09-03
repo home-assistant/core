@@ -57,7 +57,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 11
+STORAGE_VERSION_MINOR = 12
 
 CLEANUP_DELAY = 10
 
@@ -465,7 +465,7 @@ class DeletedDeviceEntry:
         validator=_normalize_connections_validator
     )
     created_at: datetime = attr.ib()
-    disabled_by: DeviceEntryDisabler | None = attr.ib()
+    disabled_by: DeviceEntryDisabler | UndefinedType | None = attr.ib()
     id: str = attr.ib()
     identifiers: set[tuple[str, str]] = attr.ib()
     labels: set[str] = attr.ib()
@@ -476,20 +476,31 @@ class DeletedDeviceEntry:
 
     def to_device_entry(
         self,
-        config_entry_id: str,
+        config_entry: ConfigEntry,
         config_subentry_id: str | None,
         connections: set[tuple[str, str]],
         identifiers: set[tuple[str, str]],
+        disabled_by: DeviceEntryDisabler | UndefinedType | None,
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
+        # Adjust disabled_by based on config entry state
+        if self.disabled_by is not UNDEFINED:
+            disabled_by = self.disabled_by
+            if config_entry.disabled_by:
+                if disabled_by is None:
+                    disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
+            elif disabled_by == DeviceEntryDisabler.CONFIG_ENTRY:
+                disabled_by = None
+        else:
+            disabled_by = disabled_by if disabled_by is not UNDEFINED else None
         return DeviceEntry(
             area_id=self.area_id,
             # type ignores: likely https://github.com/python/mypy/issues/8625
-            config_entries={config_entry_id},  # type: ignore[arg-type]
-            config_entries_subentries={config_entry_id: {config_subentry_id}},
+            config_entries={config_entry.entry_id},  # type: ignore[arg-type]
+            config_entries_subentries={config_entry.entry_id: {config_subentry_id}},
             connections=self.connections & connections,  # type: ignore[arg-type]
             created_at=self.created_at,
-            disabled_by=self.disabled_by,
+            disabled_by=disabled_by,
             identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
             id=self.id,
             is_new=True,
@@ -513,7 +524,10 @@ class DeletedDeviceEntry:
                     },
                     "connections": list(self.connections),
                     "created_at": self.created_at,
-                    "disabled_by": self.disabled_by,
+                    "disabled_by": self.disabled_by
+                    if self.disabled_by is not UNDEFINED
+                    else None,
+                    "disabled_by_undefined": self.disabled_by is UNDEFINED,
                     "identifiers": list(self.identifiers),
                     "id": self.id,
                     "labels": list(self.labels),
@@ -614,6 +628,11 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     device["connections"] = _normalize_connections(
                         device["connections"]
                     )
+            if old_minor_version < 12:
+                # Version 1.12 adds undefined flags to deleted devices, this is a bugfix
+                # of version 1.10
+                for device in old_data["deleted_devices"]:
+                    device["disabled_by_undefined"] = old_minor_version < 10
 
         if old_major_version > 2:
             raise NotImplementedError
@@ -922,12 +941,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             else:
                 self.deleted_devices.pop(deleted_device.id)
                 device = deleted_device.to_device_entry(
-                    config_entry_id,
+                    config_entry,
                     # Interpret not specifying a subentry as None
                     config_subentry_id if config_subentry_id is not UNDEFINED else None,
                     connections,
                     identifiers,
+                    disabled_by,
                 )
+                disabled_by = UNDEFINED
+
             self.devices[device.id] = device
             # If creating a new device, default to the config entry name
             if device_info_type == "primary" and (not name or name is UNDEFINED):
@@ -978,7 +1000,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             via_device_id=via_device_id,
         )
 
-        # This is safe because _async_update_device will always return a device
+        # This is safe because async_update_device will always return a device
         # in this use case.
         assert device
         return device
@@ -1108,6 +1130,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 config_entries_subentries = old.config_entries_subentries | {
                     add_config_entry_id: {add_config_subentry_id}
                 }
+                # Enable the device if it was disabled by config entry and we're adding
+                # a non disabled config entry
+                if (
+                    # mypy says add_config_entry can be None. That's impossible, because we
+                    # raise above if that happens
+                    not add_config_entry.disabled_by  # type: ignore[union-attr]
+                    and old.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY
+                ):
+                    new_values["disabled_by"] = None
+                    old_values["disabled_by"] = old.disabled_by
             elif (
                 add_config_subentry_id
                 not in old.config_entries_subentries[add_config_entry_id]
@@ -1149,6 +1181,22 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     old_values["primary_config_entry"] = old.primary_config_entry
 
                 config_entries = config_entries - {remove_config_entry_id}
+
+                # Disable the device if it is enabled and all remaining config entries
+                # are disabled
+                has_enabled_config_entries = any(
+                    config_entry.disabled_by is None
+                    for config_entry_id in config_entries
+                    if (
+                        config_entry := self.hass.config_entries.async_get_entry(
+                            config_entry_id
+                        )
+                    )
+                    is not None
+                )
+                if not has_enabled_config_entries and old.disabled_by is None:
+                    new_values["disabled_by"] = DeviceEntryDisabler.CONFIG_ENTRY
+                    old_values["disabled_by"] = old.disabled_by
 
         if config_entries != old.config_entries:
             new_values["config_entries"] = config_entries
@@ -1409,7 +1457,21 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     sw_version=device["sw_version"],
                     via_device_id=device["via_device_id"],
                 )
+
             # Introduced in 0.111
+            def get_optional_enum[_EnumT: StrEnum](
+                cls: type[_EnumT], value: str | None, undefined: bool
+            ) -> _EnumT | UndefinedType | None:
+                """Convert string to the passed enum, UNDEFINED or None."""
+                if undefined:
+                    return UNDEFINED
+                if value is None:
+                    return None
+                try:
+                    return cls(value)
+                except ValueError:
+                    return None
+
             for device in data["deleted_devices"]:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     area_id=device["area_id"],
@@ -1422,10 +1484,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     },
                     connections={tuple(conn) for conn in device["connections"]},
                     created_at=datetime.fromisoformat(device["created_at"]),
-                    disabled_by=(
-                        DeviceEntryDisabler(device["disabled_by"])
-                        if device["disabled_by"]
-                        else None
+                    disabled_by=get_optional_enum(
+                        DeviceEntryDisabler,
+                        device["disabled_by"],
+                        device["disabled_by_undefined"],
                     ),
                     identifiers={tuple(iden) for iden in device["identifiers"]},
                     id=device["id"],

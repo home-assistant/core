@@ -17,7 +17,6 @@
         '218886794_connections',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'New York Times',
@@ -49,7 +48,6 @@
         '218886794_spelling_bee',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'New York Times',
@@ -81,7 +79,6 @@
         '218886794_wordle',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'New York Times',

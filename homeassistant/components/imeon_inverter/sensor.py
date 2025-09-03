@@ -14,6 +14,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
@@ -22,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import ATTR_BATTERY_STATUS, ATTR_INVERTER_STATE, ATTR_TIMELINE_STATUS
 from .coordinator import InverterCoordinator
 from .entity import InverterEntity
 
@@ -47,8 +49,21 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="battery_status",
+        translation_key="battery_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=ATTR_BATTERY_STATUS,
+    ),
+    SensorEntityDescription(
         key="battery_stored",
         translation_key="battery_stored",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="battery_consumed",
+        translation_key="battery_consumed",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -146,6 +161,12 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="manager_inverter_state",
+        translation_key="manager_inverter_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=ATTR_INVERTER_STATE,
     ),
     # Meter
     SensorEntityDescription(
@@ -338,6 +359,62 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+    ),
+    # Timeline
+    SensorEntityDescription(
+        key="timeline_type_msg",
+        translation_key="timeline_type_msg",
+        device_class=SensorDeviceClass.ENUM,
+        options=ATTR_TIMELINE_STATUS,
+    ),
+    # Daily energy counters
+    SensorEntityDescription(
+        key="energy_pv",
+        translation_key="energy_pv",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="energy_grid_injected",
+        translation_key="energy_grid_injected",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="energy_grid_consumed",
+        translation_key="energy_grid_consumed",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="energy_building_consumption",
+        translation_key="energy_building_consumption",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="energy_battery_stored",
+        translation_key="energy_battery_stored",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="energy_battery_consumed",
+        translation_key="energy_battery_consumed",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
 )

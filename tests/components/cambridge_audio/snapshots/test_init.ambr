@@ -17,7 +17,6 @@
         '0020c2d8',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Cambridge Audio',

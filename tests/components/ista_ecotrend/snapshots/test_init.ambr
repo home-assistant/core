@@ -17,7 +17,6 @@
         '26e93f1a-c828-11ea-87d0-0242ac130003',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'ista SE',
@@ -49,7 +48,6 @@
         'eaf5c5c8-889f-4a3c-b68c-e9a676505762',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'ista SE',
