@@ -1,4 +1,25 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Matrix",
+        "description": "Configure your Matrix account",
+        "data": {
+          "homeserver": "Homeserver URL",
+          "username": "Username",
+          "password": "Password",
+          "verify_ssl": "Verify SSL certificate"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Matrix server",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Account is already configured"
+    }
+  },
   "services": {
     "send_message": {
       "name": "Send message",
