@@ -235,7 +235,7 @@
       "maximum_liquid_depth": {
         "name": "Maximum liquid depth"
       },
-      "output_power_limit": {
+      "inverter_output_power_limit": {
         "name": "Inverter output power limit"
       }
     },
