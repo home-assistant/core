@@ -931,7 +931,7 @@
       "frost_protection": {
         "name": "Frost protection"
       },
-      "feedin_power_limit": {
+      "output_power_limit": {
         "name": "Output power limit"
       }
     },
