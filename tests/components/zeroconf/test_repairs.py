@@ -1,6 +1,5 @@
 """Tests for zeroconf repair issues."""
 
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -27,16 +26,23 @@ from tests.components.repairs import (
 from tests.typing import ClientSessionGenerator
 
 
-def service_remove_mock(zeroconf, services, handlers, *, limit_service=None):
+def service_state_change_mock(
+    zeroconf,
+    services,
+    handlers,
+    *,
+    state_change: ServiceStateChange = ServiceStateChange.Removed,
+) -> None:
     """Call service update handler."""
     for service in services:
-        if limit_service is not None and service != limit_service:
-            continue
-        handlers[0](zeroconf, service, f"_name.{service}", ServiceStateChange.Removed)
+        handlers[0](zeroconf, service, f"_name.{service}", state_change)
 
 
 def _get_hass_service_info_mock(
-    service_type: str, name: str, *args: Any, **kwargs: Any
+    service_type: str,
+    name: str,
+    *,
+    instance_id="abc123",
 ) -> AsyncServiceInfo:
     """Return service info for Home Assistant instance."""
     return AsyncServiceInfo(
@@ -53,17 +59,17 @@ def _get_hass_service_info_mock(
             "internal_url": "http://10.0.0.1:8123",
             "location_name": "Home",
             "requires_api_password": "True",
-            "uuid": "abc123",
+            "uuid": instance_id,
             "version": "2025.9.0.dev0",
         },
     )
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
-async def test_instance_id_conflict_creates_repair_issue(
+async def test_instance_id_conflict_creates_repair_issue_remove(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test that a repair issue is created on instance ID conflict."""
+    """Test that a repair issue is created on instance ID conflict and gets removed when instance disappears."""
     with (
         patch("homeassistant.helpers.instance_id.async_get", return_value="abc123"),
         patch.object(
@@ -92,7 +98,7 @@ async def test_instance_id_conflict_creates_repair_issue(
         }
 
         # Now test that the issue is removed when the service goes away
-        service_remove_mock(
+        service_state_change_mock(
             mock_browser.call_args[0][0],
             [ZEROCONF_TYPE],
             mock_browser.call_args[1]["handlers"],
@@ -103,6 +109,61 @@ async def test_instance_id_conflict_creates_repair_issue(
             )
             is None
         )
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_instance_id_conflict_creates_repair_issue_changing_id(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test that a repair issue is created on instance ID conflict and gets removed when instance ID changes."""
+    with (
+        patch("homeassistant.helpers.instance_id.async_get", return_value="abc123"),
+        patch.object(
+            discovery, "AsyncServiceBrowser", side_effect=service_update_mock
+        ) as mock_browser,
+        patch.object(hass.config_entries.flow, "async_init"),
+        patch(
+            "homeassistant.components.zeroconf.discovery.AsyncServiceInfo",
+            side_effect=_get_hass_service_info_mock,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        issue = issue_registry.async_get_issue(
+            domain="zeroconf", issue_id="duplicate_instance_id"
+        )
+        assert issue
+        assert issue.severity == ir.IssueSeverity.ERROR
+        assert issue.translation_key == "duplicate_instance_id"
+        assert issue.translation_placeholders == {
+            "other_host_url": "other-host.local",
+            "other_ip": "10.0.0.1",
+            "instance_id": "abc123",
+        }
+
+        with (
+            patch(
+                "homeassistant.components.zeroconf.discovery.AsyncServiceInfo",
+                side_effect=lambda service_type, name: _get_hass_service_info_mock(
+                    service_type, name, instance_id="different-id"
+                ),
+            ),
+        ):
+            # Now test that the issue is removed when the service goes away
+            service_state_change_mock(
+                mock_browser.call_args[0][0],
+                [ZEROCONF_TYPE],
+                mock_browser.call_args[1]["handlers"],
+                state_change=ServiceStateChange.Updated,
+            )
+            assert (
+                issue_registry.async_get_issue(
+                    domain="zeroconf", issue_id="duplicate_instance_id"
+                )
+                is None
+            )
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
