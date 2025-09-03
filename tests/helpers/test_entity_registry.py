@@ -20,7 +20,6 @@ from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 from tests.common import (
@@ -963,10 +962,9 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
     assert entry.device_class is None
     assert entry.original_device_class == "best_class"
 
-    # Check migrated data
+    # Check we store migrated data
     await flush_store(registry._store)
-    migrated_data = hass_storage[er.STORAGE_KEY]
-    assert migrated_data == {
+    assert hass_storage[er.STORAGE_KEY] == {
         "version": er.STORAGE_VERSION_MAJOR,
         "minor_version": er.STORAGE_VERSION_MINOR,
         "key": er.STORAGE_KEY,
@@ -1008,11 +1006,6 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
             "deleted_entities": [],
         },
     }
-
-    # Serialize the migrated data again
-    registry.async_schedule_save()
-    await flush_store(registry._store)
-    assert hass_storage[er.STORAGE_KEY] == migrated_data
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -1149,17 +1142,9 @@ async def test_migration_1_11(
     assert entry.device_class is None
     assert entry.original_device_class == "best_class"
 
-    deleted_entry = registry.deleted_entities[
-        ("test", "super_duper_platform", "very_very_unique")
-    ]
-    assert deleted_entry.disabled_by is UNDEFINED
-    assert deleted_entry.hidden_by is UNDEFINED
-    assert deleted_entry.options is UNDEFINED
-
     # Check migrated data
     await flush_store(registry._store)
-    migrated_data = hass_storage[er.STORAGE_KEY]
-    assert migrated_data == {
+    assert hass_storage[er.STORAGE_KEY] == {
         "version": er.STORAGE_VERSION_MAJOR,
         "minor_version": er.STORAGE_VERSION_MINOR,
         "key": er.STORAGE_KEY,
@@ -1207,15 +1192,15 @@ async def test_migration_1_11(
                     "config_subentry_id": None,
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "device_class": None,
-                    "disabled_by": "UNDEFINED",
+                    "disabled_by": None,
                     "entity_id": "test.deleted_entity",
-                    "hidden_by": "UNDEFINED",
+                    "hidden_by": None,
                     "icon": None,
                     "id": "23456",
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
-                    "options": "UNDEFINED",
+                    "options": {},
                     "orphaned_timestamp": None,
                     "platform": "super_duper_platform",
                     "unique_id": "very_very_unique",
@@ -1223,11 +1208,6 @@ async def test_migration_1_11(
             ],
         },
     }
-
-    # Serialize the migrated data again
-    registry.async_schedule_save()
-    await flush_store(registry._store)
-    assert hass_storage[er.STORAGE_KEY] == migrated_data
 
 
 async def test_update_entity_unique_id(
@@ -3168,366 +3148,6 @@ async def test_restore_entity(
     assert update_events[15].data == {"action": "remove", "entity_id": "light.custom_1"}
     # Restore entities the 3rd time
     assert update_events[16].data == {"action": "create", "entity_id": "light.hue_1234"}
-
-
-@pytest.mark.parametrize(
-    ("entity_disabled_by"),
-    [
-        None,
-        er.RegistryEntryDisabler.CONFIG_ENTRY,
-        er.RegistryEntryDisabler.DEVICE,
-        er.RegistryEntryDisabler.HASS,
-        er.RegistryEntryDisabler.INTEGRATION,
-        er.RegistryEntryDisabler.USER,
-    ],
-)
-@pytest.mark.usefixtures("freezer")
-async def test_restore_migrated_entity_disabled_by(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    entity_disabled_by: er.RegistryEntryDisabler | None,
-) -> None:
-    """Check how the disabled_by flag is treated when restoring an entity."""
-    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
-    config_entry = MockConfigEntry(domain="light")
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entry = entity_registry.async_get_or_create(
-        "light",
-        "hue",
-        "1234",
-        capabilities={"key1": "value1"},
-        config_entry=config_entry,
-        config_subentry_id=None,
-        device_id=device_entry.id,
-        disabled_by=None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
-        has_entity_name=True,
-        hidden_by=er.RegistryEntryHider.INTEGRATION,
-        original_device_class="device_class_1",
-        original_icon="original_icon_1",
-        original_name="original_name_1",
-        suggested_object_id="hue_5678",
-        supported_features=1,
-        translation_key="translation_key_1",
-        unit_of_measurement="unit_1",
-    )
-
-    entity_registry.async_remove(entry.entity_id)
-    assert len(entity_registry.entities) == 0
-    assert len(entity_registry.deleted_entities) == 1
-
-    deleted_entry = entity_registry.deleted_entities[("light", "hue", "1234")]
-    entity_registry.deleted_entities[("light", "hue", "1234")] = attr.evolve(
-        deleted_entry, disabled_by=UNDEFINED
-    )
-
-    # Re-add entity, integration has changed
-    entry_restored = entity_registry.async_get_or_create(
-        "light",
-        "hue",
-        "1234",
-        capabilities={"key2": "value2"},
-        config_entry=config_entry,
-        config_subentry_id=None,
-        device_id=device_entry.id,
-        disabled_by=entity_disabled_by,
-        entity_category=EntityCategory.CONFIG,
-        get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
-        has_entity_name=False,
-        hidden_by=None,
-        original_device_class="device_class_2",
-        original_icon="original_icon_2",
-        original_name="original_name_2",
-        suggested_object_id="suggested_2",
-        supported_features=2,
-        translation_key="translation_key_2",
-        unit_of_measurement="unit_2",
-    )
-
-    assert len(entity_registry.entities) == 1
-    assert len(entity_registry.deleted_entities) == 0
-    assert entry != entry_restored
-    # entity_id and user customizations are restored. new integration options are
-    # respected.
-    assert entry_restored == er.RegistryEntry(
-        entity_id="light.hue_5678",
-        unique_id="1234",
-        platform="hue",
-        aliases=set(),
-        area_id=None,
-        categories={},
-        capabilities={"key2": "value2"},
-        config_entry_id=config_entry.entry_id,
-        config_subentry_id=None,
-        created_at=utcnow(),
-        device_class=None,
-        device_id=device_entry.id,
-        disabled_by=entity_disabled_by,
-        entity_category=EntityCategory.CONFIG,
-        has_entity_name=False,
-        hidden_by=er.RegistryEntryHider.INTEGRATION,
-        icon=None,
-        id=entry.id,
-        labels=set(),
-        modified_at=utcnow(),
-        name=None,
-        options={"test_domain": {"key1": "value1"}},
-        original_device_class="device_class_2",
-        original_icon="original_icon_2",
-        original_name="original_name_2",
-        suggested_object_id="suggested_2",
-        supported_features=2,
-        translation_key="translation_key_2",
-        unit_of_measurement="unit_2",
-    )
-
-    # Check the events
-    await hass.async_block_till_done()
-    assert len(update_events) == 3
-    assert update_events[0].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[1].data == {"action": "remove", "entity_id": "light.hue_5678"}
-    assert update_events[2].data == {"action": "create", "entity_id": "light.hue_5678"}
-
-
-@pytest.mark.parametrize(
-    ("entity_hidden_by"),
-    [
-        None,
-        er.RegistryEntryHider.INTEGRATION,
-        er.RegistryEntryHider.USER,
-    ],
-)
-@pytest.mark.usefixtures("freezer")
-async def test_restore_migrated_entity_hidden_by(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    entity_hidden_by: er.RegistryEntryHider | None,
-) -> None:
-    """Check how the hidden_by flag is treated when restoring an entity."""
-    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
-    config_entry = MockConfigEntry(domain="light")
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entry = entity_registry.async_get_or_create(
-        "light",
-        "hue",
-        "1234",
-        capabilities={"key1": "value1"},
-        config_entry=config_entry,
-        config_subentry_id=None,
-        device_id=device_entry.id,
-        disabled_by=None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
-        has_entity_name=True,
-        hidden_by=er.RegistryEntryHider.INTEGRATION,
-        original_device_class="device_class_1",
-        original_icon="original_icon_1",
-        original_name="original_name_1",
-        suggested_object_id="hue_5678",
-        supported_features=1,
-        translation_key="translation_key_1",
-        unit_of_measurement="unit_1",
-    )
-
-    entity_registry.async_remove(entry.entity_id)
-    assert len(entity_registry.entities) == 0
-    assert len(entity_registry.deleted_entities) == 1
-
-    deleted_entry = entity_registry.deleted_entities[("light", "hue", "1234")]
-    entity_registry.deleted_entities[("light", "hue", "1234")] = attr.evolve(
-        deleted_entry, hidden_by=UNDEFINED
-    )
-
-    # Re-add entity, integration has changed
-    entry_restored = entity_registry.async_get_or_create(
-        "light",
-        "hue",
-        "1234",
-        capabilities={"key2": "value2"},
-        config_entry=config_entry,
-        config_subentry_id=None,
-        device_id=device_entry.id,
-        disabled_by=None,
-        entity_category=EntityCategory.CONFIG,
-        get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
-        has_entity_name=False,
-        hidden_by=entity_hidden_by,
-        original_device_class="device_class_2",
-        original_icon="original_icon_2",
-        original_name="original_name_2",
-        suggested_object_id="suggested_2",
-        supported_features=2,
-        translation_key="translation_key_2",
-        unit_of_measurement="unit_2",
-    )
-
-    assert len(entity_registry.entities) == 1
-    assert len(entity_registry.deleted_entities) == 0
-    assert entry != entry_restored
-    # entity_id and user customizations are restored. new integration options are
-    # respected.
-    assert entry_restored == er.RegistryEntry(
-        entity_id="light.hue_5678",
-        unique_id="1234",
-        platform="hue",
-        aliases=set(),
-        area_id=None,
-        categories={},
-        capabilities={"key2": "value2"},
-        config_entry_id=config_entry.entry_id,
-        config_subentry_id=None,
-        created_at=utcnow(),
-        device_class=None,
-        device_id=device_entry.id,
-        disabled_by=None,
-        entity_category=EntityCategory.CONFIG,
-        has_entity_name=False,
-        hidden_by=entity_hidden_by,
-        icon=None,
-        id=entry.id,
-        labels=set(),
-        modified_at=utcnow(),
-        name=None,
-        options={"test_domain": {"key1": "value1"}},
-        original_device_class="device_class_2",
-        original_icon="original_icon_2",
-        original_name="original_name_2",
-        suggested_object_id="suggested_2",
-        supported_features=2,
-        translation_key="translation_key_2",
-        unit_of_measurement="unit_2",
-    )
-
-    # Check the events
-    await hass.async_block_till_done()
-    assert len(update_events) == 3
-    assert update_events[0].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[1].data == {"action": "remove", "entity_id": "light.hue_5678"}
-    assert update_events[2].data == {"action": "create", "entity_id": "light.hue_5678"}
-
-
-@pytest.mark.usefixtures("freezer")
-async def test_restore_migrated_entity_initial_options(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Check how the initial options is treated when restoring an entity."""
-    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
-    config_entry = MockConfigEntry(domain="light")
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entry = entity_registry.async_get_or_create(
-        "light",
-        "hue",
-        "1234",
-        capabilities={"key1": "value1"},
-        config_entry=config_entry,
-        config_subentry_id=None,
-        device_id=device_entry.id,
-        disabled_by=None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
-        has_entity_name=True,
-        hidden_by=er.RegistryEntryHider.INTEGRATION,
-        original_device_class="device_class_1",
-        original_icon="original_icon_1",
-        original_name="original_name_1",
-        suggested_object_id="hue_5678",
-        supported_features=1,
-        translation_key="translation_key_1",
-        unit_of_measurement="unit_1",
-    )
-
-    entity_registry.async_remove(entry.entity_id)
-    assert len(entity_registry.entities) == 0
-    assert len(entity_registry.deleted_entities) == 1
-
-    deleted_entry = entity_registry.deleted_entities[("light", "hue", "1234")]
-    entity_registry.deleted_entities[("light", "hue", "1234")] = attr.evolve(
-        deleted_entry, options=UNDEFINED
-    )
-
-    # Re-add entity, integration has changed
-    entry_restored = entity_registry.async_get_or_create(
-        "light",
-        "hue",
-        "1234",
-        capabilities={"key2": "value2"},
-        config_entry=config_entry,
-        config_subentry_id=None,
-        device_id=device_entry.id,
-        disabled_by=None,
-        entity_category=EntityCategory.CONFIG,
-        get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
-        has_entity_name=False,
-        hidden_by=None,
-        original_device_class="device_class_2",
-        original_icon="original_icon_2",
-        original_name="original_name_2",
-        suggested_object_id="suggested_2",
-        supported_features=2,
-        translation_key="translation_key_2",
-        unit_of_measurement="unit_2",
-    )
-
-    assert len(entity_registry.entities) == 1
-    assert len(entity_registry.deleted_entities) == 0
-    assert entry != entry_restored
-    # entity_id and user customizations are restored. new integration options are
-    # respected.
-    assert entry_restored == er.RegistryEntry(
-        entity_id="light.hue_5678",
-        unique_id="1234",
-        platform="hue",
-        aliases=set(),
-        area_id=None,
-        categories={},
-        capabilities={"key2": "value2"},
-        config_entry_id=config_entry.entry_id,
-        config_subentry_id=None,
-        created_at=utcnow(),
-        device_class=None,
-        device_id=device_entry.id,
-        disabled_by=None,
-        entity_category=EntityCategory.CONFIG,
-        has_entity_name=False,
-        hidden_by=er.RegistryEntryHider.INTEGRATION,
-        icon=None,
-        id=entry.id,
-        labels=set(),
-        modified_at=utcnow(),
-        name=None,
-        options={"test_domain": {"key2": "value2"}},
-        original_device_class="device_class_2",
-        original_icon="original_icon_2",
-        original_name="original_name_2",
-        suggested_object_id="suggested_2",
-        supported_features=2,
-        translation_key="translation_key_2",
-        unit_of_measurement="unit_2",
-    )
-
-    # Check the events
-    await hass.async_block_till_done()
-    assert len(update_events) == 3
-    assert update_events[0].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[1].data == {"action": "remove", "entity_id": "light.hue_5678"}
-    assert update_events[2].data == {"action": "create", "entity_id": "light.hue_5678"}
 
 
 @pytest.mark.parametrize(

@@ -590,6 +590,7 @@ class UnitOfApparentPower(StrEnum):
 
     MILLIVOLT_AMPERE = "mVA"
     VOLT_AMPERE = "VA"
+    KILO_VOLT_AMPERE = "kVA"
 
 
 # Power units

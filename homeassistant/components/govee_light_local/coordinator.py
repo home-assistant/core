@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
-from ipaddress import IPv4Address, IPv6Address
+from ipaddress import IPv4Address
 import logging
 
 from govee_local_api import GoveeController, GoveeDevice
@@ -30,7 +30,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         self,
         hass: HomeAssistant,
         config_entry: GoveeLocalConfigEntry,
-        source_ips: list[IPv4Address | IPv6Address],
+        source_ips: list[IPv4Address],
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
@@ -114,5 +114,4 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     async def _async_update_data(self) -> list[GoveeDevice]:
         for controller in self._controllers:
             controller.send_update_message()
-
         return self.devices

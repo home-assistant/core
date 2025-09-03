@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from airos.airos8 import AirOS, AirOSData
+from airos.airos8 import AirOS8, AirOS8Data
 from airos.exceptions import (
     AirOSConnectionAuthenticationError,
     AirOSConnectionSetupError,
@@ -24,13 +24,13 @@ _LOGGER = logging.getLogger(__name__)
 type AirOSConfigEntry = ConfigEntry[AirOSDataUpdateCoordinator]
 
 
-class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSData]):
+class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOS8Data]):
     """Class to manage fetching AirOS data from single endpoint."""
 
     config_entry: AirOSConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: AirOSConfigEntry, airos_device: AirOS
+        self, hass: HomeAssistant, config_entry: AirOSConfigEntry, airos_device: AirOS8
     ) -> None:
         """Initialize the coordinator."""
         self.airos_device = airos_device
@@ -42,7 +42,7 @@ class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSData]):
             update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self) -> AirOSData:
+    async def _async_update_data(self) -> AirOS8Data:
         """Fetch data from AirOS."""
         try:
             await self.airos_device.login()

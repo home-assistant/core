@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -32,9 +32,6 @@ def device_info(info: dict | None, unique_id: str) -> DeviceInfo:
             else None
         ),
         hw_version=info.get("FW_CODE") or None,
-        connections=(
-            {(CONNECTION_NETWORK_MAC, str(info["MAC"]))} if info.get("MAC") else set()
-        ),
         configuration_url=(
             f"http://{info['IP']}/index.html" if info.get("IP") else None
         ),
