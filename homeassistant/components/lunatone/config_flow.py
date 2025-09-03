@@ -4,6 +4,10 @@ from typing import Any, Final
 
 import aiohttp
 from lunatone_rest_api_client import Auth, Info
+from lunatone_rest_api_client.discovery import (
+    LunatoneDiscoveryInfo,
+    async_discover_devices,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -11,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_DEVICE, CONF_URL
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -33,10 +37,45 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    _discovered_devices: list[LunatoneDiscoveryInfo] = []
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+        self._discovered_devices = await async_discover_devices(self.hass.loop)
+        if not self._discovered_devices:
+            return await self.async_step_url_input()
+        return await self.async_step_select_device()
+
+    async def async_step_select_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the device selection."""
+        if user_input is not None:
+            selected_host = user_input[CONF_DEVICE]
+            if selected_host == "__manual__":
+                return await self.async_step_url_input()
+
+            device = next(
+                (d for d in self._discovered_devices if d.host == selected_host),
+                None,
+            )
+            if device:
+                return await self.async_step_url_input({"url": f"http://{device.host}"})
+
+        device_options = {
+            d.host: f"{d.name} ({d.host})" for d in self._discovered_devices
+        }
+        device_options["__manual__"] = "Enter URL manually"
+
+        schema = vol.Schema({vol.Required("device"): vol.In(device_options)})
+        return self.async_show_form(step_id="select_device", data_schema=schema)
+
+    async def async_step_url_input(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the URL input."""
         errors: dict[str, str] = {}
         if user_input is not None:
             url = user_input[CONF_URL]
@@ -71,7 +110,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                         data={CONF_URL: url},
                     )
         return self.async_show_form(
-            step_id="user",
+            step_id="url_input",
             data_schema=DATA_SCHEMA,
             errors=errors,
         )

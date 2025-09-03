@@ -18,11 +18,16 @@
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "url": "[%key:component::lunatone::config::step::user::data_description::url%]"
+          "url": "[%key:component::lunatone::config::step::url_input::data_description::url%]"
         },
         "description": "Update the URL."
       },
-      "user": {
+      "select_device": {
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "url_input": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
         },
