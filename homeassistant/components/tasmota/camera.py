@@ -67,14 +67,12 @@ class TasmotaCamera(
     TasmotaEntity,
     Camera,
 ):
-    """An implementation of an IP camera that is reachable over a URL."""
+    """Representation of a Tasmota Camera."""
 
     _tasmota_entity: tasmota_camera.TasmotaCamera
 
-    """Representation of a Tasmota Camera."""
-
     def __init__(self, **kwds: Any) -> None:
-        """Initialize a MJPEG camera."""
+        """Initialize."""
         super().__init__(**kwds)
         Camera.__init__(self)
 
@@ -87,7 +85,6 @@ class TasmotaCamera(
         try:
             async with asyncio.timeout(TIMEOUT):
                 response = await self._tasmota_entity.get_still_image_stream(websession)
-
                 return await response.read()
 
         except TimeoutError as err:
