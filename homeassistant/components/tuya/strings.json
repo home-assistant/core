@@ -226,7 +226,7 @@
       "alarm_minimum": {
         "name": "Alarm minimum"
       },
-      "backup_reserve": {
+      "battery_backup_reserve": {
         "name": "Battery backup reserve"
       },
       "installation_height": {
