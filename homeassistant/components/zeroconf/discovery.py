@@ -50,6 +50,8 @@ ATTR_DOMAIN: Final = "domain"
 ATTR_NAME: Final = "name"
 ATTR_PROPERTIES: Final = "properties"
 
+DUPLICATE_INSTANCE_ID_ISSUE_ID = "duplicate_instance_id"
+
 
 DATA_DISCOVERY: HassKey[ZeroconfDiscovery] = HassKey("zeroconf_discovery")
 
@@ -195,7 +197,11 @@ class ZeroconfDiscovery:
         self.async_service_browser: AsyncServiceBrowser | None = None
         self._service_update_listeners: set[Callable[[AsyncServiceInfo], None]] = set()
         self._service_removed_listeners: set[Callable[[str], None]] = set()
+        self._conflicting_instances: set[str] = set()
         self._local_service_info = info_from_service(local_service_info)
+        self._local_ips: set[IPv4Address | IPv6Address] = set()
+        if self._local_service_info:
+            self._local_ips = set(self._local_service_info.ip_addresses)
 
     @callback
     def async_register_service_update_listener(
@@ -281,6 +287,16 @@ class ZeroconfDiscovery:
         )
 
         if state_change is ServiceStateChange.Removed:
+            # Check if other Home Assistant instances has been removed.
+            # Then we can remove the duplicate instance ID issue
+            # as probably the conflicting instance has been shut down
+            if service_type == ZEROCONF_TYPE and name in self._conflicting_instances:
+                self._conflicting_instances.remove(name)
+                if len(self._conflicting_instances) == 0:
+                    ir.async_delete_issue(
+                        self.hass, DOMAIN, DUPLICATE_INSTANCE_ID_ISSUE_ID
+                    )
+
             self._async_dismiss_discoveries(name)
             for listener in self._service_removed_listeners:
                 listener(name)
@@ -430,30 +446,47 @@ class ZeroconfDiscovery:
             )
             return
 
-        issue_id = "duplicate_instance_id"
-        discovered_ips = set(info.addresses)
-        local_ips = set(self._local_service_info.addresses)
+        discovered_ips = set(info.ip_addresses)
+        is_disjoint = self._local_ips.isdisjoint(discovered_ips)
         local_instance_id = self._local_service_info.properties.get("uuid")
 
-        if discovered_instance_id != local_instance_id or local_ips.issuperset(
-            discovered_ips
-        ):
-            # No conflict, remove repair issue if present
-            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+        if not is_disjoint:
+            # No conflict, IP addresses of service contain a local IP
+            # Ignore it as it's probably a mDNS reflection
+            return
+
+        if discovered_instance_id != local_instance_id:
+            # Conflict resolved, different instance IDs
+            # No conflict, different instance IDs
+            # If there was a conflict issue before, we remove it
+            # since the other instance may have changed its ID
+            if info.name in self._conflicting_instances:
+                self._conflicting_instances.remove(info.name)
+
+            if len(self._conflicting_instances) == 0:
+                ir.async_delete_issue(self.hass, DOMAIN, DUPLICATE_INSTANCE_ID_ISSUE_ID)
             return
 
         # Conflict detected, create repair issue
+        _joined_ips = ", ".join(str(ip_address) for ip_address in discovered_ips)
+        _LOGGER.warning(
+            "Discovered another Home Assistant instance with the same instance ID (%s) at %s",
+            discovered_instance_id,
+            _joined_ips,
+        )
+
+        self._conflicting_instances.add(info.name)
         ir.async_create_issue(
             self.hass,
             DOMAIN,
-            issue_id,
+            DUPLICATE_INSTANCE_ID_ISSUE_ID,
             is_fixable=True,
             is_persistent=False,
             severity=ir.IssueSeverity.ERROR,
-            translation_key=issue_id,
+            translation_key=DUPLICATE_INSTANCE_ID_ISSUE_ID,
             translation_placeholders={
-                "instance_id": discovered_instance_id,
-                "other_ip": ", ".join(discovered_ips) or "unknown",
+                "instance_id": local_instance_id,
+                "other_ip": _joined_ips,
                 "other_host_url": info.hostname.rstrip("."),
             },
         )

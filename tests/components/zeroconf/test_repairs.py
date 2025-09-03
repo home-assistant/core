@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from zeroconf import ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
@@ -24,6 +25,14 @@ from tests.components.repairs import (
     start_repair_fix_flow,
 )
 from tests.typing import ClientSessionGenerator
+
+
+def service_remove_mock(zeroconf, services, handlers, *, limit_service=None):
+    """Call service update handler."""
+    for service in services:
+        if limit_service is not None and service != limit_service:
+            continue
+        handlers[0](zeroconf, service, f"_name.{service}", ServiceStateChange.Removed)
 
 
 def _get_hass_service_info_mock(
@@ -57,7 +66,9 @@ async def test_instance_id_conflict_creates_repair_issue(
     """Test that a repair issue is created on instance ID conflict."""
     with (
         patch("homeassistant.helpers.instance_id.async_get", return_value="abc123"),
-        patch.object(discovery, "AsyncServiceBrowser", side_effect=service_update_mock),
+        patch.object(
+            discovery, "AsyncServiceBrowser", side_effect=service_update_mock
+        ) as mock_browser,
         patch.object(hass.config_entries.flow, "async_init"),
         patch(
             "homeassistant.components.zeroconf.discovery.AsyncServiceInfo",
@@ -79,6 +90,19 @@ async def test_instance_id_conflict_creates_repair_issue(
             "other_ip": "10.0.0.1",
             "instance_id": "abc123",
         }
+
+        # Now test that the issue is removed when the service goes away
+        service_remove_mock(
+            mock_browser.call_args[0][0],
+            [ZEROCONF_TYPE],
+            mock_browser.call_args[1]["handlers"],
+        )
+        assert (
+            issue_registry.async_get_issue(
+                domain="zeroconf", issue_id="duplicate_instance_id"
+            )
+            is None
+        )
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
