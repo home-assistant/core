@@ -25,7 +25,7 @@ async def test_select_entity_options(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    test_entity_id = "select.test_window_cover_velocity"
+    test_entity_id = "select.test_window_open_close_velocity"
 
     # Get the select entity state
     select_state = hass.states.get(test_entity_id)
@@ -60,7 +60,7 @@ async def test_select_value_change(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    test_select_entity_id = "select.test_window_cover_velocity"
+    test_select_entity_id = "select.test_window_open_close_velocity"
     test_window_entity_id = "cover.test_window"
 
     # check entity exists and has Default velocity
@@ -111,7 +111,7 @@ async def test_select_device_association(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    test_entity_id = "select.test_window_cover_velocity"
+    test_entity_id = "select.test_window_open_close_velocity"
     test_cover_entity_id = "cover.test_window"
 
     # Get registries
