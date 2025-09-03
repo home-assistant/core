@@ -364,7 +364,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if time_value:
             try:
-                hour, minute, *rest = map(int, time_value.split(":"))
+                hour, minute, *_ = map(int, time_value.split(":"))
                 return now_nl.replace(hour=hour, minute=minute, second=0, microsecond=0)
             except ValueError:
                 _LOGGER.warning(

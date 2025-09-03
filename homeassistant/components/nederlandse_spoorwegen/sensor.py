@@ -26,7 +26,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NSConfigEntry
-from .api import get_ns_api_version
 from .const import CONF_FROM, CONF_ROUTES, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN
 from .coordinator import NSDataUpdateCoordinator
 from .ns_logging import UnavailabilityLogger
@@ -164,16 +163,6 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
     ),
 )
 
-NEXT_DEPARTURE_DESCRIPTION = NSSensorEntityDescription(
-    key="next_departure",
-    translation_key="next_departure",
-    name="Next departure",
-    value_fn=lambda next_trip, route: format_time(
-        get_trip_attribute(next_trip, "departure_time_actual")
-        or get_trip_attribute(next_trip, "departure_time_planned")
-    ),
-)
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -236,7 +225,6 @@ async def async_setup_entry(
         return
 
     for subentry_id, subentry in entry.subentries.items():
-        subentry_entities: list[SensorEntity] = []
         subentry_data = subentry.data
 
         route = {
@@ -247,20 +235,9 @@ async def async_setup_entry(
             "route_id": subentry_id,
         }
 
-        subentry_entities.extend(
-            [
-                NSSensor(coordinator, entry, route, subentry_id, description)
-                for description in SENSOR_DESCRIPTIONS
-            ]
-        )
-
-        subentry_entities.append(
-            NSNextDepartureSensor(
-                coordinator, entry, route, subentry_id, NEXT_DEPARTURE_DESCRIPTION
-            )
-        )
-
-        async_add_entities(subentry_entities, config_subentry_id=subentry_id)
+        # Create one NSDepartureSensor per subentry (instead of multiple sensors)
+        departure_sensor = NSDepartureSensor(coordinator, entry, route, subentry_id)
+        async_add_entities([departure_sensor], config_subentry_id=subentry_id)
 
 
 class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
@@ -298,7 +275,7 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
                 name=route[CONF_NAME],
                 manufacturer="Nederlandse Spoorwegen",
                 model="NS Route",
-                sw_version=get_ns_api_version(),
+                sw_version="1.0.0",
                 configuration_url="https://www.ns.nl/",
             )
         else:
@@ -349,29 +326,173 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
             return None
 
 
-class NSNextDepartureSensor(NSSensor):
-    """Special sensor for next departure that uses next_trip instead of first_trip."""
+class NSDepartureSensor(NSSensor):
+    """Implementation of a NS Departure Sensor."""
+
+    _attr_has_entity_name = True
+    _attr_attribution = "Data provided by NS"
+    _attr_icon = "mdi:train"
+
+    def __init__(
+        self,
+        coordinator: NSDataUpdateCoordinator,
+        entry: NSConfigEntry,
+        route: dict[str, Any],
+        route_key: str,
+    ) -> None:
+        """Initialize the sensor."""
+        # Create a custom entity description for departure sensor
+        description = NSSensorEntityDescription(
+            key="departure",
+            translation_key="departure",
+            name=route.get(
+                CONF_NAME, f"{route.get(CONF_FROM)} to {route.get(CONF_TO)}"
+            ),
+            value_fn=lambda first_trip, route: format_time(
+                get_trip_attribute(first_trip, "departure_time_actual")
+                or get_trip_attribute(first_trip, "departure_time_planned")
+            ),
+        )
+
+        super().__init__(coordinator, entry, route, route_key, description)
+
+        # Override unique_id to maintain compatibility
+        self._attr_unique_id = f"{route_key}_departure"
+
+        # Store additional route information for legacy compatibility
+        self._departure = route.get(CONF_FROM)
+        self._via = route.get(CONF_VIA)
+        self._heading = route.get(CONF_TO)
+        self._time = route.get(CONF_TIME)
+        self._state: str | int | None = None
+        self._trips = None
+        self._first_trip = None
+        self._next_trip = None
 
     @property
     def native_value(self) -> str | None:
-        """Return the native value of the sensor with robust error handling."""
-        if not self.coordinator.data or not self.entity_description.value_fn:
-            return None
+        """Return the next departure time."""
+        # Use parent's logic to get the departure time
+        departure_time = super().native_value
 
-        try:
+        # Update internal state for extra_state_attributes compatibility
+        self._state = departure_time
+
+        # Update internal trip data for legacy attributes
+        if self.coordinator.data:
             route_data = self.coordinator.data.get("routes", {})
-            if not isinstance(route_data, dict):
-                _LOGGER.warning("Invalid routes data structure: %s", type(route_data))
-                return None
+            if isinstance(route_data, dict):
+                route_specific_data = route_data.get(self._route_key, {})
+                if isinstance(route_specific_data, dict):
+                    self._trips = route_specific_data.get("trips", [])
+                    self._first_trip = route_specific_data.get("first_trip")
+                    self._next_trip = route_specific_data.get("next_trip")
 
-            route_specific_data = route_data.get(self._route_key, {})
-            if not isinstance(route_specific_data, dict):
-                _LOGGER.debug("No data for route %s", self._route_key)
-                return None
+        return departure_time if isinstance(departure_time, str) else None
 
-            next_trip = route_specific_data.get("next_trip")
-
-            return self.entity_description.value_fn(next_trip, self._route)
-        except (TypeError, AttributeError, KeyError) as ex:
-            _LOGGER.debug("Failed to get next departure value: %s", ex)
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        if not self._trips or self._first_trip is None:
             return None
+
+        route = []
+        trip_parts = get_trip_attribute(self._first_trip, "trip_parts")
+        if trip_parts:
+            departure = get_trip_attribute(self._first_trip, "departure")
+            if departure:
+                route = [departure]
+                route.extend(
+                    get_trip_attribute(part, "destination") or "" for part in trip_parts
+                )
+
+        # Static attributes
+        attributes = {
+            "going": get_trip_attribute(self._first_trip, "going"),
+            "departure_time_planned": None,
+            "departure_time_actual": None,
+            "departure_delay": False,
+            "departure_platform_planned": get_trip_attribute(
+                self._first_trip, "departure_platform_planned"
+            ),
+            "departure_platform_actual": get_trip_attribute(
+                self._first_trip, "departure_platform_actual"
+            ),
+            "arrival_time_planned": None,
+            "arrival_time_actual": None,
+            "arrival_delay": False,
+            "arrival_platform_planned": get_trip_attribute(
+                self._first_trip, "arrival_platform_planned"
+            ),
+            "arrival_platform_actual": get_trip_attribute(
+                self._first_trip, "arrival_platform_actual"
+            ),
+            "next": None,
+            "status": (get_trip_attribute(self._first_trip, "status") or "").lower(),
+            "transfers": get_trip_attribute(self._first_trip, "nr_transfers"),
+            "route": route,
+            "remarks": None,
+        }
+
+        # Planned departure attributes
+        departure_time_planned = get_trip_attribute(
+            self._first_trip, "departure_time_planned"
+        )
+        if departure_time_planned is not None:
+            attributes["departure_time_planned"] = format_time(departure_time_planned)
+
+        # Actual departure attributes
+        departure_time_actual = get_trip_attribute(
+            self._first_trip, "departure_time_actual"
+        )
+        if departure_time_actual is not None:
+            attributes["departure_time_actual"] = format_time(departure_time_actual)
+
+        # Delay departure attributes
+        if (
+            attributes["departure_time_planned"]
+            and attributes["departure_time_actual"]
+            and attributes["departure_time_planned"]
+            != attributes["departure_time_actual"]
+        ):
+            attributes["departure_delay"] = True
+
+        # Planned arrival attributes
+        arrival_time_planned = get_trip_attribute(
+            self._first_trip, "arrival_time_planned"
+        )
+        if arrival_time_planned is not None:
+            attributes["arrival_time_planned"] = format_time(arrival_time_planned)
+
+        # Actual arrival attributes
+        arrival_time_actual = get_trip_attribute(
+            self._first_trip, "arrival_time_actual"
+        )
+        if arrival_time_actual is not None:
+            attributes["arrival_time_actual"] = format_time(arrival_time_actual)
+
+        # Delay arrival attributes
+        if (
+            attributes["arrival_time_planned"]
+            and attributes["arrival_time_actual"]
+            and attributes["arrival_time_planned"] != attributes["arrival_time_actual"]
+        ):
+            attributes["arrival_delay"] = True
+
+        # Next attributes
+        if self._next_trip:
+            next_departure_actual = get_trip_attribute(
+                self._next_trip, "departure_time_actual"
+            )
+            next_departure_planned = get_trip_attribute(
+                self._next_trip, "departure_time_planned"
+            )
+
+            if next_departure_actual is not None:
+                attributes["next"] = format_time(next_departure_actual)
+            elif next_departure_planned is not None:
+                attributes["next"] = format_time(next_departure_planned)
+            else:
+                attributes["next"] = None
+
+        return attributes

@@ -9,9 +9,7 @@ from homeassistant.components.nederlandse_spoorwegen.coordinator import (
     NSDataUpdateCoordinator,
 )
 from homeassistant.components.nederlandse_spoorwegen.sensor import (
-    NEXT_DEPARTURE_DESCRIPTION,
     SENSOR_DESCRIPTIONS,
-    NSNextDepartureSensor,
     NSSensor,
     async_setup_entry,
 )
@@ -251,30 +249,21 @@ async def test_device_association_after_migration(hass: HomeAssistant) -> None:
             f"Expected 0 main entities, got {len(main_entities)}"
         )
 
-        # Should have 14 subentry entities (14 attribute sensors, no main trip sensor)
-        assert len(subentry_entities) == 14, (
-            f"Expected 14 subentry entities, got {len(subentry_entities)}"
+        # Should have 1 subentry entity (single comprehensive departure sensor)
+        assert len(subentry_entities) == 1, (
+            f"Expected 1 subentry entity, got {len(subentry_entities)}"
         )
 
-        # Verify we have all the expected sensors
+        # Verify we have the expected single comprehensive sensor
         subentry_entity_ids = {entity.entity_id for entity in subentry_entities}
         expected_entities = {
-            "sensor.test_route_departure_platform_planned",
-            "sensor.test_route_departure_platform_actual",
-            "sensor.test_route_arrival_platform_planned",
-            "sensor.test_route_arrival_platform_actual",
-            "sensor.test_route_departure_time_planned",
-            "sensor.test_route_departure_time_actual",
-            "sensor.test_route_arrival_time_planned",
-            "sensor.test_route_arrival_time_actual",
-            "sensor.test_route_next_departure",
-            "sensor.test_route_status",
-            "sensor.test_route_transfers",
-            "sensor.test_route_route_from",
-            "sensor.test_route_route_to",
-            "sensor.test_route_route_via",
+            "sensor.test_route_test_route",  # Single comprehensive departure sensor
         }
         assert subentry_entity_ids == expected_entities
+
+        # Verify the sensor has the correct translation_key for departure
+        subentry_entity = subentry_entities[0]
+        assert subentry_entity.translation_key == "departure"
 
         # Verify the subentry device has the route information
         subentry_device = subentry_devices[0]
@@ -336,7 +325,7 @@ async def test_sensor_device_info_legacy_route(hass: HomeAssistant) -> None:
     device_info = sensor.device_info
     assert device_info is not None
     assert device_info.get("identifiers") is not None
-    assert (DOMAIN, mock_config_entry.entry_id) in device_info["identifiers"]
+    assert (DOMAIN, mock_config_entry.entry_id) in device_info.get("identifiers", set())
 
 
 async def test_sensor_available_property_coordinator_data_none(
@@ -508,103 +497,4 @@ async def test_sensor_native_value_exception_handling(hass: HomeAssistant) -> No
     )
 
     # Should return None when value_fn raises exception
-    assert sensor.native_value is None
-
-
-async def test_next_departure_sensor_native_value_no_coordinator_data(
-    hass: HomeAssistant,
-) -> None:
-    """Test next departure sensor native value when coordinator data is None (coverage line 310-311)."""
-    mock_config_entry = MagicMock()
-    mock_coordinator = MagicMock()
-    mock_coordinator.data = None  # This triggers line 310-311
-
-    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
-    route_key = "Test Route_AMS_UTR"
-
-    sensor = NSNextDepartureSensor(
-        coordinator=mock_coordinator,
-        entry=mock_config_entry,
-        route=route,
-        route_key=route_key,
-        description=NEXT_DEPARTURE_DESCRIPTION,
-    )
-
-    # Should return None when coordinator data is None
-    assert sensor.native_value is None
-
-
-async def test_next_departure_sensor_native_value_invalid_routes_data(
-    hass: HomeAssistant,
-) -> None:
-    """Test next departure sensor with invalid routes data (coverage lines 315-316)."""
-    mock_config_entry = MagicMock()
-    mock_coordinator = MagicMock()
-    mock_coordinator.data = {"routes": "invalid_data"}  # Not a dict
-
-    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
-    route_key = "Test Route_AMS_UTR"
-
-    sensor = NSNextDepartureSensor(
-        coordinator=mock_coordinator,
-        entry=mock_config_entry,
-        route=route,
-        route_key=route_key,
-        description=NEXT_DEPARTURE_DESCRIPTION,
-    )
-
-    # Should return None when routes data is invalid
-    assert sensor.native_value is None
-
-
-async def test_next_departure_sensor_native_value_exception_handling(
-    hass: HomeAssistant,
-) -> None:
-    """Test next departure sensor exception handling (coverage lines 322-324)."""
-    mock_config_entry = MagicMock()
-    mock_coordinator = MagicMock()
-    mock_coordinator.data = {"routes": {"Test Route_AMS_UTR": {"next_trip": {}}}}
-
-    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
-    route_key = "Test Route_AMS_UTR"
-
-    # Create description with value_fn that raises exception
-    description = MagicMock()
-    description.key = "next_departure"
-    description.value_fn = MagicMock(side_effect=KeyError("Test error"))
-
-    sensor = NSNextDepartureSensor(
-        coordinator=mock_coordinator,
-        entry=mock_config_entry,
-        route=route,
-        route_key=route_key,
-        description=description,
-    )
-
-    # Should return None when value_fn raises exception
-    assert sensor.native_value is None
-
-
-async def test_next_departure_sensor_invalid_route_specific_data(
-    hass: HomeAssistant,
-) -> None:
-    """Test next departure sensor with invalid route-specific data (coverage lines 315-316)."""
-    mock_config_entry = MagicMock()
-    mock_coordinator = MagicMock()
-    mock_coordinator.data = {
-        "routes": {"Test Route_AMS_UTR": "invalid_route_data"}  # Not a dict
-    }
-
-    route = {"name": "Test Route", "from": "AMS", "to": "UTR"}
-    route_key = "Test Route_AMS_UTR"
-
-    sensor = NSNextDepartureSensor(
-        coordinator=mock_coordinator,
-        entry=mock_config_entry,
-        route=route,
-        route_key=route_key,
-        description=NEXT_DEPARTURE_DESCRIPTION,
-    )
-
-    # Should return None when route-specific data is invalid
     assert sensor.native_value is None

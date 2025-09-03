@@ -44,9 +44,6 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -232,12 +229,11 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                     (CONF_TO, user_input.get(CONF_TO)),
                     (CONF_VIA, user_input.get(CONF_VIA)),
                 ):
-                    if (
-                        station
-                        and api_wrapper.normalize_station_code(station)
-                        not in valid_station_codes
-                    ):
-                        errors[field] = "invalid_station"
+                    if station:
+                        # Normalize station code to uppercase for validation
+                        normalized_station = api_wrapper.normalize_station_code(station)
+                        if normalized_station not in valid_station_codes:
+                            errors[field] = "invalid_station"
 
         except Exception:  # Allowed in config flows for robustness
             _LOGGER.exception("Exception in route subentry flow")
@@ -247,21 +243,24 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
 
     def _create_route_config(self, user_input: dict[str, Any]) -> dict[str, Any]:
         """Create route configuration from user input."""
-        from_station = user_input.get(CONF_FROM, "")
-        to_station = user_input.get(CONF_TO, "")
+        # Normalize station codes to uppercase
+        from_station = NSAPIWrapper.normalize_station_code(
+            user_input.get(CONF_FROM, "")
+        )
+        to_station = NSAPIWrapper.normalize_station_code(user_input.get(CONF_TO, ""))
         via_station = user_input.get(CONF_VIA)
+        if via_station:
+            via_station = NSAPIWrapper.normalize_station_code(via_station)
 
-        # Use centralized station code normalization
-        entry = self._get_entry()
-        api_wrapper = NSAPIWrapper(self.hass, entry.data[CONF_API_KEY])
+        # Create route configuration from user input
         route_config = {
             CONF_NAME: user_input[CONF_NAME],
-            CONF_FROM: api_wrapper.normalize_station_code(from_station),
-            CONF_TO: api_wrapper.normalize_station_code(to_station),
+            CONF_FROM: from_station,
+            CONF_TO: to_station,
         }
 
         if via_station:
-            route_config[CONF_VIA] = api_wrapper.normalize_station_code(via_station)
+            route_config[CONF_VIA] = via_station
 
         if user_input.get(CONF_TIME):
             _, normalized_time = normalize_and_validate_time_format(
