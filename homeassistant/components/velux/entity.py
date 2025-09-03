@@ -1,6 +1,6 @@
 """Support for VELUX KLF 200 devices."""
 
-from pyvlx import Node
+from pyvlx.node import Node
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
