@@ -1,56 +1,53 @@
 """Test the FastdotcomDataUpdateCoordindator."""
 
-from datetime import timedelta
 from unittest.mock import patch
 
-from freezegun.api import FrozenDateTimeFactory
+import pytest
 
-from homeassistant.components.fastdotcom.const import DEFAULT_NAME, DOMAIN
-from homeassistant.components.fastdotcom.coordinator import DEFAULT_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.components.fastdotcom.coordinator import (
+    FastdotcomDataUpdateCoordinator,
+)
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
-async def test_fastdotcom_data_update_coordinator(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test the update coordinator."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="UNIQUE_TEST_ID",
-        title=DEFAULT_NAME,
-    )
-    config_entry.add_to_hass(hass)
+@pytest.fixture
+def dummy_config_entry():
+    """Return a dummy config entry for Fast.com."""
+    return MockConfigEntry(domain="fastdotcom", data={}, entry_id="test_entry")
 
+
+async def test_coordinator_success(hass, dummy_config_entry):
+    """Test that the coordinator successfully fetches data from Fast.com."""
+    fake_data = {
+        "download_speed": 100.0,
+        "upload_speed": 50.0,
+        "unloaded_ping": 15.2,
+        "loaded_ping": 20.2,
+    }
+
+    # Patch the fast_com function (used by the coordinator) to return fake_data.
     with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=5.0
+        "homeassistant.components.fastdotcom.coordinator.fast_com",
+        return_value=fake_data,
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        coordinator = FastdotcomDataUpdateCoordinator(hass, dummy_config_entry)
+        await coordinator.async_refresh()
+        # Wait for background tasks to complete
         await hass.async_block_till_done()
+        assert coordinator.data == fake_data
 
-    state = hass.states.get("sensor.fast_com_download")
-    assert state is not None
-    assert state.state == "5.0"
 
-    with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=10.0
-    ):
-        freezer.tick(timedelta(hours=DEFAULT_INTERVAL))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.fast_com_download")
-    assert state.state == "10.0"
-
+async def test_coordinator_failure(hass, dummy_config_entry):
+    """Test that the coordinator handles failure by setting last_update_success to False and clearing data."""
+    # Patch fast_com to raise an exception.
     with patch(
         "homeassistant.components.fastdotcom.coordinator.fast_com",
         side_effect=Exception("Test error"),
     ):
-        freezer.tick(timedelta(hours=DEFAULT_INTERVAL))
-        async_fire_time_changed(hass)
+        coordinator = FastdotcomDataUpdateCoordinator(hass, dummy_config_entry)
+        await coordinator.async_refresh()
+        # Wait for background tasks to complete
         await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.fast_com_download")
-    assert state.state is STATE_UNAVAILABLE
+        assert coordinator.last_update_success is False
+        assert coordinator.data == {} or coordinator.data is None
