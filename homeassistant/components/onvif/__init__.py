@@ -30,6 +30,7 @@ from .const import (
     DEFAULT_ENABLE_WEBHOOKS,
     DOMAIN,
 )
+from .coordinator import OnvifDataUpdateCoordinator
 from .device import ONVIFDevice
 
 LOGGER = logging.getLogger(__name__)
@@ -96,9 +97,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # If we get here, setup was successful - prevent cleanup
         stack.pop_all()
 
-    hass.data[DOMAIN][entry.unique_id] = device
+    # Init coordinator
+    coordinator = OnvifDataUpdateCoordinator(hass, entry, device)
+    await coordinator.async_config_entry_first_refresh()
 
-    device.platforms = [Platform.BUTTON, Platform.CAMERA]
+    hass.data[DOMAIN][entry.unique_id] = device
+    entry.runtime_data = {
+        "coordinator": coordinator,
+    }
+
+    device.platforms = [Platform.BUTTON, Platform.CAMERA, Platform.SELECT]
 
     if device.capabilities.events:
         device.platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]

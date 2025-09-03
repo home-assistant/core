@@ -43,15 +43,6 @@ SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
         supported_fn=lambda device: device.capabilities.imaging,
     ),
     ONVIFSwitchEntityDescription(
-        key="ir_lamp",
-        translation_key="ir_lamp",
-        turn_on_data={"IrCutFilter": "OFF"},
-        turn_off_data={"IrCutFilter": "ON"},
-        turn_on_fn=lambda device: device.async_set_imaging_settings,
-        turn_off_fn=lambda device: device.async_set_imaging_settings,
-        supported_fn=lambda device: device.capabilities.imaging,
-    ),
-    ONVIFSwitchEntityDescription(
         key="wiper",
         translation_key="wiper",
         turn_on_data="tt:Wiper|On",
