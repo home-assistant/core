@@ -352,7 +352,7 @@ def test_ensure_single_execution_sequential_runs(tmp_path: Path) -> None:
             first_data = json.load(f)
 
     # Small delay to ensure different timestamp
-    time.sleep(0.01)
+    time.sleep(0.00001)
 
     # Second instance should work after first is done
     with runner.ensure_single_execution(config_dir) as lock:
