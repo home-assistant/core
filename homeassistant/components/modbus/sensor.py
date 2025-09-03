@@ -106,7 +106,6 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
 
     async def _async_update(self) -> None:
         """Update the state of the sensor."""
-        self._cancel_call = None
         raw_result = await self._hub.async_pb_call(
             self._slave, self._address, self._count, self._input_type
         )
@@ -182,6 +181,10 @@ class SlaveSensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        self._attr_native_value = result[self._idx] if result else None
-        self._attr_available = result is not None
+        if not result or self._idx >= len(result):
+            self._attr_native_value = None
+            self._attr_available = False
+        else:
+            self._attr_native_value = result[self._idx]
+            self._attr_available = True
         super()._handle_coordinator_update()

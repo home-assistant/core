@@ -68,4 +68,20 @@ async def test_skip_invalid_api_fields(
     with patch("homeassistant.components.volvo.PLATFORMS", [Platform.SENSOR]):
         assert await setup_integration()
 
-    assert not hass.states.get(f"sensor.volvo_{short_model}_charging_power")
+    assert not hass.states.get(f"sensor.volvo_{short_model}_charging_current_limit")
+
+
+@pytest.mark.parametrize(
+    "full_model",
+    ["ex30_2024"],
+)
+async def test_charging_power_value(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test if charging_power_value is zero if supported, but not charging."""
+
+    with patch("homeassistant.components.volvo.PLATFORMS", [Platform.SENSOR]):
+        assert await setup_integration()
+
+    assert hass.states.get("sensor.volvo_ex30_charging_power").state == "0"

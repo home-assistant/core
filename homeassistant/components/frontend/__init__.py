@@ -50,7 +50,7 @@ CONF_EXTRA_JS_URL_ES5 = "extra_js_url_es5"
 CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
 
-DEFAULT_THEME_COLOR = "#03A9F4"
+DEFAULT_THEME_COLOR = "#2980b9"
 
 
 DATA_PANELS: HassKey[dict[str, Panel]] = HassKey("frontend_panels")

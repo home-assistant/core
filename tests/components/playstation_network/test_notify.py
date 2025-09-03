@@ -18,11 +18,12 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
+from homeassistant.components.playstation_network.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -37,7 +38,7 @@ async def notify_only() -> AsyncGenerator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_psnawpapi")
+@pytest.mark.usefixtures("mock_psnawpapi", "entity_registry_enabled_by_default")
 async def test_notify_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -57,9 +58,13 @@ async def test_notify_platform(
 
 @pytest.mark.parametrize(
     "entity_id",
-    ["notify.testuser_group_publicuniversalfriend", "notify.testuser_direct_message"],
+    [
+        "notify.testuser_group_publicuniversalfriend",
+        "notify.testuser_direct_message_publicuniversalfriend",
+    ],
 )
 @freeze_time("2025-07-28T00:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -130,3 +135,29 @@ async def test_send_message_exceptions(
         )
 
     mock_psnawpapi.group.return_value.send_message.assert_called_once_with("henlo fren")
+
+
+async def test_notify_skip_forbidden(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_psnawpapi: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we skip creation of notifiers if forbidden by parental controls."""
+
+    mock_psnawpapi.me.return_value.get_groups.side_effect = PSNAWPForbiddenError(
+        """{"error": {"message": "Not permitted by parental control"}}"""
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("notify.testuser_group_publicuniversalfriend")
+    assert state is None
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"group_chat_forbidden_{config_entry.entry_id}"
+    )

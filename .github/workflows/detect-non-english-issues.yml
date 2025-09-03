@@ -57,7 +57,7 @@ jobs:
       - name: Detect language using AI
         id: ai_language_detection
         if: steps.detect_language.outputs.should_continue == 'true'
-        uses: actions/ai-inference@v2.0.0
+        uses: actions/ai-inference@v2.0.1
         with:
           model: openai/gpt-4o-mini
           system-prompt: |

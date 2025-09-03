@@ -74,9 +74,7 @@ rules:
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
-  stale-devices:
-    status: todo
-    comment: We should remove the config entry from the device rather than remove the device
+  stale-devices: done
 
   # Platinum
   async-dependency: done

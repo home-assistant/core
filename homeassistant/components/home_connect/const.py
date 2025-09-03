@@ -61,19 +61,12 @@ BSH_DOOR_STATE_LOCKED = "BSH.Common.EnumType.DoorState.Locked"
 BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
 
-SERVICE_OPTION_ACTIVE = "set_option_active"
-SERVICE_OPTION_SELECTED = "set_option_selected"
-SERVICE_PAUSE_PROGRAM = "pause_program"
-SERVICE_RESUME_PROGRAM = "resume_program"
-SERVICE_SELECT_PROGRAM = "select_program"
 SERVICE_SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
 SERVICE_SETTING = "change_setting"
-SERVICE_START_PROGRAM = "start_program"
 
 ATTR_AFFECTS_TO = "affects_to"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
-ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 
 AFFECTS_TO_ACTIVE_PROGRAM = "active_program"

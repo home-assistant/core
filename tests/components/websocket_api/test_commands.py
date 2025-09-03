@@ -8,10 +8,13 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
+from homeassistant.components.group import DOMAIN as DOMAIN_GROUP
+from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -34,7 +37,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
-from homeassistant.util.yaml.loader import parse_yaml
+from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
 from tests.common import (
     MockConfigEntry,
@@ -671,7 +674,9 @@ async def test_get_states(
 
 
 async def test_get_services(
-    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_services command."""
     assert ALL_SERVICE_DESCRIPTIONS_JSON_CACHE not in hass.data
@@ -686,16 +691,18 @@ async def test_get_services(
     assert msg == {"id": 2, "result": {}, "success": True, "type": "result"}
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
 
-    # Load a service and check cache is updated
-    assert await async_setup_component(hass, "logger", {})
+    # Set up an integration that has services and check cache is updated
+    assert await async_setup_component(hass, DOMAIN_GROUP, {DOMAIN_GROUP: {}})
     await websocket_client.send_json_auto_id({"type": "get_services"})
     msg = await websocket_client.receive_json()
     assert msg == {
         "id": 3,
-        "result": {"logger": {"set_default_level": ANY, "set_level": ANY}},
+        "result": {DOMAIN_GROUP: ANY},
         "success": True,
         "type": "result",
     }
+    group_services = msg["result"][DOMAIN_GROUP]
+    assert group_services == snapshot
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is not old_cache
 
     # Check cache is reused
@@ -704,11 +711,69 @@ async def test_get_services(
     msg = await websocket_client.receive_json()
     assert msg == {
         "id": 4,
-        "result": {"logger": {"set_default_level": ANY, "set_level": ANY}},
+        "result": {DOMAIN_GROUP: group_services},
         "success": True,
         "type": "result",
     }
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
+
+    # Set up an integration with legacy translations in services.yaml
+    def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
+        return {
+            "set_default_level": {
+                "description": "Translated description",
+                "fields": {
+                    "level": {
+                        "description": "Field description",
+                        "example": "Field example",
+                        "name": "Field name",
+                        "selector": {
+                            "select": {
+                                "options": [
+                                    "debug",
+                                    "info",
+                                    "warning",
+                                    "error",
+                                    "fatal",
+                                    "critical",
+                                ],
+                                "translation_key": "level",
+                            }
+                        },
+                    }
+                },
+                "name": "Translated name",
+            },
+            "set_level": None,
+        }
+
+    await async_setup_component(hass, DOMAIN_LOGGER, {DOMAIN_LOGGER: {}})
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.helpers.service._load_services_file",
+            side_effect=_load_services_file,
+        ),
+        patch(
+            "homeassistant.helpers.service.translation.async_get_translations",
+            return_value={},
+        ),
+    ):
+        await websocket_client.send_json_auto_id({"type": "get_services"})
+        msg = await websocket_client.receive_json()
+
+    assert msg == {
+        "id": 5,
+        "result": {
+            DOMAIN_LOGGER: ANY,
+            DOMAIN_GROUP: group_services,
+        },
+        "success": True,
+        "type": "result",
+    }
+    logger_services = msg["result"][DOMAIN_LOGGER]
+    assert logger_services == snapshot
 
 
 @patch("annotatedyaml.loader.load_yaml")

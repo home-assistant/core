@@ -1,0 +1,197 @@
+# serializer version: 1
+# name: test_switch_entities[washer][switch.test_washer_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_washer_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_power',
+    'unique_id': 'MW2-0B530EFD-1ADF-4F54-A2C3-46C37F94C689_main_washer_operation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[washer][switch.test_washer_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test washer Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_washer_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[air_conditioner][switch.test_air_conditioner_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.test_air_conditioner_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_power',
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_air_con_operation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[air_conditioner][switch.test_air_conditioner_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test air conditioner Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_air_conditioner_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[air_conditioner][switch.test_air_conditioner_energy_saving-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.test_air_conditioner_energy_saving',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Energy saving',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <Property.POWER_SAVE_ENABLED: 'power_save_enabled'>,
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_power_save_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[air_conditioner][switch.test_air_conditioner_energy_saving-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test air conditioner Energy saving',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_air_conditioner_energy_saving',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[air_conditioner][switch.test_air_conditioner_air_purify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.test_air_conditioner_air_purify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Air purify',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <Property.AIR_CLEAN_OPERATION_MODE: 'air_clean_operation_mode'>,
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_air_clean_operation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[air_conditioner][switch.test_air_conditioner_air_purify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test air conditioner Air purify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_air_conditioner_air_purify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
