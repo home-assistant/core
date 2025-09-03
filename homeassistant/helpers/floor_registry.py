@@ -105,8 +105,7 @@ class FloorRegistryItems(NormalizedNameBaseRegistryItems[FloorEntry]):
     def _index_entry(self, key: str, entry: FloorEntry) -> None:
         """Index an entry."""
         super()._index_entry(key, entry)
-        for alias in entry.aliases:
-            normalized_alias = normalize_name(alias)
+        for normalized_alias in {normalize_name(alias) for alias in entry.aliases}:
             self._aliases_index[normalized_alias][key] = True
 
     def _unindex_entry(
@@ -116,8 +115,7 @@ class FloorRegistryItems(NormalizedNameBaseRegistryItems[FloorEntry]):
         super()._unindex_entry(key, replacement_entry)
         entry = self.data[key]
         if aliases := entry.aliases:
-            for alias in aliases:
-                normalized_alias = normalize_name(alias)
+            for normalized_alias in {normalize_name(alias) for alias in aliases}:
                 self._unindex_entry_value(key, normalized_alias, self._aliases_index)
 
     def get_floors_for_alias(self, alias: str) -> list[FloorEntry]:
