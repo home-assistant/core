@@ -36,7 +36,7 @@
     },
     "select": {
       "cover_velocity": {
-        "name": "Cover velocity",
+        "name": "Open/Close velocity",
         "state": {
           "default": "Default",
           "silent": "Silent",
