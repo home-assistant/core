@@ -86,7 +86,7 @@
         "name": "Inverter temperature"
       },
       "mix_statement_of_charge": {
-        "name": "Statement of charge"
+        "name": "State of charge"
       },
       "mix_battery_charge_today": {
         "name": "Battery charged today"
