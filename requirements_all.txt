@@ -528,7 +528,7 @@ arris-tg2492lg==2.2.0
 asmog==0.0.6
 
 # homeassistant.components.asuswrt
-asusrouter==1.20.1
+asusrouter==1.21.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
