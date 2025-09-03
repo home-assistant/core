@@ -62,7 +62,6 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
         """Initialize the entity."""
         super().__init__(config_entry, subentry)
         self._ws: asyncio.Task | None = None
-        self._connectivity_check = True
 
     @callback
     def _async_handle_event(self, notification: Notification) -> None:
@@ -85,37 +84,37 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
             if self._ws and (exc := self._ws.exception()):
                 raise exc
         except asyncio.InvalidStateError:
-            self._connectivity_check = True
+            self._attr_available = True
         except asyncio.CancelledError:
-            if self._connectivity_check:
+            if self._attr_available:
                 _LOGGER.exception(
                     "Connection to ntfy service was terminated unexpectedly"
                 )
-            self._connectivity_check = False
+            self._attr_available = False
         except NtfyForbiddenError:
-            if self._connectivity_check:
+            if self._attr_available:
                 _LOGGER.error("Failed to subscribe to topic. Topic is protected")
-            self._connectivity_check = False
+            self._attr_available = False
         except NtfyHTTPError as e:
-            if self._connectivity_check:
+            if self._attr_available:
                 _LOGGER.exception(
                     "Failed to connect to ntfy service due to a server error: %s (%s)",
                     e.error,
                     e.link,
                 )
-            self._connectivity_check = False
+            self._attr_available = False
         except NtfyConnectionError:
-            if self._connectivity_check:
+            if self._attr_available:
                 _LOGGER.exception(
                     "Failed to connect to ntfy service due to a connection error"
                 )
-            self._connectivity_check = False
+            self._attr_available = False
         except NtfyTimeoutError:
-            if self._connectivity_check:
+            if self._attr_available:
                 _LOGGER.exception(
                     "Failed to connect to ntfy service due to a connection timeout"
                 )
-            self._connectivity_check = False
+            self._attr_available = False
         finally:
             if self._ws is None or self._ws.done():
                 self._ws = self.config_entry.async_create_background_task(
@@ -136,8 +135,3 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
         """Return the entity picture to use in the frontend, if any."""
 
         return self.state_attributes.get("icon") or super().entity_picture
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._connectivity_check
