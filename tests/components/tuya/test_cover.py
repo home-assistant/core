@@ -212,7 +212,7 @@ async def test_set_tilt_position_not_supported(
     ["cl_zah67ekd"],
 )
 @pytest.mark.parametrize(
-    "control_back_mode,expected_percent_control",
+    ("control_back_mode", "expected_percent_control"),
     [
         ("forward", 0),
         ("back", 100),
