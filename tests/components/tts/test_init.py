@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import ffmpeg, tts
+from homeassistant.components import ffmpeg, media_source, tts
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
@@ -40,6 +40,7 @@ from .common import (
 )
 
 from tests.common import MockModule, async_mock_service, mock_integration, mock_platform
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
@@ -2063,3 +2064,28 @@ async def test_async_internal_get_tts_audio_called(
 
         # async_internal_get_tts_audio is called
         internal_get_tts_audio.assert_called_once_with("test message", "en_US", {})
+
+
+async def test_stream_override(
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test overriding streams with a media id."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream.async_set_message("beer")
+    stream.async_override_result("test-media-id")
+
+    url = "http://www.home-assistant.io/resolved.mp3"
+    test_data = b"override-data"
+    aioclient_mock.get(url, content=test_data)
+
+    # TODO: audio conversion
+    with patch(
+        "homeassistant.components.tts.async_resolve_media",
+        return_value=media_source.PlayMedia(url=url, mime_type="audio/mp3"),
+    ):
+        result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+        assert result_data == test_data
