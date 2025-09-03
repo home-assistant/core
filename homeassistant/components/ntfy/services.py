@@ -13,20 +13,19 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import entity_service_call
 
-from .const import (
-    ATTR_ATTACH,
-    ATTR_CALL,
-    ATTR_CLICK,
-    ATTR_DELAY,
-    ATTR_EMAIL,
-    ATTR_ICON,
-    ATTR_MARKDOWN,
-    ATTR_PRIORITY,
-    ATTR_TAGS,
-    DOMAIN,
-    SERVICE_PUBLISH,
-)
+from .const import DOMAIN
 from .notify import async_get_entities
+
+SERVICE_PUBLISH = "publish"
+ATTR_ATTACH = "attach"
+ATTR_CALL = "call"
+ATTR_CLICK = "click"
+ATTR_DELAY = "delay"
+ATTR_EMAIL = "email"
+ATTR_ICON = "icon"
+ATTR_MARKDOWN = "markdown"
+ATTR_PRIORITY = "priority"
+ATTR_TAGS = "tags"
 
 SERVICE_PUBLISH_SCHEMA = {
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
