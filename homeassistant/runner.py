@@ -95,10 +95,10 @@ def _report_existing_instance(lock_file_path: Path, config_dir: str) -> None:
             ):  # Check for non-empty content after stripping whitespace
                 existing_info = json.loads(content)
                 start_dt = datetime.fromtimestamp(existing_info["start_ts"])
-                # Format with timezone abbreviation (e.g., PST, EST, CET)
-                start_time = start_dt.strftime("%Y-%m-%d %H:%M:%S %Z")
-                # If no timezone name available, add local time indicator
-                if not start_dt.strftime("%Z"):
+                # Format with timezone abbreviation if available, otherwise add local time indicator
+                if tz_abbr := start_dt.strftime("%Z"):
+                    start_time = start_dt.strftime(f"%Y-%m-%d %H:%M:%S {tz_abbr}")
+                else:
                     start_time = (
                         start_dt.strftime("%Y-%m-%d %H:%M:%S") + " (local time)"
                     )
