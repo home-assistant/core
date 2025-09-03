@@ -238,7 +238,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2025.3.1
+aioecowitt==2025.9.0
 
 # homeassistant.components.co2signal
 aioelectricitymaps==1.1.1
@@ -528,7 +528,7 @@ arris-tg2492lg==2.2.0
 asmog==0.0.6
 
 # homeassistant.components.asuswrt
-asusrouter==1.20.1
+asusrouter==1.21.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -992,6 +992,7 @@ fyta_cli==0.7.2
 gTTS==2.5.3
 
 # homeassistant.components.gardena_bluetooth
+# homeassistant.components.husqvarna_automower_ble
 gardena-bluetooth==1.6.0
 
 # homeassistant.components.google_assistant_sdk
@@ -1136,7 +1137,7 @@ habiticalib==0.4.4
 habluetooth==5.3.0
 
 # homeassistant.components.cloud
-hass-nabucasa==1.0.0
+hass-nabucasa==1.1.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1177,7 +1178,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250829.0
+home-assistant-frontend==20250903.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.8.29
@@ -1350,6 +1351,9 @@ libpyfoscamcgi==0.0.7
 
 # homeassistant.components.vivotek
 libpyvivotek==0.4.0
+
+# homeassistant.components.libre_hardware_monitor
+librehardwaremonitor-api==1.3.1
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
@@ -1746,7 +1750,7 @@ pushover_complete==1.2.0
 pvo==2.2.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.12
+py-aosmith==1.0.14
 
 # homeassistant.components.canary
 py-canary==0.5.4
@@ -2577,7 +2581,7 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.1.18
+pyvesync==3.0.0b8
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -3064,7 +3068,7 @@ voip-utils==0.3.4
 volkszaehler==0.4.0
 
 # homeassistant.components.volvo
-volvocarsapi==0.4.1
+volvocarsapi==0.4.2
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.3
@@ -3074,9 +3078,6 @@ vsure==2.6.7
 
 # homeassistant.components.vasttrafik
 vtjp==0.2.1
-
-# homeassistant.components.vulcan
-vulcan-api==2.4.2
 
 # homeassistant.components.vultr
 vultr==0.1.2
@@ -3189,7 +3190,7 @@ youtubeaio==2.0.0
 yt-dlp[default]==2025.08.11
 
 # homeassistant.components.zabbix
-zabbix-utils==2.0.2
+zabbix-utils==2.0.3
 
 # homeassistant.components.zamg
 zamg==0.3.6
