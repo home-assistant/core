@@ -21,4 +21,6 @@ rules:
   docs-actions:
     status: exempt
     comment: The integration does not register custom service actions and documentation is up to date
-  brands: done
+  brands:
+    status: exempt
+    comment: Single integration does not require brands file
