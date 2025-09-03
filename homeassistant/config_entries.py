@@ -1178,7 +1178,13 @@ class ConfigEntry[_DataT = Any]:
 
     @callback
     def async_on_state_change(self, func: CALLBACK_TYPE) -> CALLBACK_TYPE:
-        """Add a function to call when a config entry changes its state."""
+        """Add a function to call when a config entry changes its state.
+
+        Note: async_on_unload listeners are called before the state is changed to
+        NOT_LOADED when unloading a config entry. This means the passed function
+        will not be called after a config entry has been unloaded, the last call
+        will be after the state is changed to UNLOAD_IN_PROGRESS.
+        """
         if self._on_state_change is None:
             self._on_state_change = []
         self._on_state_change.append(func)
