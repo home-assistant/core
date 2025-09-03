@@ -298,6 +298,7 @@ class DPCode(StrEnum):
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
     PRESSURE_VALUE = "pressure_value"
+    PRO_ADD_ELE = "pro_add_ele"  # Produce energy
     PUMP = "pump"
     PUMP_RESET = "pump_reset"  # Water pump reset
     PUMP_TIME = "pump_time"  # Water pump duration

@@ -680,6 +680,18 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             entity_registry_enabled_default=False,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ADD_ELE,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PRO_ADD_ELE,
+            translation_key="total_production",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
     ),
     # Air Purifier
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r41mn81
