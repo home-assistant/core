@@ -404,7 +404,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "xnyjcn": (
         NumberEntityDescription(
             key=DPCode.BACKUP_RESERVE,
-            translation_key="backup_reserve",
+            translation_key="battery_backup_reserve",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
