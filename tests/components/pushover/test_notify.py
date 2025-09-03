@@ -1,17 +1,11 @@
-"""Test pushover integration."""
+"""Test the pushover notify platform."""
 
 from unittest.mock import MagicMock, patch
 
-from pushover_complete import BadAPIRequestError
 import pytest
-import requests_mock
-from urllib3.exceptions import MaxRetryError
 
 from homeassistant.components.pushover import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from . import MOCK_CONFIG
 
 from tests.common import MockConfigEntry
 
@@ -34,93 +28,7 @@ def mock_send_message():
         yield mock
 
 
-async def test_async_setup_entry_success(
-    hass: HomeAssistant, mock_pushover: MagicMock
-) -> None:
-    """Test pushover successful setup."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.LOADED
-
-
-async def test_unique_id_updated(hass: HomeAssistant, mock_pushover: MagicMock) -> None:
-    """Test updating unique_id to new format."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, unique_id="MYUSERKEY")
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.unique_id is None
-
-
-async def test_async_setup_entry_failed_invalid_api_key(
-    hass: HomeAssistant, mock_pushover: MagicMock
-) -> None:
-    """Test pushover failed setup due to invalid api key."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-    )
-    entry.add_to_hass(hass)
-    mock_pushover.side_effect = BadAPIRequestError("400: application token is invalid")
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_async_setup_entry_failed_conn_error(
-    hass: HomeAssistant, mock_pushover: MagicMock
-) -> None:
-    """Test pushover failed setup due to conn error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-    )
-    entry.add_to_hass(hass)
-    mock_pushover.side_effect = BadAPIRequestError
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_async_setup_entry_failed_json_error(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
-) -> None:
-    """Test pushover failed setup due to bad json response from library."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-    )
-    entry.add_to_hass(hass)
-    requests_mock.post(
-        "https://api.pushover.net/1/users/validate.json", status_code=204
-    )
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_async_setup_entry_failed_urrlib3_error(
-    hass: HomeAssistant, mock_pushover: MagicMock
-) -> None:
-    """Test pushover failed setup due to conn error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-    )
-    entry.add_to_hass(hass)
-    mock_pushover.side_effect = MaxRetryError(MagicMock(), MagicMock())
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_send_message_with_ttl(
+async def test_send_message_with(
     hass: HomeAssistant, mock_pushover: MagicMock, mock_send_message: MagicMock
 ) -> None:
     """Test sending a message with TTL included in the data."""
@@ -145,6 +53,25 @@ async def test_send_message_with_ttl(
     )
 
     assert mock_send_message.called
-    call_args = mock_send_message.call_args[0]
-    assert call_args[1] == "Hello TTL"
-    assert call_args[14] == 900
+
+    call_args = mock_send_message.call_args.kwargs
+    assert call_args["message"] == "Hello TTL"
+    assert call_args["ttl"] == 900
+
+    mock_send_message.assert_called_once_with(
+        user="USER_KEY",
+        message="Hello TTL",
+        device="",
+        title="Home Assistant",
+        url=None,
+        url_title=None,
+        image=None,
+        priority=None,
+        retry=None,
+        expire=None,
+        callback_url=None,
+        timestamp=None,
+        sound=None,
+        html=0,
+        ttl=900,
+    )
