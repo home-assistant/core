@@ -78,7 +78,6 @@ class FireflyAccountEntity(FireflyBaseEntity, SensorEntity):
         """Initialize Firefly account entity."""
         super().__init__(coordinator, entity_description)
         self._account = account
-        assert coordinator.config_entry
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{entity_description.key}_{account.id}"
         self._attr_name = account.attributes.name
         self._attr_native_unit_of_measurement = (
