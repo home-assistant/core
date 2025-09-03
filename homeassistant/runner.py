@@ -51,12 +51,11 @@ LOCK_FILE_VERSION = 1  # Increment if format changes
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclasses.dataclass
 class SingleExecutionLock:
     """Context object for single execution lock."""
 
-    def __init__(self) -> None:
-        """Initialize the lock context."""
-        self.exit_code: int | None = None
+    exit_code: int | None = None
 
 
 def _write_lock_info(lock_file: TextIOWrapper) -> None:

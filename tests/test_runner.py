@@ -249,6 +249,10 @@ def test_ensure_single_execution_blocked(
         assert "Another Home Assistant instance is already running!" in captured.err
         assert "PID: 12345" in captured.err
         assert "Version: 2025.1.0" in captured.err
+        assert "Started: " in captured.err
+        assert (
+            "(local time)" in captured.err
+        )  # Should show local time since naive datetime
         assert f"Config directory: {config_dir}" in captured.err
 
 
