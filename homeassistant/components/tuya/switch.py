@@ -878,7 +878,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "xnyjcn": (
         SwitchEntityDescription(
             key=DPCode.FEEDIN_POWER_LIMIT_ENABLE,
-            translation_key="feedin_power_limit_enable",
+            translation_key="feedin_power_limit",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
