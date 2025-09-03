@@ -45,7 +45,7 @@ MAX_EXECUTOR_WORKERS = 64
 TASK_CANCELATION_TIMEOUT = 5
 
 # Lock file configuration
-LOCK_FILE_NAME = "ha_run.lock"
+LOCK_FILE_NAME = ".ha_run.lock"
 LOCK_FILE_VERSION = 1  # Increment if format changes
 
 _LOGGER = logging.getLogger(__name__)
@@ -146,6 +146,8 @@ def ensure_single_execution(config_dir: str) -> Generator[SingleExecutionLock]:
         _write_lock_info(lock_file)
 
         # Yield the context - lock will be released when the with statement closes the file
+        # IMPORTANT: We don't unlink the file to avoid races where multiple processes
+        # could create different lock files
         yield lock_context
 
 

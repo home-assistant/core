@@ -212,7 +212,7 @@ def test_ensure_single_execution_success(tmp_path: Path) -> None:
             assert "start_ts" in data
             assert isinstance(data["start_ts"], float)
 
-    # Lock file should still exist but be unlocked after context exit
+    # Lock file should still exist after context exit (we don't unlink to avoid races)
     assert lock_file_path.exists()
 
 
@@ -375,6 +375,38 @@ def test_ensure_single_execution_with_tz_abbreviation(
         assert "(local time)" not in captured.err
 
 
+def test_ensure_single_execution_file_not_unlinked(tmp_path: Path) -> None:
+    """Test that lock file is never unlinked to avoid race conditions."""
+    config_dir = str(tmp_path)
+    lock_file_path = tmp_path / runner.LOCK_FILE_NAME
+
+    # First run creates the lock file
+    with runner.ensure_single_execution(config_dir) as lock:
+        assert lock.exit_code is None
+        assert lock_file_path.exists()
+        # Get inode to verify it's the same file
+        stat1 = lock_file_path.stat()
+
+    # After context exit, file should still exist
+    assert lock_file_path.exists()
+    stat2 = lock_file_path.stat()
+    # Verify it's the exact same file (same inode)
+    assert stat1.st_ino == stat2.st_ino
+
+    # Second run should reuse the same file
+    with runner.ensure_single_execution(config_dir) as lock:
+        assert lock.exit_code is None
+        assert lock_file_path.exists()
+        stat3 = lock_file_path.stat()
+        # Still the same file (not recreated)
+        assert stat1.st_ino == stat3.st_ino
+
+    # After second run, still the same file
+    assert lock_file_path.exists()
+    stat4 = lock_file_path.stat()
+    assert stat1.st_ino == stat4.st_ino
+
+
 def test_ensure_single_execution_sequential_runs(tmp_path: Path) -> None:
     """Test that sequential runs work correctly after lock is released."""
     config_dir = str(tmp_path)
@@ -386,6 +418,9 @@ def test_ensure_single_execution_sequential_runs(tmp_path: Path) -> None:
         with open(lock_file_path, encoding="utf-8") as f:
             first_data = json.load(f)
 
+    # Lock file should still exist after first run (not unlinked)
+    assert lock_file_path.exists()
+
     # Small delay to ensure different timestamp
     time.sleep(0.00001)
 
@@ -396,3 +431,6 @@ def test_ensure_single_execution_sequential_runs(tmp_path: Path) -> None:
             second_data = json.load(f)
             assert second_data["pid"] == os.getpid()
             assert second_data["start_ts"] > first_data["start_ts"]
+
+    # Lock file should still exist after second run (not unlinked)
+    assert lock_file_path.exists()
