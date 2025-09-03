@@ -591,8 +591,8 @@
       "total_pv_power": {
         "name": "Total PV power"
       },
-      "pv_port_power": {
-        "name": "PV port {index} power"
+      "pv_channel_power": {
+        "name": "PV channel {index} power"
       },
       "inverter_output_power": {
         "name": "Inverter output power"

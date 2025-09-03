@@ -1365,7 +1365,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     ),
     # Wireless Switch
     # https://developer.tuya.com/en/docs/iot/s?id=Kbeoa9fkv6brp
-    "wxkg": BATTERY_SENSORS,
+    "wxkg": BATTERY_SENSORS,  # Pressure Sensor
     # Micro Storage Inverter
     # Energy storage and solar PV inverter system with monitoring capabilities
     "xnyjcn": (
@@ -1384,7 +1384,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PV_POWER_CHANNEL_1,
-            translation_key="pv_port_power",
+            translation_key="pv_channel_power",
             translation_placeholders={"index": "1"},
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
