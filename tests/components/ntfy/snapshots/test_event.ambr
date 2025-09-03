@@ -1,31 +1,4 @@
 # serializer version: 1
-# name: test_event
-  ReadOnlyDict({
-    'actions': list([
-    ]),
-    'attachment': None,
-    'click': 'https://example.com/',
-    'content_type': None,
-    'entity_picture': 'https://example.com/icon.png',
-    'event': <Event.MESSAGE: 'message'>,
-    'event_type': 'Title: Hello',
-    'event_types': list([
-      'Title: Hello',
-    ]),
-    'expires': datetime.datetime(2025, 3, 29, 5, 58, 46, tzinfo=datetime.timezone.utc),
-    'friendly_name': 'mytopic',
-    'icon': 'https://example.com/icon.png',
-    'id': 'h6Y2hKA5sy0U',
-    'message': 'Hello',
-    'priority': 3,
-    'tags': list([
-      'octopus',
-    ]),
-    'time': datetime.datetime(2025, 3, 28, 17, 58, 46, tzinfo=datetime.timezone.utc),
-    'title': 'Title',
-    'topic': 'mytopic',
-  })
-# ---
 # name: test_event_platform[event.mytopic-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -33,7 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        'triggered',
+        'Title: Hello',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -68,17 +41,35 @@
 # name: test_event_platform[event.mytopic-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
-        'triggered',
+      'actions': list([
       ]),
+      'attachment': None,
+      'click': 'https://example.com/',
+      'content_type': None,
+      'entity_picture': 'https://example.com/icon.png',
+      'event': <Event.MESSAGE: 'message'>,
+      'event_type': 'Title: Hello',
+      'event_types': list([
+        'Title: Hello',
+      ]),
+      'expires': datetime.datetime(2025, 3, 29, 5, 58, 46, tzinfo=datetime.timezone.utc),
       'friendly_name': 'mytopic',
+      'icon': 'https://example.com/icon.png',
+      'id': 'h6Y2hKA5sy0U',
+      'message': 'Hello',
+      'priority': 3,
+      'tags': list([
+        'octopus',
+      ]),
+      'time': datetime.datetime(2025, 3, 28, 17, 58, 46, tzinfo=datetime.timezone.utc),
+      'title': 'Title',
+      'topic': 'mytopic',
     }),
     'context': <ANY>,
     'entity_id': 'event.mytopic',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-09-03T22:00:00.000+00:00',
   })
 # ---

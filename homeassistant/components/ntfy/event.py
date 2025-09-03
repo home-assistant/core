@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
@@ -27,8 +26,6 @@ from .entity import NtfyBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-SCAN_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_entry(
@@ -78,57 +75,69 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
             self._trigger_event(event, notification.to_dict())
             self.async_write_ha_state()
 
-    async def async_update(self) -> None:
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self.ws_connect(),
+            "websocket_watchdog",
+        )
+
+    async def ws_connect(self) -> None:
         """Connect websocket."""
-        try:
-            if self._ws and (exc := self._ws.exception()):
-                raise exc
-        except asyncio.InvalidStateError:
-            self._attr_available = True
-        except asyncio.CancelledError:
-            if self._attr_available:
-                _LOGGER.exception(
-                    "Connection to ntfy service was terminated unexpectedly"
-                )
-            self._attr_available = False
-        except NtfyForbiddenError:
-            if self._attr_available:
-                _LOGGER.error("Failed to subscribe to topic. Topic is protected")
-            self._attr_available = False
-        except NtfyHTTPError as e:
-            if self._attr_available:
-                _LOGGER.exception(
-                    "Failed to connect to ntfy service due to a server error: %s (%s)",
-                    e.error,
-                    e.link,
-                )
-            self._attr_available = False
-        except NtfyConnectionError:
-            if self._attr_available:
-                _LOGGER.exception(
-                    "Failed to connect to ntfy service due to a connection error"
-                )
-            self._attr_available = False
-        except NtfyTimeoutError:
-            if self._attr_available:
-                _LOGGER.exception(
-                    "Failed to connect to ntfy service due to a connection timeout"
-                )
-            self._attr_available = False
-        finally:
-            if self._ws is None or self._ws.done():
-                self._ws = self.config_entry.async_create_background_task(
-                    hass=self.hass,
-                    target=self.ntfy.subscribe(
-                        topics=[self.topic],
-                        callback=self._async_handle_event,
-                        title=self.subentry.data.get(CONF_TITLE),
-                        message=self.subentry.data.get(CONF_MESSAGE),
-                        priority=self.subentry.data.get(CONF_PRIORITY),
-                        tags=self.subentry.data.get(CONF_TAGS),
-                    ),
-                    name="ntfy_websocket",
-                )
+        while True:
+            try:
+                if self._ws and (exc := self._ws.exception()):
+                    raise exc
+            except asyncio.InvalidStateError:
+                self._attr_available = True
+            except asyncio.CancelledError:
+                if self._attr_available:
+                    _LOGGER.exception(
+                        "Connection to ntfy service was terminated unexpectedly"
+                    )
+                self._attr_available = False
+            except NtfyForbiddenError:
+                if self._attr_available:
+                    _LOGGER.error("Failed to subscribe to topic. Topic is protected")
+                self._attr_available = False
+            except NtfyHTTPError as e:
+                if self._attr_available:
+                    _LOGGER.exception(
+                        "Failed to connect to ntfy service due to a server error: %s (%s)",
+                        e.error,
+                        e.link,
+                    )
+                self._attr_available = False
+            except NtfyConnectionError:
+                if self._attr_available:
+                    _LOGGER.exception(
+                        "Failed to connect to ntfy service due to a connection error"
+                    )
+                self._attr_available = False
+            except NtfyTimeoutError:
+                if self._attr_available:
+                    _LOGGER.exception(
+                        "Failed to connect to ntfy service due to a connection timeout"
+                    )
+                self._attr_available = False
+            finally:
+                if self._ws is None or self._ws.done():
+                    self._ws = self.config_entry.async_create_background_task(
+                        hass=self.hass,
+                        target=self.ntfy.subscribe(
+                            topics=[self.topic],
+                            callback=self._async_handle_event,
+                            title=self.subentry.data.get(CONF_TITLE),
+                            message=self.subentry.data.get(CONF_MESSAGE),
+                            priority=self.subentry.data.get(CONF_PRIORITY),
+                            tags=self.subentry.data.get(CONF_TAGS),
+                        ),
+                        name="ntfy_websocket",
+                    )
+            self.async_write_ha_state()
+            await asyncio.sleep(10)
 
     @property
     def entity_picture(self) -> str | None:

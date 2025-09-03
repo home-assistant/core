@@ -2,9 +2,10 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
+from aiontfy import Event
 from aiontfy.exceptions import (
     NtfyConnectionError,
     NtfyForbiddenError,
@@ -12,7 +13,7 @@ from aiontfy.exceptions import (
     NtfyTimeoutError,
     NtfyUnauthorizedAuthenticationError,
 )
-from freezegun.api import FrozenDateTimeFactory
+from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -35,6 +36,7 @@ async def event_only() -> AsyncGenerator[None]:
 
 
 @pytest.mark.usefixtures("mock_aiontfy")
+@freeze_time("2025-09-03T22:00:00.000Z")
 async def test_event_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -56,8 +58,6 @@ async def test_event_platform(
 async def test_event(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test ntfy events."""
 
@@ -68,15 +68,32 @@ async def test_event(
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert (state := hass.states.get("event.mytopic"))
-    assert state.state == STATE_UNKNOWN
-
-    freezer.tick(timedelta(seconds=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert (state := hass.states.get("event.mytopic"))
     assert state.state != STATE_UNKNOWN
-    assert state.attributes == snapshot
+
+    assert state.attributes == {
+        "actions": [],
+        "attachment": None,
+        "click": "https://example.com/",
+        "content_type": None,
+        "entity_picture": "https://example.com/icon.png",
+        "event": Event.MESSAGE,
+        "event_type": "Title: Hello",
+        "event_types": [
+            "Title: Hello",
+        ],
+        "expires": datetime(2025, 3, 29, 5, 58, 46, tzinfo=UTC),
+        "friendly_name": "mytopic",
+        "icon": "https://example.com/icon.png",
+        "id": "h6Y2hKA5sy0U",
+        "message": "Hello",
+        "priority": 3,
+        "tags": [
+            "octopus",
+        ],
+        "time": datetime(2025, 3, 28, 17, 58, 46, tzinfo=UTC),
+        "title": "Title",
+        "topic": "mytopic",
+    }
 
 
 @pytest.mark.parametrize(
@@ -121,18 +138,13 @@ async def test_event_exceptions(
     expected_state: str,
 ) -> None:
     """Test ntfy events exceptions."""
+    mock_aiontfy.subscribe.side_effect = exception
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-
-    mock_aiontfy.subscribe.side_effect = exception
-
-    freezer.tick(timedelta(seconds=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
 
     freezer.tick(timedelta(seconds=10))
     async_fire_time_changed(hass)
