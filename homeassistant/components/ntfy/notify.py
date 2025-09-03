@@ -11,10 +11,12 @@ from aiontfy.exceptions import (
     NtfyHTTPError,
     NtfyUnauthorizedAuthenticationError,
 )
+import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components.notify import (
-    DOMAIN as NOTIFY_DOMAIN,
+    ATTR_MESSAGE,
+    ATTR_TITLE,
     NotifyEntity,
     NotifyEntityDescription,
     NotifyEntityFeature,
@@ -23,17 +25,45 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_platforms,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_TOPIC, DOMAIN
 from .coordinator import NtfyConfigEntry
 
 PARALLEL_UPDATES = 0
+
+
+SERVICE_PUBLISH = "publish"
+ATTR_ATTACH = "attach"
+ATTR_CALL = "call"
+ATTR_CLICK = "click"
+ATTR_DELAY = "delay"
+ATTR_EMAIL = "email"
+ATTR_ICON = "icon"
+ATTR_MARKDOWN = "markdown"
+ATTR_PRIORITY = "priority"
+ATTR_TAGS = "tags"
+
+SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Optional(ATTR_TITLE): cv.string,
+        vol.Optional(ATTR_MESSAGE): cv.string,
+        vol.Optional(ATTR_MARKDOWN): cv.boolean,
+        vol.Optional(ATTR_TAGS): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_PRIORITY): vol.All(vol.Coerce(int), vol.Range(1, 5)),
+        vol.Optional(ATTR_CLICK): vol.All(vol.Url(), vol.Coerce(URL)),
+        vol.Optional(ATTR_DELAY): vol.All(
+            cv.time_period,
+            vol.Range(min=timedelta(seconds=10), max=timedelta(days=3)),
+        ),
+        vol.Optional(ATTR_ATTACH): vol.All(vol.Url(), vol.Coerce(URL)),
+        vol.Optional(ATTR_EMAIL): vol.Email(),
+        vol.Optional(ATTR_CALL): cv.string,
+        vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
+    }
+)
 
 
 async def async_setup_entry(
@@ -48,14 +78,12 @@ async def async_setup_entry(
             [NtfyNotifyEntity(config_entry, subentry)], config_subentry_id=subentry_id
         )
 
-
-def async_get_entities(hass: HomeAssistant) -> dict[str, Entity]:
-    """Get entities for a domain."""
-    entities: dict[str, Entity] = {}
-    for platform in async_get_platforms(hass, DOMAIN):
-        if platform.domain == NOTIFY_DOMAIN:
-            entities.update(platform.entities)
-    return entities
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_PUBLISH,
+        SERVICE_PUBLISH_SCHEMA,
+        "publish",
+    )
 
 
 class NtfyNotifyEntity(NotifyEntity):

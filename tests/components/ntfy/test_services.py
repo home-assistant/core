@@ -11,7 +11,7 @@ from yarl import URL
 
 from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.components.ntfy.const import DOMAIN
-from homeassistant.components.ntfy.services import (
+from homeassistant.components.ntfy.notify import (
     ATTR_ATTACH,
     ATTR_CALL,
     ATTR_CLICK,
