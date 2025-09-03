@@ -541,6 +541,12 @@
       "volume": {
         "name": "Volume"
       },
+      "volume_speak": {
+        "name": "Speak volume"
+      },
+      "volume_doorbell": {
+        "name": "Doorbell volume"
+      },
       "alarm_volume": {
         "name": "Alarm volume"
       },
@@ -654,6 +660,15 @@
       },
       "image_hue": {
         "name": "Image hue"
+      },
+      "pre_record_time": {
+        "name": "Pre-recording time"
+      },
+      "pre_record_battery_stop": {
+        "name": "Pre-recording stop battery level"
+      },
+      "silent_time": {
+        "name": "Silent time"
       }
     },
     "select": {
@@ -846,6 +861,12 @@
       "sub_bit_rate": {
         "name": "Fluent bit rate"
       },
+      "main_encoding": {
+        "name": "Clear encoding"
+      },
+      "sub_encoding": {
+        "name": "Fluent encoding"
+      },
       "scene_mode": {
         "name": "Scene mode",
         "state": {
@@ -857,6 +878,12 @@
       },
       "packing_time": {
         "name": "Recording packing time"
+      },
+      "pre_record_fps": {
+        "name": "Pre-recording frame rate"
+      },
+      "post_rec_time": {
+        "name": "Post-recording time"
       }
     },
     "sensor": {
@@ -942,6 +969,9 @@
       },
       "manual_record": {
         "name": "Manual record"
+      },
+      "pre_record": {
+        "name": "Pre-recording"
       },
       "hub_ringtone_on_event": {
         "name": "Hub ringtone on event"

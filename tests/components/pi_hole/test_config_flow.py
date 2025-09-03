@@ -3,7 +3,7 @@
 from homeassistant.components import pi_hole
 from homeassistant.components.pi_hole.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_API_VERSION
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -104,7 +104,7 @@ async def test_flow_user_with_api_key_v5(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == NAME
-        assert result["data"] == {**CONFIG_ENTRY_WITH_API_KEY, CONF_API_VERSION: 5}
+        assert result["data"] == {**CONFIG_ENTRY_WITH_API_KEY}
         mock_setup.assert_called_once()
 
         # duplicated server
@@ -148,7 +148,7 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
     mocked_hole = _create_mocked_hole(has_data=False, api_version=5)
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN,
-        data={**CONFIG_DATA_DEFAULTS, CONF_API_VERSION: 5, CONF_API_KEY: "oldkey"},
+        data={**CONFIG_DATA_DEFAULTS, CONF_API_KEY: "oldkey"},
     )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole), _patch_config_flow_hole(mocked_hole):

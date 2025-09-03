@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.wallbox.coordinator import InvalidAuth
+from homeassistant.components.wallbox.coordinator import InsufficientRights
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -130,7 +130,7 @@ async def test_wallbox_number_power_class_error_handling(
 
     with (
         patch.object(mock_wallbox, "setMaxChargingCurrent", side_effect=http_403_error),
-        pytest.raises(InvalidAuth),
+        pytest.raises(InsufficientRights),
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -202,7 +202,7 @@ async def test_wallbox_number_icp_power_class_error_handling(
 
     with (
         patch.object(mock_wallbox, "setIcpMaxCurrent", side_effect=http_403_error),
-        pytest.raises(InvalidAuth),
+        pytest.raises(InsufficientRights),
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
