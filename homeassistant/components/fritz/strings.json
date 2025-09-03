@@ -183,8 +183,8 @@
       "description": "Sets a new password for the guest Wi-Fi. The password must be between 8 and 63 characters long. If no additional parameter is set, the password will be auto-generated with a length of 12 characters.",
       "fields": {
         "device_id": {
-          "name": "Fritz!Box Device",
-          "description": "Select the Fritz!Box to configure."
+          "name": "FRITZ!Box Device",
+          "description": "Select the FRITZ!Box to configure."
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",
