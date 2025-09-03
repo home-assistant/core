@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Callable
+import copy
 from datetime import datetime, timedelta
 import struct
 from typing import Any, cast
@@ -89,7 +90,6 @@ class BasePlatform(Entity):
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
-        self._cancel_timer: Callable[[], None] | None = None
         self._cancel_call: Callable[[], None] | None = None
         self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
@@ -129,6 +129,21 @@ class BasePlatform(Entity):
                 self.async_local_update,
             )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove entity from hass."""
+        _LOGGER.debug(f"Removing entity {self._attr_name}")
+        if self._cancel_call:
+            self._cancel_call()
+            self._cancel_call = None
+
+    @callback
+    def async_hold(self) -> None:
+        """Remote stop entity."""
+        _LOGGER.debug(f"hold entity {self._attr_name}")
+        self._async_cancel_future_pending_update()
+        self._attr_available = False
+        self.async_write_ha_state()
+
     async def _async_update_write_state(self) -> None:
         """Update the entity state and write it to the state machine."""
         if self._cancel_call:
@@ -145,7 +160,7 @@ class BasePlatform(Entity):
     @callback
     def async_run(self) -> None:
         """Remote start entity."""
-        self._async_cancel_update_polling()
+        _LOGGER.info(f"start entity {self._attr_name}")
         self._async_schedule_future_update(0.1)
         self._cancel_call = async_call_later(
             self.hass, timedelta(seconds=0.1), self.async_local_update
@@ -167,20 +182,6 @@ class BasePlatform(Entity):
         if self._cancel_call:
             self._cancel_call()
             self._cancel_call = None
-
-    def _async_cancel_update_polling(self) -> None:
-        """Cancel the polling."""
-        if self._cancel_timer:
-            self._cancel_timer()
-            self._cancel_timer = None
-
-    @callback
-    def async_hold(self) -> None:
-        """Remote stop entity."""
-        self._async_cancel_future_pending_update()
-        self._async_cancel_update_polling()
-        self._attr_available = False
-        self.async_write_ha_state()
 
     async def async_await_connection(self, _now: Any) -> None:
         """Wait for first connect."""
@@ -280,7 +281,9 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         """Convert registers to proper result."""
 
         if self._swap:
-            registers = self._swap_registers(registers, self._slave_count)
+            registers = self._swap_registers(
+                copy.deepcopy(registers), self._slave_count
+            )
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
             return byte_string.decode()
