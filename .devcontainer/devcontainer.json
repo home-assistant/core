@@ -5,7 +5,12 @@
   "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && script/setup",
   "postStartCommand": "script/bootstrap",
   "containerEnv": {
-    "PYTHONASYNCIODEBUG": "1"
+    "PYTHONASYNCIODEBUG": "1",
+    // 【新增】代理配置
+    "HTTP_PROXY": "http://192.168.20.62:1082",
+    "HTTPS_PROXY": "http://192.168.20.62:1082",
+    "NO_PROXY": "localhost,127.0.0.1"
+    // 【新增】代理配置
   },
   "features": {
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
