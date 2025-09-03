@@ -17,6 +17,7 @@ import secrets
 from time import monotonic
 from typing import Any, Final, Generic, Protocol, TypeVar
 
+import aiohttp
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
@@ -26,6 +27,7 @@ import voluptuous as vol
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_source import (
+    async_resolve_media,
     generate_media_source_id as ms_generate_media_source_id,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -41,6 +43,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
@@ -483,7 +486,12 @@ class ResultStream:
     options: dict
     supports_streaming_input: bool
 
+    hass: HomeAssistant
+
     _manager: SpeechManager
+
+    # Override
+    _override_media_id: str | None = None
 
     @cached_property
     def url(self) -> str:
@@ -536,11 +544,24 @@ class ResultStream:
 
     async def async_stream_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of this result."""
+        if self._override_media_id is not None:
+            media = await async_resolve_media(self.hass, self._override_media_id)
+            session = async_get_clientsession(self.hass)
+            async with session.get(media.url) as response:
+                async for chunk in response.content:
+                    yield chunk
+
+            self.last_used = monotonic()
+            return
+
         cache = await self._result_cache
         async for chunk in cache.async_stream_data():
             yield chunk
 
         self.last_used = monotonic()
+
+    def async_override_result(self, media_id: str) -> None:
+        self._override_media_id = media_id
 
 
 def _hash_options(options: dict) -> str:
@@ -773,6 +794,7 @@ class SpeechManager:
             language=language,
             options=options,
             supports_streaming_input=supports_streaming_input,
+            hass=self.hass,
             _manager=self,
         )
         self.token_to_stream[token] = result_stream
