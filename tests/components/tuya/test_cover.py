@@ -169,7 +169,7 @@ async def test_percent_state_on_cover(
     """Test percent_state attribute on the cover entity."""
     mock_device.status["percent_control"] = percent_control
     # 100 is closed and 0 is open for Tuya covers
-    mock_device.status["percent_state"] = 100 - percent_state
+    mock_device.status["percent_state"] = percent_state
 
     entity_id = "cover.kitchen_blinds_curtain"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
@@ -205,3 +205,48 @@ async def test_set_tilt_position_not_supported(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cl_zah67ekd"],
+)
+@pytest.mark.parametrize(
+    "control_back_mode,expected_percent_control",
+    [
+        ("forward", 0),
+        ("back", 100),
+    ],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
+async def test_reverse_motor_control_back_mode(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    control_back_mode: str,
+    expected_percent_control: int,
+) -> None:
+    """Test open service with different control_back_mode values."""
+    entity_id = "cover.kitchen_blinds_curtain"
+    mock_device.status["control_back_mode"] = control_back_mode
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id,
+        [
+            {"code": "control", "value": "open"},
+            {"code": "percent_control", "value": expected_percent_control},
+        ],
+    )

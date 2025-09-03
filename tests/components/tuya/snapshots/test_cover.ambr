@@ -37,7 +37,7 @@
 # name: test_platform_setup_and_discovery[cover.bedroom_blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
+      'current_position': 100,
       'device_class': 'curtain',
       'friendly_name': 'bedroom blinds Curtain',
       'supported_features': <CoverEntityFeature: 15>,
@@ -47,7 +47,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'closed',
+    'state': 'open',
   })
 # ---
 # name: test_platform_setup_and_discovery[cover.blinds_curtain-entry]
@@ -88,7 +88,7 @@
 # name: test_platform_setup_and_discovery[cover.blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 36,
+      'current_position': 64,
       'device_class': 'curtain',
       'friendly_name': 'blinds Curtain',
       'supported_features': <CoverEntityFeature: 15>,
@@ -189,7 +189,7 @@
 # name: test_platform_setup_and_discovery[cover.kitchen_blinds_blind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      'current_position': 0,
       'device_class': 'blind',
       'friendly_name': 'Kitchen Blinds Blind',
       'supported_features': <CoverEntityFeature: 15>,
@@ -199,7 +199,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
 # name: test_platform_setup_and_discovery[cover.kitchen_blinds_curtain-entry]
@@ -240,7 +240,7 @@
 # name: test_platform_setup_and_discovery[cover.kitchen_blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 48,
+      'current_position': 52,
       'device_class': 'curtain',
       'friendly_name': 'Kitchen Blinds Curtain',
       'supported_features': <CoverEntityFeature: 15>,
@@ -291,7 +291,7 @@
 # name: test_platform_setup_and_discovery[cover.lounge_dark_blind_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      'current_position': 0,
       'device_class': 'curtain',
       'friendly_name': 'Lounge Dark Blind Curtain',
       'supported_features': <CoverEntityFeature: 15>,
@@ -301,7 +301,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
 # name: test_platform_setup_and_discovery[cover.persiana_do_quarto_curtain-entry]
@@ -342,7 +342,7 @@
 # name: test_platform_setup_and_discovery[cover.persiana_do_quarto_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      'current_position': 0,
       'device_class': 'curtain',
       'friendly_name': 'Persiana do Quarto Curtain',
       'supported_features': <CoverEntityFeature: 15>,
@@ -352,7 +352,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
 # name: test_platform_setup_and_discovery[cover.tapparelle_studio_curtain-entry]
@@ -393,7 +393,7 @@
 # name: test_platform_setup_and_discovery[cover.tapparelle_studio_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
+      'current_position': 100,
       'device_class': 'curtain',
       'friendly_name': 'Tapparelle studio Curtain',
       'supported_features': <CoverEntityFeature: 15>,
@@ -403,7 +403,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'closed',
+    'state': 'open',
   })
 # ---
 # name: test_platform_setup_and_discovery[cover.vividstorm_screen_curtain-entry]
@@ -444,7 +444,7 @@
 # name: test_platform_setup_and_discovery[cover.vividstorm_screen_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      'current_position': 0,
       'device_class': 'curtain',
       'friendly_name': 'VIVIDSTORM SCREEN Curtain',
       'supported_features': <CoverEntityFeature: 15>,
