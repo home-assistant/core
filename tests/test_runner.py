@@ -250,9 +250,8 @@ def test_ensure_single_execution_blocked(
         assert "PID: 12345" in captured.err
         assert "Version: 2025.1.0" in captured.err
         assert "Started: " in captured.err
-        assert (
-            "(local time)" in captured.err
-        )  # Should show local time since naive datetime
+        # Should show local time since naive datetime
+        assert "(local time)" in captured.err
         assert f"Config directory: {config_dir}" in captured.err
 
 
@@ -316,12 +315,12 @@ def test_ensure_single_execution_with_timezone(
     with open(lock_file_path, "w+", encoding="utf-8") as lock_file:
         fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 
-        # Write mock instance info
+        # Write mock instance info (started 2 hours ago)
         instance_info = {
             "pid": 54321,
             "version": 1,
             "ha_version": "2025.2.0",
-            "start_ts": time.time() - 7200,  # Started 2 hours ago
+            "start_ts": time.time() - 7200,
         }
         json.dump(instance_info, lock_file)
         lock_file.flush()
