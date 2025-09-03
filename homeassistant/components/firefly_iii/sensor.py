@@ -130,7 +130,6 @@ class FireflyCategoryEntity(FireflyBaseEntity, SensorEntity):
         """Initialize Firefly category entity."""
         super().__init__(coordinator, entity_description)
         self._category = category
-        assert coordinator.config_entry
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{entity_description.key}_{category.id}"
         self._attr_name = category.attributes.name
         self._attr_native_unit_of_measurement = (
