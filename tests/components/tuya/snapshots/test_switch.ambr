@@ -2369,7 +2369,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.cbe_pro_2_enable_output_power_limit-entry]
+# name: test_platform_setup_and_discovery[switch.cbe_pro_2_output_power_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2382,7 +2382,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.cbe_pro_2_enable_output_power_limit',
+    'entity_id': 'switch.cbe_pro_2_output_power_limit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2394,23 +2394,23 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Enable output power limit',
+    'original_name': 'Output power limit',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'feedin_power_limit_enable',
+    'translation_key': 'output_power_limit',
     'unique_id': 'tuya.gbq8kiahk57ct0bpncjynxfeedin_power_limit_enable',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.cbe_pro_2_enable_output_power_limit-state]
+# name: test_platform_setup_and_discovery[switch.cbe_pro_2_output_power_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CBE Pro 2 Enable output power limit',
+      'friendly_name': 'CBE Pro 2 Output power limit',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.cbe_pro_2_enable_output_power_limit',
+    'entity_id': 'switch.cbe_pro_2_output_power_limit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

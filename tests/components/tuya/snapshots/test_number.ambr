@@ -209,7 +209,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'backup_reserve',
+    'translation_key': 'battery_backup_reserve',
     'unique_id': 'tuya.gbq8kiahk57ct0bpncjynxbackup_reserve',
     'unit_of_measurement': '%',
   })
@@ -267,7 +267,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'output_power_limit',
+    'translation_key': 'inverter_output_power_limit',
     'unique_id': 'tuya.gbq8kiahk57ct0bpncjynxoutput_power_limit',
     'unit_of_measurement': 'W',
   })
