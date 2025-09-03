@@ -40,7 +40,7 @@ class FireflyCoordinatorData:
     category_details: list[Category]
     budgets: list[Budget]
     bills: list[Bill]
-    native_currency: Currency
+    primary_currency: Currency
 
 
 class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]):
@@ -105,7 +105,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                 )
                 for category in categories
             ]
-            native_currency = await self.firefly.get_currency_native()
+            primary_currency = await self.firefly.get_currency_primary()
             budgets = await self.firefly.get_budgets()
             bills = await self.firefly.get_bills()
         except FireflyAuthenticationError as err:
@@ -133,5 +133,5 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             category_details=category_details,
             budgets=budgets,
             bills=bills,
-            native_currency=native_currency,
+            primary_currency=primary_currency,
         )

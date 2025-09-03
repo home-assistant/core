@@ -81,7 +81,7 @@ class FireflyAccountEntity(FireflyBaseEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{entity_description.key}_{account.id}"
         self._attr_name = account.attributes.name
         self._attr_native_unit_of_measurement = (
-            coordinator.data.native_currency.attributes.code
+            coordinator.data.primary_currency.attributes.code
         )
 
         # Account type state doesn't go well with the icons.json. Need to fix it.
@@ -126,7 +126,7 @@ class FireflyCategoryEntity(FireflyBaseEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{entity_description.key}_{category.id}"
         self._attr_name = category.attributes.name
         self._attr_native_unit_of_measurement = (
-            coordinator.data.native_currency.attributes.code
+            coordinator.data.primary_currency.attributes.code
         )
 
     @property
