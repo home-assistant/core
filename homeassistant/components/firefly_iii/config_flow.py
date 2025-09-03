@@ -26,8 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): str,
-        vol.Required(CONF_API_KEY): str,
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        vol.Required(CONF_API_KEY): str,
     }
 )
 
