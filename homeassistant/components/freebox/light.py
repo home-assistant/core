@@ -33,6 +33,8 @@ LED_STRIP_DESCRIPTION = LightEntityDescription(
     entity_category=EntityCategory.CONFIG,
 )
 
+LED_STRIP_BRIGHTNESS_SCALE = (1, 100)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -50,8 +52,6 @@ async def async_setup_entry(
 
 class FreeboxLEDStrip(LightEntity):
     """Representation of a freebox LED Strip."""
-
-    BRIGHTNESS_SCALE = (1, 100)
 
     _attr_supported_features = LightEntityFeature.EFFECT
 
@@ -76,7 +76,7 @@ class FreeboxLEDStrip(LightEntity):
     @property
     def brightness(self) -> int:
         """LED Strip brightness, mapped to 1..255 from Freebox's 1..100 range."""
-        return value_to_brightness(self.BRIGHTNESS_SCALE, self._native_brightness)
+        return value_to_brightness(LED_STRIP_BRIGHTNESS_SCALE, self._native_brightness)
 
     @property
     def effect(self) -> str:
@@ -118,7 +118,9 @@ class FreeboxLEDStrip(LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the LED Strip on."""
         native_brightness = (
-            ceil(brightness_to_value(self.BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS]))
+            ceil(
+                brightness_to_value(LED_STRIP_BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
+            )
             if ATTR_BRIGHTNESS in kwargs
             else None
         )

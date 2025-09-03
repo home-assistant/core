@@ -19,6 +19,7 @@ from .const import (
     DATA_LAN_GET_HOSTS_LIST_GUEST,
     DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE,
     DATA_LAN_GET_INTERFACES,
+    DATA_LCD_GET_CONFIGURATION,
     DATA_STORAGE_GET_DISKS,
     DATA_STORAGE_GET_RAIDS,
     DATA_SYSTEM_GET_CONFIG,
@@ -94,6 +95,10 @@ def mock_router(mock_device_registry_devices):
         )
         instance.home.set_home_endpoint_value = AsyncMock(
             return_value=DATA_HOME_SET_VALUE
+        )
+        # lcd
+        instance.lcd.get_configuration = AsyncMock(
+            return_value=DATA_LCD_GET_CONFIGURATION
         )
         instance.close = AsyncMock()
         yield service_mock
