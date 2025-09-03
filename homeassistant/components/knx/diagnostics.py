@@ -52,8 +52,8 @@ async def async_get_config_entry_diagnostics(
     try:
         CONFIG_SCHEMA(raw_config)
     except vol.Invalid as ex:
-        diag["configuration_error"] = str(ex)
+        diag["yaml_configuration_error"] = str(ex)
     else:
-        diag["configuration_error"] = None
+        diag["yaml_configuration_error"] = None
 
     return diag

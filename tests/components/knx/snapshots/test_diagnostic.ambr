@@ -9,7 +9,6 @@
       'rate_limit': 0,
       'state_updater': True,
     }),
-    'configuration_error': "extra keys not allowed @ data['knx']['wrong_key']",
     'configuration_yaml': dict({
       'wrong_key': dict({
       }),
@@ -19,6 +18,7 @@
       'current_address': '0.0.0',
       'version': '0.0.0',
     }),
+    'yaml_configuration_error': "extra keys not allowed @ data['knx']['wrong_key']",
   })
 # ---
 # name: test_diagnostic_redact[hass_config0]
@@ -35,13 +35,13 @@
       'state_updater': True,
       'user_password': '**REDACTED**',
     }),
-    'configuration_error': None,
     'configuration_yaml': None,
     'project_info': None,
     'xknx': dict({
       'current_address': '0.0.0',
       'version': '0.0.0',
     }),
+    'yaml_configuration_error': None,
   })
 # ---
 # name: test_diagnostics[hass_config0]
@@ -54,13 +54,13 @@
       'rate_limit': 0,
       'state_updater': True,
     }),
-    'configuration_error': None,
     'configuration_yaml': None,
     'project_info': None,
     'xknx': dict({
       'current_address': '0.0.0',
       'version': '0.0.0',
     }),
+    'yaml_configuration_error': None,
   })
 # ---
 # name: test_diagnostics_project[hass_config0]
@@ -73,7 +73,6 @@
       'rate_limit': 0,
       'state_updater': True,
     }),
-    'configuration_error': None,
     'configuration_yaml': None,
     'project_info': dict({
       'created_by': 'ETS5',
@@ -91,5 +90,6 @@
       'current_address': '0.0.0',
       'version': '0.0.0',
     }),
+    'yaml_configuration_error': None,
   })
 # ---
