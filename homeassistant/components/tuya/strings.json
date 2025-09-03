@@ -586,7 +586,7 @@
         "name": "Battery SOC"
       },
       "battery_power": {
-        "name": "Battery power (+ discharge, - charge)"
+        "name": "Battery power"
       },
       "total_pv_power": {
         "name": "Total PV power"
