@@ -1,4 +1,4 @@
-"""Fixtures for sma tests."""
+"""Fixtures for hassfest tests."""
 
 from pathlib import Path
 from unittest.mock import patch
