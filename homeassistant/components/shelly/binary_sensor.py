@@ -286,7 +286,7 @@ RPC_SENSORS: Final = {
     "presence_num_objects": RpcBinarySensorDescription(
         key="presence",
         sub_key="num_objects",
-        value=lambda status, _: bool(int(status)),
+        value=lambda status, _: bool(status),
         name="Occupancy",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
