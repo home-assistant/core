@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import RequestError
+from homewizard_energy.models import CombinedModels, Measurement, State, System
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -921,3 +922,148 @@ async def test_entities_not_created_for_device(
     """Ensures entities for a specific device are not created."""
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
+
+
+@pytest.mark.parametrize("device_fixture", ["HWE-BAT"])
+@pytest.mark.freeze_time("2021-01-01 12:00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_uptime_sensor_does_not_update_timestamp_on_data_update(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test that the uptime sensor does not update its timestamp when refreshing data."""
+    entity_id = "sensor.device_uptime"
+
+    mock_homewizardenergy.combined.return_value = CombinedModels(
+        device=None,
+        measurement=Measurement(),
+        system=System(uptime_s=356),
+        state=State(),
+    )
+
+    # Initial state
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2021-01-01T11:54:04+00:00"
+
+    mock_homewizardenergy.combined.return_value = CombinedModels(
+        device=None,
+        measurement=Measurement(),
+        system=System(uptime_s=356 + UPDATE_INTERVAL.seconds),
+        state=State(),
+    )
+
+    # Uptime should be the same after the initial setup
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    # Check that the uptime sensor has updated
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2021-01-01T11:54:04+00:00"
+
+
+@pytest.mark.parametrize("device_fixture", ["HWE-BAT"])
+@pytest.mark.freeze_time("2021-01-01 12:00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_uptime_sensor_does_not_update_timestamp_on_minor_change(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test that the uptime sensor does not update its timestamp on minor changes."""
+    entity_id = "sensor.device_uptime"
+
+    mock_homewizardenergy.combined.return_value = CombinedModels(
+        device=None,
+        measurement=Measurement(),
+        system=System(uptime_s=356),
+        state=State(),
+    )
+
+    # Initial state
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2021-01-01T11:54:04+00:00"
+
+    mock_homewizardenergy.combined.return_value = CombinedModels(
+        device=None,
+        measurement=Measurement(),
+        system=System(uptime_s=400 + UPDATE_INTERVAL.seconds),
+        state=State(),
+    )
+
+    # Uptime should be the same after the initial setup
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    # Check that the uptime sensor has updated
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2021-01-01T11:54:04+00:00"
+
+
+@pytest.mark.parametrize("device_fixture", ["HWE-BAT"])
+@pytest.mark.freeze_time("2021-01-01 12:00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_uptime_sensor_refreshes_when_detecting_reboot(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test that the uptime sensor updates its timestamp on reboot."""
+    entity_id = "sensor.device_uptime"
+
+    mock_homewizardenergy.combined.return_value = CombinedModels(
+        device=None,
+        measurement=Measurement(),
+        system=System(uptime_s=356),
+        state=State(),
+    )
+
+    # Initial state
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2021-01-01T11:54:04+00:00"
+
+    mock_homewizardenergy.combined.return_value = CombinedModels(
+        device=None, measurement=Measurement(), system=System(uptime_s=0), state=State()
+    )
+
+    # Simulate a reboot by setting uptime to 0, timestamp should update
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    # Check that the uptime sensor has updated
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2021-01-01T12:00:00+00:00"
+
+
+@pytest.mark.parametrize("device_fixture", ["HWE-BAT"])
+@pytest.mark.freeze_time("2021-01-01 12:00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_uptime_sensor_unavailable(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test that the uptime sensor reports unavailable when uptime is None."""
+    entity_id = "sensor.device_uptime"
+
+    mock_homewizardenergy.combined.return_value = CombinedModels(
+        device=None,
+        measurement=Measurement(),
+        system=System(uptime_s=356),
+        state=State(),
+    )
+
+    # Initial state
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2021-01-01T11:54:04+00:00"
+
+    mock_homewizardenergy.combined.return_value = CombinedModels(
+        device=None,
+        measurement=Measurement(),
+        system=System(uptime_s=None),
+        state=State(),
+    )
+
+    # Uptime should be the same after the initial setup
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    # Check that the uptime sensor has updated
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
