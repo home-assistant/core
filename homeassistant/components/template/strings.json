@@ -136,6 +136,32 @@
         },
         "title": "Template cover"
       },
+      "event": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "device_class": "[%key:component::template::common::device_class%]",
+          "event_type": "Last fired event type",
+          "event_types": "[%key:component::event::entity_component::_::state_attributes::event_types::name%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "event_type": "Defines a template for the type of the event.",
+          "event_types": "Defines a template for a list of available event types."
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            }
+          }
+        },
+        "title": "Template event"
+      },
       "fan": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -352,21 +378,23 @@
         "title": "Template sensor"
       },
       "user": {
-        "description": "This helper allows you to create helper entities that define their state using a template.",
+        "description": "This helper allows you to create helper entities that define their state using a template. What kind of template would you like to create?",
         "menu_options": {
-          "alarm_control_panel": "Template an alarm control panel",
-          "binary_sensor": "Template a binary sensor",
-          "button": "Template a button",
-          "cover": "Template a cover",
-          "fan": "Template a fan",
-          "image": "Template an image",
-          "light": "Template a light",
-          "lock": "Template a lock",
-          "number": "Template a number",
-          "select": "Template a select",
-          "sensor": "Template a sensor",
-          "switch": "Template a switch",
-          "vacuum": "Template a vacuum"
+          "alarm_control_panel": "[%key:component::alarm_control_panel::title%]",
+          "binary_sensor": "[%key:component::binary_sensor::title%]",
+          "button": "[%key:component::button::title%]",
+          "cover": "[%key:component::cover::title%]",
+          "event": "[%key:component::event::title%]",
+          "fan": "[%key:component::fan::title%]",
+          "image": "[%key:component::image::title%]",
+          "light": "[%key:component::light::title%]",
+          "lock": "[%key:component::lock::title%]",
+          "number": "[%key:component::number::title%]",
+          "select": "[%key:component::select::title%]",
+          "sensor": "[%key:component::sensor::title%]",
+          "switch": "[%key:component::switch::title%]",
+          "update": "[%key:component::update::title%]",
+          "vacuum": "[%key:component::vacuum::title%]"
         },
         "title": "Template helper"
       },
@@ -396,6 +424,48 @@
           }
         },
         "title": "Template switch"
+      },
+      "update": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "device_class": "[%key:component::template::common::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "installed_version": "[%key:component::update::entity_component::_::state_attributes::installed_version::name%]",
+          "latest_version": "[%key:component::update::entity_component::_::state_attributes::latest_version::name%]",
+          "install": "Actions on install",
+          "in_progress": "[%key:component::update::entity_component::_::state_attributes::in_progress::name%]",
+          "release_summary": "[%key:component::update::entity_component::_::state_attributes::release_summary::name%]",
+          "release_url": "[%key:component::update::entity_component::_::state_attributes::release_url::name%]",
+          "title": "[%key:component::update::entity_component::_::state_attributes::title::name%]",
+          "backup": "Backup",
+          "specific_version": "Specific version",
+          "update_percentage": "Update percentage"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "installed_version": "Defines a template to get the installed version.",
+          "latest_version": "Defines a template to get the latest version.",
+          "install": "Defines actions to run when the update is installed. Receives variables `specific_version` and `backup` when enabled.",
+          "in_progress": "Defines a template to get the in-progress state.",
+          "release_summary": "Defines a template to get the release summary.",
+          "release_url": "Defines a template to get the release URL.",
+          "title": "Defines a template to get the update title.",
+          "backup": "Enable or disable the `automatic backup before update` option in the update repair. When disabled, the `backup` variable will always provide `False` during the `install` action and it will not accept the `backup` option.",
+          "specific_version": "Enable or disable using the `version` variable with the `install` action. When disabled, the `specific_version` variable will always provide `None` in the `install` actions",
+          "update_percentage": "Defines a template to get the update completion percentage."
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            }
+          }
+        },
+        "title": "Template update"
       },
       "vacuum": {
         "data": {
@@ -564,6 +634,31 @@
           }
         },
         "title": "[%key:component::template::config::step::cover::title%]"
+      },
+      "event": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "event_type": "[%key:component::template::config::step::event::data::event_type%]",
+          "event_types": "[%key:component::event::entity_component::_::state_attributes::event_types::name%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "event_type": "[%key:component::template::config::step::event::data_description::event_type%]",
+          "event_types": "[%key:component::template::config::step::event::data_description::event_types%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            }
+          }
+        },
+        "title": "[%key:component::template::config::step::event::title%]"
       },
       "fan": {
         "data": {
@@ -801,6 +896,48 @@
         },
         "title": "[%key:component::template::config::step::switch::title%]"
       },
+      "update": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "device_class": "[%key:component::template::common::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "installed_version": "[%key:component::update::entity_component::_::state_attributes::installed_version::name%]",
+          "latest_version": "[%key:component::update::entity_component::_::state_attributes::latest_version::name%]",
+          "install": "[%key:component::template::config::step::update::data::install%]",
+          "in_progress": "[%key:component::update::entity_component::_::state_attributes::in_progress::name%]",
+          "release_summary": "[%key:component::update::entity_component::_::state_attributes::release_summary::name%]",
+          "release_url": "[%key:component::update::entity_component::_::state_attributes::release_url::name%]",
+          "title": "[%key:component::update::entity_component::_::state_attributes::title::name%]",
+          "backup": "[%key:component::template::config::step::update::data::backup%]",
+          "specific_version": "[%key:component::template::config::step::update::data::specific_version%]",
+          "update_percentage": "[%key:component::template::config::step::update::data::update_percentage%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "installed_version": "[%key:component::template::config::step::update::data_description::installed_version%]",
+          "latest_version": "[%key:component::template::config::step::update::data_description::latest_version%]",
+          "install": "[%key:component::template::config::step::update::data_description::install%]",
+          "in_progress": "[%key:component::template::config::step::update::data_description::in_progress%]",
+          "release_summary": "[%key:component::template::config::step::update::data_description::release_summary%]",
+          "release_url": "[%key:component::template::config::step::update::data_description::release_url%]",
+          "title": "[%key:component::template::config::step::update::data_description::title%]",
+          "backup": "[%key:component::template::config::step::update::data_description::backup%]",
+          "specific_version": "[%key:component::template::config::step::update::data_description::specific_version%]",
+          "update_percentage": "[%key:component::template::config::step::update::data_description::update_percentage%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            }
+          }
+        },
+        "title": "Template update"
+      },
       "vacuum": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -905,6 +1042,13 @@
         "window": "[%key:component::cover::entity_component::window::name%]"
       }
     },
+    "event_device_class": {
+      "options": {
+        "doorbell": "[%key:component::event::entity_component::doorbell::name%]",
+        "button": "[%key:component::event::entity_component::button::name%]",
+        "motion": "[%key:component::event::entity_component::motion::name%]"
+      }
+    },
     "sensor_device_class": {
       "options": {
         "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
@@ -977,6 +1121,11 @@
     "sensor_unit_of_measurement": {
       "options": {
         "none": "No unit of measurement"
+      }
+    },
+    "update_device_class": {
+      "options": {
+        "firmware": "[%key:component::update::entity_component::firmware::name%]"
       }
     }
   },

@@ -120,7 +120,7 @@ class SensorDeviceClass(StrEnum):
     APPARENT_POWER = "apparent_power"
     """Apparent power.
 
-    Unit of measurement: `mVA`, `VA`
+    Unit of measurement: `mVA`, `VA`, `kVA`
     """
 
     AQI = "aqi"
@@ -452,7 +452,7 @@ class SensorDeviceClass(StrEnum):
     """Generic flow rate
 
     Unit of measurement: UnitOfVolumeFlowRate
-    - SI / metric: `m³/h`, `L/min`, `mL/s`
+    - SI / metric: `m³/h`, `m³/min`, `m³/s`, `L/h`, `L/min`, `L/s`, `mL/s`
     - USCS / imperial: `ft³/min`, `gal/min`
     """
 
