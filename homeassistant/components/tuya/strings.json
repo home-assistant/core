@@ -931,8 +931,8 @@
       "frost_protection": {
         "name": "Frost protection"
       },
-      "feedin_power_limit_enable": {
-        "name": "Enable output power limit"
+      "feedin_power_limit": {
+        "name": "Output power limit"
       }
     },
     "valve": {
