@@ -609,8 +609,8 @@
       "lifetime_battery_charge_energy": {
         "name": "Lifetime battery charge energy"
       },
-      "lifetime_offgrid_port1_output_energy": {
-        "name": "Lifetime off-grid port 1 output energy"
+      "lifetime_offgrid_output_energy": {
+        "name": "Lifetime off-grid output energy"
       },
       "gas": {
         "name": "Gas"

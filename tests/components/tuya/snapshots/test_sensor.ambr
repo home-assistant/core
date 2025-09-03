@@ -3246,7 +3246,7 @@
     'state': '13.46',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.cbe_pro_2_lifetime_off_grid_port_1_output_energy-entry]
+# name: test_platform_setup_and_discovery[sensor.cbe_pro_2_lifetime_off_grid_output_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3261,7 +3261,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cbe_pro_2_lifetime_off_grid_port_1_output_energy',
+    'entity_id': 'sensor.cbe_pro_2_lifetime_off_grid_output_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3276,26 +3276,26 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Lifetime off-grid port 1 output energy',
+    'original_name': 'Lifetime off-grid output energy',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'lifetime_offgrid_port1_output_energy',
+    'translation_key': 'lifetime_offgrid_output_energy',
     'unique_id': 'tuya.gbq8kiahk57ct0bpncjynxcuml_e_export_offgrid1',
     'unit_of_measurement': 'Wh',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.cbe_pro_2_lifetime_off_grid_port_1_output_energy-state]
+# name: test_platform_setup_and_discovery[sensor.cbe_pro_2_lifetime_off_grid_output_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'CBE Pro 2 Lifetime off-grid port 1 output energy',
+      'friendly_name': 'CBE Pro 2 Lifetime off-grid output energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'Wh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cbe_pro_2_lifetime_off_grid_port_1_output_energy',
+    'entity_id': 'sensor.cbe_pro_2_lifetime_off_grid_output_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

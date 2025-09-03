@@ -1434,7 +1434,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUML_E_EXPORT_OFFGRID1,
-            translation_key="lifetime_offgrid_port1_output_energy",
+            translation_key="lifetime_offgrid_output_energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
