@@ -230,7 +230,6 @@ def test_ensure_single_execution_blocked(
     with open(lock_file_path, "w+", encoding="utf-8") as lock_file:
         fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 
-        # Write mock instance info
         instance_info = {
             "pid": 12345,
             "version": 1,
@@ -240,11 +239,9 @@ def test_ensure_single_execution_blocked(
         json.dump(instance_info, lock_file)
         lock_file.flush()
 
-        # Try to acquire lock (should set exit_code but not raise)
         with runner.ensure_single_execution(config_dir) as lock:
             assert lock.exit_code == 1
 
-        # Check error output
         captured = capfd.readouterr()
         assert "Another Home Assistant instance is already running!" in captured.err
         assert "PID: 12345" in captured.err
@@ -262,7 +259,6 @@ def test_ensure_single_execution_corrupt_lock_file(
     config_dir = str(tmp_path)
     lock_file_path = tmp_path / runner.LOCK_FILE_NAME
 
-    # Create and lock the file with corrupt content
     with open(lock_file_path, "w+", encoding="utf-8") as lock_file:
         fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         lock_file.write("not valid json{]")
@@ -286,7 +282,6 @@ def test_ensure_single_execution_empty_lock_file(
     config_dir = str(tmp_path)
     lock_file_path = tmp_path / runner.LOCK_FILE_NAME
 
-    # Create and lock an empty file
     with open(lock_file_path, "w+", encoding="utf-8") as lock_file:
         fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         # Don't write anything - leave it empty
@@ -309,13 +304,12 @@ def test_ensure_single_execution_with_timezone(
     config_dir = str(tmp_path)
     lock_file_path = tmp_path / runner.LOCK_FILE_NAME
 
-    # Create and lock the file with mock instance info
     # Note: This tests an edge case - our code doesn't create timezone-aware timestamps,
     # but we handle them if they exist
     with open(lock_file_path, "w+", encoding="utf-8") as lock_file:
         fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 
-        # Write mock instance info (started 2 hours ago)
+        # Started 2 hours ago
         instance_info = {
             "pid": 54321,
             "version": 1,
@@ -325,11 +319,9 @@ def test_ensure_single_execution_with_timezone(
         json.dump(instance_info, lock_file)
         lock_file.flush()
 
-        # Try to acquire lock (should set exit_code but not raise)
         with runner.ensure_single_execution(config_dir) as lock:
             assert lock.exit_code == 1
 
-        # Check error output
         captured = capfd.readouterr()
         assert "Another Home Assistant instance is already running!" in captured.err
         assert "PID: 54321" in captured.err
@@ -344,7 +336,6 @@ def test_ensure_single_execution_sequential_runs(tmp_path: Path) -> None:
     config_dir = str(tmp_path)
     lock_file_path = tmp_path / runner.LOCK_FILE_NAME
 
-    # First instance
     with runner.ensure_single_execution(config_dir) as lock:
         assert lock.exit_code is None
         assert lock_file_path.exists()
@@ -354,12 +345,10 @@ def test_ensure_single_execution_sequential_runs(tmp_path: Path) -> None:
     # Small delay to ensure different timestamp
     time.sleep(0.00001)
 
-    # Second instance should work after first is done
     with runner.ensure_single_execution(config_dir) as lock:
         assert lock.exit_code is None
         assert lock_file_path.exists()
         with open(lock_file_path, encoding="utf-8") as f:
             second_data = json.load(f)
             assert second_data["pid"] == os.getpid()
-            # Timestamp should be different
             assert second_data["start_ts"] > first_data["start_ts"]
