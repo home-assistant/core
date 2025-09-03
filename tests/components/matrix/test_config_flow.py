@@ -161,16 +161,20 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         client_instance = AsyncMock()
         mock_client.return_value = client_instance
 
-        login_response = LoginResponse.from_dict({
-            "access_token": "test_token",
-            "device_id": "test_device",
-            "user_id": "@user:example.com",
-        })
+        login_response = LoginResponse.from_dict(
+            {
+                "access_token": "test_token",
+                "device_id": "test_device",
+                "user_id": "@user:example.com",
+            }
+        )
         client_instance.login.return_value = login_response
 
-        whoami_response = WhoamiResponse.from_dict({
-            "user_id": "@user:example.com",
-        })
+        whoami_response = WhoamiResponse.from_dict(
+            {
+                "user_id": "@user:example.com",
+            }
+        )
         client_instance.whoami.return_value = whoami_response
 
         result = await hass.config_entries.flow.async_init(
@@ -215,16 +219,20 @@ async def test_import_flow_duplicate_entry(hass: HomeAssistant) -> None:
         client_instance = AsyncMock()
         mock_client.return_value = client_instance
 
-        login_response = LoginResponse.from_dict({
-            "access_token": "test_token",
-            "device_id": "test_device",
-            "user_id": "@user:example.com",
-        })
+        login_response = LoginResponse.from_dict(
+            {
+                "access_token": "test_token",
+                "device_id": "test_device",
+                "user_id": "@user:example.com",
+            }
+        )
         client_instance.login.return_value = login_response
 
-        whoami_response = WhoamiResponse.from_dict({
-            "user_id": "@user:example.com",
-        })
+        whoami_response = WhoamiResponse.from_dict(
+            {
+                "user_id": "@user:example.com",
+            }
+        )
         client_instance.whoami.return_value = whoami_response
 
         result = await hass.config_entries.flow.async_init(
@@ -245,11 +253,13 @@ async def test_validate_input_no_user_id_from_whoami(hass: HomeAssistant) -> Non
         client_instance = AsyncMock()
         mock_client.return_value = client_instance
 
-        login_response = LoginResponse.from_dict({
-            "access_token": "test_token",
-            "device_id": "test_device",
-            "user_id": "@user:example.com",
-        })
+        login_response = LoginResponse.from_dict(
+            {
+                "access_token": "test_token",
+                "device_id": "test_device",
+                "user_id": "@user:example.com",
+            }
+        )
         client_instance.login.return_value = login_response
 
         # Mock whoami response without user_id attribute
