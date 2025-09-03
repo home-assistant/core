@@ -54,15 +54,13 @@ async def async_setup_entry(
     ]
 
     entities.extend(
-        [
-            FireflyCategoryEntity(
-                coordinator=coordinator,
-                entity_description=description,
-                category=category,
-            )
-            for category in coordinator.data.category_details
-            for description in CATEGORY_SENSORS
-        ]
+        FireflyCategoryEntity(
+            coordinator=coordinator,
+            entity_description=description,
+            category=category,
+        )
+        for category in coordinator.data.category_details
+        for description in CATEGORY_SENSORS
     )
 
     async_add_entities(entities)
