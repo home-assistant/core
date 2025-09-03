@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.droplet.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_CODE, CONF_IP_ADDRESS, CONF_PORT
 
 from tests.common import MockConfigEntry
 
@@ -25,7 +25,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: MOCK_HOST},
+        data={CONF_IP_ADDRESS: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_CODE: MOCK_CODE},
         unique_id=MOCK_DEVICE_ID,
     )
 

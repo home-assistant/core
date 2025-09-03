@@ -167,7 +167,7 @@ async def test_zeroconf_setup(
     assert result.get("context", {}).get("unique_id") == MOCK_DEVICE_ID
 
 
-@pytest.mark.parametrize("mock_droplet_discovery", [("192.168.1.5")], indirect=True)
+@pytest.mark.parametrize("mock_droplet_discovery", ["192.168.1.5"], indirect=True)
 async def test_zeroconf_update(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_droplet_discovery
 ) -> None:
