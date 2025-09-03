@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import TEST_COUNTRY, TEST_PASSWORD, TEST_SERIAL_NUMBER, TEST_USERNAME
+from .const import TEST_PASSWORD, TEST_SERIAL_NUMBER, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -42,7 +42,7 @@ async def test_migrate_entry(
         domain=DOMAIN,
         title="Amazon Test Account",
         data={
-            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_COUNTRY: "US",  # country should be in COUNTRY_DOMAINS exceptions
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_LOGIN_DATA: {"session": "test-session"},
@@ -58,4 +58,4 @@ async def test_migrate_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.minor_version == 2
-    assert config_entry.data["site"] == f"https://www.amazon.{TEST_COUNTRY}"
+    assert config_entry.data[CONF_LOGIN_DATA]["site"] == "https://www.amazon.com"
