@@ -1,6 +1,6 @@
 """PyTest fixtures and test helpers."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from pathlib import Path
 from unittest.mock import patch
 
@@ -82,7 +82,7 @@ async def mock_setup_integration(
 
 
 @pytest.fixture(name="config_entry")
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant) -> Generator[MockConfigEntry]:
     """Fixture for MockConfigEntry."""
 
     # Create private key file and parent directory.
