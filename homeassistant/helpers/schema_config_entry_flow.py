@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import UnknownHandler
@@ -330,6 +331,7 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
 
     config_flow: Mapping[str, SchemaFlowStep]
     options_flow: Mapping[str, SchemaFlowStep] | None = None
+    options_flow_reloads: bool = False
 
     VERSION = 1
 
@@ -345,6 +347,13 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
             if cls.options_flow is None:
                 raise UnknownHandler
 
+            if cls.options_flow_reloads:
+                return SchemaOptionsFlowHandlerWithReload(
+                    config_entry,
+                    cls.options_flow,
+                    cls.async_options_flow_finished,
+                    cls.async_setup_preview,
+                )
             return SchemaOptionsFlowHandler(
                 config_entry,
                 cls.options_flow,
@@ -496,6 +505,12 @@ class SchemaOptionsFlowHandler(OptionsFlow):
         if self._async_options_flow_finished:
             self._async_options_flow_finished(self.hass, data)
         return super().async_create_entry(data=data, **kwargs)
+
+
+class SchemaOptionsFlowHandlerWithReload(
+    SchemaOptionsFlowHandler, OptionsFlowWithReload
+):
+    """Handle a schema based options flow which automatically reloads."""
 
 
 @callback
