@@ -47,6 +47,7 @@ class HistoryStats:
         start: Template | None,
         end: Template | None,
         duration: datetime.timedelta | None,
+        min_state_duration: datetime.timedelta,
         preview: bool = False,
     ) -> None:
         """Init the history stats manager."""
@@ -58,6 +59,7 @@ class HistoryStats:
         self._has_recorder_data = False
         self._entity_states = set(entity_states)
         self._duration = duration
+        self._min_state_duration = min_state_duration.total_seconds()
         self._start = start
         self._end = end
         self._preview = preview
@@ -244,7 +246,13 @@ class HistoryStats:
                 break
 
             if previous_state_matches:
-                elapsed += state_change_timestamp - last_state_change_timestamp
+                history_state_duration = (
+                    state_change_timestamp - last_state_change_timestamp
+                )
+                if abs(history_state_duration) >= self._min_state_duration:
+                    elapsed += history_state_duration
+                else:
+                    match_count -= 1
             elif current_state_matches:
                 match_count += 1
 
@@ -254,7 +262,11 @@ class HistoryStats:
         # Count time elapsed between last history state and end of measure
         if previous_state_matches:
             measure_end = min(end_timestamp, now_timestamp)
-            elapsed += measure_end - last_state_change_timestamp
+            last_state_duration = measure_end - last_state_change_timestamp
+            if abs(last_state_duration) >= self._min_state_duration:
+                elapsed += last_state_duration
+            else:
+                match_count -= 1
 
         # Save value in seconds
         seconds_matched = elapsed

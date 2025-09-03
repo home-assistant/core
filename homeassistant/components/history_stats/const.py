@@ -8,6 +8,7 @@ PLATFORMS = [Platform.SENSOR]
 CONF_START = "start"
 CONF_END = "end"
 CONF_DURATION = "duration"
+CONF_MIN_STATE_DURATION = "min_state_duration"
 CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
 
 CONF_TYPE_TIME = "time"

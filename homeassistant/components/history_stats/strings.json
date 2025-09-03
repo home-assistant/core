@@ -31,7 +31,8 @@
           "type": "[%key:component::history_stats::config::step::user::data::type%]",
           "start": "Start",
           "end": "End",
-          "duration": "Duration"
+          "duration": "Duration",
+          "min_state_duration": "Minimum State Duration"
         },
         "data_description": {
           "entity_id": "[%key:component::history_stats::config::step::user::data_description::entity_id%]",
@@ -39,7 +40,8 @@
           "type": "[%key:component::history_stats::config::step::user::data_description::type%]",
           "start": "When to start the measure (timestamp or datetime). Can be a template.",
           "end": "When to stop the measure (timestamp or datetime). Can be a template",
-          "duration": "Duration of the measure."
+          "duration": "Duration of the measure.",
+          "min_state_duration": "The minimum state duration to account for the stats. Default is 0 seconds."
         }
       }
     }
@@ -60,7 +62,8 @@
           "type": "[%key:component::history_stats::config::step::user::data::type%]",
           "start": "[%key:component::history_stats::config::step::options::data::start%]",
           "end": "[%key:component::history_stats::config::step::options::data::end%]",
-          "duration": "[%key:component::history_stats::config::step::options::data::duration%]"
+          "duration": "[%key:component::history_stats::config::step::options::data::duration%]",
+          "min_state_duration": "[%key:component::history_stats::config::step::options::data::min_state_duration%]"
         },
         "data_description": {
           "entity_id": "[%key:component::history_stats::config::step::user::data_description::entity_id%]",
@@ -68,7 +71,8 @@
           "type": "[%key:component::history_stats::config::step::user::data_description::type%]",
           "start": "[%key:component::history_stats::config::step::options::data_description::start%]",
           "end": "[%key:component::history_stats::config::step::options::data_description::end%]",
-          "duration": "[%key:component::history_stats::config::step::options::data_description::duration%]"
+          "duration": "[%key:component::history_stats::config::step::options::data_description::duration%]",
+          "min_state_duration": "[%key:component::history_stats::config::step::options::data_description::min_state_duration%]"
         }
       }
     }
