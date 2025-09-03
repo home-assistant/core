@@ -409,7 +409,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         ),
         NumberEntityDescription(
             key=DPCode.OUTPUT_POWER_LIMIT,
-            translation_key="output_power_limit",
+            translation_key="inverter_output_power_limit",
             device_class=NumberDeviceClass.POWER,
             entity_category=EntityCategory.CONFIG,
         ),
