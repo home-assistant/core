@@ -73,6 +73,17 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
         return bool(self.attribute_value)
 
 
+class RpcPresenceBinarySensor(RpcBinarySensor):
+    """Represent a RPC binary sensor entity for presence component."""
+
+    @property
+    def available(self) -> bool:
+        """Available."""
+        available = super().available
+
+        return available and self.coordinator.device.config[self.key]["enable"]
+
+
 class RpcBluTrvBinarySensor(RpcBinarySensor):
     """Represent a RPC BluTrv binary sensor."""
 
@@ -289,6 +300,7 @@ RPC_SENSORS: Final = {
         value=lambda status, _: bool(status),
         name="Occupancy",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
+        entity_class=RpcPresenceBinarySensor,
     ),
 }
 

@@ -123,6 +123,17 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         return self.option_map[attribute_value]
 
 
+class RpcPresenceSensor(RpcSensor):
+    """Represent a RPC presence sensor."""
+
+    @property
+    def available(self) -> bool:
+        """Available."""
+        available = super().available
+
+        return available and self.coordinator.device.config[self.key]["enable"]
+
+
 class RpcEmeterPhaseSensor(RpcSensor):
     """Represent a RPC energy meter phase sensor."""
 
@@ -1435,6 +1446,7 @@ RPC_SENSORS: Final = {
         translation_key="detected_objects",
         name="Detected objects",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_class=RpcPresenceSensor,
     ),
 }
 
