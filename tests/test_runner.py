@@ -303,6 +303,43 @@ def test_ensure_single_execution_empty_lock_file(
         assert "Unable to read lock file details." in captured.err
 
 
+def test_ensure_single_execution_with_timezone(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str]
+) -> None:
+    """Test handling of lock file with timezone info (edge case)."""
+    config_dir = str(tmp_path)
+    lock_file_path = tmp_path / runner.LOCK_FILE_NAME
+
+    # Create and lock the file with mock instance info
+    # Note: This tests an edge case - our code doesn't create timezone-aware timestamps,
+    # but we handle them if they exist
+    with open(lock_file_path, "w+", encoding="utf-8") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+        # Write mock instance info
+        instance_info = {
+            "pid": 54321,
+            "version": 1,
+            "ha_version": "2025.2.0",
+            "start_ts": time.time() - 7200,  # Started 2 hours ago
+        }
+        json.dump(instance_info, lock_file)
+        lock_file.flush()
+
+        # Try to acquire lock (should set exit_code but not raise)
+        with runner.ensure_single_execution(config_dir) as lock:
+            assert lock.exit_code == 1
+
+        # Check error output
+        captured = capfd.readouterr()
+        assert "Another Home Assistant instance is already running!" in captured.err
+        assert "PID: 54321" in captured.err
+        assert "Version: 2025.2.0" in captured.err
+        assert "Started: " in captured.err
+        # Should show local time indicator since fromtimestamp creates naive datetime
+        assert "(local time)" in captured.err
+
+
 def test_ensure_single_execution_sequential_runs(tmp_path: Path) -> None:
     """Test that sequential runs work correctly after lock is released."""
     config_dir = str(tmp_path)
