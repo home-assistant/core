@@ -116,9 +116,6 @@ class AmcrestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 ),
                 "is_recording": api.async_record_mode,
                 "motion_detection_enabled": lambda: api.async_is_motion_detector_on(),  # pylint: disable=unnecessary-lambda
-                "audio_enabled": lambda: api.async_is_audio_enabled(
-                    channel=channel, stream="Main"
-                ),
                 "color_bw": api.async_day_night_color,
             }
 
@@ -128,6 +125,9 @@ class AmcrestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ] = {
                 "online": lambda: api.async_current_time,  # pylint: disable=unnecessary-lambda
                 "audio_detected_polled": lambda: self._check_audio_events(api),
+                "audio_enabled": lambda: api.async_is_audio_enabled(
+                    channel=channel, stream="Main"
+                ),
                 "motion_detected_polled": lambda: api.async_event_channels_happened(
                     "VideoMotion"
                 ),

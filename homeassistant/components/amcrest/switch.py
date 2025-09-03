@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 
 PRIVACY_MODE_KEY = "privacy_mode"
 MOTION_RECORDING_ENABLED_KEY = "motion_recording_enabled"
+AUDIO_ENABLED_KEY = "audio_enabled"
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
@@ -42,6 +43,12 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
         key=MOTION_RECORDING_ENABLED_KEY,
         name="Record on Motion",
         icon="mdi:record",
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
+    SwitchEntityDescription(
+        key=AUDIO_ENABLED_KEY,
+        name="Audio Enabled",
+        icon="mdi:microphone",
         device_class=SwitchDeviceClass.SWITCH,
     ),
 )
@@ -110,24 +117,22 @@ class AmcrestSwitch(SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_turn_switch(True)
+        self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_turn_switch(False)
+        self._attr_is_on = False
 
     async def _async_turn_switch(self, mode: bool) -> None:
         """Set privacy mode."""
         key = self.entity_description.key
         if key == PRIVACY_MODE_KEY:
-            lower_str = str(mode).lower()
-            await self._api.async_command(
-                f"configManager.cgi?action=setConfig&LeLensMask[0].Enable={lower_str}"
-            )
+            await self._api.async_set_privacy(mode)
         if key == MOTION_RECORDING_ENABLED_KEY:
-            lower_str = str(mode).lower()
-            await self._api.async_command(
-                f"configManager.cgi?action=setConfig&MotionDetect[0].EventHandler.RecordEnable={lower_str}"
-            )
+            await self._api.async_set_motion_recording(mode)
+        if key == AUDIO_ENABLED_KEY:
+            await self._api.async_set_audio_enabled(mode)
 
     async def async_update(self) -> None:
         """Update switch."""
