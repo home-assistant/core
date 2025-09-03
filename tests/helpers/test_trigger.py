@@ -457,15 +457,15 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
     class MockTrigger(Trigger):
         """Mock trigger."""
 
-        def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-            """Initialize trigger."""
-
         @classmethod
         async def async_validate_config(
             cls, hass: HomeAssistant, config: ConfigType
         ) -> ConfigType:
             """Validate config."""
             return config
+
+        def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+            """Initialize trigger."""
 
     class MockTrigger1(MockTrigger):
         """Mock trigger 1."""
@@ -489,9 +489,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
             """Attach a trigger."""
             action({"trigger": "test_trigger_2"})
 
-    async def async_get_triggers(
-        hass: HomeAssistant,
-    ) -> dict[str, type[Trigger]]:
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "_": MockTrigger1,
             "trig_2": MockTrigger2,
@@ -501,7 +499,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
     mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
 
     config_1 = [{"platform": "test"}]
-    config_2 = [{"platform": "test.trig_2"}]
+    config_2 = [{"platform": "test.trig_2", "data": {"x": 1}}]
     config_3 = [{"platform": "test.unknown_trig"}]
     assert await async_validate_trigger_config(hass, config_1) == config_1
     assert await async_validate_trigger_config(hass, config_2) == config_2

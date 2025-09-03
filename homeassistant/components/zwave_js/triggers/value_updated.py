@@ -216,11 +216,19 @@ class ValueUpdatedTrigger(Trigger):
         self._hass = hass
 
     @classmethod
+    async def async_validate_complete_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate complete config."""
+        return await async_validate_trigger_config(hass, config)
+
+    @classmethod
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
-        return await async_validate_trigger_config(hass, config)
+        # Needs to be migrated from old format first
+        raise NotImplementedError
 
     async def async_attach(
         self,
