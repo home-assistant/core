@@ -110,5 +110,11 @@
         "name": "Route via"
       }
     }
+  },
+  "issues": {
+    "platform_yaml_migration": {
+      "title": "Nederlandse Spoorwegen YAML configuration deprecated",
+      "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nYour existing YAML configuration has been imported to the Integrations page.\n\nRemove the `nederlandse_spoorwegen` sensor platform from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
   }
 }

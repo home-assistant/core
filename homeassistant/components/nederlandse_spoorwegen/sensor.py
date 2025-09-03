@@ -393,7 +393,11 @@ class NSDepartureSensor(NSSensor):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        if not self._trips or self._first_trip is None:
+        if not self.coordinator.data or "routes" not in self.coordinator.data:
+            return None
+
+        route_data = self.coordinator.data["routes"].get(self._route_key)
+        if not route_data:
             return None
 
         route = []

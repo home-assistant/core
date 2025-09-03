@@ -10,6 +10,8 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.typing import ConfigType
 
 from .api import NSAPIAuthError, NSAPIConnectionError, NSAPIError, NSAPIWrapper
 from .const import CONF_FROM, CONF_ROUTES, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN
@@ -32,7 +34,60 @@ class NSRuntimeData:
 
 type NSConfigEntry = ConfigEntry[NSRuntimeData]
 
+# Since this integration only supports config entry setup and handles
+# YAML sensor platform migration via async_setup, we use platform_only_config_schema
+CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
+
 PLATFORMS = [Platform.SENSOR]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Nederlandse Spoorwegen integration from YAML configuration.
+
+    This function handles YAML platform configurations and creates repair
+    notifications to guide users to migrate to the UI-based configuration.
+    """
+    # Check for platform-level configuration in sensor domain
+    sensor_config = config.get(Platform.SENSOR, [])
+    if not isinstance(sensor_config, list):
+        sensor_config = [sensor_config]
+
+    # Look for Nederlandse Spoorwegen platform configurations
+    ns_platform_configs = [
+        cfg
+        for cfg in sensor_config
+        if isinstance(cfg, dict) and cfg.get("platform") == DOMAIN
+    ]
+
+    if ns_platform_configs:
+        # Create repair notification for platform-level configuration
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "platform_yaml_migration",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="platform_yaml_migration",
+        )
+
+        # Trigger import flow for the first platform config found
+        first_config = ns_platform_configs[0]
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": "import"},
+                data=first_config,
+            )
+        )
+
+        _LOGGER.warning(
+            "YAML sensor platform configuration for Nederlandse Spoorwegen is deprecated. "
+            "Please remove the sensor platform configuration from YAML and "
+            "configure the integration via the UI instead"
+        )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
