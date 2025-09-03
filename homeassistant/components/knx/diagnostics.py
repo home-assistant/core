@@ -56,4 +56,6 @@ async def async_get_config_entry_diagnostics(
     else:
         diag["yaml_configuration_error"] = None
 
+    diag["config_store"] = knx_module.config_store.data
+
     return diag
