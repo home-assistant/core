@@ -10,14 +10,21 @@
           "password": "Password",
           "verify_ssl": "Verify SSL certificate"
         }
+      },
+      "import": {
+        "title": "Import Matrix configuration",
+        "description": "Import existing Matrix configuration from YAML"
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to the Matrix server",
+      "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error occurred"
     },
     "abort": {
-      "already_configured": "Account is already configured"
+      "already_configured": "Account is already configured",
+      "cannot_connect": "Failed to connect to the Matrix server during import",
+      "import_failed": "Failed to import configuration"
     }
   },
   "services": {

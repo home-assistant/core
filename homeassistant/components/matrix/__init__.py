@@ -127,6 +127,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     config = config[DOMAIN]
 
+    # Check if there are existing config entries for this user
+    existing_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.data.get(CONF_USERNAME) == config[CONF_USERNAME]
+    ]
+
+    if not existing_entries:
+        # No existing config entry, create one from YAML
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_HOMESERVER: config[CONF_HOMESERVER],
+                    CONF_USERNAME: config[CONF_USERNAME],
+                    CONF_PASSWORD: config[CONF_PASSWORD],
+                    CONF_VERIFY_SSL: config[CONF_VERIFY_SSL],
+                },
+            )
+        )
+
+    # Still set up the YAML config for backward compatibility
     hass.data[DOMAIN] = MatrixBot(
         hass,
         os.path.join(hass.config.path(), SESSION_FILE),
