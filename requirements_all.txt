@@ -238,7 +238,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2025.3.1
+aioecowitt==2025.9.0
 
 # homeassistant.components.co2signal
 aioelectricitymaps==1.1.1
@@ -992,6 +992,7 @@ fyta_cli==0.7.2
 gTTS==2.5.3
 
 # homeassistant.components.gardena_bluetooth
+# homeassistant.components.husqvarna_automower_ble
 gardena-bluetooth==1.6.0
 
 # homeassistant.components.google_assistant_sdk
@@ -1177,7 +1178,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250901.0
+home-assistant-frontend==20250902.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.8.29
@@ -1749,7 +1750,7 @@ pushover_complete==1.2.0
 pvo==2.2.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.12
+py-aosmith==1.0.14
 
 # homeassistant.components.canary
 py-canary==0.5.4
@@ -2580,7 +2581,7 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.1.18
+pyvesync==3.0.0b8
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -3067,7 +3068,7 @@ voip-utils==0.3.4
 volkszaehler==0.4.0
 
 # homeassistant.components.volvo
-volvocarsapi==0.4.1
+volvocarsapi==0.4.2
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.3
