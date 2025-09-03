@@ -425,7 +425,7 @@
         "name": "Lifetime total load consumption"
       },
       "tlx_statement_of_charge": {
-        "name": "Statement of charge (SoC)"
+        "name": "State of charge (SoC)"
       },
       "total_money_today": {
         "name": "Total money today"
