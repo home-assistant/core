@@ -104,8 +104,8 @@ def _report_existing_instance(lock_file_path: Path, config_dir: str) -> None:
                 error_msg.append(f"  Started: {start_time}")
             else:
                 error_msg.append("  Unable to read lock file details.")
-    except Exception:  # noqa: BLE001
-        error_msg.append("  Unable to read lock file details.")
+    except (json.JSONDecodeError, OSError) as ex:
+        error_msg.append(f"  Unable to read lock file details: {ex}")
 
     error_msg.append(f"  Config directory: {config_dir}")
     error_msg.append("")

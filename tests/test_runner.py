@@ -268,7 +268,7 @@ def test_ensure_single_execution_corrupt_lock_file(
         # Check error output
         captured = capfd.readouterr()
         assert "Another Home Assistant instance is already running!" in captured.err
-        assert "Unable to read lock file details." in captured.err
+        assert "Unable to read lock file details:" in captured.err
         assert f"Config directory: {config_dir}" in captured.err
 
 
