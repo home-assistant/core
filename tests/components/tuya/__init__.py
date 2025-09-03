@@ -66,6 +66,7 @@ DEVICE_MOCKS = [
     "cz_t0a4hwsf8anfsadp",  # https://github.com/home-assistant/core/issues/149704
     "cz_tf6qp8t3hl9h7m94",  #  https://github.com/home-assistant/core/issues/143209
     "cz_tkn2s79mzedk6pwr",  #  https://github.com/home-assistant/core/issues/146164
+    "cz_vrbpx6h7fsi5mujb",  #  https://github.com/home-assistant/core/pull/149234
     "cz_vxqn72kwtosoy4d3",  #  https://github.com/home-assistant/core/issues/141278
     "cz_w0qqde0g",  # https://github.com/orgs/home-assistant/discussions/482
     "cz_wifvoilfrqeo6hvu",  #  https://github.com/home-assistant/core/issues/146164

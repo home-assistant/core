@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyacn.com",
-  "terminal_id": "1754574903463yjkBiC",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "6c8af345c11228295flcrj",
   "name": "\u63a5HA\u53cc\u5411\u8ba1\u91cf\u63d2\u5ea7",
   "category": "cz",
   "product_id": "vrbpx6h7fsi5mujb",
