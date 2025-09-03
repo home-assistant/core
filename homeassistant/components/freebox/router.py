@@ -15,6 +15,7 @@ from typing import Any
 from freebox_api import Freepybox
 from freebox_api.api.call import Call
 from freebox_api.api.home import Home
+from freebox_api.api.lcd import Lcd
 from freebox_api.api.wifi import Wifi
 from freebox_api.exceptions import HttpRequestError, NotOpenError
 
@@ -334,3 +335,8 @@ class FreeboxRouter:
     def home(self) -> Home:
         """Return the home."""
         return self._api.home
+
+    @property
+    def lcd(self) -> Lcd:
+        """Return the lcd."""
+        return self._api.lcd
