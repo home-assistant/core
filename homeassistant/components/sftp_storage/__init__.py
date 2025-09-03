@@ -23,6 +23,7 @@ from .const import (
     CONF_PRIVATE_KEY_FILE,
     CONF_USERNAME,
     DATA_BACKUP_AGENT_LISTENERS,
+    DOMAIN,
     LOGGER,
 )
 
@@ -99,7 +100,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
 
     if bool(entry.data.get(CONF_PRIVATE_KEY_FILE)):
         LOGGER.debug("Cleaning up after %s. ", entry.unique_id)
-        storage_dir = Path(hass.config.path(STORAGE_DIR))
+        storage_dir = Path(hass.config.path(STORAGE_DIR, DOMAIN))
         await hass.async_add_executor_job(remove_files, storage_dir)
 
 
