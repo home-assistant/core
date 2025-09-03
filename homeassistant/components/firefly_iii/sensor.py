@@ -85,7 +85,7 @@ class FireflyAccountEntity(FireflyBaseEntity, SensorEntity):
             coordinator.data.native_currency.attributes.code
         )
 
-        # Account type state dose't go well with the icons.json. Need to fx it.
+        # Account type state doesn't go well with the icons.json. Need to fix it.
         if account.attributes.type == "expense":
             self._attr_icon = "mdi:cash-minus"
         elif account.attributes.type == "asset":
