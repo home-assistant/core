@@ -24,7 +24,7 @@ async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
     """Register the backup agents."""
-    entries: list[SFTPConfigEntry] = hass.config_entries.async_entries(DOMAIN)
+    entries: list[SFTPConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
     return [SFTPBackupAgent(hass, entry) for entry in entries]
 
 
@@ -57,7 +57,7 @@ class SFTPBackupAgent(BackupAgent):
         self._entry: SFTPConfigEntry = entry
         self._hass: HomeAssistant = hass
         self.name: str = entry.title
-        self.unique_id: str = entry.runtime_data.unique_id
+        self.unique_id: str = entry.entry_id
 
     async def async_download_backup(
         self,

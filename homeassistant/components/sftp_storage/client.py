@@ -29,22 +29,13 @@ from homeassistant.components.backup import (
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.util.ulid import ulid
 
 from .const import BUF_SIZE, DEFAULT_PKEY_NAME, DOMAIN, LOGGER
 from .exceptions import SFTPStorageInvalidPrivateKey
 
 if TYPE_CHECKING:
     from . import SFTPConfigEntry, SFTPConfigEntryData
-
-
-def get_client_keys(hass: HomeAssistant) -> list:
-    """Return a list of private key files usable with `SSHClientConnectionOptions`."""
-    client_keys: list = []
-    storage: Path = Path(hass.config.path(STORAGE_DIR, DOMAIN))
-    pkey: Path = storage.joinpath(DEFAULT_PKEY_NAME)
-    if pkey.exists():
-        client_keys.append(str(pkey))
-    return client_keys
 
 
 def get_client_options(cfg: SFTPConfigEntryData) -> SSHClientConnectionOptions:
@@ -75,8 +66,10 @@ async def save_uploaded_pkey_file(hass: HomeAssistant, uploaded_file_id: str) ->
                 raise SFTPStorageInvalidPrivateKey from err
 
             dest_path = Path(hass.config.path(STORAGE_DIR, DOMAIN))
-            dest_path.mkdir(exist_ok=True)
-            dest_file = dest_path / DEFAULT_PKEY_NAME
+            dest_file = dest_path / f".{ulid()}_{DEFAULT_PKEY_NAME}"
+
+            # Create parent directory
+            dest_file.parent.mkdir(exist_ok=True)
             return str(shutil.move(file_path, dest_file))
 
     return await hass.async_add_executor_job(_process_upload)

@@ -38,7 +38,6 @@ def mock_process_uploaded_file():
         patch(
             "homeassistant.components.sftp_storage.client.process_uploaded_file"
         ) as mock_process_uploaded_file,
-        patch("pathlib.Path.mkdir"),
         patch("shutil.move") as mock_shutil_move,
         NamedTemporaryFile() as f,
     ):
@@ -76,6 +75,10 @@ async def test_backup_sftp_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     expected_title = f"{user_input[CONF_USERNAME]}@{user_input[CONF_HOST]}"
     assert result["title"] == expected_title
+
+    # Make sure to match the `private_key_file` from entry
+    user_input[CONF_PRIVATE_KEY_FILE] = result["data"][CONF_PRIVATE_KEY_FILE]
+
     assert result["data"] == user_input
 
 

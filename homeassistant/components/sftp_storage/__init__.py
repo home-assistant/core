@@ -5,16 +5,13 @@ from __future__ import annotations
 import contextlib
 from dataclasses import dataclass, field
 from pathlib import Path
-import shutil
 
 from homeassistant.components.backup import BackupAgentError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.util import slugify
 
-from .client import BackupAgentClient, get_client_keys
+from .client import BackupAgentClient
 from .const import (
     CONF_BACKUP_LOCATION,
     CONF_HOST,
@@ -35,25 +32,11 @@ class SFTPConfigEntryData:
     """Dataclass holding all config entry data for an SFTP Storage entry."""
 
     host: str
-    port: int = 22
+    port: int
     username: str
     password: str | None = field(repr=False)
-    private_key_file: list
+    private_key_file: str | None
     backup_location: str
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id for this config entry."""
-        return slugify(
-            ".".join(
-                [
-                    self.host,
-                    str(self.port),
-                    self.username,
-                    self.backup_location,
-                ]
-            )
-        )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
@@ -64,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
         port=entry.data[CONF_PORT],
         username=entry.data[CONF_USERNAME],
         password=entry.data.get(CONF_PASSWORD),
-        private_key_file=get_client_keys(hass),
+        private_key_file=entry.data.get(CONF_PRIVATE_KEY_FILE, []),
         backup_location=entry.data[CONF_BACKUP_LOCATION],
     )
     entry.runtime_data = cfg
@@ -91,20 +74,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
 async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> None:
     """Remove an SFTP Storage config entry."""
 
-    def remove_files(storage_dir: Path) -> None:
-        # For some reason, rmtree's `ignore_errors` would not ignore these exceptions
-        # So we call with contextlib.suppress
-        with contextlib.suppress(OSError, TypeError, ValueError, NotImplementedError):
-            shutil.rmtree(storage_dir)
-        LOGGER.debug("Removed storage directory for %s", entry.unique_id)
+    def remove_files(entry: SFTPConfigEntry) -> None:
+        pkey = Path(entry.data[CONF_PRIVATE_KEY_FILE])
+
+        if pkey.exists():
+            with contextlib.suppress(OSError):
+                LOGGER.debug(
+                    "Removing private key (%s) for %s integration for host %s@%s",
+                    pkey,
+                    DOMAIN,
+                    entry.data[CONF_USERNAME],
+                    entry.data[CONF_HOST],
+                )
+                pkey.unlink()
+
+        with contextlib.suppress(OSError):
+            pkey.parent.rmdir()
+            LOGGER.debug(
+                "Removed storage directory for %s integration for host %s@%s",
+                DOMAIN,
+                entry.data[CONF_USERNAME],
+                entry.data[CONF_HOST],
+            )
 
     if bool(entry.data.get(CONF_PRIVATE_KEY_FILE)):
-        LOGGER.debug("Cleaning up after %s. ", entry.unique_id)
-        storage_dir = Path(hass.config.path(STORAGE_DIR, DOMAIN))
-        await hass.async_add_executor_job(remove_files, storage_dir)
+        LOGGER.debug(
+            "Cleaning up after %s integration for host %s@%s",
+            DOMAIN,
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_HOST],
+        )
+        await hass.async_add_executor_job(remove_files, entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
     """Unload SFTP Storage config entry."""
-    LOGGER.debug("Unloading integration: %s", entry.unique_id)
+    LOGGER.debug(
+        "Unloading %s integration for host %s@%s",
+        DOMAIN,
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_HOST],
+    )
     return True

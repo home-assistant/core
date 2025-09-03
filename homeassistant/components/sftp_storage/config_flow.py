@@ -69,12 +69,11 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
             raise SFTPStorageMissingPasswordOrPkey
 
         if bool(user_input.get(CONF_PRIVATE_KEY_FILE)):
-            self._client_keys.append(
-                # This will raise SFTPStorageInvalidPrivateKey if private key is invalid.
-                await save_uploaded_pkey_file(
-                    self.hass, cast(str, user_input.get(CONF_PRIVATE_KEY_FILE))
-                )
+            client_key = await save_uploaded_pkey_file(
+                self.hass, cast(str, user_input.get(CONF_PRIVATE_KEY_FILE))
             )
+            LOGGER.debug("Saved client key: %s", client_key)
+            user_input[CONF_PRIVATE_KEY_FILE] = client_key
 
         return user_input
 
@@ -90,22 +89,22 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             LOGGER.debug("Source: %s", self.source)
 
-            # Create a session using your credentials
-            user_config = SFTPConfigEntryData(
-                host=user_input[CONF_HOST],
-                port=user_input.get(CONF_PORT, 22),
-                username=user_input[CONF_USERNAME],
-                password=user_input.get(CONF_PASSWORD),
-                private_key_file=self._client_keys,
-                backup_location=user_input[CONF_BACKUP_LOCATION],
-            )
-
-            placeholders["backup_location"] = user_config.backup_location
-
             try:
                 # Performs a username-password entry check
                 # Validates private key location if provided.
                 user_input = await self._check_pkey_and_password(user_input)
+
+                # Create a session using your credentials
+                user_config = SFTPConfigEntryData(
+                    host=user_input[CONF_HOST],
+                    port=user_input.get(CONF_PORT, 22),
+                    username=user_input[CONF_USERNAME],
+                    password=user_input.get(CONF_PASSWORD),
+                    private_key_file=user_input.get(CONF_PRIVATE_KEY_FILE),
+                    backup_location=user_input[CONF_BACKUP_LOCATION],
+                )
+
+                placeholders["backup_location"] = user_config.backup_location
 
                 # Raises:
                 # - OSError, if host or port are not correct.
@@ -128,8 +127,9 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                     await sftp.listdir()
 
                 LOGGER.debug(
-                    "Will register SFTP Storage agent with identifier %s",
-                    user_config.unique_id,
+                    "Will register SFTP Storage agent with user@host %s@%s",
+                    user_config.host,
+                    user_config.username,
                 )
 
             except OSError as e:
@@ -153,8 +153,13 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 placeholders["exception"] = type(e).__name__
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_config.unique_id)
-                self._abort_if_unique_id_configured()
+                self._async_abort_entries_match(
+                    {
+                        CONF_HOST: user_config.host,
+                        CONF_PORT: user_config.port,
+                        CONF_BACKUP_LOCATION: user_config.backup_location,
+                    }
+                )
 
                 return self.async_create_entry(
                     title=f"{user_config.username}@{user_config.host}",

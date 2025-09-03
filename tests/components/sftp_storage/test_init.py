@@ -1,5 +1,6 @@
 """Tests for SFTP Storage."""
 
+from pathlib import Path
 from unittest.mock import patch
 
 from asyncssh.sftp import SFTPPermissionDenied
@@ -11,7 +12,13 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .asyncssh_mock import SSHClientConnectionMock
-from .conftest import USER_INPUT, ComponentSetup
+from .conftest import (
+    CONF_HOST,
+    CONF_PRIVATE_KEY_FILE,
+    CONF_USERNAME,
+    USER_INPUT,
+    ComponentSetup,
+)
 
 
 @pytest.mark.usefixtures("mock_ssh_connection")
@@ -39,7 +46,10 @@ async def test_setup_and_unload(
     await hass.config_entries.async_unload(entries[0].entry_id)
 
     assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert f"Unloading integration: {entries[0].unique_id}" in caplog.messages
+    assert (
+        f"Unloading {DOMAIN} integration for host {entries[0].data[CONF_USERNAME]}@{entries[0].data[CONF_HOST]}"
+        in caplog.messages
+    )
 
 
 async def test_setup_error(
@@ -89,46 +99,14 @@ async def test_async_remove_entry(
     assert len(entries) == 1
 
     config_entry = entries[0]
-    with patch("shutil.rmtree") as rmtree_mock:
-        assert await hass.config_entries.async_remove(config_entry.entry_id)
-        assert rmtree_mock.call_count == 1
+    private_key = Path(config_entry.data[CONF_PRIVATE_KEY_FILE])
+
+    assert private_key.exists()
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    assert not private_key.exists()
 
     assert hass.config_entries.async_entries(DOMAIN) == []
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-@pytest.mark.parametrize(
-    ("exception_raised"),
-    [
-        OSError(
-            "Error message"
-        ),  # Base error for `FileNotFoundError`, `NotADirectoryError` and Per`missionError.
-        TypeError("Error message"),  # Can be called internally by `lstat`, `open`.
-        ValueError("Error message"),  # Can be called internally by `lstat`, `open`.
-        NotImplementedError(
-            "Error message"
-        ),  # Due to misuse of `dir_fd` on an unsupported platform.
-    ],
-)
-async def test_async_remove_entry_exceptions(
-    exception_raised: Exception,
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test async_remove_entry with possible exceptions that could be raised by `rmtree`."""
-    await setup_integration()
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-
-    config_entry = entries[0]
-    with patch("shutil.rmtree", side_effect=exception_raised) as rmtree_mock:
-        assert await hass.config_entries.async_remove(config_entry.entry_id)
-        assert rmtree_mock.call_count == 1
-
-    assert hass.config_entries.async_entries(DOMAIN) == []
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert f"Removed storage directory for {config_entry.unique_id}" in caplog.messages
 
 
 async def test_config_entry_data_password_hidden() -> None:

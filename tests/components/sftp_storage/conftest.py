@@ -1,8 +1,10 @@
 """PyTest fixtures and test helpers."""
 
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from unittest.mock import patch
 
+from asyncssh import generate_private_key
 import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
@@ -14,11 +16,13 @@ from homeassistant.components.sftp_storage.const import (
     CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
     CONF_USERNAME,
+    DEFAULT_PKEY_NAME,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.setup import async_setup_component
-from homeassistant.util import slugify
+from homeassistant.util.ulid import ulid
 
 from .asyncssh_mock import SSHClientConnectionMock, async_context_manager
 
@@ -58,16 +62,7 @@ USER_INPUT = {
     CONF_PRIVATE_KEY_FILE: PRIVATE_KEY_FILE_UUID,
     CONF_BACKUP_LOCATION: "backup_location",
 }
-TEST_AGENT_ID = slugify(
-    ".".join(
-        [
-            USER_INPUT[CONF_HOST],
-            str(USER_INPUT[CONF_PORT]),
-            USER_INPUT[CONF_USERNAME],
-            USER_INPUT[CONF_BACKUP_LOCATION],
-        ]
-    )
-)
+TEST_AGENT_ID = ulid()
 
 
 @pytest.fixture(name="setup_integration")
@@ -87,11 +82,23 @@ async def mock_setup_integration(
 
 
 @pytest.fixture(name="config_entry")
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Fixture for MockConfigEntry."""
+
+    # Create private key file and parent directory.
+    key_dest_path = Path(hass.config.path(STORAGE_DIR, DOMAIN))
+    dest_file = key_dest_path / f".{ulid()}_{DEFAULT_PKEY_NAME}"
+    dest_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Write to file only once.
+    if not dest_file.exists():
+        dest_file.write_bytes(
+            generate_private_key("ssh-rsa").export_private_key("pkcs8-pem")
+        )
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
+        entry_id=TEST_AGENT_ID,
         unique_id=TEST_AGENT_ID,
         title=CONFIG_ENTRY_TITLE,
         data={
@@ -99,13 +106,16 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PORT: 22,
             CONF_USERNAME: "username",
             CONF_PASSWORD: "password",
-            CONF_PRIVATE_KEY_FILE: "/path/to/private_key",
+            CONF_PRIVATE_KEY_FILE: str(dest_file),
             CONF_BACKUP_LOCATION: "backup_location",
         },
     )
 
     config_entry.runtime_data = SFTPConfigEntryData(**config_entry.data)
-    return config_entry
+    yield config_entry
+    if dest_file.exists():
+        dest_file.unlink()
+        dest_file.parent.rmdir()
 
 
 @pytest.fixture
