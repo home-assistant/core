@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
 import dataclasses
-from datetime import UTC, datetime
+from datetime import datetime
 import fcntl
 from io import TextIOWrapper
 import json
@@ -94,9 +94,14 @@ def _report_existing_instance(lock_file_path: Path, config_dir: str) -> None:
                 content.strip()
             ):  # Check for non-empty content after stripping whitespace
                 existing_info = json.loads(content)
-                start_time = datetime.fromtimestamp(
-                    existing_info["start_ts"], tz=UTC
-                ).strftime("%Y-%m-%d %H:%M:%S UTC")
+                start_dt = datetime.fromtimestamp(existing_info["start_ts"])
+                # Format with timezone abbreviation (e.g., PST, EST, CET)
+                start_time = start_dt.strftime("%Y-%m-%d %H:%M:%S %Z")
+                # If no timezone name available, add local time indicator
+                if not start_dt.strftime("%Z"):
+                    start_time = (
+                        start_dt.strftime("%Y-%m-%d %H:%M:%S") + " (local time)"
+                    )
 
                 error_msg.append(f"  PID: {existing_info['pid']}")
                 error_msg.append(f"  Version: {existing_info['ha_version']}")
