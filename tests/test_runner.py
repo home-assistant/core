@@ -9,7 +9,7 @@ from pathlib import Path
 import subprocess
 import threading
 import time
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import packaging.tags
 import py
@@ -200,13 +200,10 @@ def test_ensure_single_execution_success(tmp_path: Path) -> None:
     config_dir = str(tmp_path)
     lock_file_path = tmp_path / runner.LOCK_FILE_NAME
 
-    # Should be able to acquire lock and write instance info
     with runner.ensure_single_execution(config_dir) as lock:
-        # Should not have an exit code when successful
         assert lock.exit_code is None
         assert lock_file_path.exists()
 
-        # Verify lock file contains correct information
         with open(lock_file_path, encoding="utf-8") as f:
             data = json.load(f)
             assert data["pid"] == os.getpid()
@@ -329,6 +326,53 @@ def test_ensure_single_execution_with_timezone(
         assert "Started: " in captured.err
         # Should show local time indicator since fromtimestamp creates naive datetime
         assert "(local time)" in captured.err
+
+
+def test_ensure_single_execution_with_tz_abbreviation(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str]
+) -> None:
+    """Test handling of lock file when timezone abbreviation is available."""
+    config_dir = str(tmp_path)
+    lock_file_path = tmp_path / runner.LOCK_FILE_NAME
+
+    with open(lock_file_path, "w+", encoding="utf-8") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+        instance_info = {
+            "pid": 98765,
+            "version": 1,
+            "ha_version": "2025.3.0",
+            "start_ts": time.time() - 1800,  # Started 30 minutes ago
+        }
+        json.dump(instance_info, lock_file)
+        lock_file.flush()
+
+        # Mock datetime to return a timezone abbreviation
+        # We use mocking because strftime("%Z") behavior is OS-specific:
+        # On some systems it returns empty string for naive datetimes
+        mock_dt = MagicMock()
+
+        def _mock_strftime(fmt: str) -> str:
+            if fmt == "%Z":
+                return "PST"
+            if fmt == "%Y-%m-%d %H:%M:%S":
+                return "2025-09-03 10:30:45"
+            return "2025-09-03 10:30:45 PST"
+
+        mock_dt.strftime.side_effect = _mock_strftime
+
+        with patch("homeassistant.runner.datetime") as mock_datetime:
+            mock_datetime.fromtimestamp.return_value = mock_dt
+            with runner.ensure_single_execution(config_dir) as lock:
+                assert lock.exit_code == 1
+
+        captured = capfd.readouterr()
+        assert "Another Home Assistant instance is already running!" in captured.err
+        assert "PID: 98765" in captured.err
+        assert "Version: 2025.3.0" in captured.err
+        assert "Started: 2025-09-03 10:30:45 PST" in captured.err
+        # Should NOT have "(local time)" when timezone abbreviation is present
+        assert "(local time)" not in captured.err
 
 
 def test_ensure_single_execution_sequential_runs(tmp_path: Path) -> None:
