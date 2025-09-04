@@ -16,13 +16,14 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_API_BASE_URL,
     CONF_API_SECRET,
-    CONF_API_VERIFY_CERT,
     CONF_INTERFACE_CLIENT,
     CONF_TRACKER_INTERFACES,
     DATA_HASS_CONFIG,
     DOMAIN,
     OPNSENSE_DATA,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -40,8 +41,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -64,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_API_KEY: entry.data[CONF_API_KEY],
         CONF_API_SECRET: entry.data[CONF_API_SECRET],
         CONF_API_BASE_URL: entry.data[CONF_URL],
-        CONF_API_VERIFY_CERT: entry.data[CONF_VERIFY_SSL],
+        CONF_VERIFY_SSL: entry.data[CONF_VERIFY_SSL],
     }
     tracker_interfaces = entry.data.get(CONF_TRACKER_INTERFACES)
 
