@@ -33,8 +33,8 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
+    STATE_OFF,
     STATE_PLAYING,
-    STATE_STANDBY,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -188,7 +188,7 @@ async def test_state_standby_is_set(hass: HomeAssistant) -> None:
 
     await mock_ddp_response(hass, MOCK_STATUS_STANDBY)
 
-    assert hass.states.get(mock_entity_id).state == STATE_STANDBY
+    assert hass.states.get(mock_entity_id).state == STATE_OFF
 
 
 async def test_state_playing_is_set(hass: HomeAssistant) -> None:
@@ -308,7 +308,7 @@ async def test_device_info_is_set_from_status_correctly(
 
     mock_d_entries = device_registry.devices
     mock_entry = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_HOST_ID)})
-    assert mock_state == STATE_STANDBY
+    assert mock_state == STATE_OFF
 
     assert len(mock_d_entries) == 1
     assert mock_entry.name == MOCK_HOST_NAME

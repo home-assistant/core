@@ -204,11 +204,11 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
             api, errors = await verify_connection(self.hass, user_input)
             if api:
                 await self.async_set_unique_id(
-                    api.smile_hostname or api.gateway_id,
+                    api.smile.hostname or api.gateway_id,
                     raise_on_progress=False,
                 )
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=api.smile_name, data=user_input)
+                return self.async_create_entry(title=api.smile.name, data=user_input)
 
         return self.async_show_form(
             step_id=SOURCE_USER,
@@ -236,7 +236,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
             api, errors = await verify_connection(self.hass, full_input)
             if api:
                 await self.async_set_unique_id(
-                    api.smile_hostname or api.gateway_id,
+                    api.smile.hostname or api.gateway_id,
                     raise_on_progress=False,
                 )
                 self._abort_if_unique_id_mismatch(reason="not_the_same_smile")

@@ -44,11 +44,11 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Discovery flow is not applicable for this integration
-  discovery: todo
+  discovery: done
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done
@@ -63,7 +63,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
   # Platinum

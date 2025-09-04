@@ -44,6 +44,9 @@ BLOCK_MAX_TRANSITION_TIME_MS: Final = 5000
 # min RPC light transition time in seconds (max=10800, limited by light entity to 6553)
 RPC_MIN_TRANSITION_TIME_SEC = 0.5
 
+# time in seconds between two cover state updates when moving
+RPC_COVER_UPDATE_TIME_SEC = 1.0
+
 RGBW_MODELS: Final = (
     MODEL_BULB,
     MODEL_RGBW2,
@@ -237,6 +240,9 @@ NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"
 FIRMWARE_UNSUPPORTED_ISSUE_ID = "firmware_unsupported_{unique}"
 
 BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID = "ble_scanner_firmware_unsupported_{unique}"
+OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
+    "outbound_websocket_incorrectly_enabled_{unique}"
+)
 
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
 

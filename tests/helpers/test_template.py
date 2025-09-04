@@ -845,6 +845,23 @@ def test_as_function(hass: HomeAssistant) -> None:
     )
 
 
+def test_as_function_no_arguments(hass: HomeAssistant) -> None:
+    """Test as_function with no arguments."""
+    assert (
+        template.Template(
+            """
+            {%- macro macro_get_hello(returns) -%}
+            {%- do returns("Hello") -%}
+            {%- endmacro -%}
+            {%- set get_hello = macro_get_hello | as_function -%}
+            {{ get_hello() }}
+            """,
+            hass,
+        ).async_render()
+        == "Hello"
+    )
+
+
 def test_logarithm(hass: HomeAssistant) -> None:
     """Test logarithm."""
     tests = [
@@ -1491,6 +1508,15 @@ def test_from_json(hass: HomeAssistant) -> None:
     expected_result = "Bar"
     actual_result = template.Template(
         '{{ (\'{"Foo": "Bar"}\' | from_json).Foo }}', hass
+    ).async_render()
+    assert actual_result == expected_result
+
+    info = render_to_info(hass, "{{ 'garbage string' | from_json }}")
+    with pytest.raises(TemplateError, match="no default was specified"):
+        info.result()
+
+    actual_result = template.Template(
+        "{{ 'garbage string' | from_json('Bar') }}", hass
     ).async_render()
     assert actual_result == expected_result
 
