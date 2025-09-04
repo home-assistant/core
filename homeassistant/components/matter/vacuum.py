@@ -105,7 +105,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     _supported_run_modes: (
         dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
-    _attr_areas: dict[str, Any] | None = None
+    _attr_matter_areas: dict[str, Any] | None = None
     _attr_current_area: int | None = None
     _attr_current_area_name: str | None = None
     _attr_selected_areas: list[int] | None = None
@@ -234,56 +234,48 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
     async def async_handle_get_areas(self, **kwargs: Any) -> ServiceResponse:
         """Get available area and map IDs from vacuum appliance."""
-
-        if self.get_matter_attribute_value(
-            clusters.ServiceArea.Attributes.SupportedAreas
-        ):
-            supported_areas = self.get_matter_attribute_value(
-                clusters.ServiceArea.Attributes.SupportedAreas
-            )
-        if not supported_areas:
-            raise HomeAssistantError("Can't get areas from the device.")
-
         # Group by area_id: {area_id: {"map_id": ..., "name": ...}}
         areas = {}
-        for area in supported_areas:
-            area_id = getattr(area, "areaID", None)
-            map_id = getattr(area, "mapID", None)
-            location_name = None
-            area_info = getattr(area, "areaInfo", None)
-            if area_info is not None:
-                location_info = getattr(area_info, "locationInfo", None)
-                if location_info is not None:
-                    location_name = getattr(location_info, "locationName", None)
-            if area_id is not None:
-                if map_id is NullValue:
-                    areas[area_id] = {"name": location_name}
-                else:
-                    areas[area_id] = {"map_id": map_id, "name": location_name}
+        if self._attr_matter_areas is None:
+            for area in self._attr_matter_areas:
+                area_id = getattr(area, "areaID", None)
+                map_id = getattr(area, "mapID", None)
+                location_name = None
+                area_info = getattr(area, "areaInfo", None)
+                if area_info is not None:
+                    location_info = getattr(area_info, "locationInfo", None)
+                    if location_info is not None:
+                        location_name = getattr(location_info, "locationName", None)
+                if area_id is not None:
+                    if map_id is NullValue:
+                        areas[area_id] = {"name": location_name}
+                    else:
+                        areas[area_id] = {"map_id": map_id, "name": location_name}
 
-        # Optionally, also extract supported maps if available
-        supported_maps = self.get_matter_attribute_value(
-            clusters.ServiceArea.Attributes.SupportedMaps
-        )
-        maps = []
-        if supported_maps != NullValue:  # chip.clusters.Types.Nullable
-            maps = [
+            # Optionally, also extract supported maps if available
+            supported_maps = self.get_matter_attribute_value(
+                clusters.ServiceArea.Attributes.SupportedMaps
+            )
+            maps = []
+            if supported_maps != NullValue:  # chip.clusters.Types.Nullable
+                maps = [
+                    {
+                        "map_id": getattr(m, "mapID", None)
+                        if getattr(m, "mapID", None) != NullValue
+                        else None,
+                        "name": getattr(m, "name", None),
+                    }
+                    for m in supported_maps
+                ]
+
+            return cast(
+                ServiceResponse,
                 {
-                    "map_id": getattr(m, "mapID", None)
-                    if getattr(m, "mapID", None) != NullValue
-                    else None,
-                    "name": getattr(m, "name", None),
-                }
-                for m in supported_maps
-            ]
-
-        return cast(
-            ServiceResponse,
-            {
-                "areas": areas,
-                "maps": maps,
-            },
-        )
+                    "areas": areas,
+                    "maps": maps,
+                },
+            )
+        return None
 
     async def async_handle_select_areas(
         self, areas: list[int], **kwargs: Any
@@ -319,17 +311,30 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Update from device."""
         self._calculate_features()
         # ServiceArea: get areas from the device
-        self._attr_areas = self.async_get_areas()
+        self._attr_matter_areas = self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.SupportedAreas
+        )
         # optional CurrentArea attribute
         if self.get_matter_attribute_value(clusters.ServiceArea.Attributes.CurrentArea):
             current_area = self.get_matter_attribute_value(
                 clusters.ServiceArea.Attributes.CurrentArea
             )
+            # get areaInfo.locationInfo.locationName for current_area in SupportedAreas list
+            area_name = None
+            if self._attr_matter_areas:
+                for area in self._attr_matter_areas:
+                    if getattr(area, "areaID", None) == current_area:
+                        area_info = getattr(area, "areaInfo", None)
+                        if area_info is not None:
+                            location_info = getattr(area_info, "locationInfo", None)
+                            if location_info is not None:
+                                area_name = getattr(location_info, "locationName", None)
+                        break
             self._attr_current_area = current_area
-            # get the current area "name" attribute from the areas dict if exists or return the area ID
-            self._attr_current_area_name = (
-                self._attr_areas["areas"].get(current_area, {}).get("name") or None
-            )
+            self._attr_current_area_name = area_name
+        else:
+            self._attr_current_area = None
+            self._attr_current_area_name = None
 
         # optional SelectedAreas attribute
         if self.get_matter_attribute_value(
