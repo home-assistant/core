@@ -26,7 +26,7 @@
         "data": {
           "hosts": "IP addresses (comma-separated) to scan",
           "home_interval": "Minimum number of minutes between scans of active devices (preserve battery)",
-          "exclude": "IP addresses (comma-separated) to exclude from scanning",
+          "exclude": "IP addresses to exclude from scanning",
           "mac_exclude": "MAC addresses to exclude from tracking",
           "scan_options": "Raw configurable scan options for Nmap"
         }

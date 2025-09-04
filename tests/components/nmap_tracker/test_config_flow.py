@@ -48,8 +48,8 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
                 CONF_HOSTS: hosts,
                 CONF_HOME_INTERVAL: 3,
                 CONF_OPTIONS: DEFAULT_OPTIONS,
-                CONF_EXCLUDE: "4.4.4.4",
-                CONF_MAC_EXCLUDE: "00:00:00:00:00:00",
+                CONF_EXCLUDE: ["4.4.4.4"],
+                CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
             },
         )
         await hass.async_block_till_done()
@@ -86,8 +86,8 @@ async def test_form_range(hass: HomeAssistant) -> None:
                 CONF_HOSTS: "192.168.0.5-12",
                 CONF_HOME_INTERVAL: 3,
                 CONF_OPTIONS: DEFAULT_OPTIONS,
-                CONF_EXCLUDE: "4.4.4.4",
-                CONF_MAC_EXCLUDE: "00:00:00:00:00:00",
+                CONF_EXCLUDE: ["4.4.4.4"],
+                CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
             },
         )
         await hass.async_block_till_done()
@@ -120,8 +120,8 @@ async def test_form_invalid_hosts(hass: HomeAssistant) -> None:
             CONF_HOSTS: "not an ip block",
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: "",
-            CONF_MAC_EXCLUDE: "00:00:00:00:00:00",
+            CONF_EXCLUDE: [],
+            CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
         },
     )
     await hass.async_block_till_done()
@@ -140,8 +140,8 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             CONF_HOSTS: "192.168.0.0/20",
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: "4.4.4.4",
-            CONF_MAC_EXCLUDE: "00:00:00:00:00:00",
+            CONF_EXCLUDE: ["4.4.4.4"],
+            CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
         },
     )
     config_entry.add_to_hass(hass)
@@ -157,8 +157,8 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             CONF_HOSTS: "192.168.0.0/20",
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: "",
-            CONF_MAC_EXCLUDE: "00:00:00:00:00:00",
+            CONF_EXCLUDE: [],
+            CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
         },
     )
     await hass.async_block_till_done()
@@ -182,8 +182,8 @@ async def test_form_invalid_ip_excludes(hass: HomeAssistant) -> None:
             CONF_HOSTS: "3.3.3.3",
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: "not an exclude",
-            CONF_MAC_EXCLUDE: "00:00:00:00:00:00",
+            CONF_EXCLUDE: ["not an exclude"],
+            CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
         },
     )
     await hass.async_block_till_done()
@@ -193,7 +193,8 @@ async def test_form_invalid_ip_excludes(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "mac_excludes", ["1234567890", "1234567890,11:22:33:44:55:66", "ABCDEFGHIJK"]
+    "mac_excludes",
+    [["1234567890"], ["1234567890", "11:22:33:44:55:66"], ["ABCDEFGHIJK"]],
 )
 async def test_form_invalid_mac_excludes(
     hass: HomeAssistant, mac_excludes: str
@@ -212,7 +213,7 @@ async def test_form_invalid_mac_excludes(
             CONF_HOSTS: "3.3.3.3",
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: "4.4.4.4",
+            CONF_EXCLUDE: ["4.4.4.4"],
             CONF_MAC_EXCLUDE: mac_excludes,
         },
     )
@@ -232,8 +233,8 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_HOSTS: "192.168.1.0/24",
             CONF_HOME_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: "4.4.4.4",
-            CONF_MAC_EXCLUDE: "00:00:00:00:00:00,11:22:33:44:55:66",
+            CONF_EXCLUDE: ["4.4.4.4"],
+            CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
         },
     )
     config_entry.add_to_hass(hass)
@@ -248,13 +249,13 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
 
     assert result["data_schema"]({}) == {
-        CONF_EXCLUDE: "4.4.4.4",
+        CONF_EXCLUDE: ["4.4.4.4"],
         CONF_HOME_INTERVAL: 3,
         CONF_HOSTS: "192.168.1.0/24",
         CONF_CONSIDER_HOME: 180,
         CONF_SCAN_INTERVAL: 120,
         CONF_OPTIONS: "-F -T4 --min-rate 10 --host-timeout 5s",
-        CONF_MAC_EXCLUDE: "00:00:00:00:00:00,11:22:33:44:55:66",
+        CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
     }
 
     with patch(
@@ -268,9 +269,9 @@ async def test_options_flow(hass: HomeAssistant) -> None:
                 CONF_HOME_INTERVAL: 5,
                 CONF_CONSIDER_HOME: 500,
                 CONF_OPTIONS: "-sn",
-                CONF_EXCLUDE: "4.4.4.4, 5.5.5.5",
+                CONF_EXCLUDE: ["4.4.4.4", "5.5.5.5"],
                 CONF_SCAN_INTERVAL: 10,
-                CONF_MAC_EXCLUDE: "00:00:00:00:00:00,11:22:33:44:55:66",
+                CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
             },
         )
         await hass.async_block_till_done()

@@ -146,9 +146,12 @@ async def _async_build_schema_with_user_input(
     hass: HomeAssistant, user_input: dict[str, Any], include_options: bool
 ) -> vol.Schema:
     hosts = user_input.get(CONF_HOSTS, await async_get_network(hass))
-    exclude = user_input.get(
-        CONF_EXCLUDE, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
+    ip_exclude = user_input.get(
+        CONF_EXCLUDE, [await network.async_get_source_ip(hass, MDNS_TARGET_IP)]
     )
+    if isinstance(ip_exclude, str):
+        ip_exclude = ip_exclude.split(",")
+
     mac_exclude = user_input.get(CONF_MAC_EXCLUDE, [])
     if isinstance(mac_exclude, str):
         mac_exclude = mac_exclude.split(",")
@@ -158,7 +161,9 @@ async def _async_build_schema_with_user_input(
         vol.Required(
             CONF_HOME_INTERVAL, default=user_input.get(CONF_HOME_INTERVAL, 0)
         ): int,
-        vol.Optional(CONF_EXCLUDE, default=exclude): str,
+        vol.Optional(CONF_EXCLUDE, default=ip_exclude): TextSelector(
+            TextSelectorConfig(multiple=True)
+        ),
         vol.Optional(CONF_MAC_EXCLUDE, default=mac_exclude): TextSelector(
             TextSelectorConfig(multiple=True)
         ),
