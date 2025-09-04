@@ -106,7 +106,7 @@ class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
                     CONF_ENERGYID_KEY: energyid_key,
                 }
 
-                title = f"{ha_entity_id.split('.', 1)[-1]} → {energyid_key}"
+                title = f"{ha_entity_id.split('.', 1)[-1]} connection to EnergyID"
                 return self.async_create_entry(title=title, data=subentry_data)
 
         suggested_entities = _get_suggested_entities(self.hass)
