@@ -57,4 +57,5 @@ ptz:
             - "ContinuousMove"
             - "GotoPreset"
             - "RelativeMove"
+            - "EmulateRelativeMove"
             - "Stop"
