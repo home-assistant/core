@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import patch
 
-from tuya_sharing import CustomerDevice
+from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya import DeviceListener, ManagerCompat
+from homeassistant.components.tuya import DeviceListener
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -264,7 +264,7 @@ class MockDeviceListener(DeviceListener):
 
 async def initialize_entry(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: CustomerDevice | list[CustomerDevice],
 ) -> None:
@@ -277,8 +277,6 @@ async def initialize_entry(
     mock_config_entry.add_to_hass(hass)
 
     # Initialize the component
-    with patch(
-        "homeassistant.components.tuya.ManagerCompat", return_value=mock_manager
-    ):
+    with patch("homeassistant.components.tuya.Manager", return_value=mock_manager):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
