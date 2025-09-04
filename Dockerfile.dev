@@ -3,10 +3,9 @@ FROM mcr.microsoft.com/vscode/devcontainers/base:debian
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN \
-    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && apt-get update \
+    apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        # Additional library needed by some tests and accordingly by VScode Tests Discovery
+        gnupg dirmngr ca-certificates curl \
         bluez \
         ffmpeg \
         libudev-dev \
@@ -25,6 +24,9 @@ RUN \
         git \
         cmake \
         autoconf \
+    && mkdir -p /usr/share/keyrings \
+    && curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor -o /usr/share/keyrings/yarn-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/yarn-archive-keyring.gpg] https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
