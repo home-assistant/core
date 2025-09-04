@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.matter.const import (
     SERVICE_CLEAN_AREA,
+    SERVICE_GET_AREAS,
     SERVICE_SELECT_AREAS,
 )
 from homeassistant.components.matter.vacuum import (
@@ -205,6 +206,17 @@ async def test_k11_vacuum_actions(
         command=clusters.RvcRunMode.Commands.ChangeToMode(newMode=1),
     )
     matter_client.send_device_command.reset_mock()
+
+    # test get_areas action
+    await hass.services.async_call(
+        "matter",
+        SERVICE_GET_AREAS,
+        {
+            "entity_id": entity_id,
+        },
+        blocking=True,
+        return_response=True,
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["switchbot_K11"])
