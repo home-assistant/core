@@ -7,5 +7,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["habiticalib"],
   "quality_scale": "platinum",
-  "requirements": ["habiticalib==0.4.4"]
+  "requirements": ["habiticalib==0.4.5"]
 }
