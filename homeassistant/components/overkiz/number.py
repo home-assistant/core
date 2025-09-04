@@ -175,14 +175,14 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
     ),
-    # DomesticHotWaterProduction - away mode in days (0 - 6)
+    # DomesticHotWaterProduction - away mode in days (0 - 365)
     OverkizNumberDescription(
         key=OverkizState.IO_AWAY_MODE_DURATION,
         name="Away mode duration",
         icon="mdi:water-boiler-off",
         command=OverkizCommand.SET_AWAY_MODE_DURATION,
         native_min_value=0,
-        native_max_value=6,
+        native_max_value=365,
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
