@@ -156,29 +156,36 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        self._entry_id = config_entry.entry_id  # store only the ID
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Manage the options."""
+        # Fetch the config entry dynamically
+        entry = self.hass.config_entries.async_get_entry(self._entry_id)
+        if entry is None:
+            return self.async_abort(reason="entry_not_found")
+
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         # Build options schema with current values
-        current_scan = self.config_entry.options.get(
+        current_scan = entry.options.get(
             CONF_SCAN_INTERVAL,
-            self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+            entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
         )
-        current_infer = self.config_entry.options.get(
+        current_infer = entry.options.get(
             CONF_INFER_ARMING_STATE,
-            self.config_entry.data.get(
-                CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE
-            ),
+            entry.data.get(CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE),
         )
-        current_home = self.config_entry.options.get(
+        current_home = entry.options.get(
             CONF_SUPPORT_HOME_ARM,
-            self.config_entry.data.get(CONF_SUPPORT_HOME_ARM, DEFAULT_SUPPORT_HOME_ARM),
+            entry.data.get(CONF_SUPPORT_HOME_ARM, DEFAULT_SUPPORT_HOME_ARM),
+        )
+        current_max_zones = entry.options.get(
+            CONF_MAX_SUPPORTED_ZONES,
+            entry.data.get(CONF_MAX_SUPPORTED_ZONES, DEFAULT_MAX_SUPPORTED_ZONES),
         )
 
         schema = vol.Schema(
@@ -188,6 +195,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 ),
                 vol.Optional(CONF_INFER_ARMING_STATE, default=current_infer): bool,
                 vol.Optional(CONF_SUPPORT_HOME_ARM, default=current_home): bool,
+                vol.Optional(CONF_MAX_SUPPORTED_ZONES, default=current_max_zones): int,
             }
         )
 
