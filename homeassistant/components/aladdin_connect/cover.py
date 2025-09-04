@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntity
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -50,8 +49,9 @@ class AladdinCoverEntity(AladdinConnectEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Update is closed attribute."""
-        status = self.coordinator.data.status
-        return None if status is STATE_UNKNOWN else status == "closed"
+        if (status := self.coordinator.data.status) is None:
+            return None
+        return status == "closed"
 
     @property
     def is_closing(self) -> bool | None:

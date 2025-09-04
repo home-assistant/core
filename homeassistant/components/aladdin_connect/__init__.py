@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from genie_partner_sdk.client import AladdinConnectClient
-from genie_partner_sdk.model import GarageDoor
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -16,6 +15,7 @@ from homeassistant.helpers import (
 from . import api
 from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
 from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
+from .models import AladdinConnectGarageDoor
 
 PLATFORMS: list[Platform] = [Platform.COVER, Platform.SENSOR]
 
@@ -38,9 +38,9 @@ async def async_setup_entry(
 
     sdk_doors = await client.get_doors()
 
-    # Convert SDK GarageDoor objects to integration GarageDoor objects
+    # Convert SDK GarageDoor objects to integration AladdinConnectGarageDoor objects
     doors = [
-        GarageDoor(
+        AladdinConnectGarageDoor(
             {
                 "device_id": door.device_id,
                 "door_number": door.door_number,

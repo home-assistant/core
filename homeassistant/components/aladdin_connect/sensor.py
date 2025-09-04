@@ -5,8 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from genie_partner_sdk.model import GarageDoor
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -19,18 +17,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
 from .entity import AladdinConnectEntity
+from .models import AladdinConnectGarageDoor
 
 
 @dataclass(frozen=True, kw_only=True)
 class AladdinConnectSensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for Aladdin Connect."""
 
-    value_fn: Callable[[GarageDoor], float | None]
-
-
-def get_battery_level(garage_door: GarageDoor) -> float | None:
-    """Return battery level or None if falsy."""
-    return garage_door.battery_level or None
+    value_fn: Callable[[AladdinConnectGarageDoor], float | None]
 
 
 SENSOR_TYPES: tuple[AladdinConnectSensorEntityDescription, ...] = (
@@ -41,7 +35,7 @@ SENSOR_TYPES: tuple[AladdinConnectSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=get_battery_level,
+        value_fn=lambda garage_door: garage_door.battery_level,
     ),
 )
 
