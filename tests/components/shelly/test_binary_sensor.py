@@ -53,13 +53,13 @@ async def test_block_binary_sensor(
     assert entry.unique_id == "123456789ABC-relay_0-overpower"
 
 
-async def test_block_binary_sensor_creation(
+async def test_block_binary_gas_sensor_creation(
     hass: HomeAssistant,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     entity_registry: EntityRegistry,
 ) -> None:
-    """Test block binary sensor creation."""
+    """Test block binary gas sensor creation."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_gas"
     await init_integration(hass, 1)
 
