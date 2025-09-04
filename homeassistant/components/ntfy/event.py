@@ -26,6 +26,7 @@ from .entity import NtfyBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+RECONNECT_INTERVAL = 10
 
 
 async def async_setup_entry(
@@ -89,22 +90,20 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
         while True:
             try:
                 if self._ws and (exc := self._ws.exception()):
-                    raise exc
+                    raise exc  # noqa: TRY301
             except asyncio.InvalidStateError:
                 self._attr_available = True
             except asyncio.CancelledError:
-                if self._attr_available:
-                    _LOGGER.exception(
-                        "Connection to ntfy service was terminated unexpectedly"
-                    )
                 self._attr_available = False
+                return
             except NtfyForbiddenError:
                 if self._attr_available:
                     _LOGGER.error("Failed to subscribe to topic. Topic is protected")
                 self._attr_available = False
+                return
             except NtfyHTTPError as e:
                 if self._attr_available:
-                    _LOGGER.exception(
+                    _LOGGER.error(
                         "Failed to connect to ntfy service due to a server error: %s (%s)",
                         e.error,
                         e.link,
@@ -112,20 +111,26 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
                 self._attr_available = False
             except NtfyConnectionError:
                 if self._attr_available:
-                    _LOGGER.exception(
+                    _LOGGER.error(
                         "Failed to connect to ntfy service due to a connection error"
                     )
                 self._attr_available = False
             except NtfyTimeoutError:
                 if self._attr_available:
-                    _LOGGER.exception(
+                    _LOGGER.error(
                         "Failed to connect to ntfy service due to a connection timeout"
+                    )
+                self._attr_available = False
+            except Exception:
+                if self._attr_available:
+                    _LOGGER.exception(
+                        "Failed to connect to ntfy service due to an unexpected exception"
                     )
                 self._attr_available = False
             finally:
                 if self._ws is None or self._ws.done():
                     self._ws = self.config_entry.async_create_background_task(
-                        hass=self.hass,
+                        self.hass,
                         target=self.ntfy.subscribe(
                             topics=[self.topic],
                             callback=self._async_handle_event,
@@ -136,8 +141,8 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
                         ),
                         name="ntfy_websocket",
                     )
-            self.async_write_ha_state()
-            await asyncio.sleep(10)
+                self.async_write_ha_state()
+            await asyncio.sleep(RECONNECT_INTERVAL)
 
     @property
     def entity_picture(self) -> str | None:

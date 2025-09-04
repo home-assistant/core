@@ -127,6 +127,10 @@ async def test_event(
             asyncio.InvalidStateError,
             STATE_UNKNOWN,
         ),
+        (
+            ValueError,
+            STATE_UNAVAILABLE,
+        ),
     ],
 )
 async def test_event_exceptions(

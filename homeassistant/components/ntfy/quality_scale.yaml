@@ -32,13 +32,9 @@ rules:
     status: exempt
     comment: the integration has no options
   docs-installation-parameters: done
-  entity-unavailable:
-    status: exempt
-    comment: the integration only implements a stateless notify entity.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: the integration only integrates state-less entities
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
