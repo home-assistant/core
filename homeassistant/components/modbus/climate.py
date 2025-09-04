@@ -59,9 +59,11 @@ from .const import (
     CONF_FAN_MODE_MIDDLE,
     CONF_FAN_MODE_OFF,
     CONF_FAN_MODE_ON,
+    CONF_FAN_MODE_READ_VALUES,
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_TOP,
     CONF_FAN_MODE_VALUES,
+    CONF_FAN_MODE_WRITE_VALUES,
     CONF_HVAC_ACTION_COOLING,
     CONF_HVAC_ACTION_DEFROSTING,
     CONF_HVAC_ACTION_DRYING,
@@ -236,7 +238,15 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_fan_mode = None
             self._fan_mode_mapping_to_modbus: dict[str, int] = {}
             self._fan_mode_mapping_from_modbus: dict[int, str] = {}
-            mode_value_config = mode_config[CONF_FAN_MODE_VALUES]
+            mode_values: dict[str, dict] = mode_config[CONF_FAN_MODE_VALUES]
+            mode_value_read = cast(
+                "dict[str, int]",
+                mode_values.get(CONF_FAN_MODE_READ_VALUES) or mode_values,
+            )
+            mode_value_write = cast(
+                "dict[str, int]",
+                mode_values.get(CONF_FAN_MODE_WRITE_VALUES) or mode_values,
+            )
             for fan_mode_kw, fan_mode in (
                 (CONF_FAN_MODE_ON, FAN_ON),
                 (CONF_FAN_MODE_OFF, FAN_OFF),
@@ -249,10 +259,15 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 (CONF_FAN_MODE_FOCUS, FAN_FOCUS),
                 (CONF_FAN_MODE_DIFFUSE, FAN_DIFFUSE),
             ):
-                if fan_mode_kw in mode_value_config:
-                    value = mode_value_config[fan_mode_kw]
-                    self._fan_mode_mapping_from_modbus[value] = fan_mode
-                    self._fan_mode_mapping_to_modbus[fan_mode] = value
+                if fan_mode_kw in mode_value_read:
+                    read_value = mode_value_read[fan_mode_kw]
+                    self._fan_mode_mapping_from_modbus[read_value] = fan_mode
+
+                if fan_mode_kw in mode_value_write:
+                    write_value = mode_value_write[fan_mode_kw]
+                    self._fan_mode_mapping_to_modbus[fan_mode] = write_value
+
+                if fan_mode_kw in [*mode_value_write, *mode_value_read]:
                     self._attr_fan_modes.append(fan_mode)
         else:
             # No FAN modes defined
