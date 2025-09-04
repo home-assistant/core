@@ -1,5 +1,7 @@
 """The EnergyID integration."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 import datetime as dt
 import functools
@@ -9,15 +11,10 @@ from typing import Any, Final
 from energyid_webhooks.client_v2 import WebhookClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
@@ -27,26 +24,27 @@ from .const import (
     CONF_HA_ENTITY_ID,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
-    DEFAULT_UPLOAD_INTERVAL_SECONDS,
-    SIGNAL_CONFIG_ENTRY_CHANGED,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-
-EnergyIDConfigEntry = ConfigEntry[
-    "EnergyIDRuntimeData"
-]  # Type hint for the entry's runtime_data
-
-# Listener keys
+type EnergyIDConfigEntry = ConfigEntry[EnergyIDRuntimeData]
 LISTENER_KEY_STATE: Final = "state_listener"
 LISTENER_KEY_STOP: Final = "stop_listener"
 LISTENER_KEY_CONFIG_UPDATE: Final = "config_update_listener"
 
+DEFAULT_UPLOAD_INTERVAL_SECONDS: Final = 60
+
 
 @dataclass
 class EnergyIDRuntimeData:
-    """Class to hold runtime data for the EnergyID integration."""
+    """Runtime data for the EnergyID integration.
+
+    Attributes:
+        client: The WebhookClient instance for EnergyID API communication.
+        listeners: Dictionary of event listeners for this config entry.
+        mappings: Dictionary mapping Home Assistant entity IDs to EnergyID keys.
+    """
 
     client: WebhookClient
     listeners: dict[str, CALLBACK_TYPE]
@@ -64,7 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         session=session,
     )
 
-    # Store all runtime data in the config entry itself, not in hass.data
     entry.runtime_data = EnergyIDRuntimeData(
         client=client,
         listeners={},
@@ -99,12 +96,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
                 "Error closing EnergyID client for %s", client.device_name
             )
 
-    # Register unload handlers that will be called when the entry is unloaded
+    # Register listeners
     entry.async_on_unload(entry.add_update_listener(async_config_entry_update_listener))
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close_entry_client)
-    )
-    entry.async_on_unload(_close_entry_client)
 
     # Set up listeners for sensor mappings
     await async_update_listeners(hass, entry)
@@ -131,7 +124,6 @@ async def async_config_entry_update_listener(
     """Handle config entry updates, including subentry changes."""
     _LOGGER.debug("Config entry updated for %s, reloading listeners", entry.entry_id)
     await async_update_listeners(hass, entry)
-    async_dispatcher_send(hass, SIGNAL_CONFIG_ENTRY_CHANGED, "subentry_update", entry)
 
 
 async def async_update_listeners(
@@ -170,7 +162,6 @@ async def async_update_listeners(
         entities_to_track.append(ha_entity_id)
         client.get_or_create_sensor(energyid_key)
 
-        # --- NEW LOGIC: Queue initial state for NEWLY added entities ---
         if ha_entity_id not in known_mappings:
             _LOGGER.debug(
                 "New mapping detected for %s, queuing initial state", ha_entity_id
@@ -234,7 +225,6 @@ def _async_handle_state_change(
     ):
         return
 
-    # REFACTOR: Get the entry and access its runtime_data
     entry = hass.config_entries.async_get_entry(entry_id)
     if not entry or not hasattr(entry, "runtime_data"):
         _LOGGER.debug(
@@ -269,4 +259,10 @@ def _async_handle_state_change(
 async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Unloading EnergyID entry for %s", entry.title)
+    runtime_data = getattr(entry, "runtime_data", None)
+    if runtime_data:
+        try:
+            await runtime_data.client.close()
+        except Exception:
+            _LOGGER.exception("Error closing EnergyID client for %s", entry.title)
     return True

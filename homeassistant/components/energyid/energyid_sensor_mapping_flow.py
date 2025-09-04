@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigSubentryFlow, SubentryFlowResult
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
@@ -16,30 +16,24 @@ from .const import CONF_ENERGYID_KEY, CONF_HA_ENTITY_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# --- Start of Helper Functions ---
-# These functions are now included directly in the file.
-
 
 @callback
 def _get_suggested_entities(hass: HomeAssistant) -> list[str]:
     """Return a sorted list of suggested sensor entity IDs for mapping."""
-    _LOGGER.debug("Starting _get_suggested_entities")
     ent_reg = er.async_get(hass)
-
     suitable_entities = []
+
     for entity_entry in ent_reg.entities.values():
-        _LOGGER.debug("Evaluating entity: %s", entity_entry.entity_id)
         if not (
             entity_entry.domain == Platform.SENSOR and entity_entry.platform != DOMAIN
         ):
-            _LOGGER.debug(
-                "Skipping entity %s due to domain/platform checks",
-                entity_entry.entity_id,
-            )
+            continue
+
+        if not hass.states.get(entity_entry.entity_id):
             continue
 
         state_class = (entity_entry.capabilities or {}).get("state_class")
-        is_likely_numeric = (
+        has_numeric_indicators = (
             state_class
             in (
                 SensorStateClass.MEASUREMENT,
@@ -63,35 +57,11 @@ def _get_suggested_entities(hass: HomeAssistant) -> list[str]:
                 SensorDeviceClass.VOLUME,
             )
         )
-        current_state = hass.states.get(entity_entry.entity_id)
-        if current_state and current_state.state not in (
-            STATE_UNKNOWN,
-            STATE_UNAVAILABLE,
-        ):
-            try:
-                float(current_state.state)
-            except (ValueError, TypeError):
-                _LOGGER.debug(
-                    "Entity %s state cannot be converted to float",
-                    entity_entry.entity_id,
-                )
-                continue
+
+        if has_numeric_indicators:
             suitable_entities.append(entity_entry.entity_id)
-            _LOGGER.debug(
-                "Added entity %s to suitable entities", entity_entry.entity_id
-            )
-        elif (
-            is_likely_numeric
-            and current_state
-            and current_state.state != STATE_UNAVAILABLE
-        ):
-            suitable_entities.append(entity_entry.entity_id)
-            _LOGGER.debug(
-                "Added likely numeric entity %s to suitable entities",
-                entity_entry.entity_id,
-            )
-    _LOGGER.debug("Final list of suitable entities: %s", suitable_entities)
-    return sorted(set(suitable_entities))
+
+    return sorted(suitable_entities)
 
 
 @callback
