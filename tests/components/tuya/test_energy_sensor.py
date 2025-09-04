@@ -19,6 +19,7 @@ from homeassistant.components.tuya.sensor import (
     TuyaSensorEntityDescription,
 )
 from homeassistant.const import UnitOfEnergy
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -191,7 +192,7 @@ class TestTuyaEnergySensorEntity:
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
-        hass,
+        hass: HomeAssistant,
     ):
         """Test async_added_to_hass without restore state."""
         entity = TuyaEnergySensorEntity(
@@ -218,7 +219,7 @@ class TestTuyaEnergySensorEntity:
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
-        hass,
+        hass: HomeAssistant,
     ):
         """Test async_added_to_hass with restore state."""
         entity = TuyaEnergySensorEntity(
@@ -253,7 +254,7 @@ class TestTuyaEnergySensorEntity:
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
-        hass,
+        hass: HomeAssistant,
     ):
         """Test async_added_to_hass with invalid restore values."""
         entity = TuyaEnergySensorEntity(
@@ -289,7 +290,7 @@ class TestTuyaEnergySensorEntity:
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
-        hass,
+        hass: HomeAssistant,
     ):
         """Test async_added_to_hass with missing restore attributes."""
         entity = TuyaEnergySensorEntity(
@@ -823,7 +824,7 @@ class TestTuyaEnergySensorEntity:
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
-        hass,
+        hass: HomeAssistant,
     ):
         """Test restore state with unknown state."""
         entity = TuyaEnergySensorEntity(
@@ -855,7 +856,7 @@ class TestTuyaEnergySensorEntity:
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
-        hass,
+        hass: HomeAssistant,
     ):
         """Test restore state with unavailable state."""
         entity = TuyaEnergySensorEntity(
@@ -887,7 +888,7 @@ class TestTuyaEnergySensorEntity:
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
-        hass,
+        hass: HomeAssistant,
     ):
         """Test restore state with no attributes."""
         entity = TuyaEnergySensorEntity(
@@ -910,3 +911,37 @@ class TestTuyaEnergySensorEntity:
         assert entity._cumulative_total == Decimal(0)
         assert entity._last_update_time is None
         assert entity._last_raw_value is None
+
+    def test_timestamp_handling_edge_cases(
+        self,
+        mock_energy_device,
+        mock_energy_description,
+        mock_config_entry_with_incremental,
+        mock_manager,
+    ):
+        """Test edge cases in timestamp handling."""
+        entity = TuyaEnergySensorEntity(
+            mock_energy_device,
+            mock_manager,
+            mock_energy_description,
+            mock_config_entry_with_incremental,
+        )
+
+        # Test edge case: very large timestamp
+        large_timestamp = 9999999999999
+        result = entity._is_new_update(Decimal("10.0"), large_timestamp)
+        assert result is True
+        assert entity._last_update_time == large_timestamp
+
+        # Test edge case: zero timestamp - this should be considered newer than None
+        entity._last_update_time = None  # Reset for next test
+        entity._last_raw_value = None
+        result = entity._is_new_update(Decimal("20.0"), 0)
+        assert result is True
+        assert entity._last_update_time == 0
+
+        # Test edge case: negative timestamp - this should be considered newer than None
+        # but since we already set _last_update_time to 0, it should be False
+        result = entity._is_new_update(Decimal("30.0"), -1000)
+        assert result is False  # Should not be considered new since 0 > -1000
+        assert entity._last_update_time == 0  # Should remain unchanged
