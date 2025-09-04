@@ -236,7 +236,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Get available area and map IDs from vacuum appliance."""
         # Group by area_id: {area_id: {"map_id": ..., "name": ...}}
         areas = {}
-        if self._attr_matter_areas is None:
+        if self._attr_matter_areas is not None:
             for area in self._attr_matter_areas:
                 area_id = getattr(area, "areaID", None)
                 map_id = getattr(area, "mapID", None)
@@ -315,6 +315,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             clusters.ServiceArea.Attributes.SupportedAreas
         )
         # optional CurrentArea attribute
+        # pylint: disable=too-many-nested-blocks
         if self.get_matter_attribute_value(clusters.ServiceArea.Attributes.CurrentArea):
             current_area = self.get_matter_attribute_value(
                 clusters.ServiceArea.Attributes.CurrentArea
