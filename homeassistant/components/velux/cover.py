@@ -104,7 +104,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
-        # do not use the nodes' closed state but rely on cover position
+        # do not use the node's closed state but rely on cover position
         # until https://github.com/Julius2342/pyvlx/pull/543 is merged.
         # once merged this can again return self.node.position.closed
         return self.current_cover_position == 0
