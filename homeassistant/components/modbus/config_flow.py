@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
-from .const import _LOGGER, MODBUS_DOMAIN, MODBUS_UIID
+from .const import MODBUS_DOMAIN, MODBUS_UIID
 
 
 class ModbusConfigFlow(ConfigFlow, domain=MODBUS_DOMAIN):
@@ -26,7 +26,6 @@ class ModbusConfigFlow(ConfigFlow, domain=MODBUS_DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        _LOGGER.error("JAN async_step_user")
         return self.async_abort(reason="no_online_config")
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
