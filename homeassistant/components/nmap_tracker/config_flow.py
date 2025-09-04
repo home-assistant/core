@@ -25,6 +25,7 @@ from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -148,14 +149,19 @@ async def _async_build_schema_with_user_input(
     exclude = user_input.get(
         CONF_EXCLUDE, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
     )
-    mac_exclude = user_input.get(CONF_MAC_EXCLUDE, "")
+    mac_exclude = user_input.get(CONF_MAC_EXCLUDE, [])
+    if isinstance(mac_exclude, str):
+        mac_exclude = mac_exclude.split(",")
+
     schema: VolDictType = {
         vol.Required(CONF_HOSTS, default=hosts): str,
         vol.Required(
             CONF_HOME_INTERVAL, default=user_input.get(CONF_HOME_INTERVAL, 0)
         ): int,
         vol.Optional(CONF_EXCLUDE, default=exclude): str,
-        vol.Optional(CONF_MAC_EXCLUDE, default=mac_exclude): str,
+        vol.Optional(CONF_MAC_EXCLUDE, default=mac_exclude): TextSelector(
+            TextSelectorConfig(multiple=True)
+        ),
         vol.Optional(
             CONF_OPTIONS, default=user_input.get(CONF_OPTIONS, DEFAULT_OPTIONS)
         ): str,
