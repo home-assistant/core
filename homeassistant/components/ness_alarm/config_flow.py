@@ -14,21 +14,19 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
+from .const import (
+    CONF_INFER_ARMING_STATE,
+    CONF_MAX_SUPPORTED_ZONES,
+    CONF_SUPPORT_HOME_ARM,
+    DEFAULT_INFER_ARMING_STATE,
+    DEFAULT_MAX_SUPPORTED_ZONES,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SUPPORT_HOME_ARM,
+    DOMAIN,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-# Domain must match manifest.json
-DOMAIN = "ness_alarm"
-
-# Configuration keys
-CONF_INFER_ARMING_STATE = "infer_arming_state"
-CONF_SUPPORT_HOME_ARM = "support_home_arm"
-CONF_MAX_SUPPORTED_ZONES = "max_supported_zones"
-# Default values
-DEFAULT_PORT = 2401
-DEFAULT_SCAN_INTERVAL = 60
-DEFAULT_MAX_SUPPORTED_ZONES = 16
-DEFAULT_INFER_ARMING_STATE = False
-DEFAULT_SUPPORT_HOME_ARM = True
 
 
 class NessAlarmConfigError(HomeAssistantError):

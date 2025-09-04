@@ -22,35 +22,28 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
+from .const import (
+    CONF_ID,
+    CONF_INFER_ARMING_STATE,
+    CONF_MAX_SUPPORTED_ZONES,
+    CONF_NAME,
+    CONF_SUPPORT_HOME_ARM,
+    CONF_ZONES,
+    DEFAULT_INFER_ARMING_STATE,
+    DEFAULT_MAX_SUPPORTED_ZONES,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SUPPORT_HOME_ARM,
+    DOMAIN,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "ness_alarm"
-
-# Configuration keys
-CONF_INFER_ARMING_STATE = "infer_arming_state"
-CONF_SUPPORT_HOME_ARM = "support_home_arm"
-CONF_ZONES = "zones"
-CONF_PARTITIONS = "partitions"
-CONF_ID = "id"
-CONF_NAME = "name"
-
-CONF_MAX_SUPPORTED_ZONES = "max_supported_zones"
-# Default values
-DEFAULT_MAX_SUPPORTED_ZONES = 16
-# Default values - matching existing YAML defaults
-DEFAULT_PORT = 2401
-DEFAULT_SCAN_INTERVAL = 60  # seconds (matching the 00:01:00 default from YAML)
-DEFAULT_INFER_ARMING_STATE = False  # matching YAML default
-DEFAULT_SUPPORT_HOME_ARM = True  # Changed to True to enable by default
-
-# Signals
 SIGNAL_ZONE_CHANGED = f"{DOMAIN}_zone_changed"
 SIGNAL_ARMING_STATE_CHANGED = f"{DOMAIN}_arming_state_changed"
 
-# Platforms that will be loaded
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 
-# Legacy YAML configuration schema
 ZONE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID): cv.positive_int,
@@ -83,9 +76,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ZONES, default=[]): vol.All(
                     cv.ensure_list, [ZONE_SCHEMA]
                 ),
-                vol.Optional(CONF_PARTITIONS, default=[]): vol.All(
-                    cv.ensure_list, [PARTITION_SCHEMA]
-                ),
             }
         )
     },
@@ -97,12 +87,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ness Alarm component from YAML configuration."""
     hass.data.setdefault(DOMAIN, {})
 
-    # Check if there's a YAML configuration
+    # Check if there's a YAML config for this domain
     if DOMAIN in config:
-        # Import the YAML configuration to a config entry
+        # For backward compatibility, store the YAML config temporarily
+        hass.data[DOMAIN]["yaml_config"] = config[DOMAIN]
+
+        # Import the YAML configuration to create a config entry
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+            )
+        )
+
+        # Load platforms for YAML config (backward compatibility)
+        # This ensures platforms load even before config entry is created
+        hass.async_create_task(
+            async_load_platform(
+                hass,
+                Platform.ALARM_CONTROL_PANEL,
+                DOMAIN,
+                {},  # discovery_info
+                config,  # hass_config
+            )
+        )
+
+        hass.async_create_task(
+            async_load_platform(
+                hass,
+                Platform.BINARY_SENSOR,
+                DOMAIN,
+                {},  # discovery_info
+                config,  # hass_config
             )
         )
 
@@ -156,7 +171,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client.on_zone_change(on_zone_change)
     client.on_state_change(on_state_change)
 
-    # Store the client and configuration BEFORE starting connection
     hass.data[DOMAIN][entry.entry_id] = {
         "client": client,
         "config": {
@@ -167,14 +181,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_SUPPORT_HOME_ARM: support_home_arm,
             CONF_MAX_SUPPORTED_ZONES: max_supported_zones,
             CONF_ZONES: entry.data.get(CONF_ZONES, []),
-            CONF_PARTITIONS: entry.data.get(CONF_PARTITIONS, []),
         },
     }
 
-    # Set up platforms BEFORE starting the connection
+    # Forward setup to platforms - this handles loading platforms for config entries
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Register shutdown handler
     async def handle_shutdown(event) -> None:
         """Handle Home Assistant shutdown."""
         await client.close()
@@ -184,21 +196,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     async def _started(event):
-        # Force update for current arming status and current zone states (once Home Assistant has finished loading required sensors and panel)
         _LOGGER.debug("invoking client keepalive() & update()")
         hass.loop.create_task(client.keepalive())
         hass.loop.create_task(client.update())
 
     async_at_started(hass, _started)
 
-    hass.async_create_task(
-        async_load_platform(hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, {}, {})
-    )
+    # REMOVED the problematic async_load_platform call here
+    # It was redundant since async_forward_entry_setups already handles platform loading
 
-    # Register update listener
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    # Register services
     await async_setup_services(hass)
 
     return True
@@ -210,11 +218,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        # Close the client connection
         data = hass.data[DOMAIN].pop(entry.entry_id)
         await data["client"].close()
 
-        # Remove services if this was the last entry
         if not hass.data[DOMAIN]:
             await async_unload_services(hass)
 
@@ -223,19 +229,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    # Reload the integration when options change
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    if config_entry.version == 1:
-        # Future migration logic here if needed
-        pass
-
-    return True
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
@@ -248,23 +242,23 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         output_id = call.data.get("output_id")
         state = call.data.get("state")
 
-        # Get all configured clients and send the command
         for entry_data in hass.data[DOMAIN].values():
-            client = entry_data.get("client")
-            if client:
-                await client.aux(output_id, state)
+            # Skip the yaml_config key if it exists
+            if isinstance(entry_data, dict) and "client" in entry_data:
+                client = entry_data.get("client")
+                if client:
+                    await client.aux(output_id, state)
 
     async def handle_panic(call: ServiceCall) -> None:
         """Handle panic service call."""
         code = call.data.get("code")
 
-        # Get all configured clients and send the command
         for entry_data in hass.data[DOMAIN].values():
-            client = entry_data.get("client")
-            if client:
-                await client.panic(code)
+            if isinstance(entry_data, dict) and "client" in entry_data:
+                client = entry_data.get("client")
+                if client:
+                    await client.panic(code)
 
-    # Register services
     hass.services.async_register(
         DOMAIN,
         "aux",
