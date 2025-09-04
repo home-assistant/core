@@ -9,8 +9,9 @@ from genie_partner_sdk.client import AladdinConnectClient
 from genie_partner_sdk.model import GarageDoor
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 type AladdinConnectConfigEntry = ConfigEntry[dict[str, AladdinConnectCoordinator]]
@@ -45,14 +46,6 @@ class AladdinConnectCoordinator(DataUpdateCoordinator[GarageDoor]):
             self.client.get_door_status(self.data.device_id, self.data.door_number),
             self.client.get_battery_status(self.data.device_id, self.data.door_number),
         )
-        if status is None:
-            raise UpdateFailed(
-                f"Failed to fetch status for door {self.data.device_id}-{self.data.door_number}"
-            )
-        if battery_level is None:
-            raise UpdateFailed(
-                f"Failed to fetch battery level for door {self.data.device_id}-{self.data.door_number}",
-            )
-        self.data.status = status
-        self.data.battery_level = battery_level
+        self.data.status = status or STATE_UNKNOWN
+        self.data.battery_level = battery_level or 0
         return self.data

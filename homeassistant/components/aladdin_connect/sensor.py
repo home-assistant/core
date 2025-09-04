@@ -28,6 +28,11 @@ class AladdinConnectSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[GarageDoor], float | None]
 
 
+def get_battery_level(garage_door: GarageDoor) -> float | None:
+    """Return battery level or None if falsy."""
+    return garage_door.battery_level or None
+
+
 SENSOR_TYPES: tuple[AladdinConnectSensorEntityDescription, ...] = (
     AladdinConnectSensorEntityDescription(
         key="battery_level",
@@ -36,7 +41,7 @@ SENSOR_TYPES: tuple[AladdinConnectSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda garage_door: garage_door.battery_level,
+        value_fn=get_battery_level,
     ),
 )
 
