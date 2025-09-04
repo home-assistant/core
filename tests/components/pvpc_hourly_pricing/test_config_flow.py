@@ -121,7 +121,6 @@ async def test_config_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "api_token"
     assert pvpc_aioclient_mock.call_count == 2
-
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_API_TOKEN: "test-token"}
     )
