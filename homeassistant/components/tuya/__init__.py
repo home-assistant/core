@@ -227,21 +227,29 @@ class DeviceListener(SharingDeviceListener):
         self.hass = hass
         self.manager = manager
 
-    def update_device(
-        self, device: CustomerDevice, updated_status_properties: list[str] | None
+    # pylint disable can be removed when issue fixed in library
+    # https://github.com/tuya/tuya-device-sharing-sdk/pull/35
+    def update_device(  # pylint: disable=arguments-renamed
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None = None,
+        dp_timestamps: dict | None = None,
     ) -> None:
-        """Update device status."""
+        """Update device status with optional DP timestamps."""
         LOGGER.debug(
-            "Received update for device %s (online: %s): %s (updated properties: %s)",
+            "Received update for device %s (online: %s): %s"
+            " (updated properties: %s, dp_timestamps: %s)",
             device.id,
             device.online,
             device.status,
             updated_status_properties,
+            dp_timestamps,
         )
         dispatcher_send(
             self.hass,
             f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
             updated_status_properties,
+            dp_timestamps,
         )
 
     def add_device(self, device: CustomerDevice) -> None:
