@@ -1465,7 +1465,7 @@ async def test_update_entity_unique_id_conflict(
 async def test_update_entity_entity_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test entity's entity_id is updated for entity with a state."""
+    """Test entity's entity_id is updated for entity with a restored state."""
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
     mock_config.add_to_hass(hass)
     entry = entity_registry.async_get_or_create(
@@ -1475,7 +1475,7 @@ async def test_update_entity_entity_id(
     assert (
         entity_registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
     )
-    hass.states.async_set(entry.entity_id, "on")
+    hass.states.async_set(entry.entity_id, "on", attributes={"restored": True})
     state = hass.states.get(entry.entity_id)
     assert state is not None
     assert state.state == "on"
@@ -1493,11 +1493,9 @@ async def test_update_entity_entity_id(
     assert entity_registry.async_get(entry.entity_id) is None
     assert entity_registry.async_get(new_entity_id) is not None
 
+    # The restored state should be removed
     old_state = hass.states.get(entry.entity_id)
     assert old_state is None
-    new_state = hass.states.get(new_entity_id)
-    assert new_state is not None
-    assert new_state.state == "on"
 
 
 async def test_update_entity_entity_id_without_state(
