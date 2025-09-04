@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Final
-
 from aioesphomeapi import EntityInfo, SelectInfo, SelectState
 
 from homeassistant.components.assist_pipeline.select import (
@@ -18,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, NO_WAKE_WORD
 from .entity import (
     EsphomeAssistEntity,
     EsphomeEntity,
@@ -29,7 +27,6 @@ from .entity import (
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
 PARALLEL_UPDATES = 0
-NO_WAKE_WORD: Final[str] = "no_wake_word"
 
 
 async def async_setup_entry(

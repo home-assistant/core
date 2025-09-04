@@ -37,6 +37,7 @@ from homeassistant.components.assist_satellite import (
 # pylint: disable-next=hass-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.esphome.assist_satellite import VoiceAssistantUDPServer
+from homeassistant.components.esphome.const import NO_WAKE_WORD
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
@@ -1884,10 +1885,10 @@ async def test_wake_word_select(
     assert satellite is not None
     assert satellite.async_get_configuration().active_wake_words == ["hey_jarvis"]
 
-    # Active wake word should be selected
+    # No wake word should be selected by default
     state = hass.states.get("select.test_wake_word")
     assert state is not None
-    assert state.state == "Hey Jarvis"
+    assert state.state == NO_WAKE_WORD
 
     # Changing the select should set the active wake word
     await hass.services.async_call(
