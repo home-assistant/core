@@ -1,7 +1,5 @@
 """Tests for the modbus config flow."""
 
-import pytest
-
 from homeassistant.components.modbus.const import MODBUS_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -15,7 +13,17 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         MODBUS_DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result
+    assert result["type"] is FlowResultType.ABORT
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+) -> None:
+    """Test the reconfigure configuration flow."""
+    mock_config_entry = MockConfigEntry(domain=MODBUS_DOMAIN)
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_import_flow(
@@ -32,31 +40,3 @@ async def test_import_flow(
     assert result.get("title") == "modbus_integration"
     assert result.get("data") == {}
     assert result.get("options") == {}
-
-
-async def test_reconfigure_flow(
-    hass: HomeAssistant,
-) -> None:
-    """Test the reconfigure configuration flow."""
-    mock_config_entry = MockConfigEntry(domain=MODBUS_DOMAIN)
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
-@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
-async def xtest_multiple_instances_allowed(
-    hass: HomeAssistant,
-    source: str,
-) -> None:
-    """Test we abort if already setup."""
-    mock_config_entry = MockConfigEntry(domain=MODBUS_DOMAIN)
-
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        MODBUS_DOMAIN, context={"source": source}
-    )
-
-    assert result.get("type") is FlowResultType.FORM
