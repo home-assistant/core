@@ -371,6 +371,7 @@ FLOWS = {
         "mailgun",
         "mastodon",
         "matter",
+        "mawaqit",
         "mcp",
         "mcp_server",
         "mealie",
