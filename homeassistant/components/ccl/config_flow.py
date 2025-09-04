@@ -5,7 +5,6 @@ from __future__ import annotations
 import secrets
 from typing import Any
 
-from aioccl import CCLServer
 from yarl import URL
 
 from homeassistant.components import webhook
@@ -34,9 +33,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         path = webhook.async_generate_path(webhook_id)
 
         if user_input is not None:
-            identifier = CCLServer.devices[webhook_id].device_id
-
-            await self.async_set_unique_id(identifier)
+            await self.async_set_unique_id(webhook_id)
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(

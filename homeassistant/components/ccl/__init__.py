@@ -74,14 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
 
     entry.async_create_background_task(hass, register_webhook(), "ccl_register_webhook")
 
-    try:
-        CCLServer.register(device)
-    except CCLDeviceRegistrationException:
-        _LOGGER.debug(
-            "Device with webhook ID %s is already registered",
-            entry.data[CONF_WEBHOOK_ID],
-        )
-
     @callback
     def push_update_callback(data) -> None:
         """Handle data pushed from the device."""
