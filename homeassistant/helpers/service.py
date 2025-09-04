@@ -1134,12 +1134,8 @@ def async_register_entity_service(
     if schema is None or isinstance(schema, dict):
         schema = cv.make_entity_service_schema(schema)
     elif not cv.is_entity_service_schema(schema):
-        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
-
-        report_usage(
-            "registers an entity service with a non entity service schema",
-            core_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2025.9",
+        raise HomeAssistantError(
+            f"The {domain}.{name} service registers an entity service with a non entity service schema"
         )
 
     service_func: str | HassJob[..., Any]
