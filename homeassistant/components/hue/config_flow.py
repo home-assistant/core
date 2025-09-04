@@ -85,7 +85,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
                     # Hue bridge uses a certificate from a on-bridge root authority.
                     # We need to specifically handle this case in a follow-up update.
                     self.hass,
-                    verify_ssl=True,
+                    verify_ssl=False,
                 ),
             )
         except aiohttp.ClientError as err:
