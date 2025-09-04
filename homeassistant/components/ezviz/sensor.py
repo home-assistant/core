@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -143,4 +143,4 @@ class EzvizSensor(EzvizEntity, SensorEntity):
         if self._sensor_name == "Record_Mode" and isinstance(value, dict):
             value = value.get("mode")
 
-        return value
+        return value if value is not None else STATE_UNAVAILABLE
