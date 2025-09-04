@@ -145,19 +145,20 @@ def normalize_input(user_input: dict[str, Any]) -> dict[str, str]:
 async def _async_build_schema_with_user_input(
     hass: HomeAssistant, user_input: dict[str, Any], include_options: bool
 ) -> vol.Schema:
-    hosts = user_input.get(CONF_HOSTS, await async_get_network(hass))
-    ip_exclude = user_input.get(
-        CONF_EXCLUDE, [await network.async_get_source_ip(hass, MDNS_TARGET_IP)]
+    hosts = cv.ensure_list_csv(
+        user_input.get(CONF_HOSTS, await async_get_network(hass))
     )
-    if isinstance(ip_exclude, str):
-        ip_exclude = ip_exclude.split(",")
-
-    mac_exclude = user_input.get(CONF_MAC_EXCLUDE, [])
-    if isinstance(mac_exclude, str):
-        mac_exclude = mac_exclude.split(",")
+    ip_exclude = cv.ensure_list_csv(
+        user_input.get(
+            CONF_EXCLUDE, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
+        )
+    )
+    mac_exclude = cv.ensure_list_csv(user_input.get(CONF_MAC_EXCLUDE, []))
 
     schema: VolDictType = {
-        vol.Required(CONF_HOSTS, default=hosts): str,
+        vol.Required(CONF_HOSTS, default=hosts): TextSelector(
+            TextSelectorConfig(multiple=True)
+        ),
         vol.Required(
             CONF_HOME_INTERVAL, default=user_input.get(CONF_HOME_INTERVAL, 0)
         ): int,
