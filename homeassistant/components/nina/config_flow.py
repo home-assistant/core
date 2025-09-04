@@ -20,6 +20,7 @@ from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     _LOGGER,
+    ALL_MATCH_REGEX,
     CONF_AREA_FILTER,
     CONF_HEADLINE_FILTER,
     CONF_MESSAGE_SLOTS,
@@ -126,9 +127,6 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                 if group_input := user_input.get(group):
                     user_input[CONF_REGIONS] += group_input
 
-            if not user_input[CONF_HEADLINE_FILTER]:
-                user_input[CONF_HEADLINE_FILTER] = NO_MATCH_REGEX
-
             if user_input[CONF_REGIONS]:
                 return self.async_create_entry(
                     title="NINA",
@@ -150,7 +148,10 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_MESSAGE_SLOTS, default=5): vol.All(
                         int, vol.Range(min=1, max=20)
                     ),
-                    vol.Optional(CONF_HEADLINE_FILTER, default=""): cv.string,
+                    vol.Optional(
+                        CONF_HEADLINE_FILTER, default=NO_MATCH_REGEX
+                    ): cv.string,
+                    vol.Optional(CONF_AREA_FILTER, default=ALL_MATCH_REGEX): cv.string,
                 }
             ),
             errors=errors,
