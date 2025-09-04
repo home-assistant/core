@@ -119,7 +119,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                "docs_url": "https://help.energyid.eu/nl/integraties/home-assistant/"
+                "docs_url": "https://app.energyid.eu/integrations/home-assistant"
             },
         )
 
