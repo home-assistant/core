@@ -409,3 +409,67 @@ async def test_options_flow_with_energy_sensors(
             result9["flow_id"],
             user_input={"Test Device 1 [test_device_1] [Energy]": "invalid_mode"},
         )
+
+
+async def test_options_flow_coverage_remaining_lines(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test specific scenarios to cover lines 351 and 357."""
+    # Add mock config entry
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a device with wrong domain identifiers to test line 357
+    device_registry = dr.async_get(hass)
+    device_wrong_domain = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("wrong_domain", "test_device_wrong")},  # No tuya domain
+        name="Device Wrong Domain",
+        manufacturer="Other",
+    )
+
+    # Create an entity for this device to trigger the filtering logic
+    entity_registry = er.async_get(hass)
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="tuya",
+        unique_id="test_entity_wrong_domain",
+        config_entry=mock_config_entry,
+        device_id=device_wrong_domain.id,
+        original_device_class=SensorDeviceClass.ENERGY,
+        capabilities={"state_class": "total_increasing"},
+        original_name="Energy Wrong Domain",
+    )
+
+    # Create a valid device to ensure the flow works
+    device_valid = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "test_device_valid")},
+        name="Device Valid",
+        manufacturer="Tuya",
+    )
+
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="tuya",
+        unique_id="test_entity_valid",
+        config_entry=mock_config_entry,
+        device_id=device_valid.id,
+        original_device_class=SensorDeviceClass.ENERGY,
+        capabilities={"state_class": "total_increasing"},
+        original_name="Energy Valid",
+    )
+
+    # Start options flow to trigger the filtering logic
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "init"
+
+    # Configure with empty input
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert "device_energy_modes" in result2.get("data", {})

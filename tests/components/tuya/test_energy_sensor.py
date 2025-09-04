@@ -945,3 +945,74 @@ class TestTuyaEnergySensorEntity:
         result = entity._is_new_update(Decimal("30.0"), -1000)
         assert result is False  # Should not be considered new since 0 > -1000
         assert entity._last_update_time == 0  # Should remain unchanged
+
+    def test_process_incremental_update_direct_call(
+        self,
+        mock_energy_device,
+        mock_energy_description,
+        mock_config_entry_with_incremental,
+        mock_manager,
+    ):
+        """Test _process_incremental_update method directly to cover lines 1872-1887."""
+        entity = TuyaEnergySensorEntity(
+            mock_energy_device,
+            mock_manager,
+            mock_energy_description,
+            mock_config_entry_with_incremental,
+        )
+
+        # Test case 1: raw_value is None
+        with patch.object(
+            entity.__class__.__bases__[0],
+            "native_value",
+            new_callable=PropertyMock,
+            return_value=None,
+        ):
+            entity._process_incremental_update(1234567890)
+        assert entity._cumulative_total == Decimal(0)  # Should not change
+
+        # Test case 2: raw_value is invalid (non-numeric string)
+        with patch.object(
+            entity.__class__.__bases__[0],
+            "native_value",
+            new_callable=PropertyMock,
+            return_value="invalid",
+        ):
+            entity._process_incremental_update(1234567890)
+        assert entity._cumulative_total == Decimal(0)  # Should not change
+
+        # Test case 3: raw_value is negative
+        with patch.object(
+            entity.__class__.__bases__[0],
+            "native_value",
+            new_callable=PropertyMock,
+            return_value="-5.0",
+        ):
+            entity._process_incremental_update(1234567890)
+        assert entity._cumulative_total == Decimal(0)  # Should not change
+
+        # Test case 4: raw_value is valid and _is_new_update returns True
+        with (
+            patch.object(
+                entity.__class__.__bases__[0],
+                "native_value",
+                new_callable=PropertyMock,
+                return_value="10.5",
+            ),
+            patch.object(entity, "_is_new_update", return_value=True),
+        ):
+            entity._process_incremental_update(1234567890)
+        assert entity._cumulative_total == Decimal("10.5")  # Should accumulate
+
+        # Test case 5: raw_value is valid but _is_new_update returns False
+        with (
+            patch.object(
+                entity.__class__.__bases__[0],
+                "native_value",
+                new_callable=PropertyMock,
+                return_value="15.0",
+            ),
+            patch.object(entity, "_is_new_update", return_value=False),
+        ):
+            entity._process_incremental_update(1234567890)
+        assert entity._cumulative_total == Decimal("10.5")  # Should not change
