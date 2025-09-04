@@ -3,9 +3,15 @@
 import pytest
 from pytest_unordered import unordered
 
+from homeassistant import setup
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.device_tracker.device_condition import (
+    CONDITION_TYPES,
+    ZONE_CONDITION_TYPES,
+)
+from homeassistant.components.zone import DOMAIN as DOMAIN_ZONE
 from homeassistant.const import STATE_HOME, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -14,10 +20,33 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_get_device_automations
 
+AWAY_LATITUDE = 32.881011
+AWAY_LONGITUDE = -117.234758
+
+HOME_LATITUDE = 32.880837
+HOME_LONGITUDE = -117.237561
+
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
+
+
+@pytest.fixture(autouse=True)
+async def setup_zone(hass: HomeAssistant) -> None:
+    """Create test zone."""
+    await setup.async_setup_component(
+        hass,
+        DOMAIN_ZONE,
+        {
+            "zone": {
+                "name": "test",
+                "latitude": HOME_LATITUDE,
+                "longitude": HOME_LONGITUDE,
+                "radius": 250,
+            }
+        },
+    )
 
 
 async def test_get_conditions(
@@ -44,7 +73,7 @@ async def test_get_conditions(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for condition in ("is_not_home", "is_home")
+        for condition in {*CONDITION_TYPES, *ZONE_CONDITION_TYPES}
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -92,12 +121,130 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in ("is_not_home", "is_home")
+        for condition in {*CONDITION_TYPES, *ZONE_CONDITION_TYPES}
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
     assert conditions == unordered(expected_conditions)
+
+
+async def test_in_zone(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for in zone conditions."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        entry.entity_id,
+        STATE_HOME,
+        {"latitude": HOME_LATITUDE, "longitude": HOME_LONGITUDE},
+    )
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
+                            "type": "is_in_zone",
+                            "zone": "zone.test",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "is_in_zone "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "is_in_zone - event - test_event1"
+
+
+async def test_not_in_zone(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for not in zone conditions."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        entry.entity_id,
+        STATE_HOME,
+        {"latitude": AWAY_LATITUDE, "longitude": AWAY_LONGITUDE},
+    )
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
+                            "type": "is_not_in_zone",
+                            "zone": "zone.test",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "is_not_in_zone "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "is_not_in_zone - event - test_event1"
 
 
 async def test_if_state(
