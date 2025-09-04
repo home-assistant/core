@@ -1,4 +1,57 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Ness Alarm",
+        "description": "Set up your Ness D8x/D16x alarm panel connection.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "scan_interval": "Scan Interval (seconds)",
+          "infer_arming_state": "Infer Arming State",
+          "support_home_arm": "Support Home Arm Mode",
+          "max_supported_zones": "Max Zone Count"
+        },
+        "data_description": {
+          "host": "The hostname of the IP232 module on your home network",
+          "port": "The port on which the IP232 module listens for clients",
+          "scan_interval": "Time interval between updates in seconds (default: 60 seconds)",
+          "infer_arming_state": "Infer the disarmed arming state only via system status events. This works around a bug with some panels (version less than 5.8) which emit empty status updates when they are armed",
+          "support_home_arm": "Enable support for Home arming mode (ARM_HOME feature)",
+          "max_supported_zones": "Max amount of zones supported by your panel"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the IP232 module",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "This Ness alarm panel is already configured",
+      "cannot_connect": "Failed to connect to the IP232 module during import"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ness Alarm Options",
+        "description": "Adjust settings for your Ness alarm panel.",
+        "data": {
+          "scan_interval": "Scan Interval (seconds)",
+          "infer_arming_state": "Infer Arming State",
+          "support_home_arm": "Support Home Arm Mode",
+          "max_supported_zones": "Max Zone Count"
+        },
+        "data_description": {
+          "scan_interval": "Time interval between updates in seconds",
+          "infer_arming_state": "Infer the disarmed arming state only via system status events. This works around a bug with some panels (version less than 5.8) which emit empty status updates when they are armed",
+          "support_home_arm": "Enable support for Home arming mode (ARM_HOME feature)",
+          "max_supported_zones": "Max amount of zones supported by your panel"
+        }
+      }
+    }
+  },
   "services": {
     "aux": {
       "name": "Aux",

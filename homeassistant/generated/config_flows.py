@@ -416,6 +416,7 @@ FLOWS = {
         "nanoleaf",
         "nasweb",
         "neato",
+        "ness_alarm",
         "nest",
         "netatmo",
         "netgear",
