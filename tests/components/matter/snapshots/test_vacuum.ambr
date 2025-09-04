@@ -38,8 +38,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_area': None,
+      'current_area_name': None,
       'friendly_name': 'K11+',
-      'selected_areas': None,
+      'selected_areas': list([
+        4,
+        3,
+      ]),
       'supported_features': <VacuumEntityFeature: 12316>,
     }),
     'context': <ANY>,
@@ -88,10 +92,10 @@
 # name: test_vacuum[vacuum_cleaner][vacuum.mock_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_area': 'My Location A',
+      'current_area': 7,
+      'current_area_name': 'My Location A',
       'friendly_name': 'Mock Vacuum',
-      'selected_areas': list([
-      ]),
+      'selected_areas': None,
       'supported_features': <VacuumEntityFeature: 12316>,
     }),
     'context': <ANY>,

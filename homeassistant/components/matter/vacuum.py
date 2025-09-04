@@ -34,6 +34,7 @@ from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 ATTR_CURRENT_AREA = "current_area"
+ATTR_CURRENT_AREA_NAME = "current_area_name"
 ATTR_SELECTED_AREAS = "selected_areas"
 
 
@@ -106,6 +107,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     ) = None
     _attr_areas: dict[str, Any] | None = None
     _attr_current_area: int | None = None
+    _attr_current_area_name: str | None = None
     _attr_selected_areas: list[int] | None = None
     _attr_supported_maps: list[dict[str, Any]] | None = None
     entity_description: StateVacuumEntityDescription
@@ -116,8 +118,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Return the state attributes of the entity."""
         return {
             ATTR_CURRENT_AREA: self._attr_current_area,
+            ATTR_CURRENT_AREA_NAME: self._attr_current_area_name,
             ATTR_SELECTED_AREAS: self._attr_selected_areas,
-            # ATTR_AREAS: self._attr_areas,
         }
 
     def _get_run_mode_by_tag(
@@ -323,14 +325,16 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             current_area = self.get_matter_attribute_value(
                 clusters.ServiceArea.Attributes.CurrentArea
             )
+            self._attr_current_area = current_area
             # get the current area "name" attribute from the areas dict if exists or return the area ID
-            self._attr_current_area = (
-                self._attr_areas["areas"].get(current_area, {}).get("name")
-                or current_area
+            self._attr_current_area_name = (
+                self._attr_areas["areas"].get(current_area, {}).get("name") or None
             )
 
         # optional SelectedAreas attribute
-        if self.get_matter_attribute_value(clusters.ServiceArea.Attributes.CurrentArea):
+        if self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.SelectedAreas
+        ):
             self._attr_selected_areas = self.get_matter_attribute_value(
                 clusters.ServiceArea.Attributes.SelectedAreas
             )

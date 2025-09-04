@@ -11,6 +11,11 @@ from homeassistant.components.matter.const import (
     SERVICE_CLEAN_AREA,
     SERVICE_SELECT_AREAS,
 )
+from homeassistant.components.matter.vacuum import (
+    ATTR_CURRENT_AREA,
+    ATTR_CURRENT_AREA_NAME,
+    ATTR_SELECTED_AREAS,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -256,6 +261,19 @@ async def test_k11_vacuum_service_area(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
+
+    selected_areas = [1, 3]
+    set_node_attribute(matter_node, 1, 336, 2, selected_areas)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_SELECTED_AREAS] == selected_areas
+
+    # ServiceArea.Attributes.CurrentArea (1/336/3)
+    set_node_attribute(matter_node, 1, 336, 3, 4)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_CURRENT_AREA] == 4
+    assert state.attributes[ATTR_CURRENT_AREA_NAME] == "Bedroom #3"
 
 
 @pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
