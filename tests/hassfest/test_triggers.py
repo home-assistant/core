@@ -9,7 +9,9 @@ import pytest
 
 from homeassistant.util.yaml.loader import parse_yaml
 from script.hassfest import triggers
-from script.hassfest.model import Config, Integration
+from script.hassfest.model import Config
+
+from . import get_integration
 
 TRIGGER_DESCRIPTION_FILENAME = "triggers.yaml"
 TRIGGER_ICONS_FILENAME = "icons.json"
@@ -105,38 +107,6 @@ TRIGGER_DESCRIPTIONS = {
         ],
     },
 }
-
-
-@pytest.fixture
-def config():
-    """Fixture for hassfest Config."""
-    return Config(
-        root=Path(".").absolute(),
-        specific_integrations=None,
-        action="validate",
-        requirements=True,
-    )
-
-
-@pytest.fixture
-def mock_core_integration():
-    """Mock Integration to be a core one."""
-    with patch.object(Integration, "core", return_value=True):
-        yield
-
-
-def get_integration(domain: str, config: Config):
-    """Fixture for hassfest integration model."""
-    return Integration(
-        Path(domain),
-        _config=config,
-        _manifest={
-            "domain": domain,
-            "name": domain,
-            "documentation": "https://example.com",
-            "codeowners": ["@awesome"],
-        },
-    )
 
 
 @pytest.mark.usefixtures("mock_core_integration")
