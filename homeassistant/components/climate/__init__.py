@@ -25,7 +25,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.temperature import display_temp, display_temp_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -312,12 +312,18 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         data: dict[str, Any] = {
             ATTR_HVAC_MODES: self.hvac_modes,
-            ATTR_MIN_TEMP: show_temp(hass, self.min_temp, temperature_unit, precision),
-            ATTR_MAX_TEMP: show_temp(hass, self.max_temp, temperature_unit, precision),
+            ATTR_MIN_TEMP: display_temp(
+                hass, self.min_temp, temperature_unit, precision
+            ),
+            ATTR_MAX_TEMP: display_temp(
+                hass, self.max_temp, temperature_unit, precision
+            ),
         }
 
         if target_temperature_step := self.target_temperature_step:
-            data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
+            data[ATTR_TARGET_TEMP_STEP] = display_temp_interval(
+                hass, target_temperature_step, temperature_unit, precision
+            )
 
         if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
             data[ATTR_MIN_HUMIDITY] = self.min_humidity
@@ -347,13 +353,13 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         hass = self.hass
 
         data: dict[str, str | float | None] = {
-            ATTR_CURRENT_TEMPERATURE: show_temp(
+            ATTR_CURRENT_TEMPERATURE: display_temp(
                 hass, self.current_temperature, temperature_unit, precision
             ),
         }
 
         if ClimateEntityFeature.TARGET_TEMPERATURE in supported_features:
-            data[ATTR_TEMPERATURE] = show_temp(
+            data[ATTR_TEMPERATURE] = display_temp(
                 hass,
                 self.target_temperature,
                 temperature_unit,
@@ -361,10 +367,10 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         if ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in supported_features:
-            data[ATTR_TARGET_TEMP_HIGH] = show_temp(
+            data[ATTR_TARGET_TEMP_HIGH] = display_temp(
                 hass, self.target_temperature_high, temperature_unit, precision
             )
-            data[ATTR_TARGET_TEMP_LOW] = show_temp(
+            data[ATTR_TARGET_TEMP_LOW] = display_temp(
                 hass, self.target_temperature_low, temperature_unit, precision
             )
 
