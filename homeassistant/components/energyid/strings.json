@@ -30,6 +30,9 @@
   },
   "config_subentries": {
     "sensor_mapping": {
+      "initiate_flow": {
+        "user": "Add sensor mapping"
+      },
       "step": {
         "user": {
           "title": "Add sensor mapping",
