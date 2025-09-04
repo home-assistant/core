@@ -28,6 +28,15 @@ async def async_setup_entry(
         )
 
 
+# Mapping between AutoLockMode and string representation
+AUTO_LOCK_MODE_TO_OPTION = {
+    AutoLockMode.OFF: "off",
+    AutoLockMode.TIMER: "timer",
+    AutoLockMode.INSTANT: "instant",
+}
+OPTION_TO_AUTO_LOCK_MODE = {v: k for k, v in AUTO_LOCK_MODE_TO_OPTION.items()}
+
+
 class YaleXSBLEAutoLockModeSelect(YALEXSBLEEntity, SelectEntity):
     """A yale xs ble auto lock mode selector."""
 
@@ -52,21 +61,17 @@ class YaleXSBLEAutoLockModeSelect(YALEXSBLEEntity, SelectEntity):
         if self._device.auto_lock is None:
             return None
         mode = self._device.auto_lock.mode
-        if mode == AutoLockMode.OFF:
-            return "off"
-        if mode == AutoLockMode.TIMER:
-            return "timer"
-        if mode == AutoLockMode.INSTANT:
-            return "instant"
-        raise ValueError(f"Unknown AutoLockMode: {mode}")
+        try:
+            return AUTO_LOCK_MODE_TO_OPTION[mode]
+        except KeyError as err:
+            raise ValueError(f"Unknown AutoLockMode: {mode}") from err
 
     async def async_select_option(self, option: str) -> None:
         """Change the auto lock mode."""
-        mode = AutoLockMode.OFF
-        if option == "timer":
-            mode = AutoLockMode.TIMER
-        elif option == "instant":
-            mode = AutoLockMode.INSTANT
+        try:
+            mode = OPTION_TO_AUTO_LOCK_MODE[option]
+        except KeyError as err:
+            raise ValueError(f"Unknown auto lock mode option: {option}") from err
         await self._device.set_auto_lock_mode(mode)
 
 
