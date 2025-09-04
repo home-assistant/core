@@ -17,7 +17,6 @@ import secrets
 from time import monotonic
 from typing import Any, Final, Generic, Protocol, TypeVar
 
-import aiohttp
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
@@ -127,6 +126,8 @@ _RE_VOICE_FILE = re.compile(
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
 
 SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
+
+FFMPEG_CHUNK_SIZE: Final[int] = 4096
 
 
 class TTSCache:
@@ -369,10 +370,9 @@ async def _async_convert_audio(
     )
 
     assert process.stdout
-    chunk_size = 4096
     try:
         while True:
-            chunk = await process.stdout.read(chunk_size)
+            chunk = await process.stdout.read(FFMPEG_CHUNK_SIZE)
             if not chunk:
                 break
             yield chunk
@@ -486,11 +486,10 @@ class ResultStream:
     options: dict
     supports_streaming_input: bool
 
-    hass: HomeAssistant
-
     _manager: SpeechManager
 
     # Override
+    hass: HomeAssistant
     _override_media_id: str | None = None
 
     @cached_property
@@ -545,11 +544,9 @@ class ResultStream:
     async def async_stream_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of this result."""
         if self._override_media_id is not None:
-            media = await async_resolve_media(self.hass, self._override_media_id)
-            session = async_get_clientsession(self.hass)
-            async with session.get(media.url) as response:
-                async for chunk in response.content:
-                    yield chunk
+            # Overridden
+            async for chunk in self._async_stream_override_result():
+                yield chunk
 
             self.last_used = monotonic()
             return
@@ -561,7 +558,70 @@ class ResultStream:
         self.last_used = monotonic()
 
     def async_override_result(self, media_id: str) -> None:
+        """Override the TTS stream with a different media id."""
         self._override_media_id = media_id
+
+    async def _async_stream_override_result(self) -> AsyncGenerator[bytes]:
+        """Get the stream of the overridden result."""
+        assert self._override_media_id is not None
+        media = await async_resolve_media(self.hass, self._override_media_id)
+
+        # Determine if we need to do audio conversion
+        preferred_extension: str | None = self.options.get(ATTR_PREFERRED_FORMAT)
+        sample_rate: int | None = self.options.get(ATTR_PREFERRED_SAMPLE_RATE)
+        sample_channels: int | None = self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
+        sample_bytes: int | None = self.options.get(ATTR_PREFERRED_SAMPLE_BYTES)
+
+        needs_conversion = (
+            preferred_extension
+            or (sample_rate is not None)
+            or (sample_channels is not None)
+            or (sample_bytes is not None)
+        )
+
+        if not needs_conversion:
+            # Stream directly from URL (no conversion)
+            session = async_get_clientsession(self.hass)
+            async with session.get(media.url) as response:
+                async for chunk in response.content:
+                    yield chunk
+
+            return
+
+        # Use ffmpeg to convert and stream
+        ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
+        command = [
+            ffmpeg_manager.binary,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-i",
+            media.url,
+        ]
+
+        if preferred_extension:
+            command.extend(["-f", preferred_extension])
+        if sample_rate is not None:
+            command.extend(["-ar", str(sample_rate)])
+        if sample_channels is not None:
+            command.extend(["-ac", str(sample_channels)])
+        if preferred_extension == "mp3":
+            # Max quality for MP3.
+            command.extend(["-q:a", "0"])
+        if sample_bytes == 2:
+            # 16-bit samples.
+            command.extend(["-sample_fmt", "s16"])
+        command.append("pipe:1")  # Send output to stdout.
+
+        process = await asyncio.create_subprocess_exec(
+            *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL
+        )
+        assert process.stdout
+        while True:
+            chunk = await process.stdout.read(FFMPEG_CHUNK_SIZE)
+            if not chunk:
+                break
+            yield chunk
 
 
 def _hash_options(options: dict) -> str:
