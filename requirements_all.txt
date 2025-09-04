@@ -2992,7 +2992,7 @@ ttls==1.8.3
 ttn_client==1.2.0
 
 # homeassistant.components.tuya
-tuya-device-sharing-sdk==0.2.1
+tuya-device-sharing-sdk==0.2.3
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.2.1
