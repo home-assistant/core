@@ -129,7 +129,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
 
 async def test_async_unload_entry(hass: HomeAssistant) -> None:
     """Test unloading a config entry."""
-    # Setup a matrix bot in hass.data
+    # Setup a matrix bot in runtime_data
     mock_matrix_bot = Mock()
     mock_matrix_bot.async_close = AsyncMock()
     hass.data[DOMAIN] = mock_matrix_bot
@@ -144,6 +144,8 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
             "verify_ssl": True,
         },
     )
+    # Set runtime_data to simulate proper setup
+    entry.runtime_data = mock_matrix_bot
 
     result = await async_unload_entry(hass, entry)
 

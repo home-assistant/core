@@ -170,7 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Matrix from a config entry."""
     # For config entry setup, we'll use minimal configuration
     # Users can add rooms and commands via services or future UI
-    hass.data[DOMAIN] = MatrixBot(
+    matrix_bot = MatrixBot(
         hass,
         os.path.join(hass.config.path(), f".matrix_{entry.entry_id}.conf"),
         entry.data[CONF_HOMESERVER],
@@ -181,14 +181,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         [],  # No commands configured initially
     )
 
+    # Store in runtime_data for quality scale compliance
+    entry.runtime_data = matrix_bot
+    hass.data[DOMAIN] = matrix_bot
+
     async_setup_services(hass)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if matrix_bot := hass.data.get(DOMAIN):
-        await matrix_bot.async_close()
+    # Close the MatrixBot stored in runtime_data
+    if hasattr(entry, "runtime_data") and entry.runtime_data:
+        await entry.runtime_data.async_close()
 
     hass.data.pop(DOMAIN, None)
     return True

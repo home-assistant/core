@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["matrix_client"],
-  "quality_scale": "legacy",
+  "quality_scale": "bronze",
   "requirements": ["matrix-nio==0.25.2", "Pillow==11.3.0"]
 }
