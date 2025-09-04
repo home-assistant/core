@@ -1344,7 +1344,9 @@ _ENTITY_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     # of static and dynamic templates. While this could be solved with a single
     # complex template, handling it like this, keeps config validation useful.
     vol.Optional(ATTR_ENTITY_ID): vol.Any(
-        comp_entity_ids, dynamic_template, vol.All(list, template_complex)
+        comp_entity_ids,
+        dynamic_template,
+        vol.All(list, template_complex),
     ),
     vol.Optional(ATTR_DEVICE_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
@@ -1365,7 +1367,9 @@ TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     # by entity registry ID.
     **_ENTITY_SERVICE_FIELDS_TEMPLATED,
     vol.Optional(ATTR_ENTITY_ID): vol.Any(
-        comp_entity_ids_or_uuids, dynamic_template, vol.All(list, template_complex)
+        comp_entity_ids_or_uuids,
+        dynamic_template,
+        vol.All(list, template_complex),
     ),
 }
 
