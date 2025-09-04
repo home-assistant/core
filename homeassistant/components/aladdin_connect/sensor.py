@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from genie_partner_sdk.model import GarageDoor
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -17,14 +19,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
 from .entity import AladdinConnectEntity
-from .models import AladdinConnectGarageDoor
 
 
 @dataclass(frozen=True, kw_only=True)
 class AladdinConnectSensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for Aladdin Connect."""
 
-    value_fn: Callable[[AladdinConnectGarageDoor], float | None]
+    value_fn: Callable[[GarageDoor], float | None]
 
 
 SENSOR_TYPES: tuple[AladdinConnectSensorEntityDescription, ...] = (
