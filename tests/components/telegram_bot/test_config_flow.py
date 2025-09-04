@@ -1,11 +1,14 @@
 """Config flow tests for the Telegram Bot integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from telegram import ChatFullInfo, User
 from telegram.constants import AccentColor
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
+from homeassistant.auth.models import User as HassUser
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
     BOT_NAME,
@@ -14,6 +17,7 @@ from homeassistant.components.telegram_bot.const import (
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
+    CONF_USER_ID,
     DOMAIN,
     ERROR_FIELD,
     ERROR_MESSAGE,
@@ -26,7 +30,12 @@ from homeassistant.components.telegram_bot.const import (
     SECTION_ADVANCED_SETTINGS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigSubentry
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_USER,
+    ConfigSubentry,
+    ConfigSubentryData,
+)
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -359,8 +368,30 @@ async def test_reauth_flow(
     assert mock_webhooks_config_entry.data[CONF_API_KEY] == "new mock api key"
 
 
+@pytest.mark.parametrize(
+    ("user_input", "expected_data"),
+    [
+        (
+            {CONF_CHAT_ID: 987654321, CONF_USER_ID: "aabbccddeeff00112233445566778899"},
+            {
+                CONF_CHAT_ID: 987654321,
+                CONF_USER_ID: "aabbccddeeff00112233445566778899",
+            },
+        ),
+        (
+            {CONF_CHAT_ID: 987654321, CONF_USER_ID: "unspecified"},
+            {
+                CONF_CHAT_ID: 987654321,
+                CONF_USER_ID: None,
+            },
+        ),
+    ],
+)
 async def test_subentry_flow(
-    hass: HomeAssistant, mock_broadcast_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    user_input: dict[str, Any],
+    expected_data: dict[str, Any],
 ) -> None:
     """Test subentry flow."""
     mock_broadcast_config_entry.add_to_hass(hass)
@@ -374,10 +405,21 @@ async def test_subentry_flow(
         )
         await hass.async_block_till_done()
 
-    result = await hass.config_entries.subentries.async_init(
-        (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
-        context={"source": SOURCE_USER},
-    )
+    with patch.object(
+        hass.auth,
+        "async_get_users",
+        return_value=[
+            HassUser(
+                id="aabbccddeeff00112233445566778899",
+                name="Test User",
+                perm_lookup=False,
+            )
+        ],
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
+            context={"source": SOURCE_USER},
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -394,7 +436,7 @@ async def test_subentry_flow(
     ):
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input={CONF_CHAT_ID: 987654321},
+            user_input=user_input,
         )
         await hass.async_block_till_done()
 
@@ -405,7 +447,7 @@ async def test_subentry_flow(
     assert subentry.subentry_type == SUBENTRY_TYPE_ALLOWED_CHAT_IDS
     assert subentry.title == "mock title (987654321)"
     assert subentry.unique_id == "987654321"
-    assert subentry.data == {CONF_CHAT_ID: 987654321}
+    assert subentry.data == expected_data
 
 
 async def test_subentry_flow_chat_error(
@@ -423,23 +465,50 @@ async def test_subentry_flow_chat_error(
         )
         await hass.async_block_till_done()
 
-    result = await hass.config_entries.subentries.async_init(
-        (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
-        context={"source": SOURCE_USER},
-    )
+    with patch.object(
+        hass.auth,
+        "async_get_users",
+        return_value=[
+            HassUser(
+                id="aabbccddeeff00112233445566778899",
+                name="Test User",
+                perm_lookup=False,
+            )
+        ],
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
+            context={"source": SOURCE_USER},
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # test: chat not found
 
-    with patch(
-        "homeassistant.components.telegram_bot.config_flow.Bot.get_chat"
-    ) as mock_bot:
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.config_flow.Bot.get_chat"
+        ) as mock_bot,
+        patch.object(
+            hass.auth,
+            "async_get_users",
+            return_value=[
+                HassUser(
+                    id="aabbccddeeff00112233445566778899",
+                    name="Test User",
+                    perm_lookup=False,
+                )
+            ],
+        ),
+    ):
         mock_bot.side_effect = BadRequest("mock chat not found")
 
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input={CONF_CHAT_ID: 1234567890},
+            user_input={
+                CONF_CHAT_ID: 1234567890,
+                CONF_USER_ID: "aabbccddeeff00112233445566778899",
+            },
         )
         await hass.async_block_till_done()
 
@@ -462,12 +531,125 @@ async def test_subentry_flow_chat_error(
     ):
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input={CONF_CHAT_ID: 123456},
+            user_input={
+                CONF_CHAT_ID: 123456,
+                CONF_USER_ID: "aabbccddeeff00112233445566778899",
+            },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("user_input", "expected_data"),
+    [
+        (
+            {CONF_USER_ID: "00112233445566778899aabbccddeeff"},
+            {
+                CONF_CHAT_ID: 12345678,
+                CONF_USER_ID: "00112233445566778899aabbccddeeff",
+            },
+        ),
+        (
+            {CONF_USER_ID: "unspecified"},
+            {
+                CONF_CHAT_ID: 12345678,
+                CONF_USER_ID: None,
+            },
+        ),
+    ],
+)
+async def test_subentry_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_webhooks_config_entry: MockConfigEntry,
+    user_input: dict[str, Any],
+    expected_data: dict[str, Any],
+) -> None:
+    """Test subentry reconfigure flow."""
+    mock_webhooks_config_entry.add_to_hass(hass)
+
+    subentry = next(iter(mock_webhooks_config_entry.subentries.values()))
+    with patch.object(
+        hass.auth,
+        "async_get_users",
+        return_value=[
+            HassUser(
+                id="00112233445566778899aabbccddeeff",
+                name="Test User",
+                perm_lookup=False,
+            )
+        ],
+    ):
+        result = await mock_webhooks_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.subentry_type == SUBENTRY_TYPE_ALLOWED_CHAT_IDS
+    assert subentry.title == "mock chat"
+    assert subentry.unique_id == "1234567890"
+    assert subentry.data == expected_data
+
+
+async def test_subentry_reconfigure_suggested_value(hass: HomeAssistant) -> None:
+    """Test suggested value for user id."""
+    mock_config_entry = MockConfigEntry(
+        unique_id="mock api key",
+        domain=DOMAIN,
+        data={
+            CONF_PLATFORM: "polling",
+            CONF_API_KEY: "mock api key",
+        },
+        options={ATTR_PARSER: PARSER_MD},
+        subentries_data=[
+            ConfigSubentryData(
+                unique_id="12345678",
+                data={
+                    CONF_CHAT_ID: 12345678,
+                },
+                subentry_id="mock_id",
+                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                title="Mock Chat (12345678)",
+            ),
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    with patch.object(
+        hass.auth,
+        "async_get_users",
+        return_value=[
+            HassUser(
+                id="00112233445566778899aabbccddeeff",
+                name="Mock Chat",
+                perm_lookup=False,
+            )
+        ],
+    ):
+        result = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    for key in result["data_schema"].schema:
+        if key == CONF_USER_ID:
+            assert (
+                key.description["suggested_value"] == "00112233445566778899aabbccddeeff"
+            )
 
 
 async def test_import_failed(
