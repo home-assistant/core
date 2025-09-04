@@ -9,7 +9,7 @@ import os
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from psutil import Process
-from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
+from psutil._common import sbattery, sdiskusage, shwtemp, snetio, snicaddr, sswap
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.core import HomeAssistant
@@ -19,6 +19,7 @@ from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from . import SystemMonitorConfigEntry
+from .util import read_fan_rpm
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,15 +28,17 @@ _LOGGER = logging.getLogger(__name__)
 class SensorData:
     """Sensor data."""
 
-    disk_usage: dict[str, sdiskusage]
-    swap: sswap
-    memory: VirtualMemory
-    io_counters: dict[str, snetio]
     addresses: dict[str, list[snicaddr]]
-    load: tuple[float, float, float]
-    cpu_percent: float | None
+    battery: sbattery | None
     boot_time: datetime
+    cpu_percent: float | None
+    disk_usage: dict[str, sdiskusage]
+    fan_rpm: dict[str, int]
+    io_counters: dict[str, snetio]
+    load: tuple[float, float, float]
+    memory: VirtualMemory
     processes: list[Process]
+    swap: sswap
     temperatures: dict[str, list[shwtemp]]
 
     def as_dict(self) -> dict[str, Any]:
@@ -43,6 +46,9 @@ class SensorData:
         disk_usage = None
         if self.disk_usage:
             disk_usage = {k: str(v) for k, v in self.disk_usage.items()}
+        fan_rpm = None
+        if self.fan_rpm:
+            fan_rpm = {k: str(v) for k, v in self.fan_rpm.items()}
         io_counters = None
         if self.io_counters:
             io_counters = {k: str(v) for k, v in self.io_counters.items()}
@@ -52,16 +58,19 @@ class SensorData:
         temperatures = None
         if self.temperatures:
             temperatures = {k: str(v) for k, v in self.temperatures.items()}
+
         return {
-            "disk_usage": disk_usage,
-            "swap": str(self.swap),
-            "memory": str(self.memory),
-            "io_counters": io_counters,
             "addresses": addresses,
-            "load": str(self.load),
-            "cpu_percent": str(self.cpu_percent),
+            "battery": str(self.battery),
             "boot_time": str(self.boot_time),
+            "cpu_percent": str(self.cpu_percent),
+            "disk_usage": disk_usage,
+            "fan_rpm": fan_rpm,
+            "io_counters": io_counters,
+            "load": str(self.load),
+            "memory": str(self.memory),
             "processes": str(self.processes),
+            "swap": str(self.swap),
             "temperatures": temperatures,
         }
 
@@ -117,14 +126,16 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             _disk_defaults[("disks", argument)] = set()
         return {
             **_disk_defaults,
-            ("swap", ""): set(),
-            ("memory", ""): set(),
-            ("io_counters", ""): set(),
             ("addresses", ""): set(),
-            ("load", ""): set(),
-            ("cpu_percent", ""): set(),
+            ("battery", ""): set(),
             ("boot", ""): set(),
+            ("cpu_percent", ""): set(),
+            ("fan_rpm", ""): set(),
+            ("io_counters", ""): set(),
+            ("load", ""): set(),
+            ("memory", ""): set(),
             ("processes", ""): set(),
+            ("swap", ""): set(),
             ("temperatures", ""): set(),
         }
 
@@ -146,15 +157,17 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
 
         self._initial_update = False
         return SensorData(
-            disk_usage=_data["disks"],
-            swap=_data["swap"],
-            memory=_data["memory"],
-            io_counters=_data["io_counters"],
             addresses=_data["addresses"],
-            load=load,
-            cpu_percent=cpu_percent,
+            battery=_data["battery"],
             boot_time=_data["boot_time"],
+            cpu_percent=cpu_percent,
+            disk_usage=_data["disks"],
+            fan_rpm=_data["fan_rpm"],
+            io_counters=_data["io_counters"],
+            load=load,
+            memory=_data["memory"],
             processes=_data["processes"],
+            swap=_data["swap"],
             temperatures=_data["temperatures"],
         )
 
@@ -217,13 +230,32 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             except AttributeError:
                 _LOGGER.debug("OS does not provide temperature sensors")
 
+        fan_rpm: dict[str, int] = {}
+        if self.update_subscribers[("fan_rpm", "")] or self._initial_update:
+            try:
+                fan_sensors = self._psutil.sensors_fans()
+                fan_rpm = read_fan_rpm(fan_sensors)
+                _LOGGER.debug("fan_rpm: %s", fan_rpm)
+            except AttributeError:
+                _LOGGER.debug("OS does not provide fan sensors")
+
+        battery: sbattery | None = None
+        if self.update_subscribers[("battery", "")] or self._initial_update:
+            try:
+                battery = self._psutil.sensors_battery()
+                _LOGGER.debug("battery: %s", battery)
+            except AttributeError:
+                _LOGGER.debug("OS does not provide battery sensors")
+
         return {
-            "disks": disks,
-            "swap": swap,
-            "memory": memory,
-            "io_counters": io_counters,
             "addresses": addresses,
+            "battery": battery,
             "boot_time": self.boot_time,
+            "disks": disks,
+            "fan_rpm": fan_rpm,
+            "io_counters": io_counters,
+            "memory": memory,
             "processes": processes,
+            "swap": swap,
             "temperatures": temps,
         }
