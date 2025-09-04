@@ -101,7 +101,7 @@ async def async_setup_entry(
     for camera, sensors in coordinator.data.items():
         optionals = sensors.get("optionals", {})
 
-        #Remap optionals attributes to top level for easier access
+        # Remap optionals attributes to top level for easier access
         sensors["Record_Mode"] = optionals.get("Record_Mode", {}).get("mode")
         sensors["powerStatus"] = optionals.get("powerStatus")
         sensors["OnlineStatus"] = optionals.get("OnlineStatus")
@@ -133,10 +133,10 @@ class EzvizSensor(EzvizEntity, SensorEntity):
         sensors = self.data
         optionals = sensors.get("optionals", {})
 
-        value = sensors.get(self._sensor_name) or optionals.get(self._sensor_name)
+        value = sensors.get(self._sensor_name) if sensors.get(self._sensor_name) is not None else optionals.get(self._sensor_name)
 
         # Special handling for Record_Mode. {"Record_Mode": {"mode": <value>}}
         if self._sensor_name == "Record_Mode" and isinstance(value, dict):
             value = value.get("mode")
 
-        return value if value is not None else "Not Available"
+        return value
