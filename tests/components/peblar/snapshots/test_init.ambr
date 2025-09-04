@@ -25,7 +25,6 @@
         '23-45-A4O-MOF',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Peblar',
@@ -35,7 +34,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '23-45-A4O-MOF',
-    'suggested_area': None,
     'sw_version': '1.6.1+1+WL-1',
     'via_device_id': None,
   })

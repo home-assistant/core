@@ -21,7 +21,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -363,7 +363,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         return LmOptionsFlowHandler()
 
 
-class LmOptionsFlowHandler(OptionsFlow):
+class LmOptionsFlowHandler(OptionsFlowWithReload):
     """Handles options flow for the component."""
 
     async def async_step_init(

@@ -112,9 +112,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     if not status:
         # pysqueezebox's async_query returns None on various issues,
         # including HTTP errors where it sets lms.http_status.
-        http_status = getattr(lms, "http_status", "N/A")
 
-        if http_status == HTTPStatus.UNAUTHORIZED:
+        if lms.http_status == HTTPStatus.UNAUTHORIZED:
             _LOGGER.warning("Authentication failed for Squeezebox server %s", host)
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -128,14 +127,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         _LOGGER.warning(
             "LMS %s returned no status or an error (HTTP status: %s). Retrying setup",
             host,
-            http_status,
+            lms.http_status,
         )
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="init_get_status_failed",
             translation_placeholders={
                 "host": str(host),
-                "http_status": str(http_status),
+                "http_status": str(lms.http_status),
             },
         )
 
