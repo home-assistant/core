@@ -202,6 +202,62 @@ async def test_k11_vacuum_actions(
     matter_client.send_device_command.reset_mock()
 
 
+@pytest.mark.parametrize("node_fixture", ["switchbot_K11"])
+async def test_k11_vacuum_service_area(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Matter ServiceArea cluster attributes."""
+    # Fetch translations
+    await async_setup_component(hass, "homeassistant", {})
+    entity_id = "vacuum.k11"
+    state = hass.states.get(entity_id)
+    # SupportedAreas attribute ID is 2 (1/336/0)
+    supported_areas = [
+        {
+            "0": 1,
+            "1": None,
+            "2": {
+                "0": {
+                    "0": "Bedroom #1",
+                    "1": None,
+                    "2": None,
+                },
+                "1": None,
+            },
+        },
+        {
+            "0": 3,
+            "1": None,
+            "2": {
+                "0": {
+                    "0": "Bedroom #2",
+                    "1": None,
+                    "2": None,
+                },
+                "1": None,
+            },
+        },
+        {
+            "0": 4,
+            "1": None,
+            "2": {
+                "0": {
+                    "0": "Bedroom #3",
+                    "1": None,
+                    "2": None,
+                },
+                "1": None,
+            },
+        },
+    ]
+    set_node_attribute(matter_node, 1, 336, 0, supported_areas)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+
+
 @pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
 async def test_vacuum_updates(
     hass: HomeAssistant,
