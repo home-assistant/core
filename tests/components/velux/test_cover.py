@@ -1,4 +1,4 @@
-"""Tests for the Velux binary sensor platform."""
+"""Tests for the Velux cover platform."""
 
 from unittest.mock import AsyncMock, patch
 
