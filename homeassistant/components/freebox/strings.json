@@ -24,6 +24,13 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "entity": {
+    "light": {
+      "led_strip": {
+        "name": "LED Strip"
+      }
+    }
+  },
   "services": {
     "reboot": {
       "name": "Reboot",

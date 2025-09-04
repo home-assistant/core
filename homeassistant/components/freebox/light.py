@@ -29,7 +29,8 @@ _LOGGER = logging.getLogger(__name__)
 
 LED_STRIP_DESCRIPTION = LightEntityDescription(
     key="led_strip",
-    name="Freebox LED Strip",
+    has_entity_name=True,
+    translation_key="led_strip",
     entity_category=EntityCategory.CONFIG,
 )
 
