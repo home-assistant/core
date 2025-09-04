@@ -31,6 +31,7 @@ def mock_config_entry() -> MockConfigEntry:
                     "area_name": "",
                     "area_id": "",
                     "prop": [],
+                    "model": "DALI DT6 Dimmable Driver",
                 },
                 {
                     "unique_id": "01020000036A242121110E",
@@ -44,6 +45,7 @@ def mock_config_entry() -> MockConfigEntry:
                     "area_name": "",
                     "area_id": "",
                     "prop": [],
+                    "model": "DALI DT8 Tc Dimmable Driver",
                 },
             ],
         },
@@ -64,6 +66,7 @@ def mock_devices() -> Generator[list[MagicMock]]:
         device1.status = "online"
         device1.dev_type = "0101"
         device1.name = "Dimmer 0000-02"
+        device1.model = "DALI DT6 Dimmable Driver"
         device1.gw_sn = "6A242121110E"
         device1.color_mode = "brightness"
         device1.turn_on = MagicMock()
@@ -76,13 +79,55 @@ def mock_devices() -> Generator[list[MagicMock]]:
         device2.status = "online"
         device2.dev_type = "0102"
         device2.name = "CCT 0000-03"
+        device2.model = "DALI DT8 Tc Dimmable Driver"
         device2.gw_sn = "6A242121110E"
         device2.color_mode = "color_temp"
         device2.turn_on = MagicMock()
         device2.turn_off = MagicMock()
         device2.read_status = MagicMock()
 
-        devices = [device1, device2]
+        # Add devices with different color modes for better coverage
+        device3 = MagicMock()
+        device3.dev_id = "01030000046A242121110E"
+        device3.unique_id = "01030000046A242121110E"
+        device3.status = "online"
+        device3.dev_type = "0103"
+        device3.name = "HS Color Light"
+        device3.model = "DALI HS Color Driver"
+        device3.gw_sn = "6A242121110E"
+        device3.color_mode = "hs"
+        device3.turn_on = MagicMock()
+        device3.turn_off = MagicMock()
+        device3.read_status = MagicMock()
+
+        device4 = MagicMock()
+        device4.dev_id = "01040000056A242121110E"
+        device4.unique_id = "01040000056A242121110E"
+        device4.status = "online"
+        device4.dev_type = "0104"
+        device4.name = "RGBW Light"
+        device4.model = "DALI RGBW Driver"
+        device4.gw_sn = "6A242121110E"
+        device4.color_mode = "rgbw"
+        device4.turn_on = MagicMock()
+        device4.turn_off = MagicMock()
+        device4.read_status = MagicMock()
+
+        # Add a duplicate device to test the continue logic (line 58)
+        device_duplicate = MagicMock()
+        device_duplicate.dev_id = "01010000026A242121110E"  # Same as device1
+        device_duplicate.unique_id = "01010000026A242121110E"
+        device_duplicate.status = "online"
+        device_duplicate.dev_type = "0101"
+        device_duplicate.name = "Duplicate Dimmer"
+        device_duplicate.model = "DALI DT6 Dimmable Driver"
+        device_duplicate.gw_sn = "6A242121110E"
+        device_duplicate.color_mode = "brightness"
+        device_duplicate.turn_on = MagicMock()
+        device_duplicate.turn_off = MagicMock()
+        device_duplicate.read_status = MagicMock()
+
+        devices = [device1, device2, device3, device4, device_duplicate]
         mock_device_class.side_effect = devices
 
         yield devices

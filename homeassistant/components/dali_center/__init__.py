@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from PySrDaliGateway import DaliGateway
 from PySrDaliGateway.exceptions import DaliGatewayError
@@ -40,12 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
         signal = f"dali_center_update_available_{dev_id}"
         hass.add_job(async_dispatcher_send, hass, signal, available)
 
-    def on_device_status(dev_id: str, property_list: list[dict[str, Any]]) -> None:
-        signal = f"dali_center_update_{dev_id}"
-        hass.add_job(async_dispatcher_send, hass, signal, property_list)
-
     gateway.on_online_status = on_online_status
-    gateway.on_device_status = on_device_status
 
     dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(

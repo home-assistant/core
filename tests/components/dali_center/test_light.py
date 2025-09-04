@@ -136,12 +136,54 @@ async def test_dispatcher_connection(
     state = hass.states.get(entity_id)
     assert state is not None
 
-    property_list: list[dict[str, Any]] = [{"dpid": 22, "value": 500}]
+    status_update: dict[str, Any] = {"is_on": True, "brightness": 128}
 
     async_dispatcher_send(
-        hass, "dali_center_update_01010000026A242121110E", property_list
+        hass, "dali_center_update_01010000026A242121110E", status_update
     )
     await hass.async_block_till_done()
 
     state_after = hass.states.get(entity_id)
     assert state_after is not None
+
+
+async def test_color_temp_status_update(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test status update with color temperature for CCT device."""
+    status_update = {"color_temp_kelvin": 3000}
+    async_dispatcher_send(
+        hass, "dali_center_update_01020000036A242121110E", status_update
+    )
+    await hass.async_block_till_done()
+
+
+async def test_hs_color_status_update(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test status update with HS color for HS device."""
+    status_update = {"hs_color": (120.0, 50.0)}
+    async_dispatcher_send(
+        hass, "dali_center_update_01030000046A242121110E", status_update
+    )
+    await hass.async_block_till_done()
+
+
+async def test_rgbw_status_update(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test status update with RGBW color and white level."""
+    status_update1 = {"rgbw_color": (255, 128, 64, 32)}
+    async_dispatcher_send(
+        hass, "dali_center_update_01040000056A242121110E", status_update1
+    )
+    await hass.async_block_till_done()
+
+    status_update2 = {"white_level": 200}
+    async_dispatcher_send(
+        hass, "dali_center_update_01040000056A242121110E", status_update2
+    )
+    await hass.async_block_till_done()
