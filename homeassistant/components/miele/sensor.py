@@ -270,6 +270,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=1,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -307,6 +308,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.WATER,
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfVolume.LITERS,
+            suggested_display_precision=0,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -618,6 +620,8 @@ async def async_setup_entry(
             "state_elapsed_time": MieleTimeSensor,
             "state_remaining_time": MieleTimeSensor,
             "state_start_time": MieleTimeSensor,
+            "current_energy_consumption": MieleConsumptionSensor,
+            "current_water_consumption": MieleConsumptionSensor,
         }.get(definition.description.key, MieleSensor)
 
     def _is_entity_registered(unique_id: str) -> bool:
@@ -924,3 +928,58 @@ class MieleTimeSensor(MieleRestorableSensor):
         # otherwise, cache value and return it
         else:
             self._last_value = current_value
+
+
+class MieleConsumptionSensor(MieleRestorableSensor):
+    """Representation of consumption sensors keeping state from cache."""
+
+    _is_reporting: bool = False
+
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
+        current_value = self.entity_description.value_fn(self.device)
+        current_status = StateStatus(self.device.state_status)
+        last_value = (
+            float(cast(str, self._last_value))
+            if self._last_value is not None and self._last_value != STATE_UNKNOWN
+            else 0
+        )
+
+        # force unknown when appliance is not able to report consumption
+        if current_status in (
+            StateStatus.ON,
+            StateStatus.OFF,
+            StateStatus.PROGRAMMED,
+            StateStatus.WAITING_TO_START,
+            StateStatus.IDLE,
+            StateStatus.SERVICE,
+        ):
+            self._is_reporting = False
+            self._last_value = None
+
+        # appliance might report the last value for consumption of previous cycle and it will report 0
+        # only after a while, so it is necessary to force 0 until we see the 0 value coming from API, unless
+        # we already saw a valid value in this cycle from cache
+        elif (
+            current_status in (StateStatus.IN_USE, StateStatus.PAUSE)
+            and not self._is_reporting
+            and last_value > 0
+        ):
+            self._last_value = current_value
+            self._is_reporting = True
+
+        elif (
+            current_status in (StateStatus.IN_USE, StateStatus.PAUSE)
+            and not self._is_reporting
+            and current_value is not None
+            and cast(int, current_value) > 0
+        ):
+            self._last_value = 0
+
+        # keep value when program ends
+        elif current_status == StateStatus.PROGRAM_ENDED:
+            pass
+
+        else:
+            self._last_value = current_value
+            self._is_reporting = True
