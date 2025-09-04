@@ -1,6 +1,7 @@
 """Test fixtures for Prowl."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -13,7 +14,9 @@ TEST_API_KEY = "f00f" * 10
 
 
 @pytest.fixture
-async def configure_prowl_through_yaml(hass: HomeAssistant, mock_prowlpy):
+async def configure_prowl_through_yaml(
+    hass: HomeAssistant, mock_prowlpy: Generator[Mock]
+) -> Generator[None]:
     """Configure the notify domain with YAML for the Prowl platform."""
     await async_setup_component(
         hass,
@@ -32,7 +35,7 @@ async def configure_prowl_through_yaml(hass: HomeAssistant, mock_prowlpy):
 
 
 @pytest.fixture
-def mock_prowlpy():
+def mock_prowlpy() -> Generator[Mock]:
     """Mock the prowlpy library."""
 
     with patch("homeassistant.components.prowl.notify.prowlpy.Prowl") as MockProwl:
