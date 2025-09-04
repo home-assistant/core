@@ -1,0 +1,1 @@
+"""Gaggenau virtual integration."""

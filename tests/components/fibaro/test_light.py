@@ -58,6 +58,28 @@ async def test_light_brightness(
         assert state.state == "on"
 
 
+async def test_zigbee_light_brightness(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_zigbee_light: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test that the zigbee dimmable light is detected."""
+
+    # Arrange
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [mock_zigbee_light]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.LIGHT]):
+        # Act
+        await init_integration(hass, mock_config_entry)
+        # Assert
+        state = hass.states.get("light.room_1_test_light_12")
+        assert state.attributes["brightness"] == 51
+        assert state.state == "on"
+
+
 async def test_light_turn_off(
     hass: HomeAssistant,
     mock_fibaro_client: Mock,

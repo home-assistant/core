@@ -7,12 +7,15 @@ from dataclasses import dataclass
 
 from wolf_comm.models import (
     EnergyParameter,
+    FlowParameter,
+    FrequencyParameter,
     HoursParameter,
     ListItemParameter,
     Parameter,
     PercentageParameter,
     PowerParameter,
     Pressure,
+    RPMParameter,
     SimpleParameter,
     Temperature,
 )
@@ -21,15 +24,19 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -97,6 +104,24 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:clock",
         native_unit_of_measurement=UnitOfTime.HOURS,
         supported_fn=lambda param: isinstance(param, HoursParameter),
+    ),
+    WolflinkSensorEntityDescription(
+        key="flow",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        supported_fn=lambda param: isinstance(param, FlowParameter),
+    ),
+    WolflinkSensorEntityDescription(
+        key="frequency",
+        device_class=SensorDeviceClass.FREQUENCY,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        supported_fn=lambda param: isinstance(param, FrequencyParameter),
+    ),
+    WolflinkSensorEntityDescription(
+        key="rpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        supported_fn=lambda param: isinstance(param, RPMParameter),
     ),
     WolflinkSensorEntityDescription(
         key="default",

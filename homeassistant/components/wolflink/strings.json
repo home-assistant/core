@@ -28,14 +28,15 @@
     "sensor": {
       "state": {
         "state": {
-          "ein": "[%key:common::state::enabled%]",
-          "deaktiviert": "Inactive",
-          "aus": "[%key:common::state::disabled%]",
+          "ein": "[%key:common::state::on%]",
+          "aus": "[%key:common::state::off%]",
+          "deaktiviert": "[%key:common::state::disabled%]",
           "standby": "[%key:common::state::standby%]",
-          "auto": "Auto",
+          "storung": "[%key:common::state::fault%]",
+          "auto": "[%key:common::state::auto%]",
           "permanent": "Permanent",
           "initialisierung": "Initialization",
-          "antilegionellenfunktion": "Anti-legionella Function",
+          "antilegionellenfunktion": "Anti-legionella function",
           "fernschalter_ein": "Remote control enabled",
           "1_x_warmwasser": "1 x DHW",
           "bereit_keine_ladung": "Ready, not loading",
@@ -53,7 +54,6 @@
           "taktsperre": "Anti-cycle",
           "betrieb_ohne_brenner": "Working without burner",
           "abgasklappe": "Flue gas damper",
-          "storung": "Fault",
           "gradienten_uberwachung": "Gradient monitoring",
           "gasdruck": "Gas pressure",
           "spreizung_hoch": "dT too wide",

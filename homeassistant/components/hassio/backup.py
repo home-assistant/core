@@ -19,12 +19,14 @@ from aiohasupervisor.exceptions import (
 )
 from aiohasupervisor.models import (
     backups as supervisor_backups,
+    jobs as supervisor_jobs,
     mounts as supervisor_mounts,
 )
 from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL_STORAGE
 
 from homeassistant.components.backup import (
     DATA_MANAGER,
+    AddonErrorData,
     AddonInfo,
     AgentBackup,
     BackupAgent,
@@ -46,18 +48,18 @@ from homeassistant.components.backup import (
     RestoreBackupStage,
     RestoreBackupState,
     WrittenBackup,
+    async_get_manager as async_get_backup_manager,
     suggested_filename as suggested_backup_filename,
     suggested_filename_from_name_date,
 )
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.backup import async_get_manager as async_get_backup_manager
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .const import DOMAIN, EVENT_SUPERVISOR_EVENT
+from .const import DATA_CONFIG_STORE, DOMAIN, EVENT_SUPERVISOR_EVENT
 from .handler import get_supervisor_client
 
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
@@ -295,10 +297,17 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         # It's inefficient to let core do all the copying so we want to let
         # supervisor handle as much as possible.
         # Therefore, we split the locations into two lists: encrypted and decrypted.
-        # The longest list will be sent to supervisor, and the remaining locations
-        # will be handled by async_upload_backup.
-        # If the lists are the same length, it does not matter which one we send,
-        # we send the encrypted list to have a well defined behavior.
+        # The backup will be created in the first location in the list sent to
+        # supervisor, and if that location is not available, the backup will
+        # fail.
+        # To make it less likely that the backup fails, we prefer to create the
+        # backup in the local storage location if included in the list of
+        # locations.
+        # Hence, we send the list of locations to supervisor in this priority order:
+        # 1. The list which has local storage
+        # 2. The longest list of locations
+        # 3. The list of encrypted locations
+        # In any case the remaining locations will be handled by async_upload_backup.
         encrypted_locations: list[str] = []
         decrypted_locations: list[str] = []
         agents_settings = manager.config.data.agents
@@ -313,16 +322,26 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                     encrypted_locations.append(hassio_agent.location)
             else:
                 decrypted_locations.append(hassio_agent.location)
+        locations = []
+        if LOCATION_LOCAL_STORAGE in decrypted_locations:
+            locations = decrypted_locations
+            password = None
+            # Move local storage to the front of the list
+            decrypted_locations.remove(LOCATION_LOCAL_STORAGE)
+            decrypted_locations.insert(0, LOCATION_LOCAL_STORAGE)
+        elif LOCATION_LOCAL_STORAGE in encrypted_locations:
+            locations = encrypted_locations
+            # Move local storage to the front of the list
+            encrypted_locations.remove(LOCATION_LOCAL_STORAGE)
+            encrypted_locations.insert(0, LOCATION_LOCAL_STORAGE)
         _LOGGER.debug("Encrypted locations: %s", encrypted_locations)
         _LOGGER.debug("Decrypted locations: %s", decrypted_locations)
-        if hassio_agents:
+        if not locations and hassio_agents:
             if len(encrypted_locations) >= len(decrypted_locations):
                 locations = encrypted_locations
             else:
                 locations = decrypted_locations
                 password = None
-        else:
-            locations = []
         locations = locations or [LOCATION_CLOUD_BACKUP]
 
         date = dt_util.now().isoformat()
@@ -401,6 +420,34 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 f"Backup failed: {create_errors or 'no backup_id'}"
             )
 
+        # The backup was created successfully, check for non critical errors
+        full_status = await self._client.jobs.get_job(backup.job_id)
+        _addon_errors = _collect_errors(
+            full_status, "backup_store_addons", "backup_addon_save"
+        )
+        addon_errors: dict[str, AddonErrorData] = {}
+        for slug, errors in _addon_errors.items():
+            try:
+                addon_info = await self._client.addons.addon_info(slug)
+                addon_errors[slug] = AddonErrorData(
+                    addon=AddonInfo(
+                        name=addon_info.name,
+                        slug=addon_info.slug,
+                        version=addon_info.version,
+                    ),
+                    errors=errors,
+                )
+            except SupervisorError as err:
+                _LOGGER.debug("Error getting addon %s: %s", slug, err)
+                addon_errors[slug] = AddonErrorData(
+                    addon=AddonInfo(name=None, slug=slug, version=None), errors=errors
+                )
+
+        _folder_errors = _collect_errors(
+            full_status, "backup_store_folders", "backup_folder_save"
+        )
+        folder_errors = {Folder(key): val for key, val in _folder_errors.items()}
+
         async def open_backup() -> AsyncIterator[bytes]:
             try:
                 return await self._client.backups.download_backup(backup_id)
@@ -430,7 +477,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             ) from err
 
         return WrittenBackup(
+            addon_errors=addon_errors,
             backup=_backup_details_to_agent_backup(details, locations[0]),
+            folder_errors=folder_errors,
             open_stream=open_backup,
             release_stream=remove_backup,
         )
@@ -474,7 +523,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         details = await self._client.backups.backup_info(backup_id)
 
         return WrittenBackup(
+            addon_errors={},
             backup=_backup_details_to_agent_backup(details, locations[0]),
+            folder_errors={},
             open_stream=open_backup,
             release_stream=remove_backup,
         )
@@ -696,6 +747,27 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         on_event(job.to_dict())
 
 
+def _collect_errors(
+    job: supervisor_jobs.Job, child_job_name: str, grandchild_job_name: str
+) -> dict[str, list[tuple[str, str]]]:
+    """Collect errors from a job's grandchildren."""
+    errors: dict[str, list[tuple[str, str]]] = {}
+    for child_job in job.child_jobs:
+        if child_job.name != child_job_name:
+            continue
+        for grandchild in child_job.child_jobs:
+            if (
+                grandchild.name != grandchild_job_name
+                or not grandchild.errors
+                or not grandchild.reference
+            ):
+                continue
+            errors[grandchild.reference] = [
+                (error.type, error.message) for error in grandchild.errors
+            ]
+    return errors
+
+
 async def _default_agent(client: SupervisorClient) -> str:
     """Return the default agent for creating a backup."""
     mounts = await client.mounts.info()
@@ -729,6 +801,18 @@ async def backup_addon_before_update(
             if backup.extra_metadata.get(TAG_ADDON_UPDATE) == addon
         }
 
+    def _delete_filter(
+        backups: dict[str, ManagerBackup],
+    ) -> dict[str, ManagerBackup]:
+        """Return oldest backups more numerous than copies to delete."""
+        update_config = hass.data[DATA_CONFIG_STORE].data.update_config
+        return dict(
+            sorted(
+                backups.items(),
+                key=lambda backup_item: backup_item[1].date,
+            )[: max(len(backups) - update_config.add_on_backup_retain_copies, 0)]
+        )
+
     try:
         await backup_manager.async_create_backup(
             agent_ids=[await _default_agent(client)],
@@ -747,7 +831,7 @@ async def backup_addon_before_update(
         try:
             await backup_manager.async_delete_filtered_backups(
                 include_filter=addon_update_backup_filter,
-                delete_filter=lambda backups: backups,
+                delete_filter=_delete_filter,
             )
         except BackupManagerError as err:
             raise HomeAssistantError(f"Error deleting old backups: {err}") from err
@@ -755,7 +839,7 @@ async def backup_addon_before_update(
 
 async def backup_core_before_update(hass: HomeAssistant) -> None:
     """Prepare for updating core."""
-    backup_manager = await async_get_backup_manager(hass)
+    backup_manager = async_get_backup_manager(hass)
     client = get_supervisor_client(hass)
 
     try:

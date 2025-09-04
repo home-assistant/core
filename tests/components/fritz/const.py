@@ -200,6 +200,7 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             MOCK_IPS["printer"]: {"NewDisallow": False, "NewWANAccess": "granted"}
         }
     },
+    "X_AVM-DE_UPnP1": {"GetInfo": {"NewEnable": True}},
 }
 
 MOCK_MESH_DATA = {

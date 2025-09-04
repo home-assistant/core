@@ -293,9 +293,9 @@ async def ws_get_fossil_energy_consumption(
             if statistics_id not in statistic_ids:
                 continue
             for period in stat:
-                if period["change"] is None:
+                if (change := period.get("change")) is None:
                     continue
-                result[period["start"]] += period["change"]
+                result[period["start"]] += change
 
         return {key: result[key] for key in sorted(result)}
 

@@ -62,8 +62,10 @@ from .const import (
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
+    CONF_BRIGHTNESS_REGISTER,
     CONF_BYTESIZE,
     CONF_CLIMATES,
+    CONF_COLOR_TEMP_REGISTER,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
@@ -415,7 +417,14 @@ SWITCH_SCHEMA = BASE_SWITCH_SCHEMA.extend(
     }
 )
 
-LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
+LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend(
+    {
+        vol.Optional(CONF_BRIGHTNESS_REGISTER): cv.positive_int,
+        vol.Optional(CONF_COLOR_TEMP_REGISTER): cv.positive_int,
+        vol.Optional(CONF_MIN_TEMP): cv.positive_int,
+        vol.Optional(CONF_MAX_TEMP): cv.positive_int,
+    }
+)
 
 FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
@@ -470,7 +479,8 @@ MODBUS_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 SERIAL_SCHEMA = MODBUS_SCHEMA.extend(

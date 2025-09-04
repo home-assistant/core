@@ -3,18 +3,23 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Check the documentation for how to find the offline key. If you are using the August cloud integration to obtain the key, you may need to reload the August cloud integration while the lock is in Bluetooth range.",
+        "description": "Select the device you want to set up over Bluetooth.",
         "data": {
-          "address": "Bluetooth address",
+          "address": "Bluetooth address"
+        }
+      },
+      "key_slot": {
+        "description": "Enter the key for the {title} lock with address {address}. If you are using the August or Yale cloud integration to obtain the key, you may be able to avoid this manual setup by reloading the August or Yale cloud integration while the lock is in Bluetooth range.",
+        "data": {
           "key": "Offline Key (32-byte hex string)",
           "slot": "Offline Key Slot (Integer between 0 and 255)"
         }
       },
       "reauth_validate": {
-        "description": "Enter the updated key for the {title} lock with address {address}. If you are using the August cloud integration to obtain the key, you may be able to avoid manual reauthentication by reloading the August cloud integration while the lock is in Bluetooth range.",
+        "description": "Enter the updated key for the {title} lock with address {address}. If you are using the August or Yale cloud integration to obtain the key, you may be able to avoid manual re-authentication by reloading the August or Yale cloud integration while the lock is in Bluetooth range.",
         "data": {
-          "key": "[%key:component::yalexs_ble::config::step::user::data::key%]",
-          "slot": "[%key:component::yalexs_ble::config::step::user::data::slot%]"
+          "key": "[%key:component::yalexs_ble::config::step::key_slot::data::key%]",
+          "slot": "[%key:component::yalexs_ble::config::step::key_slot::data::slot%]"
         }
       },
       "integration_discovery_confirm": {
@@ -50,6 +55,11 @@
     "sensor": {
       "battery_voltage": {
         "name": "Battery voltage"
+      }
+    },
+    "lock": {
+      "secure_mode": {
+        "name": "Secure mode"
       }
     }
   }

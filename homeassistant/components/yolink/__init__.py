@@ -26,10 +26,10 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import DOMAIN, YOLINK_EVENT
+from .const import ATTR_LORA_INFO, DOMAIN, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
-from .services import async_register_services
+from .services import async_setup_services
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -43,6 +43,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
@@ -72,6 +73,8 @@ class YoLinkHomeMessageListener(MessageListener):
         if device_coordinator is None:
             return
         device_coordinator.dev_online = True
+        if (loraInfo := msg_data.get(ATTR_LORA_INFO)) is not None:
+            device_coordinator.dev_net_type = loraInfo.get("devNetType")
         device_coordinator.async_set_updated_data(msg_data)
         # handling events
         if (
@@ -109,7 +112,7 @@ class YoLinkHomeStore:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up YoLink."""
 
-    async_register_services(hass)
+    async_setup_services(hass)
 
     return True
 
@@ -163,6 +166,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = YoLinkHomeStore(
         yolink_home, device_coordinators
     )
+
+    # Clean up yolink devices which are not associated to the account anymore.
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    for device_entry in device_entries:
+        for identifier in device_entry.identifiers:
+            if (
+                identifier[0] == DOMAIN
+                and device_coordinators.get(identifier[1]) is None
+            ):
+                device_registry.async_update_device(
+                    device_entry.id, remove_config_entry_id=entry.entry_id
+                )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def async_yolink_unload(event) -> None:

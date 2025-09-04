@@ -1,6 +1,6 @@
 """Test IQVIA diagnostics."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant

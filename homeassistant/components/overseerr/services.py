@@ -7,23 +7,18 @@ from python_overseerr import OverseerrClient, OverseerrConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util.json import JsonValueType
 
-from .const import (
-    ATTR_CONFIG_ENTRY_ID,
-    ATTR_REQUESTED_BY,
-    ATTR_SORT_ORDER,
-    ATTR_STATUS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import ATTR_REQUESTED_BY, ATTR_SORT_ORDER, ATTR_STATUS, DOMAIN, LOGGER
 from .coordinator import OverseerrConfigEntry
 
 SERVICE_GET_REQUESTS = "get_requests"
@@ -39,7 +34,7 @@ SERVICE_GET_REQUESTS_SCHEMA = vol.Schema(
 )
 
 
-def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> OverseerrConfigEntry:
+def _async_get_entry(hass: HomeAssistant, config_entry_id: str) -> OverseerrConfigEntry:
     """Get the Overseerr config entry."""
     if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
         raise ServiceValidationError(
@@ -56,7 +51,7 @@ def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> OverseerrConfi
     return cast(OverseerrConfigEntry, entry)
 
 
-async def get_media(
+async def _get_media(
     client: OverseerrClient, media_type: str, identifier: int
 ) -> dict[str, Any]:
     """Get media details."""
@@ -73,43 +68,45 @@ async def get_media(
     return media
 
 
-def setup_services(hass: HomeAssistant) -> None:
+async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
+    """Get requests made to Overseerr."""
+    entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    client = entry.runtime_data.client
+    kwargs: dict[str, Any] = {}
+    if status := call.data.get(ATTR_STATUS):
+        kwargs["status"] = status
+    if sort_order := call.data.get(ATTR_SORT_ORDER):
+        kwargs["sort"] = sort_order
+    if requested_by := call.data.get(ATTR_REQUESTED_BY):
+        kwargs["requested_by"] = requested_by
+    try:
+        requests = await client.get_requests(**kwargs)
+    except OverseerrConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
+    result: list[dict[str, Any]] = []
+    for request in requests:
+        req = asdict(request)
+        assert request.media.tmdb_id
+        req["media"] = await _get_media(
+            client, request.media.media_type, request.media.tmdb_id
+        )
+        result.append(req)
+
+    return {"requests": cast(list[JsonValueType], result)}
+
+
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Overseerr integration."""
-
-    async def async_get_requests(call: ServiceCall) -> ServiceResponse:
-        """Get requests made to Overseerr."""
-        entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
-        client = entry.runtime_data.client
-        kwargs: dict[str, Any] = {}
-        if status := call.data.get(ATTR_STATUS):
-            kwargs["status"] = status
-        if sort_order := call.data.get(ATTR_SORT_ORDER):
-            kwargs["sort"] = sort_order
-        if requested_by := call.data.get(ATTR_REQUESTED_BY):
-            kwargs["requested_by"] = requested_by
-        try:
-            requests = await client.get_requests(**kwargs)
-        except OverseerrConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="connection_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        result: list[dict[str, Any]] = []
-        for request in requests:
-            req = asdict(request)
-            assert request.media.tmdb_id
-            req["media"] = await get_media(
-                client, request.media.media_type, request.media.tmdb_id
-            )
-            result.append(req)
-
-        return {"requests": cast(list[JsonValueType], result)}
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_REQUESTS,
-        async_get_requests,
+        _async_get_requests,
         schema=SERVICE_GET_REQUESTS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

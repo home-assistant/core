@@ -11,10 +11,13 @@ from uuid import UUID
 
 import aiohttp
 import attr
-import pychromecast
 from pychromecast import dial
 from pychromecast.const import CAST_TYPE_GROUP
+import pychromecast.controllers.media
+import pychromecast.controllers.multizone
+import pychromecast.controllers.receiver
 from pychromecast.models import CastInfo
+import pychromecast.socket_client
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
@@ -81,7 +84,7 @@ class ChromecastInfo:
                     "+label%3A%22integration%3A+cast%22"
                 )
 
-                _LOGGER.debug(
+                _LOGGER.info(
                     (
                         "Fetched cast details for unknown model '%s' manufacturer:"
                         " '%s', type: '%s'. Please %s"

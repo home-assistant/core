@@ -41,7 +41,7 @@ async def async_setup_entry(
     """Add lights for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsLight(entry_data.client, entry_data.rooms, device)
+        SmartThingsLight(entry_data.client, device)
         for device in entry_data.devices.values()
         if Capability.SWITCH in device.status[MAIN]
         and any(capability in device.status[MAIN] for capability in CAPABILITIES)
@@ -71,14 +71,11 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
     # highest kelvin found supported across 20+ handlers.
     _attr_max_color_temp_kelvin = 9000  # 111 mireds
 
-    def __init__(
-        self, client: SmartThings, rooms: dict[str, str], device: FullDevice
-    ) -> None:
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize a SmartThingsLight."""
         super().__init__(
             client,
             device,
-            rooms,
             {
                 Capability.COLOR_CONTROL,
                 Capability.COLOR_TEMPERATURE,

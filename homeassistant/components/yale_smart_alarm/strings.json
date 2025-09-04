@@ -71,8 +71,8 @@
       "volume": {
         "name": "Volume",
         "state": {
-          "high": "High",
-          "low": "Low",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
           "off": "[%key:common::state::off%]"
         }
       }

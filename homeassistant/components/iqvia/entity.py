@@ -2,28 +2,23 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_ZIP_CODE, DOMAIN, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK
+from .const import CONF_ZIP_CODE, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK
+from .coordinator import IqviaConfigEntry, IqviaUpdateCoordinator
 
 
-class IQVIAEntity(CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]]):
+class IQVIAEntity(CoordinatorEntity[IqviaUpdateCoordinator]):
     """Define a base IQVIA entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, Any]],
-        entry: ConfigEntry,
+        coordinator: IqviaUpdateCoordinator,
+        entry: IqviaConfigEntry,
         description: EntityDescription,
     ) -> None:
         """Initialize."""
@@ -49,9 +44,9 @@ class IQVIAEntity(CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]]):
 
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
             self.async_on_remove(
-                self.hass.data[DOMAIN][self._entry.entry_id][
-                    TYPE_ALLERGY_OUTLOOK
-                ].async_add_listener(self._handle_coordinator_update)
+                self._entry.runtime_data[TYPE_ALLERGY_OUTLOOK].async_add_listener(
+                    self._handle_coordinator_update
+                )
             )
 
         self.update_from_latest_data()

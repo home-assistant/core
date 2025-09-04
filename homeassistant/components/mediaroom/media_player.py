@@ -134,7 +134,7 @@ class MediaroomDevice(MediaPlayerEntity):
 
         state_map = {
             State.OFF: MediaPlayerState.OFF,
-            State.STANDBY: MediaPlayerState.STANDBY,
+            State.STANDBY: MediaPlayerState.IDLE,
             State.PLAYING_LIVE_TV: MediaPlayerState.PLAYING,
             State.PLAYING_RECORDED_TV: MediaPlayerState.PLAYING,
             State.PLAYING_TIMESHIFT_TV: MediaPlayerState.PLAYING,
@@ -155,7 +155,7 @@ class MediaroomDevice(MediaPlayerEntity):
         self._channel = None
         self._optimistic = optimistic
         self._attr_state = (
-            MediaPlayerState.PLAYING if optimistic else MediaPlayerState.STANDBY
+            MediaPlayerState.PLAYING if optimistic else MediaPlayerState.IDLE
         )
         self._name = f"Mediaroom {device_id if device_id else host}"
         self._available = True
@@ -165,7 +165,7 @@ class MediaroomDevice(MediaPlayerEntity):
             self._unique_id = None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
@@ -254,7 +254,7 @@ class MediaroomDevice(MediaPlayerEntity):
         try:
             self.set_state(await self.stb.turn_off())
             if self._optimistic:
-                self._attr_state = MediaPlayerState.STANDBY
+                self._attr_state = MediaPlayerState.IDLE
             self._available = True
         except PyMediaroomError:
             self._available = False

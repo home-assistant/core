@@ -37,7 +37,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name=f"{DOMAIN}_{ha_bridge.device.device_id}",
         )
 
-        self.data = {}
+        self.data = ha_bridge.update_status(None)
         self.api = ha_bridge
         self.device_id = ha_bridge.device.device_id
         self.sub_id = ha_bridge.sub_id
@@ -63,10 +63,12 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Add a callback to handle core config update.
         self.unit_system: str | None = None
-        self.hass.bus.async_listen(
-            event_type=EVENT_CORE_CONFIG_UPDATE,
-            listener=self._handle_update_config,
-            event_filter=self.async_config_update_filter,
+        self.config_entry.async_on_unload(
+            self.hass.bus.async_listen(
+                event_type=EVENT_CORE_CONFIG_UPDATE,
+                listener=self._handle_update_config,
+                event_filter=self.async_config_update_filter,
+            )
         )
 
     async def _handle_update_config(self, _: Event) -> None:

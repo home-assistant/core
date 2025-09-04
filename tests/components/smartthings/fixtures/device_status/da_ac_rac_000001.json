@@ -473,7 +473,7 @@
           "timestamp": "2024-09-10T10:26:28.781Z"
         },
         "acOptionalMode": {
-          "value": "off",
+          "value": "windFree",
           "timestamp": "2025-02-09T09:14:39.642Z"
         }
       },

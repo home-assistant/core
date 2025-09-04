@@ -61,15 +61,9 @@ class FeedReaderEvent(CoordinatorEntity[FeedReaderCoordinator], EventEntity):
             entry_type=DeviceEntryType.SERVICE,
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Entity added to hass."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._async_handle_update)
-        )
-
     @callback
-    def _async_handle_update(self) -> None:
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         if (data := self.coordinator.data) is None or not data:
             return
 

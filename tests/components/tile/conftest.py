@@ -26,6 +26,7 @@ def tile() -> AsyncMock:
     mock.latitude = 1
     mock.longitude = 1
     mock.altitude = 0
+    mock.accuracy = 13.496111
     mock.lost = False
     mock.last_timestamp = datetime(2020, 8, 12, 17, 55, 26)
     mock.lost_timestamp = datetime(1969, 12, 31, 19, 0, 0)
@@ -42,8 +43,8 @@ def tile() -> AsyncMock:
         "hardware_version": "02.09",
         "kind": "TILE",
         "last_timestamp": datetime(2020, 8, 12, 17, 55, 26),
-        "latitude": 0,
-        "longitude": 0,
+        "latitude": 1,
+        "longitude": 1,
         "lost": False,
         "lost_timestamp": datetime(1969, 12, 31, 19, 0, 0),
         "name": "Wallet",

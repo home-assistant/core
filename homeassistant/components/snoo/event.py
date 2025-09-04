@@ -31,6 +31,7 @@ async def async_setup_entry(
                     "power",
                     "status_requested",
                     "sticky_white_noise_updated",
+                    "config_change",
                 ],
             ),
         )

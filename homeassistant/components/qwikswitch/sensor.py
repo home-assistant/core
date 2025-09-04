@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as QWIKSWITCH
+from . import DOMAIN
 from .entity import QSEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,9 +28,9 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    qsusb = hass.data[QWIKSWITCH]
+    qsusb = hass.data[DOMAIN]
     _LOGGER.debug("Setup qwikswitch.sensor %s, %s", qsusb, discovery_info)
-    devs = [QSSensor(sensor) for sensor in discovery_info[QWIKSWITCH]]
+    devs = [QSSensor(sensor) for sensor in discovery_info[DOMAIN]]
     add_entities(devs)
 
 

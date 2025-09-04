@@ -364,6 +364,15 @@ class EntityTopicState:
             entity_id, entity = self.subscribe_calls.popitem()
             try:
                 entity.async_write_ha_state()
+            except ValueError as exc:
+                _LOGGER.error(
+                    "Value error while updating state of %s, topic: "
+                    "'%s' with payload: %s: %s",
+                    entity_id,
+                    msg.topic,
+                    msg.payload,
+                    exc,
+                )
             except Exception:
                 _LOGGER.exception(
                     "Exception raised while updating state of %s, topic: "
@@ -420,6 +429,12 @@ class MqttComponentConfig:
     discovery_payload: MQTTDiscoveryPayload
 
 
+class DeviceMqttOptions(TypedDict, total=False):
+    """Hold the shared MQTT specific options for an MQTT device."""
+
+    qos: int
+
+
 class MqttDeviceData(TypedDict, total=False):
     """Hold the data for an MQTT device."""
 
@@ -430,6 +445,7 @@ class MqttDeviceData(TypedDict, total=False):
     hw_version: str
     model: str
     model_id: str
+    mqtt_settings: DeviceMqttOptions
 
 
 class MqttAvailabilityData(TypedDict, total=False):
