@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping
 from functools import lru_cache, partial
 import logging
 import os
@@ -75,32 +75,37 @@ PRIMARY_COLOR = "primary-color"
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _not_modes_string_key(key: str) -> str:
+    if key == CONF_THEMES_MODES:
+        raise vol.Invalid("Key 'modes' must not be a string value")
+    return key
+
+
+def _at_least_one_mode(value: Mapping[str, Any]) -> Mapping[str, Any]:
+    if CONF_THEMES_LIGHT not in value and CONF_THEMES_DARK not in value:
+        raise vol.Invalid("At least one of 'light' or 'dark' modes must be present")
+    return value
+
+
 EXTENDED_THEME_SCHEMA = vol.Schema(
     {
         # Theme variables that apply to all modes
-        cv.string: cv.string,
+        vol.All(cv.string, _not_modes_string_key): cv.string,
         # Mode specific theme variables
-        vol.Optional(CONF_THEMES_MODES): vol.Schema(
-            {
-                vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
-                vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
-            }
+        vol.Optional(CONF_THEMES_MODES): vol.All(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
+                    vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
+                }
+            ),
+            _at_least_one_mode,
         ),
     }
 )
 
-THEME_SCHEMA = vol.Schema(
-    {
-        cv.string: (
-            vol.Any(
-                # Legacy theme scheme
-                {cv.string: cv.string},
-                # New extended schema with mode support
-                EXTENDED_THEME_SCHEMA,
-            )
-        )
-    }
-)
+THEME_SCHEMA = vol.Schema({cv.string: (EXTENDED_THEME_SCHEMA)})
 
 CONFIG_SCHEMA = vol.Schema(
     {
