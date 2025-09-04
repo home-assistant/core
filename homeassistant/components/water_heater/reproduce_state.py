@@ -20,6 +20,8 @@ from homeassistant.core import Context, HomeAssistant, State
 from . import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     DOMAIN,
     SERVICE_SET_AWAY_MODE,
     SERVICE_SET_OPERATION_MODE,
@@ -69,6 +71,10 @@ async def _async_reproduce_state(
         cur_state.state == state.state
         and cur_state.attributes.get(ATTR_TEMPERATURE)
         == state.attributes.get(ATTR_TEMPERATURE)
+        and cur_state.attributes.get(ATTR_TARGET_TEMP_LOW)
+        == state.attributes.get(ATTR_TARGET_TEMP_LOW)
+        and cur_state.attributes.get(ATTR_TARGET_TEMP_HIGH)
+        == state.attributes.get(ATTR_TARGET_TEMP_HIGH)
         and cur_state.attributes.get(ATTR_AWAY_MODE)
         == state.attributes.get(ATTR_AWAY_MODE)
     ):
@@ -87,6 +93,25 @@ async def _async_reproduce_state(
 
         await hass.services.async_call(
             DOMAIN, service, service_data, context=context, blocking=True
+        )
+
+    if (
+        (temp_low := state.attributes.get(ATTR_TARGET_TEMP_LOW)) is not None
+        and temp_low != cur_state.attributes.get(ATTR_TARGET_TEMP_LOW)
+    ) or (
+        (temp_high := state.attributes.get(ATTR_TARGET_TEMP_HIGH)) is not None
+        and temp_high != cur_state.attributes.get(ATTR_TARGET_TEMP_HIGH)
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: state.entity_id,
+                ATTR_TARGET_TEMP_HIGH: state.attributes.get(ATTR_TARGET_TEMP_HIGH),
+                ATTR_TARGET_TEMP_LOW: state.attributes.get(ATTR_TARGET_TEMP_LOW),
+            },
+            context=context,
+            blocking=True,
         )
 
     if (
