@@ -133,7 +133,11 @@ class EzvizSensor(EzvizEntity, SensorEntity):
         sensors = self.data
         optionals = sensors.get("optionals", {})
 
-        value = sensors.get(self._sensor_name) if sensors.get(self._sensor_name) is not None else optionals.get(self._sensor_name)
+        value = (
+            sensors.get(self._sensor_name)
+            if sensors.get(self._sensor_name) is not None
+            else optionals.get(self._sensor_name)
+        )
 
         # Special handling for Record_Mode. {"Record_Mode": {"mode": <value>}}
         if self._sensor_name == "Record_Mode" and isinstance(value, dict):
