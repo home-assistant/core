@@ -2221,7 +2221,6 @@ NO_QUALITY_SCALE = [
     "history",
     "homeassistant",
     "homeassistant_alerts",
-    "homeassistant_connect_zbt2",
     "homeassistant_green",
     "homeassistant_hardware",
     "homeassistant_sky_connect",

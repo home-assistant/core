@@ -6,6 +6,7 @@
   "dependencies": ["hardware", "usb", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_connect_zbt2",
   "integration_type": "hardware",
+  "quality_scale": "bronze",
   "usb": [
     {
       "vid": "303A",
