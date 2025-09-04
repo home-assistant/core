@@ -1,5 +1,7 @@
 """Tests for the ntfy notify platform."""
 
+from typing import Any
+
 from aiontfy import Message
 from aiontfy.exceptions import (
     NtfyException,
@@ -26,7 +28,7 @@ from homeassistant.components.ntfy.notify import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import AsyncMock, MockConfigEntry
 
@@ -52,10 +54,8 @@ async def test_ntfy_publish(
             ATTR_MESSAGE: "Hello",
             ATTR_TITLE: "World",
             ATTR_ATTACH: "https://example.org/download.zip",
-            ATTR_CALL: "1234567890",
             ATTR_CLICK: "https://example.org",
             ATTR_DELAY: {"days": 1, "seconds": 30},
-            ATTR_EMAIL: "mail@example.org",
             ATTR_ICON: "https://example.org/logo.png",
             ATTR_MARKDOWN: True,
             ATTR_PRIORITY: "5",
@@ -75,9 +75,7 @@ async def test_ntfy_publish(
             attach=URL("https://example.org/download.zip"),
             markdown=True,
             icon=URL("https://example.org/logo.png"),
-            delay="1d 30s",
-            email="mail@example.org",
-            call="1234567890",
+            delay="86430.0s",
         )
     )
 
@@ -131,6 +129,43 @@ async def test_send_message_exception(
     mock_aiontfy.publish.assert_called_once_with(
         Message(topic="mytopic", message="triggered", title="test")
     )
+
+
+@pytest.mark.parametrize(
+    ("payload", "error_msg"),
+    [
+        (
+            {ATTR_DELAY: {"days": 1, "seconds": 30}, ATTR_CALL: "1234567890"},
+            "Delayed call notifications are not supported",
+        ),
+        (
+            {ATTR_DELAY: {"days": 1, "seconds": 30}, ATTR_EMAIL: "mail@example.org"},
+            "Delayed email notifications are not supported",
+        ),
+    ],
+)
+async def test_send_message_validation_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+    payload: dict[str, Any],
+    error_msg: str,
+) -> None:
+    """Test publish message service validation errors."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(ServiceValidationError, match=error_msg):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PUBLISH,
+            {ATTR_ENTITY_ID: "notify.mytopic", **payload},
+            blocking=True,
+        )
 
 
 async def test_send_message_reauth_flow(

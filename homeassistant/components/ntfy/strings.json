@@ -227,6 +227,12 @@
     },
     "entry_not_loaded": {
       "message": "The selected ntfy service is currently not loaded or disabled in Home Assistant."
+    },
+    "delay_no_email": {
+      "message": "Delayed email notifications are not supported"
+    },
+    "delay_no_call": {
+      "message": "Delayed call notifications are not supported"
     }
   },
   "services": {

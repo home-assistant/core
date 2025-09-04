@@ -24,7 +24,7 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -129,9 +129,17 @@ class NtfyNotifyEntity(NotifyEntity):
         params: dict[str, Any] = kwargs
         delay: timedelta | None = params.get("delay")
         if delay:
-            params["delay"] = (
-                f"{delay.days}d {delay.seconds}s" if delay.days else f"{delay.seconds}s"
-            )
+            params["delay"] = f"{delay.total_seconds()}s"
+            if params.get("email"):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="delay_no_email",
+                )
+            if params.get("call"):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="delay_no_call",
+                )
 
         msg = Message(topic=self.topic, **params)
         try:

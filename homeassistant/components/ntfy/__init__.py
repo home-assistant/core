@@ -21,7 +21,6 @@ from .const import DOMAIN
 from .coordinator import NtfyConfigEntry, NtfyDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
 PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.SENSOR]
 
 
