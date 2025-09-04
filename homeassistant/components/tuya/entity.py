@@ -159,7 +159,7 @@ class TuyaEntity(Entity):
 
     async def _handle_state_update(
         self,
-        updated_status_properties: list[str] | None = None,
+        updated_status_properties: list[str] | None,
         dp_timestamps: dict | None = None,
     ) -> None:
         self.async_write_ha_state()

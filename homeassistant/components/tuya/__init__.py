@@ -227,6 +227,8 @@ class DeviceListener(SharingDeviceListener):
         self.hass = hass
         self.manager = manager
 
+    # pylint disable can be removed when issue fixed in library
+    # https://github.com/tuya/tuya-device-sharing-sdk/pull/35
     def update_device(  # pylint: disable=arguments-renamed
         self,
         device: CustomerDevice,
@@ -235,7 +237,8 @@ class DeviceListener(SharingDeviceListener):
     ) -> None:
         """Update device status with optional DP timestamps."""
         LOGGER.debug(
-            "Received update for device %s (online: %s): %s (updated properties: %s, dp_timestamps: %s)",
+            "Received update for device %s (online: %s): %s"
+            " (updated properties: %s, dp_timestamps: %s)",
             device.id,
             device.online,
             device.status,
