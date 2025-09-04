@@ -1909,3 +1909,46 @@ async def test_wake_word_select(
 
     # Satellite config should have been updated
     assert satellite.async_get_configuration().active_wake_words == ["okay_nabu"]
+
+    # No secondary wake word should be selected by default
+    state = hass.states.get("select.test_secondary_wake_word")
+    assert state is not None
+    assert state.state == NO_WAKE_WORD
+
+    # Changing the secondary select should add an active wake word
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.test_secondary_wake_word", "option": "Hey Jarvis"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_secondary_wake_word")
+    assert state is not None
+    assert state.state == "Hey Jarvis"
+
+    # Wait for device config to be updated
+    async with asyncio.timeout(1):
+        await configuration_set.wait()
+
+    # Satellite config should have been updated
+    assert set(satellite.async_get_configuration().active_wake_words) == {
+        "okay_nabu",
+        "hey_jarvis",
+    }
+
+    # Remove the secondary wake word
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.test_secondary_wake_word", "option": NO_WAKE_WORD},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    async with asyncio.timeout(1):
+        await configuration_set.wait()
+
+    # Only primary wake word remains
+    assert satellite.async_get_configuration().active_wake_words == ["okay_nabu"]

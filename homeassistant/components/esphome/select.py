@@ -163,7 +163,7 @@ class EsphomeAssistSatelliteWakeWordSelect(
         self._attr_current_option = option
         self.async_write_ha_state()
 
-        wake_word_id = self._wake_words.get(option, NO_WAKE_WORD)
+        wake_word_id = self._wake_words.get(option)
         self._entry_data.async_assist_satellite_set_wake_word(
             self._wake_word_index, wake_word_id
         )
