@@ -7,7 +7,10 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.matter.const import SERVICE_SELECT_AREAS
+from homeassistant.components.matter.const import (
+    SERVICE_CLEAN_AREA,
+    SERVICE_SELECT_AREAS,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -164,11 +167,37 @@ async def test_k11_vacuum_actions(
         return_response=True,
     )
     assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.ServiceArea.Commands.SelectAreas(newAreas=selected_areas),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # test clean_areas action
+    assert state
+
+    selected_areas = [1, 2, 3]
+    await hass.services.async_call(
+        "matter",
+        SERVICE_CLEAN_AREA,
+        {
+            "entity_id": entity_id,
+            "areas": selected_areas,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.ServiceArea.Commands.SelectAreas(newAreas=selected_areas),
+    )
+    assert matter_client.send_device_command.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.RvcRunMode.Commands.ChangeToMode(newMode=1),
     )
     matter_client.send_device_command.reset_mock()
 
