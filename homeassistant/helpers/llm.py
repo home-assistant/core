@@ -686,7 +686,7 @@ def _get_exposed_entities(
 
         if include_state:
             info["state"] = state.state
-            
+
             # Convert timestamp device_class states from UTC to local time
             device_class = state.attributes.get("device_class")
             if device_class == "timestamp" and state.state:
