@@ -27,7 +27,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, mock_rest_update, mutate_rpc_device_status
+from . import init_integration, mock_polling_rpc_update, mutate_rpc_device_status
 
 ROLLER_BLOCK_ID = 1
 
@@ -328,7 +328,7 @@ async def test_update_position_closing(
         assert (state := hass.states.get(entity_id))
         assert state.attributes[ATTR_CURRENT_POSITION] == position
         assert state.state == CoverState.CLOSING
-        await mock_rest_update(hass, freezer, RPC_COVER_UPDATE_TIME_SEC)
+        await mock_polling_rpc_update(hass, freezer, RPC_COVER_UPDATE_TIME_SEC)
 
     # Final state should be closed
     assert (state := hass.states.get(entity_id))
@@ -380,7 +380,7 @@ async def test_update_position_opening(
         assert (state := hass.states.get(entity_id))
         assert state.attributes[ATTR_CURRENT_POSITION] == position
         assert state.state == CoverState.OPENING
-        await mock_rest_update(hass, freezer, RPC_COVER_UPDATE_TIME_SEC)
+        await mock_polling_rpc_update(hass, freezer, RPC_COVER_UPDATE_TIME_SEC)
 
     # Final state should be open
     assert (state := hass.states.get(entity_id))
