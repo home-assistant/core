@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 from aioesphomeapi import EntityInfo, SelectInfo, SelectState
 
 from homeassistant.components.assist_pipeline.select import (
     AssistPipelineSelect,
+    AssistSecondaryPipelineSelect,
     VadSensitivitySelect,
 )
 from homeassistant.components.assist_satellite import AssistSatelliteConfiguration
@@ -26,6 +29,7 @@ from .entity import (
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
 PARALLEL_UPDATES = 0
+NO_WAKE_WORD: Final[str] = "no_wake_word"
 
 
 async def async_setup_entry(
@@ -51,8 +55,10 @@ async def async_setup_entry(
         async_add_entities(
             [
                 EsphomeAssistPipelineSelect(hass, entry_data),
+                EsphomeSecondaryAssistPipelineSelect(hass, entry_data),
                 EsphomeVadSensitivitySelect(hass, entry_data),
                 EsphomeAssistSatelliteWakeWordSelect(entry_data),
+                EsphomeSecondaryAssistSatelliteWakeWordSelect(entry_data),
             ]
         )
 
@@ -90,6 +96,19 @@ class EsphomeAssistPipelineSelect(EsphomeAssistEntity, AssistPipelineSelect):
         AssistPipelineSelect.__init__(self, hass, DOMAIN, self._device_info.mac_address)
 
 
+class EsphomeSecondaryAssistPipelineSelect(
+    EsphomeAssistEntity, AssistSecondaryPipelineSelect
+):
+    """Secondary pipeline selector for esphome devices."""
+
+    def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
+        """Initialize a secondary pipeline selector."""
+        EsphomeAssistEntity.__init__(self, entry_data)
+        AssistSecondaryPipelineSelect.__init__(
+            self, hass, DOMAIN, self._device_info.mac_address
+        )
+
+
 class EsphomeVadSensitivitySelect(EsphomeAssistEntity, VadSensitivitySelect):
     """VAD sensitivity selector for ESPHome devices."""
 
@@ -110,9 +129,9 @@ class EsphomeAssistSatelliteWakeWordSelect(
         entity_category=EntityCategory.CONFIG,
     )
     _attr_current_option: str | None = None
-    _attr_options: list[str] = []
+    _attr_options: list[str] = [NO_WAKE_WORD]
 
-    def __init__(self, entry_data: RuntimeEntryData) -> None:
+    def __init__(self, entry_data: RuntimeEntryData, wake_word_index: int = 0) -> None:
         """Initialize a wake word selector."""
         EsphomeAssistEntity.__init__(self, entry_data)
 
@@ -121,15 +140,19 @@ class EsphomeAssistSatelliteWakeWordSelect(
 
         # name -> id
         self._wake_words: dict[str, str] = {}
+        self._wake_word_index = wake_word_index
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return bool(self._attr_options)
+        return len(self._attr_options) > 1  # more than just NO_WAKE_WORD
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+
+        if last_state := await self.async_get_last_state():
+            self._attr_current_option = last_state.state
 
         # Update options when config is updated
         self.async_on_remove(
@@ -140,33 +163,57 @@ class EsphomeAssistSatelliteWakeWordSelect(
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        if wake_word_id := self._wake_words.get(option):
-            # _attr_current_option will be updated on
-            # async_satellite_config_updated after the device sets the wake
-            # word.
-            self._entry_data.async_assist_satellite_set_wake_word(wake_word_id)
+        self._attr_current_option = option
+        self.async_write_ha_state()
+
+        wake_word_id = self._wake_words.get(option, NO_WAKE_WORD)
+        self._entry_data.async_assist_satellite_set_wake_word(
+            self._wake_word_index, wake_word_id
+        )
 
     def async_satellite_config_updated(
         self, config: AssistSatelliteConfiguration
     ) -> None:
         """Update options with available wake words."""
         if (not config.available_wake_words) or (config.max_active_wake_words < 1):
-            self._attr_current_option = None
+            # No wake words
             self._wake_words.clear()
+            self._attr_current_option = NO_WAKE_WORD
+            self._attr_options = [NO_WAKE_WORD]
             self.async_write_ha_state()
             return
 
         self._wake_words = {w.wake_word: w.id for w in config.available_wake_words}
-        self._attr_options = sorted(self._wake_words)
+        self._attr_options = [NO_WAKE_WORD, *sorted(self._wake_words)]
 
+        option = NO_WAKE_WORD
         if config.active_wake_words:
-            # Select first active wake word
-            wake_word_id = config.active_wake_words[0]
-            for wake_word in config.available_wake_words:
-                if wake_word.id == wake_word_id:
-                    self._attr_current_option = wake_word.wake_word
-        else:
-            # Select first available wake word
-            self._attr_current_option = config.available_wake_words[0].wake_word
+            for active_wake_word_id in config.active_wake_words:
+                for wake_word, wake_word_id in self._wake_words.items():
+                    if (wake_word_id == active_wake_word_id) and (
+                        self._attr_current_option == wake_word
+                    ):
+                        option = wake_word
+                        break
 
+        self._attr_current_option = option
         self.async_write_ha_state()
+
+
+class EsphomeSecondaryAssistSatelliteWakeWordSelect(
+    EsphomeAssistSatelliteWakeWordSelect
+):
+    """Secondary wake word selector for esphome devices."""
+
+    entity_description = SelectEntityDescription(
+        key="wake_word_2",
+        translation_key="wake_word_2",
+        entity_category=EntityCategory.CONFIG,
+    )
+
+    def __init__(self, entry_data: RuntimeEntryData) -> None:
+        """Initialize a secondary wake word selector."""
+        EsphomeAssistSatelliteWakeWordSelect.__init__(self, entry_data, 1)
+
+        unique_id_prefix = self._device_info.mac_address
+        self._attr_unique_id = f"{unique_id_prefix}-wake_word-2"

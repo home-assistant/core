@@ -125,6 +125,26 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
             self._attr_current_option = OPTION_PREFERRED
 
 
+class AssistSecondaryPipelineSelect(AssistPipelineSelect):
+    """Entity to represent a secondary pipeline selector."""
+
+    entity_description = SelectEntityDescription(
+        key="pipeline_2",
+        translation_key="pipeline_2",
+        entity_category=EntityCategory.CONFIG,
+    )
+
+    def __init__(self, hass: HomeAssistant, domain: str, unique_id_prefix: str) -> None:
+        """Initialize a secondary pipeline selector."""
+        super().__init__(hass, domain, unique_id_prefix)
+
+        self._domain = domain
+        self._unique_id_prefix = unique_id_prefix
+        self._attr_unique_id = f"{unique_id_prefix}-pipeline-2"
+        self.hass = hass
+        self._update_options()
+
+
 class VadSensitivitySelect(SelectEntity, restore_state.RestoreEntity):
     """Entity to represent VAD sensitivity."""
 

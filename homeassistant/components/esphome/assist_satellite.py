@@ -127,27 +127,47 @@ class EsphomeAssistSatellite(
             available_wake_words=[], active_wake_words=[], max_active_wake_words=1
         )
 
-    @property
-    def pipeline_entity_id(self) -> str | None:
-        """Return the entity ID of the pipeline to use for the next conversation."""
-        assert self._entry_data.device_info is not None
+        self._secondary_pipeline_active = False
+
+    def _get_entity_id(self, suffix: str) -> str | None:
+        """Return the entity id for pipeline select, etc."""
+        if self._entry_data.device_info is None:
+            return None
+
         ent_reg = er.async_get(self.hass)
         return ent_reg.async_get_entity_id(
             Platform.SELECT,
             DOMAIN,
-            f"{self._entry_data.device_info.mac_address}-pipeline",
+            f"{self._entry_data.device_info.mac_address}-{suffix}",
         )
+
+    @property
+    def pipeline_entity_id(self) -> str | None:
+        """Return the entity ID of the primary pipeline to use for the next conversation."""
+        if self._secondary_pipeline_active:
+            return self.secondary_pipeline_entity_id
+
+        return self._get_entity_id("pipeline")
+
+    @property
+    def secondary_pipeline_entity_id(self) -> str | None:
+        """Return the entity ID of the secondary pipeline to use for the next conversation."""
+        return self._get_entity_id("pipeline-2")
+
+    @property
+    def wake_word_entity_id(self) -> str | None:
+        """Return the entity ID of the primary wake word select."""
+        return self._get_entity_id("wake_word")
+
+    @property
+    def secondary_wake_word_entity_id(self) -> str | None:
+        """Return the entity ID of the secondary wake word select."""
+        return self._get_entity_id("wake_word-2")
 
     @property
     def vad_sensitivity_entity_id(self) -> str | None:
         """Return the entity ID of the VAD sensitivity to use for the next conversation."""
-        assert self._entry_data.device_info is not None
-        ent_reg = er.async_get(self.hass)
-        return ent_reg.async_get_entity_id(
-            Platform.SELECT,
-            DOMAIN,
-            f"{self._entry_data.device_info.mac_address}-vad_sensitivity",
-        )
+        return self._get_entity_id("vad_sensitivity")
 
     @callback
     def async_get_configuration(
@@ -235,6 +255,7 @@ class EsphomeAssistSatellite(
                 )
             )
 
+        assert self._attr_supported_features is not None
         if feature_flags & VoiceAssistantFeature.ANNOUNCE:
             # Device supports announcements
             self._attr_supported_features |= (
@@ -257,8 +278,8 @@ class EsphomeAssistSatellite(
 
         # Update wake word select when config is updated
         self.async_on_remove(
-            self._entry_data.async_register_assist_satellite_set_wake_word_callback(
-                self.async_set_wake_word
+            self._entry_data.async_register_assist_satellite_set_wake_words_callback(
+                self.async_set_wake_words
             )
         )
 
@@ -482,8 +503,30 @@ class EsphomeAssistSatellite(
             # ANNOUNCEMENT format from media player
             self._update_tts_format()
 
-        # Run the pipeline
-        _LOGGER.debug("Running pipeline from %s to %s", start_stage, end_stage)
+        # Run the appropriate pipeline.
+        #
+        # If the wake word phrase matches the secondary wake word, use the
+        # secondary pipeline.
+        self._secondary_pipeline_active = False
+
+        if (
+            (primary_ww_id := self.wake_word_entity_id)
+            and (primary_ww_state := self.hass.states.get(primary_ww_id))
+            and (secondary_ww_id := self.secondary_wake_word_entity_id)
+        ) and (secondary_ww_state := self.hass.states.get(secondary_ww_id)):
+            # Check that the wake word phrase doesn't match the primary in case
+            # primary and secondary are the same.
+            if (wake_word_phrase != primary_ww_state.state) and (
+                wake_word_phrase == secondary_ww_state.state
+            ):
+                self._secondary_pipeline_active = True
+
+        _LOGGER.debug(
+            "Running %spipeline from %s to %s",
+            "secondary " if self._secondary_pipeline_active else "",
+            start_stage,
+            end_stage,
+        )
         self._pipeline_task = self.config_entry.async_create_background_task(
             self.hass,
             self.async_accept_pipeline_from_satellite(
@@ -514,6 +557,7 @@ class EsphomeAssistSatellite(
     def handle_pipeline_finished(self) -> None:
         """Handle when pipeline has finished running."""
         self._stop_udp_server()
+        self._secondary_pipeline_active = False
         _LOGGER.debug("Pipeline finished")
 
     def handle_timer_event(
@@ -542,15 +586,15 @@ class EsphomeAssistSatellite(
         self.tts_response_finished()
 
     @callback
-    def async_set_wake_word(self, wake_word_id: str) -> None:
-        """Set active wake word and update config on satellite."""
-        self._satellite_config.active_wake_words = [wake_word_id]
+    def async_set_wake_words(self, wake_word_ids: list[str]) -> None:
+        """Set active wake words and update config on satellite."""
+        self._satellite_config.active_wake_words = wake_word_ids
         self.config_entry.async_create_background_task(
             self.hass,
             self.async_set_configuration(self._satellite_config),
             "esphome_voice_assistant_set_config",
         )
-        _LOGGER.debug("Setting active wake word: %s", wake_word_id)
+        _LOGGER.debug("Setting active wake word(s): %s", wake_word_ids)
 
     def _update_tts_format(self) -> None:
         """Update the TTS format from the first media player."""
