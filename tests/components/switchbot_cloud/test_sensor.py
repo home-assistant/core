@@ -2,10 +2,12 @@
 
 from unittest.mock import patch
 
+import pytest
 from switchbot_api import Device
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switchbot_cloud.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -43,12 +45,51 @@ async def test_meter(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
-async def test_meter_no_coordinator_data(
+async def test_plug_mini_eu(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_list_devices,
     mock_get_status,
+) -> None:
+    """Test plug_mini_eu Used Electricity."""
+
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="Plug-id-1",
+            deviceName="Plug-1",
+            deviceType="Plug Mini (EU)",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.side_effect = [
+        {
+            "usedElectricity": 3255,
+            "deviceId": "94A99054855E",
+            "deviceType": "Plug Mini (EU)",
+        },
+    ]
+
+    with patch("homeassistant.components.switchbot_cloud.PLATFORMS", [Platform.SENSOR]):
+        entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "device_model",
+    [
+        "Meter",
+        "Plug Mini (EU)",
+    ],
+)
+async def test_no_coordinator_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_list_devices,
+    mock_get_status,
+    device_model,
 ) -> None:
     """Test meter sensors are unknown without coordinator data."""
     mock_list_devices.return_value = [
@@ -56,7 +97,7 @@ async def test_meter_no_coordinator_data(
             version="V1.0",
             deviceId="meter-id-1",
             deviceName="meter-1",
-            deviceType="Meter",
+            deviceType=device_model,
             hubDeviceId="test-hub-id",
         ),
     ]
