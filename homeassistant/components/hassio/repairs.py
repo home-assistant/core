@@ -17,6 +17,7 @@ from homeassistant.data_entry_flow import FlowResult
 from . import get_addons_info, get_issues_info
 from .const import (
     ISSUE_KEY_ADDON_BOOT_FAIL,
+    ISSUE_KEY_ADDON_DEPRECATED,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     PLACEHOLDER_KEY_ADDON,
@@ -43,6 +44,7 @@ EXTRA_PLACEHOLDERS = {
         "storage_url": "/config/storage",
     },
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED: HELP_URLS,
+    ISSUE_KEY_ADDON_DEPRECATED: HELP_URLS,
 }
 
 
@@ -219,6 +221,7 @@ async def async_create_fix_flow(
     if issue and issue.key in {
         ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
         ISSUE_KEY_ADDON_BOOT_FAIL,
+        ISSUE_KEY_ADDON_DEPRECATED,
     }:
         return AddonIssueRepairFlow(hass, issue_id)
 
