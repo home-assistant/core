@@ -42,6 +42,9 @@ HUE_MANUFACTURERURL = ("http://www.philips.com", "http://www.philips-hue.com")
 HUE_IGNORED_BRIDGE_NAMES = ["Home Assistant Bridge", "Espalexa"]
 HUE_MANUAL_BRIDGE_ID = "manual"
 
+BSB002_MODEL_ID = "BSB002"
+BSB003_MODEL_ID = "BSB003"
+
 
 class HueFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Hue config flow."""
@@ -78,7 +81,11 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             bridge = await discover_bridge(
                 host,
                 websession=aiohttp_client.async_get_clientsession(
-                    self.hass, verify_ssl=False
+                    # NOTE: we disable SSL verification for now due to the fact that the (BSB003)
+                    # Hue bridge uses a certificate from a on-bridge root authority.
+                    # We need to specifically handle this case in a follow-up update.
+                    self.hass,
+                    verify_ssl=True,
                 ),
             )
         except aiohttp.ClientError as err:
@@ -244,7 +251,10 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         if bridge is None:
             return self.async_abort(reason="cannot_connect")
         self.bridge = bridge
-        if bridge.supports_v2 and discovery_info.properties.get("modelid") == "BSB003":
+        if (
+            bridge.supports_v2
+            and discovery_info.properties.get("modelid") == BSB003_MODEL_ID
+        ):
             # try to handle migration of BSB002 --> BSB003
             await self._check_migrated_bridge(bridge)
 
@@ -325,7 +335,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
                 conf_entry.entry_id
             )
             if bridge_device := next(
-                (d for d in conf_entry_devices if d.model_id == "BSB002"), None
+                (d for d in conf_entry_devices if d.model_id == BSB002_MODEL_ID), None
             ):
                 dev_reg.async_update_device(
                     bridge_device.id,
