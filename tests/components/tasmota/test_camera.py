@@ -1,5 +1,6 @@
 """The tests for the Tasmota camera platform."""
 
+from asyncio import Future
 import copy
 import json
 from unittest.mock import patch
@@ -26,7 +27,14 @@ from .test_common import (
 )
 
 from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
+from tests.typing import ClientSessionGenerator, MqttMockHAClient, MqttMockPahoClient
+
+SMALLEST_VALID_JPEG = (
+    "ffd8ffe000104a46494600010101004800480000ffdb00430003020202020203020202030303030406040404040408060"
+    "6050609080a0a090809090a0c0f0c0a0b0e0b09090d110d0e0f101011100a0c12131210130f101010ffc9000b08000100"
+    "0101011100ffcc000600101005ffda0008010100003f00d2cf20ffd9"
+)
+SMALLEST_VALID_JPEG_BYTES = bytes.fromhex(SMALLEST_VALID_JPEG)
 
 
 async def test_controlling_state_via_mqtt(
@@ -200,3 +208,101 @@ async def test_entity_id_update_discovery_update(
     await help_test_entity_id_update_discovery_update(
         hass, mqtt_mock, Platform.CAMERA, config, object_id="tasmota"
     )
+
+
+async def test_camera_single_frame(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test single frame capture."""
+
+    class MockClientResponse:
+        def __init__(self, text) -> None:
+            self._text = text
+
+        async def read(self):
+            return self._text
+
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["cam"] = 1
+
+    mac = config["mac"]
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+
+    mock_single_image_stream = Future()
+    mock_single_image_stream.set_result(MockClientResponse(SMALLEST_VALID_JPEG_BYTES))
+
+    with patch(
+        "hatasmota.camera.TasmotaCamera.get_still_image_stream",
+        return_value=mock_single_image_stream,
+    ):
+        client = await hass_client()
+        resp = await client.get("/api/camera_proxy/camera.tasmota")
+        await hass.async_block_till_done()
+
+    assert resp.status == 200
+    assert resp.content_type == "image/jpeg"
+    assert resp.content_length == len(SMALLEST_VALID_JPEG_BYTES)
+    assert await resp.read() == SMALLEST_VALID_JPEG_BYTES
+
+
+async def test_camera_stream(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test mjpeg stream capture."""
+
+    class MockClientResponse:
+        def __init__(self, text) -> None:
+            self._text = text
+            self._frame_available = True
+
+        async def read(self, buffer_size):
+            if self._frame_available:
+                self._frame_available = False
+                return self._text
+            return None
+
+        def close(self):
+            pass
+
+        @property
+        def headers(self):
+            return {"Content-Type": "multipart/x-mixed-replace"}
+
+        @property
+        def content(self):
+            return self
+
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["cam"] = 1
+
+    mac = config["mac"]
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+
+    mock_mjpeg_stream = Future()
+    mock_mjpeg_stream.set_result(MockClientResponse(SMALLEST_VALID_JPEG_BYTES))
+
+    with patch(
+        "hatasmota.camera.TasmotaCamera.get_mjpeg_stream",
+        return_value=mock_mjpeg_stream,
+    ):
+        client = await hass_client()
+        resp = await client.get("/api/camera_proxy_stream/camera.tasmota")
+        await hass.async_block_till_done()
+
+    assert resp.status == 200
+    assert resp.content_type == "multipart/x-mixed-replace"
+    assert await resp.read() == SMALLEST_VALID_JPEG_BYTES
