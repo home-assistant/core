@@ -1,0 +1,57 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "POWERASIA R2",
+  "category": "dj",
+  "product_id": "8ugheslg",
+  "product_name": "POWERASIA",
+  "online": true,
+  "sub": true,
+  "time_zone": "-05:00",
+  "active_time": "2024-07-27T23:47:47+00:00",
+  "create_time": "2024-07-27T23:47:47+00:00",
+  "update_time": "2024-07-27T23:47:47+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_led": true
+  },
+  "set_up": true,
+  "support_local": true
+}

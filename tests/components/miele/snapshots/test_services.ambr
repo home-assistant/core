@@ -43,6 +43,12 @@
         'program': 'Fan plus',
         'program_id': 13,
       }),
+      dict({
+        'parameters': dict({
+        }),
+        'program': 'Ristretto',
+        'program_id': 24000,
+      }),
     ]),
   })
 # ---

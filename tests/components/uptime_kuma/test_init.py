@@ -8,8 +8,11 @@ from pythonkuma import UptimeKumaAuthenticationException, UptimeKumaException
 from homeassistant.components.uptime_kuma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("mock_pythonkuma")
@@ -77,3 +80,85 @@ async def test_config_reauth_flow(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == config_entry.entry_id
+
+
+@pytest.mark.usefixtures("mock_pythonkuma")
+async def test_remove_stale_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test we can remove a device that is not in the coordinator data."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "123456789_1")}
+    )
+
+    config_entry.runtime_data.data.pop(1)
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+
+    assert response["success"]
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "123456789_1")}) is None
+    )
+
+
+@pytest.mark.usefixtures("mock_pythonkuma")
+async def test_remove_current_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test we cannot remove a device if it is still active."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "123456789_1")}
+    )
+
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+
+    assert response["success"] is False
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "123456789_1")})
+
+
+@pytest.mark.usefixtures("mock_pythonkuma")
+async def test_remove_entry_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test we cannot remove the device with the update entity."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "123456789")})
+
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+
+    assert response["success"] is False
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "123456789")})

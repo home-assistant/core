@@ -50,6 +50,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
+    area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
@@ -415,14 +416,17 @@ async def test_unique_id_updated_to_mac(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_home_assistant_states_and_services(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
-    mock_client.subscribe_states = async_subscribe_states
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            mac_address="1122334455aa",
-        )
+    mock_client.subscribe_home_assistant_states_and_services = (
+        async_subscribe_home_assistant_states_and_services
+    )
+    device_info = DeviceInfo(mac_address="1122334455aa")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -446,15 +450,20 @@ async def test_add_missing_bluetooth_mac_address(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_home_assistant_states_and_services(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
-    mock_client.subscribe_states = async_subscribe_states
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            mac_address="1122334455aa",
-            bluetooth_mac_address="AA:BB:CC:DD:EE:FF",
-        )
+    mock_client.subscribe_home_assistant_states_and_services = (
+        async_subscribe_home_assistant_states_and_services
+    )
+    device_info = DeviceInfo(
+        mac_address="1122334455aa",
+        bluetooth_mac_address="AA:BB:CC:DD:EE:FF",
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -488,8 +497,11 @@ async def test_unique_id_not_updated_if_name_same_and_already_mac(
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(mac_address="1122334455ab", name="test")
+    device_info = DeviceInfo(mac_address="1122334455ab", name="test")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -518,8 +530,11 @@ async def test_unique_id_updated_if_name_unset_and_already_mac(
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(mac_address="1122334455ab", name="test")
+    device_info = DeviceInfo(mac_address="1122334455ab", name="test")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -553,8 +568,11 @@ async def test_unique_id_not_updated_if_name_different_and_already_mac(
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(mac_address="1122334455ab", name="different")
+    device_info = DeviceInfo(mac_address="1122334455ab", name="different")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -586,12 +604,17 @@ async def test_name_updated_only_if_mac_matches(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_home_assistant_states_and_services(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
-    mock_client.subscribe_states = async_subscribe_states
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(mac_address="1122334455aa", name="new")
+    mock_client.subscribe_home_assistant_states_and_services = (
+        async_subscribe_home_assistant_states_and_services
+    )
+    device_info = DeviceInfo(mac_address="1122334455aa", name="new")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -621,12 +644,17 @@ async def test_name_updated_only_if_mac_was_unset(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_home_assistant_states_and_services(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
-    mock_client.subscribe_states = async_subscribe_states
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(mac_address="1122334455aa", name="new")
+    mock_client.subscribe_home_assistant_states_and_services = (
+        async_subscribe_home_assistant_states_and_services
+    )
+    device_info = DeviceInfo(mac_address="1122334455aa", name="new")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -663,8 +691,11 @@ async def test_connection_aborted_wrong_device(
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(mac_address="1122334455ab", name="different")
+    device_info = DeviceInfo(mac_address="1122334455ab", name="different")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -694,10 +725,12 @@ async def test_connection_aborted_wrong_device(
         hostname="test",
         macaddress="1122334455aa",
     )
-    new_info = AsyncMock(
-        return_value=DeviceInfo(mac_address="1122334455aa", name="test")
-    )
+    device_info = DeviceInfo(mac_address="1122334455aa", name="test")
+    new_info = AsyncMock(return_value=device_info)
     mock_client.device_info = new_info
+    # Also need to update device_info_and_list_entities
+    new_combined_info = AsyncMock(return_value=(device_info, [], []))
+    mock_client.device_info_and_list_entities = new_combined_info
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
     )
@@ -711,7 +744,8 @@ async def test_connection_aborted_wrong_device(
     }
     assert entry.data[CONF_HOST] == "192.168.43.184"
     await hass.async_block_till_done()
-    assert len(new_info.mock_calls) == 2
+    # Check that either device_info or device_info_and_list_entities was called
+    assert len(new_info.mock_calls) + len(new_combined_info.mock_calls) == 2
     assert "Unexpected device found at" not in caplog.text
 
 
@@ -740,8 +774,11 @@ async def test_connection_aborted_wrong_device_same_name(
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(mac_address="1122334455ab", name="test")
+    device_info = DeviceInfo(mac_address="1122334455ab", name="test")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -768,10 +805,12 @@ async def test_connection_aborted_wrong_device_same_name(
         hostname="test",
         macaddress="1122334455aa",
     )
-    new_info = AsyncMock(
-        return_value=DeviceInfo(mac_address="1122334455aa", name="test")
-    )
+    device_info = DeviceInfo(mac_address="1122334455aa", name="test")
+    new_info = AsyncMock(return_value=device_info)
     mock_client.device_info = new_info
+    # Also need to update device_info_and_list_entities
+    new_combined_info = AsyncMock(return_value=(device_info, [], []))
+    mock_client.device_info_and_list_entities = new_combined_info
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
     )
@@ -785,7 +824,8 @@ async def test_connection_aborted_wrong_device_same_name(
     }
     assert entry.data[CONF_HOST] == "192.168.43.184"
     await hass.async_block_till_done()
-    assert len(new_info.mock_calls) == 2
+    # Check that either device_info or device_info_and_list_entities was called
+    assert len(new_info.mock_calls) + len(new_combined_info.mock_calls) == 2
     assert "Unexpected device found at" not in caplog.text
 
 
@@ -814,6 +854,12 @@ async def test_failure_during_connect(
 
     mock_client.disconnect = async_disconnect
     mock_client.device_info = AsyncMock(side_effect=APIConnectionError("fail"))
+    mock_client.list_entities_services = AsyncMock(
+        side_effect=APIConnectionError("fail")
+    )
+    mock_client.device_info_and_list_entities = AsyncMock(
+        side_effect=APIConnectionError("fail")
+    )
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -980,6 +1026,9 @@ async def test_esphome_device_with_dash_in_name_user_services(
 
     # Verify the service can be removed
     mock_client.list_entities_services = AsyncMock(return_value=([], [service1]))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, [], [service1])
+    )
     await device.mock_disconnect(True)
     await hass.async_block_till_done()
     await device.mock_connect()
@@ -1036,6 +1085,9 @@ async def test_esphome_user_services_ignores_invalid_arg_types(
 
     # Verify the service can be removed
     mock_client.list_entities_services = AsyncMock(return_value=([], [service2]))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, [], [service2])
+    )
     await device.mock_disconnect(True)
     await hass.async_block_till_done()
     await device.mock_connect()
@@ -1144,6 +1196,9 @@ async def test_esphome_user_services_changes(
 
     # Verify the service can be updated
     mock_client.list_entities_services = AsyncMock(return_value=([], [new_service1]))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, [], [new_service1])
+    )
     await device.mock_disconnect(True)
     await hass.async_block_till_done()
     await device.mock_connect()
@@ -1170,6 +1225,7 @@ async def test_esphome_user_services_changes(
 
 async def test_esphome_device_with_suggested_area(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
@@ -1184,11 +1240,12 @@ async def test_esphome_device_with_suggested_area(
     dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
-    assert dev.suggested_area == "kitchen"
+    assert dev.area_id == area_registry.async_get_area_by_name("kitchen").id
 
 
 async def test_esphome_device_area_priority(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
@@ -1207,7 +1264,7 @@ async def test_esphome_device_area_priority(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     # Should use device_info.area.name instead of suggested_area
-    assert dev.suggested_area == "Living Room"
+    assert dev.area_id == area_registry.async_get_area_by_name("Living Room").id
 
 
 async def test_esphome_device_with_project(
@@ -1475,6 +1532,10 @@ async def test_device_adds_friendly_name(
         **{**device.device_info.to_dict(), "friendly_name": "I have a friendly name"}
     )
     mock_client.device_info = AsyncMock(return_value=device.device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, [], [])
+    )
     await device.mock_connect()
     await hass.async_block_till_done()
     dev = dev_reg.async_get_device(
@@ -1535,6 +1596,7 @@ async def test_assist_in_progress_issue_deleted(
 
 async def test_sub_device_creation(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
@@ -1571,7 +1633,7 @@ async def test_sub_device_creation(
         connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
     )
     assert main_device is not None
-    assert main_device.suggested_area == "Main Hub"
+    assert main_device.area_id == area_registry.async_get_area_by_name("Main Hub").id
 
     # Check sub devices are created
     sub_device_1 = device_registry.async_get_device(
@@ -1579,7 +1641,9 @@ async def test_sub_device_creation(
     )
     assert sub_device_1 is not None
     assert sub_device_1.name == "Motion Sensor"
-    assert sub_device_1.suggested_area == "Living Room"
+    assert (
+        sub_device_1.area_id == area_registry.async_get_area_by_name("Living Room").id
+    )
     assert sub_device_1.via_device_id == main_device.id
 
     sub_device_2 = device_registry.async_get_device(
@@ -1587,7 +1651,9 @@ async def test_sub_device_creation(
     )
     assert sub_device_2 is not None
     assert sub_device_2.name == "Light Switch"
-    assert sub_device_2.suggested_area == "Living Room"
+    assert (
+        sub_device_2.area_id == area_registry.async_get_area_by_name("Living Room").id
+    )
     assert sub_device_2.via_device_id == main_device.id
 
     sub_device_3 = device_registry.async_get_device(
@@ -1595,7 +1661,7 @@ async def test_sub_device_creation(
     )
     assert sub_device_3 is not None
     assert sub_device_3.name == "Temperature Sensor"
-    assert sub_device_3.suggested_area == "Bedroom"
+    assert sub_device_3.area_id == area_registry.async_get_area_by_name("Bedroom").id
     assert sub_device_3.via_device_id == main_device.id
 
 
@@ -1660,6 +1726,10 @@ async def test_sub_device_cleanup(
 
     # Update the mock client to return the new device info
     mock_client.device_info = AsyncMock(return_value=device.device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, [], [])
+    )
 
     # Simulate reconnection which triggers device registry update
     await device.mock_connect()
@@ -1731,6 +1801,7 @@ async def test_sub_device_with_empty_name(
 
 async def test_sub_device_references_main_device_area(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
@@ -1772,28 +1843,34 @@ async def test_sub_device_references_main_device_area(
         connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
     )
     assert main_device is not None
-    assert main_device.suggested_area == "Main Hub Area"
+    assert (
+        main_device.area_id == area_registry.async_get_area_by_name("Main Hub Area").id
+    )
 
     # Check sub device 1 uses main device's area
     sub_device_1 = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
     )
     assert sub_device_1 is not None
-    assert sub_device_1.suggested_area == "Main Hub Area"
+    assert (
+        sub_device_1.area_id == area_registry.async_get_area_by_name("Main Hub Area").id
+    )
 
     # Check sub device 2 uses Living Room
     sub_device_2 = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
     )
     assert sub_device_2 is not None
-    assert sub_device_2.suggested_area == "Living Room"
+    assert (
+        sub_device_2.area_id == area_registry.async_get_area_by_name("Living Room").id
+    )
 
     # Check sub device 3 uses Bedroom
     sub_device_3 = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
     )
     assert sub_device_3 is not None
-    assert sub_device_3.suggested_area == "Bedroom"
+    assert sub_device_3.area_id == area_registry.async_get_area_by_name("Bedroom").id
 
 
 @patch("homeassistant.components.esphome.manager.secrets.token_bytes")
