@@ -145,6 +145,7 @@ def inject_advertisement_with_time_and_source_connectable(
     time: float,
     source: str,
     connectable: bool,
+    raw: bytes | None = None,
 ) -> None:
     """Inject an advertisement into the manager from a specific source at a time and connectable status."""
     async_get_advertisement_callback(hass)(
@@ -161,6 +162,7 @@ def inject_advertisement_with_time_and_source_connectable(
             connectable=connectable,
             time=time,
             tx_power=adv.tx_power,
+            raw=raw,
         )
     )
 

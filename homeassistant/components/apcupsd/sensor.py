@@ -23,10 +23,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import LAST_S_TEST
 from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
+from .entity import APCUPSdEntity
 
 PARALLEL_UPDATES = 0
 
@@ -490,10 +490,8 @@ def infer_unit(value: str) -> tuple[str, str | None]:
     return value, None
 
 
-class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
+class APCUPSdSensor(APCUPSdEntity, SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -501,11 +499,7 @@ class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator=coordinator, context=description.key.upper())
-
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.unique_device_id}_{description.key}"
-        self._attr_device_info = coordinator.device_info
+        super().__init__(coordinator, description)
 
         # Initial update of attributes.
         self._update_attrs()

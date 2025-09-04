@@ -497,17 +497,17 @@ async def test_on_node_added_ready(
     )
 
 
-async def test_on_node_added_preprovisioned(
+async def test_check_pre_provisioned_device_update_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    multisensor_6_state,
-    client,
-    integration,
+    multisensor_6_state: NodeDataType,
+    client: MagicMock,
+    integration: MockConfigEntry,
 ) -> None:
-    """Test node added event with a preprovisioned device."""
+    """Test check pre-provisioned device that should update the device."""
     dsk = "test"
     node = Node(client, deepcopy(multisensor_6_state))
-    device = device_registry.async_get_or_create(
+    pre_provisioned_device = device_registry.async_get_or_create(
         config_entry_id=integration.entry_id,
         identifiers={(DOMAIN, f"provision_{dsk}")},
     )
@@ -515,7 +515,7 @@ async def test_on_node_added_preprovisioned(
         {
             "dsk": dsk,
             "securityClasses": [SecurityClass.S2_UNAUTHENTICATED],
-            "device_id": device.id,
+            "device_id": pre_provisioned_device.id,
         }
     )
     with patch(
@@ -526,14 +526,60 @@ async def test_on_node_added_preprovisioned(
         client.driver.controller.emit("node added", event)
         await hass.async_block_till_done()
 
-        device = device_registry.async_get(device.id)
+        device = device_registry.async_get(pre_provisioned_device.id)
         assert device
         assert device.identifiers == {
             get_device_id(client.driver, node),
             get_device_id_ext(client.driver, node),
         }
         assert device.sw_version == node.firmware_version
-        # There should only be the controller and the preprovisioned device
+        # There should only be the controller and the pre-provisioned device
+        assert len(device_registry.devices) == 2
+
+
+async def test_check_pre_provisioned_device_remove_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6_state: NodeDataType,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test check pre-provisioned device that should remove the device."""
+    dsk = "test"
+    driver = client.driver
+    node = Node(client, deepcopy(multisensor_6_state))
+    pre_provisioned_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"provision_{dsk}")},
+    )
+    extended_identifier = get_device_id_ext(driver, node)
+    assert extended_identifier
+    existing_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={
+            get_device_id(driver, node),
+            extended_identifier,
+        },
+    )
+    provisioning_entry = ProvisioningEntry.from_dict(
+        {
+            "dsk": dsk,
+            "securityClasses": [SecurityClass.S2_UNAUTHENTICATED],
+            "device_id": pre_provisioned_device.id,
+        }
+    )
+    with patch(
+        f"{CONTROLLER_PATCH_PREFIX}.async_get_provisioning_entry",
+        side_effect=lambda id: provisioning_entry if id == node.node_id else None,
+    ):
+        event = {"node": node}
+        client.driver.controller.emit("node added", event)
+        await hass.async_block_till_done()
+
+        assert not device_registry.async_get(pre_provisioned_device.id)
+        assert device_registry.async_get(existing_device.id)
+
+        # There should only be the controller and the existing device
         assert len(device_registry.devices) == 2
 
 
@@ -2262,3 +2308,38 @@ async def test_entity_available_when_node_dead(
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_driver_ready_event(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test receiving a driver ready event."""
+    config_entry = integration
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    config_entry_state_changes: list[ConfigEntryState] = []
+
+    def on_config_entry_state_change() -> None:
+        """Collect config entry state changes."""
+        config_entry_state_changes.append(config_entry.state)
+
+    config_entry.async_on_state_change(on_config_entry_state_change)
+
+    driver_ready = Event(
+        type="driver ready",
+        data={
+            "source": "driver",
+            "event": "driver ready",
+        },
+    )
+
+    client.driver.receive_event(driver_ready)
+    await hass.async_block_till_done()
+
+    assert len(config_entry_state_changes) == 4
+    assert config_entry_state_changes[0] == ConfigEntryState.UNLOAD_IN_PROGRESS
+    assert config_entry_state_changes[1] == ConfigEntryState.NOT_LOADED
+    assert config_entry_state_changes[2] == ConfigEntryState.SETUP_IN_PROGRESS
+    assert config_entry_state_changes[3] == ConfigEntryState.LOADED
