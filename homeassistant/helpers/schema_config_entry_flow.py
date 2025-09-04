@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import UnknownHandler
@@ -115,6 +116,10 @@ class SchemaFlowMenuStep(SchemaFlowStep):
 
     - If a function is specified, the function will be passed the current
     `SchemaCommonFlowHandler`.
+    """
+
+    sort: bool = False
+    """If true, menu options will be alphabetically sorted by the option label.
     """
 
 
@@ -269,6 +274,7 @@ class SchemaCommonFlowHandler:
             return self._handler.async_show_menu(
                 step_id=next_step_id,
                 menu_options=await self._get_options(menu_step),
+                sort=menu_step.sort,
             )
 
         form_step = cast(SchemaFlowFormStep, self._flow[next_step_id])
@@ -322,6 +328,7 @@ class SchemaCommonFlowHandler:
         return self._handler.async_show_menu(
             step_id=step_id,
             menu_options=await self._get_options(menu_step),
+            sort=menu_step.sort,
         )
 
 
@@ -330,6 +337,7 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
 
     config_flow: Mapping[str, SchemaFlowStep]
     options_flow: Mapping[str, SchemaFlowStep] | None = None
+    options_flow_reloads: bool = False
 
     VERSION = 1
 
@@ -345,6 +353,13 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
             if cls.options_flow is None:
                 raise UnknownHandler
 
+            if cls.options_flow_reloads:
+                return SchemaOptionsFlowHandlerWithReload(
+                    config_entry,
+                    cls.options_flow,
+                    cls.async_options_flow_finished,
+                    cls.async_setup_preview,
+                )
             return SchemaOptionsFlowHandler(
                 config_entry,
                 cls.options_flow,
@@ -496,6 +511,12 @@ class SchemaOptionsFlowHandler(OptionsFlow):
         if self._async_options_flow_finished:
             self._async_options_flow_finished(self.hass, data)
         return super().async_create_entry(data=data, **kwargs)
+
+
+class SchemaOptionsFlowHandlerWithReload(
+    SchemaOptionsFlowHandler, OptionsFlowWithReload
+):
+    """Handle a schema based options flow which automatically reloads."""
 
 
 @callback
