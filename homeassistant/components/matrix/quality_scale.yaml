@@ -40,5 +40,5 @@ rules:
   parallel-updates:
     status: exempt
     comment: Integration does not create entities, only provides messaging service
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
 from nio import AsyncClient, LoginError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -56,6 +57,10 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self.reauth_entry: ConfigEntry | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -99,4 +104,72 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=f"{info['title']} (from YAML)",
             data=import_data,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        if self.reauth_entry is None:
+            return self.async_abort(reason="unknown")
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        if self.reauth_entry is None:
+            return self.async_abort(reason="unknown")
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            # Merge existing config with new credentials
+            reauth_data = {**self.reauth_entry.data, **user_input}
+
+            try:
+                info = await validate_input(self.hass, reauth_data)
+            except ConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during reauth")
+                errors["base"] = "unknown"
+            else:
+                # Verify the user ID matches to prevent account switching
+                if info["user_id"] != self.reauth_entry.unique_id:
+                    return self.async_abort(reason="wrong_account")
+
+                return self.async_update_reload_and_abort(
+                    self.reauth_entry,
+                    data_updates=user_input,
+                )
+
+        # Show form with existing homeserver and username pre-filled
+        reauth_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_HOMESERVER, default=self.reauth_entry.data[CONF_HOMESERVER]
+                ): cv.string,
+                vol.Required(
+                    CONF_USERNAME, default=self.reauth_entry.data[CONF_USERNAME]
+                ): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(
+                    CONF_VERIFY_SSL,
+                    default=self.reauth_entry.data.get(CONF_VERIFY_SSL, True),
+                ): cv.boolean,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=reauth_schema,
+            errors=errors,
+            description_placeholders={
+                "username": self.reauth_entry.data[CONF_USERNAME],
+                "homeserver": self.reauth_entry.data[CONF_HOMESERVER],
+            },
         )
