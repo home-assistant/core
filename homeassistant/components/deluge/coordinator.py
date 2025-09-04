@@ -51,26 +51,22 @@ class DelugeDataUpdateCoordinator(
         )
         self.api = api
 
-    async def _async_update_data(self) -> dict[Platform, dict[str, Any]]:
-        """Get the latest data from Deluge and updates the state."""
+    def _get_deluge_data(self):
+        """Get the latest data from Deluge."""
+
         data = {}
         try:
-            _data = await self.hass.async_add_executor_job(
-                self.api.call,
+            data["session_status"] = self.api.call(
                 "core.get_session_status",
                 [iter_member.value for iter_member in list(DelugeGetSessionStatusKeys)],
             )
-
-            _states = await self.hass.async_add_executor_job(
-                self.api.call, "core.get_torrents_status", {}, ["state"]
+            data["torrents_status_state"] = self.api.call(
+                "core.get_torrents_status", {}, ["state"]
+            )
+            data["torrents_status_paused"] = self.api.call(
+                "core.get_torrents_status", {}, ["paused"]
             )
 
-            data[Platform.SENSOR] = {k.decode(): v for k, v in _data.items()}
-            data[Platform.SENSOR].update(count_states(_states))
-
-            data[Platform.SWITCH] = await self.hass.async_add_executor_job(
-                self.api.call, "core.get_torrents_status", {}, ["paused"]
-            )
         except (
             ConnectionRefusedError,
             TimeoutError,
@@ -85,4 +81,18 @@ class DelugeDataUpdateCoordinator(
                 ) from ex
             LOGGER.error("Unknown error connecting to Deluge: %s", ex)
             raise
+
+        return data
+
+    async def _async_update_data(self) -> dict[Platform, dict[str, Any]]:
+        """Get the latest data from Deluge and updates the state."""
+
+        deluge_data = await self.hass.async_add_executor_job(self._get_deluge_data)
+
+        data = {}
+        data[Platform.SENSOR] = {
+            k.decode(): v for k, v in deluge_data["session_status"].items()
+        }
+        data[Platform.SENSOR].update(count_states(deluge_data["torrents_status_state"]))
+        data[Platform.SWITCH] = deluge_data["torrents_status_paused"]
         return data
