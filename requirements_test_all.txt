@@ -1530,7 +1530,7 @@ pyHomee==1.2.10
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.31.6
+pyTibber==0.31.7
 
 # homeassistant.components.dlink
 pyW215==0.8.0
