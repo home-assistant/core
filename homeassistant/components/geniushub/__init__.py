@@ -124,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
 def setup_service_functions(hass: HomeAssistant, broker):
     """Set up the service functions."""
 
-    @verify_domain_control(hass, DOMAIN)
+    @verify_domain_control(DOMAIN)
     async def set_zone_mode(call: ServiceCall) -> None:
         """Set the system mode."""
         entity_id = call.data[ATTR_ENTITY_ID]
