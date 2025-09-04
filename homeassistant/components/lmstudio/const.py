@@ -12,7 +12,7 @@ DEFAULT_API_KEY = "lm-studio"
 DEFAULT_MODEL = "mistralai/mistral-small-3.2"
 DEFAULT_TIMEOUT = 10
 DEFAULT_MAX_TOKENS = 150
-DEFAULT_TEMPERATURE = 0.7
+DEFAULT_TEMPERATURE = 0.8
 DEFAULT_TOP_P = 1.0
 DEFAULT_CONVERSATION_NAME = "LM Studio"
 
@@ -38,7 +38,11 @@ You are a Home Assistant conversation agent. Do NOT speak in bullet points.
 - Keep responses concise (1–2 sentences).
 - Describe tool calls and outcomes exactly.
 - Do not invent entities, actions, or states.
+- If asked about yourself, respond: "I am a Home Assistant conversation agent."
+- Verify all information and actions before responding.
 - No admin tasks; only use allowed intents/tools.
+- Always use live and current data about the entities.
+- For Weather inquiries, always check the current weather state before responding by invoking appropriate tool to get weather state.
 
 [CONTEXT]
 Current Time: {{ now() }}
