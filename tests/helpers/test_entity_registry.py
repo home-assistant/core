@@ -1462,9 +1462,50 @@ async def test_update_entity_unique_id_conflict(
     )
 
 
-async def test_update_entity_entity_id(entity_registry: er.EntityRegistry) -> None:
-    """Test entity's entity_id is updated."""
+async def test_update_entity_entity_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test entity's entity_id is updated for entity with a state."""
+    mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
+    mock_config.add_to_hass(hass)
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=mock_config
+    )
+
+    assert (
+        entity_registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
+    )
+    hass.states.async_set(entry.entity_id, "on")
+    state = hass.states.get(entry.entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+    new_entity_id = "light.blah"
+    assert new_entity_id != entry.entity_id
+    with patch.object(entity_registry, "async_schedule_save") as mock_schedule_save:
+        updated_entry = entity_registry.async_update_entity(
+            entry.entity_id, new_entity_id=new_entity_id
+        )
+    assert updated_entry != entry
+    assert updated_entry.entity_id == new_entity_id
+    assert mock_schedule_save.call_count == 1
+
+    assert entity_registry.async_get(entry.entity_id) is None
+    assert entity_registry.async_get(new_entity_id) is not None
+
+    old_state = hass.states.get(entry.entity_id)
+    assert old_state is None
+    new_state = hass.states.get(new_entity_id)
+    assert new_state is not None
+    assert new_state.state == "on"
+
+
+async def test_update_entity_entity_id_without_state(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity's entity_id is updated for entity without a state."""
     entry = entity_registry.async_get_or_create("light", "hue", "5678")
+
     assert (
         entity_registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
     )

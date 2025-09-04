@@ -1339,6 +1339,14 @@ class EntityRegistry(BaseRegistry):
                 raise ValueError("New entity ID should be same domain")
 
             self.entities.pop(entity_id)
+            # Migrate the state to a new entity ID
+            if old_state := self.hass.states.get(old.entity_id):
+                self.hass.states.async_set(
+                    new_entity_id,
+                    new_state=old_state.state,
+                    attributes=old_state.attributes,
+                )
+                self.hass.states.async_remove(old.entity_id)
             entity_id = new_values["entity_id"] = new_entity_id
             old_values["entity_id"] = old.entity_id
 
