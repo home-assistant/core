@@ -27,7 +27,7 @@
   "entity": {
     "light": {
       "led_strip": {
-        "name": "LED Strip"
+        "name": "LED strip"
       }
     }
   },
