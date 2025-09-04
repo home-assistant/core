@@ -208,7 +208,7 @@ async def test_k11_vacuum_actions(
     matter_client.send_device_command.reset_mock()
 
     # test get_areas action
-    await hass.services.async_call(
+    response = await hass.services.async_call(
         "matter",
         SERVICE_GET_AREAS,
         {
@@ -217,6 +217,21 @@ async def test_k11_vacuum_actions(
         blocking=True,
         return_response=True,
     )
+    # check the response data
+    expected_data = {
+        "vacuum.k11": {
+            "areas": {
+                1: {"name": "Bedroom #3"},
+                2: {"name": "Stairs"},
+                3: {"name": "Bedroom #1"},
+                4: {"name": "Bedroom #2"},
+                5: {"name": "Corridor"},
+                6: {"name": "Bathroom"},
+            },
+            "maps": [],
+        }
+    }
+    assert response == expected_data
 
 
 @pytest.mark.parametrize("node_fixture", ["switchbot_K11"])
