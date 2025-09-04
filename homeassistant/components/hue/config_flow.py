@@ -256,7 +256,8 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             and discovery_info.properties.get("modelid") == BSB003_MODEL_ID
         ):
             # try to handle migration of BSB002 --> BSB003
-            await self._check_migrated_bridge(bridge)
+            if await self._check_migrated_bridge(bridge):
+                return self.async_abort(reason="migrated_bridge")
 
         return await self.async_step_link()
 
@@ -294,7 +295,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         self.bridge = bridge
         return await self.async_step_link()
 
-    async def _check_migrated_bridge(self, bridge: DiscoveredHueBridge) -> None:
+    async def _check_migrated_bridge(self, bridge: DiscoveredHueBridge) -> bool:
         """Check if the discovered bridge is a migrated bridge."""
         # Try to handle migration of BSB002 --> BSB003.
         # Once we detect a BSB003 bridge on the network which has not yet been
@@ -345,6 +346,8 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
                     # this will be auto corrected once the integration is loaded
                     new_connections=set(),
                 )
+            return True
+        return False
 
 
 class HueV1OptionsFlowHandler(OptionsFlow):
