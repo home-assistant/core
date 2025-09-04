@@ -110,6 +110,12 @@
           "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
         }
       },
+      "pipeline_2": {
+        "name": "[%key:component::assist_pipeline::entity::select::pipeline_2::name%]",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline_2::state::preferred%]"
+        }
+      },
       "vad_sensitivity": {
         "name": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::name%]",
         "state": {
@@ -121,7 +127,14 @@
       "wake_word": {
         "name": "Wake word",
         "state": {
+          "no_wake_word": "No wake word",
           "okay_nabu": "Okay Nabu"
+        }
+      },
+      "wake_word_2": {
+        "name": "Secondary wake word",
+        "state": {
+          "no_wake_word": "No wake word"
         }
       }
     },
