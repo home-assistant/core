@@ -154,8 +154,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     device_registry = dr.async_get(hass)
     for device in manager.device_map.values():
         LOGGER.debug(
-            "Register device %s: %s (function: %s, status range: %s)",
+            "Register device %s (online: %s): %s (function: %s, status range: %s)",
             device.id,
+            device.online,
             device.status,
             device.function,
             device.status_range,
@@ -234,9 +235,10 @@ class DeviceListener(SharingDeviceListener):
     ) -> None:
         """Update device status with optional DP timestamps."""
         LOGGER.debug(
-            "Received update for device %s: %s (updated properties: %s, dp_timestamps: %s)",
+            "Received update for device %s (online: %s): %s (updated properties: %s, dp_timestamps: %s)",
             device.id,
-            self.manager.device_map[device.id].status,
+            device.online,
+            device.status,
             updated_status_properties,
             dp_timestamps,
         )
@@ -253,8 +255,9 @@ class DeviceListener(SharingDeviceListener):
         self.hass.add_job(self.async_remove_device, device.id)
 
         LOGGER.debug(
-            "Add device %s: %s (function: %s, status range: %s)",
+            "Add device %s (online: %s): %s (function: %s, status range: %s)",
             device.id,
+            device.online,
             device.status,
             device.function,
             device.status_range,

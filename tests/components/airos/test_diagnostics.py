@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.airos.coordinator import AirOSData
+from homeassistant.components.airos.coordinator import AirOS8Data
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -19,7 +19,7 @@ async def test_diagnostics(
     hass_client: ClientSessionGenerator,
     mock_airos_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    ap_fixture: AirOSData,
+    ap_fixture: AirOS8Data,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
