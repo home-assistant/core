@@ -20,6 +20,11 @@
         "name": "Motzei Shabbat/Hag"
       }
     },
+    "calendar": {
+      "events": {
+        "name": "Events"
+      }
+    },
     "sensor": {
       "hebrew_date": {
         "name": "Date",
@@ -143,11 +148,13 @@
         "title": "Configure options for Jewish Calendar",
         "data": {
           "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighting",
-          "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah"
+          "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah",
+          "calendar_events": "Calendar events to display"
         },
         "data_description": {
           "candle_lighting_minutes_before_sunset": "Defaults to 18 minutes. In Israel you probably want to use 20/30/40 depending on your location. Outside of Israel you probably want to use 18/24.",
-          "havdalah_minutes_after_sunset": "Setting this to 0 means 36 minutes as fixed degrees (8.5°) will be used instead"
+          "havdalah_minutes_after_sunset": "Setting this to 0 means 36 minutes as fixed degrees (8.5°) will be used instead",
+          "calendar_events": "Select which Jewish calendar events should be displayed in the calendar entity"
         }
       }
     }
@@ -159,6 +166,21 @@
         "ashkenaz": "Ashkenaz",
         "adot_mizrah": "Adot Mizrah",
         "italian": "Italian"
+      }
+    },
+    "calendar_events": {
+      "options": {
+        "date": "Hebrew date",
+        "holiday": "Jewish holidays",
+        "weekly_portion": "Torah portion",
+        "omer_count": "Omer count",
+        "daf_yomi": "Daf Yomi",
+        "candle_lighting": "Candle lighting",
+        "havdalah": "Havdalah",
+        "fast_day": "Fast days",
+        "rosh_chodesh": "Rosh Chodesh",
+        "minor_fast": "Minor fast days",
+        "modern_holiday": "Modern holidays"
       }
     }
   },

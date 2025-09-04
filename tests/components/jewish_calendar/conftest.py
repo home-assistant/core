@@ -9,14 +9,22 @@ from freezegun import freeze_time
 from hdate.translator import set_language
 import pytest
 
+from homeassistant.components.calendar import (
+    DOMAIN as DOMAIN_CALENDAR,
+    EVENT_END_DATETIME,
+    EVENT_START_DATETIME,
+    SERVICE_GET_EVENTS,
+)
 from homeassistant.components.jewish_calendar.const import (
+    CONF_CALENDAR_EVENTS,
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_CALENDAR_EVENTS,
     DEFAULT_NAME,
     DOMAIN,
 )
-from homeassistant.const import CONF_LANGUAGE, CONF_TIME_ZONE
+from homeassistant.const import ATTR_ENTITY_ID, CONF_LANGUAGE, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -113,6 +121,12 @@ def language() -> str:
     return "en"
 
 
+@pytest.fixture
+def calendar_events() -> list[str] | None:
+    """Return default calendar events, unless calendar events are parametrized."""
+    return DEFAULT_CALENDAR_EVENTS
+
+
 @pytest.fixture(autouse=True)
 async def setup_hass(hass: HomeAssistant, location_data: _LocationData | None) -> None:
     """Set up Home Assistant for testing the jewish_calendar integration."""
@@ -128,6 +142,7 @@ def config_entry(
     location_data: _LocationData | None,
     language: str,
     havdalah_offset: int | None,
+    calendar_events: list[str] | None,
 ) -> MockConfigEntry:
     """Set up the jewish_calendar integration for testing."""
     param_data = {}
@@ -142,6 +157,9 @@ def config_entry(
 
     if havdalah_offset:
         param_options[CONF_HAVDALAH_OFFSET_MINUTES] = havdalah_offset
+
+    if calendar_events is not None:
+        param_options[CONF_CALENDAR_EVENTS] = calendar_events
 
     return MockConfigEntry(
         title=DEFAULT_NAME,
@@ -161,3 +179,45 @@ async def setup_at_time(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield
+
+
+@pytest.fixture
+async def setup(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Set up the jewish_calendar integration."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+def get_calendar_events():
+    """Fixture that returns a function to get calendar events for a date range."""
+
+    async def _get_events(
+        hass: HomeAssistant,
+        start_date: dt.datetime,
+        end_date: dt.datetime | None = None,
+    ) -> list[dict[str, str]]:
+        """Get calendar events for a date range."""
+        if end_date is None:
+            if isinstance(start_date, dt.date):
+                last_sec = dt.time(hour=23, minute=59, second=59)
+                end_date = dt.datetime.combine(start_date, last_sec)
+            else:
+                end_date = start_date.replace(hour=23, minute=59, second=59)
+
+        response = await hass.services.async_call(
+            DOMAIN_CALENDAR,
+            SERVICE_GET_EVENTS,
+            {
+                ATTR_ENTITY_ID: "calendar.jewish_calendar_events",
+                EVENT_START_DATETIME: start_date.isoformat(),
+                EVENT_END_DATETIME: end_date.isoformat(),
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+        return response["calendar.jewish_calendar_events"]["events"]
+
+    return _get_events
