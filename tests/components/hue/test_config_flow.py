@@ -732,3 +732,46 @@ async def test_bridge_connection_failed(
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
+
+
+async def test_bsb003_bridge_discovery(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a bridge being discovered."""
+    entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        data={"host": "192.168.1.217", "api_version": 2, "api_key": "abc"},
+        unique_id="abc_v2",
+    )
+    entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(const.DOMAIN, "ecb5fafff_v2")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")},
+    )
+    create_mock_api_discovery(
+        aioclient_mock, [("192.168.1.217", "abc_v2"), ("192.168.1.218", "ecb5fafff_v2")]
+    )
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("192.168.1.218"),
+            ip_addresses=[ip_address("192.168.1.218")],
+            port=443,
+            hostname="Philips-hue.local",
+            type="_hue._tcp.local.",
+            name="Philips Hue - ABCABC._hue._tcp.local.",
+            properties={
+                "bridgeid": "ecb5fafff_v2",
+                "modelid": "BSB003",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "link"
+
+    pytest.fail("Should be implemented")
