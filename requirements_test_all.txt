@@ -671,7 +671,7 @@ datapoint==0.12.1
 dbus-fast==2.44.3
 
 # homeassistant.components.debugpy
-debugpy==1.8.14
+debugpy==1.8.16
 
 # homeassistant.components.decora
 # decora==0.6
@@ -1530,7 +1530,7 @@ pyHomee==1.2.10
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.31.6
+pyTibber==0.31.7
 
 # homeassistant.components.dlink
 pyW215==0.8.0
