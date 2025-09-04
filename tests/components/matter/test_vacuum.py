@@ -7,6 +7,7 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.matter.const import SERVICE_SELECT_AREAS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -143,22 +144,26 @@ async def test_k11_vacuum_actions(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test vacuum entity actions."""
+    """Test Matter ServiceArea cluster actions."""
     # Fetch translations
     await async_setup_component(hass, "homeassistant", {})
     entity_id = "vacuum.k11"
     state = hass.states.get(entity_id)
+    # test selected_areas action
     assert state
-    """
+
+    selected_areas = [1, 2, 3]
     await hass.services.async_call(
-        "vacuum",
-        "select_areas",
+        "matter",
+        SERVICE_SELECT_AREAS,
         {
             "entity_id": entity_id,
+            "areas": selected_areas,
         },
         blocking=True,
+        return_response=True,
     )
-    selected_areas=[1, 2, 3]
+    assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
@@ -166,7 +171,6 @@ async def test_k11_vacuum_actions(
         command=clusters.ServiceArea.Commands.SelectAreas(newAreas=selected_areas),
     )
     matter_client.send_device_command.reset_mock()
-    """
 
 
 @pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
