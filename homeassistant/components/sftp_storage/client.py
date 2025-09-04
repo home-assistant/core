@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Mapping
 from dataclasses import dataclass
 import json
-from pathlib import Path
-import shutil
 from types import TracebackType
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from asyncssh import (
-    KeyImportError,
     SFTPClient,
     SFTPClientFile,
     SSHClientConnection,
@@ -26,53 +23,23 @@ from homeassistant.components.backup import (
     BackupAgentError,
     suggested_filename,
 )
-from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.util.ulid import ulid
 
-from .const import BUF_SIZE, DEFAULT_PKEY_NAME, DOMAIN, LOGGER
-from .exceptions import SFTPStorageInvalidPrivateKey
+from .const import BUF_SIZE, CONF_PASSWORD, CONF_PRIVATE_KEY_FILE, CONF_USERNAME, LOGGER
 
 if TYPE_CHECKING:
-    from . import SFTPConfigEntry, SFTPConfigEntryData
+    from . import SFTPConfigEntry
 
 
-def get_client_options(cfg: SFTPConfigEntryData) -> SSHClientConnectionOptions:
+def get_client_options(cfg: Mapping[str, Any]) -> SSHClientConnectionOptions:
     """Use this function with `hass.async_add_executor_job` to asynchronously get `SSHClientConnectionOptions`."""
 
     return SSHClientConnectionOptions(
         known_hosts=None,
-        username=cfg.username,
-        password=cfg.password,
-        client_keys=cfg.private_key_file,
+        username=cfg[CONF_USERNAME],
+        password=cfg.get(CONF_PASSWORD),
+        client_keys=cfg.get(CONF_PRIVATE_KEY_FILE),
     )
-
-
-async def save_uploaded_pkey_file(hass: HomeAssistant, uploaded_file_id: str) -> str:
-    """Validate the uploaded private key and move it to the storage directory.
-
-    Return a string representing a path to private key file.
-    Raises SFTPStorageInvalidPrivateKey if the file is invalid.
-    """
-
-    def _process_upload() -> str:
-        with process_uploaded_file(hass, uploaded_file_id) as file_path:
-            try:
-                # Initializing this will verify if private key is in correct format
-                SSHClientConnectionOptions(client_keys=[file_path])
-            except KeyImportError as err:
-                LOGGER.debug(err)
-                raise SFTPStorageInvalidPrivateKey from err
-
-            dest_path = Path(hass.config.path(STORAGE_DIR, DOMAIN))
-            dest_file = dest_path / f".{ulid()}_{DEFAULT_PKEY_NAME}"
-
-            # Create parent directory
-            dest_file.parent.mkdir(exist_ok=True)
-            return str(shutil.move(file_path, dest_file))
-
-    return await hass.async_add_executor_job(_process_upload)
 
 
 class AsyncFileIterator:
@@ -324,7 +291,7 @@ class BackupAgentClient:
                 host=self.cfg.runtime_data.host,
                 port=self.cfg.runtime_data.port,
                 options=await self.hass.async_add_executor_job(
-                    get_client_options, self.cfg.runtime_data
+                    get_client_options, self.cfg.data
                 ),
             )
         except (OSError, PermissionDenied) as e:

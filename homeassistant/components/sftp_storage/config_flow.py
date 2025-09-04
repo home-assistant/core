@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
+from pathlib import Path
+import shutil
 from typing import Any, cast
 
-from asyncssh import connect
+from asyncssh import KeyImportError, SSHClientConnectionOptions, connect
 from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 import voluptuous as vol
 
+from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     FileSelector,
     FileSelectorConfig,
@@ -17,9 +22,11 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.util.ulid import ulid
 
 from . import SFTPConfigEntryData
-from .client import get_client_options, save_uploaded_pkey_file
+from .client import get_client_options
 from .const import (
     CONF_BACKUP_LOCATION,
     CONF_HOST,
@@ -27,51 +34,56 @@ from .const import (
     CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
     CONF_USERNAME,
+    DEFAULT_PKEY_NAME,
     DOMAIN,
     LOGGER,
 )
-from .exceptions import SFTPStorageInvalidPrivateKey, SFTPStorageMissingPasswordOrPkey
+
+
+class SFTPStorageException(Exception):
+    """Base exception for SFTP Storage integration."""
+
+
+class SFTPStorageInvalidPrivateKey(SFTPStorageException):
+    """Exception raised during config flow - when user provided invalid private key file."""
+
+
+class SFTPStorageMissingPasswordOrPkey(SFTPStorageException):
+    """Exception raised during config flow - when user did not provide password or private key file."""
 
 
 class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an SFTP Storage config flow."""
 
     def __init__(self) -> None:
-        """Initialize SFTP Storage Flow Handler.
-
-        Initialize _client_keys as an instance variable to ensure each config flow
-        handler instance has its own isolated list of SSH client keys. This prevents
-        key files from previous config flow attempts (especially in tests) from
-        persisting.
-        """
+        """Initialize SFTP Storage Flow Handler."""
         self._client_keys: list = []
 
-    async def _check_pkey_and_password(
+    async def _validate_auth_and_save_keyfile(
         self, user_input: dict[str, Any]
     ) -> dict[str, Any]:
-        """Check if user provided either one of password or private key.
+        """Validate authentication input and persist uploaded key file.
 
-        Additionally, check if private key exists and make sure it starts
-        with `/config` if full path is not provided by user.
+        Ensures that at least one of password or private key is provided. When a
+        private key is supplied, the uploaded file is saved to Home Assistant's
+        config storage and `user_input[CONF_PRIVATE_KEY_FILE]` is replaced with
+        the stored path.
 
-        Returns: user_input object with edited private key location, if edited.
+        Returns: the possibly updated `user_input`.
 
         Raises:
-            - SFTPStorageMissingPasswordOrPkey - If user did not provide password nor private key.
-            - SFTPStorageInvalidPrivateKey - If private key is not valid format.
+            - SFTPStorageMissingPasswordOrPkey: Neither password nor private key provided
+            - SFTPStorageInvalidPrivateKey: The provided private key has an invalid format
         """
-        # If both password AND private key are not provided, error out.
-        # We need at least one to perform authentication.
-        if (
-            bool(user_input.get(CONF_PASSWORD)) is False
-            and bool(user_input.get(CONF_PRIVATE_KEY_FILE)) is False
-        ):
+
+        # If neither password nor private key is provided, error out;
+        # we need at least one to perform authentication.
+        if not (user_input.get(CONF_PASSWORD) or user_input.get(CONF_PRIVATE_KEY_FILE)):
             raise SFTPStorageMissingPasswordOrPkey
 
-        if bool(user_input.get(CONF_PRIVATE_KEY_FILE)):
-            client_key = await save_uploaded_pkey_file(
-                self.hass, cast(str, user_input.get(CONF_PRIVATE_KEY_FILE))
-            )
+        if key_file := user_input.get(CONF_PRIVATE_KEY_FILE):
+            client_key = await save_uploaded_pkey_file(self.hass, cast(str, key_file))
+
             LOGGER.debug("Saved client key: %s", client_key)
             user_input[CONF_PRIVATE_KEY_FILE] = client_key
 
@@ -89,15 +101,22 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             LOGGER.debug("Source: %s", self.source)
 
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                    CONF_BACKUP_LOCATION: user_input[CONF_BACKUP_LOCATION],
+                }
+            )
+
             try:
-                # Performs a username-password entry check
-                # Validates private key location if provided.
-                user_input = await self._check_pkey_and_password(user_input)
+                # Validate auth input and save uploaded key file if provided
+                user_input = await self._validate_auth_and_save_keyfile(user_input)
 
                 # Create a session using your credentials
                 user_config = SFTPConfigEntryData(
                     host=user_input[CONF_HOST],
-                    port=user_input.get(CONF_PORT, 22),
+                    port=user_input[CONF_PORT],
                     username=user_input[CONF_USERNAME],
                     password=user_input.get(CONF_PASSWORD),
                     private_key_file=user_input.get(CONF_PRIVATE_KEY_FILE),
@@ -118,7 +137,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                         host=user_config.host,
                         port=user_config.port,
                         options=await self.hass.async_add_executor_job(
-                            get_client_options, user_config
+                            get_client_options, user_input
                         ),
                     ) as ssh,
                     ssh.start_sftp_client() as sftp,
@@ -153,35 +172,68 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 placeholders["exception"] = type(e).__name__
                 errors["base"] = "unknown"
             else:
-                self._async_abort_entries_match(
-                    {
-                        CONF_HOST: user_config.host,
-                        CONF_PORT: user_config.port,
-                        CONF_BACKUP_LOCATION: user_config.backup_location,
-                    }
-                )
-
                 return self.async_create_entry(
                     title=f"{user_config.username}@{user_config.host}",
                     data=user_input,
                 )
+            finally:
+                # We remove the saved private key file if any error occurred.
+                if errors and bool(user_input.get(CONF_PRIVATE_KEY_FILE)):
+                    keyfile = Path(user_input[CONF_PRIVATE_KEY_FILE])
+                    keyfile.unlink(missing_ok=True)
+                    with suppress(OSError):
+                        keyfile.parent.rmdir()
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST): str,
+                vol.Required(CONF_PORT, default=22): int,
+                vol.Required(CONF_USERNAME): str,
+                vol.Optional(CONF_PASSWORD): TextSelector(
+                    config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
+                vol.Optional(CONF_PRIVATE_KEY_FILE): FileSelector(
+                    FileSelectorConfig(accept="*")
+                ),
+                vol.Required(CONF_BACKUP_LOCATION): str,
+            }
+        )
+        suggested_values = user_input.copy() if user_input else {}
+        # Exclude private key: FileSelector can't prefill uploaded files
+        suggested_values.pop(CONF_PRIVATE_KEY_FILE, None)
+        LOGGER.debug(suggested_values)
 
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=22): int,
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): TextSelector(
-                        config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                    ),
-                    vol.Optional(CONF_PRIVATE_KEY_FILE): FileSelector(
-                        FileSelectorConfig(accept="*")
-                    ),
-                    vol.Required(CONF_BACKUP_LOCATION): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema, suggested_values
             ),
             description_placeholders=placeholders,
             errors=errors,
         )
+
+
+async def save_uploaded_pkey_file(hass: HomeAssistant, uploaded_file_id: str) -> str:
+    """Validate the uploaded private key and move it to the storage directory.
+
+    Return a string representing a path to private key file.
+    Raises SFTPStorageInvalidPrivateKey if the file is invalid.
+    """
+
+    def _process_upload() -> str:
+        with process_uploaded_file(hass, uploaded_file_id) as file_path:
+            try:
+                # Initializing this will verify if private key is in correct format
+                SSHClientConnectionOptions(client_keys=[file_path])
+            except KeyImportError as err:
+                LOGGER.debug(err)
+                raise SFTPStorageInvalidPrivateKey from err
+
+            dest_path = Path(hass.config.path(STORAGE_DIR, DOMAIN))
+            dest_file = dest_path / f".{ulid()}_{DEFAULT_PKEY_NAME}"
+
+            # Create parent directory
+            dest_file.parent.mkdir(exist_ok=True)
+            return str(shutil.move(file_path, dest_file))
+
+    return await hass.async_add_executor_job(_process_upload)

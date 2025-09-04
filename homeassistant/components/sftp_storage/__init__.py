@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -78,20 +77,50 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
         pkey = Path(entry.data[CONF_PRIVATE_KEY_FILE])
 
         if pkey.exists():
-            with contextlib.suppress(OSError):
-                LOGGER.debug(
-                    "Removing private key (%s) for %s integration for host %s@%s",
-                    pkey,
+            LOGGER.debug(
+                "Removing private key (%s) for %s integration for host %s@%s",
+                pkey,
+                DOMAIN,
+                entry.data[CONF_USERNAME],
+                entry.data[CONF_HOST],
+            )
+            try:
+                pkey.unlink()
+            except OSError as e:
+                LOGGER.warning(
+                    "Failed to remove private key %s for %s integration for host %s@%s. %s",
+                    pkey.name,
                     DOMAIN,
                     entry.data[CONF_USERNAME],
                     entry.data[CONF_HOST],
+                    str(e),
                 )
-                pkey.unlink()
 
-        with contextlib.suppress(OSError):
+        try:
             pkey.parent.rmdir()
+        except OSError as e:
+            if e.errno == 39:  # Directory not empty
+                leftover_files = [f.name for f in pkey.parent.iterdir()]
+                LOGGER.debug(
+                    "Storage directory for %s integration is not empty (%s) at host %s@%s. Files: %s",
+                    DOMAIN,
+                    str(pkey.parent),
+                    entry.data[CONF_USERNAME],
+                    entry.data[CONF_HOST],
+                    ", ".join(leftover_files),
+                )
+            else:
+                LOGGER.warning(
+                    "Error occurred while removing directory %s for integration %s: %s at host %s@%s",
+                    str(pkey.parent),
+                    DOMAIN,
+                    str(e),
+                    entry.data[CONF_USERNAME],
+                    entry.data[CONF_HOST],
+                )
+        else:
             LOGGER.debug(
-                "Removed storage directory for %s integration for host %s@%s",
+                "Removed storage directory for %s integration at host %s@%s",
                 DOMAIN,
                 entry.data[CONF_USERNAME],
                 entry.data[CONF_HOST],

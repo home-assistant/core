@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up remote SFTP Storage",
+        "description": "Set up SFTP Storage",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -31,7 +31,7 @@
       "unknown": "Unexpected exception ({exception}) occurred during config flow. {error_message}"
     },
     "abort": {
-      "already_configured": "Integration already configured. Host with same address, port, username and backup location already exists."
+      "already_configured": "Integration already configured. Host with same address, port and backup location already exists."
     }
   }
 }

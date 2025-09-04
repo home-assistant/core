@@ -9,16 +9,16 @@ from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 import pytest
 
+from homeassistant.components.sftp_storage.config_flow import (
+    SFTPStorageInvalidPrivateKey,
+    SFTPStorageMissingPasswordOrPkey,
+)
 from homeassistant.components.sftp_storage.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PRIVATE_KEY_FILE,
     CONF_USERNAME,
     DOMAIN,
-)
-from homeassistant.components.sftp_storage.exceptions import (
-    SFTPStorageInvalidPrivateKey,
-    SFTPStorageMissingPasswordOrPkey,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -36,7 +36,7 @@ def mock_process_uploaded_file():
     """Mocks ability to process uploaded private key."""
     with (
         patch(
-            "homeassistant.components.sftp_storage.client.process_uploaded_file"
+            "homeassistant.components.sftp_storage.config_flow.process_uploaded_file"
         ) as mock_process_uploaded_file,
         patch("shutil.move") as mock_shutil_move,
         NamedTemporaryFile() as f,
@@ -173,7 +173,7 @@ async def test_config_entry_error(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.sftp_storage.client.SSHClientConnectionOptions",
+            "homeassistant.components.sftp_storage.config_flow.SSHClientConnectionOptions",
             side_effect=KeyImportError("Invalid key"),
         ),
     ):
