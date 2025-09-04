@@ -7,7 +7,7 @@
           'metadata_unit': 'm³',
           'state_unit': 'W',
           'statistic_id': 'sensor.statistics_issues_issue_1',
-          'supported_unit': 'CCF, L, fl. oz., ft³, gal, mL, m³',
+          'supported_unit': 'CCF, L, MCF, fl. oz., ft³, gal, mL, m³',
         }),
         'type': 'units_changed',
       }),
@@ -35,7 +35,7 @@
           'metadata_unit': 'm³',
           'state_unit': 'W',
           'statistic_id': 'sensor.statistics_issues_issue_3',
-          'supported_unit': 'CCF, L, fl. oz., ft³, gal, mL, m³',
+          'supported_unit': 'CCF, L, MCF, fl. oz., ft³, gal, mL, m³',
         }),
         'type': 'units_changed',
       }),
@@ -46,6 +46,16 @@
           'statistic_id': 'sensor.statistics_issues_issue_4',
         }),
         'type': 'no_state',
+      }),
+    ]),
+    'sensor.statistics_issues_issue_5': list([
+      dict({
+        'data': dict({
+          'metadata_mean_type': 1,
+          'state_mean_type': 2,
+          'statistic_id': 'sensor.statistics_issues_issue_5',
+        }),
+        'type': 'mean_type_changed',
       }),
     ]),
   })

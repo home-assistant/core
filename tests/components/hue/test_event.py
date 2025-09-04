@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
 
@@ -15,7 +16,7 @@ async def test_event(
 ) -> None:
     """Test event entity for Hue integration."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
-    await setup_platform(hass, mock_bridge_v2, "event")
+    await setup_platform(hass, mock_bridge_v2, Platform.EVENT)
     # 7 entities should be created from test data
     assert len(hass.states.async_all()) == 7
 
@@ -69,7 +70,7 @@ async def test_event(
 async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     """Test Event entity for newly added Relative Rotary resource."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
-    await setup_platform(hass, mock_bridge_v2, "event")
+    await setup_platform(hass, mock_bridge_v2, Platform.EVENT)
 
     test_entity_id = "event.hue_mocked_device_rotary"
 

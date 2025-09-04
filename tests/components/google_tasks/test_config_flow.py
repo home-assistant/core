@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -145,7 +145,10 @@ async def test_api_not_enabled(
         "homeassistant.components.google_tasks.config_flow.build",
         side_effect=HttpError(
             Response({"status": "403"}),
-            bytes(load_fixture("google_tasks/api_not_enabled_response.json"), "utf-8"),
+            bytes(
+                await async_load_fixture(hass, "api_not_enabled_response.json", DOMAIN),
+                "utf-8",
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])

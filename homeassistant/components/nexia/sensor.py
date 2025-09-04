@@ -114,6 +114,35 @@ async def async_setup_entry(
                     percent_conv,
                 )
             )
+        # Heating Humidification Setpoint
+        if thermostat.has_humidify_support():
+            entities.append(
+                NexiaThermostatSensor(
+                    coordinator,
+                    thermostat,
+                    "get_humidify_setpoint",
+                    "get_humidify_setpoint",
+                    SensorDeviceClass.HUMIDITY,
+                    PERCENTAGE,
+                    SensorStateClass.MEASUREMENT,
+                    percent_conv,
+                )
+            )
+
+        # Cooling Dehumidification Setpoint
+        if thermostat.has_dehumidify_support():
+            entities.append(
+                NexiaThermostatSensor(
+                    coordinator,
+                    thermostat,
+                    "get_dehumidify_setpoint",
+                    "get_dehumidify_setpoint",
+                    SensorDeviceClass.HUMIDITY,
+                    PERCENTAGE,
+                    SensorStateClass.MEASUREMENT,
+                    percent_conv,
+                )
+            )
 
         # Zone Sensors
         for zone_id in thermostat.get_zone_ids():

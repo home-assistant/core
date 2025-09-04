@@ -51,8 +51,8 @@
       "electricity_active_tariff": {
         "name": "Active tariff",
         "state": {
-          "low": "Low",
-          "normal": "Normal"
+          "low": "[%key:common::state::low%]",
+          "normal": "[%key:common::state::normal%]"
         }
       },
       "electricity_delivered_tariff_1": {
@@ -222,7 +222,7 @@
         "data": {
           "time_between_update": "Minimum time between entity updates [s]"
         },
-        "title": "DSMR Options"
+        "title": "DSMR options"
       }
     }
   }

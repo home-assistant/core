@@ -7,13 +7,17 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, ClassVar
 from urllib.parse import urlparse
+from uuid import UUID
 
 import aiohttp
 import attr
-import pychromecast
 from pychromecast import dial
 from pychromecast.const import CAST_TYPE_GROUP
+import pychromecast.controllers.media
+import pychromecast.controllers.multizone
+import pychromecast.controllers.receiver
 from pychromecast.models import CastInfo
+import pychromecast.socket_client
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
@@ -40,7 +44,7 @@ class ChromecastInfo:
     is_dynamic_group = attr.ib(type=bool | None, default=None)
 
     @property
-    def friendly_name(self) -> str:
+    def friendly_name(self) -> str | None:
         """Return the Friendly Name."""
         return self.cast_info.friendly_name
 
@@ -50,7 +54,7 @@ class ChromecastInfo:
         return self.cast_info.cast_type == CAST_TYPE_GROUP
 
     @property
-    def uuid(self) -> bool:
+    def uuid(self) -> UUID:
         """Return the UUID."""
         return self.cast_info.uuid
 
@@ -80,7 +84,7 @@ class ChromecastInfo:
                     "+label%3A%22integration%3A+cast%22"
                 )
 
-                _LOGGER.debug(
+                _LOGGER.info(
                     (
                         "Fetched cast details for unknown model '%s' manufacturer:"
                         " '%s', type: '%s'. Please %s"
@@ -111,7 +115,10 @@ class ChromecastInfo:
         is_dynamic_group = False
         http_group_status = None
         http_group_status = dial.get_multizone_status(
-            None,
+            # We pass services which will be used for the HTTP request, and we
+            # don't care about the host in http_group_status.dynamic_groups so
+            # we pass an empty string to simplify the code.
+            "",
             services=self.cast_info.services,
             zconf=ChromeCastZeroconf.get_zeroconf(),
         )

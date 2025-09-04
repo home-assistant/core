@@ -349,7 +349,15 @@ async def test_get_transponder_trigger_capabilities(
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "code", "optional": True, "type": "string", "lower": True}]
+    ) == [
+        {
+            "name": "code",
+            "optional": True,
+            "required": False,
+            "type": "string",
+            "lower": True,
+        }
+    ]
 
 
 async def test_get_fingerprint_trigger_capabilities(
@@ -373,7 +381,15 @@ async def test_get_fingerprint_trigger_capabilities(
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "code", "optional": True, "type": "string", "lower": True}]
+    ) == [
+        {
+            "name": "code",
+            "optional": True,
+            "required": False,
+            "type": "string",
+            "lower": True,
+        }
+    ]
 
 
 async def test_get_transmitter_trigger_capabilities(
@@ -398,13 +414,32 @@ async def test_get_transmitter_trigger_capabilities(
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
-        {"name": "code", "type": "string", "optional": True, "lower": True},
-        {"name": "level", "type": "integer", "optional": True, "valueMin": 0},
-        {"name": "key", "type": "integer", "optional": True, "valueMin": 0},
+        {
+            "name": "code",
+            "type": "string",
+            "optional": True,
+            "required": False,
+            "lower": True,
+        },
+        {
+            "name": "level",
+            "type": "integer",
+            "optional": True,
+            "required": False,
+            "valueMin": 0,
+        },
+        {
+            "name": "key",
+            "type": "integer",
+            "optional": True,
+            "required": False,
+            "valueMin": 0,
+        },
         {
             "name": "action",
             "type": "select",
             "optional": True,
+            "required": False,
             "options": [("hit", "hit"), ("make", "make"), ("break", "break")],
         },
     ]
@@ -436,6 +471,7 @@ async def test_get_send_keys_trigger_capabilities(
             "name": "key",
             "type": "select",
             "optional": True,
+            "required": False,
             "options": [(send_key.lower(), send_key.lower()) for send_key in SENDKEYS],
         },
         {
@@ -445,6 +481,7 @@ async def test_get_send_keys_trigger_capabilities(
                 (key_action.lower(), key_action.lower()) for key_action in KEY_ACTIONS
             ],
             "optional": True,
+            "required": False,
         },
     ]
 

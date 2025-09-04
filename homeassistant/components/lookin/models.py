@@ -13,7 +13,11 @@ from aiolookin import (
     Remote,
 )
 
+from homeassistant.config_entries import ConfigEntry
+
 from .coordinator import LookinDataUpdateCoordinator
+
+type LookinConfigEntry = ConfigEntry[LookinData]
 
 
 @dataclass

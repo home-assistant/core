@@ -1,0 +1,81 @@
+{
+  "components": {
+    "main": {
+      "relativeHumidityMeasurement": {
+        "humidity": {
+          "value": null
+        }
+      },
+      "thermostatOperatingState": {
+        "thermostatOperatingState": {
+          "value": null
+        }
+      },
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2025-03-10T00:57:26.866Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "offline",
+          "data": {
+            "reason": "DEVICE-OFFLINE"
+          },
+          "timestamp": "2025-03-11T10:22:17.013Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": null
+        }
+      },
+      "thermostatHeatingSetpoint": {
+        "heatingSetpoint": {
+          "value": null
+        },
+        "heatingSetpointRange": {
+          "value": null
+        }
+      },
+      "thermostatFanMode": {
+        "thermostatFanMode": {
+          "value": null
+        },
+        "supportedThermostatFanModes": {
+          "value": null
+        }
+      },
+      "refresh": {},
+      "thermostatMode": {
+        "thermostatMode": {
+          "value": null
+        },
+        "supportedThermostatModes": {
+          "value": null
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": null
+        }
+      }
+    }
+  }
+}

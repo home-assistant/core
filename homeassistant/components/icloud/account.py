@@ -29,6 +29,13 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.location import distance
 
 from .const import (
+    ATTR_ACCOUNT_FETCH_INTERVAL,
+    ATTR_BATTERY,
+    ATTR_BATTERY_STATUS,
+    ATTR_DEVICE_NAME,
+    ATTR_DEVICE_STATUS,
+    ATTR_LOW_POWER_MODE,
+    ATTR_OWNER_NAME,
     DEVICE_BATTERY_LEVEL,
     DEVICE_BATTERY_STATUS,
     DEVICE_CLASS,
@@ -49,26 +56,9 @@ from .const import (
     DOMAIN,
 )
 
-# entity attributes
-ATTR_ACCOUNT_FETCH_INTERVAL = "account_fetch_interval"
-ATTR_BATTERY = "battery"
-ATTR_BATTERY_STATUS = "battery_status"
-ATTR_DEVICE_NAME = "device_name"
-ATTR_DEVICE_STATUS = "device_status"
-ATTR_LOW_POWER_MODE = "low_power_mode"
-ATTR_OWNER_NAME = "owner_fullname"
-
-# services
-SERVICE_ICLOUD_PLAY_SOUND = "play_sound"
-SERVICE_ICLOUD_DISPLAY_MESSAGE = "display_message"
-SERVICE_ICLOUD_LOST_DEVICE = "lost_device"
-SERVICE_ICLOUD_UPDATE = "update"
-ATTR_ACCOUNT = "account"
-ATTR_LOST_DEVICE_MESSAGE = "message"
-ATTR_LOST_DEVICE_NUMBER = "number"
-ATTR_LOST_DEVICE_SOUND = "sound"
-
 _LOGGER = logging.getLogger(__name__)
+
+type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
 
 class IcloudAccount:
@@ -83,7 +73,7 @@ class IcloudAccount:
         with_family: bool,
         max_interval: int,
         gps_accuracy_threshold: int,
-        config_entry: ConfigEntry,
+        config_entry: IcloudConfigEntry,
     ) -> None:
         """Initialize an iCloud account."""
         self.hass = hass

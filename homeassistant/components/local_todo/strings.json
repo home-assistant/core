@@ -6,7 +6,8 @@
         "description": "Please choose a name for your new To-do list",
         "data": {
           "todo_list_name": "To-do list name"
-        }
+        },
+        "submit": "Create"
       }
     },
     "abort": {

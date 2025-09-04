@@ -99,6 +99,29 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-configuration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input:
+            errors = await self._validate_account(
+                reconfigure_entry.data[CONF_EMAIL],
+                user_input[CONF_PASSWORD],
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates=user_input,
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=REAUTH_SCHEMA,
+            description_placeholders={"email": reconfigure_entry.data[CONF_EMAIL]},
+            errors=errors,
+        )
+
     async def _validate_account(self, email: str, password: str) -> dict[str, str]:
         """Validate Ohme account and return dict of errors."""
         errors: dict[str, str] = {}

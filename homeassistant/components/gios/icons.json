@@ -13,6 +13,9 @@
       "no2_index": {
         "default": "mdi:molecule"
       },
+      "nox": {
+        "default": "mdi:molecule"
+      },
       "o3_index": {
         "default": "mdi:molecule"
       },

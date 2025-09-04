@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "integration_removed": {
+      "title": "The Zengge integration has been removed",
+      "description": "The Zengge integration has been removed from Home Assistant. Support for Zengge lights is provided by the `led_ble` integration.\n\nTo resolve this issue, please remove the (now defunct) `zengge` light configuration from your Home Assistant configuration and [configure the `led_ble` integration]({led_ble_url})."
+    }
+  }
+}

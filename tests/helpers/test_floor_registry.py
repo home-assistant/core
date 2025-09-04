@@ -327,7 +327,7 @@ async def test_loading_floors_from_storage(
     assert len(registry.floors) == 1
 
 
-async def test_getting_floor(floor_registry: fr.FloorRegistry) -> None:
+async def test_getting_floor_by_name(floor_registry: fr.FloorRegistry) -> None:
     """Make sure we can get the floors by name."""
     floor = floor_registry.async_create("First floor")
     floor2 = floor_registry.async_get_floor_by_name("first floor")
@@ -339,6 +339,56 @@ async def test_getting_floor(floor_registry: fr.FloorRegistry) -> None:
 
     get_floor = floor_registry.async_get_floor(floor.floor_id)
     assert get_floor == floor
+
+
+async def test_async_get_floors_by_alias(
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Make sure we can get the floors by alias."""
+    floor1 = floor_registry.async_create("First floor", aliases=("alias_1", "alias_2"))
+    floor2 = floor_registry.async_create("Second floor", aliases=("alias_1", "alias_3"))
+
+    assert floor_registry.async_get_floors_by_alias("A l i a s_1") == [floor1, floor2]
+    assert floor_registry.async_get_floors_by_alias("A l i a s_2") == [floor1]
+    assert floor_registry.async_get_floors_by_alias("A l i a s_3") == [floor2]
+
+
+async def test_async_get_floors_by_alias_collisions(
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Make sure we can get the floors by alias when the aliases have collisions."""
+    floor = floor_registry.async_create("First floor")
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == []
+
+    # Add an alias
+    updated_floor = floor_registry.async_update(floor.floor_id, aliases={"alias1"})
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == [updated_floor]
+
+    # Add a colliding alias
+    updated_floor = floor_registry.async_update(
+        floor.floor_id, aliases={"alias1", "alias  1"}
+    )
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == [updated_floor]
+
+    # Add a colliding alias
+    updated_floor = floor_registry.async_update(
+        floor.floor_id, aliases={"alias1", "alias 1", "alias  1"}
+    )
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == [updated_floor]
+
+    # Remove a colliding alias
+    updated_floor = floor_registry.async_update(
+        floor.floor_id, aliases={"alias1", "alias  1"}
+    )
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == [updated_floor]
+
+    # Remove a colliding alias
+    updated_floor = floor_registry.async_update(floor.floor_id, aliases={"alias1"})
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == [updated_floor]
+
+    # Remove all aliases
+    updated_floor = floor_registry.async_update(floor.floor_id, aliases={})
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == []
 
 
 async def test_async_get_floor_by_name_not_found(

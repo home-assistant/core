@@ -856,7 +856,7 @@ async def test_client_header_issues(hass: HomeAssistant) -> None:
         patch("plexauth.PlexAuth.initiate_auth"),
         patch("plexauth.PlexAuth.token", return_value=None),
         patch(
-            "homeassistant.components.http.current_request.get",
+            "homeassistant.helpers.http.current_request.get",
             return_value=MockRequest(),
         ),
         pytest.raises(

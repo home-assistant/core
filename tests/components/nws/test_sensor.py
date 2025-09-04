@@ -66,7 +66,9 @@ async def test_imperial_metric(
         assert description.name
         state = hass.states.get(f"sensor.abc_{slugify(description.name)}")
         assert state
-        assert state.state == result_observation[description.key]
+        assert state.state == result_observation[description.key], (
+            f"Failed for {description.key}"
+        )
         assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
 
 

@@ -5,11 +5,12 @@ import json
 from kasa import Device
 import pytest
 
+from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import _mocked_device, initialize_config_entry_for_device
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -40,7 +41,7 @@ async def test_diagnostics(
     expected_oui: str | None,
 ) -> None:
     """Test diagnostics for config entry."""
-    diagnostics_data = json.loads(load_fixture(fixture_file, "tplink"))
+    diagnostics_data = json.loads(await async_load_fixture(hass, fixture_file, DOMAIN))
 
     mocked_dev.internal_state = diagnostics_data["device_last_response"]
 

@@ -19,6 +19,7 @@ from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .config_cache import async_get_validated_config
 from .const import (
     CONF_ALWAYS_CONNECTED,
     CONF_KEY,
@@ -32,7 +33,11 @@ from .util import async_find_existing_service_info, bluetooth_callback_matcher
 type YALEXSBLEConfigEntry = ConfigEntry[YaleXSBLEData]
 
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.LOCK,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) -> bool:
@@ -92,13 +97,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
     )
 
     try:
-        await push_lock.wait_for_first_update(DEVICE_TIMEOUT)
-    except AuthError as ex:
-        raise ConfigEntryAuthFailed(str(ex)) from ex
-    except (YaleXSBLEError, TimeoutError) as ex:
-        raise ConfigEntryNotReady(
-            f"{ex}; Try moving the Bluetooth adapter closer to {local_name}"
-        ) from ex
+        await _async_wait_for_first_update(push_lock, local_name)
+    except ConfigEntryAuthFailed:
+        # If key has rotated, try to fetch it from the cache
+        # and update
+        if (validated_config := async_get_validated_config(hass, address)) and (
+            validated_config.key != entry.data[CONF_KEY]
+            or validated_config.slot != entry.data[CONF_SLOT]
+        ):
+            assert shutdown_callback is not None
+            shutdown_callback()
+            push_lock.set_lock_key(validated_config.key, validated_config.slot)
+            shutdown_callback = await push_lock.start()
+            await _async_wait_for_first_update(push_lock, local_name)
+            # If we can use the cached key and slot, update the entry.
+            hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    **entry.data,
+                    CONF_KEY: validated_config.key,
+                    CONF_SLOT: validated_config.slot,
+                },
+            )
+        else:
+            raise
 
     entry.runtime_data = YaleXSBLEData(entry.title, push_lock, always_connected)
 
@@ -125,22 +147,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
 
     entry.async_on_unload(push_lock.register_callback(_async_state_changed))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
     )
     return True
 
 
-async def _async_update_listener(
-    hass: HomeAssistant, entry: YALEXSBLEConfigEntry
-) -> None:
-    """Handle options update."""
-    data = entry.runtime_data
-    if entry.title != data.title or data.always_connected != entry.options.get(
-        CONF_ALWAYS_CONNECTED
-    ):
-        await hass.config_entries.async_reload(entry.entry_id)
+async def _async_wait_for_first_update(push_lock: PushLock, local_name: str) -> None:
+    """Wait for the first update from the push lock."""
+    try:
+        await push_lock.wait_for_first_update(DEVICE_TIMEOUT)
+    except AuthError as ex:
+        raise ConfigEntryAuthFailed(str(ex)) from ex
+    except (YaleXSBLEError, TimeoutError) as ex:
+        raise ConfigEntryNotReady(
+            f"{ex}; Try moving the Bluetooth adapter closer to {local_name}"
+        ) from ex
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) -> bool:

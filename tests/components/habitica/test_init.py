@@ -6,19 +6,13 @@ from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
+from habiticalib import HabiticaUserResponse
 import pytest
 
-from homeassistant.components.habitica.const import (
-    ATTR_ARGS,
-    ATTR_DATA,
-    ATTR_PATH,
-    DOMAIN,
-    EVENT_API_CALL_SUCCESS,
-    SERVICE_API_CALL,
-)
+from homeassistant.components.habitica.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_NAME
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import (
     ERROR_BAD_REQUEST,
@@ -27,13 +21,7 @@ from .conftest import (
     ERROR_TOO_MANY_REQUESTS,
 )
 
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
-
-
-@pytest.fixture
-def capture_api_call_success(hass: HomeAssistant) -> list[Event]:
-    """Capture api_call events."""
-    return async_capture_events(hass, EVENT_API_CALL_SUCCESS)
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 
 @pytest.mark.usefixtures("habitica")
@@ -51,37 +39,6 @@ async def test_entry_setup_unload(
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-@pytest.mark.usefixtures("habitica")
-async def test_service_call(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    capture_api_call_success: list[Event],
-) -> None:
-    """Test integration setup, service call and unload."""
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    assert len(capture_api_call_success) == 0
-
-    TEST_SERVICE_DATA = {
-        ATTR_NAME: "test-user",
-        ATTR_PATH: ["tasks", "user", "post"],
-        ATTR_ARGS: {"text": "Use API from Home Assistant", "type": "todo"},
-    }
-    await hass.services.async_call(
-        DOMAIN, SERVICE_API_CALL, TEST_SERVICE_DATA, blocking=True
-    )
-
-    assert len(capture_api_call_success) == 1
-    captured_data = capture_api_call_success[0].data
-    captured_data[ATTR_ARGS] = captured_data[ATTR_DATA]
-    del captured_data[ATTR_DATA]
-    assert captured_data == TEST_SERVICE_DATA
 
 
 @pytest.mark.parametrize(
@@ -173,3 +130,41 @@ async def test_coordinator_rate_limited(
         await hass.async_block_till_done()
 
         assert "Rate limit exceeded, will try again later" in caplog.text
+
+
+async def test_remove_party_and_reload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test we leave the party and device is removed."""
+    group_id = "1e87097c-4c03-4f8c-a475-67cc7da7f409"
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert (
+        device_registry.async_get_device(
+            {(DOMAIN, f"{config_entry.unique_id}_{group_id}")}
+        )
+        is not None
+    )
+
+    habitica.get_user.return_value = HabiticaUserResponse.from_json(
+        await async_load_fixture(hass, "user_no_party.json", DOMAIN)
+    )
+
+    freezer.tick(datetime.timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(
+            {(DOMAIN, f"{config_entry.unique_id}_{group_id}")}
+        )
+        is None
+    )

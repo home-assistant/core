@@ -3,7 +3,7 @@
 from aiohttp.test_utils import TestClient
 from freezegun import freeze_time
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.auth.models import Credentials

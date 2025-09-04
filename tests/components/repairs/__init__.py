@@ -42,20 +42,20 @@ async def get_repairs(
 
 
 async def start_repair_fix_flow(
-    client: TestClient, handler: str, issue_id: int
+    client: TestClient, handler: str, issue_id: str
 ) -> dict[str, Any]:
     """Start a flow from an issue."""
     url = RepairsFlowIndexView.url
     resp = await client.post(url, json={"handler": handler, "issue_id": issue_id})
-    assert resp.status == HTTPStatus.OK
+    assert resp.status == HTTPStatus.OK, f"Error: {resp.status}, {await resp.text()}"
     return await resp.json()
 
 
 async def process_repair_fix_flow(
-    client: TestClient, flow_id: int, json: dict[str, Any] | None = None
+    client: TestClient, flow_id: str, json: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """Return the repairs list of issues."""
     url = RepairsFlowResourceView.url.format(flow_id=flow_id)
     resp = await client.post(url, json=json)
-    assert resp.status == HTTPStatus.OK
+    assert resp.status == HTTPStatus.OK, f"Error: {resp.status}, {await resp.text()}"
     return await resp.json()

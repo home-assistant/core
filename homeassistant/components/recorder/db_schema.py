@@ -58,6 +58,7 @@ from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import (
     StatisticData,
     StatisticDataTimestamp,
+    StatisticMeanType,
     StatisticMetaData,
     bytes_to_ulid_or_none,
     bytes_to_uuid_hex_or_none,
@@ -77,7 +78,7 @@ class LegacyBase(DeclarativeBase):
     """Base class for tables, used for schema migration."""
 
 
-SCHEMA_VERSION = 48
+SCHEMA_VERSION = 50
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -203,11 +204,11 @@ UINT_32_TYPE = BigInteger().with_variant(
     "mariadb",
 )
 JSON_VARIANT_CAST = Text().with_variant(
-    postgresql.JSON(none_as_null=True),  # type: ignore[no-untyped-call]
+    postgresql.JSON(none_as_null=True),
     "postgresql",
 )
 JSONB_VARIANT_CAST = Text().with_variant(
-    postgresql.JSONB(none_as_null=True),  # type: ignore[no-untyped-call]
+    postgresql.JSONB(none_as_null=True),
     "postgresql",
 )
 DATETIME_TYPE = (
@@ -719,6 +720,7 @@ class StatisticsBase:
     start: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     start_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
     mean: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
+    mean_weight: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     min: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     max: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     last_reset: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
@@ -740,6 +742,7 @@ class StatisticsBase:
             start=None,
             start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
+            mean_weight=stats.get("mean_weight"),
             min=stats.get("min"),
             max=stats.get("max"),
             last_reset=None,
@@ -763,6 +766,7 @@ class StatisticsBase:
             start=None,
             start_ts=stats["start_ts"],
             mean=stats.get("mean"),
+            mean_weight=stats.get("mean_weight"),
             min=stats.get("min"),
             max=stats.get("max"),
             last_reset=None,
@@ -848,6 +852,9 @@ class _StatisticsMeta:
     has_mean: Mapped[bool | None] = mapped_column(Boolean)
     has_sum: Mapped[bool | None] = mapped_column(Boolean)
     name: Mapped[str | None] = mapped_column(String(255))
+    mean_type: Mapped[StatisticMeanType] = mapped_column(
+        SmallInteger, nullable=False, default=StatisticMeanType.NONE.value
+    )  # See StatisticMeanType
 
     @staticmethod
     def from_meta(meta: StatisticMetaData) -> StatisticsMeta:

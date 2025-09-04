@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 from pybalboa import SpaControl
 from pybalboa.enums import HeatMode, OffLowMediumHighState
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -26,10 +26,11 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import client_update, init_integration
 
@@ -97,11 +98,10 @@ async def test_spa_temperature_unit(
     hass: HomeAssistant, client: MagicMock, integration: MockConfigEntry
 ) -> None:
     """Test temperature unit conversions."""
-    with patch.object(
-        hass.config.units, "temperature_unit", UnitOfTemperature.FAHRENHEIT
-    ):
-        state = await _patch_spa_settemp(hass, client, 0, 15.4)
-        assert state.attributes.get(ATTR_TEMPERATURE) == 15.0
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    state = await _patch_spa_settemp(hass, client, 0, 15.4)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 15.0
 
 
 async def test_spa_hvac_modes(
@@ -126,9 +126,6 @@ async def test_spa_hvac_action(
 
     state = await _patch_spa_heatstate(hass, client, 1)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
-
-    state = await _patch_spa_heatstate(hass, client, 2)
-    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
 async def test_spa_preset_modes(

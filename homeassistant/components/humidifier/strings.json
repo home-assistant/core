@@ -62,15 +62,15 @@
         "mode": {
           "name": "Mode",
           "state": {
-            "normal": "Normal",
-            "eco": "Eco",
-            "away": "Away",
+            "normal": "[%key:common::state::normal%]",
+            "home": "[%key:common::state::home%]",
+            "away": "[%key:common::state::not_home%]",
+            "auto": "[%key:common::state::auto%]",
+            "baby": "Baby",
             "boost": "Boost",
             "comfort": "Comfort",
-            "home": "[%key:common::state::home%]",
-            "sleep": "Sleep",
-            "auto": "Auto",
-            "baby": "Baby"
+            "eco": "Eco",
+            "sleep": "Sleep"
           }
         }
       }
@@ -89,7 +89,7 @@
       "fields": {
         "mode": {
           "name": "Mode",
-          "description": "Operation mode. For example, _normal_, _eco_, or _away_. For a list of possible values, refer to the integration documentation."
+          "description": "Operation mode. For example, \"normal\", \"eco\", or \"away\". For a list of possible values, refer to the integration documentation."
         }
       }
     },

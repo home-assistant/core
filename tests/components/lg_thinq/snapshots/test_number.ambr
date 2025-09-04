@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[number.test_air_conditioner_schedule_turn_off-entry]
+# name: test_number_entities[air_conditioner][number.test_air_conditioner_schedule_turn_off-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -32,13 +32,14 @@
     'original_name': 'Schedule turn-off',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <Property.RELATIVE_HOUR_TO_STOP: 'relative_hour_to_stop'>,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_relative_hour_to_stop',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_all_entities[number.test_air_conditioner_schedule_turn_off-state]
+# name: test_number_entities[air_conditioner][number.test_air_conditioner_schedule_turn_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test air conditioner Schedule turn-off',
@@ -56,7 +57,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[number.test_air_conditioner_schedule_turn_on-entry]
+# name: test_number_entities[air_conditioner][number.test_air_conditioner_schedule_turn_on-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -89,13 +90,14 @@
     'original_name': 'Schedule turn-on',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <Property.RELATIVE_HOUR_TO_START: 'relative_hour_to_start'>,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_relative_hour_to_start',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_all_entities[number.test_air_conditioner_schedule_turn_on-state]
+# name: test_number_entities[air_conditioner][number.test_air_conditioner_schedule_turn_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test air conditioner Schedule turn-on',
@@ -111,5 +113,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_number_entities[washer][number.test_washer_delayed_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 19,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.test_washer_delayed_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Delayed start',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <TimerProperty.RELATIVE_HOUR_TO_START_WM: 'relative_hour_to_start_wm'>,
+    'unique_id': 'MW2-0B530EFD-1ADF-4F54-A2C3-46C37F94C689_main_relative_hour_to_start',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_number_entities[washer][number.test_washer_delayed_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test washer Delayed start',
+      'max': 19,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.test_washer_delayed_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---

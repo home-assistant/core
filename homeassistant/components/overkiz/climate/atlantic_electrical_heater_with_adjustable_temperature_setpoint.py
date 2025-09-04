@@ -13,6 +13,7 @@ from homeassistant.components.climate import (
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -54,6 +55,12 @@ OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.STANDBY: HVACMode.OFF,
     OverkizCommandParam.EXTERNAL: HVACMode.AUTO,
     OverkizCommandParam.INTERNAL: HVACMode.AUTO,
+}
+
+OVERKIZ_TO_HVAC_ACTION: dict[str, HVACAction] = {
+    OverkizCommandParam.STANDBY: HVACAction.IDLE,
+    OverkizCommandParam.INCREASE: HVACAction.HEATING,
+    OverkizCommandParam.NONE: HVACAction.OFF,
 }
 
 HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
@@ -101,6 +108,14 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         await self.executor.async_execute_command(
             OverkizCommand.SET_OPERATING_MODE, HVAC_MODE_TO_OVERKIZ[hvac_mode]
         )
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """Return the current running hvac operation ie. heating, idle, off."""
+        states = self.device.states
+        if (state := states[OverkizState.CORE_REGULATION_MODE]) and state.value_as_str:
+            return OVERKIZ_TO_HVAC_ACTION[state.value_as_str]
+        return HVACAction.OFF
 
     @property
     def preset_mode(self) -> str | None:

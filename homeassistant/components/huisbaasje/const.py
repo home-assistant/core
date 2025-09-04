@@ -9,8 +9,6 @@ from energyflip.const import (
     SOURCE_TYPE_GAS,
 )
 
-DATA_COORDINATOR = "coordinator"
-
 DOMAIN = "huisbaasje"
 
 """Interval in seconds between polls to EnergyFlip."""

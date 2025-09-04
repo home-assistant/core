@@ -21,7 +21,7 @@
   "entity": {
     "button": {
       "set_datetime": {
-        "name": "Set Date&Time"
+        "name": "Set date & time"
       }
     }
   }
