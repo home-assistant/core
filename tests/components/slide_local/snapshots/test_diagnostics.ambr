@@ -31,7 +31,7 @@
       'curtain_type': 0,
       'device_name': 'slide bedroom',
       'mac': '1234567890ab',
-      'pos': 0,
+      'pos': 1,
       'slide_id': 'slide_1234567890ab',
       'state': 'open',
       'touch_go': True,

@@ -396,7 +396,7 @@ class DeconzGroup(DeconzBaseLight[Group]):
         """Return a device description for device registry."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Dresden Elektronik",
+            manufacturer="dresden elektronik",
             model="deCONZ group",
             name=self._device.name,
             via_device=(DOMAIN, self.hub.api.config.bridge_id),

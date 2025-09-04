@@ -20,7 +20,6 @@ generate_data:
             supported_features:
               - ai_task.AITaskEntityFeature.GENERATE_DATA
     structure:
-      advanced: true
       required: false
       example: '{ "name": { "selector": { "text": }, "description": "Name of the user", "required": "True" } } }, "age": { "selector": { "number": }, "description": "Age of the user" } }'
       selector:

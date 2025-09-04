@@ -1,0 +1,25 @@
+{
+  "code": 0,
+  "msg": "request success",
+  "traceId": "1234",
+  "result": {
+    "code": 0,
+    "result": {
+      "enabled": true,
+      "filter_life": 99,
+      "mode": "manual",
+      "level": 1,
+      "device_error_code": 0,
+      "air_quality": 1,
+      "air_quality_value": 5,
+      "display": true,
+      "child_lock": false,
+      "configuration": {
+        "display": true,
+        "display_forever": true,
+        "auto_preference": null
+      },
+      "night_light": "off"
+    }
+  }
+}

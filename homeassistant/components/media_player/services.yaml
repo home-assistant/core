@@ -135,9 +135,7 @@ play_media:
       required: true
       selector:
         media:
-      example:
-        media_content_id: "https://home-assistant.io/images/cast/splash.png"
-        media_content_type: "music"
+      example: '{"media_content_id": "https://home-assistant.io/images/cast/splash.png", "media_content_type": "music"}'
 
     enqueue:
       filter:

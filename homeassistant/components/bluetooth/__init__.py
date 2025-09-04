@@ -385,10 +385,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Bluetooth adapter {adapter} with address {address} not found"
         )
     passive = entry.options.get(CONF_PASSIVE)
+    adapters = await manager.async_get_bluetooth_adapters()
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
     scanner = HaScanner(mode, adapter, address)
     scanner.async_setup()
-    adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
     if entry.title == address:
         hass.config_entries.async_update_entry(

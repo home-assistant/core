@@ -190,7 +190,7 @@ _SECTION_SCHEMA = vol.Schema(
 
 _SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
+        vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
         vol.Optional("fields"): vol.Schema(
             {str: vol.Any(_SECTION_SCHEMA, _FIELD_SCHEMA)}
         ),

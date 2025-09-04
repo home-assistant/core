@@ -1,4 +1,211 @@
 # serializer version: 1
+# name: test_sensors[sensor.publicuniversalfriend_last_online-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.publicuniversalfriend_last_online',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last online',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkSensor.LAST_ONLINE: 'last_online'>,
+    'unique_id': 'fren-psn-id_last_online',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_last_online-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'PublicUniversalFriend Last online',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.publicuniversalfriend_last_online',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-06-30T01:42:15+00:00',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_now_playing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.publicuniversalfriend_now_playing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Now playing',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkSensor.NOW_PLAYING: 'now_playing'>,
+    'unique_id': 'fren-psn-id_now_playing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_now_playing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PublicUniversalFriend Now playing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.publicuniversalfriend_now_playing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'STAR WARS Jedi: Survivor™',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_online_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.publicuniversalfriend_online_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Online ID',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkSensor.ONLINE_ID: 'online_id'>,
+    'unique_id': 'fren-psn-id_online_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_online_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PublicUniversalFriend Online ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.publicuniversalfriend_online_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'PublicUniversalFriend',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_online_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'offline',
+        'availabletoplay',
+        'availabletocommunicate',
+        'busy',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.publicuniversalfriend_online_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Online status',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkSensor.ONLINE_STATUS: 'online_status'>,
+    'unique_id': 'fren-psn-id_online_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_online_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'PublicUniversalFriend Online status',
+      'options': list([
+        'offline',
+        'availabletoplay',
+        'availabletocommunicate',
+        'busy',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.publicuniversalfriend_online_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'availabletoplay',
+  })
+# ---
 # name: test_sensors[sensor.testuser_bronze_trophies-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -146,55 +353,6 @@
     'state': '2025-06-30T01:42:15+00:00',
   })
 # ---
-# name: test_sensors[sensor.testuser_last_online_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.testuser_last_online_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Last online',
-    'platform': 'playstation_network',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <PlaystationNetworkSensor.LAST_ONLINE: 'last_online'>,
-    'unique_id': 'fren-psn-id_last_online',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.testuser_last_online_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'testuser Last online',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.testuser_last_online_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-06-30T01:42:15+00:00',
-  })
-# ---
 # name: test_sensors[sensor.testuser_next_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -292,54 +450,6 @@
     'state': 'STAR WARS Jedi: Survivor™',
   })
 # ---
-# name: test_sensors[sensor.testuser_now_playing_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.testuser_now_playing_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Now playing',
-    'platform': 'playstation_network',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <PlaystationNetworkSensor.NOW_PLAYING: 'now_playing'>,
-    'unique_id': 'fren-psn-id_now_playing',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.testuser_now_playing_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'testuser Now playing',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.testuser_now_playing_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'STAR WARS Jedi: Survivor™',
-  })
-# ---
 # name: test_sensors[sensor.testuser_online_id-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -383,55 +493,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_online_id',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'testuser',
-  })
-# ---
-# name: test_sensors[sensor.testuser_online_id_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.testuser_online_id_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Online ID',
-    'platform': 'playstation_network',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <PlaystationNetworkSensor.ONLINE_ID: 'online_id'>,
-    'unique_id': 'fren-psn-id_online_id',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.testuser_online_id_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'entity_picture': 'http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png',
-      'friendly_name': 'testuser Online ID',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.testuser_online_id_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -494,68 +555,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_online_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'availabletoplay',
-  })
-# ---
-# name: test_sensors[sensor.testuser_online_status_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'offline',
-        'availabletoplay',
-        'availabletocommunicate',
-        'busy',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.testuser_online_status_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Online status',
-    'platform': 'playstation_network',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <PlaystationNetworkSensor.ONLINE_STATUS: 'online_status'>,
-    'unique_id': 'fren-psn-id_online_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.testuser_online_status_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'testuser Online status',
-      'options': list([
-        'offline',
-        'availabletoplay',
-        'availabletocommunicate',
-        'busy',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.testuser_online_status_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
