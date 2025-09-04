@@ -9,6 +9,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
     AssistSatelliteWakeWord,
 )
+from homeassistant.components.esphome.const import NO_WAKE_WORD
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -186,7 +187,7 @@ async def test_wake_word_select_no_active_wake_words(
     assert satellite is not None
     assert not satellite.async_get_configuration().active_wake_words
 
-    # First available wake word should be selected
+    # No wake word should be selected
     state = hass.states.get("select.test_wake_word")
     assert state is not None
-    assert state.state == "Okay Nabu"
+    assert state.state == NO_WAKE_WORD
