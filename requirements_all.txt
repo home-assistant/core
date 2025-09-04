@@ -277,7 +277,7 @@ aiohomekit==3.2.15
 aiohttp_sse==2.2.0
 
 # homeassistant.components.hue
-aiohue==4.7.4
+aiohue==4.7.5
 
 # homeassistant.components.imap
 aioimaplib==2.0.1
@@ -1178,7 +1178,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250903.2
+home-assistant-frontend==20250903.3
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.9.3
