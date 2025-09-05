@@ -493,6 +493,7 @@ FLOWS = {
         "point",
         "pooldose",
         "poolsense",
+        "portainer",
         "powerfox",
         "powerwall",
         "private_ble_device",
