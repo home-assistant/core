@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pyvlx.opening_device import (
+from pyvlx import (
     Awning,
     Blind,
     GarageDoor,
     Gate,
     OpeningDevice,
+    Position,
     RollerShutter,
 )
-from pyvlx.parameter import Position
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
