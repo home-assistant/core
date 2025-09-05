@@ -321,6 +321,8 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
                 await api.fetch_full_state()
             except (AiohueException, aiohttp.ClientError):
                 continue
+            old_bridge_id = conf_entry.unique_id
+            assert old_bridge_id is not None
             # found a matching entry, migrate it
             self.hass.config_entries.async_update_entry(
                 conf_entry,
@@ -332,11 +334,8 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             # also update the bridge device
             dev_reg = dr.async_get(self.hass)
-            conf_entry_devices = dev_reg.devices.get_devices_for_config_entry_id(
-                conf_entry.entry_id
-            )
-            if bridge_device := next(
-                (d for d in conf_entry_devices if d.model_id == BSB002_MODEL_ID), None
+            if bridge_device := dev_reg.async_get_device(
+                identifiers={(DOMAIN, old_bridge_id)}
             ):
                 dev_reg.async_update_device(
                     bridge_device.id,

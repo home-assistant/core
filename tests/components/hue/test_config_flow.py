@@ -746,7 +746,7 @@ async def test_bsb003_bridge_discovery(
         unique_id="bsb002_00000",
     )
     entry.add_to_hass(hass)
-    device_registry.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(const.DOMAIN, "bsb002_00000")},
         connections={(dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")},
@@ -787,3 +787,12 @@ async def test_bsb003_bridge_discovery(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "migrated_bridge"
+
+    migrated_device = device_registry.async_get(device.id)
+
+    assert migrated_device is not None
+    assert len(migrated_device.identifiers) == 1
+    assert list(migrated_device.identifiers)[0] == (const.DOMAIN, "bsb003_00000")
+    # The tests don't add new connection, but that will happen
+    # outside of the config flow
+    assert len(migrated_device.connections) == 0
