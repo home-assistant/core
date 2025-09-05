@@ -259,10 +259,23 @@ def _async_handle_state_change(
 async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Unloading EnergyID entry for %s", entry.title)
-    runtime_data = getattr(entry, "runtime_data", None)
-    if runtime_data:
-        try:
-            await runtime_data.client.close()
-        except Exception:
-            _LOGGER.exception("Error closing EnergyID client for %s", entry.title)
-    return True
+    try:
+        runtime_data = getattr(entry, "runtime_data", None)
+        if runtime_data:
+            # Stop listeners
+            for unsub in runtime_data.listeners.values():
+                unsub()
+            # Close client
+            try:
+                await runtime_data.client.close()
+            except Exception:
+                _LOGGER.exception("Error closing EnergyID client for %s", entry.title)
+            # Clean up
+            del entry.runtime_data
+        else:
+            pass
+    except Exception:
+        _LOGGER.exception("Error during async_unload_entry for %s", entry.title)
+        return False
+    else:
+        return True
