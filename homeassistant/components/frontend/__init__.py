@@ -75,7 +75,7 @@ PRIMARY_COLOR = "primary-color"
 
 _LOGGER = logging.getLogger(__name__)
 
-EXTENDED_THEME_SCHEMA = vol.Schema(
+THEME_SCHEMA = vol.Schema(
     {
         # Theme variables that apply to all modes
         cv.string: cv.string,
@@ -90,14 +90,14 @@ EXTENDED_THEME_SCHEMA = vol.Schema(
     }
 )
 
-THEME_SCHEMA = vol.Schema({cv.string: (EXTENDED_THEME_SCHEMA)})
+THEMES_SCHEMA = vol.Schema({cv.string: (THEME_SCHEMA)})
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
-                vol.Optional(CONF_THEMES): THEME_SCHEMA,
+                vol.Optional(CONF_THEMES): THEMES_SCHEMA,
                 vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
