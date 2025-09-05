@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from aiohttp import ClientConnectionError
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -17,6 +18,13 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .test_config_flow import HOST, MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.fixture
+def freezer() -> FrozenDateTimeFactory:
+    """Provide a freezer for controlling time in tests."""
+    with freeze_time("2024-01-01 00:00:00") as frozen:
+        yield frozen
 
 
 @pytest.fixture

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from urllib.parse import unquote
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -284,3 +285,41 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             {HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]: HA_STATE_TO_DAIKIN[HVACMode.OFF]}
         )
         await self.coordinator.async_refresh()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes, mapping zone IDs to set temperatures for ON zones only, for the current mode."""
+        attrs = dict(super().extra_state_attributes or {})
+        lztemp_h = self.device.values.get("lztemp_h")
+        lztemp_c = self.device.values.get("lztemp_c")
+        zones = getattr(self.device, "zones", None)
+
+        def parse_zone_temps(val):
+            if not val:
+                return []
+            try:
+                decoded = unquote(val)
+                return [float(x) for x in decoded.split(";")]
+            except (ValueError, TypeError) as err:
+                _LOGGER.debug("Invalid zone temperature data '%s': %s", val, err)
+                return []
+
+        heating_temps = parse_zone_temps(lztemp_h)
+        cooling_temps = parse_zone_temps(lztemp_c)
+        # Determine current mode
+        mode = self.hvac_mode
+        use_heating = mode == HVACMode.HEAT
+        use_cooling = mode == HVACMode.COOL
+        # Only include zones that are ON (switch enabled)
+        zone_temps = {}
+        if zones:
+            for idx, zone in enumerate(zones):
+                enabled = str(zone[-1])
+                if enabled != "1":
+                    continue
+                if use_heating and idx < len(heating_temps):
+                    zone_temps[idx] = heating_temps[idx]
+                elif use_cooling and idx < len(cooling_temps):
+                    zone_temps[idx] = cooling_temps[idx]
+        attrs["zone_temps"] = zone_temps
+        return attrs
