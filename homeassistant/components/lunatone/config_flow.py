@@ -37,6 +37,7 @@ DEFAULT_DALI_DEVICE_SCAN_METHOD: Final = DALIDeviceScanMethod.CURRENT_DEVICE_LIS
 DALI_DEVICE_SCAN_METHODS: Final[list[str]] = [
     option.value for option in DALIDeviceScanMethod
 ]
+DALI_DEVICE_SCAN_TIMEOUT_MINUTES: Final = 30
 
 DATA_SCHEMA: Final[vol.Schema] = vol.Schema(
     {vol.Required(CONF_URL, default="http://"): cv.string},
@@ -194,7 +195,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_is_dali_device_scan_done(self, scan: DALIScan) -> bool:
         await asyncio.sleep(1)
-        for _ in range(1800):
+        for _ in range(DALI_DEVICE_SCAN_TIMEOUT_MINUTES * 60):
             await scan.async_update()
             if not scan.is_busy:
                 return True
