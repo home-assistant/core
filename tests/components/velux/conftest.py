@@ -75,6 +75,9 @@ def mock_window() -> AsyncMock:
     window.is_closing = False
     window.position = AsyncMock(autospec=True)
     window.get_limitation.return_value = MagicMock(min_value=0)
+    window.is_opening = False
+    window.is_closing = False
+    window.position = MagicMock(position_percent=30, closed=False)
     return window
 
 
