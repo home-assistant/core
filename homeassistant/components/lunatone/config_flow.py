@@ -126,7 +126,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             next_step_id = None
             if self._dali_device_scan_task.cancelled():
                 _LOGGER.debug("DALI device scan timeout")
-                next_step_id = "failed"
+                next_step_id = "scan_timeout"
             elif self._dali_device_scan_task.done():
                 next_step_id = "finish"
             if next_step_id:
@@ -149,10 +149,10 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             last_step=False,
         )
 
-    async def async_step_failed(
+    async def async_step_scan_timeout(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle failed config flow."""
+        """Handle DALI device scan timeout config flow."""
         return self.async_abort(reason="dali_device_scan_timeout")
 
     async def async_step_finish(
