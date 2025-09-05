@@ -384,14 +384,14 @@ class TestTuyaEnergySensorEntity:
             ["total_forward_energy"], {"total_forward_energy": 1234567890}
         )
 
-    def test_process_incremental_update_no_raw_value(
+    def test_process_incremental_update_invalid_cases(
         self,
         mock_energy_device,
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
     ):
-        """Test _process_incremental_update with no raw value."""
+        """Test _process_incremental_update with invalid raw values."""
         entity = TuyaEnergySensorEntity(
             mock_energy_device,
             mock_manager,
@@ -400,48 +400,33 @@ class TestTuyaEnergySensorEntity:
         )
 
         # Test with None raw value - this should not accumulate
-        entity._process_incremental_update(1234567890)
-
+        with patch.object(
+            entity.__class__.__bases__[0],
+            "native_value",
+            new_callable=PropertyMock,
+            return_value=None,
+        ):
+            entity._process_incremental_update(1234567890)
         assert entity._cumulative_total == Decimal(0)
 
-    def test_process_incremental_update_invalid_raw_value(
-        self,
-        mock_energy_device,
-        mock_energy_description,
-        mock_config_entry_with_incremental,
-        mock_manager,
-    ):
-        """Test _process_incremental_update with invalid raw value."""
-        entity = TuyaEnergySensorEntity(
-            mock_energy_device,
-            mock_manager,
-            mock_energy_description,
-            mock_config_entry_with_incremental,
-        )
-
-        # Test with invalid raw value - this should not accumulate
-        entity._process_incremental_update(1234567890)
-
+        # Test with invalid raw value (non-numeric string) - this should not accumulate
+        with patch.object(
+            entity.__class__.__bases__[0],
+            "native_value",
+            new_callable=PropertyMock,
+            return_value="invalid",
+        ):
+            entity._process_incremental_update(1234567890)
         assert entity._cumulative_total == Decimal(0)
-
-    def test_process_incremental_update_negative_value(
-        self,
-        mock_energy_device,
-        mock_energy_description,
-        mock_config_entry_with_incremental,
-        mock_manager,
-    ):
-        """Test _process_incremental_update with negative value."""
-        entity = TuyaEnergySensorEntity(
-            mock_energy_device,
-            mock_manager,
-            mock_energy_description,
-            mock_config_entry_with_incremental,
-        )
 
         # Test with negative raw value - this should not accumulate
-        entity._process_incremental_update(1234567890)
-
+        with patch.object(
+            entity.__class__.__bases__[0],
+            "native_value",
+            new_callable=PropertyMock,
+            return_value="-5.0",
+        ):
+            entity._process_incremental_update(1234567890)
         assert entity._cumulative_total == Decimal(0)
 
     def test_process_incremental_update_valid_value_with_timestamp(
@@ -579,9 +564,9 @@ class TestTuyaEnergySensorEntity:
             mock_config_entry_with_cumulative,
         )
 
-        # Mock super().native_value
+        # Mock the parent class's native_value property to ensure line 1912 is covered
         with patch.object(
-            entity.__class__,
+            entity.__class__.__bases__[0],  # TuyaSensorEntity
             "native_value",
             new_callable=PropertyMock,
             return_value="2000.0",
@@ -589,93 +574,76 @@ class TestTuyaEnergySensorEntity:
             value = entity.native_value
             assert value == "2000.0"
 
-    def test_extra_state_attributes_incremental_mode(
+    def test_extra_state_attributes_comprehensive(
         self,
         mock_energy_device,
         mock_energy_description,
         mock_config_entry_with_incremental,
+        mock_config_entry_with_cumulative,
         mock_manager,
     ):
-        """Test extra_state_attributes in incremental mode."""
+        """Test extra_state_attributes comprehensively."""
+        # Test incremental mode with all values
         entity = TuyaEnergySensorEntity(
             mock_energy_device,
             mock_manager,
             mock_energy_description,
             mock_config_entry_with_incremental,
         )
-
-        # Set values
         entity._cumulative_total = Decimal("1500.75")
         entity._last_update_time = 1234567890
         entity._last_raw_value = Decimal("25.5")
 
-        # Test that energy-specific attributes are added
         attrs = entity.extra_state_attributes
-
-        # Check that energy-specific attributes are added
         assert attrs["energy_report_mode"] == "incremental"
         assert attrs["cumulative_total"] == "1500.75"
         assert attrs["last_update_time"] == 1234567890
         assert attrs["last_raw_value"] == "25.5"
 
-    def test_extra_state_attributes_cumulative_mode(
-        self,
-        mock_energy_device,
-        mock_energy_description,
-        mock_config_entry_with_cumulative,
-        mock_manager,
-    ):
-        """Test extra_state_attributes in cumulative mode."""
+        # Test incremental mode with None values
+        entity._last_update_time = None
+        entity._last_raw_value = None
+        attrs = entity.extra_state_attributes
+        assert attrs["energy_report_mode"] == "incremental"
+        assert attrs["cumulative_total"] == "1500.75"
+        assert "last_update_time" not in attrs
+        assert "last_raw_value" not in attrs
+
+        # Test cumulative mode
         entity = TuyaEnergySensorEntity(
             mock_energy_device,
             mock_manager,
             mock_energy_description,
             mock_config_entry_with_cumulative,
         )
-
-        # Test that energy-specific attributes are added
         attrs = entity.extra_state_attributes
-
         assert attrs["energy_report_mode"] == "cumulative"
 
-    def test_extra_state_attributes_non_energy_sensor(
-        self,
-        mock_energy_device,
-        mock_energy_description,
-        mock_config_entry_with_incremental,
-        mock_manager,
-    ):
-        """Test extra_state_attributes for non-energy sensor."""
-        # Create a non-energy sensor description
+        # Test non-energy sensor
         non_energy_description = TuyaSensorEntityDescription(
             key="cur_current",
             translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
         )
-
         entity = TuyaEnergySensorEntity(
             mock_energy_device,
             mock_manager,
             non_energy_description,
             mock_config_entry_with_incremental,
         )
-
-        # Test that energy-specific attributes are not added for non-energy sensors
         attrs = entity.extra_state_attributes
-
-        # Should not have energy-specific attributes
         assert "energy_report_mode" not in attrs
         assert "cumulative_total" not in attrs
 
-    def test_extra_state_attributes_none_values(
+    def test_is_new_update_comprehensive(
         self,
         mock_energy_device,
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
     ):
-        """Test extra_state_attributes with None values."""
+        """Test _is_new_update method comprehensively."""
         entity = TuyaEnergySensorEntity(
             mock_energy_device,
             mock_manager,
@@ -683,141 +651,43 @@ class TestTuyaEnergySensorEntity:
             mock_config_entry_with_incremental,
         )
 
-        # Set values to None
-        entity._cumulative_total = Decimal("1500.75")
-        entity._last_update_time = None
-        entity._last_raw_value = None
-
-        # Test that energy-specific attributes are added correctly
-        attrs = entity.extra_state_attributes
-
-        assert attrs["energy_report_mode"] == "incremental"
-        assert attrs["cumulative_total"] == "1500.75"
-        assert "last_update_time" not in attrs
-        assert "last_raw_value" not in attrs
-
-    def test_is_new_update_with_timestamp_newer(
-        self,
-        mock_energy_device,
-        mock_energy_description,
-        mock_config_entry_with_incremental,
-        mock_manager,
-    ):
-        """Test _is_new_update with newer timestamp."""
-        entity = TuyaEnergySensorEntity(
-            mock_energy_device,
-            mock_manager,
-            mock_energy_description,
-            mock_config_entry_with_incremental,
-        )
-
-        # Set initial timestamp
+        # Test with newer timestamp
         entity._last_update_time = 1000
-
         result = entity._is_new_update(Decimal("25.5"), 2000)
-
         assert result is True
         assert entity._last_update_time == 2000
         assert entity._last_raw_value == Decimal("25.5")
 
-    def test_is_new_update_with_timestamp_older(
-        self,
-        mock_energy_device,
-        mock_energy_description,
-        mock_config_entry_with_incremental,
-        mock_manager,
-    ):
-        """Test _is_new_update with older timestamp."""
-        entity = TuyaEnergySensorEntity(
-            mock_energy_device,
-            mock_manager,
-            mock_energy_description,
-            mock_config_entry_with_incremental,
-        )
-
-        # Set initial timestamp
-        entity._last_update_time = 2000
-
-        result = entity._is_new_update(Decimal("25.5"), 1000)
-
+        # Test with older timestamp
+        result = entity._is_new_update(Decimal("30.0"), 1000)
         assert result is False
         assert entity._last_update_time == 2000  # Should not change
 
-    def test_is_new_update_with_timestamp_none(
-        self,
-        mock_energy_device,
-        mock_energy_description,
-        mock_config_entry_with_incremental,
-        mock_manager,
-    ):
-        """Test _is_new_update with no timestamp."""
-        entity = TuyaEnergySensorEntity(
-            mock_energy_device,
-            mock_manager,
-            mock_energy_description,
-            mock_config_entry_with_incremental,
-        )
-
-        # Set initial values
+        # Test with no timestamp and different value
         entity._last_raw_value = Decimal("20.0")
-
         with patch("time.time", return_value=1234567.0):
             result = entity._is_new_update(Decimal("25.5"), None)
-
         assert result is True
         assert entity._last_raw_value == Decimal("25.5")
         assert entity._last_update_time == 1234567000
 
-    def test_is_new_update_with_timestamp_none_duplicate_value(
-        self,
-        mock_energy_device,
-        mock_energy_description,
-        mock_config_entry_with_incremental,
-        mock_manager,
-    ):
-        """Test _is_new_update with no timestamp and duplicate value."""
-        entity = TuyaEnergySensorEntity(
-            mock_energy_device,
-            mock_manager,
-            mock_energy_description,
-            mock_config_entry_with_incremental,
-        )
-
-        # Set initial values
-        entity._last_raw_value = Decimal("25.5")
-
-        with patch("time.time", return_value=1234567.0):
+        # Test with no timestamp and duplicate value
+        with patch("time.time", return_value=1234568.0):
             result = entity._is_new_update(Decimal("25.5"), None)
-
         assert result is False
         assert entity._last_raw_value == Decimal("25.5")  # Should not change
 
-    def test_is_new_update_with_timestamp_none_no_previous_value(
-        self,
-        mock_energy_device,
-        mock_energy_description,
-        mock_config_entry_with_incremental,
-        mock_manager,
-    ):
-        """Test _is_new_update with no timestamp and no previous value."""
-        entity = TuyaEnergySensorEntity(
-            mock_energy_device,
-            mock_manager,
-            mock_energy_description,
-            mock_config_entry_with_incremental,
-        )
-
-        # No initial values set
-
-        with patch("time.time", return_value=1234567.0):
-            result = entity._is_new_update(Decimal("25.5"), None)
-
+        # Test with no timestamp and no previous value
+        entity._last_raw_value = None
+        entity._last_update_time = None
+        with patch("time.time", return_value=1234569.0):
+            result = entity._is_new_update(Decimal("30.0"), None)
         assert result is True
-        assert entity._last_raw_value == Decimal("25.5")
-        assert entity._last_update_time == 1234567000
+        assert entity._last_raw_value == Decimal("30.0")
+        assert entity._last_update_time == 1234569000
 
     @patch("homeassistant.components.tuya.sensor.TuyaSensorEntity.async_added_to_hass")
-    async def test_restore_state_unknown_state(
+    async def test_restore_state_invalid_cases(
         self,
         mock_super,
         mock_energy_device,
@@ -826,7 +696,7 @@ class TestTuyaEnergySensorEntity:
         mock_manager,
         hass: HomeAssistant,
     ):
-        """Test restore state with unknown state."""
+        """Test restore state with invalid states and attributes."""
         entity = TuyaEnergySensorEntity(
             mock_energy_device,
             mock_manager,
@@ -834,80 +704,38 @@ class TestTuyaEnergySensorEntity:
             mock_config_entry_with_incremental,
         )
 
-        # Mock restore state with unknown state
+        # Test with unknown state
         mock_state = MagicMock()
         mock_state.state = "unknown"
         mock_state.attributes = {}
-
         with patch.object(entity, "async_get_last_state", return_value=mock_state):
             await entity.async_added_to_hass()
-
         mock_super.assert_called_once()
-        # Should not restore anything
         assert entity._cumulative_total == Decimal(0)
         assert entity._last_update_time is None
         assert entity._last_raw_value is None
 
-    @patch("homeassistant.components.tuya.sensor.TuyaSensorEntity.async_added_to_hass")
-    async def test_restore_state_unavailable_state(
-        self,
-        mock_super,
-        mock_energy_device,
-        mock_energy_description,
-        mock_config_entry_with_incremental,
-        mock_manager,
-        hass: HomeAssistant,
-    ):
-        """Test restore state with unavailable state."""
-        entity = TuyaEnergySensorEntity(
-            mock_energy_device,
-            mock_manager,
-            mock_energy_description,
-            mock_config_entry_with_incremental,
-        )
+        # Reset for next test
+        mock_super.reset_mock()
 
-        # Mock restore state with unavailable state
-        mock_state = MagicMock()
+        # Test with unavailable state
         mock_state.state = "unavailable"
-        mock_state.attributes = {}
-
         with patch.object(entity, "async_get_last_state", return_value=mock_state):
             await entity.async_added_to_hass()
-
         mock_super.assert_called_once()
-        # Should not restore anything
         assert entity._cumulative_total == Decimal(0)
         assert entity._last_update_time is None
         assert entity._last_raw_value is None
 
-    @patch("homeassistant.components.tuya.sensor.TuyaSensorEntity.async_added_to_hass")
-    async def test_restore_state_no_attributes(
-        self,
-        mock_super,
-        mock_energy_device,
-        mock_energy_description,
-        mock_config_entry_with_incremental,
-        mock_manager,
-        hass: HomeAssistant,
-    ):
-        """Test restore state with no attributes."""
-        entity = TuyaEnergySensorEntity(
-            mock_energy_device,
-            mock_manager,
-            mock_energy_description,
-            mock_config_entry_with_incremental,
-        )
+        # Reset for next test
+        mock_super.reset_mock()
 
-        # Mock restore state with no attributes
-        mock_state = MagicMock()
+        # Test with no attributes
         mock_state.state = "1000.0"
         mock_state.attributes = None
-
         with patch.object(entity, "async_get_last_state", return_value=mock_state):
             await entity.async_added_to_hass()
-
         mock_super.assert_called_once()
-        # Should not restore anything
         assert entity._cumulative_total == Decimal(0)
         assert entity._last_update_time is None
         assert entity._last_raw_value is None
@@ -946,14 +774,14 @@ class TestTuyaEnergySensorEntity:
         assert result is False  # Should not be considered new since 0 > -1000
         assert entity._last_update_time == 0  # Should remain unchanged
 
-    def test_process_incremental_update_direct_call(
+    def test_process_incremental_update_valid_cases(
         self,
         mock_energy_device,
         mock_energy_description,
         mock_config_entry_with_incremental,
         mock_manager,
     ):
-        """Test _process_incremental_update method directly to cover lines 1872-1887."""
+        """Test _process_incremental_update with valid values."""
         entity = TuyaEnergySensorEntity(
             mock_energy_device,
             mock_manager,
@@ -961,37 +789,7 @@ class TestTuyaEnergySensorEntity:
             mock_config_entry_with_incremental,
         )
 
-        # Test case 1: raw_value is None
-        with patch.object(
-            entity.__class__.__bases__[0],
-            "native_value",
-            new_callable=PropertyMock,
-            return_value=None,
-        ):
-            entity._process_incremental_update(1234567890)
-        assert entity._cumulative_total == Decimal(0)  # Should not change
-
-        # Test case 2: raw_value is invalid (non-numeric string)
-        with patch.object(
-            entity.__class__.__bases__[0],
-            "native_value",
-            new_callable=PropertyMock,
-            return_value="invalid",
-        ):
-            entity._process_incremental_update(1234567890)
-        assert entity._cumulative_total == Decimal(0)  # Should not change
-
-        # Test case 3: raw_value is negative
-        with patch.object(
-            entity.__class__.__bases__[0],
-            "native_value",
-            new_callable=PropertyMock,
-            return_value="-5.0",
-        ):
-            entity._process_incremental_update(1234567890)
-        assert entity._cumulative_total == Decimal(0)  # Should not change
-
-        # Test case 4: raw_value is valid and _is_new_update returns True
+        # Test with valid value and _is_new_update returns True
         with (
             patch.object(
                 entity.__class__.__bases__[0],
@@ -1004,7 +802,7 @@ class TestTuyaEnergySensorEntity:
             entity._process_incremental_update(1234567890)
         assert entity._cumulative_total == Decimal("10.5")  # Should accumulate
 
-        # Test case 5: raw_value is valid but _is_new_update returns False
+        # Test with valid value but _is_new_update returns False
         with (
             patch.object(
                 entity.__class__.__bases__[0],

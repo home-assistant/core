@@ -8,6 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.tuya.config_flow import TuyaOptionsFlow
 from homeassistant.components.tuya.const import (
     CONF_APP_TYPE,
     CONF_USER_CODE,
@@ -411,16 +412,83 @@ async def test_options_flow_with_energy_sensors(
         )
 
 
-async def test_options_flow_coverage_remaining_lines(
+async def test_options_flow_edge_cases(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test specific scenarios to cover lines 351 and 357."""
+    """Test options flow edge cases to achieve 100% coverage."""
     # Add mock config entry
     mock_config_entry.add_to_hass(hass)
 
-    # Create a device with wrong domain identifiers to test line 357
     device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    # Create a device with more than 3 sensors to test the else branch (line 415)
+    device_more_than_three = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "test_device_more_than_three")},
+        name="Device More Than Three",
+        manufacturer="Tuya",
+    )
+
+    # Create more than 3 sensors for this device
+    for i in range(5):
+        entity_registry.async_get_or_create(
+            domain="sensor",
+            platform="tuya",
+            unique_id=f"test_entity_more_than_three_{i}",
+            config_entry=mock_config_entry,
+            device_id=device_more_than_three.id,
+            original_device_class=SensorDeviceClass.ENERGY,
+            capabilities={"state_class": "total_increasing"},
+            original_name=f"Energy Sensor {i}",
+        )
+
+    # Create a device with no sensors to test the "No sensors" branch
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "test_device_no_sensors")},
+        name="Device No Sensors",
+        manufacturer="Tuya",
+    )
+
+    # Create an entity without device_id to test line 351 (continue statement)
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="tuya",
+        unique_id="test_entity_no_device",
+        config_entry=mock_config_entry,
+        device_id=None,  # This will cause line 351 to be covered
+        original_device_class=SensorDeviceClass.ENERGY,
+        capabilities={"state_class": "total_increasing"},
+        original_name="Energy No Device",
+    )
+
+    # Create an entity with wrong device class to test line 351 (continue statement)
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="tuya",
+        unique_id="test_entity_wrong_device_class",
+        config_entry=mock_config_entry,
+        device_id=device_more_than_three.id,
+        original_device_class=SensorDeviceClass.TEMPERATURE,  # Wrong device class
+        capabilities={"state_class": "measurement"},
+        original_name="Temperature Sensor",
+    )
+
+    # Create an entity without capabilities to test line 351 (continue statement)
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="tuya",
+        unique_id="test_entity_no_capabilities",
+        config_entry=mock_config_entry,
+        device_id=device_more_than_three.id,
+        original_device_class=SensorDeviceClass.ENERGY,
+        capabilities=None,  # No capabilities
+        original_name="Energy No Capabilities",
+    )
+
+    # Create a device with wrong domain identifiers to test line 357 (continue statement)
     device_wrong_domain = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("wrong_domain", "test_device_wrong")},  # No tuya domain
@@ -428,8 +496,7 @@ async def test_options_flow_coverage_remaining_lines(
         manufacturer="Other",
     )
 
-    # Create an entity for this device to trigger the filtering logic
-    entity_registry = er.async_get(hass)
+    # Create an entity for this device to trigger the continue statement at line 357
     entity_registry.async_get_or_create(
         domain="sensor",
         platform="tuya",
@@ -441,26 +508,35 @@ async def test_options_flow_coverage_remaining_lines(
         original_name="Energy Wrong Domain",
     )
 
-    # Create a valid device to ensure the flow works
-    device_valid = device_registry.async_get_or_create(
+    # Create a device with empty identifiers to test line 391
+    device_empty_identifiers = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "test_device_valid")},
-        name="Device Valid",
+        identifiers={
+            (DOMAIN, "test_device_empty_identifiers")
+        },  # Start with valid identifiers
+        name="Device Empty Identifiers",
         manufacturer="Tuya",
     )
 
+    # Create an entity for this device to trigger the ha_device.identifiers check at line 391
     entity_registry.async_get_or_create(
         domain="sensor",
         platform="tuya",
-        unique_id="test_entity_valid",
+        unique_id="test_entity_empty_identifiers",
         config_entry=mock_config_entry,
-        device_id=device_valid.id,
+        device_id=device_empty_identifiers.id,
         original_device_class=SensorDeviceClass.ENERGY,
         capabilities={"state_class": "total_increasing"},
-        original_name="Energy Valid",
+        original_name="Energy Empty Identifiers",
     )
 
-    # Start options flow to trigger the filtering logic
+    # Now modify the device to have empty identifiers to test line 391
+    device_registry.async_update_device(
+        device_empty_identifiers.id,
+        new_identifiers=set(),  # Clear identifiers
+    )
+
+    # Start options flow to trigger all the logic paths
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
@@ -473,3 +549,50 @@ async def test_options_flow_coverage_remaining_lines(
 
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert "device_energy_modes" in result2.get("data", {})
+
+
+async def test_format_device_list_method(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test _format_device_list method to cover all branches."""
+    # Add mock config entry
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a flow instance
+    flow = TuyaOptionsFlow()
+    flow.hass = hass
+
+    # Test with no sensors (line 410)
+    energy_devices_no_sensors = {
+        "test_device": {
+            "name": "Test Device No Sensors",
+            "sensors": [],
+        }
+    }
+    result = flow._format_device_list(energy_devices_no_sensors)
+    assert result == [("test_device", "Test Device No Sensors &|& No sensors")]
+
+    # Test with exactly 3 sensors (line 411)
+    energy_devices_exactly_three = {
+        "test_device": {
+            "name": "Test Device Exactly Three",
+            "sensors": ["Sensor 1", "Sensor 2", "Sensor 3"],
+        }
+    }
+    result = flow._format_device_list(energy_devices_exactly_three)
+    assert result == [
+        ("test_device", "Test Device Exactly Three &|& Sensor 1, Sensor 2, Sensor 3")
+    ]
+
+    # Test with more than 3 sensors (line 415)
+    energy_devices_many = {
+        "test_device": {
+            "name": "Test Device Many",
+            "sensors": ["Sensor 1", "Sensor 2", "Sensor 3", "Sensor 4", "Sensor 5"],
+        }
+    }
+    result = flow._format_device_list(energy_devices_many)
+    assert result == [
+        ("test_device", "Test Device Many &|& Sensor 1, Sensor 2, Sensor 3 (+2 more)")
+    ]
