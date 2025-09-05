@@ -36,7 +36,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_url": "Failed to connect. Check the URL and if the device is connected to power"
+      "invalid_url": "Failed to connect. Check the URL and if the device is connected to power",
+      "missing_device_info": "Failed to read device information. Check the network connection of the device"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",

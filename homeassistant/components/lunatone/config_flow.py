@@ -96,18 +96,21 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                self._name = info.name
-                self._serial_number = info.serial_number
-                await self.async_set_unique_id(str(self._serial_number))
-                if self.source == SOURCE_USER:
-                    self._abort_if_unique_id_configured()
-                    return await self.async_step_dali()
-                self._abort_if_unique_id_mismatch()
-                return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
-                    data_updates=data,
-                    title=self._title,
-                )
+                if info.data is None or info.serial_number is None:
+                    errors["base"] = "missing_device_info"
+                else:
+                    self._name = info.name
+                    self._serial_number = info.serial_number
+                    await self.async_set_unique_id(str(self._serial_number))
+                    if self.source == SOURCE_USER:
+                        self._abort_if_unique_id_configured()
+                        return await self.async_step_dali()
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data_updates=data,
+                        title=self._title,
+                    )
 
         return self.async_show_form(
             step_id="user",

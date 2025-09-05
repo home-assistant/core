@@ -80,6 +80,28 @@ async def test_full_flow_with_scan(
     assert result["data"] == {CONF_URL: "http://10.0.0.131"}
 
 
+async def test_full_flow_fail_because_of_missing_device_infos(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+) -> None:
+    """Test full flow."""
+    mock_lunatone_info.data = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://10.0.0.131"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "missing_device_info"}
+
+
 @pytest.mark.parametrize(
     "scan_method",
     [
