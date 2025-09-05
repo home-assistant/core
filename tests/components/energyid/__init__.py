@@ -1,1 +1,1 @@
-"""Tests for the EnergyID integration."""
+"""EnergyID integration test package."""
