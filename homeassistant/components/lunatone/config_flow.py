@@ -37,7 +37,7 @@ DEFAULT_DALI_DEVICE_SCAN_METHOD: Final = DALIDeviceScanMethod.CURRENT_DEVICE_LIS
 DALI_DEVICE_SCAN_METHODS: Final[list[str]] = [
     option.value for option in DALIDeviceScanMethod
 ]
-DALI_DEVICE_SCAN_TIMEOUT_MINUTES: Final = 30
+DALI_DEVICE_SCAN_TIMEOUT_MINUTES: Final = 20
 
 DATA_SCHEMA: Final[vol.Schema] = vol.Schema(
     {vol.Required(CONF_URL, default="http://"): cv.string},
