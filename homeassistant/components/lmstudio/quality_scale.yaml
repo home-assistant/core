@@ -1,0 +1,36 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling:
+    status: exempt
+    comment: Integration uses coordinator pattern for data updates.
+  brands:
+    status: exempt
+    comment: Integration is a service and has no physical devices.
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-high-level-description:
+    status: exempt
+    comment: Integration is in development phase.
+  docs-installation-instructions:
+    status: exempt
+    comment: Integration is in development phase.
+  docs-removal-instructions:
+    status: exempt
+    comment: Integration is in development phase.
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not register events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done

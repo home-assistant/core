@@ -1,0 +1,111 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up LM Studio",
+        "description": "Configure your LM Studio server connection",
+        "data": {
+          "base_url": "Base URL",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "base_url": "The base URL of your LM Studio server (e.g., http://localhost:1234/v1)",
+          "api_key": "API key for authentication (optional for local servers)"
+        }
+      },
+      "model": {
+        "title": "Select default model",
+        "description": "Choose a default model for your LM Studio integration",
+        "data": {
+          "model": "Model"
+        },
+        "data_description": {
+          "model": "The default model to use. You can choose from available models or enter a custom model name."
+        }
+      },
+      "init": {
+        "title": "Configure {subentry_type}",
+        "description": "Configure your LM Studio {subentry_type}",
+        "data": {
+          "name": "Name",
+          "model": "Model",
+          "prompt": "Prompt",
+          "llm_hass_api": "Use Home Assistant API",
+          "max_tokens": "Maximum tokens",
+          "temperature": "Temperature",
+          "top_p": "Top P"
+        },
+        "data_description": {
+          "name": "A name for this configuration",
+          "model": "The model to use for this configuration",
+          "prompt": "Custom system prompt (optional)",
+          "llm_hass_api": "Allow the model to control Home Assistant",
+          "max_tokens": "Maximum number of tokens in the response",
+          "temperature": "Controls randomness (0.0 = deterministic, 1.0 = creative)",
+          "top_p": "Controls diversity via nucleus sampling"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to LM Studio server",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "config_subentries": {
+    "conversation": {
+      "initiate_flow": {
+        "user": "Add conversation",
+        "reconfigure": "Reconfigure conversation"
+      },
+      "entry_type": "Conversation",
+      "step": {
+        "init": {
+          "title": "[%key:component::lmstudio::config::step::init::title%]",
+          "description": "[%key:component::lmstudio::config::step::init::description%]",
+          "data": {
+            "name": "[%key:component::lmstudio::config::step::init::data::name%]",
+            "model": "[%key:component::lmstudio::config::step::init::data::model%]",
+            "prompt": "[%key:component::lmstudio::config::step::init::data::prompt%]",
+            "llm_hass_api": "[%key:component::lmstudio::config::step::init::data::llm_hass_api%]",
+            "max_tokens": "[%key:component::lmstudio::config::step::init::data::max_tokens%]",
+            "temperature": "[%key:component::lmstudio::config::step::init::data::temperature%]",
+            "top_p": "[%key:component::lmstudio::config::step::init::data::top_p%]"
+          },
+          "data_description": {
+            "name": "A name for this conversation",
+            "model": "[%key:component::lmstudio::config::step::init::data_description::model%]",
+            "prompt": "[%key:component::lmstudio::config::step::init::data_description::prompt%]",
+            "llm_hass_api": "[%key:component::lmstudio::config::step::init::data_description::llm_hass_api%]",
+            "max_tokens": "[%key:component::lmstudio::config::step::init::data_description::max_tokens%]",
+            "temperature": "[%key:component::lmstudio::config::step::init::data_description::temperature%]",
+            "top_p": "[%key:component::lmstudio::config::step::init::data_description::top_p%]"
+          }
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "LM Studio options",
+        "description": "Update your LM Studio configuration",
+        "data": {
+          "model": "Default model",
+          "max_tokens": "[%key:component::lmstudio::config::step::init::data::max_tokens%]",
+          "temperature": "[%key:component::lmstudio::config::step::init::data::temperature%]",
+          "top_p": "[%key:component::lmstudio::config::step::init::data::top_p%]"
+        },
+        "data_description": {
+          "model": "The default model to use for new conversations",
+          "max_tokens": "[%key:component::lmstudio::config::step::init::data_description::max_tokens%]",
+          "temperature": "[%key:component::lmstudio::config::step::init::data_description::temperature%]",
+          "top_p": "[%key:component::lmstudio::config::step::init::data_description::top_p%]"
+        }
+      }
+    }
+  }
+}
