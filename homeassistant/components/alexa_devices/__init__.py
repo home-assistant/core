@@ -63,6 +63,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
             "Migrating from version %s.%s", entry.version, entry.minor_version
         )
 
+        if CONF_SITE in entry.data[CONF_LOGIN_DATA]:
+            # Site is there, just update version to avoid future migrations
+            hass.config_entries.async_update_entry(entry, version=1, minor_version=2)
+            return True
+
         # Convert country in domain
         country = entry.data[CONF_COUNTRY].lower()
         domain = COUNTRY_DOMAINS.get(country, country)
