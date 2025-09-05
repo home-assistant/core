@@ -11,7 +11,7 @@
         "data_description": {
           "system": "System the webhooks should be set up for"
         },
-        "description": "Please select a system in which you want to set up the webhooks"
+        "description": "Please select the Ekey Bionyx system in which you want to set up the webhooks"
       },
       "webhooks": {
         "description": "Please name your webhooks. You can set up to 5 webhooks. Leaving a name empty will skip the setup of that webhook.",
@@ -21,7 +21,7 @@
           "webhook3": "Webhook 3",
           "webhook4": "Webhook 4",
           "webhook5": "Webhook 5",
-          "url": "[%key:common::config_flow::data::url%]"
+          "url": "Home Assistant URL"
         },
         "data_description": {
           "webhook1": "Webhook 1",
@@ -29,7 +29,7 @@
           "webhook3": "Webhook 3",
           "webhook4": "Webhook 4",
           "webhook5": "Webhook 5",
-          "url": "[%key:common::config_flow::data::url%]"
+          "url": "Home Assistant instance URL which can be reached from the fingerprint controller"
         }
       },
       "delete_webhooks": {

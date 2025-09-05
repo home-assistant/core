@@ -1,6 +1,7 @@
 """Constants for the Ekey Bionyx integration."""
 
 import logging
+import re
 
 DOMAIN = "ekeybionyx"
 
@@ -10,3 +11,6 @@ OAUTH2_AUTHORIZE = "https://ekeybionyxprod.b2clogin.com/ekeybionyxprod.onmicroso
 OAUTH2_TOKEN = "https://ekeybionyxprod.b2clogin.com/ekeybionyxprod.onmicrosoft.com/B2C_1_sign_in_v2/oauth2/v2.0/token"
 API_URL = "https://api.bionyx.io/3rd-party/api"
 SCOPE = "https://ekeybionyxprod.onmicrosoft.com/3rd-party-api/api-access"
+
+# Valid webhook name: starts with letter or underscore, contains letters, digits, spaces, dots, and underscores, does not end with space or dot
+VALID_NAME_PATTERN = re.compile(r"^(?![\d\s])[\w\d \.]*[\w\d]$")

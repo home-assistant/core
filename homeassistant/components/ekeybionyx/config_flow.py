@@ -21,7 +21,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import SelectOptionDict, SelectSelector
 
-from .const import API_URL, DOMAIN, SCOPE
+from .const import API_URL, DOMAIN, SCOPE, VALID_NAME_PATTERN
 
 
 class ConfigFlowEkeyApi(ekey_bionyxpy.AbstractAuth):
@@ -129,12 +129,11 @@ class OAuth2FlowHandler(
         errors: dict[str, str] | None = None
         if user_input is not None:
             errors = {}
-            [
-                errors.update({webhooks[0]: "invalid_name"})
-                for webhooks in user_input.items()
-                if webhooks[0] != CONF_URL
-                and not re.match(r"^(?![\d\s])[\w\d\u0020\.]*[\w\d]$", webhooks[1])
-            ]
+            for webhooks in user_input.items():
+                if webhooks[0] != CONF_URL and not re.match(
+                    VALID_NAME_PATTERN, webhooks[1]
+                ):
+                    errors.update({webhooks[0]: "invalid_name"})
             try:
                 cv.url(user_input[CONF_URL])
             except vol.Invalid:
@@ -189,7 +188,8 @@ class OAuth2FlowHandler(
                         allow_ip=True,
                         prefer_external=False,
                     )
-                },
+                }
+                | (user_input or {}),
             ),
             errors=errors,
         )

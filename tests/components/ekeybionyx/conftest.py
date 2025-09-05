@@ -26,13 +26,13 @@ def mock_systems(
                 "systemName": "A simple string containing 0 to 128 word, space and punctuation characters.",
                 "systemId": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
                 "ownSystem": True,
-                "functionWebhookQuotas": {"free": 1, "used": 0},
+                "functionWebhookQuotas": {"free": 5, "used": 0},
             },
             {
                 "systemName": "A simple string containing 0 to 128 word, space and punctuation characters.",
                 "systemId": "946DA01F-9ABD-4D9D-80C7-02AF85C822A9",
                 "ownSystem": True,
-                "functionWebhookQuotas": {"free": 1, "used": 0},
+                "functionWebhookQuotas": {"free": 5, "used": 0},
             },
         ],
     )
