@@ -1899,7 +1899,7 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
     @callback
     def cleanup_restored_states_filter(event_data: Mapping[str, Any]) -> bool:
         """Clean up restored states filter."""
-        return bool(event_data["action"] == "remove") or bool(
+        return (event_data["action"] == "remove") or (
             event_data["action"] == "update"
             and "old_entity_id" in event_data
             and event_data["entity_id"] != event_data["old_entity_id"]
