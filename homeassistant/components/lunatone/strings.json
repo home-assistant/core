@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "user": {
+        "description": "Connect to the API of your Lunatone DALI IoT Gateway.",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The URL to the Lunatone gateway device."
+        }
+      },
+      "dali": {
+        "data": {
+          "device_scan_method": "Select a DALI device scan method:"
+        },
+        "data_description": {
+          "device_scan_method": "Available scan methods"
+        }
+      },
+      "finish": {
+        "description": "DALI device scan completed successfully"
+      },
+      "reconfigure": {
+        "description": "Update the URL.",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::lunatone::config::step::user::data_description::url%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_url": "Failed to connect. Check the URL and if the device is connected to power",
+      "missing_device_info": "Failed to read device information. Check the network connection of the device"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "dali_device_scan_timeout": "DALI device scan timeout"
+    },
+    "progress": {
+      "device_scan": "Scanning for DALI devices..."
+    }
+  },
+  "selector": {
+    "device_scan_method": {
+      "options": {
+        "current_device_list": "Refresh current device list",
+        "system_extension": "Find new devices",
+        "new_installation": "New installation"
+      }
+    }
+  }
+}
