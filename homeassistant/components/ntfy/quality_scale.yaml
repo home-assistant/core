@@ -1,6 +1,8 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: only entity actions
   appropriate-polling:
     status: exempt
     comment: the integration does not poll
