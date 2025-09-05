@@ -66,6 +66,8 @@ from .const import (
     CONF_BYTESIZE,
     CONF_CLIMATES,
     CONF_COLOR_TEMP_REGISTER,
+    CONF_COMMAND_CLOSE,
+    CONF_COMMAND_OPEN,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
@@ -398,6 +400,8 @@ COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 CALL_TYPE_COIL,
             ]
         ),
+        vol.Optional(CONF_COMMAND_CLOSE): cv.positive_int,
+        vol.Optional(CONF_COMMAND_OPEN): cv.positive_int,
         vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
         vol.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
