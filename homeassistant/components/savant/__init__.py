@@ -17,9 +17,6 @@ from .coordinator import (
 
 _PLATFORMS: list[Platform] = [
     Platform.MEDIA_PLAYER,
-    Platform.SENSOR,
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
 ]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
