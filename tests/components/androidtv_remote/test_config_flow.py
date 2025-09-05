@@ -7,7 +7,7 @@ from androidtvremote2 import CannotConnect, ConnectionClosed, InvalidAuth
 
 from homeassistant import config_entries
 from homeassistant.components.androidtv_remote.config_flow import (
-    CONF_ADD_NEW_APP,
+    APPS_NEW_ID,
     CONF_APP_DELETE,
     CONF_APP_ID,
 )
@@ -1064,7 +1064,7 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
-    assert set(data_schema) == {CONF_APPS, CONF_ADD_NEW_APP, CONF_ENABLE_IME}
+    assert set(data_schema) == {CONF_APPS, CONF_ENABLE_IME}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -1108,7 +1108,7 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ADD_NEW_APP: True,
+            CONF_APPS: APPS_NEW_ID,
         },
     )
     assert result["type"] is FlowResultType.FORM
