@@ -174,27 +174,25 @@ class OAuth2FlowHandler(
                     data={"webhooks": webhook_data},
                 )
 
-        if user_input is None or errors:
-            data_schema: dict[Any, Any] = {
-                vol.Optional(f"webhook{i + 1}"): vol.All(str, vol.Length(max=50))
-                for i in range(self._data["system"].function_webhook_quotas["free"])
-            }
-            data_schema[vol.Required(CONF_URL)] = str
-            return self.async_show_form(
-                step_id="webhooks",
-                data_schema=self.add_suggested_values_to_schema(
-                    vol.Schema(data_schema),
-                    {
-                        CONF_URL: get_url(
-                            self.hass,
-                            allow_ip=True,
-                            prefer_external=False,
-                        )
-                    },
-                ),
-                errors=errors,
-            )
-        return None
+        data_schema: dict[Any, Any] = {
+            vol.Optional(f"webhook{i + 1}"): vol.All(str, vol.Length(max=50))
+            for i in range(self._data["system"].function_webhook_quotas["free"])
+        }
+        data_schema[vol.Required(CONF_URL)] = str
+        return self.async_show_form(
+            step_id="webhooks",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(data_schema),
+                {
+                    CONF_URL: get_url(
+                        self.hass,
+                        allow_ip=True,
+                        prefer_external=False,
+                    )
+                },
+            ),
+            errors=errors,
+        )
 
     async def async_step_delete_webhooks(
         self, user_input: dict[str, Any] | None = None
