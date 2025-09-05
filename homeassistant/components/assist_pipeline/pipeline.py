@@ -1308,7 +1308,17 @@ class PipelineRun:
         """Prepare text-to-speech."""
         # pipeline.tts_engine can't be None or this function is not called
         engine = cast(str, self.pipeline.tts_engine)
+        if tts.get_engine_instance(self.hass, engine) is None:
+            raise TextToSpeechError(
+                code="tts-engine-not-found",
+                message=f"Text-to-speech engine {engine} not found",
+            )
 
+    async def text_to_speech(self, tts_input: str) -> None:
+        """Run text-to-speech portion of pipeline."""
+        # This is where the stream should be created, not in 'prepare'.
+        # All the necessary info (engine, language, options) is available here.
+        engine = cast(str, self.pipeline.tts_engine)
         tts_options: dict[str, Any] = {}
         if self.pipeline.tts_voice is not None:
             tts_options[tts.ATTR_VOICE] = self.pipeline.tts_voice
@@ -1324,6 +1334,7 @@ class PipelineRun:
                 tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = SAMPLE_WIDTH
 
         try:
+            # Create the stream and token JUST-IN-TIME
             self.tts_stream = tts.async_create_stream(
                 hass=self.hass,
                 engine=engine,
@@ -1340,8 +1351,6 @@ class PipelineRun:
                 ),
             ) from err
 
-    async def text_to_speech(self, tts_input: str) -> None:
-        """Run text-to-speech portion of pipeline."""
         assert self.tts_stream is not None
 
         self.process_event(
