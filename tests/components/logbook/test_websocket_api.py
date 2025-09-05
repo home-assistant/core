@@ -16,8 +16,10 @@ from homeassistant.components.logbook import websocket_api
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.util import get_instance
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorDeviceClass
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -307,19 +309,70 @@ async def test_get_events_entities_filtered_away(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-    hass.states.async_set("light.kitchen", STATE_ON)
+    entities = [
+        {
+            "id": "light.kitchen",
+            "attributes": {ATTR_UNIT_OF_MEASUREMENT: "any", "brightness": 100},
+            "filtered": False,  # Light is not a filterable domain
+        },
+        {
+            "id": "sensor.sensor0",
+            "attributes": {ATTR_UNIT_OF_MEASUREMENT: "any"},
+            "filtered": True,  # Sensor with UoM is always filtered
+        },
+        {
+            "id": "sensor.sensor1",
+            "attributes": {ATTR_DEVICE_CLASS: SensorDeviceClass.AQI},
+            "filtered": True,  # Sensor with a numeric device class is always filtered
+        },
+        {
+            "id": "sensor.sensor2",
+            "attributes": {ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM},
+            "filtered": False,  # Sensor with a non-numeric device class is not filtered
+        },
+        {
+            "id": "sensor.sensor3",
+            "attributes": {ATTR_STATE_CLASS: "any"},
+            "filtered": True,  # Sensor with state class is always filtered
+        },
+        {
+            "id": "sensor.sensor4",
+            "filtered": False,  # Sensor with no UoM, device_class, or state_class is not filtered
+        },
+        {
+            "id": "number.number0",
+            "attributes": {ATTR_UNIT_OF_MEASUREMENT: "any"},
+            "filtered": False,  # Non-sensor domains are not filtered by presence of UoM
+        },
+        {
+            "id": "number.number1",
+            "filtered": False,  # Not a filtered domain
+        },
+        {
+            "id": "input_number.number0",
+            "attributes": {ATTR_UNIT_OF_MEASUREMENT: "any"},
+            "filtered": False,  # Non-sensor domains are not filtered by presence of UoM
+        },
+        {
+            "id": "input_number.number1",
+            "filtered": False,  # Not a filtered domain
+        },
+        {
+            "id": "counter.counter0",
+            "filtered": True,  # Counter is an always continuous domain
+        },
+        {
+            "id": "zone.home",
+            "filtered": True,  # Zone is an always continuous domain
+        },
+    ]
+
+    for entity in entities:
+        hass.states.async_set(entity["id"], "A", entity.get("attributes"))
     await hass.async_block_till_done()
-    hass.states.async_set(
-        "light.filtered", STATE_ON, {"brightness": 100, ATTR_UNIT_OF_MEASUREMENT: "any"}
-    )
+    for entity in entities:
+        hass.states.async_set(entity["id"], "B", entity.get("attributes"))
     await hass.async_block_till_done()
-    hass.states.async_set("light.kitchen", STATE_OFF, {"brightness": 200})
-    await hass.async_block_till_done()
-    hass.states.async_set(
-        "light.filtered",
-        STATE_OFF,
-        {"brightness": 300, ATTR_UNIT_OF_MEASUREMENT: "any"},
-    )
 
     await async_wait_recording_done(hass)
     client = await hass_ws_client()
@@ -329,31 +382,19 @@ async def test_get_events_entities_filtered_away(
             "id": 1,
             "type": "logbook/get_events",
             "start_time": now.isoformat(),
-            "entity_ids": ["light.kitchen"],
+            "entity_ids": [entity["id"] for entity in entities],
         }
     )
     response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 1
 
-    results = response["result"]
-    assert results[0]["entity_id"] == "light.kitchen"
-    assert results[0]["state"] == "off"
+    unfiltered_entities = [entity for entity in entities if not entity["filtered"]]
 
-    await client.send_json(
-        {
-            "id": 2,
-            "type": "logbook/get_events",
-            "start_time": now.isoformat(),
-            "entity_ids": ["light.filtered"],
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["id"] == 2
-
-    results = response["result"]
-    assert len(results) == 0
+    results = zip(unfiltered_entities, response["result"], strict=True)
+    for result in results:
+        assert result[0]["id"] == result[1]["entity_id"]
+        assert result[1]["state"] == "B"
 
 
 async def test_get_events_future_start_time(
