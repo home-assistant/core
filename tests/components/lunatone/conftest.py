@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from lunatone_rest_api_client.models import DeviceInfoData, InfoData
 import pytest
 
 from homeassistant.components.lunatone.const import DOMAIN
@@ -19,9 +20,32 @@ def base_url() -> str:
 
 
 @pytest.fixture
+def serial_number() -> int:
+    """Serial number fixture."""
+    return 12345
+
+
+@pytest.fixture
 def version() -> str:
     """Version fixture."""
     return "v1.14.1/1.4.3"
+
+
+@pytest.fixture
+def info_data(version: str, serial_number: int) -> InfoData:
+    """Info data fixture."""
+    return InfoData(
+        name="Test",
+        version=version,
+        device=DeviceInfoData(
+            serial=serial_number,
+            gtin=192837465,
+            pcb="2a",
+            articleNumber=87654321,
+            productionYear=20,
+            productionWeek=1,
+        ),
+    )
 
 
 @pytest.fixture
@@ -66,7 +90,7 @@ def mock_lunatone_devices(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]
 
 @pytest.fixture
 def mock_lunatone_info(
-    mock_lunatone_auth: AsyncMock, version: str
+    info_data: InfoData, mock_lunatone_auth: AsyncMock, version: str, serial_number: int
 ) -> Generator[AsyncMock]:
     """Mock a Lunatone info object."""
     with (
@@ -81,9 +105,10 @@ def mock_lunatone_info(
     ):
         info = mock_info.return_value
         info._auth = mock_lunatone_auth
-        info.name = "Test"
-        info.version = version
-        info.serial_number = 12345
+        info.data = info_data
+        info.name = info.data.name
+        info.version = info.data.version
+        info.serial_number = info.data.device.serial
         yield info
 
 

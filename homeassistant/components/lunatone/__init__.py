@@ -41,7 +41,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         name=info.name,
         manufacturer="Lunatone",
         sw_version=info.version,
+        hw_version=info.data.device.pcb,
         configuration_url=entry.data[CONF_URL],
+        serial_number=info.serial_number,
+        model_id=f"{info.data.device.article_number}{info.data.device.article_info}",
     )
 
     entry.runtime_data = LunatoneData(coordinator_info, coordinator_devices)
