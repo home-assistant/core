@@ -1,0 +1,94 @@
+{
+  "components": {
+    "main": {
+      "tvocMeasurement": {
+        "tvocLevel": {
+          "value": 0.1,
+          "unit": "ppm",
+          "timestamp": "2025-08-15T13:48:52.222Z"
+        }
+      },
+      "fineDustSensor": {
+        "fineDustLevel": {
+          "value": 1,
+          "unit": "\u03bcg/m^3",
+          "timestamp": "2025-08-15T13:29:36.938Z"
+        }
+      },
+      "relativeHumidityMeasurement": {
+        "humidity": {
+          "value": 53.0,
+          "unit": "%",
+          "timestamp": "2025-08-15T13:48:42.554Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": {
+            "minimum": -10.0,
+            "maximum": 50.0
+          },
+          "unit": "C",
+          "timestamp": "2025-03-19T19:48:47.896Z"
+        },
+        "temperature": {
+          "value": 22.0,
+          "unit": "C",
+          "timestamp": "2025-08-15T12:25:37.127Z"
+        }
+      },
+      "refresh": {},
+      "airQualityHealthConcern": {
+        "supportedAirQualityValues": {
+          "value": null
+        },
+        "airQualityHealthConcern": {
+          "value": "good",
+          "timestamp": "2025-08-15T13:17:38.791Z"
+        }
+      },
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": "TOO_MANY_CLIENTS",
+          "timestamp": "2025-06-09T05:59:52.076Z"
+        },
+        "imageTransferProgress": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "00010010",
+          "timestamp": "2025-03-19T19:49:07.016Z"
+        },
+        "lastUpdateStatus": {
+          "value": "updateFailed",
+          "timestamp": "2025-06-09T05:59:52.072Z"
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2025-06-09T05:59:52.105Z"
+        },
+        "estimatedTimeRemaining": {
+          "value": null
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2025-03-19T19:49:07.014Z"
+        },
+        "currentVersion": {
+          "value": "00010010",
+          "timestamp": "2025-06-09T05:59:52.071Z"
+        },
+        "lastUpdateTime": {
+          "value": "2025-06-09T05:59:51Z",
+          "timestamp": "2025-06-09T05:59:52.076Z"
+        },
+        "supportsProgressReports": {
+          "value": null
+        }
+      }
+    }
+  }
+}

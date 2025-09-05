@@ -38,7 +38,6 @@ class PlaystationNetworkData:
     presence: dict[str, Any] = field(default_factory=dict)
     username: str = ""
     account_id: str = ""
-    availability: str = "unavailable"
     active_sessions: dict[PlatformType, SessionData] = field(default_factory=dict)
     registered_platforms: set[PlatformType] = field(default_factory=set)
     trophy_summary: TrophySummary | None = None
@@ -61,6 +60,7 @@ class PlaystationNetwork:
         self.legacy_profile: dict[str, Any] | None = None
         self.trophy_titles: list[TrophyTitle] = []
         self._title_icon_urls: dict[str, str] = {}
+        self.friends_list: dict[str, User] = {}
 
     def _setup(self) -> None:
         """Setup PSN."""
@@ -68,6 +68,9 @@ class PlaystationNetwork:
         self.client = self.psn.me()
         self.shareable_profile_link = self.client.get_shareable_profile_link()
         self.trophy_titles = list(self.user.trophy_titles(page_size=500))
+        self.friends_list = {
+            friend.account_id: friend for friend in self.user.friends_list()
+        }
 
     async def async_setup(self) -> None:
         """Setup PSN."""
@@ -97,6 +100,7 @@ class PlaystationNetwork:
         # check legacy platforms if owned
         if LEGACY_PLATFORMS & data.registered_platforms:
             self.legacy_profile = self.client.get_profile_legacy()
+
         return data
 
     async def get_data(self) -> PlaystationNetworkData:
@@ -105,7 +109,6 @@ class PlaystationNetwork:
         data.username = self.user.online_id
         data.account_id = self.user.account_id
         data.shareable_profile_link = self.shareable_profile_link
-        data.availability = data.presence["basicPresence"]["availability"]
 
         if "platform" in data.presence["basicPresence"]["primaryPlatformInfo"]:
             primary_platform = PlatformType(
@@ -193,3 +196,17 @@ class PlaystationNetwork:
 def normalize_title(name: str) -> str:
     """Normalize trophy title."""
     return name.removesuffix("Trophies").removesuffix("Trophy Set").strip()
+
+
+def get_game_title_info(presence: dict[str, Any]) -> dict[str, Any]:
+    """Retrieve title info from presence."""
+
+    return (
+        next((title for title in game_title_info), {})
+        if (
+            game_title_info := presence.get("basicPresence", {}).get(
+                "gameTitleInfoList"
+            )
+        )
+        else {}
+    )

@@ -141,11 +141,23 @@ async def light_switch_options_schema(
     """Generate options schema."""
     return (await basic_group_options_schema(domain, handler)).extend(
         {
-            vol.Required(
-                CONF_ALL, default=False, description={"advanced": True}
-            ): selector.BooleanSelector(),
+            vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
         }
     )
+
+
+LIGHT_CONFIG_SCHEMA = basic_group_config_schema("light").extend(
+    {
+        vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
+    }
+)
+
+
+SWITCH_CONFIG_SCHEMA = basic_group_config_schema("switch").extend(
+    {
+        vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
+    }
+)
 
 
 GROUP_TYPES = [
@@ -212,7 +224,7 @@ CONFIG_FLOW = {
         validate_user_input=set_group_type("fan"),
     ),
     "light": SchemaFlowFormStep(
-        basic_group_config_schema("light"),
+        LIGHT_CONFIG_SCHEMA,
         preview="group",
         validate_user_input=set_group_type("light"),
     ),
@@ -237,7 +249,7 @@ CONFIG_FLOW = {
         validate_user_input=set_group_type("sensor"),
     ),
     "switch": SchemaFlowFormStep(
-        basic_group_config_schema("switch"),
+        SWITCH_CONFIG_SCHEMA,
         preview="group",
         validate_user_input=set_group_type("switch"),
     ),

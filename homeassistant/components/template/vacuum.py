@@ -22,6 +22,7 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
@@ -33,21 +34,34 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    template,
+)
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_platform
-from .template_entity import (
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
+from .schemas import (
     TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    TemplateEntity,
     make_template_entity_common_modern_attributes_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,7 +109,11 @@ VACUUM_COMMON_SCHEMA = vol.Schema(
 
 VACUUM_YAML_SCHEMA = VACUUM_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
-).extend(make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema)
+).extend(
+    make_template_entity_common_modern_attributes_schema(
+        VACUUM_DOMAIN, DEFAULT_NAME
+    ).schema
+)
 
 VACUUM_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
@@ -125,6 +143,10 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_VACUUMS): cv.schema_with_slug_keys(VACUUM_LEGACY_YAML_SCHEMA)}
 )
 
+VACUUM_CONFIG_ENTRY_SCHEMA = VACUUM_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -144,6 +166,55 @@ async def async_setup_platform(
         LEGACY_FIELDS,
         legacy_key=CONF_VACUUMS,
     )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        TemplateStateVacuumEntity,
+        VACUUM_CONFIG_ENTRY_SCHEMA,
+    )
+
+
+@callback
+def async_create_preview_vacuum(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> TemplateStateVacuumEntity:
+    """Create a preview."""
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        TemplateStateVacuumEntity,
+        VACUUM_CONFIG_ENTRY_SCHEMA,
+    )
+
+
+def create_issue(
+    hass: HomeAssistant, supported_features: int, name: str, entity_id: str
+) -> None:
+    """Create the battery_level issue."""
+    if supported_features & VacuumEntityFeature.BATTERY:
+        key = "deprecated_battery_level"
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"{key}_{entity_id}",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key=key,
+            translation_placeholders={
+                "entity_name": name,
+                "entity_id": entity_id,
+            },
+        )
 
 
 class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
@@ -327,6 +398,16 @@ class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
             self.add_script(action_id, action_config, name, DOMAIN)
             self._attr_supported_features |= supported_feature
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        create_issue(
+            self.hass,
+            self._attr_supported_features,
+            self._attr_name or DEFAULT_NAME,
+            self.entity_id,
+        )
+
     @callback
     def _async_setup_templates(self) -> None:
         """Set up templates."""
@@ -391,6 +472,16 @@ class TriggerVacuumEntity(TriggerEntity, AbstractTemplateVacuum):
             if isinstance(config.get(key), template.Template):
                 self._to_render_simple.append(key)
                 self._parse_result.add(key)
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        create_issue(
+            self.hass,
+            self._attr_supported_features,
+            self._attr_name or DEFAULT_NAME,
+            self.entity_id,
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:

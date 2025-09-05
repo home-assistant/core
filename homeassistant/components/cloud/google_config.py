@@ -7,7 +7,7 @@ from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any
 
-from hass_nabucasa import Cloud, cloud_api
+from hass_nabucasa import Cloud
 from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -377,7 +377,7 @@ class CloudGoogleConfig(AbstractConfig):
             return HTTPStatus.OK
 
         async with self._sync_entities_lock:
-            resp = await cloud_api.async_google_actions_request_sync(self._cloud)
+            resp = await self._cloud.google_report_state.request_sync()
             return resp.status
 
     async def async_connect_agent_user(self, agent_user_id: str) -> None:
