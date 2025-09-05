@@ -1352,6 +1352,92 @@ async def test_announce(
             "wyoming_satellite_announce",
         )
 
+        async with asyncio.timeout(1):
+            await mock_client.tts_audio_start_event.wait()
+            await mock_client.tts_audio_chunk_event.wait()
+            await mock_client.tts_audio_stop_event.wait()
+
+            # Stop announcement from blocking
+            mock_client.inject_event(Played().event())
+            await announce_task
+
+        # Stop the satellite
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_announce_with_preannounce(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test announce on satellite."""
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+
+    def async_process_play_media_url(hass: HomeAssistant, media_id: str) -> str:
+        # Don't create a URL
+        return media_id
+
+    with (
+        tempfile.NamedTemporaryFile(
+            mode="wb+", suffix=".wav"
+        ) as temp_preannounce_wav_file,
+        tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as temp_wav_file,
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient(responses=[], block_until_inject=True),
+        ) as mock_client,
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_process_play_media_url",
+            new=async_process_play_media_url,
+        ),
+    ):
+        # Use test WAV data for media and preannounce media
+        for temp_file in (temp_preannounce_wav_file, temp_wav_file):
+            with wave.open(temp_file.name, "wb") as wav_file:
+                wav_file.setframerate(22050)
+                wav_file.setsampwidth(2)
+                wav_file.setnchannels(1)
+                wav_file.writeframes(bytes(22050))  # 0.5 sec
+            temp_file.seek(0)
+
+        entry = await setup_config_entry(hass)
+        device: SatelliteDevice = hass.data[wyoming.DOMAIN][entry.entry_id].device
+        assert device is not None
+
+        satellite_entry = next(
+            (
+                maybe_entry
+                for maybe_entry in er.async_entries_for_device(
+                    entity_registry, device.device_id
+                )
+                if maybe_entry.domain == assist_satellite.DOMAIN
+            ),
+            None,
+        )
+        assert satellite_entry is not None
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        # Announce with preannounce
+        announce_task = hass.async_create_background_task(
+            hass.services.async_call(
+                assist_satellite.DOMAIN,
+                "announce",
+                {
+                    "entity_id": satellite_entry.entity_id,
+                    "preannounce_media_id": temp_preannounce_wav_file.name,
+                    "media_id": temp_wav_file.name,
+                },
+                blocking=True,
+            ),
+            "wyoming_satellite_announce",
+        )
+
         # Wait for audio to come from ffmpeg
         async with asyncio.timeout(1):
             await mock_client.tts_audio_start_event.wait()
@@ -1361,6 +1447,15 @@ async def test_announce(
             # Stop announcement from blocking
             mock_client.inject_event(Played().event())
             await announce_task
+
+        # If the preannounce media was played then total time should be
+        # 1000 milliseconds minus some tolerance for encoding and rounding
+        assert mock_client.tts_audio_chunk is not None
+        assert (
+            mock_client.tts_audio_chunk.timestamp
+            + mock_client.tts_audio_chunk.milliseconds
+            > 900
+        )
 
         # Stop the satellite
         await hass.config_entries.async_unload(entry.entry_id)
