@@ -47,11 +47,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
         and entry.minor_version == 2
         and CONF_SITE in entry.data[CONF_LOGIN_DATA]
     ):
-        # Version and data up-to-data
+        # Version and data up-to-date
         return True
 
     if CONF_SITE in entry.data:
-        # Site in data, just move to login data
+        # Site in data (wrong place), just move to login data
         new_data = entry.data.copy()
         new_data[CONF_LOGIN_DATA][CONF_SITE] = new_data[CONF_SITE]
         new_data.pop(CONF_SITE)
