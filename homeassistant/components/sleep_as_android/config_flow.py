@@ -11,4 +11,5 @@ config_entry_flow.register_webhook_flow(
     "Sleep as Android",
     {"docs_url": "https://www.home-assistant.io/integrations/sleep_as_android"},
     allow_multiple=True,
+    reconfigure=True,
 )
