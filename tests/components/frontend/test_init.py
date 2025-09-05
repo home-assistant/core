@@ -441,7 +441,7 @@ async def test_themes_reload_themes(
                     "modes": {},
                 }
             },
-            "At least one of 'light' or 'dark'",
+            "at least one of light, dark.*modes",
         ),
         (
             {
