@@ -1599,5 +1599,7 @@ async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) ->
     assert empty_info["state"] == ""
 
     # Test with include_state=False to ensure no conversion happens
-    exposed_no_state = llm._get_exposed_entities(hass, "conversation", include_state=False)
+    exposed_no_state = llm._get_exposed_entities(
+        hass, "conversation", include_state=False
+    )
     assert "state" not in exposed_no_state["entities"]["sensor.test_timestamp"]
