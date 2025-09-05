@@ -169,30 +169,36 @@ def get_platforms(config_entry):
     return []
 
 
-def _async_update_data_default(hass, device):
+def _async_update_data_default(
+    hass: HomeAssistant, device: Any, polling_time_out: int = POLLING_TIMEOUT_SEC
+):
     async def update():
         """Fetch data from the device using async_add_executor_job."""
 
         async def _async_fetch_data():
             """Fetch data from the device."""
-            async with asyncio.timeout(POLLING_TIMEOUT_SEC):
+            async with asyncio.timeout(polling_time_out):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
 
-        try:
-            return await _async_fetch_data()
-        except DeviceException as ex:
-            if getattr(ex, "code", None) != -9999:
-                raise UpdateFailed(ex) from ex
-            _LOGGER.error(
-                "Got exception while fetching the state, trying again: %s", ex
-            )
-        # Try to fetch the data a second time after error code -9999
-        try:
-            return await _async_fetch_data()
-        except DeviceException as ex:
-            raise UpdateFailed(ex) from ex
+        for consider_retry in [True, True, False]:
+            try:
+                return await _async_fetch_data()
+            except DeviceException as ex:
+                if not consider_retry or (
+                    getattr(ex, "code", None) != -9999
+                    and not (
+                        device.model == "zhimi.airpurifier.mb3"
+                        and "discovery failed" in str(ex)
+                    )
+                ):
+                    raise UpdateFailed(ex) from ex
+                _LOGGER.exception(
+                    "Got exception while fetching the state, trying again"
+                )
+                await asyncio.sleep(1)
+        raise UpdateFailed("Updating failed")  # keep ruff happy
 
     return update
 
@@ -233,7 +239,9 @@ class VacuumCoordinatorDataAttributes:
 
 
 def _async_update_data_vacuum(
-    hass: HomeAssistant, device: RoborockVacuum
+    hass: HomeAssistant,
+    device: RoborockVacuum,
+    polling_time_out: int = POLLING_TIMEOUT_SEC,
 ) -> Callable[[], Coroutine[Any, Any, VacuumCoordinatorData]]:
     def update() -> VacuumCoordinatorData:
         timer = []
@@ -264,7 +272,7 @@ def _async_update_data_vacuum(
         """Fetch data from the device using async_add_executor_job."""
 
         async def execute_update() -> VacuumCoordinatorData:
-            async with asyncio.timeout(POLLING_TIMEOUT_SEC):
+            async with asyncio.timeout(polling_time_out):
                 state = await hass.async_add_executor_job(update)
                 _LOGGER.debug("Got new vacuum state: %s", state)
                 return state
@@ -297,6 +305,8 @@ async def async_create_miio_device_and_coordinator(
     name = entry.title
     migrate = False
     update_method = _async_update_data_default
+    polling_timeout_sec: int = POLLING_TIMEOUT_SEC
+    update_interval: timedelta = UPDATE_INTERVAL
     coordinator_class: type[DataUpdateCoordinator[Any]] = DataUpdateCoordinator
 
     # List of models requiring specific lazy_discover setting
@@ -304,6 +314,7 @@ async def async_create_miio_device_and_coordinator(
         "zhimi.fan.za3": True,
         "zhimi.fan.za5": True,
         "zhimi.airpurifier.za1": True,
+        "zhimi.airpurifier.mb3": True,
         "dmaker.fan.1c": True,
     }
     lazy_discover = LAZY_DISCOVER_FOR_MODEL.get(model, False)
@@ -324,6 +335,8 @@ async def async_create_miio_device_and_coordinator(
     if model in MODELS_HUMIDIFIER_MIOT:
         device = AirHumidifierMiot(host, token, lazy_discover=lazy_discover)
         migrate = True
+        update_interval = timedelta(seconds=40)
+        polling_timeout_sec = update_interval.seconds - 5
     elif model in MODELS_HUMIDIFIER_MJJSQ:
         device = AirHumidifierMjjsq(
             host, token, lazy_discover=lazy_discover, model=model
@@ -387,9 +400,9 @@ async def async_create_miio_device_and_coordinator(
         _LOGGER,
         config_entry=entry,
         name=name,
-        update_method=update_method(hass, device),
+        update_method=update_method(hass, device, polling_timeout_sec),
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=UPDATE_INTERVAL,
+        update_interval=update_interval,
     )
 
     # Trigger first data fetch
