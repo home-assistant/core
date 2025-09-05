@@ -1385,4 +1385,16 @@ DISCOVERY_SCHEMAS = [
             clusters.ValveConfigurationAndControl.Attributes.AutoCloseTime,
         ),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ServiceAreaEstimatedEndTime",
+            translation_key="estimated_end_time",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            state_class=None,
+            device_to_ha=(lambda x: dt_util.utc_from_timestamp(x) if x > 0 else None),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ServiceArea.Attributes.EstimatedEndTime,),
+    ),
 ]

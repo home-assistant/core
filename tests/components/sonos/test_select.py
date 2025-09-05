@@ -38,9 +38,9 @@ async def platform_binary_sensor_fixture():
     [
         (0, "off"),
         (1, "low"),
-        (2, "medium"),
-        (3, "high"),
-        (4, "max"),
+        ("2", "medium"),
+        ("3", "high"),
+        ("4", "max"),
     ],
 )
 async def test_select_dialog_level(
@@ -49,7 +49,7 @@ async def test_select_dialog_level(
     soco,
     entity_registry: er.EntityRegistry,
     speaker_info: dict[str, str],
-    level: int,
+    level: int | str,
     result: str,
 ) -> None:
     """Test dialog level select entity."""
