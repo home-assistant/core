@@ -1914,10 +1914,8 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
             if old_state is None or not old_state.attributes.get(ATTR_RESTORED):
                 return
             hass.states.async_remove(old_entity_id, context=event.context)
-            entry = registry.async_get(event.data["entity_id"])
-            if TYPE_CHECKING:
-                assert entry is not None
-            entry.write_unavailable_state(hass)
+            if entry := registry.async_get(event.data["entity_id"]):
+                entry.write_unavailable_state(hass)
             return
 
         state = hass.states.get(event.data["entity_id"])
