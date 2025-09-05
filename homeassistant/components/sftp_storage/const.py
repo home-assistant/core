@@ -24,4 +24,4 @@ BUF_SIZE = 2**20 * 4  # 4MB
 DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
     f"{DOMAIN}.backup_agent_listeners"
 )
-DEFAULT_PKEY_NAME: str = ".sftp_storage_pkey"
+DEFAULT_PKEY_NAME: str = "sftp_storage_pkey"

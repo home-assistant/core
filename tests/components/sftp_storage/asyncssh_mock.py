@@ -1,4 +1,4 @@
-"""Mock objects for asyncssh module."""
+"""Mock classes for asyncssh module."""
 
 from __future__ import annotations
 

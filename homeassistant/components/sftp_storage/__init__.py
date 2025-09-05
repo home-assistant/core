@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 from dataclasses import dataclass, field
+import errno
 import logging
 from pathlib import Path
 
@@ -101,7 +102,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
         try:
             pkey.parent.rmdir()
         except OSError as e:
-            if e.errno == 39:  # Directory not empty
+            if e.errno == errno.ENOTEMPTY:  # Directory not empty
                 if LOGGER.isEnabledFor(logging.DEBUG):
                     leftover_files = []
                     # If we get an exception while gathering leftover files, make sure to log plain message.
