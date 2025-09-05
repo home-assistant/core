@@ -18,7 +18,13 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
+from .const import (
+    CONF_API_BASE_URL,
+    CONF_API_SECRET,
+    CONF_API_VERIFY_CERT,
+    CONF_TRACKER_INTERFACES,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,8 +99,8 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         api_data = {
             CONF_API_KEY: user_input[CONF_API_KEY],
             CONF_API_SECRET: user_input[CONF_API_SECRET],
-            "base_url": user_input[CONF_URL],
-            "verify_cert": user_input[CONF_VERIFY_SSL],
+            CONF_API_BASE_URL: user_input[CONF_URL],
+            CONF_API_VERIFY_CERT: user_input[CONF_VERIFY_SSL],
         }
         interfaces_client = diagnostics.InterfaceClient(**api_data)
 
@@ -114,7 +120,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors["base"] = "invalid_interface"
                         return await self._show_setup_form(user_input, errors)
 
-                return self.async_create_entry(title="OPNsense", data=user_input)
+            return self.async_create_entry(title="OPNsense", data=user_input)
 
         except (APIException, requestsConnectionError):
             _LOGGER.error("Error connecting to the OPNsense router")
@@ -125,6 +131,28 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         return await self._show_setup_form(user_input, errors)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        if user_input is not None:
+            data = {
+                CONF_TRACKER_INTERFACES: user_input.get(CONF_TRACKER_INTERFACES, None),
+            }
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                data_updates=data,
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_TRACKER_INTERFACES): str,
+                }
+            ),
+        )
 
     async def async_step_import(
         self, import_config: (dict[str, Any] | None)

@@ -12,6 +12,12 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "tracker_interfaces": "Interface(s) to use for tracking devices"
         }
+      },
+      "reconfigure": {
+        "description": "Reconfigure",
+        "data": {
+          "tracker_interfaces": "Interface(s) to use for tracking devices"
+        }
       }
     },
     "error": {
