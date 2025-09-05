@@ -120,6 +120,16 @@ async def test_setup_multiple_states(
             "end": "{{ utcnow() }}",
             "duration": "01:00",
         },
+        {
+            "platform": "history_stats",
+            "entity_id": "binary_sensor.test_id",
+            "name": "Test",
+            "state": "on",
+            "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+            "end": "{{ utcnow() }}",
+            "type": "ratio",
+            "state_class": "total_increasing",
+        },
     ],
 )
 @pytest.mark.usefixtures("hass")
@@ -321,6 +331,7 @@ async def test_measure_multiple(recorder_mock: Recorder, hass: HomeAssistant) ->
                         "start": "{{ as_timestamp(utcnow()) - 3600 }}",
                         "end": "{{ utcnow() }}",
                         "type": "time",
+                        "state_class": "measurement",
                     },
                     {
                         "platform": "history_stats",
@@ -330,6 +341,7 @@ async def test_measure_multiple(recorder_mock: Recorder, hass: HomeAssistant) ->
                         "start": "{{ as_timestamp(utcnow()) - 3600 }}",
                         "end": "{{ utcnow() }}",
                         "type": "time",
+                        "state_class": "total_increasing",
                     },
                     {
                         "platform": "history_stats",
@@ -361,6 +373,20 @@ async def test_measure_multiple(recorder_mock: Recorder, hass: HomeAssistant) ->
     assert hass.states.get("sensor.sensor2").state == "0.0"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "50.0"
+
+    assert (
+        hass.states.get("sensor.sensor1").attributes.get("state_class") == "measurement"
+    )
+    assert (
+        hass.states.get("sensor.sensor2").attributes.get("state_class")
+        == "total_increasing"
+    )
+    assert (
+        hass.states.get("sensor.sensor3").attributes.get("state_class") == "measurement"
+    )
+    assert (
+        hass.states.get("sensor.sensor4").attributes.get("state_class") == "measurement"
+    )
 
 
 async def test_measure(recorder_mock: Recorder, hass: HomeAssistant) -> None:
