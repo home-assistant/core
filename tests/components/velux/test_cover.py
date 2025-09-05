@@ -8,6 +8,8 @@ import pytest
 from homeassistant.const import STATE_CLOSED, STATE_OPEN, Platform
 from homeassistant.core import HomeAssistant
 
+from . import update_callback_entity
+
 from tests.common import MockConfigEntry
 
 
@@ -38,10 +40,8 @@ async def test_cover_closed(
     # continue to be green after the lib is fixed
     mock_window.position.closed = True
 
-    # Trigger entity state update
-    entity = hass.data["entity_components"]["cover"].get_entity(test_entity_id)
-    entity.async_write_ha_state()
-    await hass.async_block_till_done()
+    # Trigger entity state update via registered callback
+    await update_callback_entity(hass, mock_window)
 
     state = hass.states.get(test_entity_id)
     assert state is not None
