@@ -308,8 +308,6 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         ):
             if conf_entry.data[CONF_API_VERSION] != 2:
                 continue
-            if conf_entry.unique_id == bridge.id:
-                continue
             if conf_entry.data[CONF_HOST] == bridge.host:
                 continue
             # found an existing (BSB002) bridge entry,
