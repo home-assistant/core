@@ -1,0 +1,7 @@
+{
+  "version": "5.8.0-alpha.1",
+  "api_version": "5.8.0-alpha.1",
+  "php_version": "8.1.5",
+  "os": "Linux",
+  "driver": "mysql"
+}
