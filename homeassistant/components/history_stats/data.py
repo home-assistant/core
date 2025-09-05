@@ -245,19 +245,25 @@ class HistoryStats:
                 )
                 break
 
-            if previous_state_matches:
-                history_state_duration = (
-                    state_change_timestamp - last_state_change_timestamp
+            if previous_state_matches and current_state_matches:
+                pass
+            elif not previous_state_matches and current_state_matches:
+                match_count += 1
+                last_state_change_timestamp = max(
+                    start_timestamp, state_change_timestamp
                 )
-                if history_state_duration >= self._min_state_duration:
-                    elapsed += history_state_duration
+            elif previous_state_matches and not current_state_matches:
+                block_duration = state_change_timestamp - last_state_change_timestamp
+                if block_duration >= self._min_state_duration:
+                    elapsed += block_duration
                 else:
                     match_count -= 1
-            elif current_state_matches:
-                match_count += 1
 
             previous_state_matches = current_state_matches
-            last_state_change_timestamp = max(start_timestamp, state_change_timestamp)
+            if not current_state_matches:
+                last_state_change_timestamp = max(
+                    start_timestamp, state_change_timestamp
+                )
 
         # Count time elapsed between last history state and end of measure
         if previous_state_matches:
