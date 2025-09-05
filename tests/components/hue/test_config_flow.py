@@ -748,7 +748,7 @@ async def test_bsb003_bridge_discovery(
     entry.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(const.DOMAIN, "bsb002000_v2")},
+        identifiers={(const.DOMAIN, "bsb002_00000")},
         connections={(dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")},
     )
     create_mock_api_discovery(
