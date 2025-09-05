@@ -213,11 +213,11 @@ async def test_set_tilt_position_not_supported(
 @pytest.mark.parametrize(
     ("initial_percent_control", "expected_state", "expected_position"),
     [
-        (0, "open", 100),  # Should be closed/0
-        (25, "open", 75),  # Should be open/25
+        (0, "closed", 0),
+        (25, "open", 25),
         (50, "open", 50),
-        (75, "open", 25),  # Should be open/75
-        (100, "closed", 0),  # Should be open/100
+        (75, "open", 75),
+        (100, "open", 100),
     ],
 )
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
@@ -259,16 +259,14 @@ async def test_clkg_wltqkykhni0papzj_state(
             {},
             [
                 {"code": "control", "value": "open"},
-                # Should be sending 100
-                {"code": "percent_control", "value": 0},
+                {"code": "percent_control", "value": 100},
             ],
         ),
         (
             SERVICE_SET_COVER_POSITION,
             {ATTR_POSITION: 25},
             [
-                # Should be sending 25
-                {"code": "percent_control", "value": 75},
+                {"code": "percent_control", "value": 25},
             ],
         ),
         (
@@ -276,8 +274,7 @@ async def test_clkg_wltqkykhni0papzj_state(
             {},
             [
                 {"code": "control", "value": "close"},
-                # Should be sending 0
-                {"code": "percent_control", "value": 100},
+                {"code": "percent_control", "value": 0},
             ],
         ),
     ],
