@@ -399,7 +399,10 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
 
     dev_reg = dr.async_get(hass)
 
-    new_device_ids: dict[str, tuple[str, int]] = {}
+    # We need to refer to other devices, for example in `via_device` field.
+    # We don't however send the original device ids outside of Home Assistant,
+    # instead we refer to devices by (integration_domain, index_in_integration_device_list).
+    device_id_mapping: dict[str, tuple[str, int]] = {}
 
     for device_entry in dev_reg.devices.values():
         if not device_entry.primary_config_entry:
@@ -419,7 +422,7 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
 
         devices_info = integration_info["devices"]
 
-        new_device_ids[device_entry.id] = (integration_domain, len(devices_info))
+        device_id_mapping[device_entry.id] = (integration_domain, len(devices_info))
 
         devices_info.append(
             {
@@ -440,7 +443,7 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
         for device_info in integration_info["devices"]:
             if device_info["via_device"] is None:
                 continue
-            device_info["via_device"] = new_device_ids.get(device_info["via_device"])
+            device_info["via_device"] = device_id_mapping.get(device_info["via_device"])
 
     ent_reg = er.async_get(hass)
 
@@ -456,9 +459,10 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
         entity_state = hass.states.get(entity_entry.entity_id)
 
         entity_info = {
-            # LIMITATION: `assumed_state` can be overridden by users
-            # we should replace it with the original value in the future
-            # It is also not present if entity is not in the state machine
+            # LIMITATION: `assumed_state` can be overridden by users;
+            # we should replace it with the original value in the future.
+            # It is also not present, if entity is not in the state machine,
+            # which can happen for disabled entities.
             "assumed_state": entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
             if entity_state is not None
             else None,
@@ -467,14 +471,14 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
             "entity_category": entity_entry.entity_category,
             "has_entity_name": entity_entry.has_entity_name,
             "original_device_class": entity_entry.original_device_class,
-            # LIMITATION: `unit_of_measurement` can be overridden by users
-            # we should replace it with the original value in the future
+            # LIMITATION: `unit_of_measurement` can be overridden by users;
+            # we should replace it with the original value in the future.
             "unit_of_measurement": entity_entry.unit_of_measurement,
         }
 
         if (
             ((device_id := entity_entry.device_id) is not None)
-            and ((new_device_id := new_device_ids.get(device_id)) is not None)
+            and ((new_device_id := device_id_mapping.get(device_id)) is not None)
             and (new_device_id[0] == integration_domain)
         ):
             device_info = devices_info[new_device_id[1]]
