@@ -39,6 +39,21 @@ from .const import (
     LOGGER,
 )
 
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=22): int,
+        vol.Required(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_PRIVATE_KEY_FILE): FileSelector(
+            FileSelectorConfig(accept="*")
+        ),
+        vol.Required(CONF_BACKUP_LOCATION): str,
+    }
+)
+
 
 class SFTPStorageException(Exception):
     """Base exception for SFTP Storage integration."""
@@ -184,30 +199,12 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                     with suppress(OSError):
                         keyfile.parent.rmdir()
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_PORT, default=22): int,
-                vol.Required(CONF_USERNAME): str,
-                vol.Optional(CONF_PASSWORD): TextSelector(
-                    config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                ),
-                vol.Optional(CONF_PRIVATE_KEY_FILE): FileSelector(
-                    FileSelectorConfig(accept="*")
-                ),
-                vol.Required(CONF_BACKUP_LOCATION): str,
-            }
-        )
-        suggested_values = user_input.copy() if user_input else {}
-        # Exclude private key: FileSelector can't prefill uploaded files
-        suggested_values.pop(CONF_PRIVATE_KEY_FILE, None)
-        LOGGER.debug(suggested_values)
+        if user_input:
+            user_input.pop(CONF_PRIVATE_KEY_FILE, None)
 
         return self.async_show_form(
             step_id=step_id,
-            data_schema=self.add_suggested_values_to_schema(
-                data_schema, suggested_values
-            ),
+            data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, user_input),
             description_placeholders=placeholders,
             errors=errors,
         )

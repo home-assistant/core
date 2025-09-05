@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass, field
+import logging
 from pathlib import Path
 
 from homeassistant.components.backup import BackupAgentError
@@ -100,15 +102,22 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
             pkey.parent.rmdir()
         except OSError as e:
             if e.errno == 39:  # Directory not empty
-                leftover_files = [f.name for f in pkey.parent.iterdir()]
-                LOGGER.debug(
-                    "Storage directory for %s integration is not empty (%s) at host %s@%s. Files: %s",
-                    DOMAIN,
-                    str(pkey.parent),
-                    entry.data[CONF_USERNAME],
-                    entry.data[CONF_HOST],
-                    ", ".join(leftover_files),
-                )
+                if LOGGER.isEnabledFor(logging.DEBUG):
+                    logger_args = [
+                        DOMAIN,
+                        str(pkey.parent),
+                    ]
+                    logger_msg = (
+                        "Storage directory for %s integration is not empty (%s)"
+                    )
+
+                    # If we get an exception while gathering leftover files, make sure to log plain message.
+                    with contextlib.suppress(OSError):
+                        leftover_files = [f.name for f in pkey.parent.iterdir()]
+                        logger_msg += "Files: %s"
+                        logger_args.append(", ".join(leftover_files))
+
+                    LOGGER.debug(logger_msg, *logger_args)
             else:
                 LOGGER.warning(
                     "Error occurred while removing directory %s for integration %s: %s at host %s@%s",
@@ -120,7 +129,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
                 )
         else:
             LOGGER.debug(
-                "Removed storage directory for %s integration at host %s@%s",
+                "Removed storage directory for %s integration.",
                 DOMAIN,
                 entry.data[CONF_USERNAME],
                 entry.data[CONF_HOST],
