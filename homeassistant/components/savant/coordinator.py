@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 import typing
 
-from savant.switch import AudioSwitch, Switch, VideoSwitch
+from pysavant.switch import AudioSwitch, Switch, VideoSwitch
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.components.sensor import SensorEntity

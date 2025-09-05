@@ -3,7 +3,7 @@
 import logging
 import typing
 
-from savant.switch import AudioSwitch, Switch, VideoSwitch
+from pysavant.switch import AudioSwitch, Switch, VideoSwitch
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -116,7 +116,9 @@ class SavantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         ),
                     }
                 ),
-                self._get_reconfigure_entry().data,
+                self._get_reconfigure_entry().data
+                if self.source == SOURCE_RECONFIGURE
+                else {},
             ),
         )
 
