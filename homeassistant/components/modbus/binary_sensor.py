@@ -157,5 +157,8 @@ class SlaveSensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        self._attr_is_on = bool(result[self._result_inx] & 1) if result else None
+        if not result or self._result_inx >= len(result):
+            self._attr_is_on = None
+        else:
+            self._attr_is_on = bool(result[self._result_inx] & 1)
         super()._handle_coordinator_update()

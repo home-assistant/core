@@ -3,7 +3,7 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from . import DOMAIN, SERVICE_DOCK, SERVICE_START_MOWING
+from . import DOMAIN, SERVICE_DOCK, SERVICE_START_MOWING, LawnMowerEntityFeature
 
 INTENT_LANW_MOWER_START_MOWING = "HassLawnMowerStartMowing"
 INTENT_LANW_MOWER_DOCK = "HassLawnMowerDock"
@@ -20,6 +20,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             description="Starts a lawn mower",
             required_domains={DOMAIN},
             platforms={DOMAIN},
+            required_features=LawnMowerEntityFeature.START_MOWING,
         ),
     )
     intent.async_register(
@@ -31,5 +32,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             description="Sends a lawn mower to dock",
             required_domains={DOMAIN},
             platforms={DOMAIN},
+            required_features=LawnMowerEntityFeature.DOCK,
         ),
     )
