@@ -204,3 +204,113 @@ async def test_set_tilt_position_not_supported(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["clkg_wltqkykhni0papzj"],
+)
+@pytest.mark.parametrize(
+    ("initial_percent_control", "expected_state", "expected_position"),
+    [
+        (0, "open", 100),  # Should be closed/0
+        (25, "open", 75),  # Should be open/25
+        (50, "open", 50),
+        (75, "open", 25),  # Should be open/75
+        (100, "closed", 0),  # Should be open/100
+    ],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
+async def test_clkg_wltqkykhni0papzj_state(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    initial_percent_control: int,
+    expected_state: str,
+    expected_position: int,
+) -> None:
+    """Test cover position for wltqkykhni0papzj device.
+
+    See https://github.com/home-assistant/core/issues/151635
+    percent_control == 0 is when my roller shutter is completely open (meaning up)
+    percent_control == 100 is when my roller shutter is completely closed (meaning down)
+    """
+    entity_id = "cover.roller_shutter_living_room_curtain"
+    mock_device.status["percent_control"] = initial_percent_control
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == expected_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == expected_position
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["clkg_wltqkykhni0papzj"],
+)
+@pytest.mark.parametrize(
+    ("service_name", "service_kwargs", "expected_commands"),
+    [
+        (
+            SERVICE_OPEN_COVER,
+            {},
+            [
+                {"code": "control", "value": "open"},
+                # Should be sending 100
+                {"code": "percent_control", "value": 0},
+            ],
+        ),
+        (
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 25},
+            [
+                # Should be sending 25
+                {"code": "percent_control", "value": 75},
+            ],
+        ),
+        (
+            SERVICE_CLOSE_COVER,
+            {},
+            [
+                {"code": "control", "value": "close"},
+                # Should be sending 0
+                {"code": "percent_control", "value": 100},
+            ],
+        ),
+    ],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
+async def test_clkg_wltqkykhni0papzj_action(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    service_name: str,
+    service_kwargs: dict,
+    expected_commands: list[dict],
+) -> None:
+    """Test cover position for wltqkykhni0papzj device.
+
+    See https://github.com/home-assistant/core/issues/151635
+    percent_control == 0 is when my roller shutter is completely open (meaning up)
+    percent_control == 100 is when my roller shutter is completely closed (meaning down)
+    """
+    entity_id = "cover.roller_shutter_living_room_curtain"
+    mock_device.status["percent_control"] = 50
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service_name,
+        {ATTR_ENTITY_ID: entity_id, **service_kwargs},
+        blocking=True,
+    )
+
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id,
+        expected_commands,
+    )
