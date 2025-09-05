@@ -1351,7 +1351,7 @@ objgraph==3.5.0
 odp-amsterdam==6.1.2
 
 # homeassistant.components.ohme
-ohme==1.5.1
+ohme==1.5.2
 
 # homeassistant.components.ollama
 ollama==0.5.1
