@@ -152,7 +152,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                         host=user_config.host,
                         port=user_config.port,
                         options=await self.hass.async_add_executor_job(
-                            get_client_options, user_input
+                            get_client_options, user_config
                         ),
                     ) as ssh,
                     ssh.start_sftp_client() as sftp,

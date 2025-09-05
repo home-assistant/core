@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 import json
 from types import TracebackType
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Self
 
 from asyncssh import (
     SFTPClient,
@@ -28,17 +28,17 @@ from homeassistant.core import HomeAssistant
 from .const import BUF_SIZE, CONF_PASSWORD, CONF_PRIVATE_KEY_FILE, CONF_USERNAME, LOGGER
 
 if TYPE_CHECKING:
-    from . import SFTPConfigEntry
+    from . import SFTPConfigEntry, SFTPConfigEntryData
 
 
-def get_client_options(cfg: Mapping[str, Any]) -> SSHClientConnectionOptions:
+def get_client_options(cfg: SFTPConfigEntryData) -> SSHClientConnectionOptions:
     """Use this function with `hass.async_add_executor_job` to asynchronously get `SSHClientConnectionOptions`."""
 
     return SSHClientConnectionOptions(
         known_hosts=None,
-        username=cfg[CONF_USERNAME],
-        password=cfg.get(CONF_PASSWORD),
-        client_keys=cfg.get(CONF_PRIVATE_KEY_FILE),
+        username=cfg.username,
+        password=cfg.password,
+        client_keys=cfg.private_key_file,
     )
 
 
@@ -291,7 +291,7 @@ class BackupAgentClient:
                 host=self.cfg.runtime_data.host,
                 port=self.cfg.runtime_data.port,
                 options=await self.hass.async_add_executor_job(
-                    get_client_options, self.cfg.data
+                    get_client_options, self.cfg.runtime_data
                 ),
             )
         except (OSError, PermissionDenied) as e:

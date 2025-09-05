@@ -103,21 +103,19 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
         except OSError as e:
             if e.errno == 39:  # Directory not empty
                 if LOGGER.isEnabledFor(logging.DEBUG):
-                    logger_args = [
-                        DOMAIN,
-                        str(pkey.parent),
-                    ]
-                    logger_msg = (
-                        "Storage directory for %s integration is not empty (%s)"
-                    )
-
+                    leftover_files = []
                     # If we get an exception while gathering leftover files, make sure to log plain message.
                     with contextlib.suppress(OSError):
                         leftover_files = [f.name for f in pkey.parent.iterdir()]
-                        logger_msg += "Files: %s"
-                        logger_args.append(", ".join(leftover_files))
 
-                    LOGGER.debug(logger_msg, *logger_args)
+                    LOGGER.debug(
+                        "Storage directory for %s integration is not empty (%s)%s",
+                        DOMAIN,
+                        str(pkey.parent),
+                        f", files: {', '.join(leftover_files)}"
+                        if leftover_files
+                        else "",
+                    )
             else:
                 LOGGER.warning(
                     "Error occurred while removing directory %s for integration %s: %s at host %s@%s",
