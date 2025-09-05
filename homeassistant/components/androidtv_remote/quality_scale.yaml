@@ -40,9 +40,7 @@ rules:
   diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update:
-    status: exempt
-    comment: This is a push-based integration.
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
