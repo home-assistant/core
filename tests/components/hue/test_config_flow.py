@@ -755,7 +755,9 @@ async def test_bsb003_bridge_discovery(
         aioclient_mock,
         [("192.168.1.217", "bsb002_00000"), ("192.168.1.218", "bsb003_00000")],
     )
-    disc_bridge = get_discovered_bridge(bridge_id="bsb003_00000", supports_v2=True)
+    disc_bridge = get_discovered_bridge(
+        bridge_id="bsb003_00000", host="192.168.1.218", supports_v2=True
+    )
 
     with (
         patch(
@@ -796,3 +798,4 @@ async def test_bsb003_bridge_discovery(
     # The tests don't add new connection, but that will happen
     # outside of the config flow
     assert len(migrated_device.connections) == 0
+    assert entry.data["host"] == "192.168.1.218"
