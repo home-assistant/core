@@ -75,29 +75,39 @@ PRIMARY_COLOR = "primary-color"
 
 _LOGGER = logging.getLogger(__name__)
 
-THEME_SCHEMA = vol.Schema(
+EXTENDED_THEME_SCHEMA = vol.Schema(
     {
         # Theme variables that apply to all modes
         cv.string: cv.string,
         # Mode specific theme variables
-        vol.Optional(CONF_THEMES_MODES): vol.All(
+        vol.Optional(CONF_THEMES_MODES): vol.Schema(
             {
                 vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
                 vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
-            },
-            cv.has_at_least_one_key(CONF_THEMES_LIGHT, CONF_THEMES_DARK),
+            }
         ),
     }
 )
 
-THEMES_SCHEMA = vol.Schema({cv.string: THEME_SCHEMA})
+THEME_SCHEMA = vol.Schema(
+    {
+        cv.string: (
+            vol.Any(
+                # Legacy theme scheme
+                {cv.string: cv.string},
+                # New extended schema with mode support
+                EXTENDED_THEME_SCHEMA,
+            )
+        )
+    }
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
-                vol.Optional(CONF_THEMES): THEMES_SCHEMA,
+                vol.Optional(CONF_THEMES): THEME_SCHEMA,
                 vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -536,7 +546,7 @@ async def _async_setup_themes(
         new_themes = config.get(DOMAIN, {}).get(CONF_THEMES, {})
 
         try:
-            THEMES_SCHEMA(new_themes)
+            THEME_SCHEMA(new_themes)
         except vol.Invalid as err:
             raise HomeAssistantError(f"Failed to reload themes: {err}") from err
 
