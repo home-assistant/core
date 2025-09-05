@@ -266,7 +266,7 @@ async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> N
     subentry_id = list(config_entry.subentries)[0]
     assert config_entry.subentries == {
         subentry_id: ConfigSubentry(
-            data={CONF_TOPIC: "randomtopic", CONF_NAME: "mytopic"},
+            data={CONF_TOPIC: "randomtopic"},
             subentry_id=subentry_id,
             subentry_type="topic",
             title="mytopic",
