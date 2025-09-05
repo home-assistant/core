@@ -1497,10 +1497,10 @@ async def test_update_entity_entity_id(
     old_state = hass.states.get(entry.entity_id)
     assert old_state is None
 
-    # The new entity should have the have the restored state
+    # The new entity should have an unavailable initial state
     new_state = hass.states.get(new_entity_id)
     assert new_state is not None
-    assert new_state.state == "on"
+    assert new_state.state == "unavailable"
 
 
 async def test_update_entity_entity_id_without_state(
