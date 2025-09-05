@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "OPNsence",
         "description": "Set required parameters to connect to your router. For more information, please refer to the [integration documentation]({doc_url})",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
