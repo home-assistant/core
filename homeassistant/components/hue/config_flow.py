@@ -306,17 +306,15 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         for conf_entry in self.hass.config_entries.async_entries(
             DOMAIN, include_ignore=False, include_disabled=False
         ):
-            if conf_entry.data.get(CONF_API_VERSION) != 2:
+            if conf_entry.data[CONF_API_VERSION] != 2:
                 continue
             if conf_entry.unique_id == bridge.id:
                 continue
-            if conf_entry.data.get(CONF_HOST) == bridge.host:
+            if conf_entry.data[CONF_HOST] == bridge.host:
                 continue
             # found an existing (BSB002) bridge entry,
             # check if we can connect to the new BSB003 bridge using the old credentials
-            if not (old_app_key := conf_entry.data.get(CONF_API_KEY)):
-                continue  # guard
-            api = HueBridgeV2(bridge.host, old_app_key)
+            api = HueBridgeV2(bridge.host, conf_entry.data[CONF_API_KEY])
             try:
                 await api.fetch_full_state()
             except (AiohueException, aiohttp.ClientError):
