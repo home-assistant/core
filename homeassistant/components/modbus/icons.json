@@ -9,6 +9,9 @@
     "write_register": {
       "service": "mdi:database-edit"
     },
+    "read_registers": {
+      "service": "mdi:database-search"
+    },
     "stop": {
       "service": "mdi:stop"
     },

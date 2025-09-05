@@ -13,6 +13,7 @@ This file is responsible for testing:
 It uses binary_sensors/sensors to do black box testing of the read calls.
 """
 
+from contextlib import nullcontext as does_not_raise
 from datetime import timedelta
 import logging
 from unittest import mock
@@ -27,8 +28,10 @@ from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
+    ATTR_COUNT,
     ATTR_HUB,
     ATTR_SLAVE,
+    ATTR_TYPE,
     ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
@@ -67,6 +70,7 @@ from homeassistant.components.modbus.const import (
     MODBUS_DOMAIN as DOMAIN,
     RTUOVERTCP,
     SERIAL,
+    SERVICE_READ_REGISTERS,
     SERVICE_STOP,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
@@ -107,6 +111,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -760,6 +765,8 @@ async def test_config_modbus(
 
 
 VALUE = "value"
+RETURN_VALUE = "return_value"
+EXPECTED_RESULT = "expected_result"
 FUNC = "func"
 DATA = "data"
 SERVICE = "service"
@@ -874,6 +881,144 @@ async def test_pb_service_write(
 
     if do_return[DATA]:
         assert any(message.startswith("Pymodbus:") for message in caplog.messages)
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_NAME: TEST_MODBUS_NAME,
+            CONF_TYPE: SERIAL,
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_METHOD: "rtu",
+            CONF_PORT: TEST_PORT_SERIAL,
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "dummy",
+                    CONF_ADDRESS: 9999,
+                }
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "do_read",
+    [
+        {
+            ATTR_ADDRESS: 14,
+            ATTR_COUNT: 1,
+            ATTR_TYPE: CALL_TYPE_REGISTER_INPUT,
+            FUNC: CALL_TYPE_REGISTER_INPUT,
+            RETURN_VALUE: ReadResult([0x0001]),
+            EXPECTED_RESULT: {"values": [0x0001]},
+        },
+        {
+            ATTR_ADDRESS: 15,
+            ATTR_TYPE: CALL_TYPE_REGISTER_INPUT,
+            FUNC: CALL_TYPE_REGISTER_INPUT,
+            RETURN_VALUE: ReadResult([0x1000]),
+            EXPECTED_RESULT: {"values": [0x1000]},
+        },
+        {
+            ATTR_ADDRESS: 16,
+            ATTR_COUNT: 2,
+            ATTR_TYPE: CALL_TYPE_REGISTER_INPUT,
+            FUNC: CALL_TYPE_REGISTER_INPUT,
+            RETURN_VALUE: ReadResult([0x0003, 0x0002]),
+            EXPECTED_RESULT: {"values": [0x0003, 0x0002]},
+        },
+        {
+            ATTR_ADDRESS: 17,
+            ATTR_COUNT: 1,
+            ATTR_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            FUNC: CALL_TYPE_REGISTER_HOLDING,
+            RETURN_VALUE: ReadResult([0x0004]),
+            EXPECTED_RESULT: {"values": [0x0004]},
+        },
+        {
+            ATTR_ADDRESS: 18,
+            ATTR_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            FUNC: CALL_TYPE_REGISTER_HOLDING,
+            RETURN_VALUE: ReadResult([0x0005]),
+            EXPECTED_RESULT: {"values": [0x0005]},
+        },
+        {
+            ATTR_ADDRESS: 19,
+            ATTR_COUNT: 2,
+            ATTR_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            FUNC: CALL_TYPE_REGISTER_HOLDING,
+            RETURN_VALUE: ReadResult([0x0006, 0x0007]),
+            EXPECTED_RESULT: {"values": [0x0006, 0x0007]},
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "do_return",
+    [
+        {VALUE: None, DATA: ""},  # None: RETURN_VALUE from do_read will be used
+        {VALUE: ExceptionResponse(0x06), DATA: "Pymodbus:"},
+        {VALUE: ModbusException("fail read_"), DATA: "Pymodbus:"},
+    ],
+)
+@pytest.mark.parametrize(
+    "do_slave",
+    [
+        ATTR_SLAVE,
+        ATTR_UNIT,
+    ],
+)
+async def test_pb_service_read(
+    hass: HomeAssistant,
+    do_read,
+    do_return,
+    do_slave,
+    caplog: pytest.LogCaptureFixture,
+    mock_modbus_with_pymodbus,
+) -> None:
+    """Run test for service read_registers."""
+
+    func_name = {
+        CALL_TYPE_REGISTER_INPUT: mock_modbus_with_pymodbus.read_input_registers,
+        CALL_TYPE_REGISTER_HOLDING: mock_modbus_with_pymodbus.read_holding_registers,
+    }
+
+    data = {
+        ATTR_HUB: TEST_MODBUS_NAME,
+        do_slave: 17,
+        ATTR_ADDRESS: do_read[ATTR_ADDRESS],
+        ATTR_TYPE: do_read[ATTR_TYPE],
+    }
+    if ATTR_COUNT in do_read:
+        data[ATTR_COUNT] = do_read[ATTR_COUNT]
+    mock_modbus_with_pymodbus.reset_mock()
+    caplog.clear()
+    caplog.set_level(logging.DEBUG)
+    return_value = do_return[VALUE]
+    if return_value is None:
+        return_value = do_read[RETURN_VALUE]
+    func_name[do_read[FUNC]].return_value = return_value
+
+    error_expected = bool(do_return[DATA])
+    ctx = pytest.raises(HomeAssistantError) if error_expected else does_not_raise()
+    with ctx:
+        service_result = await hass.services.async_call(
+            DOMAIN, SERVICE_READ_REGISTERS, data, blocking=True, return_response=True
+        )
+
+    assert func_name[do_read[FUNC]].called
+    assert func_name[do_read[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
+    assert func_name[do_read[FUNC]].call_args.kwargs == {
+        DEVICE_ID: 17,
+        ATTR_COUNT: data.get(ATTR_COUNT, 1),
+    }
+
+    if error_expected:
+        assert any(message.startswith("Pymodbus:") for message in caplog.messages)
+    else:
+        assert service_result == do_read[EXPECTED_RESULT]
 
 
 @pytest.fixture(name="mock_modbus_read_pymodbus")

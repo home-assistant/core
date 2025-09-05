@@ -106,6 +106,8 @@ UDP = "udp"
 
 # service call attributes
 ATTR_ADDRESS = CONF_ADDRESS
+ATTR_COUNT = "count"
+ATTR_TYPE = "type"
 ATTR_HUB = "hub"
 ATTR_UNIT = "unit"
 ATTR_SLAVE = "slave"
@@ -143,6 +145,7 @@ CALL_TYPE_X_REGISTER_HOLDINGS = "holdings"
 # service calls
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
+SERVICE_READ_REGISTERS = "read_registers"
 SERVICE_STOP = "stop"
 SERVICE_RESTART = "restart"
 

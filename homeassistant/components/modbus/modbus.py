@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import namedtuple
-from typing import Any
+from typing import Any, cast
 
 from pymodbus.client import (
     AsyncModbusSerialClient,
@@ -27,18 +27,28 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.json import JsonValueType
 
 from .const import (
     _LOGGER,
     ATTR_ADDRESS,
+    ATTR_COUNT,
     ATTR_HUB,
     ATTR_SLAVE,
+    ATTR_TYPE,
     ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
@@ -60,6 +70,7 @@ from .const import (
     PLATFORMS,
     RTUOVERTCP,
     SERIAL,
+    SERVICE_READ_REGISTERS,
     SERVICE_STOP,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
@@ -169,14 +180,17 @@ async def async_modbus_setup(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_modbus)
 
+    def _resolve_slave(data: dict[str, Any]) -> int:
+        slave = 1
+        if ATTR_UNIT in data:
+            slave = int(float(data[ATTR_UNIT]))
+        if ATTR_SLAVE in data:
+            slave = int(float(data[ATTR_SLAVE]))
+        return slave
+
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
-        slave = 1
-        if ATTR_UNIT in service.data:
-            slave = int(float(service.data[ATTR_UNIT]))
-
-        if ATTR_SLAVE in service.data:
-            slave = int(float(service.data[ATTR_SLAVE]))
+        slave = _resolve_slave(service.data)
         address = int(float(service.data[ATTR_ADDRESS]))
         value = service.data[ATTR_VALUE]
         hub = hub_collect[service.data.get(ATTR_HUB, DEFAULT_HUB)]
@@ -194,11 +208,7 @@ async def async_modbus_setup(
 
     async def async_write_coil(service: ServiceCall) -> None:
         """Write Modbus coil."""
-        slave = 1
-        if ATTR_UNIT in service.data:
-            slave = int(float(service.data[ATTR_UNIT]))
-        if ATTR_SLAVE in service.data:
-            slave = int(float(service.data[ATTR_SLAVE]))
+        slave = _resolve_slave(service.data)
         address = service.data[ATTR_ADDRESS]
         state = service.data[ATTR_STATE]
         hub = hub_collect[service.data.get(ATTR_HUB, DEFAULT_HUB)]
@@ -240,6 +250,44 @@ async def async_modbus_setup(
         async_stop_hub,
         schema=vol.Schema({vol.Required(ATTR_HUB): cv.string}),
     )
+
+    async def async_read_registers(service: ServiceCall) -> ServiceResponse:
+        """Read one or more holding/input registers and return the result."""
+        slave = _resolve_slave(service.data)
+        count = service.data[ATTR_COUNT]
+        address = service.data[ATTR_ADDRESS]
+        register_type = service.data[ATTR_TYPE]
+        hub = hub_collect[service.data.get(ATTR_HUB, DEFAULT_HUB)]
+        raw_result = await hub.async_pb_call(slave, address, count, register_type)
+        if raw_result is None:
+            raise HomeAssistantError(
+                f"failed to read {register_type} registers at address={address}  count={count}"
+            )
+        register_values: list[int] = raw_result.registers
+        return {"values": cast(JsonValueType, register_values)}
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_READ_REGISTERS,
+        async_read_registers,
+        schema=vol.Schema(
+            {
+                vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
+                vol.Exclusive(ATTR_SLAVE, "unit"): cv.positive_int,
+                vol.Exclusive(ATTR_UNIT, "unit"): cv.positive_int,
+                vol.Required(ATTR_ADDRESS): cv.positive_int,
+                vol.Optional(ATTR_COUNT, default=1): cv.positive_int,
+                vol.Required(ATTR_TYPE): vol.In(
+                    [
+                        CALL_TYPE_REGISTER_HOLDING,
+                        CALL_TYPE_REGISTER_INPUT,
+                    ]
+                ),
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
     return True
 
 
