@@ -48,11 +48,11 @@ SUPPORT_ALL_SERVICES = (
 )
 
 FAN_SPEEDS = ["min", "medium", "high", "max"]
-DEMO_VACUUM_COMPLETE = "0_Ground_floor"
-DEMO_VACUUM_MOST = "1_First_floor"
-DEMO_VACUUM_BASIC = "2_Second_floor"
-DEMO_VACUUM_MINIMAL = "3_Third_floor"
-DEMO_VACUUM_NONE = "4_Fourth_floor"
+DEMO_VACUUM_COMPLETE = "Demo vacuum 0 ground floor"
+DEMO_VACUUM_MOST = "Demo vacuum 1 first floor"
+DEMO_VACUUM_BASIC = "Demo vacuum 2 second floor"
+DEMO_VACUUM_MINIMAL = "Demo vacuum 3 third floor"
+DEMO_VACUUM_NONE = "Demo vacuum 4 fourth floor"
 
 
 async def async_setup_entry(

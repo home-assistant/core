@@ -47,7 +47,11 @@ def _last_restart(runtime: int) -> datetime:
 
 
 type _CoordinatorDataType = (
-    LogicalNetwork | DataRate | list[ConnectedStationInfo] | list[NeighborAPInfo] | int
+    LogicalNetwork
+    | DataRate
+    | dict[str, ConnectedStationInfo]
+    | list[NeighborAPInfo]
+    | int
 )
 type _SensorDataType = int | float | datetime
 
@@ -79,7 +83,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any, Any]] = {
         ),
     ),
     CONNECTED_WIFI_CLIENTS: DevoloSensorEntityDescription[
-        list[ConnectedStationInfo], int
+        dict[str, ConnectedStationInfo], int
     ](
         key=CONNECTED_WIFI_CLIENTS,
         state_class=SensorStateClass.MEASUREMENT,

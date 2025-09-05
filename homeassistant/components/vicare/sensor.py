@@ -194,6 +194,15 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
+        key="dhw_storage_middle_temperature",
+        translation_key="dhw_storage_middle_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterStorageTemperatureMiddle(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
         key="dhw_storage_bottom_temperature",
         translation_key="dhw_storage_bottom_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,

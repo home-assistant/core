@@ -12,3 +12,8 @@ TEST_OPTIONS = {
     ollama.CONF_MAX_HISTORY: 2,
     ollama.CONF_MODEL: "test_model:latest",
 }
+
+TEST_AI_TASK_OPTIONS = {
+    ollama.CONF_MAX_HISTORY: 2,
+    ollama.CONF_MODEL: "test_model:latest",
+}
