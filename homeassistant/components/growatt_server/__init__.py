@@ -1,12 +1,13 @@
 """The Growatt server PV inverter sensor integration."""
 
 from collections.abc import Mapping
+import logging
 
 import growattServer
 
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 
 from .const import (
     CONF_PLANT_ID,
@@ -19,6 +20,8 @@ from .const import (
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
 from .models import GrowattRuntimeData
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def get_device_list(
     api: growattServer.GrowattApi, config: Mapping[str, str]
@@ -27,19 +30,45 @@ def get_device_list(
     plant_id = config[CONF_PLANT_ID]
 
     # Log in to api and fetch first plant if no plant id is defined.
-    login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    if (
-        not login_response["success"]
-        and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
-    ):
-        raise ConfigEntryError("Username, Password or URL may be incorrect!")
+    try:
+        login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
+        # DEBUG: Log the actual response structure
+    except Exception as ex:
+        _LOGGER.error("DEBUG - Login response: %s", login_response)
+        raise ConfigEntryError(
+            f"Error communicating with Growatt API during login: {ex}"
+        ) from ex
+
+    if not login_response.get("success"):
+        msg = login_response.get("msg", "Unknown error")
+        _LOGGER.debug("Growatt login failed: %s", msg)
+        if msg == LOGIN_INVALID_AUTH_CODE:
+            raise ConfigEntryAuthFailed("Username, Password or URL may be incorrect!")
+        raise ConfigEntryError(f"Growatt login failed: {msg}")
+
     user_id = login_response["user"]["id"]
+
     if plant_id == DEFAULT_PLANT_ID:
-        plant_info = api.plant_list(user_id)
-        plant_id = plant_info["data"][0]["plantId"]
+        try:
+            plant_info = api.plant_list(user_id)
+        except Exception as ex:
+            raise ConfigEntryError(
+                f"Error communicating with Growatt API during plant list: {ex}"
+            ) from ex
+        if not plant_info or "data" not in plant_info or not plant_info["data"]:
+            raise ConfigEntryError("No plants found for this account.")
+        plant_id = plant_info["data"][0].get("plantId")
+        if not plant_id:
+            raise ConfigEntryError("Plant ID missing in plant info.")
 
     # Get a list of devices for specified plant to add sensors for.
-    devices = api.device_list(plant_id)
+    try:
+        devices = api.device_list(plant_id)
+    except Exception as ex:
+        raise ConfigEntryError(
+            f"Error communicating with Growatt API during device list: {ex}"
+        ) from ex
+
     return devices, plant_id
 
 
