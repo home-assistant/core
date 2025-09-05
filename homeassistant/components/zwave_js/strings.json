@@ -113,6 +113,16 @@
         "description": "[%key:component::zwave_js::config::step::on_supervisor::description%]",
         "title": "[%key:component::zwave_js::config::step::on_supervisor::title%]"
       },
+      "rf_region": {
+        "title": "Z-Wave region",
+        "description": "Select the RF region for your Z-Wave network.",
+        "data": {
+          "rf_region": "RF region"
+        },
+        "data_description": {
+          "rf_region": "The radio frequency region for your Z-Wave network. This must match the region of your Z-Wave devices."
+        }
+      },
       "start_addon": {
         "title": "Configuring add-on"
       },
@@ -130,6 +140,10 @@
         "menu_options": {
           "intent_migrate": "Migrate to a new adapter",
           "intent_reconfigure": "Re-configure the current adapter"
+        },
+        "menu_option_descriptions": {
+          "intent_migrate": "This will move your Z-Wave network to a new adapter.",
+          "intent_reconfigure": "This will let you change the adapter configuration."
         }
       },
       "instruct_unplug": {
