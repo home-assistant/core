@@ -4,7 +4,11 @@ from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.alexa_devices.const import CONF_LOGIN_DATA, DOMAIN
+from homeassistant.components.alexa_devices.const import (
+    CONF_LOGIN_DATA,
+    CONF_SITE,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -58,4 +62,4 @@ async def test_migrate_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.minor_version == 2
-    assert config_entry.data[CONF_LOGIN_DATA]["site"] == "https://www.amazon.com"
+    assert config_entry.data[CONF_LOGIN_DATA][CONF_SITE] == "https://www.amazon.com"

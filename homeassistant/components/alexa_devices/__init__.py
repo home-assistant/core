@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import _LOGGER, CONF_LOGIN_DATA, COUNTRY_DOMAINS, DOMAIN
+from .const import _LOGGER, CONF_LOGIN_DATA, CONF_SITE, COUNTRY_DOMAINS, DOMAIN
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .services import async_setup_services
 
@@ -42,7 +42,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
 async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Migrate old entry."""
-    if entry.version == 1 and entry.minor_version == 1:
+    if (
+        entry.version == 1
+        and entry.minor_version == 2
+        and CONF_SITE in entry.data[CONF_LOGIN_DATA]
+    ):
+        # Version and data up-to-data
+        return True
+
+    if CONF_SITE in entry.data:
+        # Site in data, just move to login data
+        new_data = entry.data.copy()
+        new_data[CONF_LOGIN_DATA][CONF_SITE] = new_data[CONF_SITE]
+        new_data.pop(CONF_SITE)
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, version=1, minor_version=2
+        )
+    else:
         _LOGGER.debug(
             "Migrating from version %s.%s", entry.version, entry.minor_version
         )
@@ -53,7 +69,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
 
         # Add site to login data
         new_data = entry.data.copy()
-        new_data[CONF_LOGIN_DATA]["site"] = f"https://www.amazon.{domain}"
+        new_data[CONF_LOGIN_DATA][CONF_SITE] = f"https://www.amazon.{domain}"
 
         hass.config_entries.async_update_entry(
             entry, data=new_data, version=1, minor_version=2
