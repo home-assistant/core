@@ -5872,6 +5872,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "sftp_storage": {
+      "name": "SFTP Storage",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "sharkiq": {
       "name": "Shark IQ",
       "integration_type": "hub",

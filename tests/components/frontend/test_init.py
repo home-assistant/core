@@ -410,8 +410,64 @@ async def test_themes_reload_themes(
 
 
 @pytest.mark.usefixtures("frontend")
+@pytest.mark.parametrize(
+    ("invalid_theme", "error"),
+    [
+        (
+            {
+                "invalid0": "blue",
+            },
+            "expected a dictionary",
+        ),
+        (
+            {
+                "invalid1": {
+                    "primary-color": "black",
+                    "modes": "light:{} dark:{}",
+                }
+            },
+            "expected a dictionary.*modes",
+        ),
+        (
+            {
+                "invalid2": None,
+            },
+            "expected a dictionary",
+        ),
+        (
+            {
+                "invalid3": {
+                    "primary-color": "black",
+                    "modes": {},
+                }
+            },
+            "at least one of light, dark.*modes",
+        ),
+        (
+            {
+                "invalid4": {
+                    "primary-color": "black",
+                    "modes": None,
+                }
+            },
+            "expected a dictionary.*modes",
+        ),
+        (
+            {
+                "invalid5": {
+                    "primary-color": "black",
+                    "modes": {"light": {}, "dank": {}},
+                }
+            },
+            "extra keys not allowed.*dank",
+        ),
+    ],
+)
 async def test_themes_reload_invalid(
-    hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
+    hass: HomeAssistant,
+    themes_ws_client: MockHAClientWebSocket,
+    invalid_theme: dict,
+    error: str,
 ) -> None:
     """Test frontend.reload_themes service with an invalid theme."""
 
@@ -424,9 +480,9 @@ async def test_themes_reload_invalid(
     with (
         patch(
             "homeassistant.components.frontend.async_hass_config_yaml",
-            return_value={DOMAIN: {CONF_THEMES: {"sad": "blue"}}},
+            return_value={DOMAIN: {CONF_THEMES: invalid_theme}},
         ),
-        pytest.raises(HomeAssistantError, match="Failed to reload themes"),
+        pytest.raises(HomeAssistantError, match=rf"Failed to reload themes.*{error}"),
     ):
         await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
 
