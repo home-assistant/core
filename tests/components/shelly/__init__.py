@@ -100,10 +100,12 @@ async def mock_rest_update(
 
 
 async def mock_polling_rpc_update(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    seconds: float = RPC_SENSORS_POLLING_INTERVAL,
 ) -> None:
     """Move time to create polling RPC sensors update event."""
-    freezer.tick(timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL))
+    freezer.tick(timedelta(seconds=seconds))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
