@@ -56,11 +56,13 @@
     "step": {
       "init": {
         "data": {
-          "apps": "Configure applications list",
+          "apps": "Configure an existing application",
+          "add_new_app": "Add a new application",
           "enable_ime": "Enable IME"
         },
         "data_description": {
-          "apps": "Here you can define the list of applications, specify names and icons that will be displayed in the UI.",
+          "apps": "Select an application from the list to modify its name or icon.",
+          "add_new_app": "Check this box to add a new application to the list.",
           "enable_ime": "Enable this option to be able to get the current app name and send text as keyboard input. Disable it for devices that show 'Use keyboard on mobile device screen' instead of the on-screen keyboard."
         }
       },

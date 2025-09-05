@@ -40,6 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 APPS_NEW_ID = "NewApp"
 CONF_APP_DELETE = "app_delete"
 CONF_APP_ID = "app_id"
+CONF_ADD_NEW_APP = "add_new_app"
 
 STEP_PAIR_DATA_SCHEMA = vol.Schema(
     {
@@ -254,7 +255,9 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
     @callback
     def _save_config(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Save the updated options."""
-        new_data = {k: v for k, v in data.items() if k not in [CONF_APPS]}
+        new_data = {
+            k: v for k, v in data.items() if k not in [CONF_APPS, CONF_ADD_NEW_APP]
+        }
         if self._apps:
             new_data[CONF_APPS] = self._apps
 
@@ -265,6 +268,10 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
+            # Check for "Add new app" checkbox first
+            if user_input.get(CONF_ADD_NEW_APP):
+                return await self.async_step_apps(None, APPS_NEW_ID)
+            # If an existing app was selected
             if sel_app := user_input.get(CONF_APPS):
                 return await self.async_step_apps(None, sel_app)
             return self._save_config(user_input)
@@ -273,9 +280,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
             k: f"{v[CONF_APP_NAME]} ({k})" if CONF_APP_NAME in v else k
             for k, v in self._apps.items()
         }
-        apps = [SelectOptionDict(value=APPS_NEW_ID, label="Add new")] + [
-            SelectOptionDict(value=k, label=v) for k, v in apps_list.items()
-        ]
+        apps = [SelectOptionDict(value=k, label=v) for k, v in apps_list.items()]
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
@@ -285,6 +290,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
                             options=apps, mode=SelectSelectorMode.DROPDOWN
                         )
                     ),
+                    vol.Optional(CONF_ADD_NEW_APP, default=False): bool,
                     vol.Required(
                         CONF_ENABLE_IME,
                         default=get_enable_ime(self.config_entry),
