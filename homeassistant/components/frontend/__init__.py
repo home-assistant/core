@@ -90,7 +90,7 @@ THEME_SCHEMA = vol.Schema(
     }
 )
 
-THEMES_SCHEMA = vol.Schema({cv.string: (THEME_SCHEMA)})
+THEMES_SCHEMA = vol.Schema({cv.string: THEME_SCHEMA})
 
 CONFIG_SCHEMA = vol.Schema(
     {
