@@ -5,10 +5,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, Final, cast
 
 import pyatmo
-from pyatmo.modules import PublicWeatherArea
+from pyatmo.modules import Module, PublicWeatherArea
+from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -44,6 +45,8 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     CONF_URL_ENERGY,
     CONF_URL_PUBLIC_WEATHER,
+    CONF_URL_SECURITY,
+    CONF_URL_WEATHER,
     CONF_WEATHER_AREAS,
     DATA_HANDLER,
     DOMAIN,
@@ -387,6 +390,108 @@ BATTERY_SENSOR_DESCRIPTION = NetatmoSensorEntityDescription(
     device_class=SensorDeviceClass.BATTERY,
 )
 
+NETATMO_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]] = [
+    NetatmoSensorEntityDescription(
+        key="battery",
+        netatmo_name="battery",
+        translation_key="Battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+    ),
+    NetatmoSensorEntityDescription(
+        key="rf_status",
+        netatmo_name="rf_strength",
+        translation_key="RF strength",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=process_rf,
+        icon="mdi:signal",
+    ),
+]
+
+OPENING_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]] = []
+
+DEVICE_CATEGORY_SENSORS: Final[dict[NetatmoDeviceCategory, list]] = {
+    NetatmoDeviceCategory.opening: OPENING_SENSOR_DESCRIPTIONS,
+}
+
+DEVICE_CATEGORY_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
+    NetatmoDeviceCategory.opening: CONF_URL_SECURITY,
+    NetatmoDeviceCategory.weather: CONF_URL_WEATHER,
+    NetatmoDeviceCategory.climate: CONF_URL_ENERGY,
+}
+
+
+class NetatmoCommonSensor(NetatmoModuleEntity, SensorEntity):
+    """Implementation of new Netatmo common sensor."""
+
+    entity_description: NetatmoSensorEntityDescription
+
+    def __init__(
+        self, netatmo_device: NetatmoDevice, description: NetatmoSensorEntityDescription
+    ) -> None:
+        """Initialize the sensor."""
+
+        if not isinstance(netatmo_device.device, Module):
+            return
+
+        name_suffix = (
+            description.translation_key
+            if description.translation_key
+            else description.key.replace("_", " ").title()
+        )
+
+        self._attr_unique_id = f"{netatmo_device.device.entity_id}-{description.key}"
+        self._attr_name = name_suffix
+        if netatmo_device.device.device_category:
+            self._attr_configuration_url = DEVICE_CATEGORY_URLS.get(
+                netatmo_device.device.device_category, None
+            )
+        else:
+            self._attr_configuration_url = None
+
+        super().__init__(netatmo_device)
+        self.entity_description = description
+
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": netatmo_device.device.home.entity_id,
+                    SIGNAL_NAME: netatmo_device.signal_name,
+                },
+            ]
+        )
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if not self.device.reachable:
+            if self.available:
+                self._attr_available = False
+            self._async_write_ha_state()
+            return
+
+        self._attr_available = True
+        value = cast(
+            StateType, getattr(self.device, self.entity_description.netatmo_name)
+        )
+
+        _LOGGER.debug(
+            "Updating sensor '%s' for module '%s' with status: %s",
+            self.entity_description.netatmo_name,
+            self.device.name,
+            value,
+        )
+
+        if value is not None:
+            value = self.entity_description.value_fn(value)
+        self._attr_native_value = value
+        self._async_write_ha_state()
+        return
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -395,9 +500,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Netatmo sensor platform."""
 
+    data_handler: NetatmoDataHandler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
+
     @callback
     def _create_battery_entity(netatmo_device: NetatmoDevice) -> None:
-        if not hasattr(netatmo_device.device, "battery"):
+        if not isinstance(netatmo_device.device, Module) or not hasattr(
+            netatmo_device.device, "battery"
+        ):
             return
         entity = NetatmoClimateBatterySensor(netatmo_device)
         async_add_entities([entity])
@@ -408,6 +517,9 @@ async def async_setup_entry(
 
     @callback
     def _create_weather_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        if not isinstance(netatmo_device.device, Module):
+            return
+
         async_add_entities(
             NetatmoWeatherSensor(netatmo_device, description)
             for description in SENSOR_TYPES
@@ -422,6 +534,20 @@ async def async_setup_entry(
 
     @callback
     def _create_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        if not isinstance(netatmo_device.device, Module):
+            return
+
+        if netatmo_device.device.device_category is None:
+            _LOGGER.warning(
+                "Device %s is missing a device_category, cannot create sensors",
+                netatmo_device.device.name,
+            )
+            return
+
+        # Check if the device category is in the DEVICE_CATEGORY_SENSORS (skip if is - means new device)
+        if netatmo_device.device.device_category in DEVICE_CATEGORY_SENSORS:
+            return
+
         _LOGGER.debug(
             "Adding %s sensor %s",
             netatmo_device.device.device_category,
@@ -512,6 +638,82 @@ async def async_setup_entry(
 
     await add_public_entities(False)
 
+    @callback
+    def _create_common_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        """Create new sensor entities."""
+
+        if not isinstance(netatmo_device.device, Module):
+            _LOGGER.debug(
+                "Skipping device that is not a module: %s",
+                netatmo_device.device.name,
+            )
+            return
+
+        if netatmo_device.device.device_category is None:
+            _LOGGER.warning(
+                "Device %s is missing a device_category, cannot create sensors",
+                netatmo_device.device.name,
+            )
+            return
+
+        # Check if the device category is in the DEVICE_CATEGORY_SENSORS (skip if not - means legacy device)
+        if netatmo_device.device.device_category not in DEVICE_CATEGORY_SENSORS:
+            return
+
+        # We add specific sensors for the device category (new definitions)
+        descriptions_to_add = DEVICE_CATEGORY_SENSORS.get(
+            netatmo_device.device.device_category, []
+        )
+
+        # Only add the generic descriptions if the specific list is not empty
+        if descriptions_to_add:
+            descriptions_to_add += NETATMO_SENSOR_DESCRIPTIONS
+        else:
+            descriptions_to_add = NETATMO_SENSOR_DESCRIPTIONS
+
+        entities: list[NetatmoCommonSensor] = []
+
+        # Create sensors for module
+        for description in descriptions_to_add:
+            if description.netatmo_name in netatmo_device.device.features:
+                _LOGGER.debug(
+                    "Adding %s sensor for device %s",
+                    description.netatmo_name,
+                    netatmo_device.device.name,
+                )
+                entities.append(
+                    NetatmoCommonSensor(
+                        netatmo_device,
+                        description,
+                    )
+                )
+            else:
+                _LOGGER.warning(
+                    "Failed to add %s (%s) sensor for device %s",
+                    description.netatmo_name,
+                    description.key,
+                    netatmo_device.device.name,
+                )
+
+        if entities:
+            _LOGGER.debug(
+                "Adding %s entities for device %s",
+                len(entities),
+                netatmo_device.device.name,
+            )
+            async_add_entities(entities)
+        else:
+            _LOGGER.debug(
+                "No sensor entities created for device %s",
+                netatmo_device.device.name,
+            )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NETATMO_CREATE_SENSOR, _create_common_sensor_entity
+        )
+    )
+
 
 class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, SensorEntity):
     """Implementation of a Netatmo weather/home coach sensor."""
@@ -561,15 +763,18 @@ class NetatmoClimateBatterySensor(NetatmoModuleEntity, SensorEntity):
         super().__init__(netatmo_device)
         self.entity_description = BATTERY_SENSOR_DESCRIPTION
 
-        self._publishers.extend(
-            [
-                {
-                    "name": HOME,
-                    "home_id": netatmo_device.device.home.entity_id,
-                    SIGNAL_NAME: netatmo_device.signal_name,
-                },
-            ]
-        )
+        if isinstance(netatmo_device.device, Module):
+            self._publishers.extend(
+                [
+                    {
+                        "name": HOME,
+                        "home_id": netatmo_device.device.home.entity_id,
+                        SIGNAL_NAME: netatmo_device.signal_name,
+                    },
+                ]
+            )
+        else:
+            self._publishers.extend([])
 
         self._attr_unique_id = f"{netatmo_device.parent_id}-{self.device.entity_id}-{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
