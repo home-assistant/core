@@ -1497,6 +1497,9 @@ async def test_update_entity_entity_id(
     old_state = hass.states.get(entry.entity_id)
     assert old_state is None
 
+    new_state = hass.states.get(new_entity_id)
+    assert new_state is not None
+
 
 async def test_update_entity_entity_id_without_state(
     entity_registry: er.EntityRegistry,
