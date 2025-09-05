@@ -1877,7 +1877,7 @@ class TuyaEnergySensorEntity(TuyaSensorEntity, RestoreSensor):
             return
 
         # Process new increment
-        # Negative values are likely errors, don't accumulate
+        # Negative values are invalid. This usually indicates abnormal data reported by the device, and such reports should be ignored.
         if current_value < 0:
             return
 
