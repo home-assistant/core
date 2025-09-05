@@ -129,7 +129,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
                 )
         else:
             LOGGER.debug(
-                "Removed storage directory for %s integration.",
+                "Removed storage directory for %s integration",
                 DOMAIN,
                 entry.data[CONF_USERNAME],
                 entry.data[CONF_HOST],
