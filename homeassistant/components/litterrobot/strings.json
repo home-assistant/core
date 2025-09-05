@@ -37,6 +37,9 @@
       "hopper_connected": {
         "name": "Hopper connected"
       },
+      "hopper_low": {
+        "name": "Hopper low"
+      },
       "sleeping": {
         "name": "Sleeping"
       },
@@ -72,6 +75,19 @@
           "motor_disconnected": "Motor disconnected",
           "empty": "[%key:common::state::empty%]"
         }
+      },
+      "hopper_dispensed_today": {
+        "name": "Litter dispensed today"
+      },
+      "hopper_dispense_events_today": {
+        "name": "Hopper dispense events today",
+        "unit_of_measurement": "events"
+      },
+      "hopper_dispensed_last": {
+        "name": "Last litter dispensed"
+      },
+      "hopper_dispensed_total": {
+        "name": "Litter dispensed (total)"
       },
       "last_seen": {
         "name": "Last seen"
