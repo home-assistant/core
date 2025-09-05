@@ -20,7 +20,7 @@ from homeassistant.components.conversation import async_get_chat_log
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session
+from homeassistant.helpers import chat_session, llm
 from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
@@ -78,10 +78,12 @@ async def test_generate_data_preferred_entity(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
+    llm_api = llm.AssistAPI(hass)
     result = await async_generate_data(
         hass,
         task_name="Test Task",
         instructions="Test prompt",
+        llm_api=llm_api,
     )
     assert result.data == "Mock result"
     as_dict = result.as_dict()
@@ -90,6 +92,12 @@ async def test_generate_data_preferred_entity(
     state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNKNOWN
+
+    with (
+        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert chat_log.llm_api.api is llm_api
 
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(

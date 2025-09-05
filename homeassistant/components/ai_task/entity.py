@@ -60,6 +60,10 @@ class AITaskEntity(RestoreEntity):
         task: GenDataTask | GenImageTask,
     ) -> AsyncGenerator[ChatLog]:
         """Context manager used to manage the ChatLog used during an AI Task."""
+        user_llm_hass_api: llm.API | None = None
+        if isinstance(task, GenDataTask):
+            user_llm_hass_api = task.llm_api
+
         # pylint: disable-next=contextmanager-generator-missing-cleanup
         with (
             async_get_chat_log(
@@ -77,6 +81,7 @@ class AITaskEntity(RestoreEntity):
                     device_id=None,
                 ),
                 user_llm_prompt=DEFAULT_SYSTEM_PROMPT,
+                user_llm_hass_api=user_llm_hass_api,
             )
 
             chat_log.async_add_user_content(
