@@ -13,7 +13,7 @@ from tests.common import async_fire_time_changed
 async def update_callback_entity(
     hass: HomeAssistant, mock_velux_node: MagicMock
 ) -> None:
-    """Simulate an update trigger from the API."""
+    """Simulate an update triggered by the pyvlx lib for a Velux node."""
 
     callback = mock_velux_node.register_device_updated_cb.call_args[0][0]
     await callback(mock_velux_node)
@@ -23,7 +23,7 @@ async def update_callback_entity(
 async def update_polled_entities(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Simulate an update trigger from the polling."""
+    """Simulate an update trigger from polling."""
     # just fire a time changed event to trigger the polling
 
     freezer.tick(timedelta(minutes=5))
