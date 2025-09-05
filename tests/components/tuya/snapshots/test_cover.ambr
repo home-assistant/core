@@ -393,7 +393,7 @@
 # name: test_platform_setup_and_discovery[cover.roller_shutter_living_room_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 25,
+      'current_position': 75,
       'device_class': 'curtain',
       'friendly_name': 'Roller shutter Living Room Curtain',
       'supported_features': <CoverEntityFeature: 15>,
