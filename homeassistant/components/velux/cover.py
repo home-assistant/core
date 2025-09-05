@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-
-from pyvlx.const import Velocity
 from pyvlx import (
     Awning,
     Blind,
@@ -15,6 +13,7 @@ from pyvlx import (
     Position,
     RollerShutter,
 )
+from pyvlx.const import Velocity
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
