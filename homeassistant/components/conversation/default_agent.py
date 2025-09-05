@@ -35,7 +35,7 @@ from hassil.recognize import (
 )
 from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
 from hassil.trie import Trie
-from hassil.util import merge_dict
+from hassil.util import merge_dict, remove_punctuation
 from home_assistant_intents import (
     ErrorKey,
     FuzzyConfig,
@@ -327,12 +327,10 @@ class DefaultAgent(ConversationEntity):
 
         if self._exposed_names_trie is not None:
             # Filter by input string
-            text_lower = user_input.text.strip().lower()
+            text = remove_punctuation(user_input.text).strip().lower()
             slot_lists["name"] = TextSlotList(
                 name="name",
-                values=[
-                    result[2] for result in self._exposed_names_trie.find(text_lower)
-                ],
+                values=[result[2] for result in self._exposed_names_trie.find(text)],
             )
 
         start = time.monotonic()
@@ -1263,7 +1261,7 @@ class DefaultAgent(ConversationEntity):
         name_list = TextSlotList.from_tuples(exposed_entity_names, allow_template=False)
         for name_value in name_list.values:
             assert isinstance(name_value.text_in, TextChunk)
-            name_text = name_value.text_in.text.strip().lower()
+            name_text = remove_punctuation(name_value.text_in.text).strip().lower()
             self._exposed_names_trie.insert(name_text, name_value)
 
         self._slot_lists = {
