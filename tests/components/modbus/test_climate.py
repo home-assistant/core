@@ -942,160 +942,6 @@ async def test_hvac_onoff_register_transition_update(
                 CONF_CLIMATES: [
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 120,
-                        CONF_ADDRESS: 117,
-                        CONF_SLAVE: 10,
-                        CONF_SCAN_INTERVAL: 0,
-                        CONF_DATA_TYPE: DataType.INT32,
-                    },
-                ]
-            },
-            17,
-            [0, 17],
-        ),
-        (
-            {
-                CONF_CLIMATES: [
-                    {
-                        CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 120,
-                        CONF_ADDRESS: 117,
-                        CONF_SLAVE: 10,
-                        CONF_SCAN_INTERVAL: 0,
-                        CONF_CURRENT_TEMP_SCALE: 0.01,
-                        CONF_CURRENT_TEMP_OFFSET: 10,
-                        CONF_SCALE: 10,
-                        CONF_OFFSET: 20,
-                    },
-                ]
-            },
-            35,
-            [2500],
-        ),
-        (
-            {
-                CONF_CLIMATES: [
-                    {
-                        CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 120,
-                        CONF_ADDRESS: 117,
-                        CONF_SLAVE: 10,
-                        CONF_SCAN_INTERVAL: 0,
-                        CONF_CURRENT_TEMP_SCALE: 0.01,
-                        CONF_CURRENT_TEMP_OFFSET: 10,
-                        CONF_SCALE: 10,
-                        CONF_OFFSET: -20,
-                    },
-                ]
-            },
-            29,
-            [1900],
-        ),
-    ],
-)
-async def test_config_current_temp_scale_and_offset(
-    hass: HomeAssistant, mock_modbus_ha, result, register_words
-) -> None:
-    """Test behavior with different configurations for temperature scaling."""
-    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
-
-    await hass.services.async_call(
-        HOMEASSISTANT_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.attributes.get("current_temperature") == result
-
-
-@pytest.mark.parametrize(
-    ("do_config", "result", "register_words"),
-    [
-        (
-            {
-                CONF_CLIMATES: [
-                    {
-                        CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 120,
-                        CONF_ADDRESS: 117,
-                        CONF_SLAVE: 10,
-                        CONF_SCAN_INTERVAL: 0,
-                        CONF_DATA_TYPE: DataType.INT32,
-                    },
-                ]
-            },
-            17,
-            [0, 17],
-        ),
-        (
-            {
-                CONF_CLIMATES: [
-                    {
-                        CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 120,
-                        CONF_ADDRESS: 117,
-                        CONF_SLAVE: 10,
-                        CONF_SCAN_INTERVAL: 0,
-                        CONF_TARGET_TEMP_SCALE: 0.01,
-                        CONF_TARGET_TEMP_OFFSET: -5,
-                        CONF_SCALE: 10,
-                        CONF_OFFSET: 20,
-                    },
-                ]
-            },
-            20,
-            [2500],
-        ),
-        (
-            {
-                CONF_CLIMATES: [
-                    {
-                        CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 120,
-                        CONF_ADDRESS: 117,
-                        CONF_SLAVE: 10,
-                        CONF_SCAN_INTERVAL: 0,
-                        CONF_TARGET_TEMP_SCALE: 0.1,
-                        CONF_TARGET_TEMP_OFFSET: 5,
-                        CONF_SCALE: 10,
-                        CONF_OFFSET: -20,
-                    },
-                ]
-            },
-            26,
-            [210],
-        ),
-    ],
-)
-async def test_config_target_temp_scale_and_offset(
-    hass: HomeAssistant, mock_modbus_ha, result, register_words
-) -> None:
-    """Test behavior with different configurations for temperature scaling."""
-    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
-
-    await hass.services.async_call(
-        HOMEASSISTANT_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.attributes.get("temperature") == result
-
-
-@pytest.mark.parametrize(
-    ("do_config", "result", "register_words"),
-    [
-        (
-            {
-                CONF_CLIMATES: [
-                    {
-                        CONF_NAME: TEST_ENTITY_NAME,
                         CONF_TARGET_TEMP: 116,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
@@ -1859,3 +1705,149 @@ async def test_no_discovery_info_climate(
     )
     await hass.async_block_till_done()
     assert CLIMATE_DOMAIN in hass.config.components
+
+
+@pytest.mark.parametrize(
+    ("do_config", "result", "register_words"),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                    },
+                ]
+            },
+            17,
+            [17],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_SCALE: 10,
+                        CONF_OFFSET: 20,
+                    },
+                ]
+            },
+            30,
+            [1],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_CURRENT_TEMP_SCALE: 2,
+                        CONF_CURRENT_TEMP_OFFSET: 10,
+                    },
+                ]
+            },
+            30,
+            [10],
+        ),
+    ],
+)
+async def test_update_current_temp_scale_and_offset(
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
+) -> None:
+    """Test behavior with different configurations for temperature scaling."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get("current_temperature") == result
+
+
+@pytest.mark.parametrize(
+    ("do_config", "result", "register_words"),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                    },
+                ]
+            },
+            17,
+            [17],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TARGET_TEMP_SCALE: 1,
+                        CONF_TARGET_TEMP_OFFSET: 0,
+                        CONF_SCALE: 10,
+                        CONF_OFFSET: 20,
+                    },
+                ]
+            },
+            120,
+            [10],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TARGET_TEMP_SCALE: 0.1,
+                        CONF_TARGET_TEMP_OFFSET: 5,
+                    },
+                ]
+            },
+            26,
+            [210],
+        ),
+    ],
+)
+async def test_update_target_temp_scale_and_offset(
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
+) -> None:
+    """Test behavior with different configurations for temperature scaling."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get("temperature") == result

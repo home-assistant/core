@@ -170,10 +170,10 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._attr_min_temp = config[CONF_MIN_TEMP]
         self._attr_max_temp = config[CONF_MAX_TEMP]
         self._attr_target_temperature_step = config[CONF_STEP]
-        self._current_temp_scale = config.get(CONF_CURRENT_TEMP_SCALE) or self._scale
-        self._current_temp_offset = config.get(CONF_CURRENT_TEMP_OFFSET) or self._offset
-        self._target_temp_scale = config.get(CONF_TARGET_TEMP_SCALE) or self._scale
-        self._target_temp_offset = config.get(CONF_TARGET_TEMP_OFFSET) or self._offset
+        self._current_temp_scale = config[CONF_CURRENT_TEMP_SCALE]
+        self._current_temp_offset = config[CONF_CURRENT_TEMP_OFFSET]
+        self._target_temp_scale = config[CONF_TARGET_TEMP_SCALE]
+        self._target_temp_offset = config[CONF_TARGET_TEMP_OFFSET]
 
         if CONF_HVAC_MODE_REGISTER in config:
             mode_config = config[CONF_HVAC_MODE_REGISTER]
@@ -579,8 +579,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self,
         register_type: str,
         register: int,
-        scale: float | None = None,
-        offset: float | None = None,
+        scale: float = 1,
+        offset: float = 0,
         raw: bool | None = False,
     ) -> float | None:
         """Read register using the Modbus hub slave."""
@@ -598,10 +598,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             return int(result.registers[0])
 
         # The regular handling of the value
-        if scale is None:
-            scale = self._scale
-        if offset is None:
-            offset = self._offset
         self._value = self.unpack_structure_result(result.registers, scale, offset)
         if not self._value:
             self._attr_available = False

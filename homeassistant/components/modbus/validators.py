@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_COUNT,
     CONF_HOST,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_STRUCTURE,
@@ -25,16 +26,23 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
+    CONF_CURRENT_TEMP_OFFSET,
+    CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_FAN_MODE_VALUES,
+    CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_SWING_MODE_VALUES,
+    CONF_TARGET_TEMP_OFFSET,
+    CONF_TARGET_TEMP_SCALE,
     CONF_VIRTUAL_COUNT,
     DEFAULT_HUB,
+    DEFAULT_OFFSET,
+    DEFAULT_SCALE,
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
@@ -240,6 +248,60 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
 
     for key in reversed(errors):
         del config[CONF_FAN_MODE_VALUES][key]
+    return config
+
+
+def ensure_and_check_conflicting_scales_and_offsets(config: dict[str, Any]) -> dict:
+    """Check for conflicts in scale/offset and ensure target/current temp scale/offset is set."""
+
+    if (
+        config[CONF_TARGET_TEMP_SCALE] != config[CONF_SCALE]
+        and config[CONF_SCALE] != DEFAULT_SCALE
+        and config[CONF_TARGET_TEMP_SCALE] != DEFAULT_SCALE
+    ):
+        raise vol.Invalid(
+            f"Invalid scales: {CONF_SCALE} and {CONF_TARGET_TEMP_SCALE} cannot be used together, please use only one of them."
+        )
+
+    if config[CONF_SCALE] != DEFAULT_SCALE:
+        config[CONF_TARGET_TEMP_SCALE] = config[CONF_SCALE]
+
+    if (
+        config[CONF_CURRENT_TEMP_SCALE] != config[CONF_SCALE]
+        and config[CONF_SCALE] != DEFAULT_SCALE
+        and config[CONF_CURRENT_TEMP_SCALE] != DEFAULT_SCALE
+    ):
+        raise vol.Invalid(
+            f"Invalid scales: {CONF_SCALE} and {CONF_CURRENT_TEMP_SCALE} cannot be used together, please use only one of them."
+        )
+
+    if config[CONF_SCALE] != DEFAULT_SCALE:
+        config[CONF_CURRENT_TEMP_SCALE] = config[CONF_SCALE]
+
+    if (
+        config[CONF_TARGET_TEMP_OFFSET] != config[CONF_OFFSET]
+        and config[CONF_OFFSET] != DEFAULT_OFFSET
+        and config[CONF_TARGET_TEMP_OFFSET] != DEFAULT_OFFSET
+    ):
+        raise vol.Invalid(
+            f"Invalid scales: {CONF_OFFSET} and {CONF_TARGET_TEMP_OFFSET} cannot be used together, please use only one of them."
+        )
+
+    if config[CONF_OFFSET] != DEFAULT_OFFSET:
+        config[CONF_TARGET_TEMP_OFFSET] = config[CONF_OFFSET]
+
+    if (
+        config[CONF_CURRENT_TEMP_OFFSET] != config[CONF_OFFSET]
+        and config[CONF_OFFSET] != DEFAULT_OFFSET
+        and config[CONF_CURRENT_TEMP_OFFSET] != DEFAULT_OFFSET
+    ):
+        raise vol.Invalid(
+            f"Invalid scales: {CONF_OFFSET} and {CONF_CURRENT_TEMP_OFFSET} cannot be used together, please use only one of them."
+        )
+
+    if config[CONF_OFFSET] != DEFAULT_OFFSET:
+        config[CONF_CURRENT_TEMP_OFFSET] = config[CONF_OFFSET]
+
     return config
 
 
