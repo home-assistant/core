@@ -743,16 +743,16 @@ async def test_bsb003_bridge_discovery(
     entry = MockConfigEntry(
         domain=const.DOMAIN,
         data={"host": "192.168.1.217", "api_version": 2, "api_key": "abc"},
-        unique_id="abc_v2",
+        unique_id="bsb002_v2",
     )
     entry.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(const.DOMAIN, "ecb5fafff_v2")},
+        identifiers={(const.DOMAIN, "bsb002_v2")},
         connections={(dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")},
     )
     create_mock_api_discovery(
-        aioclient_mock, [("192.168.1.217", "abc_v2"), ("192.168.1.218", "ecb5fafff_v2")]
+        aioclient_mock, [("192.168.1.217", "bsb002_v2"), ("192.168.1.218", "bsb003_v2")]
     )
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
@@ -765,7 +765,7 @@ async def test_bsb003_bridge_discovery(
             type="_hue._tcp.local.",
             name="Philips Hue - ABCABC._hue._tcp.local.",
             properties={
-                "bridgeid": "ecb5fafff_v2",
+                "bridgeid": "bsb003_v2",
                 "modelid": "BSB003",
             },
         ),
