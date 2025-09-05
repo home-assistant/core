@@ -142,6 +142,7 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     progress_task: asyncio.Task[Any] | None
     reason: str
     required: bool
+    sort: bool
     step_id: str
     title: str
     translation_domain: str
@@ -854,6 +855,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         *,
         step_id: str | None = None,
         menu_options: Container[str],
+        sort: bool = False,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> _FlowResultT:
         """Show a navigation menu to the user.
@@ -868,6 +870,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
+        if sort:
+            flow_result["sort"] = sort
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result

@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaus.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "ebb9d0eb5014f98cfboxbz",
   "name": "Gas sensor",
   "category": "rqbj",
   "product_id": "4iqe2hsfyd86kwwc",
