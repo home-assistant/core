@@ -31,16 +31,34 @@ def get_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def substitute_translation_references(integration_strings, flattened_translations):
+def substitute_translation_references(
+    integration_strings, flattened_translations, translations
+):
     """Recursively processes all translation strings for the integration."""
     result = {}
     for key, value in integration_strings.items():
         if isinstance(value, dict):
-            sub_dict = substitute_translation_references(value, flattened_translations)
+            sub_dict = substitute_translation_references(
+                value, flattened_translations, translations
+            )
             result[key] = sub_dict
         elif isinstance(value, str):
-            result[key] = substitute_reference(value, flattened_translations)
-
+            if value.startswith(r"[%dict:"):
+                paths = value.removeprefix(r"[%dict:").removesuffix("%]").split("::")
+                values = translations
+                for path in paths:
+                    if path not in values:
+                        print(
+                            f"Invalid dict key '{'::'.join(paths)}' found in string '{value}'"
+                        )
+                        sys.exit(1)
+                    values = values[path]
+                sub_dict = substitute_translation_references(
+                    values, flattened_translations, translations
+                )
+                result[key] = sub_dict
+            else:
+                result[key] = substitute_reference(value, flattened_translations)
     return result
 
 
@@ -78,7 +96,7 @@ def run_single(translations, flattened_translations, integration):
     integration_strings = translations["component"][integration]
 
     translations["component"][integration] = substitute_translation_references(
-        integration_strings, flattened_translations
+        integration_strings, flattened_translations, translations
     )
 
     if download.DOWNLOAD_DIR.is_dir():
