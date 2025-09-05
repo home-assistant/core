@@ -10,7 +10,6 @@ from greenplanet_energy_api import (
     GreenPlanetEnergyAPIError,
     GreenPlanetEnergyConnectionError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
@@ -19,8 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_SCHEMA = vol.Schema({})
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -59,6 +56,4 @@ class GreenPlanetEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
+        return self.async_show_form(step_id="user", errors=errors)
