@@ -172,7 +172,6 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm Supervisor discovery and prompt for API token."""
-
         if user_input is None:
             return await self._show_hassio_form()
 
