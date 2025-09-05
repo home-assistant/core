@@ -375,7 +375,8 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Process ambiguous units."""
         native_unit_of_measurement = self.native_unit_of_measurement
         return AMBIGUOUS_UNITS.get(
-            native_unit_of_measurement, native_unit_of_measurement
+            native_unit_of_measurement,  # type: ignore[arg-type]
+            native_unit_of_measurement,  # type: ignore[arg-type]
         )
 
     @property
