@@ -25,7 +25,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import BUF_SIZE, CONF_PASSWORD, CONF_PRIVATE_KEY_FILE, CONF_USERNAME, LOGGER
+from .const import BUF_SIZE, LOGGER
 
 if TYPE_CHECKING:
     from . import SFTPConfigEntry, SFTPConfigEntryData

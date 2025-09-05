@@ -3,12 +3,18 @@
 from io import StringIO
 import json
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from asyncssh.sftp import SFTPError
 import pytest
 
-from homeassistant.components.sftp_storage.const import DOMAIN
+from homeassistant.components.sftp_storage.backup import (
+    async_register_backup_agents_listener,
+)
+from homeassistant.components.sftp_storage.const import (
+    DATA_BACKUP_AGENT_LISTENERS,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -397,3 +403,16 @@ async def test_agents_delete_not_found(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
+
+
+async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
+    """Test listener gets cleaned up."""
+    listener = MagicMock()
+    remove_listener = async_register_backup_agents_listener(hass, listener=listener)
+
+    hass.data[DATA_BACKUP_AGENT_LISTENERS] = [
+        listener
+    ]  # make sure it's the last listener
+    remove_listener()
+
+    assert DATA_BACKUP_AGENT_LISTENERS not in hass.data
