@@ -31,7 +31,3 @@ async def test_platform_setup_and_discovery(
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-# Sensor value conversion and native_value edge case tests have been moved to test_energy_sensor.py
-# as they test TuyaSensorEntity internal logic rather than general platform functionality
