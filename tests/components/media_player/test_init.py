@@ -654,3 +654,56 @@ async def test_get_async_get_browse_image_quoting(
         url = player.get_browse_image_url("album", media_content_id)
         await client.get(url)
         mock_browse_image.assert_called_with("album", media_content_id, None)
+
+
+async def test_play_media_via_selector(hass: HomeAssistant) -> None:
+    """Test that play_media data under 'media' is remapped to top level keys for backward compatibility."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    # Fake group support for DemoYoutubePlayer
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.play_media",
+    ) as mock_play_media:
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "entity_id": "media_player.bedroom",
+                "media": {
+                    "media_content_type": "music",
+                    "media_content_id": "1234",
+                },
+            },
+            blocking=True,
+        )
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "entity_id": "media_player.bedroom",
+                "media_content_type": "music",
+                "media_content_id": "1234",
+            },
+            blocking=True,
+        )
+
+    assert len(mock_play_media.mock_calls) == 2
+    assert mock_play_media.mock_calls[0].args == mock_play_media.mock_calls[1].args
+
+    with pytest.raises(vol.Invalid, match="Play media cannot contain 'media'"):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "media_content_id": "1234",
+                "entity_id": "media_player.bedroom",
+                "media": {
+                    "media_content_type": "music",
+                    "media_content_id": "1234",
+                },
+            },
+            blocking=True,
+        )

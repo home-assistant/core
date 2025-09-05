@@ -35,7 +35,7 @@ async def async_setup_entry(
     except FritzSecurityError as ex:
         _LOGGER.error(
             (
-                "User has insufficient permissions to access AVM FRITZ!Box settings and"
+                "User has insufficient permissions to access FRITZ!Box settings and"
                 " its phonebooks: %s"
             ),
             ex,
@@ -44,7 +44,7 @@ async def async_setup_entry(
     except FritzConnectionException as ex:
         raise ConfigEntryAuthFailed from ex
     except RequestsConnectionError as ex:
-        _LOGGER.error("Unable to connect to AVM FRITZ!Box call monitor: %s", ex)
+        _LOGGER.error("Unable to connect to FRITZ!Box call monitor: %s", ex)
         raise ConfigEntryNotReady from ex
 
     config_entry.runtime_data = fritzbox_phonebook
