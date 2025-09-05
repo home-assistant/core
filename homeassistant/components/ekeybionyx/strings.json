@@ -14,7 +14,7 @@
         "description": "Please select a system in which you want to set up the webhooks"
       },
       "webhooks": {
-        "description": "Please name your webhooks. Leaving them empty will delete them.",
+        "description": "Please name your webhooks. You can set up to 5 webhooks. Leaving a name empty will skip the setup of that webhook.",
         "data": {
           "webhook1": "Webhook 1",
           "webhook2": "Webhook 2",

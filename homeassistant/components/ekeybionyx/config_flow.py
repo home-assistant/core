@@ -1,6 +1,5 @@
 """Config flow for Ekey Bionyx."""
 
-from collections.abc import Sequence
 import json
 import logging
 import re
@@ -22,8 +21,27 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import SelectOptionDict, SelectSelector
 
-from . import api
-from .const import DOMAIN, SCOPE
+from .const import API_URL, DOMAIN, SCOPE
+
+
+class ConfigFlowEkeyApi(ekey_bionyxpy.AbstractAuth):
+    """Ekey Bionyx authentication before a ConfigEntry exists.
+
+    This implementation directly provides the token without supporting refresh.
+    """
+
+    def __init__(
+        self,
+        websession: aiohttp.ClientSession,
+        token: dict[str, Any],
+    ) -> None:
+        """Initialize ConfigFlowEkeyApi."""
+        super().__init__(websession, API_URL)
+        self._token = token
+
+    async def async_get_access_token(self) -> str:
+        """Return the token for the Ekey API."""
+        return self._token["access_token"]
 
 
 class EkeyFlowData(TypedDict):
@@ -56,10 +74,8 @@ class OAuth2FlowHandler(
         return {"scope": SCOPE}
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
-        """Create an entry for the flow, or update existing entry."""
-        client = api.ConfigFlowEkeyApi(
-            async_get_clientsession(self.hass), data[CONF_TOKEN]
-        )
+        """Start the user facing flow by initializing the API and getting the systems."""
+        client = ConfigFlowEkeyApi(async_get_clientsession(self.hass), data[CONF_TOKEN])
         ap = ekey_bionyxpy.BionyxAPI(client)
         try:
             system_res = await ap.get_systems()
@@ -80,7 +96,7 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Dialog to choose System if multiple systems are present."""
         if user_input is None:
-            options: Sequence[SelectOptionDict] = [
+            options: list[SelectOptionDict] = [
                 {"value": s.system_id, "label": s.system_name}
                 for s in self._data["systems"]
             ]
@@ -100,13 +116,16 @@ class OAuth2FlowHandler(
         system = self._data["system"]
         await self.async_set_unique_id(system.system_id)
         self._abort_if_unique_id_configured()
+
         if (
             system.function_webhook_quotas["free"] == 0
             and system.function_webhook_quotas["used"] == 0
         ):
             return self.async_abort(reason="no_available_webhooks")
+
         if system.function_webhook_quotas["used"] > 0:
             return await self.async_step_delete_webhooks()
+
         errors: dict[str, str] | None = None
         if user_input is not None:
             errors = {}
@@ -122,52 +141,60 @@ class OAuth2FlowHandler(
                 errors[CONF_URL] = "invalid_url"
             if len([x for x in user_input.items() if x[0] != CONF_URL]) == 0:
                 errors["base"] = "no_webhooks_provided"
+
+            if not errors:
+                webhook_data = [
+                    {"webhook_id": webhook_generate_id(), "name": webhooks[1]}
+                    for webhooks in user_input.items()
+                    if webhooks[0] != CONF_URL
+                ]
+                for webhook in webhook_data:
+                    webhook.update(auth=secrets.token_hex(32))
+                    wh_def: ekey_bionyxpy.WebhookData = {
+                        "integrationName": "Home Assistant",
+                        "functionName": webhook["name"],
+                        "locationName": "Home Assistant",
+                        "definition": {
+                            "url": user_input[CONF_URL]
+                            + webhook_generate_path(webhook["webhook_id"]),
+                            "authentication": {"apiAuthenticationType": "None"},
+                            "securityLevel": "AllowHttp",
+                            "method": "Post",
+                            "body": {
+                                "contentType": "application/json",
+                                "content": json.dumps({"auth": webhook["auth"]}),
+                            },
+                        },
+                    }
+                    webhook.update(
+                        ekey_id=(await system.add_webhook(wh_def)).webhook_id
+                    )
+                return self.async_create_entry(
+                    title=self._data["system"].system_name,
+                    data={"webhooks": webhook_data},
+                )
+
         if user_input is None or errors:
             data_schema: dict[Any, Any] = {
                 vol.Optional(f"webhook{i + 1}"): vol.All(str, vol.Length(max=50))
                 for i in range(self._data["system"].function_webhook_quotas["free"])
             }
-            data_schema[
-                vol.Required(
-                    CONF_URL,
-                    default=get_url(
-                        self.hass,
-                        allow_ip=True,
-                        prefer_external=False,
-                    ),
-                )
-            ] = str
+            data_schema[vol.Required(CONF_URL)] = str
             return self.async_show_form(
-                step_id="webhooks", data_schema=vol.Schema(data_schema), errors=errors
-            )
-        webhook_data = [
-            {"webhook_id": webhook_generate_id(), "name": webhooks[1]}
-            for webhooks in user_input.items()
-            if webhooks[0] != CONF_URL
-        ]
-        for webhook in webhook_data:
-            webhook.update(auth=secrets.token_hex(32))
-            wh_def: ekey_bionyxpy.WebhookData = {
-                "integrationName": "Home Assistant",
-                "functionName": webhook["name"],
-                "locationName": "Home Assistant",
-                "definition": {
-                    "url": user_input[CONF_URL]
-                    + webhook_generate_path(webhook["webhook_id"]),
-                    "authentication": {"apiAuthenticationType": "None"},
-                    "securityLevel": "AllowHttp",
-                    "method": "Post",
-                    "body": {
-                        "contentType": "application/json",
-                        "content": json.dumps({"auth": webhook["auth"]}),
+                step_id="webhooks",
+                data_schema=self.add_suggested_values_to_schema(
+                    vol.Schema(data_schema),
+                    {
+                        CONF_URL: get_url(
+                            self.hass,
+                            allow_ip=True,
+                            prefer_external=False,
+                        )
                     },
-                },
-            }
-            webhook.update(ekey_id=(await system.add_webhook(wh_def)).webhook_id)
-        return self.async_create_entry(
-            title=self._data["system"].system_name,
-            data={"webhooks": webhook_data},
-        )
+                ),
+                errors=errors,
+            )
+        return None
 
     async def async_step_delete_webhooks(
         self, user_input: dict[str, Any] | None = None

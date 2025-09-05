@@ -15,6 +15,15 @@ from . import EkeyBionyxConfigEntry
 from .const import DOMAIN, LOGGER
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: EkeyBionyxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Ekey event."""
+    async_add_entities(EkeyEvent(data) for data in entry.data["webhooks"])
+
+
 class EkeyEvent(EventEntity):
     """Ekey Event."""
 
@@ -60,12 +69,3 @@ class EkeyEvent(EventEntity):
         """Unregister Webhook."""
         webhook_unregister(self.hass, self._webhook_id)
         LOGGER.info("Unregistered Webhook")
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: EkeyBionyxConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up Ekey event."""
-    async_add_entities(EkeyEvent(data) for data in entry.data["webhooks"])
