@@ -62,7 +62,6 @@ from .const import (
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
-    SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
     DataType,
 )
@@ -143,7 +142,6 @@ class BasePlatform(Entity):
             self._cancel_call()
             self._cancel_call = None
         self._attr_available = False
-        self.async_write_ha_state()
 
     async def async_await_connection(self, _now: Any) -> None:
         """Wait for first connect."""
@@ -161,11 +159,6 @@ class BasePlatform(Entity):
         )
         self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_disable)
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_START_ENTITY, self.async_local_update
-            )
         )
 
 
