@@ -1466,19 +1466,22 @@ async def test_update_entity_entity_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test entity's entity_id is updated for entity with a restored state."""
+    hass.set_state(CoreState.not_running)
+
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
     mock_config.add_to_hass(hass)
     entry = entity_registry.async_get_or_create(
         "light", "hue", "5678", config_entry=mock_config
     )
-
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
     assert (
         entity_registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
     )
-    hass.states.async_set(entry.entity_id, "on", attributes={"restored": True})
     state = hass.states.get(entry.entity_id)
     assert state is not None
-    assert state.state == "on"
+    assert state.state == "unavailable"
+    assert state.attributes == {"restored": True, "supported_features": 0}
 
     new_entity_id = "light.blah"
     assert new_entity_id != entry.entity_id
