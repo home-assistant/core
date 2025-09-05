@@ -536,7 +536,7 @@ async def _async_setup_themes(
         new_themes = config.get(DOMAIN, {}).get(CONF_THEMES, {})
 
         try:
-            THEME_SCHEMA(new_themes)
+            THEMES_SCHEMA(new_themes)
         except vol.Invalid as err:
             raise HomeAssistantError(f"Failed to reload themes: {err}") from err
 
