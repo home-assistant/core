@@ -62,7 +62,6 @@ from .const import (
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
-    SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
     DataType,
 )
@@ -160,9 +159,6 @@ class BasePlatform(Entity):
         )
         self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_disable)
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_START_ENTITY, self.async_update)
         )
 
 
