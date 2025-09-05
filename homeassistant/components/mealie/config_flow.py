@@ -75,7 +75,6 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-
         errors: dict[str, str] = {}
         if user_input:
             self.host = user_input[CONF_HOST]
@@ -90,7 +89,6 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
                     title="Mealie",
                     data=user_input,
                 )
-
         return self.async_show_form(
             step_id="user",
             data_schema=USER_SCHEMA,

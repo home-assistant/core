@@ -405,7 +405,7 @@ async def test_hassio_success(
 async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(
-        domain=DOMAIN, data={"host": "mock-adguard", "port": "3000"}
+        domain=DOMAIN, data={"host": "mock-mealie", "port": "9090"}
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
