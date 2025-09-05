@@ -26,6 +26,11 @@ class ToGrillEntity(CoordinatorEntity[ToGrillCoordinator]):
         super().__init__(coordinator)
         self._attr_device_info = coordinator.get_device_info(probe_number)
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success and self.coordinator.active is True
+
     def _get_client(self) -> Client:
         client = self.coordinator.client
         if client is None or not client.is_connected:

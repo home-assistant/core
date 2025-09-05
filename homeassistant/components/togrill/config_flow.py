@@ -14,13 +14,38 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_ADDRESS, CONF_MODEL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
-from .const import CONF_PROBE_COUNT, DOMAIN
+from .const import (
+    CONF_ACTIVE_BY_DEFAULT,
+    CONF_PROBE_COUNT,
+    DOMAIN,
+    MAJOR_VERSION,
+    MINOR_VERSION,
+)
 from .coordinator import LOGGER
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ACTIVE_BY_DEFAULT, default=True): bool,
+    }
+)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
+
 
 _TIMEOUT = 10
 
@@ -54,7 +79,8 @@ async def read_config_data(
 class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ToGrillBluetooth."""
 
-    VERSION = 1
+    VERSION = MAJOR_VERSION
+    MINOR_VERSION = MINOR_VERSION
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -69,6 +95,7 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=config_data[CONF_MODEL],
             data=config_data,
+            options={CONF_ACTIVE_BY_DEFAULT: True},
         )
 
     async def async_step_bluetooth(
@@ -133,4 +160,12 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(addresses)}),
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return SchemaOptionsFlowHandler(
+            config_entry=config_entry, options_flow=OPTIONS_FLOW
         )
