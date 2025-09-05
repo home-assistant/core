@@ -38,6 +38,7 @@ from homeassistant.helpers.typing import StateType
 from . import TuyaConfigEntry
 from .const import (
     DEVICE_CLASS_UNITS,
+    DEVICE_ENERGY_MODES,
     DOMAIN,
     ENERGY_REPORT_MODE_CUMULATIVE,
     ENERGY_REPORT_MODE_INCREMENTAL,
@@ -1825,7 +1826,7 @@ class TuyaEnergySensorEntity(TuyaSensorEntity, RestoreSensor):
     def _is_incremental_mode(self) -> bool:
         """Check if sensor is configured for incremental reporting."""
         # Use config entry (device-level) options
-        device_mode = self._config_entry.options.get("device_energy_modes", {}).get(
+        device_mode = self._config_entry.options.get(DEVICE_ENERGY_MODES, {}).get(
             self.device.id, ENERGY_REPORT_MODE_CUMULATIVE
         )
 

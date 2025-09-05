@@ -8,12 +8,14 @@ from typing import Any
 from tuya_sharing import LoginControl
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
+from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er, selector
 
@@ -23,6 +25,7 @@ from .const import (
     CONF_TERMINAL_ID,
     CONF_TOKEN_INFO,
     CONF_USER_CODE,
+    DEVICE_ENERGY_MODES,
     DOMAIN,
     ENERGY_REPORT_MODE_CUMULATIVE,
     ENERGY_REPORT_MODE_INCREMENTAL,
@@ -34,6 +37,10 @@ from .const import (
     TUYA_RESPONSE_SUCCESS,
     TUYA_SCHEMA,
 )
+
+# Options flow constants (only used in this file)
+DEVICE_DISPLAY_SEPARATOR = " &|& "
+MAX_DISPLAY_SENSORS = 3
 
 
 class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -256,13 +263,13 @@ class TuyaOptionsFlow(OptionsFlow):
                 device_configs[device_id] = value
 
         return self.async_create_entry(
-            title="", data={"device_energy_modes": device_configs}
+            title="", data={DEVICE_ENERGY_MODES: device_configs}
         )
 
     def _build_options_form(self) -> ConfigFlowResult:
         """Build the options form with device energy mode selectors."""
         schema_dict = {}
-        current_options = self.config_entry.options.get("device_energy_modes", {})
+        current_options = self.config_entry.options.get(DEVICE_ENERGY_MODES, {})
         device_field_mapping = {}
 
         for device_id, device_display_name in self._energy_devices:
@@ -300,8 +307,10 @@ class TuyaOptionsFlow(OptionsFlow):
         """Create user-friendly field key from device display name and ID."""
         device_name = device_display_name
         sensor_info = ""
-        if " &|& " in device_display_name:
-            device_name, sensor_info = device_display_name.split(" &|& ", 1)
+        if DEVICE_DISPLAY_SEPARATOR in device_display_name:
+            device_name, sensor_info = device_display_name.split(
+                DEVICE_DISPLAY_SEPARATOR, 1
+            )
 
         return f"{device_name} [{device_id}] [{sensor_info}]"
 
@@ -377,12 +386,14 @@ class TuyaOptionsFlow(OptionsFlow):
     def _is_energy_sensor(self, entity: er.RegistryEntry) -> bool:
         """Check if an entity is a valid energy sensor."""
         return (
-            entity.domain == "sensor"
-            and entity.platform == "tuya"
-            and entity.original_device_class in ("energy", "energy_storage")
+            entity.domain == Platform.SENSOR
+            and entity.platform == DOMAIN
+            and entity.original_device_class
+            in (SensorDeviceClass.ENERGY, SensorDeviceClass.ENERGY_STORAGE)
             and entity.device_id is not None
             and entity.capabilities is not None
-            and entity.capabilities.get("state_class") in ("total_increasing", "total")
+            and entity.capabilities.get("state_class")
+            in (SensorStateClass.TOTAL_INCREASING, SensorStateClass.TOTAL)
         )
 
     def _get_tuya_device_id(self, ha_device: dr.DeviceEntry | None) -> str | None:
@@ -394,7 +405,7 @@ class TuyaOptionsFlow(OptionsFlow):
             (
                 identifier
                 for domain, identifier in ha_device.identifiers
-                if domain == "tuya"
+                if domain == DOMAIN
             ),
             None,
         )
@@ -409,13 +420,15 @@ class TuyaOptionsFlow(OptionsFlow):
             sensors = device_info["sensors"]
             if not sensors:
                 sensors_text = "No sensors"
-            elif len(sensors) <= 3:
+            elif len(sensors) <= MAX_DISPLAY_SENSORS:
                 sensors_text = ", ".join(sensors)
             else:
-                sensors_text = f"{', '.join(sensors[:3])} (+{len(sensors) - 3} more)"
+                sensors_text = f"{', '.join(sensors[:MAX_DISPLAY_SENSORS])} (+{len(sensors) - MAX_DISPLAY_SENSORS} more)"
 
             # Create display name with separator
-            device_display_name = f"{device_info['name']} &|& {sensors_text}"
+            device_display_name = (
+                f"{device_info['name']}{DEVICE_DISPLAY_SEPARATOR}{sensors_text}"
+            )
             result.append((device_id, device_display_name))
 
         return result

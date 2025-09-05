@@ -36,9 +36,9 @@ CONF_TERMINAL_ID = "terminal_id"
 CONF_TOKEN_INFO = "token_info"
 CONF_USER_CODE = "user_code"
 CONF_USERNAME = "username"
-CONF_ENERGY_REPORT_MODE = "energy_report_mode"
 
 # Energy reporting modes
+DEVICE_ENERGY_MODES = "device_energy_modes"
 ENERGY_REPORT_MODE_CUMULATIVE = "cumulative"
 ENERGY_REPORT_MODE_INCREMENTAL = "incremental"
 
