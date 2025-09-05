@@ -570,6 +570,7 @@ FLOWS = {
         "senz",
         "seventeentrack",
         "sfr_box",
+        "sftp_client",
         "sharkiq",
         "shelly",
         "shopping_list",
