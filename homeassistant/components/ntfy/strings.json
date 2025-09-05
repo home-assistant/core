@@ -102,6 +102,24 @@
           "data_description": {
             "topic": "Enter the name of the topic you want to use for notifications. Topics may not be password-protected, so choose a name that's not easy to guess.",
             "name": "Set an alternative name to display instead of the topic name. This helps identify topics with complex or hard-to-read names more easily."
+          },
+          "sections": {
+            "filter": {
+              "data": {
+                "filter_priority": "Filter by priority",
+                "filter_tags": "Filter by tags",
+                "filter_title": "Filter by title",
+                "filter_message": "Filter by message content"
+              },
+              "data_description": {
+                "filter_priority": "Include messages that match any of the selected priority levels. If no priority is selected, all messages are included by default",
+                "filter_tags": "Only include messages that have all selected tags",
+                "filter_title": "Include messages with a title that exactly matches the specified text",
+                "filter_message": "Include messages with content that exactly matches the specified text"
+              },
+              "name": "Message filters (optional)",
+              "description": "Apply filters to narrow down the messages received when Home Assistant subscribes to the topic. Filters apply only to the event entity."
+            }
           }
         }
       },
@@ -121,6 +139,17 @@
     }
   },
   "entity": {
+    "event": {
+      "subscribe": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "triggered": "Triggered"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "messages": {
         "name": "Messages published",
@@ -221,6 +250,17 @@
     },
     "timeout_error": {
       "message": "Failed to connect to ntfy service due to a connection timeout"
+    }
+  },
+  "selector": {
+    "priority": {
+      "options": {
+        "1": "Minimum",
+        "2": "[%key:common::state::low%]",
+        "3": "Default",
+        "4": "[%key:common::state::high%]",
+        "5": "Maximum"
+      }
     }
   }
 }

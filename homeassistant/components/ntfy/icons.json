@@ -5,6 +5,11 @@
         "default": "mdi:console-line"
       }
     },
+    "event": {
+      "subscribe": {
+        "default": "mdi:message-outline"
+      }
+    },
     "sensor": {
       "messages": {
         "default": "mdi:message-arrow-right-outline"
