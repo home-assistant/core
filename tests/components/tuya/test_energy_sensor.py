@@ -6,10 +6,9 @@ from decimal import Decimal
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
-from tuya_sharing import CustomerDevice
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.components.tuya import ManagerCompat
 from homeassistant.components.tuya.const import (
     ENERGY_REPORT_MODE_CUMULATIVE,
     ENERGY_REPORT_MODE_INCREMENTAL,
@@ -95,9 +94,9 @@ def mock_config_entry_with_cumulative() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_manager() -> ManagerCompat:
+def mock_manager() -> Manager:
     """Create a mock Tuya manager."""
-    manager = MagicMock(spec=ManagerCompat)
+    manager = MagicMock(spec=Manager)
     manager.device_map = {}
     return manager
 

@@ -6,9 +6,8 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tuya_sharing import CustomerDevice
+from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya import ManagerCompat
 from homeassistant.components.tuya.const import ENERGY_REPORT_MODE_INCREMENTAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, State
@@ -23,7 +22,7 @@ from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
@@ -39,7 +38,7 @@ async def test_platform_setup_and_discovery(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_energy_sensor_incremental_mode(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
@@ -72,7 +71,7 @@ async def test_energy_sensor_incremental_mode(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_energy_sensor_state_restore(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
@@ -120,7 +119,7 @@ async def test_energy_sensor_state_restore(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_energy_sensor_incremental_updates(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
@@ -152,7 +151,7 @@ async def test_energy_sensor_incremental_updates(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_energy_sensor_timestamp_deduplication(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
@@ -185,7 +184,7 @@ async def test_energy_sensor_timestamp_deduplication(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_energy_sensor_edge_cases(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
@@ -223,7 +222,7 @@ async def test_energy_sensor_edge_cases(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_energy_sensor_error_handling(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
@@ -252,7 +251,7 @@ async def test_energy_sensor_error_handling(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_energy_sensor_handle_state_update(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
@@ -291,7 +290,7 @@ async def test_energy_sensor_handle_state_update(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_value_conversion_edge_cases(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
@@ -334,7 +333,7 @@ async def test_sensor_value_conversion_edge_cases(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_native_value_edge_cases(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
