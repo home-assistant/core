@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import (
@@ -36,24 +37,52 @@ async def test_device_info(
     assert device_entry == snapshot
 
 
+@pytest.mark.parametrize(
+    ("minor_version", "country", "site_data", "site_login_data"),
+    [
+        # Standard migration case
+        (1, "US", None, None),
+        # Edge case #1: no country, site already in login data
+        (1, None, None, "https://www.amazon.com"),
+        # Edge case #2: no country, site in data (wrong place), minor version 1
+        (1, None, "https://www.amazon.com", None),
+        # Edge case #3: no country, site in data (wrong place), minor version 2
+        (2, None, "https://www.amazon.com", None),
+    ],
+)
 async def test_migrate_entry(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    minor_version: int,
+    country: str | None,
+    site_data: str | None,
+    site_login_data: str | None,
 ) -> None:
     """Test successful migration of entry data."""
+
+    data = {
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_LOGIN_DATA: {"session": "test-session"},
+    }
+
+    if country:
+        data[CONF_COUNTRY] = country
+
+    if site_data:
+        data[CONF_SITE] = site_data
+
+    if site_login_data:
+        data[CONF_LOGIN_DATA].update({CONF_SITE: site_login_data})
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Amazon Test Account",
-        data={
-            CONF_COUNTRY: "US",  # country should be in COUNTRY_DOMAINS exceptions
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_LOGIN_DATA: {"session": "test-session"},
-        },
+        data=data,
         unique_id=TEST_USERNAME,
         version=1,
-        minor_version=1,
+        minor_version=minor_version,
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -61,5 +90,5 @@ async def test_migrate_entry(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.minor_version == 2
+    assert config_entry.minor_version == 3
     assert config_entry.data[CONF_LOGIN_DATA][CONF_SITE] == "https://www.amazon.com"

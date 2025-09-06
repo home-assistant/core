@@ -42,13 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
 async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Migrate old entry."""
-    if (
-        entry.version == 1
-        and entry.minor_version == 2
-        and CONF_SITE in entry.data[CONF_LOGIN_DATA]
-    ):
-        # Version and data up-to-date
-        return True
 
     if CONF_SITE in entry.data:
         # Site in data (wrong place), just move to login data
@@ -56,33 +49,32 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
         new_data[CONF_LOGIN_DATA][CONF_SITE] = new_data[CONF_SITE]
         new_data.pop(CONF_SITE)
         hass.config_entries.async_update_entry(
-            entry, data=new_data, version=1, minor_version=2
+            entry, data=new_data, version=1, minor_version=3
         )
-    else:
-        _LOGGER.debug(
-            "Migrating from version %s.%s", entry.version, entry.minor_version
-        )
+        return True
 
-        if CONF_SITE in entry.data[CONF_LOGIN_DATA]:
-            # Site is there, just update version to avoid future migrations
-            hass.config_entries.async_update_entry(entry, version=1, minor_version=2)
-            return True
+    if CONF_SITE in entry.data[CONF_LOGIN_DATA]:
+        # Site is there, just update version to avoid future migrations
+        hass.config_entries.async_update_entry(entry, version=1, minor_version=3)
+        return True
 
-        # Convert country in domain
-        country = entry.data[CONF_COUNTRY].lower()
-        domain = COUNTRY_DOMAINS.get(country, country)
+    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
-        # Add site to login data
-        new_data = entry.data.copy()
-        new_data[CONF_LOGIN_DATA][CONF_SITE] = f"https://www.amazon.{domain}"
+    # Convert country in domain
+    country = entry.data[CONF_COUNTRY].lower()
+    domain = COUNTRY_DOMAINS.get(country, country)
 
-        hass.config_entries.async_update_entry(
-            entry, data=new_data, version=1, minor_version=2
-        )
+    # Add site to login data
+    new_data = entry.data.copy()
+    new_data[CONF_LOGIN_DATA][CONF_SITE] = f"https://www.amazon.{domain}"
 
-        _LOGGER.info(
-            "Migration to version %s.%s successful", entry.version, entry.minor_version
-        )
+    hass.config_entries.async_update_entry(
+        entry, data=new_data, version=1, minor_version=3
+    )
+
+    _LOGGER.info(
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
+    )
 
     return True
 
