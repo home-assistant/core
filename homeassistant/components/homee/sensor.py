@@ -35,7 +35,7 @@ from .const import (
     WINDOW_MAP_REVERSED,
 )
 from .entity import HomeeEntity, HomeeNodeEntity
-from .helpers import get_name_for_enum
+from .helpers import get_name_for_enum, setup_homee_platform
 
 PARALLEL_UPDATES = 0
 
@@ -304,11 +304,11 @@ def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add the homee platform for the sensor components."""
     ent_reg = er.async_get(hass)
-    devices: list[HomeeSensor | HomeeNodeSensor] = []
+    entities: list[HomeeSensor | HomeeNodeSensor] = []
 
     def add_deprecated_entity(
         attribute: HomeeAttribute, description: HomeeSensorEntityDescription
@@ -325,7 +325,7 @@ async def async_setup_entry(
                     f"deprecated_entity_{entity_uid}",
                 )
             elif entity_entry:
-                devices.append(HomeeSensor(attribute, config_entry, description))
+                entities.append(HomeeSensor(attribute, config_entry, description))
                 if entity_used_in(hass, entity_id):
                     async_create_issue(
                         hass,
@@ -343,26 +343,36 @@ async def async_setup_entry(
                         },
                     )
 
-    for node in config_entry.runtime_data.nodes:
-        # Node properties that are sensors.
-        devices.extend(
-            HomeeNodeSensor(node, config_entry, description)
-            for description in NODE_SENSOR_DESCRIPTIONS
-        )
+    async def add_sensor_entities(
+        config_entry: HomeeConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+        nodes: list[HomeeNode],
+    ) -> None:
+        """Add homee sensor entities."""
+        for node in nodes:
+            # Node properties that are sensors.
+            entities.extend(
+                HomeeNodeSensor(node, config_entry, description)
+                for description in NODE_SENSOR_DESCRIPTIONS
+            )
 
-        # Node attributes that are sensors.
-        for attribute in node.attributes:
-            if attribute.type == AttributeType.CURRENT_VALVE_POSITION:
-                add_deprecated_entity(attribute, SENSOR_DESCRIPTIONS[attribute.type])
-            elif attribute.type in SENSOR_DESCRIPTIONS and not attribute.editable:
-                devices.append(
-                    HomeeSensor(
-                        attribute, config_entry, SENSOR_DESCRIPTIONS[attribute.type]
+            # Node attributes that are sensors.
+            for attribute in node.attributes:
+                if attribute.type == AttributeType.CURRENT_VALVE_POSITION:
+                    add_deprecated_entity(
+                        attribute, SENSOR_DESCRIPTIONS[attribute.type]
                     )
-                )
+                elif attribute.type in SENSOR_DESCRIPTIONS and not attribute.editable:
+                    entities.append(
+                        HomeeSensor(
+                            attribute, config_entry, SENSOR_DESCRIPTIONS[attribute.type]
+                        )
+                    )
 
-    if devices:
-        async_add_devices(devices)
+        if entities:
+            async_add_entities(entities)
+
+    await setup_homee_platform(add_sensor_entities, async_add_entities, config_entry)
 
 
 class HomeeSensor(HomeeEntity, SensorEntity):
