@@ -1,0 +1,18 @@
+{
+  "led_strip_brightness": 70,
+  "led_strip_animation": "static",
+  "hide_wifi_key": false,
+  "led_strip_enabled": true,
+  "available_led_strip_animations": [
+    "organic",
+    "static",
+    "breathing",
+    "rain",
+    "trail",
+    "wave"
+  ],
+  "hide_status_led": false,
+  "orientation": 0,
+  "brightness": 100,
+  "orientation_forced": true
+}
