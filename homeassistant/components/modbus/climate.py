@@ -50,6 +50,8 @@ from .const import (
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
+    CONF_CURRENT_TEMP_OFFSET,
+    CONF_CURRENT_TEMP_SCALE,
     CONF_FAN_MODE_AUTO,
     CONF_FAN_MODE_DIFFUSE,
     CONF_FAN_MODE_FOCUS,
@@ -97,6 +99,8 @@ from .const import (
     CONF_SWING_MODE_SWING_VERT,
     CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_OFFSET,
+    CONF_TARGET_TEMP_SCALE,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
     DataType,
@@ -166,6 +170,10 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._attr_min_temp = config[CONF_MIN_TEMP]
         self._attr_max_temp = config[CONF_MAX_TEMP]
         self._attr_target_temperature_step = config[CONF_STEP]
+        self._current_temp_scale = config[CONF_CURRENT_TEMP_SCALE]
+        self._current_temp_offset = config[CONF_CURRENT_TEMP_OFFSET]
+        self._target_temp_scale = config[CONF_TARGET_TEMP_SCALE]
+        self._target_temp_offset = config[CONF_TARGET_TEMP_OFFSET]
 
         if CONF_HVAC_MODE_REGISTER in config:
             mode_config = config[CONF_HVAC_MODE_REGISTER]
@@ -413,8 +421,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = (
-            float(kwargs[ATTR_TEMPERATURE]) - self._offset
-        ) / self._scale
+            float(kwargs[ATTR_TEMPERATURE]) - self._target_temp_offset
+        ) / self._target_temp_scale
         if self._data_type in (
             DataType.INT16,
             DataType.INT32,
@@ -472,11 +480,17 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._target_temperature_register[
                 HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
             ],
+            scale=self._target_temp_scale,
+            offset=self._target_temp_offset,
         )
 
         self._attr_current_temperature = await self._async_read_register(
-            self._input_type, self._address
+            self._input_type,
+            self._address,
+            scale=self._current_temp_scale,
+            offset=self._current_temp_offset,
         )
+
         # Read the HVAC mode register if defined
         if self._hvac_mode_register is not None:
             hvac_mode = await self._async_read_register(
@@ -562,7 +576,12 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 self._attr_hvac_mode = HVACMode.OFF
 
     async def _async_read_register(
-        self, register_type: str, register: int, raw: bool | None = False
+        self,
+        register_type: str,
+        register: int,
+        scale: float = 1,
+        offset: float = 0,
+        raw: bool | None = False,
     ) -> float | None:
         """Read register using the Modbus hub slave."""
         result = await self._hub.async_pb_call(
@@ -579,7 +598,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             return int(result.registers[0])
 
         # The regular handling of the value
-        self._value = self.unpack_structure_result(result.registers)
+        self._value = self.unpack_structure_result(result.registers, scale, offset)
         if not self._value:
             self._attr_available = False
             return None
