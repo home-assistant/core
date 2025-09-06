@@ -349,6 +349,8 @@ async def async_setup_entry(
         nodes: list[HomeeNode],
     ) -> None:
         """Add homee sensor entities."""
+        entities.clear()
+
         for node in nodes:
             # Node properties that are sensors.
             entities.extend(
