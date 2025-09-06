@@ -113,7 +113,9 @@
     dict({
       'agent_id': 'conversation.gpt_3_5_turbo',
       'content': 'Hello, how can I help you?',
+      'native': None,
       'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': None,
     }),
   ])
@@ -128,9 +130,12 @@
     dict({
       'agent_id': 'conversation.gpt_3_5_turbo',
       'content': None,
+      'native': None,
       'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': list([
         dict({
+          'external': False,
           'id': 'call_call_1',
           'tool_args': dict({
             'param1': 'call1',
@@ -149,7 +154,9 @@
     dict({
       'agent_id': 'conversation.gpt_3_5_turbo',
       'content': 'I have successfully called the function',
+      'native': None,
       'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': None,
     }),
   ])

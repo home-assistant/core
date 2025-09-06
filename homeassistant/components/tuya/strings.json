@@ -2,13 +2,13 @@
   "config": {
     "step": {
       "reauth_user_code": {
-        "description": "The Tuya integration now uses an improved login method. To reauthenticate with your Smart Life or Tuya Smart account, you need to enter your user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case sensitive, please be sure to enter it exactly as shown in the app.",
+        "description": "The Tuya integration now uses an improved login method. To reauthenticate with your Smart Life or Tuya Smart account, you need to enter your user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case-sensitive, please be sure to enter it exactly as shown in the app.",
         "data": {
           "user_code": "User code"
         }
       },
       "user": {
-        "description": "Enter your Smart Life or Tuya Smart user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case sensitive, please be sure to enter it exactly as shown in the app.",
+        "description": "Enter your Smart Life or Tuya Smart user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case-sensitive, please be sure to enter it exactly as shown in the app.",
         "data": {
           "user_code": "User code"
         }
@@ -63,6 +63,9 @@
       "defrost": {
         "name": "Defrost"
       },
+      "valve": {
+        "name": "Valve"
+      },
       "wet": {
         "name": "Wet"
       }
@@ -94,20 +97,11 @@
       "curtain": {
         "name": "[%key:component::cover::entity_component::curtain::name%]"
       },
-      "curtain_2": {
-        "name": "Curtain 2"
+      "indexed_curtain": {
+        "name": "Curtain {index}"
       },
-      "curtain_3": {
-        "name": "Curtain 3"
-      },
-      "door": {
-        "name": "[%key:component::cover::entity_component::door::name%]"
-      },
-      "door_2": {
-        "name": "Door 2"
-      },
-      "door_3": {
-        "name": "Door 3"
+      "indexed_door": {
+        "name": "Door {index}"
       }
     },
     "event": {
@@ -131,11 +125,8 @@
       "light": {
         "name": "[%key:component::light::title%]"
       },
-      "light_2": {
-        "name": "Light 2"
-      },
-      "light_3": {
-        "name": "Light 3"
+      "indexed_light": {
+        "name": "Light {index}"
       },
       "night_light": {
         "name": "Night light"
@@ -156,6 +147,9 @@
       },
       "heat_preservation_time": {
         "name": "Heat preservation time"
+      },
+      "indexed_irrigation_duration": {
+        "name": "Irrigation duration {index}"
       },
       "feed": {
         "name": "Feed"
@@ -199,17 +193,11 @@
       "maximum_brightness": {
         "name": "Maximum brightness"
       },
-      "minimum_brightness_2": {
-        "name": "Minimum brightness 2"
+      "indexed_minimum_brightness": {
+        "name": "Minimum brightness {index}"
       },
-      "maximum_brightness_2": {
-        "name": "Maximum brightness 2"
-      },
-      "minimum_brightness_3": {
-        "name": "Minimum brightness 3"
-      },
-      "maximum_brightness_3": {
-        "name": "Maximum brightness 3"
+      "indexed_maximum_brightness": {
+        "name": "Maximum brightness {index}"
       },
       "move_down": {
         "name": "Move down"
@@ -231,6 +219,24 @@
       },
       "siren_duration": {
         "name": "Siren duration"
+      },
+      "alarm_maximum": {
+        "name": "Alarm maximum"
+      },
+      "alarm_minimum": {
+        "name": "Alarm minimum"
+      },
+      "battery_backup_reserve": {
+        "name": "Battery backup reserve"
+      },
+      "installation_height": {
+        "name": "Installation height"
+      },
+      "maximum_liquid_depth": {
+        "name": "Maximum liquid depth"
+      },
+      "inverter_output_power_limit": {
+        "name": "Inverter output power limit"
       }
     },
     "select": {
@@ -296,16 +302,8 @@
           "led": "LED"
         }
       },
-      "led_type_2": {
-        "name": "Light 2 source type",
-        "state": {
-          "halogen": "[%key:component::tuya::entity::select::led_type::state::halogen%]",
-          "incandescent": "[%key:component::tuya::entity::select::led_type::state::incandescent%]",
-          "led": "[%key:component::tuya::entity::select::led_type::state::led%]"
-        }
-      },
-      "led_type_3": {
-        "name": "Light 3 source type",
+      "indexed_led_type": {
+        "name": "Light {index} source type",
         "state": {
           "halogen": "[%key:component::tuya::entity::select::led_type::state::halogen%]",
           "incandescent": "[%key:component::tuya::entity::select::led_type::state::incandescent%]",
@@ -486,7 +484,7 @@
       },
       "blanket_level": {
         "state": {
-          "level_1": "Low",
+          "level_1": "[%key:common::state::low%]",
           "level_2": "Level 2",
           "level_3": "Level 3",
           "level_4": "Level 4",
@@ -495,7 +493,7 @@
           "level_7": "Level 7",
           "level_8": "Level 8",
           "level_9": "Level 9",
-          "level_10": "High"
+          "level_10": "[%key:common::state::high%]"
         }
       },
       "odor_elimination_mode": {
@@ -503,6 +501,14 @@
         "state": {
           "smart": "Smart",
           "interim": "Interim"
+        }
+      },
+      "inverter_work_mode": {
+        "name": "Inverter work mode",
+        "state": {
+          "self_powered": "Self-powered",
+          "time_of_use": "Time of use",
+          "manual": "Manual mode"
         }
       }
     },
@@ -528,8 +534,32 @@
       "temperature_external": {
         "name": "Probe temperature"
       },
+      "indexed_temperature_external": {
+        "name": "Probe temperature channel {index}"
+      },
       "humidity": {
         "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "humidity_outdoor": {
+        "name": "Outdoor humidity"
+      },
+      "indexed_humidity_outdoor": {
+        "name": "Outdoor humidity channel {index}"
+      },
+      "air_pressure": {
+        "name": "Air pressure"
+      },
+      "precipitation_today": {
+        "name": "Total precipitation today"
+      },
+      "precipitation_intensity": {
+        "name": "[%key:component::sensor::entity_component::precipitation_intensity::name%]"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "wind_direction": {
+        "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
       },
       "pm25": {
         "name": "[%key:component::sensor::entity_component::pm25::name%]"
@@ -581,6 +611,9 @@
       },
       "total_energy": {
         "name": "Total energy"
+      },
+      "total_power": {
+        "name": "Total power"
       },
       "total_production": {
         "name": "Total production"
@@ -725,6 +758,23 @@
           "charging": "[%key:common::state::charging%]",
           "charge_done": "Charge done"
         }
+      },
+      "liquid_state": {
+        "name": "Liquid state",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "lower_alarm": "[%key:common::state::low%]",
+          "upper_alarm": "[%key:common::state::high%]"
+        }
+      },
+      "liquid_depth": {
+        "name": "Liquid depth"
+      },
+      "liquid_level": {
+        "name": "Liquid level"
+      },
+      "supply_frequency": {
+        "name": "Supply frequency"
       }
     },
     "switch": {
@@ -770,86 +820,26 @@
       "switch": {
         "name": "Switch"
       },
+      "indexed_switch": {
+        "name": "Switch {index}"
+      },
       "socket": {
         "name": "Socket"
+      },
+      "indexed_socket": {
+        "name": "Socket {index}"
       },
       "radio": {
         "name": "Radio"
       },
-      "alarm_1": {
-        "name": "Alarm 1"
-      },
-      "alarm_2": {
-        "name": "Alarm 2"
-      },
-      "alarm_3": {
-        "name": "Alarm 3"
-      },
-      "alarm_4": {
-        "name": "Alarm 4"
+      "indexed_alarm": {
+        "name": "Alarm {index}"
       },
       "sleep_aid": {
         "name": "Sleep aid"
       },
-      "switch_1": {
-        "name": "Switch 1"
-      },
-      "switch_2": {
-        "name": "Switch 2"
-      },
-      "switch_3": {
-        "name": "Switch 3"
-      },
-      "switch_4": {
-        "name": "Switch 4"
-      },
-      "switch_5": {
-        "name": "Switch 5"
-      },
-      "switch_6": {
-        "name": "Switch 6"
-      },
-      "switch_7": {
-        "name": "Switch 7"
-      },
-      "switch_8": {
-        "name": "Switch 8"
-      },
-      "usb_1": {
-        "name": "USB 1"
-      },
-      "usb_2": {
-        "name": "USB 2"
-      },
-      "usb_3": {
-        "name": "USB 3"
-      },
-      "usb_4": {
-        "name": "USB 4"
-      },
-      "usb_5": {
-        "name": "USB 5"
-      },
-      "usb_6": {
-        "name": "USB 6"
-      },
-      "socket_1": {
-        "name": "Socket 1"
-      },
-      "socket_2": {
-        "name": "Socket 2"
-      },
-      "socket_3": {
-        "name": "Socket 3"
-      },
-      "socket_4": {
-        "name": "Socket 4"
-      },
-      "socket_5": {
-        "name": "Socket 5"
-      },
-      "socket_6": {
-        "name": "Socket 6"
+      "indexed_usb": {
+        "name": "USB {index}"
       },
       "ionizer": {
         "name": "Ionizer"
@@ -940,7 +930,23 @@
       },
       "siren": {
         "name": "Siren"
+      },
+      "frost_protection": {
+        "name": "Frost protection"
+      },
+      "output_power_limit": {
+        "name": "Output power limit"
       }
+    },
+    "valve": {
+      "indexed_valve": {
+        "name": "Valve {index}"
+      }
+    }
+  },
+  "exceptions": {
+    "action_dpcode_not_found": {
+      "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
     }
   }
 }

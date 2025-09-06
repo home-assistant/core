@@ -23,6 +23,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
+from .util import get_dpcode
 
 
 @dataclass(frozen=True)
@@ -44,21 +45,24 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "ckmkzq": (
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_1,
-            translation_key="door",
+            translation_key="indexed_door",
+            translation_placeholders={"index": "1"},
             current_state=DPCode.DOORCONTACT_STATE,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_2,
-            translation_key="door_2",
+            translation_key="indexed_door",
+            translation_placeholders={"index": "2"},
             current_state=DPCode.DOORCONTACT_STATE_2,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_3,
-            translation_key="door_3",
+            translation_key="indexed_door",
+            translation_placeholders={"index": "3"},
             current_state=DPCode.DOORCONTACT_STATE_3,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
@@ -78,14 +82,16 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
-            translation_key="curtain_2",
+            translation_key="indexed_curtain",
+            translation_placeholders={"index": "2"},
             current_position=DPCode.PERCENT_STATE_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_3,
-            translation_key="curtain_3",
+            translation_key="indexed_curtain",
+            translation_placeholders={"index": "3"},
             current_position=DPCode.PERCENT_STATE_3,
             set_position=DPCode.PERCENT_CONTROL_3,
             device_class=CoverDeviceClass.CURTAIN,
@@ -122,7 +128,8 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
-            translation_key="curtain_2",
+            translation_key="indexed_curtain",
+            translation_placeholders={"index": "2"},
             current_position=DPCode.PERCENT_CONTROL_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
@@ -196,7 +203,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._attr_supported_features = CoverEntityFeature(0)
 
         # Check if this cover is based on a switch or has controls
-        if self.find_dpcode(description.key, prefer_function=True):
+        if get_dpcode(self.device, description.key):
             if device.function[description.key].type == "Boolean":
                 self._attr_supported_features |= (
                     CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE

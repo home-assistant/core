@@ -49,6 +49,29 @@
         "name": "Refill error"
       }
     },
+    "select": {
+      "display_temperature_unit": {
+        "name": "Temperature unit on display",
+        "state": {
+          "celsius": "Celsius",
+          "fahrenheit": "Fahrenheit"
+        }
+      },
+      "light_brightness": {
+        "name": "Light brightness",
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "high": "[%key:common::state::high%]"
+        }
+      },
+      "light_mode": {
+        "name": "Light mode",
+        "state": {
+          "flower": "Fruits/Flowers",
+          "vegetable": "Veggies/Herbs"
+        }
+      }
+    },
     "sensor": {
       "water_level": {
         "name": "Water level"

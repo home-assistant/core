@@ -1,0 +1,19 @@
+{
+  "domain": "togrill",
+  "name": "ToGrill",
+  "bluetooth": [
+    {
+      "manufacturer_id": 34714,
+      "service_uuid": "0000cee0-0000-1000-8000-00805f9b34fb",
+      "connectable": true
+    }
+  ],
+  "codeowners": ["@elupus"],
+  "config_flow": true,
+  "dependencies": ["bluetooth"],
+  "documentation": "https://www.home-assistant.io/integrations/togrill",
+  "iot_class": "local_push",
+  "loggers": ["togrill_bluetooth"],
+  "quality_scale": "bronze",
+  "requirements": ["togrill-bluetooth==0.8.0"]
+}
