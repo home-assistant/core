@@ -16,8 +16,7 @@ from .translations import translation_key_validator
 
 
 def icon_value_validator_factory(core_integration: bool):
-    """
-    Return a validator for icon values.
+    """Return a validator for icon values.
 
     For core integrations, icons must start with "mdi:" (Material Design Icons).
     Custom integrations can use any icon format.
