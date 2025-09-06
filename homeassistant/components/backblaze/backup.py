@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
+import contextlib
 import functools
 import json
 import logging
@@ -9,11 +10,12 @@ import mimetypes
 import os
 import tempfile
 from time import time  # Import time for caching
-from typing import Any, cast
+from typing import Any
 
 import aiofiles
 from b2sdk.v2 import DEFAULT_MIN_PART_SIZE, FileVersion
 from b2sdk.v2.exception import B2Error
+import voluptuous as vol
 
 from homeassistant.components.backup import (
     AgentBackup,
@@ -29,6 +31,8 @@ from .const import (
     CONF_PREFIX,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
+    MAX_BACKUP_SIZE,
+    MAX_SIMPLE_UPLOAD_SIZE,
     METADATA_FILE_SUFFIX,
     METADATA_VERSION,
 )
@@ -38,11 +42,43 @@ _LOGGER = logging.getLogger(__name__)
 # Cache TTL for backup list (in seconds)
 CACHE_TTL = 300
 
+# Schema for validating metadata files
+METADATA_SCHEMA = vol.Schema(
+    {
+        vol.Required("metadata_version"): vol.Equal(METADATA_VERSION),
+        vol.Required("backup_id"): str,
+        vol.Required("backup_metadata"): {
+            vol.Required("backup_id"): str,
+            vol.Required("date"): str,
+            vol.Required("name"): str,
+            vol.Required("protected"): bool,
+            vol.Optional("size", default=0): int,
+            vol.Optional("addons", default=list): list,
+            vol.Optional("database_included", default=False): bool,
+            vol.Optional("folders", default=list): list,
+            vol.Optional("homeassistant_included", default=False): bool,
+            vol.Optional("homeassistant_version"): vol.Any(str, None),
+            vol.Optional("extra_metadata", default=dict): dict,
+        },
+    }
+)
+
 
 def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
     """Return the suggested filenames for the backup and metadata files."""
     base_name = suggested_filename(backup).rsplit(".", 1)[0]
     return f"{base_name}.tar", f"{base_name}.metadata.json"
+
+
+def _parse_and_validate_metadata(raw_content: str) -> dict[str, Any]:
+    """Parse and validate metadata content against schema."""
+    try:
+        metadata_content = json.loads(raw_content)
+        validated_metadata: dict[str, Any] = METADATA_SCHEMA(metadata_content)
+    except (json.JSONDecodeError, vol.Invalid) as err:
+        raise ValueError(f"Invalid metadata format: {err}") from err
+    else:
+        return validated_metadata
 
 
 def handle_b2_errors[T](
@@ -115,6 +151,10 @@ class BackblazeBackupAgent(BackupAgent):
         self._all_files_cache_expiration: float = 0.0
         self._backup_list_cache: dict[str, AgentBackup] = {}
         self._backup_list_cache_expiration: float = 0.0
+
+        # Simple locks to prevent cache race conditions
+        self._all_files_cache_lock = asyncio.Lock()
+        self._backup_list_cache_lock = asyncio.Lock()
 
     async def _close_stream(self, stream: AsyncIterator[bytes]) -> None:
         """Close a stream gracefully with both async and sync fallbacks."""
@@ -214,6 +254,13 @@ class BackblazeBackupAgent(BackupAgent):
             }
         ).encode("utf-8")
 
+        # Safety check: validate backup size
+        if backup.size > MAX_BACKUP_SIZE:
+            raise BackupAgentError(
+                f"Backup size ({backup.size} bytes) exceeds maximum allowed size "
+                f"({MAX_BACKUP_SIZE} bytes)"
+            )
+
         _LOGGER.debug(
             "Uploading backup: %s, and metadata: %s",
             prefixed_tar_filename,
@@ -222,7 +269,8 @@ class BackblazeBackupAgent(BackupAgent):
 
         try:
             # --- Main Backup File Upload ---
-            if backup.size < DEFAULT_MIN_PART_SIZE:
+            # Use safe limits for simple upload to prevent memory exhaustion
+            if backup.size < min(DEFAULT_MIN_PART_SIZE, MAX_SIMPLE_UPLOAD_SIZE):
                 await self._upload_simple_b2(prefixed_tar_filename, open_stream, {})
             else:
                 await self._upload_multipart_b2(prefixed_tar_filename, open_stream, {})
@@ -303,17 +351,36 @@ class BackblazeBackupAgent(BackupAgent):
         """Uploads a large file to B2 using multipart upload via a temporary file."""
         temp_file_path: str | None = None
         try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".tmp") as tmp:
+            # Create temporary file with more descriptive naming and secure permissions
+            with tempfile.NamedTemporaryFile(
+                delete=False,
+                suffix=".backblaze.tmp",
+                prefix="hass_backup_",
+                dir=tempfile.gettempdir(),
+            ) as tmp:
                 temp_file_path = tmp.name
+                # Ensure file permissions are secure (owner only)
+                os.chmod(temp_file_path, 0o600)
+
+            _LOGGER.debug("Created temporary file: %s", temp_file_path)
 
             stream_to_disk = await open_stream()
             try:
                 async with aiofiles.open(temp_file_path, mode="wb") as f:
+                    bytes_written = 0
                     async for chunk in stream_to_disk:
                         await f.write(chunk)
+                        bytes_written += len(chunk)
+                        # Log progress for large files
+                        if bytes_written % (50 * 1024 * 1024) == 0:  # Every 50MB
+                            _LOGGER.debug(
+                                "Written %d bytes to temp file", bytes_written
+                            )
             finally:
                 # Explicitly close the stream after writing to disk
                 await self._close_stream(stream_to_disk)
+
+            _LOGGER.debug("Finished writing %d bytes to temp file", bytes_written)
 
             content_type, _ = mimetypes.guess_type(filename)
             file_version = await self._hass.async_add_executor_job(
@@ -335,13 +402,64 @@ class BackblazeBackupAgent(BackupAgent):
             _LOGGER.exception("An error occurred during upload for %s:", filename)
             raise
         finally:
-            if temp_file_path and os.path.exists(temp_file_path):
-                try:
-                    os.unlink(temp_file_path)
-                except OSError as e:
-                    _LOGGER.warning(
-                        "Failed to delete temporary file %s: %s", temp_file_path, e
+            # Improved cleanup with multiple retry attempts
+            if temp_file_path:
+                await self._cleanup_temp_file(temp_file_path)
+
+    def _truncate_file(self, file_path: str) -> None:
+        """Truncate a file to zero bytes (blocking operation for executor)."""
+        with open(file_path, "w", encoding="utf-8"):
+            pass
+
+    async def _cleanup_temp_file(self, temp_file_path: str) -> None:
+        """Clean up temporary file with retries."""
+        if not os.path.exists(temp_file_path):
+            return
+
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # Try to remove file permissions first (helps on Windows)
+                with contextlib.suppress(OSError):
+                    os.chmod(temp_file_path, 0o600)  # More restrictive permissions
+
+                os.unlink(temp_file_path)
+            except OSError as e:
+                if attempt < max_retries - 1:
+                    _LOGGER.debug(
+                        "Failed to delete temp file %s (attempt %d/%d): %s",
+                        temp_file_path,
+                        attempt + 1,
+                        max_retries,
+                        e,
                     )
+                    # Brief delay before retry
+                    await asyncio.sleep(0.1)
+                else:
+                    _LOGGER.warning(
+                        "Failed to delete temporary file %s after %d attempts: %s",
+                        temp_file_path,
+                        max_retries,
+                        e,
+                    )
+                    # As a last resort, try to truncate the file to save space
+                    try:
+                        await self._hass.async_add_executor_job(
+                            self._truncate_file, temp_file_path
+                        )
+                        _LOGGER.info(
+                            "Truncated temporary file %s as fallback", temp_file_path
+                        )
+                    except OSError:
+                        _LOGGER.error(
+                            "Could not delete or truncate temporary file %s. "
+                            "Manual cleanup may be required",
+                            temp_file_path,
+                        )
+                    return
+            else:
+                _LOGGER.debug("Successfully deleted temporary file: %s", temp_file_path)
+                return
 
     @handle_b2_errors
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
@@ -391,42 +509,44 @@ class BackblazeBackupAgent(BackupAgent):
     @handle_b2_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List all backups by finding their associated metadata files in Backblaze B2."""
-        if self._backup_list_cache and time() <= self._backup_list_cache_expiration:
-            _LOGGER.debug("Returning backups from cache")
-            return list(self._backup_list_cache.values())
+        async with self._backup_list_cache_lock:
+            # Re-check cache after acquiring lock
+            if self._backup_list_cache and time() <= self._backup_list_cache_expiration:
+                _LOGGER.debug("Returning backups from cache")
+                return list(self._backup_list_cache.values())
 
-        _LOGGER.debug(
-            "Cache expired or empty, fetching all files from B2 to build backup list"
-        )
-        all_files_in_prefix = await self._get_all_files_in_prefix()
-
-        _LOGGER.debug(
-            "Files found in prefix '%s': %s",
-            self._prefix,
-            list(all_files_in_prefix.keys()),
-        )
-
-        # Collect tasks for concurrent metadata file processing.
-        tasks = [
-            self._hass.async_add_executor_job(
-                self._process_metadata_file_sync,
-                file_name,
-                file_version,
-                all_files_in_prefix,
+            _LOGGER.debug(
+                "Cache expired or empty, fetching all files from B2 to build backup list"
             )
-            for file_name, file_version in all_files_in_prefix.items()
-            if file_name.endswith(METADATA_FILE_SUFFIX)
-        ]
+            all_files_in_prefix = await self._get_all_files_in_prefix()
 
-        # Run metadata downloads and parsing concurrently.
-        results = await asyncio.gather(*tasks)
+            _LOGGER.debug(
+                "Files found in prefix '%s': %s",
+                self._prefix,
+                list(all_files_in_prefix.keys()),
+            )
 
-        # Filter out None results and store in cache
-        backups = {backup.backup_id: backup for backup in results if backup}
-        self._backup_list_cache = backups
-        self._backup_list_cache_expiration = time() + CACHE_TTL
+            # Collect tasks for concurrent metadata file processing.
+            tasks = [
+                self._hass.async_add_executor_job(
+                    self._process_metadata_file_sync,
+                    file_name,
+                    file_version,
+                    all_files_in_prefix,
+                )
+                for file_name, file_version in all_files_in_prefix.items()
+                if file_name.endswith(METADATA_FILE_SUFFIX)
+            ]
 
-        return list(backups.values())
+            # Run metadata downloads and parsing concurrently.
+            results = await asyncio.gather(*tasks)
+
+            # Filter out None results and store in cache
+            backups = {backup.backup_id: backup for backup in results if backup}
+            self._backup_list_cache = backups
+            self._backup_list_cache_expiration = time() + CACHE_TTL
+
+            return list(backups.values())
 
     @handle_b2_errors
     async def async_get_backup(self, backup_id: str, **kwargs: Any) -> AgentBackup:
@@ -446,11 +566,8 @@ class BackblazeBackupAgent(BackupAgent):
             raise BackupNotFound(f"Backup {backup_id} not found")
 
         metadata_content = await self._hass.async_add_executor_job(
-            lambda: cast(
-                dict[str, Any],
-                json.loads(
-                    metadata_file_version.download().response.content.decode("utf-8")
-                ),
+            lambda: _parse_and_validate_metadata(
+                metadata_file_version.download().response.content.decode("utf-8")
             )
         )
 
@@ -509,17 +626,23 @@ class BackblazeBackupAgent(BackupAgent):
             # Explicitly close the download response for metadata file in executor
             download_response = file_version.download().response
             try:
-                metadata_content = json.loads(download_response.content.decode("utf-8"))
+                metadata_content = _parse_and_validate_metadata(
+                    download_response.content.decode("utf-8")
+                )
+            except ValueError:
+                # Invalid metadata, skip this file
+                if hasattr(download_response, "close") and callable(
+                    download_response.close
+                ):
+                    download_response.close()
+                return None, None
             finally:
                 if hasattr(download_response, "close") and callable(
                     download_response.close
                 ):
                     download_response.close()
 
-            if (
-                metadata_content.get("metadata_version") == METADATA_VERSION
-                and metadata_content.get("backup_id") == target_backup_id
-            ):
+            if metadata_content.get("backup_id") == target_backup_id:
                 base_name = file_name.removesuffix(METADATA_FILE_SUFFIX)
                 expected_backup_file_prefix = base_name
 
@@ -549,13 +672,13 @@ class BackblazeBackupAgent(BackupAgent):
                     target_backup_id,
                 )
             _LOGGER.debug(
-                "Metadata file %s does not match target backup ID %s or version",
+                "Metadata file %s does not match target backup ID %s",
                 file_name,
                 target_backup_id,
             )
-        except (B2Error, json.JSONDecodeError) as err:
+        except B2Error as err:
             _LOGGER.warning(
-                "Failed to parse metadata file %s during ID search: %s",
+                "Failed to download metadata file %s during ID search: %s",
                 file_name,
                 err,
             )
@@ -576,21 +699,23 @@ class BackblazeBackupAgent(BackupAgent):
 
         This fetches a flat list of all files, including main backups and metadata files.
         """
-        if time() <= self._all_files_cache_expiration:
-            _LOGGER.debug("Returning all files from cache")
-            return self._all_files_cache
+        async with self._all_files_cache_lock:
+            # Re-check cache after acquiring lock
+            if time() <= self._all_files_cache_expiration:
+                _LOGGER.debug("Returning all files from cache")
+                return self._all_files_cache
 
-        _LOGGER.debug("Cache for all files expired or empty, fetching from B2")
-        all_files_in_prefix: dict[str, FileVersion] = {}
-        await self._hass.async_add_executor_job(
-            lambda: [
-                all_files_in_prefix.update({file.file_name: file})
-                for file, _ in self._bucket.ls(self._prefix)
-            ]
-        )
-        self._all_files_cache = all_files_in_prefix
-        self._all_files_cache_expiration = time() + CACHE_TTL
-        return all_files_in_prefix
+            _LOGGER.debug("Cache for all files expired or empty, fetching from B2")
+            all_files_in_prefix: dict[str, FileVersion] = {}
+            await self._hass.async_add_executor_job(
+                lambda: [
+                    all_files_in_prefix.update({file.file_name: file})
+                    for file, _ in self._bucket.ls(self._prefix)
+                ]
+            )
+            self._all_files_cache = all_files_in_prefix
+            self._all_files_cache_expiration = time() + CACHE_TTL
+            return all_files_in_prefix
 
     def _process_metadata_file_sync(
         self,
@@ -603,58 +728,61 @@ class BackblazeBackupAgent(BackupAgent):
             # Explicitly close the download response for metadata file in executor
             download_response = file_version.download().response
             try:
-                metadata_content = json.loads(download_response.content.decode("utf-8"))
+                metadata_content = _parse_and_validate_metadata(
+                    download_response.content.decode("utf-8")
+                )
+            except ValueError:
+                # Invalid metadata, skip this file
+                if hasattr(download_response, "close") and callable(
+                    download_response.close
+                ):
+                    download_response.close()
+                return None
             finally:
                 if hasattr(download_response, "close") and callable(
                     download_response.close
                 ):
                     download_response.close()
 
-            if (
-                metadata_content.get("metadata_version") == METADATA_VERSION
-                and "backup_id" in metadata_content
-                and "backup_metadata" in metadata_content
-            ):
-                # Derive the expected main backup file name from the metadata file name.
-                # Remove prefix and then the .metadata.json suffix to get base name
-                base_filename_without_prefix = file_name[
-                    len(self._prefix) :
-                ].removesuffix(METADATA_FILE_SUFFIX)
+            # Schema validation already checked required fields, so we can proceed
+            # Derive the expected main backup file name from the metadata file name.
+            # Remove prefix and then the .metadata.json suffix to get base name
+            base_filename_without_prefix = file_name[len(self._prefix) :].removesuffix(
+                METADATA_FILE_SUFFIX
+            )
 
-                found_backup_archive_file = next(
-                    (
-                        archive_file_version
-                        for archive_file_name, archive_file_version in all_files_in_prefix.items()
-                        if archive_file_name.startswith(
-                            self._prefix + base_filename_without_prefix
-                        )
-                        and archive_file_name.endswith(".tar")
-                        and archive_file_name
-                        != file_name  # Ensure it's not the metadata file itself
-                    ),
-                    None,
-                )
+            found_backup_archive_file = next(
+                (
+                    archive_file_version
+                    for archive_file_name, archive_file_version in all_files_in_prefix.items()
+                    if archive_file_name.startswith(
+                        self._prefix + base_filename_without_prefix
+                    )
+                    and archive_file_name.endswith(".tar")
+                    and archive_file_name
+                    != file_name  # Ensure it's not the metadata file itself
+                ),
+                None,
+            )
 
-                if found_backup_archive_file:
-                    _LOGGER.debug(
-                        "Successfully processed metadata file %s for backup ID %s",
-                        file_name,
-                        metadata_content["backup_id"],
-                    )
-                    return self._backup_from_b2_metadata(
-                        metadata_content, found_backup_archive_file
-                    )
-                _LOGGER.warning(
-                    "Found metadata file %s but no corresponding backup file "
-                    "starting with %s (after prefix)",
+            if found_backup_archive_file:
+                _LOGGER.debug(
+                    "Successfully processed metadata file %s for backup ID %s",
                     file_name,
-                    base_filename_without_prefix,
+                    metadata_content["backup_id"],
                 )
-            else:
-                _LOGGER.debug("Skipping non-conforming metadata file: %s", file_name)
+                return self._backup_from_b2_metadata(
+                    metadata_content, found_backup_archive_file
+                )
+            _LOGGER.warning(
+                "Found metadata file %s but no corresponding backup file "
+                "starting with %s (after prefix)",
+                file_name,
+                base_filename_without_prefix,
+            )
 
-        except (B2Error, json.JSONDecodeError) as err:
-            _LOGGER.warning("Failed to parse metadata file %s: %s", file_name, err)
+        except B2Error as err:
+            _LOGGER.warning("Failed to download metadata file %s: %s", file_name, err)
         return None
 
     def _invalidate_caches(
