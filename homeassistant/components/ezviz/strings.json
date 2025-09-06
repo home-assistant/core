@@ -159,6 +159,9 @@
       },
       "online_status": {
         "name": "Online status"
+      },
+      "mode": {
+        "name": "Mode"
       }
     },
     "switch": {
