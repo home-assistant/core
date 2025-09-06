@@ -6,13 +6,21 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN, TADO_HOME, TADO_ZONE
-from .coordinator import TadoDataUpdateCoordinator
+from .coordinator import TadoDataUpdateCoordinator, TadoZoneControlUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class TadoCoordinatorEntity(CoordinatorEntity[TadoDataUpdateCoordinator]):
     """Base class for Tado entity."""
+
+    _attr_has_entity_name = True
+
+
+class TadoZoneControlCoordinatorEntity(
+    CoordinatorEntity[TadoZoneControlUpdateCoordinator]
+):
+    """Base class for Tado zone control entity."""
 
     _attr_has_entity_name = True
 
@@ -67,6 +75,30 @@ class TadoZoneEntity(TadoCoordinatorEntity):
         coordinator: TadoDataUpdateCoordinator,
     ) -> None:
         """Initialize a Tado zone."""
+        super().__init__(coordinator)
+        self.zone_name = zone_name
+        self.zone_id = zone_id
+        self._attr_device_info = DeviceInfo(
+            configuration_url=(f"https://app.tado.com/en/main/home/zoneV2/{zone_id}"),
+            identifiers={(DOMAIN, f"{home_id}_{zone_id}")},
+            name=zone_name,
+            manufacturer=DEFAULT_NAME,
+            model=TADO_ZONE,
+            suggested_area=zone_name,
+        )
+
+
+class TadoZoneControlEntity(TadoZoneControlCoordinatorEntity):
+    """Base implementation for Tado zone with zone control coordinator."""
+
+    def __init__(
+        self,
+        zone_name: str,
+        home_id: int,
+        zone_id: int,
+        coordinator: TadoZoneControlUpdateCoordinator,
+    ) -> None:
+        """Initialize a Tado zone with zone control coordinator."""
         super().__init__(coordinator)
         self.zone_name = zone_name
         self.zone_id = zone_id
