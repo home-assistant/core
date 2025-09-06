@@ -6905,6 +6905,55 @@
     'state': '28.3',
   })
 # ---
+# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_estimated_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_vacuum_estimated_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Estimated end time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'estimated_end_time',
+    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-ServiceAreaEstimatedEndTime-336-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_estimated_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Vacuum Estimated end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_vacuum_estimated_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-08-29T21:00:00+00:00',
+  })
+# ---
 # name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

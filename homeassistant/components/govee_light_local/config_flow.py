@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from ipaddress import IPv4Address, IPv6Address
+from ipaddress import IPv4Address
 import logging
 
 from govee_local_api import GoveeController
@@ -24,9 +24,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _async_discover(
-    hass: HomeAssistant, adapter_ip: IPv4Address | IPv6Address
-) -> bool:
+async def _async_discover(hass: HomeAssistant, adapter_ip: IPv4Address) -> bool:
     controller: GoveeController = GoveeController(
         loop=hass.loop,
         logger=_LOGGER,
@@ -54,14 +52,9 @@ async def _async_discover(
         _LOGGER.debug("No devices found with IP %s", adapter_ip)
 
     devices_count = len(controller.devices)
-    cleanup_complete_events: list[asyncio.Event] = []
+    cleanup_complete: asyncio.Event = controller.cleanup()
     with suppress(TimeoutError):
-        await asyncio.gather(
-            *[
-                asyncio.wait_for(cleanup_complete_event.wait(), 1)
-                for cleanup_complete_event in cleanup_complete_events
-            ]
-        )
+        await asyncio.wait_for(cleanup_complete.wait(), 1)
 
     return devices_count > 0
 
@@ -74,7 +67,9 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     _LOGGER.debug("Enabled source IPs: %s", source_ips)
 
     # Run discovery on every IPv4 address and gather results
-    results = await asyncio.gather(*[_async_discover(hass, ip) for ip in source_ips])
+    results = await asyncio.gather(
+        *[_async_discover(hass, ip) for ip in source_ips if isinstance(ip, IPv4Address)]
+    )
 
     return any(results)
 

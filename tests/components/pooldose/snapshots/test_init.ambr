@@ -6,10 +6,6 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'http://192.168.1.100/index.html',
     'connections': set({
-      tuple(
-        'mac',
-        'aa:bb:cc:dd:ee:ff',
-      ),
     }),
     'disabled_by': None,
     'entry_type': None,

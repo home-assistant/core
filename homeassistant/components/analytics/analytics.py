@@ -24,7 +24,12 @@ from homeassistant.components.recorder import (
     get_instance as get_recorder_instance,
 )
 from homeassistant.config_entries import SOURCE_IGNORE
-from homeassistant.const import ATTR_DOMAIN, BASE_PLATFORMS, __version__ as HA_VERSION
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_DOMAIN,
+    BASE_PLATFORMS,
+    __version__ as HA_VERSION,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -389,66 +394,117 @@ def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
 
 
 async def async_devices_payload(hass: HomeAssistant) -> dict:
-    """Return the devices payload."""
-    devices: list[dict[str, Any]] = []
+    """Return detailed information about entities and devices."""
+    integrations_info: dict[str, dict[str, Any]] = {}
+
     dev_reg = dr.async_get(hass)
-    # Devices that need via device info set
-    new_indexes: dict[str, int] = {}
-    via_devices: dict[str, str] = {}
 
-    seen_integrations = set()
+    # We need to refer to other devices, for example in `via_device` field.
+    # We don't however send the original device ids outside of Home Assistant,
+    # instead we refer to devices by (integration_domain, index_in_integration_device_list).
+    device_id_mapping: dict[str, tuple[str, int]] = {}
 
-    for device in dev_reg.devices.values():
-        if not device.primary_config_entry:
+    for device_entry in dev_reg.devices.values():
+        if not device_entry.primary_config_entry:
             continue
 
-        config_entry = hass.config_entries.async_get_entry(device.primary_config_entry)
+        config_entry = hass.config_entries.async_get_entry(
+            device_entry.primary_config_entry
+        )
 
         if config_entry is None:
             continue
 
-        seen_integrations.add(config_entry.domain)
+        integration_domain = config_entry.domain
+        integration_info = integrations_info.setdefault(
+            integration_domain, {"devices": [], "entities": []}
+        )
 
-        new_indexes[device.id] = len(devices)
-        devices.append(
+        devices_info = integration_info["devices"]
+
+        device_id_mapping[device_entry.id] = (integration_domain, len(devices_info))
+
+        devices_info.append(
             {
-                "integration": config_entry.domain,
-                "manufacturer": device.manufacturer,
-                "model_id": device.model_id,
-                "model": device.model,
-                "sw_version": device.sw_version,
-                "hw_version": device.hw_version,
-                "has_configuration_url": device.configuration_url is not None,
-                "via_device": None,
-                "entry_type": device.entry_type.value if device.entry_type else None,
+                "entities": [],
+                "entry_type": device_entry.entry_type,
+                "has_configuration_url": device_entry.configuration_url is not None,
+                "hw_version": device_entry.hw_version,
+                "manufacturer": device_entry.manufacturer,
+                "model": device_entry.model,
+                "model_id": device_entry.model_id,
+                "sw_version": device_entry.sw_version,
+                "via_device": device_entry.via_device_id,
             }
         )
 
-        if device.via_device_id:
-            via_devices[device.id] = device.via_device_id
+    # Fill out via_device with new device ids
+    for integration_info in integrations_info.values():
+        for device_info in integration_info["devices"]:
+            if device_info["via_device"] is None:
+                continue
+            device_info["via_device"] = device_id_mapping.get(device_info["via_device"])
 
-    for from_device, via_device in via_devices.items():
-        if via_device not in new_indexes:
-            continue
-        devices[new_indexes[from_device]]["via_device"] = new_indexes[via_device]
+    ent_reg = er.async_get(hass)
+
+    for entity_entry in ent_reg.entities.values():
+        integration_domain = entity_entry.platform
+        integration_info = integrations_info.setdefault(
+            integration_domain, {"devices": [], "entities": []}
+        )
+
+        devices_info = integration_info["devices"]
+        entities_info = integration_info["entities"]
+
+        entity_state = hass.states.get(entity_entry.entity_id)
+
+        entity_info = {
+            # LIMITATION: `assumed_state` can be overridden by users;
+            # we should replace it with the original value in the future.
+            # It is also not present, if entity is not in the state machine,
+            # which can happen for disabled entities.
+            "assumed_state": entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
+            if entity_state is not None
+            else None,
+            "capabilities": entity_entry.capabilities,
+            "domain": entity_entry.domain,
+            "entity_category": entity_entry.entity_category,
+            "has_entity_name": entity_entry.has_entity_name,
+            "original_device_class": entity_entry.original_device_class,
+            # LIMITATION: `unit_of_measurement` can be overridden by users;
+            # we should replace it with the original value in the future.
+            "unit_of_measurement": entity_entry.unit_of_measurement,
+        }
+
+        if (
+            ((device_id := entity_entry.device_id) is not None)
+            and ((new_device_id := device_id_mapping.get(device_id)) is not None)
+            and (new_device_id[0] == integration_domain)
+        ):
+            device_info = devices_info[new_device_id[1]]
+            device_info["entities"].append(entity_info)
+        else:
+            entities_info.append(entity_info)
 
     integrations = {
         domain: integration
         for domain, integration in (
-            await async_get_integrations(hass, seen_integrations)
+            await async_get_integrations(hass, integrations_info.keys())
         ).items()
         if isinstance(integration, Integration)
     }
 
-    for device_info in devices:
-        if integration := integrations.get(device_info["integration"]):
-            device_info["is_custom_integration"] = not integration.is_built_in
+    for domain, integration_info in integrations_info.items():
+        if integration := integrations.get(domain):
+            integration_info["is_custom_integration"] = not integration.is_built_in
             # Include version for custom integrations
             if not integration.is_built_in and integration.version:
-                device_info["custom_integration_version"] = str(integration.version)
+                integration_info["custom_integration_version"] = str(
+                    integration.version
+                )
 
     return {
         "version": "home-assistant:1",
         "home_assistant": HA_VERSION,
-        "devices": devices,
+        "integrations": integrations_info,
     }

@@ -61,8 +61,15 @@ async def async_setup_entry(
                 if (
                     state := getattr(speaker.soco, select_data.soco_attribute, None)
                 ) is not None:
-                    setattr(speaker, select_data.speaker_attribute, state)
-                    features.append(select_data)
+                    try:
+                        setattr(speaker, select_data.speaker_attribute, int(state))
+                        features.append(select_data)
+                    except ValueError:
+                        _LOGGER.error(
+                            "Invalid value for %s %s",
+                            select_data.speaker_attribute,
+                            state,
+                        )
         return features
 
     async def _async_create_entities(speaker: SonosSpeaker) -> None:

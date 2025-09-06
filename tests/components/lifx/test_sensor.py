@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import pytest
+
 from homeassistant.components import lifx
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
@@ -32,6 +34,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.usefixtures("mock_discovery")
 async def test_rssi_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -88,6 +91,7 @@ async def test_rssi_sensor(
     assert rssi.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
 
+@pytest.mark.usefixtures("mock_discovery")
 async def test_rssi_sensor_old_firmware(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:

@@ -5,6 +5,9 @@
       "changed_states": "{entity_name} update availability changed",
       "turned_on": "{entity_name} got an update available",
       "turned_off": "{entity_name} became up-to-date"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
   "entity_component": {

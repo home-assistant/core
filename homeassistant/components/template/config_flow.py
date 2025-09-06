@@ -514,7 +514,7 @@ TEMPLATE_TYPES = [
 ]
 
 CONFIG_FLOW = {
-    "user": SchemaFlowMenuStep(TEMPLATE_TYPES),
+    "user": SchemaFlowMenuStep(TEMPLATE_TYPES, True),
     Platform.ALARM_CONTROL_PANEL: SchemaFlowFormStep(
         config_schema(Platform.ALARM_CONTROL_PANEL),
         preview="template",

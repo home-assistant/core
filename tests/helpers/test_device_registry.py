@@ -351,6 +351,7 @@ async def test_loading_from_storage(
                     "connections": [["Zigbee", "23.45.67.89.01"]],
                     "created_at": created_at,
                     "disabled_by": dr.DeviceEntryDisabler.USER,
+                    "disabled_by_undefined": False,
                     "id": "bcdefghijklmn",
                     "identifiers": [["serial", "3456ABCDEF12"]],
                     "labels": {"label1", "label2"},
@@ -586,7 +587,8 @@ async def test_migration_from_1_1(
                     "config_entries_subentries": {"123456": [None]},
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
-                    "disabled_by": "UNDEFINED",
+                    "disabled_by": None,
+                    "disabled_by_undefined": True,
                     "id": "deletedid",
                     "identifiers": [["serial", "123456ABCDFF"]],
                     "labels": [],
@@ -1482,6 +1484,7 @@ async def test_migration_from_1_10(
                     "connections": [["mac", "123456ABCDAB"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
+                    "disabled_by_undefined": False,
                     "id": "abcdefghijklm2",
                     "identifiers": [["serial", "123456ABCDAB"]],
                     "labels": [],
@@ -1558,6 +1561,143 @@ async def test_migration_from_1_10(
                     "connections": [["mac", "12:34:56:ab:cd:ab"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
+                    "disabled_by_undefined": False,
+                    "id": "abcdefghijklm2",
+                    "identifiers": [["serial", "123456ABCDAB"]],
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "orphaned_timestamp": "1970-01-01T00:00:00+00:00",
+                },
+            ],
+        },
+    }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("freezer")
+async def test_migration_from_1_11(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration from version 1.11."""
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 10,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [mock_config_entry.entry_id],
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
+                    "configuration_url": None,
+                    "connections": [["mac", "123456ABCDEF"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "hw_version": "hw_version",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "123456ABCDEF"]],
+                    "labels": ["blah"],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "primary_config_entry": mock_config_entry.entry_id,
+                    "serial_number": None,
+                    "sw_version": "new_version",
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [
+                {
+                    "area_id": None,
+                    "config_entries": ["234567"],
+                    "config_entries_subentries": {"234567": [None]},
+                    "connections": [["mac", "123456ABCDAB"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "id": "abcdefghijklm2",
+                    "identifiers": [["serial", "123456ABCDAB"]],
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "orphaned_timestamp": "1970-01-01T00:00:00+00:00",
+                },
+            ],
+        },
+    }
+
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("serial", "123456ABCDEF")},
+    )
+    assert entry.id == "abcdefghijklm"
+    deleted_entry = registry.deleted_devices.get_entry(
+        connections=set(),
+        identifiers={("serial", "123456ABCDAB")},
+    )
+    assert deleted_entry.id == "abcdefghijklm2"
+
+    # Update to trigger a store
+    entry = registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("serial", "123456ABCDEF")},
+        sw_version="new_version",
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+
+    assert hass_storage[dr.STORAGE_KEY] == {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [mock_config_entry.entry_id],
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
+                    "configuration_url": None,
+                    "connections": [["mac", "12:34:56:ab:cd:ef"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "hw_version": "hw_version",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "123456ABCDEF"]],
+                    "labels": ["blah"],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "primary_config_entry": mock_config_entry.entry_id,
+                    "serial_number": None,
+                    "sw_version": "new_version",
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [
+                {
+                    "area_id": None,
+                    "config_entries": ["234567"],
+                    "config_entries_subentries": {"234567": [None]},
+                    "connections": [["mac", "12:34:56:ab:cd:ab"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "disabled_by_undefined": False,
                     "id": "abcdefghijklm2",
                     "identifiers": [["serial", "123456ABCDAB"]],
                     "labels": [],

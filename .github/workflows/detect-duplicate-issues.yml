@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Check if integration label was added and extract details
         id: extract
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@v8
         with:
           script: |
             // Debug: Log the event payload
@@ -113,7 +113,7 @@ jobs:
       - name: Fetch similar issues
         id: fetch_similar
         if: steps.extract.outputs.should_continue == 'true'
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@v8
         env:
           INTEGRATION_LABELS: ${{ steps.extract.outputs.integration_labels }}
           CURRENT_NUMBER: ${{ steps.extract.outputs.current_number }}
@@ -280,7 +280,7 @@ jobs:
       - name: Post duplicate detection results
         id: post_results
         if: steps.extract.outputs.should_continue == 'true' && steps.fetch_similar.outputs.has_similar == 'true'
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@v8
         env:
           AI_RESPONSE: ${{ steps.ai_detection.outputs.response }}
           SIMILAR_ISSUES: ${{ steps.fetch_similar.outputs.similar_issues }}
