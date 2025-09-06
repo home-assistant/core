@@ -94,18 +94,10 @@ class BasePlatform(Entity):
         self._attr_name = entry[CONF_NAME]
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
 
-        def get_optional_numeric_config(config_name: str) -> int | float | None:
-            if (val := entry.get(config_name)) is None:
-                return None
-            assert isinstance(val, (float, int)), (
-                f"Expected float or int but {config_name} was {type(val)}"
-            )
-            return val
-
-        self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
-        self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
+        self._min_value = entry.get(CONF_MIN_VALUE)
+        self._max_value = entry.get(CONF_MAX_VALUE)
         self._nan_value = entry.get(CONF_NAN_VALUE)
-        self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
+        self._zero_suppress = entry.get(CONF_ZERO_SUPPRESS)
 
     @abstractmethod
     async def _async_update(self) -> None:
