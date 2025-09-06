@@ -21,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from .const import DATA_LCD_GET_CONFIG_NO_LED, MOCK_HOST, MOCK_PORT
@@ -249,17 +248,19 @@ async def test_light_entity_becomes_unavailable_when_led_attributes_missing(
     assert state is not None
     assert state.state == STATE_ON
 
-    # Simulate router LCD config being updated without LED attributes
-    router_instance = entry.runtime_data
-    router_instance.lcd_config = DATA_LCD_GET_CONFIG_NO_LED
+    # Change the mock to return config without LED attributes
+    router().lcd.get_configuration.return_value = DATA_LCD_GET_CONFIG_NO_LED
 
-    # Trigger state update by dispatching the LCD update signal
-
-    async_dispatcher_send(hass, router_instance.signal_lcd_update)
-    await hass.async_block_till_done()
+    # Try to turn the light on - this should trigger an update and make the entity unavailable
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
 
     state = hass.states.get(entity_id)
-    # Entity should become unavailable
+    # Entity should become unavailable because it no longer has LED strip support
     assert state.state == "unavailable"
 
 

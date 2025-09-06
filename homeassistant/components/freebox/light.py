@@ -17,7 +17,6 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -40,18 +39,29 @@ async def async_setup_entry(
         getattr(router, "mac", "unknown"),
     )
 
-    # Ensure lcd_config is fetched from the API before checks
-    await router.update_lcd_config()
-
-    # Log the LCD config for diagnostics
-    lcd_config = router.lcd_config
-    if not router or not lcd_config or not isinstance(lcd_config, dict):
+    # Fetch LCD configuration from API to check LED strip support
+    try:
+        lcd_config = await router.lcd.get_configuration()
+        if not lcd_config or not isinstance(lcd_config, dict):
+            return
+    except (HttpRequestError, InsufficientPermissionsError, AttributeError) as err:
+        _LOGGER.debug(
+            "LCD config API not available for router '%s' (mac=%s): %s",
+            router.name,
+            router.mac,
+            err,
+        )
         return
 
     # Check if the router has LCD configuration with LED strip attributes
-    if not _has_led_strip_support(router.lcd_config):
+    if not _has_led_strip_support(lcd_config):
+        _LOGGER.debug(
+            "LED strip not supported - missing attributes: %s",
+            _missing_led_attrs(lcd_config),
+        )
         return
 
+    _LOGGER.debug("Creating LED strip light entity for router %s", router.mac)
     async_add_entities([FreeboxLEDStripLight(router)], True)
 
 
@@ -108,6 +118,10 @@ class FreeboxLEDStripLight(LightEntity):
         """Initialize the Freebox LED strip light."""
         self._router = router
         self._attr_unique_id = f"{router.mac}-led_strip"
+        self._attr_name = (
+            "LED strip"  # Fallback name for when translations aren't loaded
+        )
+        self._lcd_config: dict[str, Any] = {}
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, router.mac)},
@@ -116,20 +130,37 @@ class FreeboxLEDStripLight(LightEntity):
             model=router.name,
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Register state update callback."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self._router.signal_lcd_update,
-                self.async_write_ha_state,
+    async def async_update(self) -> None:
+        """Update the LCD configuration from API."""
+        try:
+            response = await self._router.lcd.get_configuration()
+            if (
+                response
+                and isinstance(response, dict)
+                and "led_strip_brightness" in response
+            ):
+                self._lcd_config = response
+            else:
+                _LOGGER.debug(
+                    "Invalid LCD API response for router '%s' (mac=%s). Response: %s",
+                    self._router.name,
+                    self._router.mac,
+                    response,
+                )
+                self._lcd_config = {}
+        except (HttpRequestError, InsufficientPermissionsError, AttributeError) as err:
+            _LOGGER.debug(
+                "LCD config API not available for router '%s' (mac=%s): %s",
+                self._router.name,
+                self._router.mac,
+                err,
             )
-        )
+            self._lcd_config = {}
 
     @property
     def is_on(self) -> bool:
         """Return if the light is on."""
-        return self._router.lcd_config.get("led_strip_enabled", False)
+        return self._lcd_config.get("led_strip_enabled", False)
 
     @property
     def brightness(self) -> int | None:
@@ -137,7 +168,7 @@ class FreeboxLEDStripLight(LightEntity):
         if not self.is_on:
             return None
 
-        brightness_pct = self._router.lcd_config.get("led_strip_brightness", 100)
+        brightness_pct = self._lcd_config.get("led_strip_brightness", 100)
         # Convert from 0-100 to 0-255
         return int((brightness_pct / 100) * 255)
 
@@ -146,12 +177,12 @@ class FreeboxLEDStripLight(LightEntity):
         """Return the current effect."""
         if not self.is_on:
             return None
-        return self._router.lcd_config.get("led_strip_animation")
+        return self._lcd_config.get("led_strip_animation")
 
     @property
     def effect_list(self) -> list[str] | None:
         """Return list of available effects."""
-        return self._router.lcd_config.get("available_led_strip_animations")
+        return self._lcd_config.get("available_led_strip_animations")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
@@ -170,7 +201,7 @@ class FreeboxLEDStripLight(LightEntity):
         # Handle effect
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
-            available_effects = self._router.lcd_config.get(
+            available_effects = self._lcd_config.get(
                 "available_led_strip_animations", []
             )
             if effect in available_effects:
@@ -184,7 +215,9 @@ class FreeboxLEDStripLight(LightEntity):
 
         # Send the configuration (only this part can raise exceptions)
         try:
-            await self._router.set_lcd_config(config)
+            await self._router.lcd.set_configuration(config)
+            # Update state after successful configuration
+            await self.async_update()
         except InsufficientPermissionsError:
             _LOGGER.warning(
                 "Insufficient permissions to control LED strip. Please grant 'Modification des réglages de la Freebox' permission in Freebox settings"
@@ -204,7 +237,9 @@ class FreeboxLEDStripLight(LightEntity):
         # Send only the value to change (only this part can raise exceptions)
         config: dict[str, Any] = {"led_strip_enabled": False}
         try:
-            await self._router.set_lcd_config(config)
+            await self._router.lcd.set_configuration(config)
+            # Update state after successful configuration
+            await self.async_update()
         except InsufficientPermissionsError:
             _LOGGER.warning(
                 "Insufficient permissions to control LED strip. Please grant 'Modification des réglages de la Freebox' permission in Freebox settings"
@@ -221,4 +256,4 @@ class FreeboxLEDStripLight(LightEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return _has_led_strip_support(self._router.lcd_config)
+        return _has_led_strip_support(self._lcd_config)
