@@ -48,6 +48,9 @@
       },
       "music_surround_level": {
         "name": "Music surround level"
+      },
+      "group_volume": {
+        "name": "Group volume"
       }
     },
     "select": {
