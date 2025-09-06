@@ -12,6 +12,12 @@
           "preferred": "Preferred"
         }
       },
+      "pipeline_2": {
+        "name": "Secondary Assistant",
+        "state": {
+          "preferred": "Preferred"
+        }
+      },
       "vad_sensitivity": {
         "name": "Finished speaking detection",
         "state": {
