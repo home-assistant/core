@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/asuswrt",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["aioasuswrt", "asyncssh"],
-  "requirements": ["aioasuswrt==1.4.0", "asusrouter==1.18.2"]
+  "loggers": ["aioasuswrt", "asusrouter", "asyncssh"],
+  "requirements": ["aioasuswrt==1.4.0", "asusrouter==1.21.0"]
 }
