@@ -736,3 +736,56 @@ async def test_more_coverage_edge_cases(
     backup_list = await agent.async_list_backups()
     assert len(backup_list) == 2
     assert mock_backup in backup_list
+
+
+async def test_push_for_95_coverage(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Push for 95%+ coverage targeting remaining easy lines."""
+    agent = BackblazeBackupAgent(hass, mock_config_entry)
+
+    # Test cache update when backup is found directly (line 583)
+    agent._backup_list_cache = {"other_backup": Mock()}
+    agent._backup_list_cache_expiration = time() + 300  # Valid cache
+
+    # Mock the file finding chain
+    mock_file = Mock(id_="test_id", file_name="direct_backup.tar")
+    mock_metadata_file = Mock()
+    mock_metadata_file.download.return_value.response.content.decode.return_value = (
+        '{"backup_id": "direct_backup"}'
+    )
+
+    mock_metadata_content = {"backup_id": "direct_backup", "name": "test"}
+
+    with (
+        patch.object(
+            agent,
+            "_find_file_and_metadata_version_by_id",
+            return_value=(mock_file, mock_metadata_file),
+        ),
+        patch(
+            "homeassistant.components.backblaze.backup._parse_and_validate_metadata",
+            return_value=mock_metadata_content,
+        ),
+        patch.object(agent, "_backup_from_b2_metadata") as mock_backup_from_metadata,
+    ):
+        test_backup = AgentBackup(
+            backup_id="direct_backup",
+            date="2021-01-01T00:00:00+00:00",
+            name="direct_backup",
+            size=1000,
+            addons=[],
+            database_included=False,
+            extra_metadata={},
+            folders=[],
+            homeassistant_included=False,
+            homeassistant_version=None,
+            protected=False,
+        )
+        mock_backup_from_metadata.return_value = test_backup
+
+        # This should trigger line 583 (cache update)
+        result = await agent.async_get_backup("direct_backup")
+        assert result == test_backup
+        # Verify cache was updated
+        assert "direct_backup" in agent._backup_list_cache
