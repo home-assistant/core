@@ -25,6 +25,7 @@ MAX_IMAGES = 20
 SERVICE_GENERATE_DATA = "generate_data"
 SERVICE_GENERATE_IMAGE = "generate_image"
 
+ATTR_SYSTEM_PROMPT: Final = "system_prompt"
 ATTR_INSTRUCTIONS: Final = "instructions"
 ATTR_TASK_NAME: Final = "task_name"
 ATTR_STRUCTURE: Final = "structure"
