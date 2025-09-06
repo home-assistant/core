@@ -26,6 +26,7 @@ import voluptuous as vol
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_source import (
+    async_resolve_media,
     generate_media_source_id as ms_generate_media_source_id,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -41,6 +42,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
@@ -124,6 +126,8 @@ _RE_VOICE_FILE = re.compile(
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
 
 SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
+
+FFMPEG_CHUNK_SIZE: Final[int] = 4096
 
 
 class TTSCache:
@@ -366,10 +370,9 @@ async def _async_convert_audio(
     )
 
     assert process.stdout
-    chunk_size = 4096
     try:
         while True:
-            chunk = await process.stdout.read(chunk_size)
+            chunk = await process.stdout.read(FFMPEG_CHUNK_SIZE)
             if not chunk:
                 break
             yield chunk
@@ -485,6 +488,10 @@ class ResultStream:
 
     _manager: SpeechManager
 
+    # Override
+    hass: HomeAssistant
+    _override_media_id: str | None = None
+
     @cached_property
     def url(self) -> str:
         """Get the URL to stream the result."""
@@ -536,11 +543,85 @@ class ResultStream:
 
     async def async_stream_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of this result."""
+        if self._override_media_id is not None:
+            # Overridden
+            async for chunk in self._async_stream_override_result():
+                yield chunk
+
+            self.last_used = monotonic()
+            return
+
         cache = await self._result_cache
         async for chunk in cache.async_stream_data():
             yield chunk
 
         self.last_used = monotonic()
+
+    def async_override_result(self, media_id: str) -> None:
+        """Override the TTS stream with a different media id."""
+        self._override_media_id = media_id
+
+    async def _async_stream_override_result(self) -> AsyncGenerator[bytes]:
+        """Get the stream of the overridden result."""
+        assert self._override_media_id is not None
+        media = await async_resolve_media(self.hass, self._override_media_id)
+
+        # Determine if we need to do audio conversion
+        preferred_extension: str | None = self.options.get(ATTR_PREFERRED_FORMAT)
+        sample_rate: int | None = self.options.get(ATTR_PREFERRED_SAMPLE_RATE)
+        sample_channels: int | None = self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
+        sample_bytes: int | None = self.options.get(ATTR_PREFERRED_SAMPLE_BYTES)
+
+        needs_conversion = (
+            preferred_extension
+            or (sample_rate is not None)
+            or (sample_channels is not None)
+            or (sample_bytes is not None)
+        )
+
+        if not needs_conversion:
+            # Stream directly from URL (no conversion)
+            session = async_get_clientsession(self.hass)
+            async with session.get(media.url) as response:
+                async for chunk in response.content:
+                    yield chunk
+
+            return
+
+        # Use ffmpeg to convert and stream
+        ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
+        command = [
+            ffmpeg_manager.binary,
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-i",
+            media.url,
+        ]
+
+        if preferred_extension:
+            command.extend(["-f", preferred_extension])
+        if sample_rate is not None:
+            command.extend(["-ar", str(sample_rate)])
+        if sample_channels is not None:
+            command.extend(["-ac", str(sample_channels)])
+        if preferred_extension == "mp3":
+            # Max quality for MP3.
+            command.extend(["-q:a", "0"])
+        if sample_bytes == 2:
+            # 16-bit samples.
+            command.extend(["-sample_fmt", "s16"])
+        command.append("pipe:1")  # Send output to stdout.
+
+        process = await asyncio.create_subprocess_exec(
+            *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL
+        )
+        assert process.stdout
+        while True:
+            chunk = await process.stdout.read(FFMPEG_CHUNK_SIZE)
+            if not chunk:
+                break
+            yield chunk
 
 
 def _hash_options(options: dict) -> str:
@@ -773,6 +854,7 @@ class SpeechManager:
             language=language,
             options=options,
             supports_streaming_input=supports_streaming_input,
+            hass=self.hass,
             _manager=self,
         )
         self.token_to_stream[token] = result_stream
