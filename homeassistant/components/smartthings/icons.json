@@ -113,6 +113,13 @@
           "off": "mdi:lightbulb-off"
         }
       },
+      "beep": {
+        "default": "mdi:volume-high",
+        "state": {
+          "on": "mdi:volume-high",
+          "off": "mdi:volume-off"
+        }
+      },
       "wrinkle_prevent": {
         "default": "mdi:tumble-dryer",
         "state": {
