@@ -63,9 +63,7 @@ def setup_platform(
 
     if russ.is_connected():
         for zone_id, extra in config[CONF_ZONES].items():
-            add_entities(
-                [RussoundRNETDevice(russ, sources, zone_id, extra)], True
-            )
+            add_entities([RussoundRNETDevice(russ, sources, zone_id, extra)], True)
     else:
         _LOGGER.error("Not connected to %s:%s", host, port)
 
