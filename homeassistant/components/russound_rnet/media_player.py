@@ -64,7 +64,7 @@ def setup_platform(
     if russ.is_connected():
         for zone_id, extra in config[CONF_ZONES].items():
             add_entities(
-                [RussoundRNETDevice(hass, russ, sources, zone_id, extra)], True
+                [RussoundRNETDevice(russ, sources, zone_id, extra)], True
             )
     else:
         _LOGGER.error("Not connected to %s:%s", host, port)
@@ -81,7 +81,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, _, russ, sources, zone_id, extra) -> None:
+    def __init__(self, russ, sources, zone_id, extra) -> None:
         """Initialise the Russound RNET device."""
         self._attr_name = extra["name"]
         self._russ = russ
