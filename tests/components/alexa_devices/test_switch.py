@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -66,9 +67,27 @@ async def test_switch_dnd(
 
     assert mock_amazon_devices_client.set_do_not_disturb.call_count == 1
 
-    mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_SERIAL_NUMBER
-    ].do_not_disturb = True
+    mock_amazon_devices_client.get_devices_data.return_value[TEST_SERIAL_NUMBER] = (
+        AmazonDevice(
+            account_name="Echo Test",
+            capabilities=["AUDIO_PLAYER", "MICROPHONE"],
+            device_family="mine",
+            device_type="echo",
+            device_owner_customer_id="amazon_ower_id",
+            device_cluster_members=[TEST_SERIAL_NUMBER],
+            online=True,
+            serial_number=TEST_SERIAL_NUMBER,
+            software_version="echo_test_software_version",
+            entity_id="11111111-2222-3333-4444-555555555555",
+            endpoint_id="G1234567890123456789012345678A",
+            sensors={
+                "dnd": AmazonDeviceSensor(name="dnd", value=True, scale=None),
+                "temperature": AmazonDeviceSensor(
+                    name="temperature", value="22.5", scale="CELSIUS"
+                ),
+            },
+        )
+    )
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -84,9 +103,27 @@ async def test_switch_dnd(
         blocking=True,
     )
 
-    mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_SERIAL_NUMBER
-    ].do_not_disturb = False
+    mock_amazon_devices_client.get_devices_data.return_value[TEST_SERIAL_NUMBER] = (
+        AmazonDevice(
+            account_name="Echo Test",
+            capabilities=["AUDIO_PLAYER", "MICROPHONE"],
+            device_family="mine",
+            device_type="echo",
+            device_owner_customer_id="amazon_ower_id",
+            device_cluster_members=[TEST_SERIAL_NUMBER],
+            online=True,
+            serial_number=TEST_SERIAL_NUMBER,
+            software_version="echo_test_software_version",
+            entity_id="11111111-2222-3333-4444-555555555555",
+            endpoint_id="G1234567890123456789012345678A",
+            sensors={
+                "dnd": AmazonDeviceSensor(name="dnd", value=False, scale=None),
+                "temperature": AmazonDeviceSensor(
+                    name="temperature", value="22.5", scale="CELSIUS"
+                ),
+            },
+        )
+    )
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
