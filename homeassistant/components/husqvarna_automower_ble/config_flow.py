@@ -47,6 +47,13 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
         LOGGER.debug("Unsupported device: %s (%s)", manufacturer_data, discovery_info)
         return False
 
+    if not manufacturer_data.pairable:
+        LOGGER.error("The mower does not appear to be pairable")
+        LOGGER.error("Ensure the mower is in pairing mode before continuing")
+        LOGGER.error(
+            "If the mower isn't pariable you will receive authentication errors and be unable to connect"
+        )
+
     LOGGER.debug("Supported device: %s", manufacturer_data)
     return True
 
