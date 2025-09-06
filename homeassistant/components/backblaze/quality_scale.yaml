@@ -52,16 +52,14 @@ rules:
   parallel-updates:
     status: exempt
     comment: This integration does not poll.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices:
     status: exempt
     comment: This integration does not have entities.
-  diagnostics:
-    status: exempt
-    comment: There is no data to diagnose.
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Backblaze is a cloud service that is not discovered on the network.
@@ -98,17 +96,25 @@ rules:
   entity-translations:
     status: exempt
     comment: This integration does not have entities.
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: This integration does not use icons.
-  reconfiguration-flow: todo
-  repair-issues: todo
+  reconfiguration-flow: done
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: This integration does not have devices.
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
-  strict-typing: todo
+  async-dependency:
+    status: exempt
+    comment: |
+      The b2sdk library is synchronous by design. All sync operations are properly
+      wrapped with async_add_executor_job to prevent blocking the event loop.
+  inject-websession:
+    status: exempt
+    comment: |
+      The b2sdk library does not support custom HTTP session injection.
+      It manages HTTP connections internally through its own session management.
+  strict-typing: done

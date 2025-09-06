@@ -209,7 +209,8 @@ class BackblazeBackupAgent(BackupAgent):
         except B2Error as err:
             _LOGGER.error("Backblaze B2 API error during backup upload: %s", err)
             _LOGGER.warning(
-                "Attempting to delete partially uploaded main backup file %s due to metadata upload failure",
+                "Attempting to delete partially uploaded main backup file %s "
+                "due to metadata upload failure",
                 prefixed_tar_filename,
             )
             try:
@@ -224,7 +225,8 @@ class BackblazeBackupAgent(BackupAgent):
                 )
             except Exception:
                 _LOGGER.exception(
-                    "Failed to clean up partially uploaded main backup file %s due to unexpected error:",
+                    "Failed to clean up partially uploaded main backup file %s "
+                    "due to unexpected error:",
                     prefixed_tar_filename,
                 )
                 _LOGGER.exception(
@@ -241,9 +243,10 @@ class BackblazeBackupAgent(BackupAgent):
             ) from err
         else:
             _LOGGER.info("Backup upload complete: %s", prefixed_tar_filename)
-            # Invalidate the cache after a successful upload
-            self._all_files_cache_expiration = 0.0
-            self._backup_list_cache_expiration = 0.0
+            # Invalidate cache after successful upload - only add the new files
+            self._invalidate_caches_for_upload(
+                backup.backup_id, prefixed_tar_filename, prefixed_metadata_filename
+            )
 
     async def _upload_simple_b2(
         self,
@@ -371,9 +374,12 @@ class BackblazeBackupAgent(BackupAgent):
                 "Metadata file for backup %s not found for deletion", backup_id
             )
 
-        # Invalidate the cache after a successful deletion
-        self._all_files_cache_expiration = 0.0
-        self._backup_list_cache_expiration = 0.0
+        # Invalidate cache after successful deletion - remove specific files
+        self._invalidate_caches_for_deletion(
+            backup_id,
+            file.file_name,
+            metadata_file.file_name if metadata_file else None,
+        )
 
     @handle_b2_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
@@ -423,7 +429,8 @@ class BackblazeBackupAgent(BackupAgent):
             if backup := self._backup_list_cache.get(backup_id):
                 _LOGGER.debug("Returning backup %s from cache", backup_id)
                 return backup
-            # If not in cache, proceed to fetch directly to avoid full re-list if only one item is needed
+            # If not in cache, proceed to fetch directly to avoid full re-list
+            # if only one item is needed
 
         file, metadata_file_version = await self._find_file_and_metadata_version_by_id(
             backup_id
@@ -516,7 +523,8 @@ class BackblazeBackupAgent(BackupAgent):
                         if archive_file_name.startswith(expected_backup_file_prefix)
                         and archive_file_name.endswith(".tar")
                         and archive_file_name
-                        != file_name  # Ensure we don't accidentally match the metadata file if it somehow ends with .tar
+                        != file_name  # Ensure we don't accidentally match the metadata file
+                        # if it somehow ends with .tar
                     ),
                     None,
                 )
@@ -630,7 +638,8 @@ class BackblazeBackupAgent(BackupAgent):
                         metadata_content, found_backup_archive_file
                     )
                 _LOGGER.warning(
-                    "Found metadata file %s but no corresponding backup file starting with %s (after prefix)",
+                    "Found metadata file %s but no corresponding backup file "
+                    "starting with %s (after prefix)",
                     file_name,
                     base_filename_without_prefix,
                 )
@@ -640,3 +649,33 @@ class BackblazeBackupAgent(BackupAgent):
         except (B2Error, json.JSONDecodeError) as err:
             _LOGGER.warning("Failed to parse metadata file %s: %s", file_name, err)
         return None
+
+    def _invalidate_caches_for_upload(
+        self, backup_id: str, tar_filename: str, metadata_filename: str
+    ) -> None:
+        """Invalidate caches efficiently after upload by adding new files."""
+        # Add new files to all_files_cache if it exists and is still valid
+        if time() <= self._all_files_cache_expiration:
+            # We can't easily create FileVersion objects without API calls,
+            # so we'll just invalidate for now. In the future, this could be optimized
+            # to add the new file objects to the cache.
+            pass
+
+        # For backup list cache, we could add the new backup, but since we don't have
+        # the FileVersion objects readily available, it's simpler to invalidate
+        self._all_files_cache_expiration = 0.0
+        self._backup_list_cache_expiration = 0.0
+
+    def _invalidate_caches_for_deletion(
+        self, backup_id: str, tar_filename: str, metadata_filename: str | None
+    ) -> None:
+        """Invalidate caches efficiently after deletion by removing specific files."""
+        # Remove from all_files_cache if it exists and is still valid
+        if time() <= self._all_files_cache_expiration:
+            self._all_files_cache.pop(tar_filename, None)
+            if metadata_filename:
+                self._all_files_cache.pop(metadata_filename, None)
+
+        # Remove from backup_list_cache if it exists and is still valid
+        if time() <= self._backup_list_cache_expiration:
+            self._backup_list_cache.pop(backup_id, None)

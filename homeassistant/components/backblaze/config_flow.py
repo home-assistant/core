@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from typing import Any, cast
 
 from b2sdk.v2 import B2Api, InMemoryAccountInfo, exception
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -46,6 +47,8 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Backblaze."""
 
     VERSION = 1
+
+    reauth_entry: ConfigEntry[Any] | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -190,3 +193,101 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         return errors, placeholders
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication flow."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        assert self.reauth_entry is not None
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication."""
+        assert self.reauth_entry is not None
+        errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
+
+        if user_input is not None:
+            # Validate the new credentials
+            validation_input = {
+                CONF_KEY_ID: user_input[CONF_KEY_ID],
+                CONF_APPLICATION_KEY: user_input[CONF_APPLICATION_KEY],
+                CONF_BUCKET: self.reauth_entry.data[CONF_BUCKET],
+                CONF_PREFIX: self.reauth_entry.data[CONF_PREFIX],
+            }
+
+            errors, placeholders = await self._async_validate_backblaze_connection(
+                validation_input
+            )
+
+            if not errors:
+                # Update the config entry with new credentials
+                return self.async_update_reload_and_abort(
+                    self.reauth_entry,
+                    data_updates={
+                        CONF_KEY_ID: user_input[CONF_KEY_ID],
+                        CONF_APPLICATION_KEY: user_input[CONF_APPLICATION_KEY],
+                    },
+                )
+
+        # Show the reauthentication form
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_KEY_ID): cv.string,
+                    vol.Required(CONF_APPLICATION_KEY): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "bucket": self.reauth_entry.data[CONF_BUCKET],
+                **placeholders,
+            },
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration flow."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry is not None
+
+        if user_input is not None:
+            # Validate the reconfigured settings
+            errors, placeholders = await self._async_validate_backblaze_connection(
+                user_input
+            )
+
+            if not errors:
+                # Ensure the prefix always ends with a slash if it's not empty
+                if user_input[CONF_PREFIX] and not user_input[CONF_PREFIX].endswith(
+                    "/"
+                ):
+                    user_input[CONF_PREFIX] += "/"
+
+                # Update the configuration entry
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates=user_input,
+                )
+        else:
+            errors = {}
+            placeholders = {}
+
+        # Show the reconfiguration form with current values
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or entry.data
+            ),
+            errors=errors,
+            description_placeholders=placeholders,
+        )
