@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_MODEL_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    CONF_URL,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import Event, HassJobType, HomeAssistant, callback
@@ -74,6 +75,7 @@ from .const import (
     CONF_AVAILABILITY_TOPIC,
     CONF_CONFIGURATION_URL,
     CONF_CONNECTIONS,
+    CONF_DEFAULT_ENTITY_ID,
     CONF_ENABLED_BY_DEFAULT,
     CONF_ENCODING,
     CONF_ENTITY_PICTURE,
@@ -83,6 +85,7 @@ from .const import (
     CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
     CONF_OBJECT_ID,
+    CONF_ORIGIN,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
@@ -1406,12 +1409,62 @@ class MqttEntity(
         ensure_via_device_exists(self.hass, self.device_info, self._config_entry)
 
     def _init_entity_id(self) -> None:
-        """Set entity_id from object_id if defined in config."""
-        if CONF_OBJECT_ID not in self._config:
+        """Set entity_id from default_entity_id if defined in config."""
+        object_id: str
+        default_entity_id: str | None
+        # Setting the default entity_id through the CONF_OBJECT_ID is deprecated
+        # Support will be removed with HA Core 2026.4
+        if (
+            CONF_DEFAULT_ENTITY_ID not in self._config
+            and CONF_OBJECT_ID not in self._config
+        ):
             return
+        if (default_entity_id := self._config.get(CONF_DEFAULT_ENTITY_ID)) is None:
+            object_id = self._config[CONF_OBJECT_ID]
+        else:
+            _, _, object_id = default_entity_id.partition(".")
         self.entity_id = async_generate_entity_id(
-            self._entity_id_format, self._config[CONF_OBJECT_ID], None, self.hass
+            self._entity_id_format, object_id, None, self.hass
         )
+        if CONF_OBJECT_ID in self._config:
+            domain = self.entity_id.split(".")[0]
+            if not self._discovery:
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    self.entity_id,
+                    issue_domain=DOMAIN,
+                    is_fixable=False,
+                    breaks_in_ha_version="2026.4",
+                    severity=IssueSeverity.WARNING,
+                    learn_more_url=f"{learn_more_url(domain)}#default_enity_id",
+                    translation_placeholders={
+                        "entity_id": self.entity_id,
+                        "object_id": self._config[CONF_OBJECT_ID],
+                        "domain": domain,
+                    },
+                    translation_key="deprecated_object_id",
+                )
+            else:
+                if CONF_ORIGIN in self._config:
+                    origin_name = self._config[CONF_ORIGIN][CONF_NAME]
+                    url = self._config[CONF_ORIGIN].get(CONF_URL)
+                    origin = f"[{origin_name}]({url})" if url else origin_name
+                else:
+                    origin = "the integration"
+                _LOGGER.warning(
+                    "The configuration for entity %s uses the deprecated option "
+                    "`object_id` to set the default entity id. Replace the "
+                    '`"object_id": "%s"` option with `"default_entity_id": '
+                    '"%s"` in your published discovery configuration to fix this '
+                    "issue, or contact the maintainer of %s that published this config "
+                    "to fix this. This will stop working in Home Assistant Core 2026.4",
+                    self.entity_id,
+                    self._config[CONF_OBJECT_ID],
+                    f"{domain}.{self._config[CONF_OBJECT_ID]}",
+                    origin,
+                )
+
         if self.unique_id is None:
             return
         # Check for previous deleted entities
