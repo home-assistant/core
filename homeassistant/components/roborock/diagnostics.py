@@ -1,4 +1,4 @@
-"""Support for the Airzone diagnostics."""
+"""Support for Roborock diagnostics."""
 
 from __future__ import annotations
 
