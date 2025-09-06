@@ -8,6 +8,10 @@
           "name": "Task name",
           "description": "Name of the task."
         },
+        "system_prompt": {
+          "name": "System prompt",
+          "description": "Custom system prompt."
+        },
         "instructions": {
           "name": "Instructions",
           "description": "Instructions on what needs to be done."

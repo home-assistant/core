@@ -112,6 +112,7 @@ async def async_generate_data(
     *,
     task_name: str,
     entity_id: str | None = None,
+    system_prompt: str | None = None,
     instructions: str,
     structure: vol.Schema | None = None,
     attachments: list[dict] | None = None,
@@ -148,6 +149,7 @@ async def async_generate_data(
             GenDataTask(
                 name=task_name,
                 instructions=instructions,
+                system_prompt=system_prompt,
                 structure=structure,
                 attachments=resolved_attachments or None,
             ),
@@ -254,6 +256,9 @@ class GenDataTask:
 
     instructions: str
     """Instructions on what needs to be done."""
+
+    system_prompt: str | None = None
+    """Custom system prompt."""
 
     structure: vol.Schema | None = None
     """Optional structure for the data to be generated."""

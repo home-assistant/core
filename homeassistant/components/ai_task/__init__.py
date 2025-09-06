@@ -26,6 +26,7 @@ from .const import (
     ATTR_INSTRUCTIONS,
     ATTR_REQUIRED,
     ATTR_STRUCTURE,
+    ATTR_SYSTEM_PROMPT,
     ATTR_TASK_NAME,
     DATA_COMPONENT,
     DATA_IMAGES,
@@ -106,6 +107,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             {
                 vol.Required(ATTR_TASK_NAME): cv.string,
                 vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+                vol.Optional(ATTR_SYSTEM_PROMPT): cv.string,
                 vol.Required(ATTR_INSTRUCTIONS): cv.string,
                 vol.Optional(ATTR_STRUCTURE): vol.All(
                     vol.Schema({str: STRUCTURE_FIELD_SCHEMA}),

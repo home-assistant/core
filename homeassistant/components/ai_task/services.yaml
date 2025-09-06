@@ -5,6 +5,12 @@ generate_data:
       required: true
       selector:
         text:
+    system_prompt:
+      example: "You are a Home Assistant expert"
+      required: false
+      selector:
+        text:
+          multiline: true
     instructions:
       example: "Generate a funny notification that the garage door was left open"
       required: true
