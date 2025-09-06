@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -26,11 +25,9 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import get_hub
-from .const import CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
+from .const import _LOGGER, CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
 from .entity import BaseStructPlatform
 from .modbus import ModbusHub
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -109,9 +106,6 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
 
     async def _async_update(self) -> None:
         """Update the state of the sensor."""
-        # remark "now" is a dummy parameter to avoid problems with
-        # async_track_time_interval
-        self._cancel_call = None
         raw_result = await self._hub.async_pb_call(
             self._slave, self._address, self._count, self._input_type
         )
@@ -187,6 +181,10 @@ class SlaveSensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        self._attr_native_value = result[self._idx] if result else None
-        self._attr_available = result is not None
+        if not result or self._idx >= len(result):
+            self._attr_native_value = None
+            self._attr_available = False
+        else:
+            self._attr_native_value = result[self._idx]
+            self._attr_available = True
         super()._handle_coordinator_update()

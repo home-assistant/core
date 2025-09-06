@@ -6,73 +6,51 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tuya_sharing import CustomerDevice
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
 )
-from homeassistant.components.tuya import ManagerCompat
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
 
-from . import DEVICE_MOCKS, initialize_entry
+from . import initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize(
-    "mock_device_code",
-    [k for k, v in DEVICE_MOCKS.items() if Platform.COVER in v],
-)
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
+    mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test platform setup and discovery."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    [k for k, v in DEVICE_MOCKS.items() if Platform.COVER not in v],
-)
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
-async def test_platform_setup_no_discovery(
-    hass: HomeAssistant,
-    mock_manager: ManagerCompat,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test platform setup without discovery."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    assert not er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-
-@pytest.mark.parametrize(
-    "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
 async def test_open_service(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
@@ -86,10 +64,10 @@ async def test_open_service(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
         {
-            "entity_id": entity_id,
+            ATTR_ENTITY_ID: entity_id,
         },
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id,
         [
@@ -101,12 +79,12 @@ async def test_open_service(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
 async def test_close_service(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
@@ -120,10 +98,10 @@ async def test_close_service(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
         {
-            "entity_id": entity_id,
+            ATTR_ENTITY_ID: entity_id,
         },
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id,
         [
@@ -135,11 +113,11 @@ async def test_close_service(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 async def test_set_position(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
@@ -153,11 +131,11 @@ async def test_set_position(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
         {
-            "entity_id": entity_id,
-            "position": 25,
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_POSITION: 25,
         },
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id,
         [
@@ -168,7 +146,7 @@ async def test_set_position(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 @pytest.mark.parametrize(
     ("percent_control", "percent_state"),
@@ -181,7 +159,7 @@ async def test_set_position(
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
 async def test_percent_state_on_cover(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
     percent_control: int,
@@ -197,16 +175,16 @@ async def test_percent_state_on_cover(
 
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
-    assert state.attributes["current_position"] == percent_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == percent_state
 
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 async def test_set_tilt_position_not_supported(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
@@ -221,8 +199,8 @@ async def test_set_tilt_position_not_supported(
             COVER_DOMAIN,
             SERVICE_SET_COVER_TILT_POSITION,
             {
-                "entity_id": entity_id,
-                "tilt_position": 50,
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_TILT_POSITION: 50,
             },
             blocking=True,
         )

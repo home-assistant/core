@@ -1,0 +1,56 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Humy bain",
+  "category": "wsdcg",
+  "product_id": "vtA4pDd6PLUZzXgZ",
+  "product_name": "Temperature and humidity sensor",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-19T12:04:21+00:00",
+  "create_time": "2025-07-19T12:04:21+00:00",
+  "update_time": "2025-07-19T12:04:21+00:00",
+  "function": {},
+  "status_range": {
+    "va_humidity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "va_temperature": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -20,
+        "max": 60,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "va_battery": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 500,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "va_humidity": 63,
+    "va_battery": 100,
+    "va_temperature": 20
+  },
+  "set_up": true,
+  "support_local": true
+}
