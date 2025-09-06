@@ -23,6 +23,7 @@ from homeassistant.components.tuya.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import dt as dt_util
 
@@ -219,3 +220,18 @@ def mock_listener(hass: HomeAssistant, mock_manager: Manager) -> MockDeviceListe
     listener = MockDeviceListener(hass, mock_manager)
     mock_manager.add_device_listener(listener)
     return listener
+
+
+# Helper functions for testing
+async def complete_options_flow(
+    hass: HomeAssistant, config_entry: MockConfigEntry, user_input: dict | None = None
+) -> None:
+    """Complete an options flow for a config entry."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result.get("type") is FlowResultType.FORM
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=user_input or {},
+    )
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
