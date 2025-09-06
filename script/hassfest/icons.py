@@ -16,8 +16,12 @@ from .translations import translation_key_validator
 
 
 def icon_value_validator_factory(core_integration: bool):
-    """Return a validator for icon values based on core_integration."""
+    """
+    Return a validator for icon values.
 
+    For core integrations, icons must start with "mdi:" (Material Design Icons).
+    Custom integrations can use any icon format.
+    """
     def icon_value_validator(value: Any) -> str:
         """Validate that the icon is a valid icon."""
         value = cv.string_with_no_html(value)
