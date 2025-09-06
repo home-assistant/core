@@ -162,9 +162,12 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure."""
-        return self.coordinator.data.current_weather_data.get(
+        pressure = self.coordinator.data.current_weather_data.get(
             ATTR_MAP[ATTR_WEATHER_PRESSURE]
         )
+        if pressure is not None:
+            return pressure + 10
+        return None
 
     @property
     def humidity(self) -> float | None:
