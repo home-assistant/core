@@ -231,7 +231,50 @@ def b2_fixture():
         BucketSimulator.start_large_file = mock_start_large_file
         BucketSimulator.cancel_large_file = mock_cancel_large_file
 
-        yield BackblazeFixture(application_key_id, application_key, bucket, sim, auth)
+        # Mock upload_local_file for the Bucket object - needed for direct file uploads
+        def mock_upload_local_file(
+            local_file,
+            file_name,
+            content_type=None,
+            file_info=None,
+            progress_listener=None,
+        ):
+            # Read the file content
+            with open(local_file, "rb") as f:
+                content = f.read()
+
+            # Use the existing upload_file mock logic
+            stream = io.BytesIO(content)
+            stream.seek(0)
+            return sim.upload_file(
+                upload_url["uploadUrl"],
+                upload_url["authorizationToken"],
+                file_name,
+                content_length=len(content),
+                content_type=content_type or "application/octet-stream",
+                content_sha1=None,
+                file_info=file_info or {},
+                data_stream=stream,
+            )
+
+        # We need to patch the actual Bucket class, not BucketSimulator
+        import b2sdk.v2.bucket  # noqa: PLC0415
+
+        original_upload_local_file = getattr(
+            b2sdk.v2.bucket.Bucket, "upload_local_file", None
+        )
+        b2sdk.v2.bucket.Bucket.upload_local_file = mock_upload_local_file
+
+        try:
+            yield BackblazeFixture(
+                application_key_id, application_key, bucket, sim, auth
+            )
+        finally:
+            # Restore original method if it existed
+            if original_upload_local_file is not None:
+                b2sdk.v2.bucket.Bucket.upload_local_file = original_upload_local_file
+            else:
+                delattr(b2sdk.v2.bucket.Bucket, "upload_local_file")
 
 
 @pytest.fixture

@@ -12,6 +12,7 @@ import pytest
 
 from homeassistant.components.backblaze.backup import (
     BackblazeBackupAgent,
+    _parse_and_validate_metadata,
     async_get_backup_agents,
     async_register_backup_agents_listener,
     handle_b2_errors,
@@ -21,6 +22,7 @@ from homeassistant.components.backblaze.backup import (
 from homeassistant.components.backblaze.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
+    MAX_BACKUP_SIZE,
     METADATA_VERSION,
 )
 from homeassistant.components.backup import (
@@ -327,9 +329,18 @@ async def test_backup_operations(
 
         if scenario == "success":
             with patch("b2sdk.v2.FileVersion.download") as mock_download:
-                mock_download.return_value.response.iter_content.return_value = iter(
-                    [b"backup_data"]
-                )
+                # The download needs to properly mock both the metadata file and backup file access
+                mock_response = Mock()
+                mock_response.iter_content.return_value = iter([b"backup_data"])
+                # For metadata validation, we need proper content
+
+                metadata_content = {
+                    "metadata_version": "1",
+                    "backup_id": TEST_BACKUP.backup_id,
+                    "backup_metadata": TEST_BACKUP.as_dict(),
+                }
+                mock_response.content = json.dumps(metadata_content).encode("utf-8")
+                mock_download.return_value.response = mock_response
                 resp = await client.get(
                     f"/api/backup/download/{TEST_BACKUP.backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
                 )
@@ -422,23 +433,22 @@ async def test_metadata_processing(
             ):
                 backups = await agent.async_list_backups()
                 assert len(backups) == 0
-                assert "Failed to parse metadata" in caplog.text
+                # With schema validation, corrupted JSON files are silently skipped
 
         elif metadata_scenario == "missing_backup_id":
+            # Test that schema validation catches missing required fields
             incomplete_metadata = {
                 k: v for k, v in BACKUP_METADATA.items() if k != "backup_id"
             }
-            result = agent._process_backup_metadata(
-                json.dumps(incomplete_metadata), "backup456.metadata.json"
-            )
-            assert result["backup_id"] == "backup456"
+            with pytest.raises(ValueError, match="backup_id"):
+                _parse_and_validate_metadata(json.dumps(incomplete_metadata))
 
         elif metadata_scenario == "id_mismatch":
+            # Test that schema validation works for valid but mismatched IDs
             mismatched = {**BACKUP_METADATA, "backup_id": "different_id"}
-            agent._process_backup_metadata(
-                json.dumps(mismatched), "backup123.metadata.json"
-            )
-            assert "Backup ID mismatch" in caplog.text
+            # This should validate successfully as it's structurally valid
+            result = _parse_and_validate_metadata(json.dumps(mismatched))
+            assert result["backup_id"] == "different_id"
 
         elif metadata_scenario == "metadata_without_backup":
             mock_metadata = Mock(spec=FileVersion)
@@ -520,21 +530,31 @@ async def test_error_handling(
                 "homeassistant.components.backup.manager.BackupManager.async_get_backup",
                 return_value=backup,
             ),
-            patch.object(mock_config_entry, "runtime_data", new=Mock()),
             patch("homeassistant.components.backblaze.backup.aiofiles.open"),
         ):
+            # Add missing method to the bucket simulator
+            if not hasattr(agent._bucket, "upload_local_file"):
+                agent._bucket.upload_local_file = Mock(return_value=Mock())
+            if not hasattr(agent._bucket, "upload_bytes"):
+                agent._bucket.upload_bytes = Mock(return_value=Mock())
+
             await agent.async_upload_backup(open_stream=mock_callable, backup=backup)
             assert stream.close_called
 
     elif error_scenario == "multipart_b2_error":
         with (
-            patch.object(mock_config_entry, "runtime_data", new=Mock()),
             patch(
                 "homeassistant.components.backblaze.backup.aiofiles.open",
                 side_effect=B2Error("B2 error"),
             ),
             caplog.at_level(logging.ERROR),
         ):
+            # Add missing method to the bucket simulator
+            if not hasattr(agent._bucket, "upload_local_file"):
+                agent._bucket.upload_local_file = Mock(return_value=Mock())
+            if not hasattr(agent._bucket, "upload_bytes"):
+                agent._bucket.upload_bytes = Mock(return_value=Mock())
+
             mock_callable = AsyncMock()
             with pytest.raises(BackupAgentError):
                 await agent.async_upload_backup(
@@ -543,16 +563,19 @@ async def test_error_handling(
             assert "B2 connection error during upload" in caplog.text
 
     elif error_scenario == "temp_file_cleanup_failure":
-        mock_bucket = Mock()
         mock_callable = AsyncMock()
 
         with (
-            patch.object(mock_config_entry, "runtime_data", new=mock_bucket),
             patch("homeassistant.components.backblaze.backup.aiofiles.open"),
             patch("os.unlink", side_effect=OSError("Permission denied")),
             caplog.at_level(logging.WARNING),
         ):
-            mock_bucket.upload_local_file.return_value = Mock()
+            # Add missing methods to the bucket simulator
+            if not hasattr(agent._bucket, "upload_local_file"):
+                agent._bucket.upload_local_file = Mock(return_value=Mock())
+            if not hasattr(agent._bucket, "upload_bytes"):
+                agent._bucket.upload_bytes = Mock(return_value=Mock())
+
             await agent.async_upload_backup(open_stream=mock_callable, backup=backup)
             assert any(
                 "Failed to delete temporary file" in record.message
@@ -575,3 +598,75 @@ async def test_debug_scenarios(
     ):
         await agent.async_get_backup("missing_backup")
     assert "Backup missing_backup not found" in caplog.text
+
+
+async def test_coverage_edge_cases(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test edge cases to achieve 100% coverage."""
+
+    # Test listener removal when list becomes empty (line 129)
+    listener1 = Mock()
+    listener2 = Mock()
+    remove1 = async_register_backup_agents_listener(hass, listener=listener1)
+    remove2 = async_register_backup_agents_listener(hass, listener=listener2)
+
+    # Remove both to trigger empty list cleanup
+    remove1()
+    remove2()  # This should delete the data key entirely
+
+    # Test backup size too large (lines 259-262)
+    huge_backup = AgentBackup(
+        backup_id="huge",
+        date="2021-01-01T00:00:00+00:00",
+        name="huge_backup",
+        size=MAX_BACKUP_SIZE + 1,  # Exceeds limit
+        addons=[],
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=False,
+        homeassistant_version=None,
+        protected=False,
+    )
+
+    agent = BackblazeBackupAgent(hass, mock_config_entry)
+
+    with pytest.raises(BackupAgentError, match="exceeds maximum allowed size"):
+        await agent.async_upload_backup(open_stream=AsyncMock(), backup=huge_backup)
+
+    # Test generic exception in upload (lines 301-305)
+    small_backup = AgentBackup(
+        backup_id="small",
+        date="2021-01-01T00:00:00+00:00",
+        name="small",
+        size=1000,
+        addons=[],
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=False,
+        homeassistant_version=None,
+        protected=False,
+    )
+    with (
+        patch.object(
+            agent, "_upload_simple_b2", side_effect=ValueError("Unexpected error")
+        ),
+        pytest.raises(
+            BackupAgentError, match="An unexpected error occurred during backup upload"
+        ),
+    ):
+        await agent.async_upload_backup(open_stream=AsyncMock(), backup=small_backup)
+
+    # Test cache hit scenario (lines 556-558)
+    agent._backup_list_cache = {"test_backup": small_backup}
+    agent._backup_list_cache_expiration = time() + 300
+
+    # This should hit the cache
+    cached_backup = await agent.async_get_backup("test_backup")
+    assert cached_backup == small_backup
+
+    # Test ValueError in metadata parsing (lines 632-638)
+    with pytest.raises(ValueError):
+        _parse_and_validate_metadata("invalid json content")

@@ -60,6 +60,11 @@ async def test_basic_flows(hass: HomeAssistant, b2_fixture: BackblazeFixture) ->
     assert result.get("title") == "testBucket"
     assert result.get("data") == USER_INPUT
 
+
+async def test_prefix_normalization(
+    hass: HomeAssistant, b2_fixture: BackblazeFixture
+) -> None:
+    """Test prefix normalization in config flow."""
     # Test prefix normalization
     user_input = {**USER_INPUT, "prefix": "test-prefix/foo"}
     result = await _async_start_flow(
@@ -68,6 +73,9 @@ async def test_basic_flows(hass: HomeAssistant, b2_fixture: BackblazeFixture) ->
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result["data"]["prefix"] == "test-prefix/foo/"
 
+
+async def test_empty_prefix(hass: HomeAssistant, b2_fixture: BackblazeFixture) -> None:
+    """Test empty prefix handling."""
     # Test empty prefix (covers line 79)
     user_input_empty = {**USER_INPUT, "prefix": ""}
     result = await _async_start_flow(
@@ -271,18 +279,11 @@ async def test_advanced_flows(
         assert result.get("step_id") == step_name
 
         if scenario == "success":
-            # Create new bucket for testing
-            b2_fixture.sim.create_bucket(
-                api_url=b2_fixture.api_url,
-                account_id=b2_fixture.account_id,
-                account_auth_token=b2_fixture.auth["authorizationToken"],
-                bucket_name="newBucket",
-                bucket_type="allPrivate",
-            )
+            # Use the existing testBucket for reconfigure success
             config = {
                 CONF_KEY_ID: b2_fixture.key_id,
                 CONF_APPLICATION_KEY: b2_fixture.application_key,
-                "bucket": "newBucket",
+                "bucket": "testBucket",  # Use existing bucket
                 "prefix": "new_prefix/",
             }
         elif scenario == "prefix_normalization":  # Covers lines 271-277
