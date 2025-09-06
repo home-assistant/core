@@ -95,11 +95,8 @@ class RussoundRNETDevice(MediaPlayerEntity):
         # Stable unique_id so entity/device get registered once
         self._attr_unique_id = f"rnet_{self._controller_id}_zone_{self._zone_id}"
 
-    # Expose a per-zone device
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this Russound zone."""
-        return DeviceInfo(
+        # Expose a per-zone device
+        self._attr_device_info = DeviceInfo(
             identifiers={("russound_rnet", f"{self._controller_id}-{self._zone_id}")},
             name=self._attr_name,
             manufacturer="Russound",
