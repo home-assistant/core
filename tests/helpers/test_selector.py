@@ -1160,6 +1160,7 @@ def test_constant_selector_schema(schema, valid_selections, invalid_selections) 
 @pytest.mark.parametrize(
     "schema",
     [
+        None,  # Value is mandatory
         {},  # Value is mandatory
         {"value": []},  # Value must be str, int or bool
         {"value": 123, "label": 123},  # Label must be str
