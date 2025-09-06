@@ -107,13 +107,13 @@ def b2_fixture():
             len(test_backup_data),
             "application/octet-stream",
             sha1_backup,
-            {},  # Store the full BACKUP_METADATA dict as user_file_info on the tar file
+            {
+                "backup_metadata": json.dumps(BACKUP_METADATA)
+            },  # Store the full BACKUP_METADATA dict as user_file_info on the tar file
             stream_backup,
         )
 
         # --- Upload the metadata JSON file ---
-        # The content of the metadata JSON file is BACKUP_METADATA["backup_metadata"]
-        # which is already a JSON string from TEST_BACKUP.as_dict()
         metadata_json_content_bytes = json.dumps(BACKUP_METADATA).encode("utf-8")
         stream_metadata = io.BytesIO(metadata_json_content_bytes)
         stream_metadata.seek(0)
@@ -154,6 +154,7 @@ def b2_fixture():
                 # It should provide an iter_content method that yields the content
                 mock_response = Mock()
                 mock_response.iter_content.return_value = iter([self._content])
+                mock_response.content = self._content  # Add this line
                 return mock_response
 
         # Define a mock for download_file_by_id on RawSimulator
@@ -214,6 +215,21 @@ def b2_fixture():
             return listed_files
 
         BucketSimulator.ls = ls
+
+        # Mock start_large_file and cancel_large_file for BucketSimulator
+        def mock_start_large_file(
+            file_name, content_type, file_info, account_auth_token
+        ):
+            mock_large_file = Mock()
+            mock_large_file.file_name = file_name
+            mock_large_file.file_id = "mock_file_id"
+            return mock_large_file
+
+        def mock_cancel_large_file(file_id, account_auth_token):
+            pass
+
+        BucketSimulator.start_large_file = mock_start_large_file
+        BucketSimulator.cancel_large_file = mock_cancel_large_file
 
         yield BackblazeFixture(application_key_id, application_key, bucket, sim, auth)
 

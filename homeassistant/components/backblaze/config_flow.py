@@ -16,9 +16,19 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_APPLICATION_KEY, CONF_BUCKET, CONF_KEY_ID, CONF_PREFIX, DOMAIN
+from .const import (
+    BACKBLAZE_REALM,
+    CONF_APPLICATION_KEY,
+    CONF_BUCKET,
+    CONF_KEY_ID,
+    CONF_PREFIX,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+# Constants
+REQUIRED_CAPABILITIES = {"writeFiles", "listFiles", "deleteFiles", "readFiles"}
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -45,6 +55,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         placeholders: dict[str, str] = {}
 
         if user_input is not None:
+            # Abort if an entry with the exact same Key ID and Application Key already exists
             self._async_abort_entries_match(
                 {
                     CONF_KEY_ID: user_input[CONF_KEY_ID],
@@ -52,64 +63,24 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            info = InMemoryAccountInfo()
-            b2_api = B2Api(info)
+            # Validate the provided Backblaze credentials and bucket
+            errors, placeholders = await self._async_validate_backblaze_connection(
+                user_input
+            )
 
-            def _authorize_and_get_bucket() -> None:
-                """Authorize account and get bucket by name."""
-                b2_api.authorize_account(
-                    "production",
-                    user_input[CONF_KEY_ID],
-                    user_input[CONF_APPLICATION_KEY],
+            if not errors:
+                # Ensure the prefix always ends with a slash if it's not empty
+                if user_input[CONF_PREFIX] and not user_input[CONF_PREFIX].endswith(
+                    "/"
+                ):
+                    user_input[CONF_PREFIX] += "/"
+
+                # Create the configuration entry
+                return self.async_create_entry(
+                    title=user_input[CONF_BUCKET], data=user_input
                 )
-                b2_api.get_bucket_by_name(user_input[CONF_BUCKET])
 
-            try:
-                await self.hass.async_add_executor_job(_authorize_and_get_bucket)
-
-            except exception.Unauthorized:
-                errors["base"] = "invalid_credentials"
-            except exception.RestrictedBucket as err:
-                placeholders["restricted_bucket_name"] = err.bucket_name
-                errors[CONF_BUCKET] = "restricted_bucket"
-            except exception.NonExistentBucket:
-                errors[CONF_BUCKET] = "invalid_bucket_name"
-            except exception.ConnectionReset:
-                errors["base"] = "cannot_connect"
-            except exception.MissingAccountData:
-                errors["base"] = "invalid_credentials"
-            else:
-                allowed = b2_api.account_info.get_allowed()
-
-                # Check if capabilities contains 'writeFiles' and 'listFiles' and 'deleteFiles' and 'readFiles'
-                if allowed is not None:
-                    capabilities = allowed["capabilities"]
-                    if not capabilities or not all(
-                        capability in capabilities
-                        for capability in (
-                            "writeFiles",
-                            "listFiles",
-                            "deleteFiles",
-                            "readFiles",
-                        )
-                    ):
-                        errors["base"] = "invalid_capability"
-
-                    # Check if prefix is valid
-                    prefix: str = user_input[CONF_PREFIX]
-                    allowed_prefix = cast(str, allowed.get("namePrefix", ""))
-                    if allowed_prefix and not prefix.startswith(allowed_prefix):
-                        errors[CONF_PREFIX] = "invalid_prefix"
-                        placeholders["allowed_prefix"] = allowed_prefix
-
-                    if prefix and not prefix.endswith("/"):
-                        user_input[CONF_PREFIX] = f"{prefix}/"
-
-                if not errors:
-                    return self.async_create_entry(
-                        title=user_input[CONF_BUCKET], data=user_input
-                    )
-
+        # Show the configuration form to the user
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
@@ -118,3 +89,104 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=placeholders,
         )
+
+    async def _async_validate_backblaze_connection(
+        self, user_input: dict[str, Any]
+    ) -> tuple[dict[str, str], dict[str, str]]:
+        """Validate Backblaze credentials, bucket, capabilities, and prefix.
+
+        Returns a tuple of (errors_dict, placeholders_dict).
+        """
+        errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
+
+        info = InMemoryAccountInfo()
+        b2_api = B2Api(info)
+
+        def _authorize_and_get_bucket_sync() -> None:
+            """Synchronously authorize the account and get the bucket by name.
+
+            This function is run in the executor because b2sdk operations are blocking.
+            """
+            b2_api.authorize_account(
+                BACKBLAZE_REALM,  # Use the defined realm constant
+                user_input[CONF_KEY_ID],
+                user_input[CONF_APPLICATION_KEY],
+            )
+            b2_api.get_bucket_by_name(user_input[CONF_BUCKET])
+
+        try:
+            # Execute the blocking API calls in the event loop's executor
+            await self.hass.async_add_executor_job(_authorize_and_get_bucket_sync)
+
+            # Retrieve allowed capabilities after successful authorization
+            allowed = b2_api.account_info.get_allowed()
+
+            # Check for required capabilities
+            if (
+                allowed is None
+                or not allowed.get("capabilities")
+                or not REQUIRED_CAPABILITIES.issubset(set(allowed["capabilities"]))
+            ):
+                missing_caps = REQUIRED_CAPABILITIES - set(
+                    allowed.get("capabilities", [])
+                )
+                if missing_caps:
+                    _LOGGER.warning(
+                        "Missing required Backblaze capabilities for Key ID '%s': %s",
+                        user_input[CONF_KEY_ID],
+                        ", ".join(sorted(missing_caps)),
+                    )
+                    errors["base"] = "invalid_capability"
+                    # Provide specific missing capabilities for the frontend to display
+                    placeholders["missing_capabilities"] = ", ".join(
+                        sorted(missing_caps)
+                    )
+
+            # Validate the specified prefix against the allowed prefix (if any)
+            configured_prefix: str = user_input[CONF_PREFIX]
+            # cast to str as get() could return None, but namePrefix is expected to be str
+            allowed_prefix = cast(str, allowed.get("namePrefix", ""))
+
+            # If an allowed prefix is defined by Backblaze, ensure the configured prefix starts with it
+            if allowed_prefix and not configured_prefix.startswith(allowed_prefix):
+                errors[CONF_PREFIX] = "invalid_prefix"
+                placeholders["allowed_prefix"] = allowed_prefix
+
+        except exception.Unauthorized:
+            _LOGGER.debug(
+                "Backblaze authentication failed for Key ID '%s'",
+                user_input[CONF_KEY_ID],
+            )
+            errors["base"] = "invalid_credentials"
+        except exception.RestrictedBucket as err:
+            _LOGGER.debug(
+                "Access to Backblaze bucket '%s' is restricted: %s",
+                user_input[CONF_BUCKET],
+                err,
+            )
+            placeholders["restricted_bucket_name"] = err.bucket_name
+            errors[CONF_BUCKET] = "restricted_bucket"
+        except exception.NonExistentBucket:
+            _LOGGER.debug(
+                "Backblaze bucket '%s' does not exist", user_input[CONF_BUCKET]
+            )
+            errors[CONF_BUCKET] = "invalid_bucket_name"
+        except exception.ConnectionReset:
+            _LOGGER.error("Failed to connect to Backblaze. Connection reset")
+            errors["base"] = "cannot_connect"
+        except exception.MissingAccountData:
+            # This generally indicates an issue with how InMemoryAccountInfo is used
+            _LOGGER.error(
+                "Missing account data during Backblaze authorization for Key ID '%s'",
+                user_input[CONF_KEY_ID],
+            )
+            errors["base"] = "invalid_credentials"
+        except Exception:
+            _LOGGER.exception(
+                "An unexpected error occurred during Backblaze configuration for Key ID '%s'",
+                user_input[CONF_KEY_ID],
+            )
+            errors["base"] = "unknown"
+
+        return errors, placeholders
