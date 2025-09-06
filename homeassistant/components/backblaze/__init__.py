@@ -18,6 +18,7 @@ from .const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
+from .repairs import async_check_for_repair_issues
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,6 +117,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             listener()
 
     entry.async_on_unload(entry.async_on_state_change(_async_notify_backup_listeners))
+
+    # Check for repair issues periodically (not blocking setup)
+    hass.async_create_task(async_check_for_repair_issues(hass, entry))
 
     return True
 
