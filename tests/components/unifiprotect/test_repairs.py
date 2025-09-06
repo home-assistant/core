@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from unittest.mock import AsyncMock
 
-from uiprotect.data import Camera, CloudAccount, ModelType, Version
+from uiprotect.data import Camera, CloudAccount, Version
 
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
@@ -77,6 +77,7 @@ async def test_rtsp_read_only_ignore(
         user.all_permissions = []
 
     ufp.api.get_camera = AsyncMock(return_value=doorbell)
+    ufp.api.create_camera_rtsps_streams = AsyncMock(return_value=None)
 
     await init_entry(hass, ufp, [doorbell])
     await async_process_repairs_platforms(hass)
@@ -133,6 +134,7 @@ async def test_rtsp_read_only_fix(
     new_doorbell = deepcopy(doorbell)
     new_doorbell.channels[1].is_rtsp_enabled = True
     ufp.api.get_camera = AsyncMock(return_value=new_doorbell)
+    ufp.api.create_camera_rtsps_streams = AsyncMock(return_value=None)
     issue_id = f"rtsp_disabled_{doorbell.id}"
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -175,8 +177,9 @@ async def test_rtsp_writable_fix(
 
     new_doorbell = deepcopy(doorbell)
     new_doorbell.channels[0].is_rtsp_enabled = True
+
     ufp.api.get_camera = AsyncMock(side_effect=[doorbell, new_doorbell])
-    ufp.api.update_device = AsyncMock()
+    ufp.api.create_camera_rtsps_streams = AsyncMock(return_value=None)
     issue_id = f"rtsp_disabled_{doorbell.id}"
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -199,11 +202,7 @@ async def test_rtsp_writable_fix(
 
     assert data["type"] == "create_entry"
 
-    channels = doorbell.unifi_dict()["channels"]
-    channels[0]["isRtspEnabled"] = True
-    ufp.api.update_device.assert_called_with(
-        ModelType.CAMERA, doorbell.id, {"channels": channels}
-    )
+    ufp.api.create_camera_rtsps_streams.assert_called_with(doorbell.id, "high")
 
 
 async def test_rtsp_writable_fix_when_not_setup(
@@ -225,8 +224,9 @@ async def test_rtsp_writable_fix_when_not_setup(
 
     new_doorbell = deepcopy(doorbell)
     new_doorbell.channels[0].is_rtsp_enabled = True
+
     ufp.api.get_camera = AsyncMock(side_effect=[doorbell, new_doorbell])
-    ufp.api.update_device = AsyncMock()
+    ufp.api.create_camera_rtsps_streams = AsyncMock(return_value=None)
     issue_id = f"rtsp_disabled_{doorbell.id}"
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -254,11 +254,7 @@ async def test_rtsp_writable_fix_when_not_setup(
 
     assert data["type"] == "create_entry"
 
-    channels = doorbell.unifi_dict()["channels"]
-    channels[0]["isRtspEnabled"] = True
-    ufp.api.update_device.assert_called_with(
-        ModelType.CAMERA, doorbell.id, {"channels": channels}
-    )
+    ufp.api.create_camera_rtsps_streams.assert_called_with(doorbell.id, "high")
 
 
 async def test_rtsp_no_fix_if_third_party(
