@@ -194,9 +194,6 @@ class ModbusLight(BaseSwitch, LightEntity):
 
     def _convert_modbus_percent_to_temperature(self, percent: int) -> int:
         """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
-        assert isinstance(self._attr_min_color_temp_kelvin, int) and isinstance(
-            self._attr_max_color_temp_kelvin, int
-        )
         return round(
             self._attr_min_color_temp_kelvin
             + (
