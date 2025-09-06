@@ -29,7 +29,7 @@ async def disabled_upnp_server():
     with (
         patch("homeassistant.components.ssdp.server.UpnpServer.async_start"),
         patch("homeassistant.components.ssdp.server.UpnpServer.async_stop"),
-        patch("homeassistant.components.ssdp.server._async_find_next_available_port"),
+        patch("homeassistant.components.ssdp.server._async_find_next_available_port", spec=True),
     ):
         yield UpnpServer
 
