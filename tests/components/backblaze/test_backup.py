@@ -682,3 +682,57 @@ async def test_missing_coverage_scenarios(
     # This call should hit cache and return early
     cached_files = await agent._get_all_files_in_prefix()
     assert cached_files == agent._all_files_cache
+
+
+async def test_more_coverage_edge_cases(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test additional edge cases for >95% coverage."""
+
+    # Test listener removal when list becomes empty (line 129)
+    # Use a clean hass instance for this test to avoid interference
+    listener1 = Mock()
+    listener2 = Mock()
+
+    # Ensure we start clean
+    if DATA_BACKUP_AGENT_LISTENERS in hass.data:
+        del hass.data[DATA_BACKUP_AGENT_LISTENERS]
+
+    remove1 = async_register_backup_agents_listener(hass, listener=listener1)
+    remove2 = async_register_backup_agents_listener(hass, listener=listener2)
+
+    # Verify we have 2 listeners
+    assert len(hass.data[DATA_BACKUP_AGENT_LISTENERS]) == 2
+
+    # Remove first listener
+    remove1()
+    assert len(hass.data[DATA_BACKUP_AGENT_LISTENERS]) == 1
+
+    # Remove second listener - this should trigger line 129 (delete empty data key)
+    remove2()
+
+    # Verify the data key was deleted
+    assert DATA_BACKUP_AGENT_LISTENERS not in hass.data
+
+    # Test backup cache hit scenario (lines 556-558)
+    agent = BackblazeBackupAgent(hass, mock_config_entry)
+
+    # Create a mock backup and prime the cache
+    mock_backup = Mock()
+    mock_backup.backup_id = "test_backup"
+    agent._backup_list_cache = {"test_backup": mock_backup}
+    agent._backup_list_cache_expiration = time() + 300  # Future expiration
+
+    # This should hit cache and return the cached backup (lines 556-558)
+    cached_backup = await agent.async_get_backup("test_backup")
+    assert cached_backup == mock_backup
+
+    # Test backup list cache hit scenario (lines 515-516)
+    # Prime the backup list cache with some backups
+    agent._backup_list_cache = {"backup1": mock_backup, "backup2": Mock()}
+    agent._backup_list_cache_expiration = time() + 300  # Future expiration
+
+    # This should hit the backup list cache and return cached values (lines 515-516)
+    backup_list = await agent.async_list_backups()
+    assert len(backup_list) == 2
+    assert mock_backup in backup_list
