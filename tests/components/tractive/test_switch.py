@@ -234,7 +234,7 @@ async def test_switch_unavailable(
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the switch is unavalable when the tracker is in energy saving zone."""
+    """Test the switch is navailable when the tracker is in the energy saving zone."""
     entity_id = "switch.test_pet_tracker_buzzer"
 
     await init_integration(hass, mock_config_entry)
