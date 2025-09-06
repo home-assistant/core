@@ -64,7 +64,8 @@ class ModbusLight(BaseSwitch, LightEntity):
         self._attr_color_mode = self._detect_color_mode(config)
         self._attr_supported_color_modes = {self._attr_color_mode}
 
-        # Set min/max kelvin values if the mode is COLOR_TEMP
+        self._attr_min_color_temp_kelvin: int = LIGHT_DEFAULT_MIN_KELVIN
+        self._attr_max_color_temp_kelvin: int = LIGHT_DEFAULT_MAX_KELVIN
         if self._attr_color_mode == ColorMode.COLOR_TEMP:
             self._attr_min_color_temp_kelvin = config.get(
                 CONF_MIN_TEMP, LIGHT_DEFAULT_MIN_KELVIN
@@ -216,9 +217,6 @@ class ModbusLight(BaseSwitch, LightEntity):
 
     def _convert_color_temp_to_modbus(self, kelvin: int) -> int:
         """Convert color temperature from Kelvin to the Modbus scale (0-100)."""
-        assert isinstance(self._attr_min_color_temp_kelvin, int) and isinstance(
-            self._attr_max_color_temp_kelvin, int
-        )
         return round(
             LIGHT_MODBUS_SCALE_MIN
             + (kelvin - self._attr_min_color_temp_kelvin)
