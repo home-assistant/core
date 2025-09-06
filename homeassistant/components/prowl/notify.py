@@ -19,7 +19,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -66,15 +66,17 @@ class ProwlNotificationService(BaseNotificationService):
                         url=data.get("url"),
                     )
                 )
-        except TimeoutError:
+        except TimeoutError as ex:
             _LOGGER.error("Timeout accessing Prowl API")
-            raise
+            raise HomeAssistantError("Timeout accessing Prowl API") from ex
         except prowlpy.APIError as ex:
             if str(ex).startswith("Invalid API key"):
                 _LOGGER.error("Invalid API key for Prowl service")
-                raise ConfigEntryAuthFailed from ex
+                raise HomeAssistantError("Invalid API key for Prowl service") from ex
             if str(ex).startswith("Not accepted"):
                 _LOGGER.error("Prowl returned: exceeded rate limit")
-                raise ConfigEntryAuthFailed from ex
+                raise HomeAssistantError(
+                    "Prowl service reported: exceeded rate limit"
+                ) from ex
             _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
             raise HomeAssistantError("Unexpected error when calling Prowl API") from ex
