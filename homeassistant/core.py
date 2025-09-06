@@ -2891,3 +2891,6 @@ __dir__ = functools.partial(
     dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
 )
 __all__ = all_with_deprecated_constants(globals())
+
+
+_LOGGER.warning("  My Home Assistant devcontainer is working!")
