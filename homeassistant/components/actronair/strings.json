@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Actron Air OAuth2 Authorization"
+      },
+      "timeout": {
+        "title": "Authorization timeout",
+        "description": "The authorization process timed out. Please try again.",
+        "data": {}
+      }
+    },
+    "progress": {
+      "wait_for_authorization": "To authenticate, open the following URL and login at Actron Air:\n{verification_uri}\nIf the code is not automatically copied, paste the following code to authorize the integration:\n\n```{user_code}```\n\n\nThe login attempt will time out after {expires_minutes} minutes."
+    },
+    "error": {
+      "oauth2_error": "Failed to start OAuth2 flow. Please try again later."
+    },
+    "abort": {
+      "oauth2_error": "Failed to start OAuth2 flow",
+      "already_configured": "Account is already configured"
+    }
+  }
+}
