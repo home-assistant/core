@@ -48,6 +48,32 @@
         }
       }
     },
+    "read_registers": {
+      "name": "Read registers",
+      "description": "Reads one or more Modbus input or holding registers.",
+      "fields": {
+        "address": {
+          "name": "[%key:component::modbus::services::write_coil::fields::address::name%]",
+          "description": "Address of the first register."
+        },
+        "count": {
+          "name": "Count",
+          "description": "Number of registers to read."
+        },
+        "type": {
+          "name": "Type",
+          "description": "Type of registers to read."
+        },
+        "slave": {
+          "name": "[%key:component::modbus::services::write_coil::fields::slave::name%]",
+          "description": "[%key:component::modbus::services::write_coil::fields::slave::description%]"
+        },
+        "hub": {
+          "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]",
+          "description": "[%key:component::modbus::services::write_coil::fields::hub::description%]"
+        }
+      }
+    },
     "stop": {
       "name": "[%key:common::action::stop%]",
       "description": "Stops a Modbus hub.",
