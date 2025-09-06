@@ -575,26 +575,6 @@
                 'type': 'knx_section_flat',
               }),
               dict({
-                'name': 'ga_blue_brightness',
-                'options': dict({
-                  'passive': True,
-                  'state': dict({
-                    'required': False,
-                  }),
-                  'validDPTs': list([
-                    dict({
-                      'main': 5,
-                      'sub': 1,
-                    }),
-                  ]),
-                  'write': dict({
-                    'required': True,
-                  }),
-                }),
-                'required': True,
-                'type': 'knx_group_address',
-              }),
-              dict({
                 'name': 'ga_blue_switch',
                 'optional': True,
                 'options': dict({
@@ -616,14 +596,7 @@
                 'type': 'knx_group_address',
               }),
               dict({
-                'collapsible': False,
-                'name': 'section_white',
-                'required': False,
-                'type': 'knx_section_flat',
-              }),
-              dict({
-                'name': 'ga_white_brightness',
-                'optional': True,
+                'name': 'ga_blue_brightness',
                 'options': dict({
                   'passive': True,
                   'state': dict({
@@ -639,8 +612,14 @@
                     'required': True,
                   }),
                 }),
-                'required': False,
+                'required': True,
                 'type': 'knx_group_address',
+              }),
+              dict({
+                'collapsible': False,
+                'name': 'section_white',
+                'required': False,
+                'type': 'knx_section_flat',
               }),
               dict({
                 'name': 'ga_white_switch',
@@ -658,6 +637,27 @@
                   ]),
                   'write': dict({
                     'required': False,
+                  }),
+                }),
+                'required': False,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'name': 'ga_white_brightness',
+                'optional': True,
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 5,
+                      'sub': 1,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': True,
                   }),
                 }),
                 'required': False,
