@@ -68,6 +68,14 @@ async def test_basic_flows(hass: HomeAssistant, b2_fixture: BackblazeFixture) ->
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result["data"]["prefix"] == "test-prefix/foo/"
 
+    # Test empty prefix (covers line 79)
+    user_input_empty = {**USER_INPUT, "prefix": ""}
+    result = await _async_start_flow(
+        hass, b2_fixture.key_id, b2_fixture.application_key, user_input_empty
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["data"]["prefix"] == ""  # Empty prefix should remain empty
+
 
 async def test_already_configured(
     hass: HomeAssistant,

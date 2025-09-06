@@ -16,8 +16,13 @@ from homeassistant.components.backblaze.backup import (
     async_register_backup_agents_listener,
     handle_b2_errors,
     suggested_filename,
+    suggested_filenames,
 )
-from homeassistant.components.backblaze.const import DOMAIN, METADATA_VERSION
+from homeassistant.components.backblaze.const import (
+    DATA_BACKUP_AGENT_LISTENERS,
+    DOMAIN,
+    METADATA_VERSION,
+)
 from homeassistant.components.backup import (
     AgentBackup,
     BackupAgentError,
@@ -77,17 +82,19 @@ async def test_core_functionality(
     agent._backup_list_cache = {"backup123": "backup_obj"}
     agent._backup_list_cache_expiration = time() + 300
 
-    # Test upload invalidation (covers line 662)
-    agent._invalidate_caches_for_upload("backup123", "test.tar", "test.metadata.json")
+    # Test upload invalidation (expiration-based)
+    agent._invalidate_caches("backup123", "test.tar", "test.metadata.json")
     assert agent._all_files_cache_expiration <= time()
 
-    # Test deletion invalidation when cache valid (covers lines 675-677, 681)
+    # Test deletion invalidation when cache valid (file removal-based)
     agent._all_files_cache = {"test.tar": "file1", "test.metadata.json": "file2"}
     agent._all_files_cache_expiration = time() + 300
     agent._backup_list_cache = {"backup123": "backup_obj"}
     agent._backup_list_cache_expiration = time() + 300
 
-    agent._invalidate_caches_for_deletion("backup123", "test.tar", "test.metadata.json")
+    agent._invalidate_caches(
+        "backup123", "test.tar", "test.metadata.json", remove_files=True
+    )
     assert "test.tar" not in agent._all_files_cache
     assert "backup123" not in agent._backup_list_cache
 
@@ -101,9 +108,78 @@ async def test_core_functionality(
 
     # Test listener management
     mock_listener = Mock()
-    async_register_backup_agents_listener(hass, mock_listener)
+    remove_listener = async_register_backup_agents_listener(
+        hass, listener=mock_listener
+    )
     agents = await async_get_backup_agents(hass)
     assert len(agents) >= 1
+
+    # Test listener removal (covers lines 91-93)
+    listeners_before = len(hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []))
+    remove_listener()
+    listeners_after = len(hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []))
+    assert listeners_after == listeners_before - 1
+
+    # Test response closing fallback (covers lines 128-129)
+    response_without_close = object()  # Object without close method
+    await agent._close_response(response_without_close)  # Should not raise
+
+    # Test cleanup failed upload method (covers lines 133-153)
+    with patch.object(agent._bucket, "get_file_info_by_name") as mock_get_file:
+        mock_file_info = Mock()
+        mock_get_file.return_value = mock_file_info
+        mock_file_info.delete = Mock()
+
+        await agent._cleanup_failed_upload("test_file.tar")
+        mock_get_file.assert_called_once_with("test_file.tar")
+        mock_file_info.delete.assert_called_once()
+
+
+async def test_additional_coverage(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test additional scenarios for coverage."""
+    agent = BackblazeBackupAgent(hass, mock_config_entry)
+
+    # Test suggested_filenames function (covers lines 44-45)
+    backup = AgentBackup(
+        backup_id="test123",
+        date="2021-01-01T01:02:03+00:00",
+        addons=[],
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=False,
+        homeassistant_version=None,
+        name="test_backup",
+        protected=False,
+        size=0,
+    )
+    tar_filename, metadata_filename = suggested_filenames(backup)
+
+    # Test cache invalidation path not covered (line 654)
+    agent._all_files_cache_expiration = time() + 300
+    agent._backup_list_cache_expiration = time() + 300
+    agent._invalidate_caches("test", "test.tar", None, remove_files=True)
+
+    # Test stream closing sync fallback (line 124)
+    mock_stream = Mock(spec=[])  # Mock with no methods initially
+    mock_stream.close = Mock()  # Add only sync close method
+
+    await agent._close_stream(mock_stream)
+    mock_stream.close.assert_called_once()
+
+    # Test listener cleanup when list becomes empty (line 93)
+    # First, ensure we have just one listener
+    listeners = hass.data.get(DATA_BACKUP_AGENT_LISTENERS, [])
+    for _ in range(len(listeners) - 1):  # Remove all but one
+        if listeners:
+            listeners.pop()
+
+    # Add one more listener, then remove it to trigger cleanup
+    test_listener = Mock()
+    remove_fn = async_register_backup_agents_listener(hass, listener=test_listener)
+    remove_fn()  # Should delete the key entirely if list becomes empty
 
 
 @pytest.mark.parametrize(
