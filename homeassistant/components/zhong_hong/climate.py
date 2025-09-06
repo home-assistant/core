@@ -41,7 +41,6 @@ MODE_TO_STATE = {
 
 STATE_TO_MODE = {v: k for k, v in MODE_TO_STATE.items()}
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ZhongHongConfigEntry,
