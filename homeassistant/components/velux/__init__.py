@@ -7,10 +7,15 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_ST
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import DOMAIN, LOGGER, PLATFORMS
+from .coordinator import VeluxDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the velux component."""
+    # Create coordinator for shared data
+    coordinator = VeluxDataUpdateCoordinator(hass, entry)
+    entry.runtime_data = coordinator
+
     module = VeluxModule(hass, entry.data)
     try:
         module.setup()

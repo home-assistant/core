@@ -17,21 +17,13 @@ class VeluxEntity(Entity):
 
     def __init__(self, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux device."""
+        # Use serial_number if available, otherwise fallback to config_entry_id and node_id
+        unique_id = node.serial_number or f"{config_entry_id}_{node.node_id}"
+        self.device_info_str = unique_id
         self.node = node
-        self._attr_unique_id = (
-            node.serial_number
-            if node.serial_number
-            else f"{config_entry_id}_{node.node_id}"
-        )
+        self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={
-                (
-                    DOMAIN,
-                    node.serial_number
-                    if node.serial_number
-                    else f"{config_entry_id}_{node.node_id}",
-                )
-            },
+            identifiers={(DOMAIN, unique_id)},
             name=node.name if node.name else f"#{node.node_id}",
             serial_number=node.serial_number,
         )
@@ -49,3 +41,18 @@ class VeluxEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""
         self.async_register_callbacks()
+
+
+class VeluxCoordinatorEntity(VeluxEntity):
+    """Abstraction for Velux entities that use a coordinator."""
+
+    def __init__(self, node: Node, config_entry_id: str, coordinator) -> None:
+        """Initialize the Velux device with a coordinator."""
+        super().__init__(node, config_entry_id)
+        self.coordinator = coordinator
+
+    @callback
+    def async_register_callbacks(self):
+        """Register callbacks to update hass after device was changed."""
+        super().async_register_callbacks()
+        self.coordinator.async_add_listener(self.async_write_ha_state)
