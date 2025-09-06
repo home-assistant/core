@@ -34,11 +34,9 @@ def _safe_time_from_cache(cache: AttributeCache, which: str) -> time:
     """
     val = cache.value
     if isinstance(val, dict):
-        if which == "start":
-            return time(
-                hour=val.get("start_hour", 0), minute=val.get("start_minute", 0)
-            )
-        return time(hour=val.get("end_hour", 0), minute=val.get("end_minute", 0))
+        return time(
+            hour=val.get(f"{which}_hour", 0), minute=val.get(f"{which}_minute", 0)
+        )
     return time(0, 0)
 
 
