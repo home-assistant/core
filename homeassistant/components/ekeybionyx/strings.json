@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "choose_system": {
+        "data": {
+          "system": "System"
+        },
+        "data_description": {
+          "system": "System the webhooks should be set up for"
+        },
+        "description": "Please select the Ekey Bionyx system in which you want to set up the webhooks"
+      },
+      "webhooks": {
+        "description": "Please name your webhooks. You can set up to 5 webhooks. Leaving a name empty will skip the setup of that webhook.",
+        "data": {
+          "webhook1": "Webhook 1",
+          "webhook2": "Webhook 2",
+          "webhook3": "Webhook 3",
+          "webhook4": "Webhook 4",
+          "webhook5": "Webhook 5",
+          "url": "Home Assistant URL"
+        },
+        "data_description": {
+          "webhook1": "Webhook 1",
+          "webhook2": "Webhook 2",
+          "webhook3": "Webhook 3",
+          "webhook4": "Webhook 4",
+          "webhook5": "Webhook 5",
+          "url": "Home Assistant instance URL which can be reached from the fingerprint controller"
+        }
+      },
+      "delete_webhooks": {
+        "description": "Webhook configuration inconsistent. Webhooks with Home Assistant were already configured. If you continue they will be marked for removal."
+      }
+    },
+    "error": {
+      "invalid_name": "Name is invalid",
+      "invalid_url": "URL is invalid",
+      "no_webhooks_provided": "No webhooks provided"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "no_available_webhooks": "There are no available webhooks in the ekey Bionyx plattform. Please delete some and try again.",
+      "no_own_systems": "Your account does not have admin access to any systems",
+      "webhook_deletion_requested": "Please go to the ekey Bionyx app and confirm the deletion of the webhooks. Afterwards set up the integration again.",
+      "cannot_connect": "Connection to ekey Bionyx failed. Please check your Internet connection and try again."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  }
+}
