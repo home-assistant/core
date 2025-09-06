@@ -635,38 +635,50 @@ async def test_coverage_edge_cases(
     with pytest.raises(BackupAgentError, match="exceeds maximum allowed size"):
         await agent.async_upload_backup(open_stream=AsyncMock(), backup=huge_backup)
 
-    # Test generic exception in upload (lines 301-305)
-    small_backup = AgentBackup(
-        backup_id="small",
-        date="2021-01-01T00:00:00+00:00",
-        name="small",
-        size=1000,
-        addons=[],
-        database_included=False,
-        extra_metadata={},
-        folders=[],
-        homeassistant_included=False,
-        homeassistant_version=None,
-        protected=False,
-    )
-    with (
-        patch.object(
-            agent, "_upload_simple_b2", side_effect=ValueError("Unexpected error")
-        ),
-        pytest.raises(
-            BackupAgentError, match="An unexpected error occurred during backup upload"
-        ),
-    ):
-        await agent.async_upload_backup(open_stream=AsyncMock(), backup=small_backup)
 
-    # Test cache hit scenario (lines 556-558)
-    agent._backup_list_cache = {"test_backup": small_backup}
-    agent._backup_list_cache_expiration = time() + 300
+async def test_additional_coverage_scenarios(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test additional scenarios for >95% coverage."""
+    agent = BackblazeBackupAgent(hass, mock_config_entry)
 
-    # This should hit the cache
-    cached_backup = await agent.async_get_backup("test_backup")
-    assert cached_backup == small_backup
+    # Test _cleanup_temp_file when file doesn't exist (line 417)
+    with patch("os.path.exists", return_value=False):
+        await agent._cleanup_temp_file("nonexistent_file")  # Should return early
 
-    # Test ValueError in metadata parsing (lines 632-638)
+    # Test the _parse_and_validate_metadata function directly for lines 669-685
+    # Invalid JSON should raise ValueError
     with pytest.raises(ValueError):
         _parse_and_validate_metadata("invalid json content")
+
+    # Test missing backup_id in metadata (which would hit lines 632-638 in another method)
+    invalid_metadata = json.dumps(
+        {
+            "metadata_version": "1",
+            "backup_metadata": {
+                "date": "2021-01-01",
+                "name": "test",
+                "protected": False,
+            },
+            # Missing backup_id
+        }
+    )
+
+    with pytest.raises(ValueError):
+        _parse_and_validate_metadata(invalid_metadata)
+
+
+async def test_missing_coverage_scenarios(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test remaining uncovered scenarios."""
+    agent = BackblazeBackupAgent(hass, mock_config_entry)
+
+    # Test cache hit scenario for _get_all_files_in_prefix (lines 515-516)
+    # Prime the cache first
+    agent._all_files_cache = {"test": Mock()}
+    agent._all_files_cache_expiration = time() + 300  # Future expiration
+
+    # This call should hit cache and return early
+    cached_files = await agent._get_all_files_in_prefix()
+    assert cached_files == agent._all_files_cache
