@@ -34,6 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -
     except AuthenticationError as err:
         LOGGER.error("Invalid API key: %s", err)
         raise ConfigEntryError("Invalid API key") from err
+    except (ValueError, TypeError) as err:
+        # Handle model parsing errors - just log and continue
+        LOGGER.warning("Error parsing models list (will retry later): %s", err)
     except OpenAIError as err:
         raise ConfigEntryNotReady(err) from err
 

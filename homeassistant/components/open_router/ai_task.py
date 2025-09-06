@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from json import JSONDecodeError
 import logging
+from typing import Any
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.core import HomeAssistant
@@ -15,6 +16,11 @@ from . import OpenRouterConfigEntry
 from .entity import OpenRouterEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+# Define supported features
+SUPPORTED_FEATURES = ai_task.AITaskEntityFeature.GENERATE_DATA
+if hasattr(ai_task.AITaskEntityFeature, "ATTACHMENTS"):
+    SUPPORTED_FEATURES |= ai_task.AITaskEntityFeature.ATTACHMENTS
 
 
 async def async_setup_entry(
@@ -40,7 +46,9 @@ class OpenRouterAITaskEntity(
     """OpenRouter AI Task entity."""
 
     _attr_name = None
-    _attr_supported_features = ai_task.AITaskEntityFeature.GENERATE_DATA
+    # Set default supported features
+    _attr_supported_features = SUPPORTED_FEATURES
+    
 
     async def _async_generate_data(
         self,
@@ -62,6 +70,7 @@ class OpenRouterAITaskEntity(
                 conversation_id=chat_log.conversation_id,
                 data=text,
             )
+        
         try:
             data = json_loads(text)
         except JSONDecodeError as err:

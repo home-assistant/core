@@ -99,8 +99,37 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
         client = OpenRouterClient(
             entry.data[CONF_API_KEY], async_get_clientsession(self.hass)
         )
-        models = await client.get_models()
-        self.models = {model.id: model for model in models}
+        try:
+            models = await client.get_models()
+            self.models = {model.id: model for model in models}
+        except ValueError as e:
+            # Handle parsing errors for new model architectures/modalities
+            _LOGGER.warning("Error parsing some models, retrying with safe parsing: %s", e)
+            # Try to get raw response and parse safely
+            try:
+                import aiohttp
+                session = async_get_clientsession(self.hass)
+                headers = {"Authorization": f"Bearer {entry.data[CONF_API_KEY]}"}
+                async with session.get(
+                    "https://openrouter.ai/api/v1/models",
+                    headers=headers
+                ) as resp:
+                    data = await resp.json()
+                    self.models = {}
+                    for model_data in data.get("data", []):
+                        try:
+                            # Create minimal model object
+                            model = type('Model', (), {
+                                'id': model_data.get('id', 'unknown'),
+                                'name': model_data.get('name', model_data.get('id', 'Unknown')),
+                                'supported_parameters': []
+                            })()
+                            self.models[model.id] = model
+                        except Exception as model_err:
+                            _LOGGER.debug("Skipping model %s: %s", model_data.get('id'), model_err)
+            except Exception:
+                # If safe parsing also fails, re-raise original error
+                raise
 
 
 class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
@@ -181,11 +210,22 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
-        options = [
-            SelectOptionDict(value=model.id, label=model.name)
-            for model in self.models.values()
-            if SupportedParameter.STRUCTURED_OUTPUTS in model.supported_parameters
-        ]
+        # Include all models for AI tasks, but prioritize structured output models
+        options = []
+        structured_models = []
+        other_models = []
+        
+        for model in self.models.values():
+            option = SelectOptionDict(value=model.id, label=model.name)
+            if SupportedParameter.STRUCTURED_OUTPUTS in model.supported_parameters:
+                structured_models.append(option)
+            else:
+                # Include vision models even without structured output support
+                # This allows Claude-3, GPT-4V, etc. to be used for image analysis
+                other_models.append(option)
+        
+        # Structured output models first, then others
+        options = structured_models + other_models
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
