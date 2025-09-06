@@ -38,7 +38,6 @@ DOOR_LOCK_OPERATION_SOURCE = {
     10: "Aliro",  # [Aliro]
 }
 
-
 DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
 
 
@@ -96,6 +95,18 @@ class MatterLock(MatterEntity, LockEntity):
         node_event_data: dict[str, int] = node_event.data or {}
         match node_event.event_id:
             case (
+                clusters.DoorLock.Events.DoorLockAlarm.event_id
+            ):  # Lock cluster event 0
+                match node_event_data.get("alarmCode"):
+                    case 0:  # lock is jammed
+                        # set in an uncertain state if jammed
+                        self._attr_is_locked = None
+                        self._attr_is_open = None
+                        self._attr_is_opening = None
+                        self._attr_is_locking = None
+                        self._attr_is_jammed = True
+                        self.async_write_ha_state()
+            case (
                 clusters.DoorLock.Events.LockOperation.event_id
             ):  # Lock cluster event 2
                 # update the changed_by attribute to indicate lock operation source
@@ -132,10 +143,8 @@ class MatterLock(MatterEntity, LockEntity):
             self._attr_is_locking = True
             self.async_write_ha_state()
             # the lock should acknowledge the command with an attribute update
-            # but bad things may happen, so guard against it with a timer.
-            self._optimistic_timer = self.hass.loop.call_later(
-                30, self._reset_optimistic_state
-            )
+            # but if it fails, then change from optimistic state
+            # based on the lockOperationError event.
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
@@ -150,10 +159,7 @@ class MatterLock(MatterEntity, LockEntity):
             self._attr_is_unlocking = True
             self.async_write_ha_state()
             # the lock should acknowledge the command with an attribute update
-            # but bad things may happen, so guard against it with a timer.
-            self._optimistic_timer = self.hass.loop.call_later(
-                30, self._reset_optimistic_state
-            )
+            # but if it fails, then change from optimistic state with the lockOperationError event.
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         if self._attr_supported_features & LockEntityFeature.OPEN:
@@ -176,10 +182,7 @@ class MatterLock(MatterEntity, LockEntity):
         self._attr_is_opening = True
         self.async_write_ha_state()
         # the lock should acknowledge the command with an attribute update
-        # but bad things may happen, so guard against it with a timer.
-        self._optimistic_timer = self.hass.loop.call_later(
-            30 if self._attr_is_locked else 5, self._reset_optimistic_state
-        )
+        # but if it fails, then change from optimistic state with the lockOperationError event.
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
@@ -197,39 +200,45 @@ class MatterLock(MatterEntity, LockEntity):
             clusters.DoorLock.Attributes.LockState
         )
 
-        # always reset the optimisically (un)locking state on state update
-        self._reset_optimistic_state(write_state=False)
-
         LOGGER.debug("Lock state: %s for %s", lock_state, self.entity_id)
 
-        if lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
-            self._attr_is_locked = False
-            self._attr_is_open = True
-        elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
+        # If LockState reports a value of 0 - NotFullyLocked - ignore it as it is not a reliable indicator.
+        # It can be transiently reported during normal operation, and might indicate either a
+        # is_locking, is_opening, or is_unlocking state, or possibly a jammed result.
+        # Instead, rely on the other states to determine the lock state or the events to determine jammed.
+        if lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
+            # State 1 - Locked: Lock state is fully locked.
             self._attr_is_locked = True
+            self._attr_is_locking = False
+            self._attr_is_unlocking = False
             self._attr_is_open = False
-        elif lock_state in (
-            clusters.DoorLock.Enums.DlLockState.kUnlocked,
-            clusters.DoorLock.Enums.DlLockState.kNotFullyLocked,
-        ):
+            self._attr_is_opening = False
+            self._attr_is_jammed = False
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlocked:  # state 2
+            # State 2 - Unlocked: Lock state is fully unlocked.
             self._attr_is_locked = False
+            self._attr_is_locking = False
+            self._attr_is_unlocking = False
             self._attr_is_open = False
+            self._attr_is_opening = False
+            self._attr_is_jammed = False
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
+            # State 3 - Unlatched: Lock state is fully unlocked and the latch is pulled.
+            self._attr_is_locked = False
+            self._attr_is_locking = False
+            self._attr_is_unlocking = False
+            self._attr_is_open = True
+            self._attr_is_opening = False
+            self._attr_is_jammed = False
         else:
-            # Treat any other state as unknown.
-            # NOTE: A null state can happen during device startup.
+            # NOTE: A null state can happen during device startup. Treat as unknown.
             self._attr_is_locked = None
+            self._attr_is_locking = None
+            self._attr_is_unlocking = None
             self._attr_is_open = None
-
-    @callback
-    def _reset_optimistic_state(self, write_state: bool = True) -> None:
-        if self._optimistic_timer and not self._optimistic_timer.cancelled():
-            self._optimistic_timer.cancel()
-        self._optimistic_timer = None
-        self._attr_is_locking = False
-        self._attr_is_unlocking = False
-        self._attr_is_opening = False
-        if write_state:
-            self.async_write_ha_state()
+            self._attr_is_opening = None
+            self._attr_is_jammed = None
+            self._attr_changed_by = "Unknown"
 
     @callback
     def _calculate_features(
