@@ -116,6 +116,45 @@ class BackblazeBackupAgent(BackupAgent):
         self._backup_list_cache: dict[str, AgentBackup] = {}
         self._backup_list_cache_expiration: float = 0.0
 
+    async def _close_stream(self, stream: AsyncIterator[bytes]) -> None:
+        """Close a stream gracefully with both async and sync fallbacks."""
+        if hasattr(stream, "aclose") and callable(stream.aclose):
+            await stream.aclose()
+        elif hasattr(stream, "close") and callable(stream.close):
+            stream.close()
+
+    async def _close_response(self, response: Any) -> None:
+        """Close a response object gracefully."""
+        if hasattr(response, "close") and callable(response.close):
+            await self._hass.async_add_executor_job(response.close)
+
+    async def _cleanup_failed_upload(self, filename: str) -> None:
+        """Clean up a partially uploaded file after upload failure."""
+        _LOGGER.warning(
+            "Attempting to delete partially uploaded main backup file %s "
+            "due to metadata upload failure",
+            filename,
+        )
+        try:
+            # Get file info to obtain fileId for deletion
+            uploaded_main_file_info = await self._hass.async_add_executor_job(
+                self._bucket.get_file_info_by_name, filename
+            )
+            await self._hass.async_add_executor_job(uploaded_main_file_info.delete)
+            _LOGGER.info(
+                "Successfully deleted partially uploaded main backup file %s", filename
+            )
+        except Exception:
+            _LOGGER.exception(
+                "Failed to clean up partially uploaded main backup file %s "
+                "due to unexpected error:",
+                filename,
+            )
+            _LOGGER.exception(
+                "Manual intervention may be required to delete %s from Backblaze B2",
+                filename,
+            )
+
     @handle_b2_errors
     async def async_download_backup(
         self, backup_id: str, **kwargs: Any
@@ -147,8 +186,7 @@ class BackblazeBackupAgent(BackupAgent):
             finally:
                 _LOGGER.debug("Closing download stream for %s", file.file_name)
                 # Ensure the underlying response stream is closed
-                if hasattr(response, "close") and callable(response.close):
-                    await self._hass.async_add_executor_job(response.close)
+                await self._close_response(response)
 
         return stream_buffer_and_close()
 
@@ -208,31 +246,7 @@ class BackblazeBackupAgent(BackupAgent):
 
         except B2Error as err:
             _LOGGER.error("Backblaze B2 API error during backup upload: %s", err)
-            _LOGGER.warning(
-                "Attempting to delete partially uploaded main backup file %s "
-                "due to metadata upload failure",
-                prefixed_tar_filename,
-            )
-            try:
-                # Get file info to obtain fileId for deletion
-                uploaded_main_file_info = await self._hass.async_add_executor_job(
-                    self._bucket.get_file_info_by_name, prefixed_tar_filename
-                )
-                await self._hass.async_add_executor_job(uploaded_main_file_info.delete)
-                _LOGGER.info(
-                    "Successfully deleted partially uploaded main backup file %s",
-                    prefixed_tar_filename,
-                )
-            except Exception:
-                _LOGGER.exception(
-                    "Failed to clean up partially uploaded main backup file %s "
-                    "due to unexpected error:",
-                    prefixed_tar_filename,
-                )
-                _LOGGER.exception(
-                    "Manual intervention may be required to delete %s from Backblaze B2",
-                    prefixed_tar_filename,
-                )
+            await self._cleanup_failed_upload(prefixed_tar_filename)
             raise BackupAgentError(
                 f"Failed to upload backup to Backblaze B2: {err}"
             ) from err
@@ -243,8 +257,8 @@ class BackblazeBackupAgent(BackupAgent):
             ) from err
         else:
             _LOGGER.info("Backup upload complete: %s", prefixed_tar_filename)
-            # Invalidate cache after successful upload - only add the new files
-            self._invalidate_caches_for_upload(
+            # Invalidate cache after successful upload
+            self._invalidate_caches(
                 backup.backup_id, prefixed_tar_filename, prefixed_metadata_filename
             )
 
@@ -262,8 +276,7 @@ class BackblazeBackupAgent(BackupAgent):
             file_data.extend(chunk)
 
         # Explicitly close the stream after reading all content
-        if hasattr(stream, "aclose") and callable(stream.aclose):
-            await stream.aclose()
+        await self._close_stream(stream)
 
         _LOGGER.info(
             "Uploading main backup file %s (size: %d bytes) using simple upload",
@@ -300,14 +313,7 @@ class BackblazeBackupAgent(BackupAgent):
                         await f.write(chunk)
             finally:
                 # Explicitly close the stream after writing to disk
-                if hasattr(stream_to_disk, "aclose") and callable(
-                    stream_to_disk.aclose
-                ):
-                    await stream_to_disk.aclose()
-                elif hasattr(stream_to_disk, "close") and callable(
-                    stream_to_disk.close
-                ):
-                    stream_to_disk.close()
+                await self._close_stream(stream_to_disk)
 
             content_type, _ = mimetypes.guess_type(filename)
             file_version = await self._hass.async_add_executor_job(
@@ -375,10 +381,11 @@ class BackblazeBackupAgent(BackupAgent):
             )
 
         # Invalidate cache after successful deletion - remove specific files
-        self._invalidate_caches_for_deletion(
+        self._invalidate_caches(
             backup_id,
             file.file_name,
             metadata_file.file_name if metadata_file else None,
+            remove_files=True,
         )
 
     @handle_b2_errors
@@ -650,32 +657,34 @@ class BackblazeBackupAgent(BackupAgent):
             _LOGGER.warning("Failed to parse metadata file %s: %s", file_name, err)
         return None
 
-    def _invalidate_caches_for_upload(
-        self, backup_id: str, tar_filename: str, metadata_filename: str
+    def _invalidate_caches(
+        self,
+        backup_id: str,
+        tar_filename: str,
+        metadata_filename: str | None,
+        *,
+        remove_files: bool = False,
     ) -> None:
-        """Invalidate caches efficiently after upload by adding new files."""
-        # Add new files to all_files_cache if it exists and is still valid
-        if time() <= self._all_files_cache_expiration:
-            # We can't easily create FileVersion objects without API calls,
-            # so we'll just invalidate for now. In the future, this could be optimized
-            # to add the new file objects to the cache.
-            pass
+        """Invalidate caches after upload/deletion operations.
 
-        # For backup list cache, we could add the new backup, but since we don't have
-        # the FileVersion objects readily available, it's simpler to invalidate
-        self._all_files_cache_expiration = 0.0
-        self._backup_list_cache_expiration = 0.0
+        Args:
+            backup_id: The backup ID to remove from backup cache
+            tar_filename: The tar filename to remove from files cache
+            metadata_filename: The metadata filename to remove from files cache
+            remove_files: If True, remove specific files from cache; if False, expire entire cache
+        """
+        if remove_files:
+            # Remove specific files from all_files_cache if it exists and is still valid
+            if time() <= self._all_files_cache_expiration:
+                self._all_files_cache.pop(tar_filename, None)
+                if metadata_filename:
+                    self._all_files_cache.pop(metadata_filename, None)
 
-    def _invalidate_caches_for_deletion(
-        self, backup_id: str, tar_filename: str, metadata_filename: str | None
-    ) -> None:
-        """Invalidate caches efficiently after deletion by removing specific files."""
-        # Remove from all_files_cache if it exists and is still valid
-        if time() <= self._all_files_cache_expiration:
-            self._all_files_cache.pop(tar_filename, None)
-            if metadata_filename:
-                self._all_files_cache.pop(metadata_filename, None)
-
-        # Remove from backup_list_cache if it exists and is still valid
-        if time() <= self._backup_list_cache_expiration:
-            self._backup_list_cache.pop(backup_id, None)
+            # Remove from backup_list_cache if it exists and is still valid
+            if time() <= self._backup_list_cache_expiration:
+                self._backup_list_cache.pop(backup_id, None)
+        else:
+            # For uploads, we can't easily add new FileVersion objects without API calls,
+            # so we expire the entire cache for simplicity
+            self._all_files_cache_expiration = 0.0
+            self._backup_list_cache_expiration = 0.0
