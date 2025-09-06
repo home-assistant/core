@@ -15,9 +15,12 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_ID,
     CONF_INFER_ARMING_STATE,
     CONF_MAX_SUPPORTED_ZONES,
+    CONF_NAME,
     CONF_SUPPORT_HOME_ARM,
+    CONF_ZONES,
     DEFAULT_INFER_ARMING_STATE,
     DEFAULT_MAX_SUPPORTED_ZONES,
     DEFAULT_PORT,
@@ -42,7 +45,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     host = data[CONF_HOST]
     port = data[CONF_PORT]
 
-    # Simple socket test to verify connectivity
     def test_connection():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(5)
@@ -55,7 +57,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         finally:
             sock.close()
 
-    # Run the blocking socket test in executor
     is_connected = await hass.async_add_executor_job(test_connection)
 
     if not is_connected:
@@ -111,17 +112,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): bool,
             }
         )
-
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_import(
         self, import_config: dict[str, Any]
     ) -> config_entries.ConfigFlowResult:
         """Handle import from YAML."""
-        # Convert scan_interval if needed
         scan_interval = import_config.get(CONF_SCAN_INTERVAL)
         if scan_interval and hasattr(scan_interval, "total_seconds"):
             scan_interval = int(scan_interval.total_seconds())
+
+        zones = import_config.get(CONF_ZONES, [])
+
+        if zones:
+            zone_ids = [zone.get(CONF_ID, 0) for zone in zones]
+            if zone_ids:
+                max_zone_id = max(zone_ids)
+            else:
+                max_zone_id = DEFAULT_MAX_SUPPORTED_ZONES
+        else:
+            max_zone_id = import_config.get(
+                CONF_MAX_SUPPORTED_ZONES, DEFAULT_MAX_SUPPORTED_ZONES
+            )
 
         data = {
             CONF_HOST: import_config[CONF_HOST],
@@ -133,12 +145,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_SUPPORT_HOME_ARM: import_config.get(
                 CONF_SUPPORT_HOME_ARM, DEFAULT_SUPPORT_HOME_ARM
             ),
-            CONF_MAX_SUPPORTED_ZONES: import_config.get(
-                CONF_MAX_SUPPORTED_ZONES, DEFAULT_MAX_SUPPORTED_ZONES
-            ),
+            CONF_MAX_SUPPORTED_ZONES: max_zone_id,
+            CONF_ZONES: [
+                {CONF_ID: zone.get(CONF_ID), CONF_NAME: zone.get(CONF_NAME)}
+                for zone in zones
+                if zone.get(CONF_ID) and zone.get(CONF_NAME)
+            ],
         }
+        await self.async_set_unique_id(f"{data[CONF_HOST]}:{data[CONF_PORT]}")
+        self._abort_if_unique_id_configured()
 
-        return await self.async_step_user(data)
+        return self.async_create_entry(
+            title=f"Ness Alarm ({data[CONF_HOST]})", data=data
+        )
 
     @staticmethod
     @callback
@@ -154,7 +173,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
-        self._entry_id = config_entry.entry_id  # store only the ID
+        self._entry_id = config_entry.entry_id
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

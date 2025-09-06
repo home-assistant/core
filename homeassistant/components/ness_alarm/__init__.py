@@ -17,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -48,6 +47,7 @@ ZONE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID): cv.positive_int,
         vol.Required(CONF_NAME): cv.string,
+        vol.Optional("type"): cv.string,
     }
 )
 
@@ -87,37 +87,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ness Alarm component from YAML configuration."""
     hass.data.setdefault(DOMAIN, {})
 
-    # Check if there's a YAML config for this domain
     if DOMAIN in config:
-        # For backward compatibility, store the YAML config temporarily
         hass.data[DOMAIN]["yaml_config"] = config[DOMAIN]
-
-        # Import the YAML configuration to create a config entry
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
-            )
-        )
-
-        # Load platforms for YAML config (backward compatibility)
-        # This ensures platforms load even before config entry is created
-        hass.async_create_task(
-            async_load_platform(
-                hass,
-                Platform.ALARM_CONTROL_PANEL,
-                DOMAIN,
-                {},  # discovery_info
-                config,  # hass_config
-            )
-        )
-
-        hass.async_create_task(
-            async_load_platform(
-                hass,
-                Platform.BINARY_SENSOR,
-                DOMAIN,
-                {},  # discovery_info
-                config,  # hass_config
             )
         )
 
@@ -129,7 +103,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    # Extract configuration
     host = entry.data[CONF_HOST]
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
     scan_interval = entry.options.get(
@@ -148,15 +121,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_MAX_SUPPORTED_ZONES, DEFAULT_MAX_SUPPORTED_ZONES),
     )
 
-    # Create the client
     client = Client(
         host=host,
         port=port,
-        update_interval=scan_interval,  # Already in seconds
+        update_interval=scan_interval,
         infer_arming_state=infer_arming_state,
     )
 
-    # Set up event handlers
     @callback
     def on_zone_change(zone_id: int, state: bool) -> None:
         """Handle zone state changes."""
@@ -184,7 +155,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         },
     }
 
-    # Forward setup to platforms - this handles loading platforms for config entries
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def handle_shutdown(event) -> None:
@@ -202,9 +172,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async_at_started(hass, _started)
 
-    # REMOVED the problematic async_load_platform call here
-    # It was redundant since async_forward_entry_setups already handles platform loading
-
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     await async_setup_services(hass)
@@ -214,7 +181,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # Unload platforms
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
@@ -243,7 +209,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         state = call.data.get("state")
 
         for entry_data in hass.data[DOMAIN].values():
-            # Skip the yaml_config key if it exists
             if isinstance(entry_data, dict) and "client" in entry_data:
                 client = entry_data.get("client")
                 if client:
