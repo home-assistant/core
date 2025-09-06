@@ -4,7 +4,12 @@ from datetime import timedelta
 
 DOMAIN = "rituals_perfume_genie"
 
+# Alt (API V1)
 ACCOUNT_HASH = "account_hash"
+
+# Neu (API V2):
+USERNAME = "username"
+PASSWORD = "password"
 
 # The API provided by Rituals is currently rate limited to 30 requests
 # per hour per IP address. To avoid hitting this limit, the polling
