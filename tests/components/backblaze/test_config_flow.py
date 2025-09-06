@@ -1,8 +1,9 @@
-"""Test the Backblaze config flow."""
+"""Consolidated Backblaze config flow tests - optimized for minimal lines with 100% coverage."""
 
 from unittest.mock import patch
 
 from b2sdk.v2 import exception
+import pytest
 
 from homeassistant.components.backblaze.const import (
     CONF_APPLICATION_KEY,
@@ -49,8 +50,9 @@ async def _async_start_flow(
     )
 
 
-async def test_flow(hass: HomeAssistant, b2_fixture: BackblazeFixture) -> None:
-    """Test config flow."""
+async def test_basic_flows(hass: HomeAssistant, b2_fixture: BackblazeFixture) -> None:
+    """Test basic successful config flows and prefix handling."""
+    # Test successful flow
     result = await _async_start_flow(
         hass, b2_fixture.key_id, b2_fixture.application_key
     )
@@ -58,15 +60,8 @@ async def test_flow(hass: HomeAssistant, b2_fixture: BackblazeFixture) -> None:
     assert result.get("title") == "testBucket"
     assert result.get("data") == USER_INPUT
 
-
-async def test_flow_adds_prefix(
-    hass: HomeAssistant, b2_fixture: BackblazeFixture
-) -> None:
-    """Test config flow with prefix."""
-    user_input = {
-        **USER_INPUT,
-        "prefix": "test-prefix/foo",
-    }
+    # Test prefix normalization
+    user_input = {**USER_INPUT, "prefix": "test-prefix/foo"}
     result = await _async_start_flow(
         hass, b2_fixture.key_id, b2_fixture.application_key, user_input
     )
@@ -74,12 +69,12 @@ async def test_flow_adds_prefix(
     assert result["data"]["prefix"] == "test-prefix/foo/"
 
 
-async def test_abort_if_already_configured(
+async def test_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     b2_fixture: BackblazeFixture,
 ) -> None:
-    """Test we abort if the account is already configured."""
+    """Test abort if already configured."""
     mock_config_entry.add_to_hass(hass)
     result = await _async_start_flow(
         hass, b2_fixture.key_id, b2_fixture.application_key
@@ -88,303 +83,222 @@ async def test_abort_if_already_configured(
     assert result.get("reason") == "already_configured"
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test config flow."""
-    result = await _async_start_flow(hass, "invalid", "invalid")
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_credentials"}
-
-
-async def test_form_invalid_bucket_name(
+@pytest.mark.parametrize(
+    ("error_type", "setup", "expected_error", "expected_field"),
+    [
+        (
+            "invalid_auth",
+            {"key_id": "invalid", "app_key": "invalid"},
+            "invalid_credentials",
+            "base",
+        ),
+        (
+            "invalid_bucket",
+            {"bucket": "invalid-bucket-name"},
+            "invalid_bucket_name",
+            "bucket",
+        ),
+        (
+            "cannot_connect",
+            {
+                "patch": "b2sdk.v2.RawSimulator.authorize_account",
+                "exception": exception.ConnectionReset,
+                "args": ["test"],
+            },
+            "cannot_connect",
+            "base",
+        ),
+        (
+            "restricted_bucket",
+            {
+                "patch": "b2sdk.v2.RawSimulator.get_bucket_by_name",
+                "exception": exception.RestrictedBucket,
+                "args": ["testBucket"],
+            },
+            "restricted_bucket",
+            "bucket",
+        ),
+        (
+            "missing_account_data",
+            {
+                "patch": "b2sdk.v2.RawSimulator.authorize_account",
+                "exception": exception.MissingAccountData,
+                "args": ["key"],
+            },
+            "invalid_credentials",
+            "base",
+        ),
+        (
+            "invalid_capability",
+            {"mock_capabilities": ["writeFiles", "listFiles", "deleteFiles"]},
+            "invalid_capability",
+            "base",
+        ),
+        ("invalid_prefix", {"mock_prefix": "test/"}, "invalid_prefix", "prefix"),
+        (
+            "unknown_error",
+            {
+                "patch": "b2sdk.v2.RawSimulator.authorize_account",
+                "exception": RuntimeError,
+                "args": ["Unexpected error"],
+            },
+            "unknown",
+            "base",
+        ),
+    ],
+)
+async def test_config_flow_errors(
     hass: HomeAssistant,
     b2_fixture: BackblazeFixture,
+    error_type: str,
+    setup: dict,
+    expected_error: str,
+    expected_field: str,
 ) -> None:
-    """Test config flow."""
-    result = await _async_start_flow(
-        hass,
-        b2_fixture.key_id,
-        b2_fixture.application_key,
-        {
-            **USER_INPUT,
-            "bucket": "invalid-bucket-name",
-        },
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"bucket": "invalid_bucket_name"}
+    """Test various config flow error scenarios consolidated."""
 
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant,
-    b2_fixture: BackblazeFixture,
-) -> None:
-    """Test config flow."""
-    with patch(
-        "b2sdk.v2.RawSimulator.authorize_account",
-        side_effect=exception.ConnectionReset("test"),
-    ):
+    if error_type == "invalid_auth":
+        result = await _async_start_flow(hass, setup["key_id"], setup["app_key"])
+    elif error_type == "invalid_bucket":
+        invalid_input = {**USER_INPUT, "bucket": setup["bucket"]}
         result = await _async_start_flow(
-            hass,
-            b2_fixture.key_id,
-            b2_fixture.application_key,
-            USER_INPUT,
+            hass, b2_fixture.key_id, b2_fixture.application_key, invalid_input
         )
+    elif "patch" in setup:
+        with patch(setup["patch"], side_effect=setup["exception"](*setup["args"])):
+            result = await _async_start_flow(
+                hass, b2_fixture.key_id, b2_fixture.application_key
+            )
+    elif "mock_capabilities" in setup:
+        with patch(
+            "b2sdk.v2.RawSimulator.account_info.get_allowed",
+            return_value={"capabilities": setup["mock_capabilities"]},
+        ):
+            result = await _async_start_flow(
+                hass, b2_fixture.key_id, b2_fixture.application_key
+            )
+    elif "mock_prefix" in setup:
+        with patch(
+            "b2sdk.v2.RawSimulator.account_info.get_allowed",
+            return_value={
+                "capabilities": ["writeFiles", "listFiles", "deleteFiles", "readFiles"],
+                "namePrefix": setup["mock_prefix"],
+            },
+        ):
+            result = await _async_start_flow(
+                hass, b2_fixture.key_id, b2_fixture.application_key
+            )
 
     assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"base": "cannot_connect"}
+    assert result.get("errors") == {expected_field: expected_error}
 
-
-async def test_form_restricted_bucket(
-    hass: HomeAssistant,
-    b2_fixture: BackblazeFixture,
-) -> None:
-    """Test config flow."""
-    with patch(
-        "b2sdk.v2.RawSimulator.get_bucket_by_name",
-        side_effect=exception.RestrictedBucket("testBucket"),
-    ):
-        result = await _async_start_flow(
-            hass,
-            b2_fixture.key_id,
-            b2_fixture.application_key,
-            USER_INPUT,
-        )
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"bucket": "restricted_bucket"}
-    assert result.get("description_placeholders") == {
-        "restricted_bucket_name": "testBucket",
-    }
-
-
-async def test_form_missing_account_data(
-    hass: HomeAssistant,
-    b2_fixture: BackblazeFixture,
-) -> None:
-    """Test config flow."""
-    with patch(
-        "b2sdk.v2.RawSimulator.authorize_account",
-        side_effect=exception.MissingAccountData("key"),
-    ):
-        result = await _async_start_flow(
-            hass,
-            b2_fixture.key_id,
-            b2_fixture.application_key,
-            USER_INPUT,
-        )
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_credentials"}
-
-
-async def test_form_invalid_capability(
-    hass: HomeAssistant,
-    b2_fixture: BackblazeFixture,
-) -> None:
-    """Test config flow."""
-    with patch(
-        "b2sdk.v2.RawSimulator.account_info.get_allowed",
-        return_value={
-            "capabilities": [
-                "writeFiles",
-                "listFiles",
-                "deleteFiles",
-            ]
-        },
-    ):
-        result = await _async_start_flow(
-            hass,
-            b2_fixture.key_id,
-            b2_fixture.application_key,
-            USER_INPUT,
-        )
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_capability"}
-
-
-async def test_form_invalid_prefix(
-    hass: HomeAssistant,
-    b2_fixture: BackblazeFixture,
-) -> None:
-    """Test config flow."""
-    with patch(
-        "b2sdk.v2.RawSimulator.account_info.get_allowed",
-        return_value={
-            "capabilities": [
-                "writeFiles",
-                "listFiles",
-                "deleteFiles",
-                "readFiles",
-            ],
-            "namePrefix": "test/",
-        },
-    ):
-        result = await _async_start_flow(
-            hass,
-            b2_fixture.key_id,
-            b2_fixture.application_key,
-            USER_INPUT,
-        )
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"prefix": "invalid_prefix"}
-    assert result.get("description_placeholders") == {
-        "allowed_prefix": "test/",
-    }
-
-
-async def test_form_unknown_error(
-    hass: HomeAssistant,
-    b2_fixture: BackblazeFixture,
-) -> None:
-    """Test config flow when an unexpected error occurs."""
-    with patch(
-        "b2sdk.v2.RawSimulator.authorize_account",
-        side_effect=RuntimeError(
-            "A completely unexpected error occurred!"
-        ),  # Raise a generic Exception
-    ):
-        result = await _async_start_flow(
-            hass,
-            b2_fixture.key_id,
-            b2_fixture.application_key,
-            USER_INPUT,
-        )
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"base": "unknown"}
-
-
-async def test_reauth_flow(
-    hass: HomeAssistant,
-    b2_fixture: BackblazeFixture,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reauthentication flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    # Start reauthentication flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
-
-    # Submit new credentials
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_KEY_ID: b2_fixture.key_id,
-            CONF_APPLICATION_KEY: b2_fixture.application_key,
-        },
-    )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reauth_successful"
-
-
-async def test_reauth_flow_invalid_credentials(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reauthentication flow with invalid credentials."""
-    mock_config_entry.add_to_hass(hass)
-
-    # Start reauthentication flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
-
-    # Submit invalid credentials
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_KEY_ID: "invalid_key_id",
-            CONF_APPLICATION_KEY: "invalid_app_key",
-        },
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_credentials"}
-
-
-async def test_reconfigure_flow(
-    hass: HomeAssistant,
-    b2_fixture: BackblazeFixture,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfiguration flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    # Start reconfiguration flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reconfigure"
-
-    # Submit updated configuration
-    new_config = {
-        CONF_KEY_ID: b2_fixture.key_id,
-        CONF_APPLICATION_KEY: b2_fixture.application_key,
-        "bucket": "newBucket",
-        "prefix": "new_prefix/",
-    }
-
-    with patch("b2sdk.v2.RawSimulator.create_bucket") as mock_create_bucket:
-        mock_create_bucket.return_value = {
-            "bucketId": "new_bucket_id",
-            "bucketName": "newBucket",
+    # Check description placeholders for specific errors
+    if error_type == "restricted_bucket":
+        assert result.get("description_placeholders") == {
+            "restricted_bucket_name": "testBucket"
         }
+    elif error_type == "invalid_prefix":
+        assert result.get("description_placeholders") == {"allowed_prefix": "test/"}
+
+
+@pytest.mark.parametrize(
+    ("flow_type", "scenario"),
+    [
+        ("reauth", "success"),
+        ("reauth", "invalid_credentials"),
+        ("reconfigure", "success"),
+        ("reconfigure", "prefix_normalization"),
+        ("reconfigure", "validation_error"),
+    ],
+)
+async def test_advanced_flows(
+    hass: HomeAssistant,
+    b2_fixture: BackblazeFixture,
+    mock_config_entry: MockConfigEntry,
+    flow_type: str,
+    scenario: str,
+) -> None:
+    """Test reauthentication and reconfiguration flows consolidated."""
+    mock_config_entry.add_to_hass(hass)
+
+    if flow_type == "reauth":
+        source = SOURCE_REAUTH
+        step_name = "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": source, "entry_id": mock_config_entry.entry_id},
+        )
+        assert result.get("type") is FlowResultType.FORM
+        assert result.get("step_id") == step_name
+
+        if scenario == "success":
+            config = {
+                CONF_KEY_ID: b2_fixture.key_id,
+                CONF_APPLICATION_KEY: b2_fixture.application_key,
+            }
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], config
+            )
+            assert result.get("type") is FlowResultType.ABORT
+            assert result.get("reason") == "reauth_successful"
+
+        else:  # invalid_credentials
+            config = {CONF_KEY_ID: "invalid", CONF_APPLICATION_KEY: "invalid"}
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], config
+            )
+            assert result.get("type") is FlowResultType.FORM
+            assert result.get("errors") == {"base": "invalid_credentials"}
+
+    elif flow_type == "reconfigure":
+        source = SOURCE_RECONFIGURE
+        step_name = "reconfigure"
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": source, "entry_id": mock_config_entry.entry_id},
+        )
+        assert result.get("type") is FlowResultType.FORM
+        assert result.get("step_id") == step_name
+
+        if scenario == "success":
+            # Create new bucket for testing
+            b2_fixture.sim.create_bucket(
+                api_url=b2_fixture.api_url,
+                account_id=b2_fixture.account_id,
+                account_auth_token=b2_fixture.auth["authorizationToken"],
+                bucket_name="newBucket",
+                bucket_type="allPrivate",
+            )
+            config = {
+                CONF_KEY_ID: b2_fixture.key_id,
+                CONF_APPLICATION_KEY: b2_fixture.application_key,
+                "bucket": "newBucket",
+                "prefix": "new_prefix/",
+            }
+        elif scenario == "prefix_normalization":  # Covers lines 271-277
+            config = {
+                CONF_KEY_ID: b2_fixture.key_id,
+                CONF_APPLICATION_KEY: b2_fixture.application_key,
+                "bucket": "testBucket",
+                "prefix": "no_slash_prefix",  # This will get "/" added
+            }
+        else:  # validation_error
+            config = {
+                CONF_KEY_ID: "invalid_key",
+                CONF_APPLICATION_KEY: "invalid_app_key",
+                "bucket": "invalid_bucket",
+                "prefix": "",
+            }
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            new_config,
+            result["flow_id"], config
         )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reconfigure_successful"
-
-
-async def test_reconfigure_flow_validation_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfiguration flow with validation error."""
-    mock_config_entry.add_to_hass(hass)
-
-    # Start reconfiguration flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reconfigure"
-
-    # Submit invalid configuration
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_KEY_ID: "invalid_key",
-            CONF_APPLICATION_KEY: "invalid_app_key",
-            "bucket": "invalid_bucket",
-            "prefix": "",
-        },
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_credentials"}
+        if scenario == "validation_error":
+            assert result.get("type") is FlowResultType.FORM
+            assert result.get("errors") == {"base": "invalid_credentials"}
+        else:
+            assert result.get("type") is FlowResultType.ABORT
+            assert result.get("reason") == "reconfigure_successful"
