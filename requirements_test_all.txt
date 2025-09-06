@@ -1584,6 +1584,9 @@ pybotvac==0.0.28
 # homeassistant.components.braviatv
 pybravia==0.3.4
 
+# homeassistant.components.briiv
+pybriiv==0.1.1
+
 # homeassistant.components.cloudflare
 pycfdns==3.0.0
 
