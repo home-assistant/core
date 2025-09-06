@@ -127,6 +127,7 @@ FLOWS = {
         "cpuspeed",
         "crownstone",
         "daikin",
+        "dali_center",
         "datadog",
         "deako",
         "deconz",

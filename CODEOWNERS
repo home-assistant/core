@@ -316,6 +316,8 @@ build.json @home-assistant/supervisor
 /tests/components/cups/ @fabaff
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
+/homeassistant/components/dali_center/ @niracler
+/tests/components/dali_center/ @niracler
 /homeassistant/components/date/ @home-assistant/core
 /tests/components/date/ @home-assistant/core
 /homeassistant/components/datetime/ @home-assistant/core
