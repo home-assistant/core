@@ -345,7 +345,6 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             return
 
         if self._verify_delay:
-            assert self._verify_delay == 1
             if self._cancel_call:
                 self._cancel_call()
                 self._cancel_call = None
