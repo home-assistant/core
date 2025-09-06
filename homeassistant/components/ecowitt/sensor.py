@@ -224,6 +224,16 @@ ECOWITT_SENSORS_MAPPING: Final = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    EcoWittSensorTypes.DISTANCE_MM: SensorEntityDescription(
+        key="DISTANCE_MM",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.HEAT_COUNT: SensorEntityDescription(
+        key="HEAT_COUNT",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
 }
 
 
