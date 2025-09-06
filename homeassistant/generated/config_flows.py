@@ -555,6 +555,7 @@ FLOWS = {
         "sabnzbd",
         "samsungtv",
         "sanix",
+        "savant",
         "schlage",
         "scrape",
         "screenlogic",
