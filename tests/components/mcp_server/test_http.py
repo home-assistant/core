@@ -54,6 +54,7 @@ DATA_PREFIX = "data: "
 EXPECTED_PROMPT_SUFFIX = """
 - names: Kitchen Light
   domain: light
+  entity_id: light.kitchen
   areas: Kitchen
 """
 
