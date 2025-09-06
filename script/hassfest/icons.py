@@ -15,14 +15,19 @@ from .model import Config, Integration
 from .translations import translation_key_validator
 
 
-def icon_value_validator(value: Any) -> str:
-    """Validate that the icon is a valid icon."""
-    value = cv.string_with_no_html(value)
-    if not value.startswith("mdi:"):
-        raise vol.Invalid(
-            "The icon needs to be a valid icon from Material Design Icons and start with `mdi:`"
-        )
-    return str(value)
+def icon_value_validator_factory(core_integration: bool):
+    """Return a validator for icon values based on core_integration."""
+
+    def icon_value_validator(value: Any) -> str:
+        """Validate that the icon is a valid icon."""
+        value = cv.string_with_no_html(value)
+        if core_integration and not value.startswith("mdi:"):
+            raise vol.Invalid(
+                "The icon needs to be a valid icon from Material Design Icons and start with `mdi:`"
+            )
+        return str(value)
+
+    return icon_value_validator
 
 
 def range_key_validator(value: str) -> str:
@@ -78,35 +83,24 @@ def ensure_range_is_sorted(value: dict) -> dict:
     return value
 
 
-DATA_ENTRY_ICONS_SCHEMA = vol.Schema(
-    {
-        "step": {
-            str: {
-                "sections": {
-                    str: icon_value_validator,
+def get_data_entry_icons_schema(icon_value_validator):
+    """Return DATA_ENTRY_ICONS_SCHEMA using the correct icon_value_validator."""
+    return vol.Schema(
+        {
+            "step": {
+                str: {
+                    "sections": {
+                        str: icon_value_validator,
+                    }
                 }
             }
         }
-    }
-)
+    )
 
 
-CORE_SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
-    vol.Schema(
-        {
-            vol.Optional("service"): icon_value_validator,
-            vol.Optional("sections"): cv.schema_with_slug_keys(
-                icon_value_validator, slug_validator=translation_key_validator
-            ),
-        }
-    ),
-    slug_validator=translation_key_validator,
-)
-
-
-CUSTOM_INTEGRATION_SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
-    vol.All(
-        convert_shorthand_service_icon,
+def get_core_service_icons_schema(icon_value_validator):
+    """Return CORE_SERVICE_ICONS_SCHEMA using the correct icon_value_validator."""
+    return cv.schema_with_slug_keys(
         vol.Schema(
             {
                 vol.Optional("service"): icon_value_validator,
@@ -115,35 +109,45 @@ CUSTOM_INTEGRATION_SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
                 ),
             }
         ),
-    ),
-    slug_validator=translation_key_validator,
-)
+        slug_validator=translation_key_validator,
+    )
 
 
-CONDITION_ICONS_SCHEMA = cv.schema_with_slug_keys(
-    vol.Schema(
-        {
-            vol.Optional("condition"): icon_value_validator,
-        }
-    ),
-    slug_validator=cv.underscore_slug,
-)
+def get_custom_integration_service_icons_schema(icon_value_validator):
+    """Return CUSTOM_INTEGRATION_SERVICE_ICONS_SCHEMA using the correct icon_value_validator."""
+    return cv.schema_with_slug_keys(
+        vol.All(
+            convert_shorthand_service_icon,
+            vol.Schema(
+                {
+                    vol.Optional("service"): icon_value_validator,
+                    vol.Optional("sections"): cv.schema_with_slug_keys(
+                        icon_value_validator, slug_validator=translation_key_validator
+                    ),
+                }
+            ),
+        ),
+        slug_validator=translation_key_validator,
+    )
 
 
-TRIGGER_ICONS_SCHEMA = cv.schema_with_slug_keys(
-    vol.Schema(
-        {
-            vol.Optional("trigger"): icon_value_validator,
-        }
-    ),
-    slug_validator=cv.underscore_slug,
-)
+def get_trigger_icons_schema(icon_value_validator):
+    """Return TRIGGER_ICONS_SCHEMA using the correct icon_value_validator."""
+    return cv.schema_with_slug_keys(
+        vol.Schema(
+            {
+                vol.Optional("trigger"): icon_value_validator,
+            }
+        ),
+        slug_validator=translation_key_validator,
+    )
 
 
 def icon_schema(
     core_integration: bool, integration_type: str, no_entity_platform: bool
 ) -> vol.Schema:
     """Create an icon schema."""
+    icon_value_validator = icon_value_validator_factory(core_integration)
 
     state_validator = cv.schema_with_slug_keys(
         icon_value_validator,
@@ -176,16 +180,17 @@ def icon_schema(
 
     schema = vol.Schema(
         {
-            vol.Optional("conditions"): CONDITION_ICONS_SCHEMA,
-            vol.Optional("config"): DATA_ENTRY_ICONS_SCHEMA,
+            vol.Optional("config"): get_data_entry_icons_schema(icon_value_validator),
             vol.Optional("issues"): vol.Schema(
-                {str: {"fix_flow": DATA_ENTRY_ICONS_SCHEMA}}
+                {str: {"fix_flow": get_data_entry_icons_schema(icon_value_validator)}}
             ),
-            vol.Optional("options"): DATA_ENTRY_ICONS_SCHEMA,
-            vol.Optional("services"): CORE_SERVICE_ICONS_SCHEMA
+            vol.Optional("options"): get_data_entry_icons_schema(icon_value_validator),
+            vol.Optional("services"): get_core_service_icons_schema(
+                icon_value_validator
+            )
             if core_integration
-            else CUSTOM_INTEGRATION_SERVICE_ICONS_SCHEMA,
-            vol.Optional("triggers"): TRIGGER_ICONS_SCHEMA,
+            else get_custom_integration_service_icons_schema(icon_value_validator),
+            vol.Optional("triggers"): get_trigger_icons_schema(icon_value_validator),
         }
     )
 
