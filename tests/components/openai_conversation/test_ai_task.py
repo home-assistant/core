@@ -284,7 +284,7 @@ async def test_repair_issue(
                     status_code=403, request=httpx.Request(method="GET", url="")
                 ),
                 body=None,
-                message="Your organization must be verified to use the model `gpt-image-1`. Please go to: https://platform.openai.com/settings/organization/general and click on Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate.",
+                message="Please click on Verify Organization.",
             ),
         ),
         pytest.raises(HomeAssistantError, match="Error talking to OpenAI"),
