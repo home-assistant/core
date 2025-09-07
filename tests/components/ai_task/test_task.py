@@ -237,9 +237,7 @@ async def test_generate_data_mixed_attachments(
         hass,
         dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT + timedelta(seconds=1),
     )
-    await hass.async_block_till_done()  # Need several iterations
-    await hass.async_block_till_done()  # because one iteration of the loop
-    await hass.async_block_till_done()  # simply schedules the cleanup
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify the temporary file cleaned up
     assert not camera_attachment.path.exists()
