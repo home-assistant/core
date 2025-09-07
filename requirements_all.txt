@@ -2354,7 +2354,7 @@ pysmarlaapi==0.9.2
 pysmartthings==3.2.9
 
 # homeassistant.components.smarty
-pysmarty2==0.10.2
+pysmarty2==0.10.3
 
 # homeassistant.components.smhi
 pysmhi==1.0.2
