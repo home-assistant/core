@@ -1,7 +1,9 @@
 """Constants for the Mealie integration."""
 
+from dataclasses import dataclass
 import logging
 
+from aiomealie import MealplanEntryType
 from awesomeversion import AwesomeVersion
 
 DOMAIN = "mealie"
@@ -20,3 +22,19 @@ ATTR_SEARCH_TERMS = "search_terms"
 ATTR_RESULT_LIMIT = "result_limit"
 
 MIN_REQUIRED_MEALIE_VERSION = AwesomeVersion("v1.0.0")
+
+
+@dataclass
+class MealTime:
+    """class to store meal times."""
+
+    text: str
+    default: str
+
+
+MEAL_TIME: dict[MealplanEntryType, MealTime] = {
+    MealplanEntryType.BREAKFAST: MealTime("Breakfast Time", "9:00 AM"),
+    MealplanEntryType.LUNCH: MealTime("Lunch Time", "12:00 PM"),
+    MealplanEntryType.DINNER: MealTime("Dinner Time", "6:00 PM"),
+    MealplanEntryType.SIDE: MealTime("Side Time", "5:00 PM"),
+}
