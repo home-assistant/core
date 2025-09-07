@@ -1236,7 +1236,7 @@ microBeesPy==0.3.5
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.12.5
+millheater==0.13.1
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -1530,7 +1530,7 @@ pyHomee==1.2.10
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.31.6
+pyTibber==0.32.0
 
 # homeassistant.components.dlink
 pyW215==0.8.0
