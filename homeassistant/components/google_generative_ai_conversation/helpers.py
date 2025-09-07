@@ -4,11 +4,54 @@ from __future__ import annotations
 
 from contextlib import suppress
 import io
+import re
 import wave
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import LOGGER
+
+
+def is_valid_multispeakers_string(s: str) -> bool:
+    """Checks if a string has a "key: value;" structure using a regex.
+
+    Args:
+        s: The string to validate.
+
+    Returns:
+        True if the string matches the expected format, otherwise False.
+    """
+    validation_pattern = r"^\s*([^:]+:\s*[^;]+;?\s*)+$"
+    return bool(re.fullmatch(validation_pattern, s))
+
+
+def parse_multispeakers_string(s: str) -> dict | None:
+    """Parses a valid "key: value;" string into a dictionary.
+
+    Args:
+        s: The string to parse.
+
+    Returns:
+        A dictionary of the parsed data.
+    """
+    data = {}
+    pairs = s.split(";")
+
+    for pair in pairs:
+        if not pair.strip():
+            continue
+
+        try:
+            key, value = pair.split(":", 1)
+        except ValueError:
+            continue
+
+        trimmed_key = key.strip()
+        trimmed_value = value.strip().lower()
+
+        data[trimmed_key] = trimmed_value
+
+    return data
 
 
 def convert_to_wav(audio_data: bytes, mime_type: str) -> bytes:

@@ -22,6 +22,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
 )
+from homeassistant.components.google_generative_ai_conversation.tts import ATTR_VOICES
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
@@ -178,12 +179,125 @@ async def test_tts_service_speak(
 
     tts_entity._genai_client.aio.models.generate_content.assert_called_once_with(
         model=TEST_CHAT_MODEL,
-        contents="There is a person at the front door.",
+        contents=[
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part.from_text(text="There is a person at the front door."),
+                ],
+            ),
+        ],
         config=types.GenerateContentConfig(
             response_modalities=["AUDIO"],
             speech_config=types.SpeechConfig(
                 voice_config=types.VoiceConfig(
                     prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice_id)
+                )
+            ),
+            temperature=RECOMMENDED_TEMPERATURE,
+            top_k=RECOMMENDED_TOP_K,
+            top_p=RECOMMENDED_TOP_P,
+            max_output_tokens=RECOMMENDED_MAX_TOKENS,
+            safety_settings=[
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                    threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                ),
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                    threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                ),
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                ),
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                    threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                ),
+            ],
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        {
+            ATTR_ENTITY_ID: "tts.google_ai_tts",
+            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+            tts.ATTR_MESSAGE: "Read aloud: Speaker 1: There is a person at the front door. Speaker 2: Delivery!",
+            tts.ATTR_OPTIONS: {ATTR_VOICES: "Speaker 1: voice1; Speaker 2: voice2"},
+        },
+        {
+            ATTR_ENTITY_ID: "tts.google_ai_tts",
+            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+            tts.ATTR_MESSAGE: "Read aloud: Speaker 1: There is a person at the front door. Speaker 2: Delivery!",
+            tts.ATTR_OPTIONS: {
+                ATTR_VOICES: " Speaker 1: voice1 ; Speaker 2 : voice2 ; "
+            },
+        },
+    ],
+)
+@pytest.mark.usefixtures("setup")
+async def test_tts_service_speak_multispeaker(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    calls: list[ServiceCall],
+    service_data: dict[str, Any],
+) -> None:
+    """Test tts service."""
+
+    tts_entity = hass.data[tts.DOMAIN].get_entity(service_data[ATTR_ENTITY_ID])
+    tts_entity._genai_client.aio.models.generate_content.reset_mock()
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "speak",
+        service_data,
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+
+    tts_entity._genai_client.aio.models.generate_content.assert_called_once_with(
+        model=TEST_CHAT_MODEL,
+        contents=[
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part.from_text(
+                        text="Read aloud: Speaker 1: There is a person at the front door. Speaker 2: Delivery!"
+                    ),
+                ],
+            ),
+        ],
+        config=types.GenerateContentConfig(
+            response_modalities=["AUDIO"],
+            speech_config=types.SpeechConfig(
+                multi_speaker_voice_config=types.MultiSpeakerVoiceConfig(
+                    speaker_voice_configs=[
+                        types.SpeakerVoiceConfig(
+                            speaker="Speaker 1",
+                            voice_config=types.VoiceConfig(
+                                prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                    voice_name="voice1"
+                                )
+                            ),
+                        ),
+                        types.SpeakerVoiceConfig(
+                            speaker="Speaker 2",
+                            voice_config=types.VoiceConfig(
+                                prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                    voice_name="voice2"
+                                )
+                            ),
+                        ),
+                    ]
                 )
             ),
             temperature=RECOMMENDED_TEMPERATURE,
@@ -246,7 +360,14 @@ async def test_tts_service_speak_error(
 
     tts_entity._genai_client.aio.models.generate_content.assert_called_once_with(
         model=TEST_CHAT_MODEL,
-        contents="There is a person at the front door.",
+        contents=[
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part.from_text(text="There is a person at the front door."),
+                ],
+            ),
+        ],
         config=types.GenerateContentConfig(
             response_modalities=["AUDIO"],
             speech_config=types.SpeechConfig(

@@ -22,7 +22,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_CHAT_MODEL, LOGGER, RECOMMENDED_TTS_MODEL
 from .entity import GoogleGenerativeAILLMBaseEntity
-from .helpers import convert_to_wav
+from .helpers import (
+    convert_to_wav,
+    is_valid_multispeakers_string,
+    parse_multispeakers_string,
+)
+
+ATTR_VOICES = "voices"
 
 
 async def async_setup_entry(
@@ -46,7 +52,7 @@ class GoogleGenerativeAITextToSpeechEntity(
 ):
     """Google Generative AI text-to-speech entity."""
 
-    _attr_supported_options = [ATTR_VOICE]
+    _attr_supported_options = [ATTR_VOICE, ATTR_VOICES]
     # See https://ai.google.dev/gemini-api/docs/speech-generation#languages
     # Note the documentation might not be up to date, e.g. el-GR is not listed
     # there but is supported.
@@ -131,6 +137,7 @@ class GoogleGenerativeAITextToSpeechEntity(
         """Return a mapping with the default options."""
         return {
             ATTR_VOICE: self._supported_voices[0].voice_id,
+            ATTR_VOICES: "",
         }
 
     async def async_get_tts_audio(
@@ -139,13 +146,37 @@ class GoogleGenerativeAITextToSpeechEntity(
         """Load tts audio file from the engine."""
         config = self.create_generate_content_config()
         config.response_modalities = ["AUDIO"]
-        config.speech_config = types.SpeechConfig(
-            voice_config=types.VoiceConfig(
-                prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                    voice_name=options[ATTR_VOICE]
+
+        voices = options.get(ATTR_VOICES, "")
+        speakers_data = None
+
+        if is_valid_multispeakers_string(voices):
+            speakers_data = parse_multispeakers_string(voices)
+
+        if speakers_data:
+            config.speech_config = types.SpeechConfig(
+                multi_speaker_voice_config=types.MultiSpeakerVoiceConfig(
+                    speaker_voice_configs=[
+                        types.SpeakerVoiceConfig(
+                            speaker=speaker,
+                            voice_config=types.VoiceConfig(
+                                prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                    voice_name=voice
+                                )
+                            ),
+                        )
+                        for speaker, voice in speakers_data.items()
+                    ]
                 )
             )
-        )
+        else:
+            config.speech_config = types.SpeechConfig(
+                voice_config=types.VoiceConfig(
+                    prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                        voice_name=options[ATTR_VOICE]
+                    )
+                )
+            )
 
         def _extract_audio_parts(
             response: types.GenerateContentResponse,
@@ -175,7 +206,14 @@ class GoogleGenerativeAITextToSpeechEntity(
         try:
             response = await self._genai_client.aio.models.generate_content(
                 model=self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL),
-                contents=message,
+                contents=[
+                    types.Content(
+                        role="user",
+                        parts=[
+                            types.Part.from_text(text=message),
+                        ],
+                    ),
+                ],
                 config=config,
             )
 
