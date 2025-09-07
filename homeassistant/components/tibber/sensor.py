@@ -406,6 +406,7 @@ class TibberSensorElPrice(TibberSensor):
         elif (
             self._tibber_home.price_total
             and self._last_updated
+            and self._last_updated.hour == now.hour
             and now - self._last_updated < timedelta(minutes=15)
             and self._tibber_home.last_data_timestamp
         ):
