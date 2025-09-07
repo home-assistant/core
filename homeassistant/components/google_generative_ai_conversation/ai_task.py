@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from json import JSONDecodeError
-import logging
 from typing import TYPE_CHECKING
 
 from google.genai.errors import APIError
@@ -27,8 +26,6 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigSubentry
 
     from . import GoogleGenerativeAIConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -136,7 +133,7 @@ class GoogleGenerativeAITaskEntity(
                 ),
             )
         except (APIError, ValueError) as err:
-            _LOGGER.error("Error generating image: %s", err)
+            LOGGER.error("Error generating image: %s", err)
             raise HomeAssistantError(f"Error generating image: {err}") from err
 
         if response.prompt_feedback:
