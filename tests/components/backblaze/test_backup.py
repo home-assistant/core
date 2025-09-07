@@ -2,6 +2,7 @@
 
 import json
 import logging
+import tempfile
 from time import time
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -319,7 +320,7 @@ class TestBackblazeBackupOperations:
     """Test backup upload, download, and delete operations."""
 
     @pytest.mark.parametrize(
-        "backup_size,expected_method",
+        ("backup_size", "expected_method"),
         [
             (100, "simple"),
             (MAX_SIMPLE_UPLOAD_SIZE + 1000, "multipart"),
@@ -343,9 +344,10 @@ class TestBackblazeBackupOperations:
                         "homeassistant.components.backblaze.backup.aiofiles.open"
                     ) as mock_aiofiles,
                     patch("os.chmod"),
+                    tempfile.NamedTemporaryFile(delete=False) as temp_file,
                 ):
                     mock_temp_file = Mock()
-                    mock_temp_file.name = "/tmp/test_file"
+                    mock_temp_file.name = temp_file.name
                     mock_temp.return_value.__enter__.return_value = mock_temp_file
 
                     mock_file = Mock()
@@ -384,9 +386,10 @@ class TestBackblazeBackupOperations:
             patch("os.chmod"),
             patch.object(agent, "_bucket", mock_bucket),
             caplog.at_level(logging.DEBUG),
+            tempfile.NamedTemporaryFile(delete=False) as temp_file,
         ):
             mock_temp_file = Mock()
-            mock_temp_file.name = "/tmp/test_large_file"
+            mock_temp_file.name = temp_file.name
             mock_temp.return_value.__enter__.return_value = mock_temp_file
 
             mock_file = Mock()
@@ -517,9 +520,10 @@ class TestBackblazeErrorHandling:
             ),
             patch("os.chmod"),
             caplog.at_level(logging.ERROR),
+            tempfile.NamedTemporaryFile(delete=False) as temp_file,
         ):
             mock_temp_file = Mock()
-            mock_temp_file.name = "/tmp/test_exception_file"
+            mock_temp_file.name = temp_file.name
             mock_temp.return_value.__enter__.return_value = mock_temp_file
 
             with pytest.raises(BackupAgentError):
@@ -534,25 +538,26 @@ class TestBackblazeErrorHandling:
 
     async def test_temp_file_cleanup_failure(self, agent, caplog):
         """Test temp file cleanup with failure scenarios."""
-        temp_file_path = "/tmp/test_cleanup_file"
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            temp_file_path = temp_file.name
 
-        with (
-            patch("os.unlink", side_effect=OSError("Permission denied")),
-            patch("os.path.exists", return_value=True),
-            patch("os.chmod"),
-            patch.object(
-                agent, "_truncate_file", side_effect=OSError("Truncate failed")
-            ),
-            caplog.at_level(logging.ERROR),
-        ):
-            await agent._cleanup_temp_file(temp_file_path)
+            with (
+                patch("os.unlink", side_effect=OSError("Permission denied")),
+                patch("os.path.exists", return_value=True),
+                patch("os.chmod"),
+                patch.object(
+                    agent, "_truncate_file", side_effect=OSError("Truncate failed")
+                ),
+                caplog.at_level(logging.ERROR),
+            ):
+                await agent._cleanup_temp_file(temp_file_path)
 
-            error_logs = [
-                r.message
-                for r in caplog.records
-                if "Could not delete or truncate" in r.message
-            ]
-            assert len(error_logs) > 0
+                error_logs = [
+                    r.message
+                    for r in caplog.records
+                    if "Could not delete or truncate" in r.message
+                ]
+                assert len(error_logs) > 0
 
     async def test_delete_metadata_b2_error(self, agent):
         """Test B2Error during metadata file deletion."""
@@ -841,8 +846,10 @@ class TestBackblazeAdditionalCoverage:
             patch("os.path.exists", return_value=True),
             patch("os.chmod"),
             patch("os.unlink", side_effect=mock_unlink),
+            tempfile.NamedTemporaryFile(delete=False) as temp_file,
         ):
-            await agent._cleanup_temp_file("/tmp/test_retry_file")
+            temp_retry_path = temp_file.name
+            await agent._cleanup_temp_file(temp_retry_path)
             assert call_count == 3
 
     async def test_list_backups_empty_cache_miss(self, agent):
@@ -974,9 +981,10 @@ class TestBackblazeAdditionalCoverage:
             ),
             patch("os.chmod"),
             caplog.at_level(logging.ERROR),
+            tempfile.NamedTemporaryFile(delete=False) as temp_file,
         ):
             mock_temp_file = Mock()
-            mock_temp_file.name = "/tmp/test_b2error_file"
+            mock_temp_file.name = temp_file.name
             mock_temp.return_value.__enter__.return_value = mock_temp_file
 
             with pytest.raises(BackupAgentError):
@@ -991,66 +999,69 @@ class TestBackblazeAdditionalCoverage:
 
     async def test_temp_file_successful_deletion_after_retry(self, agent, caplog):
         """Test successful temp file deletion after initial failure."""
-        temp_file_path = "/tmp/test_success_after_retry"
-        call_count = 0
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            temp_file_path = temp_file.name
+            call_count = 0
 
-        def mock_unlink(path):
-            nonlocal call_count
-            call_count += 1
-            if call_count == 1:  # Fail first time only
-                raise OSError("Permission denied")
-            # Success on 2nd try - no exception
+            def mock_unlink(path):
+                nonlocal call_count
+                call_count += 1
+                if call_count == 1:  # Fail first time only
+                    raise OSError("Permission denied")
+                # Success on 2nd try - no exception
 
-        with (
-            patch("os.path.exists", return_value=True),
-            patch("os.chmod"),
-            patch("os.unlink", side_effect=mock_unlink),
-            caplog.at_level(logging.DEBUG),
-        ):
-            await agent._cleanup_temp_file(temp_file_path)
+            with (
+                patch("os.path.exists", return_value=True),
+                patch("os.chmod"),
+                patch("os.unlink", side_effect=mock_unlink),
+                caplog.at_level(logging.DEBUG),
+            ):
+                await agent._cleanup_temp_file(temp_file_path)
 
-            # Should log successful deletion
-            debug_logs = [
-                r.message
-                for r in caplog.records
-                if "Successfully deleted temporary file" in r.message
-            ]
-            assert len(debug_logs) > 0
+                # Should log successful deletion
+                debug_logs = [
+                    r.message
+                    for r in caplog.records
+                    if "Successfully deleted temporary file" in r.message
+                ]
+                assert len(debug_logs) > 0
 
     def test_truncate_file_operation(self, agent):
         """Test the truncate file operation."""
-        test_file_path = "/tmp/test_truncate"
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            test_file_path = temp_file.name
 
-        # Mock open with context manager support
-        mock_file = Mock()
-        mock_file.__enter__ = Mock(return_value=mock_file)
-        mock_file.__exit__ = Mock(return_value=None)
+            # Mock open with context manager support
+            mock_file = Mock()
+            mock_file.__enter__ = Mock(return_value=mock_file)
+            mock_file.__exit__ = Mock(return_value=None)
 
-        with patch("builtins.open", return_value=mock_file):
-            agent._truncate_file(test_file_path)
-            mock_file.__enter__.assert_called_once()
-            mock_file.__exit__.assert_called_once()
+            with patch("builtins.open", return_value=mock_file):
+                agent._truncate_file(test_file_path)
+                mock_file.__enter__.assert_called_once()
+                mock_file.__exit__.assert_called_once()
 
     async def test_temp_file_cleanup_successful_truncation(self, agent, caplog):
         """Test successful temp file truncation after delete failure."""
-        temp_file_path = "/tmp/test_truncate_success"
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            temp_file_path = temp_file.name
 
-        with (
-            patch("os.unlink", side_effect=OSError("Permission denied")),
-            patch("os.path.exists", return_value=True),
-            patch("os.chmod"),
-            patch.object(
-                agent, "_truncate_file", return_value=None
-            ),  # Successful truncation
-            caplog.at_level(logging.INFO),
-        ):
-            await agent._cleanup_temp_file(temp_file_path)
+            with (
+                patch("os.unlink", side_effect=OSError("Permission denied")),
+                patch("os.path.exists", return_value=True),
+                patch("os.chmod"),
+                patch.object(
+                    agent, "_truncate_file", return_value=None
+                ),  # Successful truncation
+                caplog.at_level(logging.INFO),
+            ):
+                await agent._cleanup_temp_file(temp_file_path)
 
-            # Should log successful truncation
-            info_logs = [
-                r.message
-                for r in caplog.records
-                if "Truncated temporary file" in r.message
-                and "as fallback" in r.message
-            ]
-            assert len(info_logs) > 0
+                # Should log successful truncation
+                info_logs = [
+                    r.message
+                    for r in caplog.records
+                    if "Truncated temporary file" in r.message
+                    and "as fallback" in r.message
+                ]
+                assert len(info_logs) > 0
