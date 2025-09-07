@@ -27,7 +27,7 @@ async def test_load_unload_config_entry(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

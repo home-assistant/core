@@ -22,17 +22,18 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-
-        webhook_id = secrets.token_hex(4)
-
-        url = URL(get_url(self.hass))
-        assert url.host
-
-        host = url.host
-        port = str(url.port)
-        path = webhook.async_generate_path(webhook_id)
+        self._set_confirm_only()
 
         if user_input is not None:
+            webhook_id = secrets.token_hex(4)
+
+            url = URL(get_url(self.hass))
+            assert url.host
+
+            host = url.host
+            port = str(url.port)
+            path = webhook.async_generate_path(webhook_id)
+
             await self.async_set_unique_id(webhook_id)
             self._abort_if_unique_id_configured()
 
@@ -50,5 +51,4 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="user")
