@@ -79,7 +79,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the alarm control panel component."""
+    """Add the homee platform for the alarm control panel component."""
 
     await setup_homee_platform(
         add_alarm_control_panel_entities, async_add_entities, config_entry

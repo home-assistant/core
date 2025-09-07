@@ -142,7 +142,7 @@ async def add_number_entities(
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
-    """Add Homee number entities."""
+    """Add homee number entities."""
     async_add_entities(
         HomeeNumber(attribute, config_entry, NUMBER_DESCRIPTIONS[attribute.type])
         for node in nodes
@@ -156,7 +156,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the number component."""
+    """Add the homee platform for the number component."""
 
     await setup_homee_platform(add_number_entities, async_add_entities, config_entry)
 

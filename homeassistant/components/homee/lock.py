@@ -21,7 +21,7 @@ async def add_lock_entities(
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
-    """Add Homee lock entities."""
+    """Add homee lock entities."""
     async_add_entities(
         HomeeLock(attribute, config_entry)
         for node in nodes
@@ -35,7 +35,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the lock component."""
+    """Add the homee platform for the lock component."""
 
     await setup_homee_platform(add_lock_entities, async_add_entities, config_entry)
 

@@ -158,7 +158,7 @@ async def add_binary_sensor_entities(
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
-    """Add Homee binary sensor entities."""
+    """Add homee binary sensor entities."""
     async_add_entities(
         HomeeBinarySensor(
             attribute, config_entry, BINARY_SENSOR_DESCRIPTIONS[attribute.type]
@@ -174,7 +174,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the binary sensor component."""
+    """Add the homee platform for the binary sensor component."""
 
     await setup_homee_platform(
         add_binary_sensor_entities, async_add_entities, config_entry

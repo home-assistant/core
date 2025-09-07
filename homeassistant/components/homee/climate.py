@@ -37,7 +37,7 @@ async def add_climate_entities(
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
-    """Add Homee climate entities."""
+    """Add homee climate entities."""
     async_add_entities(
         HomeeClimate(node, config_entry)
         for node in nodes

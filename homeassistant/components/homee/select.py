@@ -47,7 +47,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the select component."""
+    """Add the homee platform for the select component."""
 
     await setup_homee_platform(add_select_entities, async_add_entities, config_entry)
 

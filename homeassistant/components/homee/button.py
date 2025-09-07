@@ -59,7 +59,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the button component."""
+    """Add the homee platform for the button component."""
 
     await setup_homee_platform(add_button_entities, async_add_entities, config_entry)
 
