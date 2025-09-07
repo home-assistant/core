@@ -25,7 +25,7 @@ class NikoHomeControlEntity(Entity):
         self._action = action
         self._attr_unique_id = f"{unique_id}-{action.id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
+            identifiers={(DOMAIN, f"{unique_id}-{action.id}")},
             manufacturer="Niko",
             name=action.name,
             suggested_area=action.suggested_area,
