@@ -238,7 +238,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2025.9.0
+aioecowitt==2025.9.1
 
 # homeassistant.components.co2signal
 aioelectricitymaps==1.1.1
