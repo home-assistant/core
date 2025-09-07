@@ -181,7 +181,7 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[OWMUpdateCoordinator]
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_WIND_BEARING)
 
     @property
-    def visibility(self) -> float | str | None:
+    def native_visibility(self) -> float | None:
         """Return visibility."""
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_VISIBILITY_DISTANCE)
 
