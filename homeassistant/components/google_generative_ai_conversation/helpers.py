@@ -25,7 +25,7 @@ def is_valid_multispeakers_string(s: str) -> bool:
     return bool(re.fullmatch(validation_pattern, s))
 
 
-def parse_multispeakers_string(s: str) -> dict | None:
+def parse_multispeakers_string(s: str) -> dict[str, str]:
     """Parses a valid "key: value;" string into a dictionary.
 
     Args:
