@@ -23,7 +23,7 @@ class NikoHomeControlEntity(Entity):
         """Set up the Niko Home Control entity."""
         self._controller = controller
         self._action = action
-        self._attr_unique_id = unique_id = f"{unique_id}-{action.id}"
+        self._attr_unique_id = f"{unique_id}-{action.id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer="Niko",
