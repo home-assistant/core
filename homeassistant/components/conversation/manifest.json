@@ -1,7 +1,7 @@
 {
   "domain": "conversation",
   "name": "Conversation",
-  "codeowners": ["@home-assistant/core", "@synesthesiam"],
+  "codeowners": ["@home-assistant/core", "@synesthesiam", "@arturpragacz"],
   "dependencies": ["http", "intent"],
   "documentation": "https://www.home-assistant.io/integrations/conversation",
   "integration_type": "system",
