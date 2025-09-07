@@ -93,7 +93,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
-        # Show form
         schema = vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
@@ -147,7 +146,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             CONF_MAX_SUPPORTED_ZONES: max_zone_id,
             CONF_ZONES: [
-                {CONF_ID: zone.get(CONF_ID), CONF_NAME: zone.get(CONF_NAME)}
+                {
+                    CONF_ID: zone.get(CONF_ID),
+                    CONF_NAME: zone.get(CONF_NAME),
+                    "type": zone.get("type", "motion"),
+                }
                 for zone in zones
                 if zone.get(CONF_ID) and zone.get(CONF_NAME)
             ],

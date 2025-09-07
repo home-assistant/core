@@ -27,6 +27,7 @@ from .const import (
     CONF_MAX_SUPPORTED_ZONES,
     CONF_NAME,
     CONF_SUPPORT_HOME_ARM,
+    CONF_TYPE,
     CONF_ZONES,
     DEFAULT_INFER_ARMING_STATE,
     DEFAULT_MAX_SUPPORTED_ZONES,
@@ -47,7 +48,7 @@ ZONE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID): cv.positive_int,
         vol.Required(CONF_NAME): cv.string,
-        vol.Optional("type"): cv.string,
+        vol.Optional(CONF_TYPE): cv.string,
     }
 )
 
