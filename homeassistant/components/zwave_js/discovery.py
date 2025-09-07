@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from dataclasses import asdict, dataclass, field
-from enum import StrEnum
-from typing import TYPE_CHECKING, Any, cast
+from dataclasses import dataclass
+from typing import cast
 
 from awesomeversion import AwesomeVersion
 from zwave_js_server.const import (
@@ -55,6 +54,7 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntry
 
+from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
@@ -65,108 +65,20 @@ from .discovery_data_template import (
     FixedFanValueMappingDataTemplate,
     NumericSensorDataTemplate,
 )
-from .helpers import ZwaveValueID
+from .entity import NewZwaveDiscoveryInfo
+from .models import (
+    FirmwareVersionRange,
+    NewZWaveDiscoverySchema,
+    ValueType,
+    ZwaveDiscoveryInfo,
+    ZWaveValueDiscoverySchema,
+    ZwaveValueID,
+)
 
-if TYPE_CHECKING:
-    from _typeshed import DataclassInstance
-
-
-class ValueType(StrEnum):
-    """Enum with all value types."""
-
-    ANY = "any"
-    BOOLEAN = "boolean"
-    NUMBER = "number"
-    STRING = "string"
-
-
-class DataclassMustHaveAtLeastOne:
-    """A dataclass that must have at least one input parameter that is not None."""
-
-    def __post_init__(self: DataclassInstance) -> None:
-        """Post dataclass initialization."""
-        if all(val is None for val in asdict(self).values()):
-            raise ValueError("At least one input parameter must not be None")
-
-
-@dataclass
-class FirmwareVersionRange(DataclassMustHaveAtLeastOne):
-    """Firmware version range dictionary."""
-
-    min: str | None = None
-    max: str | None = None
-    min_ver: AwesomeVersion | None = field(default=None, init=False)
-    max_ver: AwesomeVersion | None = field(default=None, init=False)
-
-    def __post_init__(self) -> None:
-        """Post dataclass initialization."""
-        super().__post_init__()
-        if self.min:
-            self.min_ver = AwesomeVersion(self.min)
-        if self.max:
-            self.max_ver = AwesomeVersion(self.max)
-
-
-@dataclass
-class ZwaveDiscoveryInfo:
-    """Info discovered from (primary) ZWave Value to create entity."""
-
-    # node to which the value(s) belongs
-    node: ZwaveNode
-    # the value object itself for primary value
-    primary_value: ZwaveValue
-    # bool to specify whether state is assumed and events should be fired on value
-    # update
-    assumed_state: bool
-    # the home assistant platform for which an entity should be created
-    platform: Platform
-    # helper data to use in platform setup
-    platform_data: Any
-    # additional values that need to be watched by entity
-    additional_value_ids_to_watch: set[str]
-    # hint for the platform about this discovered entity
-    platform_hint: str | None = ""
-    # data template to use in platform logic
-    platform_data_template: BaseDiscoverySchemaDataTemplate | None = None
-    # bool to specify whether entity should be enabled by default
-    entity_registry_enabled_default: bool = True
-    # the entity category for the discovered entity
-    entity_category: EntityCategory | None = None
-
-
-@dataclass
-class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
-    """Z-Wave Value discovery schema.
-
-    The Z-Wave Value must match these conditions.
-    Use the Z-Wave specifications to find out the values for these parameters:
-    https://github.com/zwave-js/specs/tree/master
-    """
-
-    # [optional] the value's command class must match ANY of these values
-    command_class: set[int] | None = None
-    # [optional] the value's endpoint must match ANY of these values
-    endpoint: set[int] | None = None
-    # [optional] the value's property must match ANY of these values
-    property: set[str | int] | None = None
-    # [optional] the value's property name must match ANY of these values
-    property_name: set[str] | None = None
-    # [optional] the value's property key must match ANY of these values
-    property_key: set[str | int | None] | None = None
-    # [optional] the value's property key must NOT match ANY of these values
-    not_property_key: set[str | int | None] | None = None
-    # [optional] the value's metadata_type must match ANY of these values
-    type: set[str] | None = None
-    # [optional] the value's metadata_readable must match this value
-    readable: bool | None = None
-    # [optional] the value's metadata_writeable must match this value
-    writeable: bool | None = None
-    # [optional] the value's states map must include ANY of these key/value pairs
-    any_available_states: set[tuple[int, str]] | None = None
-    # [optional] the value's value must match this value
-    value: Any | None = None
-    # [optional] the value's metadata_stateful must match this value
-    stateful: bool | None = None
+NEW_DISCOVERY_SCHEMAS: dict[Platform, list[NewZWaveDiscoverySchema]] = {
+    Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
+}
+SUPPORTED_PLATFORMS = tuple(NEW_DISCOVERY_SCHEMAS)
 
 
 @dataclass
@@ -760,7 +672,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         hint="multilevel_switch",
         manufacturer_id={0x0084},
-        product_id={0x0107, 0x0108, 0x010B, 0x0205},
+        product_id={0x0107, 0x0108, 0x0109, 0x010B, 0x0205},
         product_type={0x0311, 0x0313, 0x0331, 0x0341, 0x0343},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=BaseDiscoverySchemaDataTemplate(
@@ -771,6 +683,35 @@ DISCOVERY_SCHEMAS = [
                 99: "Siren & Strobe FULL Alarm",
             },
         ),
+    ),
+    # ZWA-2, discover LED control as configuration, default disabled
+    ## Production firmware (1.0) -> Color Switch CC
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        manufacturer_id={0x0466},
+        product_id={0x0001},
+        product_type={0x0001},
+        hint="zwa2_led_color",
+        primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        ],
+        entity_category=EntityCategory.CONFIG,
+    ),
+    ## Day-1 firmware update (1.1) -> Binary Switch CC
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        manufacturer_id={0x0466},
+        product_id={0x0001},
+        product_type={0x0001},
+        hint="zwa2_led_onoff",
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        ],
+        entity_category=EntityCategory.CONFIG,
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
@@ -1287,7 +1228,7 @@ DISCOVERY_SCHEMAS = [
 @callback
 def async_discover_node_values(
     node: ZwaveNode, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
-) -> Generator[ZwaveDiscoveryInfo]:
+) -> Generator[ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
         # We don't need to rediscover an already processed value_id
@@ -1298,9 +1239,19 @@ def async_discover_node_values(
 @callback
 def async_discover_single_value(
     value: ZwaveValue, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
-) -> Generator[ZwaveDiscoveryInfo]:
+) -> Generator[ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo]:
     """Run discovery on a single ZWave value and return matching schema info."""
-    for schema in DISCOVERY_SCHEMAS:
+    # Temporary workaround for new schemas
+    schemas: tuple[ZWaveDiscoverySchema | NewZWaveDiscoverySchema, ...] = (
+        *(
+            new_schema
+            for _schemas in NEW_DISCOVERY_SCHEMAS.values()
+            for new_schema in _schemas
+        ),
+        *DISCOVERY_SCHEMAS,
+    )
+
+    for schema in schemas:
         # abort if attribute(s) already discovered
         if value.value_id in discovered_value_ids[device.id]:
             continue
@@ -1429,18 +1380,38 @@ def async_discover_single_value(
             )
 
         # all checks passed, this value belongs to an entity
-        yield ZwaveDiscoveryInfo(
-            node=value.node,
-            primary_value=value,
-            assumed_state=schema.assumed_state,
-            platform=schema.platform,
-            platform_hint=schema.hint,
-            platform_data_template=schema.data_template,
-            platform_data=resolved_data,
-            additional_value_ids_to_watch=additional_value_ids_to_watch,
-            entity_registry_enabled_default=schema.entity_registry_enabled_default,
-            entity_category=schema.entity_category,
-        )
+
+        discovery_info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo
+
+        # Temporary workaround for new schemas
+        if isinstance(schema, NewZWaveDiscoverySchema):
+            discovery_info = NewZwaveDiscoveryInfo(
+                node=value.node,
+                primary_value=value,
+                assumed_state=schema.assumed_state,
+                platform=schema.platform,
+                platform_data_template=schema.data_template,
+                platform_data=resolved_data,
+                additional_value_ids_to_watch=additional_value_ids_to_watch,
+                entity_class=schema.entity_class,
+                entity_description=schema.entity_description,
+            )
+
+        else:
+            discovery_info = ZwaveDiscoveryInfo(
+                node=value.node,
+                primary_value=value,
+                assumed_state=schema.assumed_state,
+                platform=schema.platform,
+                platform_hint=schema.hint,
+                platform_data_template=schema.data_template,
+                platform_data=resolved_data,
+                additional_value_ids_to_watch=additional_value_ids_to_watch,
+                entity_registry_enabled_default=schema.entity_registry_enabled_default,
+                entity_category=schema.entity_category,
+            )
+
+        yield discovery_info
 
         # prevent re-discovery of the (primary) value if not allowed
         if not schema.allow_multi:
@@ -1583,6 +1554,25 @@ def check_value(
         and not any(
             str(key) in value.metadata.states and value.metadata.states[str(key)] == val
             for key, val in schema.any_available_states
+        )
+    ):
+        return False
+    if (
+        schema.any_available_states_keys is not None
+        and value.metadata.states is not None
+        and not any(
+            str(key) in value.metadata.states
+            for key in schema.any_available_states_keys
+        )
+    ):
+        return False
+    # check available cc specific
+    if (
+        schema.any_available_cc_specific is not None
+        and value.metadata.cc_specific is not None
+        and not any(
+            key in value.metadata.cc_specific and value.metadata.cc_specific[key] == val
+            for key, val in schema.any_available_cc_specific
         )
     ):
         return False

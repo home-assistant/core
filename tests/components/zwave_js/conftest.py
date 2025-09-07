@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Generator
 import copy
 import io
+import logging
 from typing import Any, cast
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
@@ -427,6 +428,12 @@ def fortrezz_ssa1_siren_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("fortrezz_ssa1_siren_state.json", DOMAIN)
 
 
+@pytest.fixture(name="fortrezz_ssa2_siren_state", scope="package")
+def fortrezz_ssa2_siren_state_fixture() -> dict[str, Any]:
+    """Load the fortrezz ssa2 siren node state fixture data."""
+    return load_json_object_fixture("fortrezz_ssa2_siren_state.json", DOMAIN)
+
+
 @pytest.fixture(name="fortrezz_ssa3_siren_state", scope="package")
 def fortrezz_ssa3_siren_state_fixture() -> dict[str, Any]:
     """Load the fortrezz ssa3 siren node state fixture data."""
@@ -538,6 +545,24 @@ def zcombo_smoke_co_alarm_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="nabu_casa_zwa2_state")
+def nabu_casa_zwa2_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Nabu Casa ZWA-2."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("nabu_casa_zwa2_state.json", DOMAIN),
+    )
+
+
+@pytest.fixture(name="nabu_casa_zwa2_legacy_state")
+def nabu_casa_zwa2_legacy_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Nabu Casa ZWA-2 (legacy firmware)."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("nabu_casa_zwa2_legacy_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -547,12 +572,6 @@ def mock_listen_block_fixture() -> asyncio.Event:
     return asyncio.Event()
 
 
-@pytest.fixture(name="listen_result")
-def listen_result_fixture() -> asyncio.Future[None]:
-    """Mock a listen result."""
-    return asyncio.Future()
-
-
 @pytest.fixture(name="client")
 def mock_client_fixture(
     controller_state: dict[str, Any],
@@ -560,7 +579,6 @@ def mock_client_fixture(
     version_state: dict[str, Any],
     log_config_state: dict[str, Any],
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
 ):
     """Mock a client."""
     with patch(
@@ -569,15 +587,16 @@ def mock_client_fixture(
         client = client_class.return_value
 
         async def connect():
+            listen_block.clear()
             await asyncio.sleep(0)
             client.connected = True
 
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
             await listen_block.wait()
-            await listen_result
 
         async def disconnect():
+            listen_block.set()
             client.connected = False
 
         client.connect = AsyncMock(side_effect=connect)
@@ -907,6 +926,7 @@ async def integration_fixture(
     hass: HomeAssistant,
     client: MagicMock,
     platforms: list[Platform],
+    caplog: pytest.LogCaptureFixture,
 ) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(
@@ -920,6 +940,11 @@ async def integration_fixture(
         await hass.async_block_till_done()
 
     client.async_send_command.reset_mock()
+
+    # Make sure no errors logged during setup.
+    # Eg. unique id collisions are only logged as errors and not raised,
+    # and may not cause tests to fail otherwise.
+    assert not any(record.levelno == logging.ERROR for record in caplog.records)
 
     return entry
 
@@ -1206,6 +1231,14 @@ def fortrezz_ssa1_siren_fixture(client, fortrezz_ssa1_siren_state) -> Node:
     return node
 
 
+@pytest.fixture(name="fortrezz_ssa2_siren")
+def fortrezz_ssa2_siren_fixture(client, fortrezz_ssa2_siren_state) -> Node:
+    """Mock a fortrezz ssa2 siren node."""
+    node = Node(client, copy.deepcopy(fortrezz_ssa2_siren_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="fortrezz_ssa3_siren")
 def fortrezz_ssa3_siren_fixture(client, fortrezz_ssa3_siren_state) -> Node:
     """Mock a fortrezz ssa3 siren node."""
@@ -1356,5 +1389,25 @@ def zcombo_smoke_co_alarm_fixture(
 ) -> Node:
     """Load node for ZCombo-G Smoke/CO Alarm."""
     node = Node(client, zcombo_smoke_co_alarm_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nabu_casa_zwa2")
+def nabu_casa_zwa2_fixture(
+    client: MagicMock, nabu_casa_zwa2_state: NodeDataType
+) -> Node:
+    """Load node for Nabu Casa ZWA-2."""
+    node = Node(client, nabu_casa_zwa2_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nabu_casa_zwa2_legacy")
+def nabu_casa_zwa2_legacy_fixture(
+    client: MagicMock, nabu_casa_zwa2_legacy_state: NodeDataType
+) -> Node:
+    """Load node for Nabu Casa ZWA-2 (legacy firmware)."""
+    node = Node(client, nabu_casa_zwa2_legacy_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

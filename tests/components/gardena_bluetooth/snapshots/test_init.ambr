@@ -21,7 +21,6 @@
         '00000000-0000-0000-0000-000000000001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -31,7 +30,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.2.3',
     'via_device_id': None,
   })

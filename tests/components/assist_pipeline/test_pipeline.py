@@ -375,7 +375,7 @@ async def test_get_pipelines(hass: HomeAssistant) -> None:
         ("en", "us", "en", "en"),
         ("en", "uk", "en", "en"),
         ("pt", "pt", "pt", "pt"),
-        ("pt", "br", "pt-br", "pt"),
+        ("pt", "br", "pt-BR", "pt"),
     ],
 )
 async def test_default_pipeline_no_stt_tts(
@@ -428,7 +428,7 @@ async def test_default_pipeline_no_stt_tts(
         ("en", "us", "en", "en", "en", "en"),
         ("en", "uk", "en", "en", "en", "en"),
         ("pt", "pt", "pt", "pt", "pt", "pt"),
-        ("pt", "br", "pt-br", "pt", "pt-br", "pt-br"),
+        ("pt", "br", "pt-BR", "pt", "pt-br", "pt-br"),
     ],
 )
 @pytest.mark.usefixtures("init_supporting_components")
