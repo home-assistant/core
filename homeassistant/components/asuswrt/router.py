@@ -388,13 +388,13 @@ class AsusWrtRouter:
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         info = DeviceInfo(
+            configuration_url=self._api.configuration_url,
             identifiers={(DOMAIN, self._entry.unique_id or "AsusWRT")},
             name=self.host,
             model=self._api.model or "Asus Router",
             model_id=self._api.model_id,
             serial_number=self._api.serial_number,
             manufacturer="Asus",
-            configuration_url=f"http://{self.host}",
         )
         if self._api.firmware:
             info["sw_version"] = self._api.firmware
