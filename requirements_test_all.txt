@@ -247,7 +247,7 @@ aiogithubapi==24.6.0
 aioguardian==2022.07.0
 
 # homeassistant.components.harmony
-aioharmony==0.5.2
+aioharmony==0.5.3
 
 # homeassistant.components.hassio
 aiohasupervisor==0.3.2
@@ -1621,7 +1621,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2025.7.0
+pydrawise==2025.9.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -1963,7 +1963,7 @@ pysmarlaapi==0.9.2
 pysmartthings==3.2.9
 
 # homeassistant.components.smarty
-pysmarty2==0.10.2
+pysmarty2==0.10.3
 
 # homeassistant.components.smhi
 pysmhi==1.0.2
