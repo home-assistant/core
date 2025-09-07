@@ -47,7 +47,7 @@ def parse_multispeakers_string(s: str) -> dict[str, str]:
             continue
 
         trimmed_key = key.strip()
-        trimmed_value = value.strip().lower()
+        trimmed_value = value.strip()
 
         data[trimmed_key] = trimmed_value
 
