@@ -1,0 +1,11 @@
+{
+  "invalid_auth": {
+    "error": "Invalid username or password"
+  },
+  "connection_error": {
+    "error": "Connection timeout"
+  },
+  "api_error": {
+    "error": "Internal server error"
+  }
+}
