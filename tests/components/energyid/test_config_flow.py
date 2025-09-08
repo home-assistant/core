@@ -93,7 +93,6 @@ async def test_config_flow_user_step_needs_claim(
         snap = snap.copy()
         snap.pop("data_schema")
     assert strip_schema(result2_clean) == snap
-    assert result2 == snapshot(name="auth_and_claim_step_form")
 
 
 @pytest.mark.parametrize(

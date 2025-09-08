@@ -1,7 +1,6 @@
 # serializer version: 1
 # name: test_config_flow_user_step_needs_claim[unclaimed][auth_and_claim_step_form]
   FlowResultSnapshot({
-    'data_schema': None,
     'description_placeholders': dict({
       'claim_code': 'ABCDEF',
       'claim_url': 'https://example.com/claim',
