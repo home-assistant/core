@@ -187,6 +187,12 @@
         }
       }
     },
+    "aladdin_connect": {
+      "name": "Aladdin Connect",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "alarmdecoder": {
       "name": "AlarmDecoder",
       "integration_type": "device",
@@ -2145,7 +2151,7 @@
       ]
     },
     "fritzbox": {
-      "name": "FRITZ!Box",
+      "name": "FRITZ!",
       "integrations": {
         "fritz": {
           "integration_type": "hub",
@@ -2705,6 +2711,11 @@
       "name": "Legrand Home+ Control",
       "integration_type": "virtual",
       "supported_by": "netatmo"
+    },
+    "homeassistant_connect_zbt2": {
+      "name": "Home Assistant Connect ZBT-2",
+      "integration_type": "hardware",
+      "config_flow": true
     },
     "homeassistant_green": {
       "name": "Home Assistant Green",
@@ -3477,6 +3488,12 @@
           "name": "LG webOS TV"
         }
       }
+    },
+    "libre_hardware_monitor": {
+      "name": "Libre Hardware Monitor",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "lidarr": {
       "name": "Lidarr",
@@ -4724,7 +4741,7 @@
       }
     },
     "opnsense": {
-      "name": "OPNSense",
+      "name": "OPNsense",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
@@ -5857,6 +5874,12 @@
     "sfr_box": {
       "name": "SFR Box",
       "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "sftp_storage": {
+      "name": "SFTP Storage",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7296,12 +7319,6 @@
     },
     "volvooncall": {
       "name": "Volvo On Call",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "vulcan": {
-      "name": "Uonet+ Vulcan",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
