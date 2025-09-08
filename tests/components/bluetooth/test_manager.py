@@ -8,9 +8,9 @@ from unittest.mock import patch
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
 from freezegun import freeze_time
+from habluetooth import HaScanner
 
 # pylint: disable-next=no-name-in-module
-from habluetooth import HaScanner
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
 
@@ -1752,7 +1752,6 @@ async def test_repair_issue_created_for_degraded_scanner_in_docker(
 
     manager = _get_manager()
 
-    # Create a real HaScanner instance
     scanner = HaScanner(
         mode=BluetoothScanningMode.ACTIVE,
         adapter="hci0",
@@ -1760,7 +1759,6 @@ async def test_repair_issue_created_for_degraded_scanner_in_docker(
     )
     scanner.async_setup()
 
-    # Mock adapter details
     mock_adapters = {
         "hci0": {
             "address": "00:11:22:33:44:55",
@@ -1774,7 +1772,6 @@ async def test_repair_issue_created_for_degraded_scanner_in_docker(
         }
     }
 
-    # Mock is_operating_degraded to return True and is_docker_env
     with (
         patch("habluetooth.manager.IS_LINUX", True),
         patch.object(type(manager), "is_operating_degraded", return_value=True),
@@ -1786,7 +1783,6 @@ async def test_repair_issue_created_for_degraded_scanner_in_docker(
     ):
         manager.on_scanner_start(scanner)
 
-        # Check that repair issue was created
         issue_id = f"bluetooth_adapter_missing_permissions_{scanner.source}"
         registry = ir.async_get(hass)
         issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
@@ -1807,7 +1803,6 @@ async def test_repair_issue_deleted_when_scanner_not_degraded(
     manager = _get_manager()
     registry = ir.async_get(hass)
 
-    # Create a real HaScanner instance
     scanner = HaScanner(
         mode=BluetoothScanningMode.ACTIVE,
         adapter="hci0",
@@ -1815,7 +1810,6 @@ async def test_repair_issue_deleted_when_scanner_not_degraded(
     )
     scanner.async_setup()
 
-    # Mock adapter details
     mock_adapters = {
         "hci0": {
             "address": "00:11:22:33:44:55",
@@ -1831,7 +1825,6 @@ async def test_repair_issue_deleted_when_scanner_not_degraded(
 
     issue_id = f"bluetooth_adapter_missing_permissions_{scanner.source}"
 
-    # First create the issue by calling on_scanner_start with degraded mode
     with (
         patch("habluetooth.manager.IS_LINUX", True),
         patch.object(type(manager), "is_operating_degraded", return_value=True),
@@ -1843,10 +1836,8 @@ async def test_repair_issue_deleted_when_scanner_not_degraded(
     ):
         manager.on_scanner_start(scanner)
 
-    # Verify it exists
     assert registry.async_get_issue(bluetooth.DOMAIN, issue_id) is not None
 
-    # Now call again with NOT operating in degraded mode
     with (
         patch(
             "homeassistant.components.bluetooth.manager.is_docker_env",
