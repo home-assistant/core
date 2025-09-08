@@ -1578,14 +1578,8 @@ async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) ->
 
     # Check the converted timestamp
     sensor_info = exposed["entities"]["sensor.test_timestamp"]
-    parsed_utc = dt_util.parse_datetime(utc_timestamp)
-    expected_local = dt_util.as_local(parsed_utc).isoformat()
 
-    # In New York timezone, this should be "2024-01-15T05:30:00-05:00"
-    assert sensor_info["state"] == expected_local
-    assert sensor_info["state"] != utc_timestamp  # Ensure it's actually different
-    assert "-05:00" in sensor_info["state"]  # Verify it's in EST (winter time)
-
+    assert sensor_info["state"] == "2024-01-15T05:30:00-05:00"
     # Regular sensor without device_class should keep original value
     regular_info = exposed["entities"]["sensor.regular_sensor"]
     assert regular_info["state"] == "2024-01-15T10:30:00+00:00"  # Unchanged
