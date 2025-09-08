@@ -24,8 +24,6 @@ async def async_get_config_entry_diagnostics(
     coordinators_diag: dict[str, Any] = {}
     for i, coordinator in enumerate(coordinators.values()):
         api_diag = dict(coordinator.api.diagnostic_data)
-        # Backwards-compat: older snapshots expect a 'misc_info' mapping.
-        api_diag.setdefault("misc_info", {})
         coordinators_diag[f"**REDACTED-{i}**"] = {
             "roborock_device_info": async_redact_data(
                 coordinator.roborock_device_info.as_dict(), TO_REDACT_COORD

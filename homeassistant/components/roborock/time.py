@@ -27,19 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-def _safe_time_from_cache(cache: AttributeCache, which: str) -> time:
-    """Safely construct a time from cache without assuming dict semantics.
-
-    `which` is either 'start' or 'end'. If cache value is not a dict, returns 00:00.
-    """
-    val = cache.value
-    if isinstance(val, dict):
-        return time(
-            hour=val.get(f"{which}_hour", 0), minute=val.get(f"{which}_minute", 0)
-        )
-    return time(0, 0)
-
-
 @dataclass(frozen=True, kw_only=True)
 class RoborockTimeDescription(TimeEntityDescription):
     """Class to describe a Roborock time entity."""
@@ -65,7 +52,10 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 cache.value.get("end_minute"),
             ]
         ),
-        get_value=lambda cache: _safe_time_from_cache(cache, "start"),
+        get_value=lambda cache: time(
+            hour=cache.value.get("start_hour", 0),
+            minute=cache.value.get("start_minute", 0),
+        ),
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockTimeDescription(
@@ -80,7 +70,10 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 desired_time.minute,
             ]
         ),
-        get_value=lambda cache: _safe_time_from_cache(cache, "end"),
+        get_value=lambda cache: time(
+            hour=cache.value.get("end_hour", 0),
+            minute=cache.value.get("end_minute", 0),
+        ),
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockTimeDescription(
@@ -95,7 +88,10 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 cache.value.get("end_minute"),
             ]
         ),
-        get_value=lambda cache: _safe_time_from_cache(cache, "start"),
+        get_value=lambda cache: time(
+            hour=cache.value.get("start_hour", 0),
+            minute=cache.value.get("start_minute", 0),
+        ),
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
@@ -111,7 +107,10 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 desired_time.minute,
             ]
         ),
-        get_value=lambda cache: _safe_time_from_cache(cache, "end"),
+        get_value=lambda cache: time(
+            hour=cache.value.get("end_hour", 0),
+            minute=cache.value.get("end_minute", 0),
+        ),
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
@@ -174,9 +173,10 @@ class RoborockTimeEntity(RoborockEntityV1, TimeEntity):
     @property
     def native_value(self) -> time | None:
         """Return the value reported by the time."""
-        return self.entity_description.get_value(
-            self.get_cache(self.entity_description.cache_key)
-        )
+        cache = self.get_cache(self.entity_description.cache_key)
+        if not isinstance(cache.value, dict):
+            return None
+        return self.entity_description.get_value(cache)
 
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
