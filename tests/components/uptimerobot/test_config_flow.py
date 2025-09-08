@@ -317,7 +317,7 @@ async def test_reconfigure_successful(
 
     with (
         patch(
-            "pyuptimerobot.UptimeRobot.async_get_account_details",
+            "homeassistant.components.uptimerobot.config_flow.UptimeRobot.async_get_account_details",
             return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ACCOUNT),
         ),
         patch(
@@ -356,7 +356,7 @@ async def test_reconfigure_failed(
 
     with (
         patch(
-            "pyuptimerobot.UptimeRobot.async_get_account_details",
+            "homeassistant.components.uptimerobot.config_flow.UptimeRobot.async_get_account_details",
             side_effect=UptimeRobotAuthenticationException,
         ),
         patch(
@@ -376,7 +376,7 @@ async def test_reconfigure_failed(
 
     with (
         patch(
-            "pyuptimerobot.UptimeRobot.async_get_account_details",
+            "homeassistant.components.uptimerobot.config_flow.UptimeRobot.async_get_account_details",
             return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ACCOUNT),
         ),
         patch(
