@@ -175,7 +175,9 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                         "data": {
                             CONF_NAME: zone_data[CONF_NAME],
                             CONF_ZONE_NUMBER: zone_number,
-                            CONF_ZONE_TYPE: zone_data.get(CONF_ZONE_TYPE, "motion"),
+                            CONF_ZONE_TYPE: zone_data.get(
+                                CONF_ZONE_TYPE, BinarySensorDeviceClass.MOTION
+                            ),
                         },
                     }
                 )
@@ -191,7 +193,9 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                         "data": {
                             CONF_NAME: output_data[CONF_NAME],
                             CONF_OUTPUT_NUMBER: output_number,
-                            CONF_ZONE_TYPE: output_data.get(CONF_ZONE_TYPE, "motion"),
+                            CONF_ZONE_TYPE: output_data.get(
+                                CONF_ZONE_TYPE, BinarySensorDeviceClass.MOTION
+                            ),
                         },
                     }
                 )
