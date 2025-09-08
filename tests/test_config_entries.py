@@ -5267,7 +5267,7 @@ async def test_async_abort_entries_match(
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == reason
 
-    # For another Domain with no entries, there should never be a match
+    # For a domain with no entries, there should never be a match
     mock_integration(hass, MockModule("not_comp", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "not_comp.config_flow", None)
 
