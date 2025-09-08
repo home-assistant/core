@@ -222,11 +222,13 @@ async def test_coordinator_push_callback_handling(
         mock_api.async_start_monitoring.assert_called_once()
         callback = mock_api.async_start_monitoring.call_args[0][0]
 
-        # Test the callback function
+        # Test the callback function - it now schedules an async task
         test_data = {"test": "data"}
-        with patch.object(coordinator, "async_set_updated_data") as mock_set_data:
+        with patch.object(coordinator, "async_refresh") as mock_refresh:
             callback(test_data)
-            mock_set_data.assert_called_once_with(coordinator.data)
+            # Wait for any scheduled tasks to complete
+            await hass.async_block_till_done()
+            mock_refresh.assert_called_once()
 
 
 async def test_coordinator_stale_device_removal(

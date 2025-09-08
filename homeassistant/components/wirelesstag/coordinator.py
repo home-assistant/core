@@ -125,13 +125,21 @@ class WirelessTagDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # For now, we just log the detection - the entities will be created
         # when the platforms run their setup again.
 
-    def _handle_push_callback(self, *args, **kwargs) -> None:
+    def _handle_push_callback(self, data=None, *args, **kwargs) -> None:
         """Handle push notification callback from API."""
         _LOGGER.debug(
-            "Received push notification with args: %s, kwargs: %s", args, kwargs
+            "Received push notification with data: %s, args: %s, kwargs: %s",
+            data,
+            args,
+            kwargs,
         )
+        # Schedule a refresh in the event loop since this is called from a thread
+        self.hass.async_create_task(self._async_handle_push_update())
+
+    async def _async_handle_push_update(self) -> None:
+        """Handle push update asynchronously."""
         # Trigger a coordinator refresh to update all entities
-        self.async_set_updated_data(self.data)
+        await self.async_refresh()
 
     def _convert_battery_percentage(
         self, battery_decimal: float | None
