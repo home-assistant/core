@@ -296,7 +296,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
             if running_state_value := self.get_matter_attribute_value(
                 clusters.Thermostat.Attributes.ThermostatRunningState
             ):
-                match running_state_value:
                 if running_state_value & (
                     ThermostatRunningState.Heat | ThermostatRunningState.HeatStage2
                 ):
