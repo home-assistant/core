@@ -371,7 +371,6 @@ class DefaultAgent(ConversationEntity):
             response = intent.IntentResponse(
                 language=user_input.language or self.hass.config.language
             )
-            response.response_type = intent.IntentResponseType.ACTION_DONE
             response.async_set_speech(response_text)
 
         if response is None:
