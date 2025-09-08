@@ -1891,11 +1891,9 @@ async def test_no_repair_issue_for_remote_scanner(
 
     manager = _get_manager()
 
-    # Create a FakeRemoteScanner instance (not HaScanner)
     connector = HaBluetoothConnector(MockBleakClient, "mock_connector", lambda: False)
     scanner = FakeRemoteScanner("remote_scanner", "esp32", connector, True)
 
-    # Mock that we're in Docker and operating in degraded mode
     with (
         patch(
             "homeassistant.components.bluetooth.manager.is_docker_env",
@@ -1905,9 +1903,7 @@ async def test_no_repair_issue_for_remote_scanner(
     ):
         manager.on_scanner_start(scanner)
 
-        # Check that no repair issue was created (remote scanners are ignored)
         registry = ir.async_get(hass)
-        # Check there are no bluetooth repair issues at all
         issues = [
             issue
             for issue in registry.issues.values()
