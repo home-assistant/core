@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_ID,
     CONF_MATCH,
+    CONF_SELECTOR,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
@@ -59,9 +60,10 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
-from . import config_validation as cv, entity_registry as er
+from . import config_validation as cv, entity_registry as er, selector
 from .automation import get_absolute_description_key, get_relative_description_key
 from .integration_platform import async_process_integration_platforms
+from .selector import TargetSelector
 from .template import Template, render_complex
 from .trace import (
     TraceElement,
@@ -110,12 +112,15 @@ CONDITIONS: HassKey[dict[str, str]] = HassKey("conditions")
 # Basic schemas to sanity check the condition descriptions,
 # full validation is done by hassfest.conditions
 _FIELD_SCHEMA = vol.Schema(
-    {},
+    {
+        vol.Optional(CONF_SELECTOR): selector.validate_selector,
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
 _CONDITION_SCHEMA = vol.Schema(
     {
+        vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
         vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
     },
     extra=vol.ALLOW_EXTRA,
