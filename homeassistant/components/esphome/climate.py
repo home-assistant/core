@@ -236,7 +236,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Return the current temperature."""
         if not self._static_info.supports_current_temperature:
             return None
-        return cast(float | None, self._state.current_temperature)
+        return self._state.current_temperature
 
     @property
     @esphome_state_property
@@ -258,11 +258,11 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             not self._static_info.supports_two_point_target_temperature
             and self.hvac_mode != HVACMode.AUTO
         ):
-            return cast(float | None, self._state.target_temperature)
+            return self._state.target_temperature
         if self.hvac_mode == HVACMode.HEAT:
-            return cast(float | None, self._state.target_temperature_low)
+            return self._state.target_temperature_low
         if self.hvac_mode == HVACMode.COOL:
-            return cast(float | None, self._state.target_temperature_high)
+            return self._state.target_temperature_high
         return None
 
     @property
@@ -271,7 +271,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.AUTO:
             return None
-        return cast(float | None, self._state.target_temperature_low)
+        return self._state.target_temperature_low
 
     @property
     @esphome_float_state_property
@@ -279,7 +279,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Return the highbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.AUTO:
             return None
-        return cast(float | None, self._state.target_temperature_high)
+        return self._state.target_temperature_high
 
     @property
     @esphome_state_property
