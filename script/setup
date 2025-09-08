@@ -32,7 +32,6 @@ fi
 script/bootstrap
 
 pre-commit install
-python3 -m script.translations develop --all
 
 hass --script ensure_config -c config
 
