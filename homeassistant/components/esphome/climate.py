@@ -197,7 +197,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @esphome_state_property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
-        return cast(HVACMode | None, _CLIMATE_MODES.from_esphome(self._state.mode))
+        return _CLIMATE_MODES.from_esphome(self._state.mode)
 
     @property
     @esphome_state_property
@@ -206,35 +206,29 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         # HA has no support feature field for hvac_action
         if not self._static_info.supports_action:
             return None
-        return cast(
-            HVACAction | None, _CLIMATE_ACTIONS.from_esphome(self._state.action)
-        )
+        return _CLIMATE_ACTIONS.from_esphome(self._state.action)
 
     @property
     @esphome_state_property
     def fan_mode(self) -> str | None:
         """Return current fan setting."""
         state = self._state
-        return cast(
-            str | None, state.custom_fan_mode or _FAN_MODES.from_esphome(state.fan_mode)
-        )
+        return state.custom_fan_mode or _FAN_MODES.from_esphome(state.fan_mode)
 
     @property
     @esphome_state_property
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
         state = self._state
-        return cast(
-            str | None,
-            state.custom_preset
-            or _PRESETS.from_esphome(state.preset_compat(self._api_version)),
+        return state.custom_preset or _PRESETS.from_esphome(
+            state.preset_compat(self._api_version)
         )
 
     @property
     @esphome_state_property
     def swing_mode(self) -> str | None:
         """Return current swing mode."""
-        return cast(str | None, _SWING_MODES.from_esphome(self._state.swing_mode))
+        return _SWING_MODES.from_esphome(self._state.swing_mode)
 
     @property
     @esphome_float_state_property
@@ -254,7 +248,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             or not isfinite(val)
         ):
             return None
-        return cast(int, round(val))
+        return round(val)
 
     @property
     @esphome_float_state_property
@@ -291,7 +285,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @esphome_state_property
     def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
-        return cast(int, round(self._state.target_humidity))
+        return round(self._state.target_humidity)
 
     @convert_api_error_ha_error
     async def async_set_temperature(self, **kwargs: Any) -> None:
