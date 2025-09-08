@@ -8,7 +8,7 @@
   "iot_class": "local_push",
   "loggers": ["homee"],
   "quality_scale": "silver",
-  "requirements": ["pyHomee==1.3.0"],
+  "requirements": ["pyHomee==1.3.8"],
   "zeroconf": [
     {
       "type": "_ssh._tcp.local.",
