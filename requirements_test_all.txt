@@ -280,7 +280,7 @@ aiokem==1.0.1
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.6.4
+aiolifx-themes==1.0.2
 
 # homeassistant.components.lifx
 aiolifx==1.2.1
