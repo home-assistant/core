@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import io
 import logging
 import mimetypes
 from pathlib import Path
 import shutil
-from typing import Any, cast
+from typing import Any, Protocol, cast
 
 from aiohttp import web
 from aiohttp.web_request import FileField
@@ -33,6 +34,14 @@ class PathNotSupportedError(HomeAssistantError):
 
 class InvalidFileNameError(HomeAssistantError):
     """Error to indicate an invalid file name."""
+
+
+class UploadedFile(Protocol):
+    """Protocol describing properties of an uploaded file."""
+
+    filename: str
+    file: io.IOBase
+    content_type: str
 
 
 async def async_get_media_source(hass: HomeAssistant) -> LocalSource:
@@ -103,7 +112,7 @@ class LocalSource(MediaSource):
         await self.hass.async_add_executor_job(_do_delete)
 
     async def async_upload_media(
-        self, target_folder: MediaSourceItem, uploaded_file: FileField
+        self, target_folder: MediaSourceItem, uploaded_file: UploadedFile
     ) -> str:
         """Upload media.
 
