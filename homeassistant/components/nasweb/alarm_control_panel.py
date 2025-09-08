@@ -77,15 +77,16 @@ class ZoneEntity(AlarmControlPanelEntity, BaseCoordinatorEntity):
     """Entity representing NASweb zone."""
 
     def __init__(
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    _attr_translation_key = ALARM_CONTROL_PANEL_TRANSLATION_KEY
         self, coordinator: BaseDataUpdateCoordinatorProtocol, nasweb_zone: NASwebZone
     ) -> None:
         """Initialize zone entity."""
         super().__init__(coordinator)
         self._zone = nasweb_zone
-        self._attr_has_entity_name = True
         self._attr_name = nasweb_zone.name
-        self._attr_should_poll = False
-        self._attr_translation_key = ALARM_CONTROL_PANEL_TRANSLATION_KEY
         self._attr_translation_placeholders = {"index": f"{nasweb_zone.index:2d}"}
         self._attr_unique_id = (
             f"{DOMAIN}.{self._zone.webio_serial}.zone.{self._zone.index}"
