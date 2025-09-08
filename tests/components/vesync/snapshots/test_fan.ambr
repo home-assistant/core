@@ -79,7 +79,7 @@
     'attributes': ReadOnlyDict({
       'active_time': 0,
       'child_lock': False,
-      'display_status': 'on',
+      'display_status': <DeviceStatus.ON: 'on'>,
       'friendly_name': 'Air Purifier 131s',
       'mode': 'sleep',
       'night_light': None,
