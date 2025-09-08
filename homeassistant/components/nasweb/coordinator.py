@@ -11,12 +11,7 @@ from typing import Any
 
 from aiohttp.web import Request, Response
 from webio_api import WebioAPI
-from webio_api.const import (
-    KEY_DEVICE_SERIAL,
-    KEY_TYPE,
-    KEY_ZONES,
-    TYPE_STATUS_UPDATE,
-)
+from webio_api.const import KEY_DEVICE_SERIAL, KEY_TYPE, KEY_ZONES, TYPE_STATUS_UPDATE
 
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import event
