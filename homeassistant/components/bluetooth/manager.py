@@ -334,8 +334,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
             return
 
-        # Only create repair issues for Docker-based installations where users can fix permissions
-        # This includes: Home Assistant Supervised, Home Assistant Container, and third-party containers
+        # Only create repair issues for Docker-based installations where users
+        # can fix permissions. This includes: Home Assistant Supervised,
+        # Home Assistant Container, and third-party containers
         if not is_docker_env():
             return
 
@@ -352,7 +353,8 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             self.hass,
             DOMAIN,
             issue_id,
-            is_fixable=False,  # Not fixable from within HA - requires container restart with new permissions
+            is_fixable=False,  # Not fixable from within HA - requires
+            # container restart with new permissions
             severity=ir.IssueSeverity.WARNING,
             translation_key="bluetooth_adapter_missing_permissions",
             translation_placeholders={
