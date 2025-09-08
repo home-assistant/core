@@ -1,7 +1,8 @@
 """Tests for refoss_rpc update platform."""
 
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
+from aiorefoss.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 
 from homeassistant.components.update import (
@@ -34,6 +35,8 @@ async def test_rpc_update(
     """Test RPC device update entity."""
     entity_id = "update.test_name_firmware"
     monkeypatch.setattr(mock_rpc_device, "firmware_version", "1")
+    await set_integration(hass)
+
     monkeypatch.setitem(
         mock_rpc_device.status["sys"],
         "available_updates",
@@ -125,3 +128,46 @@ async def test_rpc_update(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-sys-fwupdate"
+
+
+@pytest.mark.parametrize(
+    ("exc"),
+    [
+        (DeviceConnectionError),
+        (RpcCallError),
+        (InvalidAuthError),
+    ],
+)
+async def test_rpc_update_err(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    exc: Exception,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC device update entity err."""
+    entity_id = "update.test_name_firmware"
+    monkeypatch.setattr(mock_rpc_device, "firmware_version", "1")
+    monkeypatch.setitem(
+        mock_rpc_device.status["sys"],
+        "available_updates",
+        {
+            "version": "2",
+        },
+    )
+    await set_integration(hass)
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "trigger_firmware_update",
+        AsyncMock(
+            side_effect=exc,
+        ),
+    )

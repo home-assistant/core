@@ -392,16 +392,22 @@ async def test_zeroconf(
     mock_rpc_device: Mock,
 ) -> None:
     """Test we get the form."""
-    with patch(
-        "homeassistant.components.refoss_rpc.config_flow.get_info",
-        return_value={
-            "name": "Test name",
-            "model": "r11",
-            "mac": "test-mac",
-            "fw_ver": "1.0.0",
-            "hw_ver": "1.0.1",
-            "auth_en": False,
-        },
+    with (
+        patch(
+            "homeassistant.components.refoss_rpc.config_flow.get_info",
+            return_value={
+                "name": "Test name",
+                "model": "r11",
+                "mac": "test-mac",
+                "fw_ver": "1.0.0",
+                "hw_ver": "1.0.1",
+                "auth_en": False,
+            },
+        ),
+        patch(
+            "homeassistant.components.refoss_rpc.config_flow.mac_address_from_name",
+            return_value="test-mac",
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

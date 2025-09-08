@@ -15,6 +15,8 @@ MOCK_CONFIG = {
     "switch:1": {"id": 1, "name": "test switch"},
     "wifi": {"sta_1": {"enable": True}, "sta_2": {"enable": False}},
     "cover:1": {"id": 1, "name": "test cover"},
+    "em:1": {"id": 1, "name": "test em"},
+    "em:2": {"id": 2, "name": "test em2"},
 }
 
 
@@ -45,10 +47,13 @@ MOCK_STATUS = {
         "temperature": {"tc": 22.0},
         "restart_required": False,
         "uptime": 100,
-        "available_updates": {"version": "2"},
+        "available_updates": {},
         "errors": [],
     },
     "wifi": {"rssi": -30},
+    "em:1": {"power": 10},
+    "em:2": {"power": 20},
+    "emmerge:3": 3,
 }
 
 
