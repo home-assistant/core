@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
     BrowseMediaSource,
@@ -14,7 +16,7 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_IMAGES, DOMAIN
+from .const import DATA_IMAGES, DOMAIN, IMAGE_EXPIRY_TIME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +45,14 @@ class ImageMediaSource(MediaSource):
         if image is None:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
 
-        return PlayMedia(f"/api/{DOMAIN}/images/{item.identifier}", image.mime_type)
+        return PlayMedia(
+            async_sign_path(
+                self.hass,
+                f"/api/{DOMAIN}/images/{item.identifier}",
+                timedelta(seconds=IMAGE_EXPIRY_TIME or 1800),
+            ),
+            image.mime_type,
+        )
 
     async def async_browse_media(
         self,
