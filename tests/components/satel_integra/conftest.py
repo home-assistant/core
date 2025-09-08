@@ -41,7 +41,7 @@ def mock_satel() -> Generator[AsyncMock]:
 
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
-    """Mock ntfy configuration entry."""
+    """Mock satel configuration entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="192.168.0.2",
