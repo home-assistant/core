@@ -583,3 +583,23 @@ async def test_pump(
     state = hass.states.get("sensor.mock_pump_rotation_speed")
     assert state
     assert state.state == "500"
+
+
+@pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
+async def test_vacuum_actions(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test vacuum sensors."""
+    # EstimatedEndTime
+    state = hass.states.get("sensor.mock_vacuum_estimated_end_time")
+    assert state
+    assert state.state == "2025-08-29T21:00:00+00:00"
+
+    set_node_attribute(matter_node, 1, 336, 4, 1756502000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_vacuum_estimated_end_time")
+    assert state
+    assert state.state == "2025-08-29T21:13:20+00:00"
