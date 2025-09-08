@@ -41,6 +41,7 @@ ABBREVIATIONS = {
     "curr_hum_tpl": "current_humidity_template",
     "curr_temp_t": "current_temperature_topic",
     "curr_temp_tpl": "current_temperature_template",
+    "def_ent_id": "default_entity_id",
     "dev": "device",
     "dev_cla": "device_class",
     "dir_cmd_t": "direction_command_topic",

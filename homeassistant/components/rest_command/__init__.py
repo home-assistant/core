@@ -12,6 +12,7 @@ from aiohttp import hdrs
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_AUTHENTICATION,
     CONF_HEADERS,
     CONF_METHOD,
     CONF_PASSWORD,
@@ -20,6 +21,8 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
     SERVICE_RELOAD,
 )
 from homeassistant.core import (
@@ -56,6 +59,9 @@ COMMAND_SCHEMA = vol.Schema(
             vol.Lower, vol.In(SUPPORT_REST_METHODS)
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.template}),
+        vol.Optional(CONF_AUTHENTICATION): vol.In(
+            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
+        ),
         vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
         vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
         vol.Optional(CONF_PAYLOAD): cv.template,
@@ -109,10 +115,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         template_url = command_config[CONF_URL]
 
         auth = None
+        digest_middleware = None
         if CONF_USERNAME in command_config:
             username = command_config[CONF_USERNAME]
             password = command_config.get(CONF_PASSWORD, "")
-            auth = aiohttp.BasicAuth(username, password=password)
+            if command_config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
+                digest_middleware = aiohttp.DigestAuthMiddleware(username, password)
+            else:
+                auth = aiohttp.BasicAuth(username, password=password)
 
         template_payload = None
         if CONF_PAYLOAD in command_config:
@@ -155,12 +165,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
             try:
+                # Prepare request kwargs
+                request_kwargs = {
+                    "data": payload,
+                    "headers": headers or None,
+                    "timeout": timeout,
+                }
+
+                # Add authentication
+                if auth is not None:
+                    request_kwargs["auth"] = auth
+                elif digest_middleware is not None:
+                    request_kwargs["middlewares"] = (digest_middleware,)
+
                 async with getattr(websession, method)(
                     request_url,
-                    data=payload,
-                    auth=auth,
-                    headers=headers or None,
-                    timeout=timeout,
+                    **request_kwargs,
                 ) as response:
                     if response.status < HTTPStatus.BAD_REQUEST:
                         _LOGGER.debug(
@@ -178,6 +198,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         )
 
                     if not service.return_response:
+                        # always read the response to avoid closing the connection
+                        # before the server has finished sending it, while avoiding excessive memory usage
+                        async for _ in response.content.iter_chunked(1024):
+                            pass
+
                         return None
 
                     _content = None

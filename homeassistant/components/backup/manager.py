@@ -896,7 +896,8 @@ class BackupManager:
         )
         agent_errors = {
             backup_id: error
-            for backup_id, error in zip(backup_ids, delete_results, strict=True)
+            for backup_id, error_dict in zip(backup_ids, delete_results, strict=True)
+            for error in error_dict.values()
             if error and not isinstance(error, BackupNotFound)
         }
         if agent_errors:
@@ -1119,7 +1120,7 @@ class BackupManager:
             )
         if unavailable_agents:
             LOGGER.warning(
-                "Backup agents %s are not available, will backupp to %s",
+                "Backup agents %s are not available, will backup to %s",
                 unavailable_agents,
                 available_agents,
             )

@@ -122,6 +122,10 @@
         "name": "Total cycles",
         "unit_of_measurement": "cycles"
       },
+      "visits_today": {
+        "name": "Visits today",
+        "unit_of_measurement": "visits"
+      },
       "waste_drawer": {
         "name": "Waste drawer"
       }

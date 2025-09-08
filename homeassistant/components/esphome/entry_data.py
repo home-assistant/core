@@ -295,23 +295,7 @@ class RuntimeEntryData:
                 needed_platforms.add(Platform.BINARY_SENSOR)
                 needed_platforms.add(Platform.SELECT)
 
-        ent_reg = er.async_get(hass)
-        registry_get_entity = ent_reg.async_get_entity_id
-        for info in infos:
-            platform = INFO_TYPE_TO_PLATFORM[type(info)]
-            needed_platforms.add(platform)
-            # If the unique id is in the old format, migrate it
-            # except if they downgraded and upgraded, there might be a duplicate
-            # so we want to keep the one that was already there.
-            if (
-                (old_unique_id := info.unique_id)
-                and (old_entry := registry_get_entity(platform, DOMAIN, old_unique_id))
-                and (new_unique_id := build_device_unique_id(mac, info))
-                != old_unique_id
-                and not registry_get_entity(platform, DOMAIN, new_unique_id)
-            ):
-                ent_reg.async_update_entity(old_entry, new_unique_id=new_unique_id)
-
+        needed_platforms.update(INFO_TYPE_TO_PLATFORM[type(info)] for info in infos)
         await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         # Make a dict of the EntityInfo by type and send
