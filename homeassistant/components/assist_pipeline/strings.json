@@ -13,7 +13,7 @@
         }
       },
       "pipeline_2": {
-        "name": "Secondary Assistant",
+        "name": "Secondary assistant",
         "state": {
           "preferred": "Preferred"
         }
