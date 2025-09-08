@@ -32,6 +32,7 @@ from .const import (
     CONF_COMPONENTS,
     CONF_CONFIGURATION_URL,
     CONF_CONNECTIONS,
+    CONF_DEFAULT_ENTITY_ID,
     CONF_DEPRECATED_VIA_HUB,
     CONF_ENABLED_BY_DEFAULT,
     CONF_ENCODING,
@@ -180,6 +181,7 @@ MQTT_ENTITY_COMMON_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
+        vol.Optional(CONF_DEFAULT_ENTITY_ID): cv.string,
         vol.Optional(CONF_OBJECT_ID): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }

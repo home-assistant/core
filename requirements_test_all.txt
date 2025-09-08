@@ -226,7 +226,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2025.9.0
+aioecowitt==2025.9.1
 
 # homeassistant.components.co2signal
 aioelectricitymaps==1.1.1
@@ -280,7 +280,7 @@ aiokem==1.0.1
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.6.4
+aiolifx-themes==1.0.2
 
 # homeassistant.components.lifx
 aiolifx==1.2.1
@@ -408,7 +408,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.10.0
+aiovodafone==1.2.1
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -998,7 +998,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.5
 
 # homeassistant.components.bluetooth
-habluetooth==5.3.1
+habluetooth==5.5.1
 
 # homeassistant.components.cloud
 hass-nabucasa==1.1.0
@@ -1527,7 +1527,7 @@ pyDuotecno==2024.10.1
 pyElectra==1.2.4
 
 # homeassistant.components.homee
-pyHomee==1.2.10
+pyHomee==1.3.8
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
