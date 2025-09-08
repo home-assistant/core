@@ -8,9 +8,8 @@ from aioonkyo import Code, Instruction, Kind, Receiver, Status, Zone, status
 import pytest
 
 from homeassistant.components.onkyo.const import DOMAIN
-from homeassistant.const import CONF_HOST
 
-from . import RECEIVER_INFO, mock_discovery
+from . import RECEIVER_INFO, RECEIVER_INFO_2, mock_discovery
 
 from tests.common import MockConfigEntry
 
@@ -24,7 +23,7 @@ def mock_default_discovery() -> Generator[None]:
             DEVICE_INTERVIEW_TIMEOUT=1,
             DEVICE_DISCOVERY_TIMEOUT=1,
         ),
-        mock_discovery([RECEIVER_INFO]),
+        mock_discovery([RECEIVER_INFO, RECEIVER_INFO_2]),
     ):
         yield
 
@@ -164,7 +163,7 @@ def mock_receiver(
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
-    data = {CONF_HOST: RECEIVER_INFO.host}
+    data = {"host": RECEIVER_INFO.host}
     options = {
         "volume_resolution": 80,
         "max_volume": 100,

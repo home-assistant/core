@@ -25,6 +25,7 @@
         "name": "Hydrological alert",
         "state": {
           "no_alert": "No alert",
+          "exceeding_the_warning_level": "Exceeding the warning level",
           "hydrological_drought": "Hydrological drought",
           "rapid_water_level_rise": "Rapid water level rise"
         },
@@ -41,6 +42,7 @@
           "options": {
             "state": {
               "no_alert": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::no_alert%]",
+              "exceeding_the_warning_level": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::exceeding_the_warning_level%]",
               "hydrological_drought": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::hydrological_drought%]",
               "rapid_water_level_rise": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::rapid_water_level_rise%]"
             }
