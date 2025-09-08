@@ -189,21 +189,23 @@ class EsphomeAssistSatelliteWakeWordSelect(
         self._wake_words = {w.wake_word: w.id for w in config.available_wake_words}
         self._attr_options = [NO_WAKE_WORD, *sorted(self._wake_words)]
 
-        option = NO_WAKE_WORD
-        if config.active_wake_words:
-            for active_wake_word_id in config.active_wake_words:
-                for wake_word, wake_word_id in self._wake_words.items():
-                    if (wake_word_id == active_wake_word_id) and (
-                        self._attr_current_option == wake_word
-                    ):
-                        option = wake_word
-
-                        # Keep entry data in sync
-                        self._entry_data.assist_satellite_active_wake_words[
-                            self._wake_word_index
-                        ] = wake_word_id
-
-                        break
+        option = self._attr_current_option
+        if (
+            (not option)
+            or ((wake_word_id := self._wake_words.get(option)) is None)
+            or (wake_word_id not in config.active_wake_words)
+        ):
+            option = NO_WAKE_WORD
 
         self._attr_current_option = option
         self.async_write_ha_state()
+
+        # Keep entry data in sync
+        if wake_word_id := self._wake_words.get(option):
+            self._entry_data.assist_satellite_active_wake_words[
+                self._wake_word_index
+            ] = wake_word_id
+        else:
+            self._entry_data.assist_satellite_active_wake_words.pop(
+                self._wake_word_index, None
+            )
