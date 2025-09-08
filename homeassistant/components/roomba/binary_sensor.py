@@ -1,5 +1,7 @@
 """Roomba binary sensor entities."""
 
+from propcache.api import cached_property
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -31,13 +33,13 @@ class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
 
     _attr_translation_key = "bin_full"
 
-    @property
-    def unique_id(self):
+    @cached_property
+    def unique_id(self) -> str:
         """Return the ID of this sensor."""
         return f"bin_{self._blid}"
 
-    @property
-    def is_on(self):
+    @cached_property
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         return roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
 

@@ -2,7 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 
+from propcache.api import cached_property
 from roombapy import Roomba
 
 from homeassistant.components.sensor import (
@@ -26,7 +28,7 @@ from .models import RoombaData
 class RoombaSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing Roomba data."""
 
-    value_fn: Callable[[IRobotEntity], StateType]
+    value_fn: Callable[[IRobotEntity], StateType | datetime]
 
 
 SENSORS: list[RoombaSensorEntityDescription] = [
@@ -152,12 +154,12 @@ class RoombaSensor(IRobotEntity, SensorEntity):
         super().__init__(roomba, blid)
         self.entity_description = entity_description
 
-    @property
+    @cached_property
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self.entity_description.key}_{self._blid}"
 
-    @property
-    def native_value(self) -> StateType:
+    @cached_property
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self)
