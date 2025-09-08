@@ -22,7 +22,7 @@
       },
       "zeroconf_confirm": {
         "title": "Discovered Android TV",
-        "description": "Do you want to add the Android TV ({name}) to Home Assistant?  It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
+        "description": "Do you want to add the Android TV ({name}) to Home Assistant? It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
       },
       "pair": {
         "description": "Enter the pairing code displayed on the Android TV ({name}).",
@@ -85,6 +85,12 @@
   "exceptions": {
     "connection_closed": {
       "message": "Connection to the Android TV device is closed"
+    },
+    "invalid_channel": {
+      "message": "Channel must be numeric: {media_id}"
+    },
+    "invalid_media_type": {
+      "message": "Invalid media type: {media_type}"
     }
   }
 }

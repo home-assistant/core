@@ -233,28 +233,6 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._show_ws_port_form(errors)
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML."""
-        reason = None
-        try:
-            await validate_http(self.hass, import_data)
-            await validate_ws(self.hass, import_data)
-        except InvalidAuth:
-            _LOGGER.exception("Invalid Kodi credentials")
-            reason = "invalid_auth"
-        except CannotConnect:
-            _LOGGER.exception("Cannot connect to Kodi")
-            reason = "cannot_connect"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            reason = "unknown"
-        else:
-            return self.async_create_entry(
-                title=import_data[CONF_NAME], data=import_data
-            )
-
-        return self.async_abort(reason=reason)
-
     @callback
     def _show_credentials_form(
         self, errors: dict[str, str] | None = None

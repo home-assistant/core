@@ -312,15 +312,14 @@ class ModbusHub:
     async def async_pb_connect(self) -> None:
         """Connect to device, async."""
         while True:
-            async with self._lock:
-                try:
-                    if await self._client.connect():  # type: ignore[union-attr]
-                        _LOGGER.info(f"modbus {self.name} communication open")
-                        break
-                except ModbusException as exception_error:
-                    self._log_error(
-                        f"{self.name} connect failed, please check your configuration ({exception_error!s})"
-                    )
+            try:
+                if await self._client.connect():  # type: ignore[union-attr]
+                    _LOGGER.info(f"modbus {self.name} communication open")
+                    break
+            except ModbusException as exception_error:
+                self._log_error(
+                    f"{self.name} connect failed, please check your configuration ({exception_error!s})"
+                )
             _LOGGER.info(
                 f"modbus {self.name} connect NOT a success ! retrying in {PRIMARY_RECONNECT_DELAY} seconds"
             )
@@ -359,6 +358,7 @@ class ModbusHub:
 
     async def async_close(self) -> None:
         """Disconnect client."""
+        self.event_connected.set()
         if not self._connect_task.done():
             self._connect_task.cancel()
 
