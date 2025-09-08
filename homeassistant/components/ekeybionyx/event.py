@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EkeyBionyxConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -28,7 +28,7 @@ class EkeyEvent(EventEntity):
     """Ekey Event."""
 
     _attr_device_class = EventDeviceClass.BUTTON
-    _attr_event_types = ["webhook_fired"]
+    _attr_event_types = ["event happened"]
 
     def __init__(
         self,
@@ -41,9 +41,9 @@ class EkeyEvent(EventEntity):
         self._auth = data["auth"]
 
     @callback
-    def _async_handle_event(self, event: str) -> None:
+    def _async_handle_event(self) -> None:
         """Handle the webhook event."""
-        self._trigger_event(event)
+        self._trigger_event("event happened")
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -53,7 +53,7 @@ class EkeyEvent(EventEntity):
             hass: HomeAssistant, webhook_id: str, request: Request
         ) -> Response | None:
             if (await request.json())["auth"] == self._auth:
-                self._async_handle_event("webhook_fired")
+                self._async_handle_event()
             return None
 
         webhook_register(
@@ -68,4 +68,3 @@ class EkeyEvent(EventEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Unregister Webhook."""
         webhook_unregister(self.hass, self._webhook_id)
-        LOGGER.info("Unregistered Webhook")

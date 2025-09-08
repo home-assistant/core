@@ -21,7 +21,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import SelectOptionDict, SelectSelector
 
-from .const import API_URL, DOMAIN, SCOPE, VALID_NAME_PATTERN
+from .const import API_URL, DOMAIN, SCOPE
+
+# Valid webhook name: starts with letter or underscore, contains letters, digits, spaces, dots, and underscores, does not end with space or dot
+VALID_NAME_PATTERN = re.compile(r"^(?![\d\s])[\w\d \.]*[\w\d]$")
 
 
 class ConfigFlowEkeyApi(ekey_bionyxpy.AbstractAuth):
@@ -138,17 +141,20 @@ class OAuth2FlowHandler(
                 cv.url(user_input[CONF_URL])
             except vol.Invalid:
                 errors[CONF_URL] = "invalid_url"
-            if len([x for x in user_input.items() if x[0] != CONF_URL]) == 0:
+            if set(user_input) == {CONF_URL}:
                 errors["base"] = "no_webhooks_provided"
 
             if not errors:
                 webhook_data = [
-                    {"webhook_id": webhook_generate_id(), "name": webhooks[1]}
+                    {
+                        "auth": secrets.token_hex(32),
+                        "name": webhooks[1],
+                        "webhook_id": webhook_generate_id(),
+                    }
                     for webhooks in user_input.items()
                     if webhooks[0] != CONF_URL
                 ]
                 for webhook in webhook_data:
-                    webhook.update(auth=secrets.token_hex(32))
                     wh_def: ekey_bionyxpy.WebhookData = {
                         "integrationName": "Home Assistant",
                         "functionName": webhook["name"],
@@ -165,9 +171,7 @@ class OAuth2FlowHandler(
                             },
                         },
                     }
-                    webhook.update(
-                        ekey_id=(await system.add_webhook(wh_def)).webhook_id
-                    )
+                    webhook["ekey_id"] = (await system.add_webhook(wh_def)).webhook_id
                 return self.async_create_entry(
                     title=self._data["system"].system_name,
                     data={"webhooks": webhook_data},
