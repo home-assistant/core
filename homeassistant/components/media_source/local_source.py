@@ -28,10 +28,7 @@ LOGGER = logging.getLogger(__name__)
 
 async def async_get_media_source(hass: HomeAssistant) -> LocalSource:
     """Set up local media source."""
-    source = LocalSource(hass, DOMAIN, "My media", hass.config.media_dirs, "/media")
-    hass.http.register_view(UploadMediaView(hass, source))
-    websocket_api.async_register_command(hass, websocket_remove_media)
-    return source
+    return LocalSource(hass, DOMAIN, "My media", hass.config.media_dirs, "/media")
 
 
 class LocalSource(MediaSource):
@@ -265,21 +262,18 @@ class UploadMediaView(http.HomeAssistantView):
 
     url = "/api/media_source/local_source/upload"
     name = "api:media_source:local_source:upload"
-
-    def __init__(self, hass: HomeAssistant, source: LocalSource) -> None:
-        """Initialize the media view."""
-        self.hass = hass
-        self.source = source
-        self.schema = vol.Schema(
-            {
-                "media_content_id": str,
-                "file": FileField,
-            }
-        )
+    schema = vol.Schema(
+        {
+            "media_content_id": str,
+            "file": FileField,
+        }
+    )
 
     @require_admin
     async def post(self, request: web.Request) -> web.Response:
         """Handle upload."""
+        hass = request.app[http.KEY_HASS]
+
         # Increase max payload
         request._client_max_size = MAX_UPLOAD_SIZE  # noqa: SLF001
 
@@ -290,13 +284,18 @@ class UploadMediaView(http.HomeAssistantView):
             raise web.HTTPBadRequest from err
 
         try:
-            item = MediaSourceItem.from_uri(self.hass, data["media_content_id"], None)
+            item = MediaSourceItem.from_uri(hass, data["media_content_id"], None)
         except ValueError as err:
             LOGGER.error("Received invalid upload data: %s", err)
             raise web.HTTPBadRequest from err
 
+        if item.domain != DOMAIN:
+            raise web.HTTPBadRequest
+
+        source = cast(LocalSource, hass.data[MEDIA_SOURCE_DATA][item.domain])
+
         try:
-            source_dir_id, location = self.source.async_parse_identifier(item)
+            source_dir_id, location = source.async_parse_identifier(item)
         except Unresolvable as err:
             LOGGER.error("Invalid local source ID")
             raise web.HTTPBadRequest from err
@@ -314,9 +313,9 @@ class UploadMediaView(http.HomeAssistantView):
             raise web.HTTPBadRequest from err
 
         try:
-            await self.hass.async_add_executor_job(
+            await hass.async_add_executor_job(
                 self._move_file,
-                self.source.async_full_path(source_dir_id, location),
+                source.async_full_path(source_dir_id, location),
                 uploaded_file,
             )
         except ValueError as err:
@@ -359,7 +358,13 @@ async def websocket_remove_media(
         connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
         return
 
-    source = cast(LocalSource, hass.data[MEDIA_SOURCE_DATA][DOMAIN])
+    if item.domain != DOMAIN:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_INVALID_FORMAT, "Invalid media source domain"
+        )
+        return
+
+    source = cast(LocalSource, hass.data[MEDIA_SOURCE_DATA][item.domain])
 
     try:
         source_dir_id, location = source.async_parse_identifier(item)

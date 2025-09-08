@@ -85,7 +85,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     frontend.async_register_built_in_panel(
         hass, "media-browser", "media_browser", "hass:play-box-multiple"
     )
+
+    # Local sources support
     await _process_media_source_platform(hass, DOMAIN, local_source)
+    hass.http.register_view(local_source.UploadMediaView)
+    websocket_api.async_register_command(hass, local_source.websocket_remove_media)
+
     await async_process_integration_platforms(
         hass, DOMAIN, _process_media_source_platform
     )
