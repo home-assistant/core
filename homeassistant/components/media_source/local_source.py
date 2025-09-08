@@ -31,6 +31,10 @@ class PathNotSupportedError(HomeAssistantError):
     """Error to indicate a path is not supported."""
 
 
+class InvalidFileNameError(HomeAssistantError):
+    """Error to indicate an invalid file name."""
+
+
 async def async_get_media_source(hass: HomeAssistant) -> LocalSource:
     """Set up local media source."""
     return LocalSource(hass, DOMAIN, "My media", hass.config.media_dirs, "/media")
@@ -97,6 +101,48 @@ class LocalSource(MediaSource):
             item_path.unlink()
 
         await self.hass.async_add_executor_job(_do_delete)
+
+    async def async_upload_media(
+        self, target_folder: MediaSourceItem, uploaded_file: FileField
+    ) -> str:
+        """Upload media.
+
+        Return value is the media source ID of the uploaded file.
+        """
+        source_dir_id, location = self.async_parse_identifier(target_folder)
+
+        if not uploaded_file.content_type.startswith(("image/", "video/", "audio/")):
+            LOGGER.error("Content type not allowed")
+            raise vol.Invalid("Only images and video are allowed")
+
+        try:
+            raise_if_invalid_filename(uploaded_file.filename)
+        except ValueError as err:
+            raise InvalidFileNameError from err
+
+        target_dir = self.async_full_path(source_dir_id, location)
+
+        def _do_move() -> None:
+            """Move file to target."""
+            if not target_dir.is_dir():
+                raise PathNotSupportedError("Target is not an existing directory")
+
+            target_path = target_dir / uploaded_file.filename
+
+            try:
+                target_path.relative_to(target_dir)
+                raise_if_invalid_path(str(target_path))
+            except ValueError as err:
+                raise PathNotSupportedError("Invalid path") from err
+
+            with target_path.open("wb") as target_fp:
+                shutil.copyfileobj(uploaded_file.file, target_fp)
+
+        await self.hass.async_add_executor_job(
+            _do_move,
+        )
+
+        return f"{target_folder.media_source_id}/{uploaded_file.filename}"
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
@@ -305,60 +351,35 @@ class UploadMediaView(http.HomeAssistantView):
             raise web.HTTPBadRequest from err
 
         try:
-            item = MediaSourceItem.from_uri(hass, data["media_content_id"], None)
+            target_folder = MediaSourceItem.from_uri(
+                hass, data["media_content_id"], None
+            )
         except ValueError as err:
             LOGGER.error("Received invalid upload data: %s", err)
             raise web.HTTPBadRequest from err
 
-        if item.domain != DOMAIN:
+        if target_folder.domain != DOMAIN:
             raise web.HTTPBadRequest
 
-        source = cast(LocalSource, hass.data[MEDIA_SOURCE_DATA][item.domain])
-
+        source = cast(LocalSource, hass.data[MEDIA_SOURCE_DATA][target_folder.domain])
         try:
-            source_dir_id, location = source.async_parse_identifier(item)
-        except Unresolvable as err:
-            LOGGER.error("Invalid local source ID")
-            raise web.HTTPBadRequest from err
-
-        uploaded_file: FileField = data["file"]
-
-        if not uploaded_file.content_type.startswith(("image/", "video/", "audio/")):
-            LOGGER.error("Content type not allowed")
-            raise vol.Invalid("Only images and video are allowed")
-
-        try:
-            raise_if_invalid_filename(uploaded_file.filename)
-        except ValueError as err:
-            LOGGER.error("Invalid filename")
-            raise web.HTTPBadRequest from err
-
-        try:
-            await hass.async_add_executor_job(
-                self._move_file,
-                source.async_full_path(source_dir_id, location),
-                uploaded_file,
+            uploaded_media_source_id = await source.async_upload_media(
+                target_folder, data["file"]
             )
-        except ValueError as err:
-            LOGGER.error("Moving upload failed: %s", err)
+        except Unresolvable as err:
+            LOGGER.error("Invalid local source ID: %s", data["media_content_id"])
             raise web.HTTPBadRequest from err
+        except InvalidFileNameError as err:
+            LOGGER.error("Invalid filename uploaded: %s", data["file"].filename)
+            raise web.HTTPBadRequest from err
+        except PathNotSupportedError as err:
+            LOGGER.error("Invalid path for upload: %s", data["media_content_id"])
+            raise web.HTTPBadRequest from err
+        except OSError as err:
+            LOGGER.error("Error uploading file: %s", err)
+            raise web.HTTPInternalServerError from err
 
-        return self.json(
-            {"media_content_id": f"{data['media_content_id']}/{uploaded_file.filename}"}
-        )
-
-    def _move_file(self, target_dir: Path, uploaded_file: FileField) -> None:
-        """Move file to target."""
-        if not target_dir.is_dir():
-            raise ValueError("Target is not an existing directory")
-
-        target_path = target_dir / uploaded_file.filename
-
-        target_path.relative_to(target_dir)
-        raise_if_invalid_path(str(target_path))
-
-        with target_path.open("wb") as target_fp:
-            shutil.copyfileobj(uploaded_file.file, target_fp)
+        return self.json({"media_content_id": uploaded_media_source_id})
 
 
 @websocket_api.websocket_command(
