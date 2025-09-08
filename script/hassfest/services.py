@@ -262,6 +262,23 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
                     f"Service {service_name} has no description {error_msg_suffix}",
                 )
 
+        if integration.core and "services" in strings:
+            section_fields = set()
+            for content in service_schema.get("fields", {}).values():
+                if "fields" in content:
+                    # This is a section
+                    section_fields.update(content["fields"].keys())
+            fields = {
+                field
+                for field in strings["services"][service_name].get("fields", {})
+                if field not in service_schema.get("fields", {})
+            }
+            for field in fields - section_fields:
+                integration.add_error(
+                    "services",
+                    f"Service {service_name} has a field {field} in the translations file that is not in the schema",
+                )
+
         # The same check is done for the description in each of the fields of the
         # service schema.
         for field_name, field_schema in service_schema.get("fields", {}).items():
