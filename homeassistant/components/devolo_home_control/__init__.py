@@ -12,10 +12,11 @@ from devolo_home_control_api.homecontrol import HomeControl
 from devolo_home_control_api.mydevolo import Mydevolo
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN, PLATFORMS
@@ -27,6 +28,16 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: DevoloHomeControlConfigEntry
 ) -> bool:
     """Set up the devolo account from a config entry."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "api_shutdown",
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="api_shutdown",
+    )
+
     mydevolo = configure_mydevolo(entry.data)
 
     gateway_ids = await hass.async_add_executor_job(
@@ -81,6 +92,14 @@ async def async_unload_entry(
             for gateway in entry.runtime_data
         )
     )
+
+    if all(
+        config_entry.state is ConfigEntryState.NOT_LOADED
+        for config_entry in hass.config_entries.async_entries(DOMAIN)
+        if config_entry.entry_id != entry.entry_id
+    ):
+        ir.async_delete_issue(hass, DOMAIN, "api_shutdown")
+
     return unload
 
 

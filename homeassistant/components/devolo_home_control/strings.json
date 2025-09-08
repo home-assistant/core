@@ -66,5 +66,11 @@
     "maintenance": {
       "message": "devolo Home Control is currently in maintenance mode."
     }
+  },
+  "issues": {
+    "api_shutdown": {
+      "title": "Discontinuation of the Home Control servers",
+      "description": "The Home Control servers will be discontinued on 31 December 2025. Central Units that are in the same network as Home Assistant will continue to work within the current feature set as long as my devolo stays online. There is no shutdown date for my devolo yet, but there is also no guarantee that it will stay online. The service [Rockethome](https://en.rockethome.de/devolo-landingpage) offers is not compatible with this integration. We suggest you manually migrate to [Z-Wave JS](https://www.home-assistant.io/integrations/zwave_js/)."
+    }
   }
 }
