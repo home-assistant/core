@@ -165,8 +165,6 @@ class ThermostatRunningState(IntEnum):
     Heat = 1  # 1 << 0 = 1
     Cool = 2  # 1 << 1 = 2
     Fan = 4  # 1 << 2 = 4
-    HeatFan = 5
-    CoolFan = 6
     HeatStage2 = 8  # 1 << 3 = 8
     CoolStage2 = 16  # 1 << 4 = 16
     FanStage2 = 32  # 1 << 5 = 32
