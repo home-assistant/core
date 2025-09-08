@@ -7,8 +7,7 @@ import pytest
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.components.ness_alarm import (
-    ATTR_CODE,
+from homeassistant.components.ness_alarm.const import (
     ATTR_OUTPUT_ID,
     CONF_DEVICE_PORT,
     CONF_ZONE_ID,
@@ -19,6 +18,7 @@ from homeassistant.components.ness_alarm import (
     SERVICE_PANIC,
 )
 from homeassistant.const import (
+    ATTR_CODE,
     ATTR_ENTITY_ID,
     CONF_HOST,
     SERVICE_ALARM_ARM_AWAY,

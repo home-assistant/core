@@ -12,9 +12,15 @@ DEFAULT_SUPPORT_HOME_ARM = True
 DOMAIN = "ness_alarm"
 
 # Configuration keys
+ATTR_OUTPUT_ID = "output_id"
+CONF_DEVICE_PORT = "port"
 CONF_INFER_ARMING_STATE = "infer_arming_state"
 CONF_SUPPORT_HOME_ARM = "support_home_arm"
 CONF_ZONES = "zones"
+CONF_ZONE_NAME = "name"
+CONF_ZONE_ID = "id"
 CONF_ID = "id"
 CONF_NAME = "name"
 CONF_TYPE = "type"
+SERVICE_PANIC = "panic"
+SERVICE_AUX = "aux"

@@ -232,7 +232,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         schema=vol.Schema(
             {
                 vol.Required("output_id"): cv.positive_int,
-                vol.Required("state"): cv.boolean,
+                vol.Required("state", default=True): cv.boolean,
             }
         ),
     )

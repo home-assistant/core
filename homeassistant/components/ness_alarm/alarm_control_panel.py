@@ -129,7 +129,10 @@ class NessAlarmPanel(AlarmControlPanelEntity):
     @property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
-        features = AlarmControlPanelEntityFeature.ARM_AWAY
+        features = (
+            AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.TRIGGER
+        )
         if self._support_home_arm:
             features |= AlarmControlPanelEntityFeature.ARM_HOME
         return features
@@ -140,11 +143,13 @@ class NessAlarmPanel(AlarmControlPanelEntity):
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        # Use configured code if no code provided
         await self._client.arm_away(code)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if self._support_home_arm:
-            # Use configured code if no code provided
             await self._client.arm_home(code)
+
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
+        """Send alarm trigger command (panic)."""
+        await self._client.panic(code)
