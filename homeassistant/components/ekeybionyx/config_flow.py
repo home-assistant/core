@@ -132,11 +132,11 @@ class OAuth2FlowHandler(
         errors: dict[str, str] | None = None
         if user_input is not None:
             errors = {}
-            for webhooks in user_input.items():
-                if webhooks[0] != CONF_URL and not re.match(
-                    VALID_NAME_PATTERN, webhooks[1]
-                ):
-                    errors.update({webhooks[0]: "invalid_name"})
+            for key, webhook_name in user_input.items():
+                if key == CONF_URL:
+                    continue
+                if not re.match(VALID_NAME_PATTERN, webhook_name):
+                    errors.update({key: "invalid_name"})
             try:
                 cv.url(user_input[CONF_URL])
             except vol.Invalid:
