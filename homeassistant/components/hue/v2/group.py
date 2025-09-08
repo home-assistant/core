@@ -400,10 +400,11 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             # ignore scenes from other groups
             return
         if isinstance(scene, HueScene):
-            if getattr(scene, "_ha_active_mode", "inactive") != "inactive":
+            active_mode = getattr(scene, "_ha_active_mode", "inactive")
+            if active_mode != "inactive":
                 self._active_scene_id = scene.id
                 self._active_scene_name = scene.metadata.name
-                self._active_scene_mode = getattr(scene, "_ha_active_mode", None)
+                self._active_scene_mode = active_mode
                 self._active_scene_last_recall = getattr(scene, "_ha_last_recall", None)
             elif self._active_scene_id == scene.id:
                 self._active_scene_id = None
