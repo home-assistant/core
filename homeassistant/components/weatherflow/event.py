@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from pyweatherflowudp.device import EVENT_RAIN_START, EVENT_STRIKE, WeatherFlowDevice
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
@@ -13,19 +15,29 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, LOGGER, format_dispatch_call
 
-RAIN_START_DESCRIPTION = EventEntityDescription(
-    key="rain_start_event",
-    translation_key="rain_start_event",
-    name="Rain start",
-    event_types=["rain_start"],
-)
 
-LIGHTNING_STRIKE_DESCRIPTION = EventEntityDescription(
-    key="lightning_strike_event",
-    translation_key="lightning_strike_event",
-    name="Lightning strike",
-    event_types=["strike"],
-)
+@dataclass(frozen=True, kw_only=True)
+class WeatherFlowEventEntityDescription(EventEntityDescription):
+    """Describes a WeatherFlow event entity."""
+
+    wf_event: str
+    event_types: list[str]
+
+
+EVENT_DESCRIPTIONS: list[WeatherFlowEventEntityDescription] = [
+    WeatherFlowEventEntityDescription(
+        key="rain_start_event",
+        translation_key="rain_start_event",
+        event_types=["rain_start"],
+        wf_event=EVENT_RAIN_START,
+    ),
+    WeatherFlowEventEntityDescription(
+        key="lightning_strike_event",
+        translation_key="lightning_strike_event",
+        event_types=["strike"],
+        wf_event=EVENT_STRIKE,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -39,10 +51,8 @@ async def async_setup_entry(
     def async_add_events(device: WeatherFlowDevice) -> None:
         LOGGER.debug("Adding events for %s", device)
         async_add_entities(
-            [
-                WeatherFlowRainStartEventEntity(device),
-                WeatherFlowLightningStrikeEventEntity(device),
-            ]
+            WeatherFlowEventEntity(device, description)
+            for description in EVENT_DESCRIPTIONS
         )
 
     config_entry.async_on_unload(
@@ -54,28 +64,22 @@ async def async_setup_entry(
     )
 
 
-class _WeatherFlowEventEntity(EventEntity):
-    """Base WeatherFlow event entity."""
+class WeatherFlowEventEntity(EventEntity):
+    """Generic WeatherFlow event entity."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
+    entity_description: WeatherFlowEventEntityDescription
 
     def __init__(
         self,
         device: WeatherFlowDevice,
-        description: EventEntityDescription,
+        description: WeatherFlowEventEntityDescription,
     ) -> None:
-        """Initialize the base WeatherFlow event entity."""
+        """Initialize the WeatherFlow event entity."""
 
         self.device = device
         self.entity_description = description
 
-        translation_key = description.translation_key
-        self._attr_translation_key = (
-            translation_key if isinstance(translation_key, str) else None
-        )
-        name = description.name
-        self._attr_name = name if isinstance(name, str) else None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.serial_number)},
             manufacturer="WeatherFlow",
@@ -84,54 +88,17 @@ class _WeatherFlowEventEntity(EventEntity):
             sw_version=device.firmware_revision,
         )
         self._attr_unique_id = f"{device.serial_number}_{description.key}"
-        self._attr_entity_id = (
-            f"event.weatherflow_{device.serial_number}_{description.key}"
-        )
-
-
-class WeatherFlowRainStartEventEntity(_WeatherFlowEventEntity):
-    """Event entity that fires when rain starts."""
-
-    entity_description = RAIN_START_DESCRIPTION
-    _attr_icon = "mdi:weather-rainy"
-
-    def __init__(self, device: WeatherFlowDevice) -> None:
-        """Initialize a rain start event entity."""
-
-        super().__init__(device, RAIN_START_DESCRIPTION)
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to rain start events."""
-        self.async_on_remove(self.device.on(EVENT_RAIN_START, self._handle_event))
+        """Subscribe to the configured WeatherFlow device event."""
+        self.async_on_remove(
+            self.device.on(self.entity_description.wf_event, self._handle_event)
+        )
 
     @callback
     def _handle_event(self, event) -> None:
         self._trigger_event(
-            "rain_start",
-            {},
-        )
-        self.async_write_ha_state()
-
-
-class WeatherFlowLightningStrikeEventEntity(_WeatherFlowEventEntity):
-    """Event entity that fires when lightning strikes."""
-
-    entity_description = LIGHTNING_STRIKE_DESCRIPTION
-    _attr_icon = "mdi:weather-lightning"
-
-    def __init__(self, device: WeatherFlowDevice) -> None:
-        """Initialize a lightning strike event entity."""
-
-        super().__init__(device, LIGHTNING_STRIKE_DESCRIPTION)
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to lightning strike events."""
-        self.async_on_remove(self.device.on(EVENT_STRIKE, self._handle_event))
-
-    @callback
-    def _handle_event(self, event) -> None:
-        self._trigger_event(
-            "strike",
+            self.entity_description.event_types[0],
             {},
         )
         self.async_write_ha_state()
