@@ -1285,6 +1285,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/refoss/ @ashionky
 /tests/components/refoss/ @ashionky
 /homeassistant/components/refoss_rpc/ @ashionky
+/tests/components/refoss_rpc/ @ashionky
 /homeassistant/components/rehlko/ @bdraco @peterager
 /tests/components/rehlko/ @bdraco @peterager
 /homeassistant/components/remote/ @home-assistant/core
