@@ -8,10 +8,7 @@ from typing import Any
 from satel_integra.satel_integra import AsyncSatel
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA,
-    BinarySensorDeviceClass,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -23,7 +20,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_ARM_HOME_MODE,
@@ -76,7 +73,14 @@ ZONE_AND_OUTPUT_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(
             CONF_ZONE_TYPE, default=BinarySensorDeviceClass.MOTION
-        ): DEVICE_CLASSES_SCHEMA,
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[cls.value for cls in BinarySensorDeviceClass],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key="binary_sensor_device_class",
+                sort=True,
+            ),
+        ),
     }
 )
 
