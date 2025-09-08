@@ -1330,9 +1330,6 @@ class IntentResponseType(Enum):
     ACTION_DONE = "action_done"
     """Intent caused an action to occur"""
 
-    PARTIAL_ACTION_DONE = "partial_action_done"
-    """Intent caused an action, but it could only be partially done"""
-
     QUERY_ANSWER = "query_answer"
     """Response is an answer to a query"""
 
