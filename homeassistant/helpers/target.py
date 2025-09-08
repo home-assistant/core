@@ -268,11 +268,13 @@ class TargetStateChangeTracker:
         hass: HomeAssistant,
         selector_data: TargetSelectorData,
         action: Callable[[TargetStateChangedData], Any],
+        entity_filter: Callable[[set[str]], set[str]],
     ) -> None:
         """Initialize the state change tracker."""
         self._hass = hass
         self._selector_data = selector_data
         self._action = action
+        self._entity_filter = entity_filter
 
         self._state_change_unsub: CALLBACK_TYPE | None = None
         self._registry_unsubs: list[CALLBACK_TYPE] = []
@@ -289,7 +291,9 @@ class TargetStateChangeTracker:
             self._hass, self._selector_data, expand_group=False
         )
 
-        tracked_entities = selected.referenced.union(selected.indirectly_referenced)
+        tracked_entities = self._entity_filter(
+            selected.referenced.union(selected.indirectly_referenced)
+        )
 
         @callback
         def state_change_listener(event: Event[EventStateChangedData]) -> None:
@@ -348,6 +352,7 @@ def async_track_target_selector_state_change_event(
     hass: HomeAssistant,
     target_selector_config: ConfigType,
     action: Callable[[TargetStateChangedData], Any],
+    entity_filter: Callable[[set[str]], set[str]] = lambda x: x,
 ) -> CALLBACK_TYPE:
     """Track state changes for entities referenced directly or indirectly in a target selector."""
     selector_data = TargetSelectorData(target_selector_config)
@@ -355,5 +360,5 @@ def async_track_target_selector_state_change_event(
         raise HomeAssistantError(
             f"Target selector {target_selector_config} does not have any selectors defined"
         )
-    tracker = TargetStateChangeTracker(hass, selector_data, action)
+    tracker = TargetStateChangeTracker(hass, selector_data, action, entity_filter)
     return tracker.async_setup()

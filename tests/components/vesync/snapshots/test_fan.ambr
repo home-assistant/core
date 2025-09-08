@@ -40,8 +40,8 @@
       'area_id': None,
       'capabilities': dict({
         'preset_modes': list([
-          'auto',
-          'sleep',
+          <PurifierModes.AUTO: 'auto'>,
+          <PurifierModes.SLEEP: 'sleep'>,
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -78,16 +78,18 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'active_time': 0,
+      'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 131s',
       'mode': 'sleep',
+      'night_light': None,
       'percentage': None,
       'percentage_step': 33.333333333333336,
       'preset_mode': 'sleep',
       'preset_modes': list([
-        'auto',
-        'sleep',
+        <PurifierModes.AUTO: 'auto'>,
+        <PurifierModes.SLEEP: 'sleep'>,
       ]),
-      'screen_status': 'on',
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -139,7 +141,7 @@
       'area_id': None,
       'capabilities': dict({
         'preset_modes': list([
-          'sleep',
+          <PurifierModes.SLEEP: 'sleep'>,
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -175,17 +177,18 @@
 # name: test_fan_state[Air Purifier 200s][fan.air_purifier_200s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': None,
       'child_lock': False,
+      'display_status': <DeviceStatus.ON: 'on'>,
       'friendly_name': 'Air Purifier 200s',
       'mode': 'manual',
-      'night_light': 'off',
+      'night_light': <DeviceStatus.OFF: 'off'>,
       'percentage': 33,
       'percentage_step': 33.333333333333336,
       'preset_mode': None,
       'preset_modes': list([
-        'sleep',
+        <PurifierModes.SLEEP: 'sleep'>,
       ]),
-      'screen_status': True,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -237,8 +240,8 @@
       'area_id': None,
       'capabilities': dict({
         'preset_modes': list([
-          'auto',
-          'sleep',
+          <PurifierModes.AUTO: 'auto'>,
+          <PurifierModes.SLEEP: 'sleep'>,
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -274,18 +277,19 @@
 # name: test_fan_state[Air Purifier 400s][fan.air_purifier_400s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': None,
       'child_lock': False,
+      'display_status': <DeviceStatus.ON: 'on'>,
       'friendly_name': 'Air Purifier 400s',
       'mode': 'manual',
-      'night_light': 'off',
+      'night_light': <DeviceStatus.OFF: 'off'>,
       'percentage': 25,
       'percentage_step': 25.0,
       'preset_mode': None,
       'preset_modes': list([
-        'auto',
-        'sleep',
+        <PurifierModes.AUTO: 'auto'>,
+        <PurifierModes.SLEEP: 'sleep'>,
       ]),
-      'screen_status': True,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -337,8 +341,8 @@
       'area_id': None,
       'capabilities': dict({
         'preset_modes': list([
-          'auto',
-          'sleep',
+          <PurifierModes.AUTO: 'auto'>,
+          <PurifierModes.SLEEP: 'sleep'>,
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -374,18 +378,19 @@
 # name: test_fan_state[Air Purifier 600s][fan.air_purifier_600s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': None,
       'child_lock': False,
+      'display_status': <DeviceStatus.ON: 'on'>,
       'friendly_name': 'Air Purifier 600s',
       'mode': 'manual',
-      'night_light': 'off',
+      'night_light': <DeviceStatus.OFF: 'off'>,
       'percentage': 25,
       'percentage_step': 25.0,
       'preset_mode': None,
       'preset_modes': list([
-        'auto',
-        'sleep',
+        <PurifierModes.AUTO: 'auto'>,
+        <PurifierModes.SLEEP: 'sleep'>,
       ]),
-      'screen_status': True,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -622,10 +627,10 @@
       'area_id': None,
       'capabilities': dict({
         'preset_modes': list([
-          'advancedSleep',
-          'auto',
-          'normal',
-          'turbo',
+          <FanModes.SLEEP: 'advancedSleep'>,
+          <FanModes.AUTO: 'auto'>,
+          <FanModes.NORMAL: 'normal'>,
+          <FanModes.TURBO: 'turbo'>,
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -661,20 +666,19 @@
 # name: test_fan_state[SmartTowerFan][fan.smarttowerfan]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'child_lock': False,
+      'active_time': None,
+      'display_status': <DeviceStatus.OFF: 'off'>,
       'friendly_name': 'SmartTowerFan',
       'mode': 'normal',
-      'night_light': 'off',
       'percentage': None,
-      'percentage_step': 7.6923076923076925,
+      'percentage_step': 8.333333333333334,
       'preset_mode': 'normal',
       'preset_modes': list([
-        'advancedSleep',
-        'auto',
-        'normal',
-        'turbo',
+        <FanModes.SLEEP: 'advancedSleep'>,
+        <FanModes.AUTO: 'auto'>,
+        <FanModes.NORMAL: 'normal'>,
+        <FanModes.TURBO: 'turbo'>,
       ]),
-      'screen_status': False,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
