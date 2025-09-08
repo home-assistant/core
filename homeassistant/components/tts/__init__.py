@@ -12,6 +12,7 @@ import io
 import logging
 import mimetypes
 import os
+from pathlib import Path
 import re
 import secrets
 from time import monotonic
@@ -314,28 +315,28 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
 
 async def _async_convert_audio(
     hass: HomeAssistant,
-    from_extension: str,
-    audio_bytes_gen: AsyncGenerator[bytes],
-    to_extension: str,
+    from_extension: str | None,
+    audio_input: AsyncGenerator[bytes] | str | Path,
+    to_extension: str | None,
     to_sample_rate: int | None = None,
     to_sample_channels: int | None = None,
     to_sample_bytes: int | None = None,
 ) -> AsyncGenerator[bytes]:
     """Convert audio to a preferred format using ffmpeg."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
+    is_input_gen = not isinstance(audio_input, (str, Path))
 
-    command = [
-        ffmpeg_manager.binary,
-        "-hide_banner",
-        "-loglevel",
-        "error",
-        "-f",
-        from_extension,
-        "-i",
-        "pipe:",
-        "-f",
-        to_extension,
-    ]
+    command = [ffmpeg_manager.binary, "-hide_banner", "-loglevel", "error"]
+    if from_extension:
+        command.extend(["-f", from_extension])
+
+    if not is_input_gen:
+        # URL or path
+        command.extend(["-i", str(audio_input)])
+
+    if to_extension:
+        command.extend(["-f", to_extension])
+
     if to_sample_rate is not None:
         command.extend(["-ar", str(to_sample_rate)])
     if to_sample_channels is not None:
@@ -350,24 +351,31 @@ async def _async_convert_audio(
 
     process = await asyncio.create_subprocess_exec(
         *command,
-        stdin=asyncio.subprocess.PIPE,
+        stdin=asyncio.subprocess.PIPE if is_input_gen else None,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
 
-    async def write_input() -> None:
-        assert process.stdin
-        try:
-            async for chunk in audio_bytes_gen:
-                process.stdin.write(chunk)
-                await process.stdin.drain()
-        finally:
-            if process.stdin:
-                process.stdin.close()
+    writer_task: asyncio.Task | None = None
 
-    writer_task = hass.async_create_background_task(
-        write_input(), "tts_ffmpeg_conversion"
-    )
+    if is_input_gen:
+        # Input is a generator, so we must manually feed in chunks
+        assert isinstance(audio_input, AsyncGenerator)
+        assert process.stdin
+
+        async def write_input() -> None:
+            assert process.stdin
+            try:
+                async for chunk in audio_input:
+                    process.stdin.write(chunk)
+                    await process.stdin.drain()
+            finally:
+                if process.stdin:
+                    process.stdin.close()
+
+        writer_task = hass.async_create_background_task(
+            write_input(), "tts_ffmpeg_conversion"
+        )
 
     assert process.stdout
     try:
@@ -377,8 +385,10 @@ async def _async_convert_audio(
                 break
             yield chunk
     finally:
-        # Ensure we wait for the input writer to complete.
-        await writer_task
+        if writer_task is not None:
+            # Ensure we wait for the input writer to complete.
+            await writer_task
+
         # Wait for process termination and check for errors.
         retcode = await process.wait()
         if retcode != 0:
@@ -473,6 +483,7 @@ class ResultStream:
     """Class that will stream the result when available."""
 
     last_used: float = field(default_factory=monotonic, init=False)
+    hass: HomeAssistant
 
     # Streaming/conversion properties
     token: str
@@ -489,7 +500,6 @@ class ResultStream:
     _manager: SpeechManager
 
     # Override
-    hass: HomeAssistant
     _override_media_id: str | None = None
 
     @cached_property
@@ -588,39 +598,17 @@ class ResultStream:
 
             return
 
-        # Use ffmpeg to convert and stream
-        ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
-        command = [
-            ffmpeg_manager.binary,
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-i",
-            media.url,
-        ]
-
-        if preferred_extension:
-            command.extend(["-f", preferred_extension])
-        if sample_rate is not None:
-            command.extend(["-ar", str(sample_rate)])
-        if sample_channels is not None:
-            command.extend(["-ac", str(sample_channels)])
-        if preferred_extension == "mp3":
-            # Max quality for MP3.
-            command.extend(["-q:a", "0"])
-        if sample_bytes == 2:
-            # 16-bit samples.
-            command.extend(["-sample_fmt", "s16"])
-        command.append("pipe:1")  # Send output to stdout.
-
-        process = await asyncio.create_subprocess_exec(
-            *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL
+        # Use ffmpeg to convert audio to preferred format
+        converted_audio = _async_convert_audio(
+            self.hass,
+            from_extension=None,
+            audio_input=media.path or media.url,
+            to_extension=preferred_extension,
+            to_sample_rate=sample_rate,
+            to_sample_channels=sample_channels,
+            to_sample_bytes=sample_bytes,
         )
-        assert process.stdout
-        while True:
-            chunk = await process.stdout.read(FFMPEG_CHUNK_SIZE)
-            if not chunk:
-                break
+        async for chunk in converted_audio:
             yield chunk
 
 
