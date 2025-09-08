@@ -96,14 +96,15 @@ async def async_setup_entry(
         scene = api.scenes.get(scene_id)
         if scene is None:
             return
-        # Log presence of status fields for now (debug only)
         status = data.get("status")
         if status:
-            active_mode = status.get("active")
-            last_recall = status.get("last_recall")
             # Attach custom attributes on the underlying scene resource so we can
             # later expose them on grouped lights or elsewhere. Attribute names are
             # prefixed with _ha_ to avoid clashing with official model fields.
+            active_mode = status.get("active")
+            last_recall = status.get("last_recall")
+
+            # Events only contain fields that changed, so we must check for None
             if active_mode is not None:
                 setattr(scene, "_ha_active_mode", active_mode)
             if last_recall is not None:
