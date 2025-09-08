@@ -17,6 +17,8 @@ from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
+from .psi_parser import get_all_pressure_info
+
 if TYPE_CHECKING:
     from . import SystemMonitorConfigEntry
 
@@ -37,6 +39,7 @@ class SensorData:
     boot_time: datetime
     processes: list[Process]
     temperatures: dict[str, list[shwtemp]]
+    pressure: dict[str, Any]
 
     def as_dict(self) -> dict[str, Any]:
         """Return as dict."""
@@ -63,6 +66,7 @@ class SensorData:
             "boot_time": str(self.boot_time),
             "processes": str(self.processes),
             "temperatures": temperatures,
+            "pressure": self.pressure,
         }
 
 
@@ -126,6 +130,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             ("boot", ""): set(),
             ("processes", ""): set(),
             ("temperatures", ""): set(),
+            ("pressure", ""): set(),
         }
 
     async def _async_update_data(self) -> SensorData:
@@ -156,6 +161,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             boot_time=_data["boot_time"],
             processes=_data["processes"],
             temperatures=_data["temperatures"],
+            pressure=_data["pressure"],
         )
 
     def update_data(self) -> dict[str, Any]:
@@ -217,6 +223,11 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             except AttributeError:
                 _LOGGER.debug("OS does not provide temperature sensors")
 
+        pressure: dict[str, Any] = {}
+        if self.update_subscribers[("pressure", "")] or self._initial_update:
+            pressure = get_all_pressure_info()
+            _LOGGER.debug("pressure: %s", pressure)
+
         return {
             "disks": disks,
             "swap": swap,
@@ -226,4 +237,5 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             "boot_time": self.boot_time,
             "processes": processes,
             "temperatures": temps,
+            "pressure": pressure,
         }

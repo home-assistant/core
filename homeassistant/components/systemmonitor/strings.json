@@ -100,6 +100,18 @@
       },
       "swap_use_percent": {
         "name": "Swap usage"
+      },
+      "memory_pressure_some_avg10": {
+        "name": "Memory Pressure Some 10s Average"
+      },
+      "memory_pressure_some_avg60": {
+        "name": "Memory Pressure Some 60s Average"
+      },
+      "memory_pressure_some_avg300": {
+        "name": "Memory Pressure Some 300s Average"
+      },
+      "memory_pressure_some_total": {
+        "name": "Memory Pressure Some Total"
       }
     }
   }
