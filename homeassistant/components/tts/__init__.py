@@ -330,7 +330,10 @@ async def _async_convert_audio(
     if from_extension:
         command.extend(["-f", from_extension])
 
-    if not is_input_gen:
+    if is_input_gen:
+        # Async generator
+        command.extend(["-i", "pipe:0"])
+    else:
         # URL or path
         command.extend(["-i", str(audio_input)])
 
