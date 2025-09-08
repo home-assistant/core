@@ -584,7 +584,7 @@ class OpenAIBaseLLMEntity(Entity):
                         DOMAIN,
                         "organization_verification_required",
                         is_fixable=False,
-                        is_persistent=True,
+                        is_persistent=False,
                         learn_more_url="https://help.openai.com/en/articles/10910291-api-organization-verification",
                         severity=ir.IssueSeverity.WARNING,
                         translation_key="organization_verification_required",
