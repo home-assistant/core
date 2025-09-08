@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import (
 
 from .bridge import HueBridge, HueConfigEntry
 from .const import DOMAIN
-from .v2.entity import HueBaseEntity
+from .v2.entity import HueBaseEntity, ResourceTypes
 from .v2.helpers import normalize_hue_brightness, normalize_hue_transition
 
 SERVICE_ACTIVATE_SCENE = "activate_scene"
@@ -80,6 +80,37 @@ async def async_setup_entry(
             ),
         },
         "_async_activate",
+    )
+
+    @callback
+    def handle_scene_event(event_type: EventType, data: dict[str, Any]) -> None:
+        """Handle raw scene event from the Hue event stream."""
+        if not isinstance(data, dict):
+            return
+        if data.get("type") != "scene":
+            return
+        scene_id = data.get("id")
+        if not scene_id:
+            return
+        # Ensure the scene resource is known (may be None on very early events)
+        scene = api.scenes.get(scene_id)
+        if scene is None:
+            return
+        # Log presence of status fields for now (debug only)
+        status = data.get("status")
+        if status:
+            active_mode = status.get("active")
+            last_recall = status.get("last_recall")
+            # Attach custom attributes on the underlying scene resource so we can
+            # later expose them on grouped lights or elsewhere. Attribute names are
+            # prefixed with _ha_ to avoid clashing with official model fields.
+            if active_mode is not None:
+                setattr(scene, "_ha_active_mode", active_mode)
+            if last_recall is not None:
+                setattr(scene, "_ha_last_recall", last_recall)
+
+    config_entry.async_on_unload(
+        api.events.subscribe(handle_scene_event, resource_filter=ResourceTypes.SCENE)
     )
 
 
