@@ -1086,7 +1086,7 @@ gotailwind==0.3.0
 govee-ble==0.44.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==2.1.0
+govee-local-api==2.2.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
