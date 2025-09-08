@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import partial
 import mimetypes
 from pathlib import Path
@@ -13,6 +13,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import camera, conversation, media_source
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.chat_session import ChatSession, async_get_chat_session
@@ -239,7 +240,11 @@ async def async_generate_image(
     if IMAGE_EXPIRY_TIME > 0:
         async_call_later(hass, IMAGE_EXPIRY_TIME, partial(_purge_image, filename))
 
-    service_result["url"] = get_url(hass) + f"/api/{DOMAIN}/images/{filename}"
+    service_result["url"] = get_url(hass) + async_sign_path(
+        hass,
+        f"/api/{DOMAIN}/images/{filename}",
+        timedelta(seconds=IMAGE_EXPIRY_TIME or 1800),
+    )
     service_result["media_source_id"] = f"media-source://{DOMAIN}/images/{filename}"
 
     return service_result
