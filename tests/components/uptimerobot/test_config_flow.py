@@ -371,3 +371,26 @@ async def test_reconfigure_failed(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "invalid_api_key"
+
+    new_key = "u0242ac120003-new"
+
+    with (
+        patch(
+            "pyuptimerobot.UptimeRobot.async_get_account_details",
+            return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ACCOUNT),
+        ),
+        patch(
+            "homeassistant.components.uptimerobot.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={CONF_API_KEY: new_key},
+        )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+
+    # changed entry
+    assert config_entry.data[CONF_API_KEY] == new_key
