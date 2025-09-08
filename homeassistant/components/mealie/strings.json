@@ -109,6 +109,9 @@
     "recipe_not_found": {
       "message": "Recipe with ID or slug `{recipe_id}` not found."
     },
+    "no_recipes_found": {
+      "message": "No recipes found matching your search."
+    },
     "could_not_import_recipe": {
       "message": "Mealie could not import the recipe from the URL."
     },
@@ -173,6 +176,24 @@
         "recipe_id": {
           "name": "Recipe ID or slug",
           "description": "The recipe ID or the slug of the recipe to get."
+        }
+      }
+    },
+    "get_recipes": {
+      "name": "Get recipes",
+      "description": "Searches for recipes with any matching properties in Mealie",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "search_terms": {
+          "name": "Search terms",
+          "description": "Terms to search for in recipe properties."
+        },
+        "result_limit": {
+          "name": "Result limit",
+          "description": "Maximum number of recipes to return (default: 10)."
         }
       }
     },

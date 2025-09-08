@@ -37,7 +37,10 @@ class GoogleGenerativeAITaskEntity(
 ):
     """Google Generative AI AI Task entity."""
 
-    _attr_supported_features = ai_task.AITaskEntityFeature.GENERATE_DATA
+    _attr_supported_features = (
+        ai_task.AITaskEntityFeature.GENERATE_DATA
+        | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
+    )
 
     async def _async_generate_data(
         self,
