@@ -1847,7 +1847,6 @@ async def test_repair_issue_deleted_when_scanner_not_degraded(
     ):
         manager.on_scanner_start(scanner)
 
-    # Check that repair issue was deleted
     assert registry.async_get_issue(bluetooth.DOMAIN, issue_id) is None
 
 
@@ -1861,7 +1860,6 @@ async def test_no_repair_issue_when_not_docker(
 
     manager = _get_manager()
 
-    # Create a real HaScanner instance
     scanner = HaScanner(
         mode=BluetoothScanningMode.ACTIVE,
         adapter="hci0",
@@ -1869,7 +1867,6 @@ async def test_no_repair_issue_when_not_docker(
     )
     scanner.async_setup()
 
-    # Mock that we're NOT in Docker but operating in degraded mode
     with (
         patch(
             "homeassistant.components.bluetooth.manager.is_docker_env",
@@ -1879,7 +1876,6 @@ async def test_no_repair_issue_when_not_docker(
     ):
         manager.on_scanner_start(scanner)
 
-        # Check that no repair issue was created
         issue_id = f"bluetooth_adapter_missing_permissions_{scanner.source}"
         registry = ir.async_get(hass)
         assert registry.async_get_issue(bluetooth.DOMAIN, issue_id) is None
