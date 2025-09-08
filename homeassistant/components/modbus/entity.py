@@ -209,7 +209,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
     def __process_raw_value(
         self,
         entry: float | bytes,
-        scale: float = 1,
+        scale: float = 1.0,
         offset: float = 0,
     ) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
@@ -232,7 +232,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         return f"{float(val):.{self._precision}f}"
 
     def unpack_structure_result(
-        self, registers: list[int], scale: float = 1, offset: float = 0
+        self, registers: list[int], scale: float = 1.0, offset: float = 0
     ) -> str | None:
         """Convert registers to proper result."""
 
