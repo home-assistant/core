@@ -76,11 +76,11 @@ async def async_setup_entry(
 class ZoneEntity(AlarmControlPanelEntity, BaseCoordinatorEntity):
     """Entity representing NASweb zone."""
 
-    def __init__(
-
     _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_translation_key = ALARM_CONTROL_PANEL_TRANSLATION_KEY
+
+    def __init__(
         self, coordinator: BaseDataUpdateCoordinatorProtocol, nasweb_zone: NASwebZone
     ) -> None:
         """Initialize zone entity."""
