@@ -179,8 +179,7 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
             self._floors_index[entry.floor_id][key] = True
         for label in entry.labels:
             self._labels_index[label][key] = True
-        for alias in entry.aliases:
-            normalized_alias = normalize_name(alias)
+        for normalized_alias in {normalize_name(alias) for alias in entry.aliases}:
             self._aliases_index[normalized_alias][key] = True
 
     def _unindex_entry(
@@ -190,8 +189,7 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         super()._unindex_entry(key, replacement_entry)
         entry = self.data[key]
         if aliases := entry.aliases:
-            for alias in aliases:
-                normalized_alias = normalize_name(alias)
+            for normalized_alias in {normalize_name(alias) for alias in aliases}:
                 self._unindex_entry_value(key, normalized_alias, self._aliases_index)
         if labels := entry.labels:
             for label in labels:
@@ -475,8 +473,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
     @callback
     def _async_setup_cleanup(self) -> None:
         """Set up the area registry cleanup."""
-        # pylint: disable-next=import-outside-toplevel
-        from . import (  # Circular dependencies
+        from . import (  # Circular dependencies  # noqa: PLC0415
             floor_registry as fr,
             label_registry as lr,
         )
@@ -543,8 +540,7 @@ def async_entries_for_label(registry: AreaRegistry, label_id: str) -> list[AreaE
 
 def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Validate temperature entity."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.components.sensor import SensorDeviceClass
+    from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
 
     if not (state := hass.states.get(entity_id)):
         raise ValueError(f"Entity {entity_id} does not exist")
@@ -558,8 +554,7 @@ def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> None:
 
 def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Validate humidity entity."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.components.sensor import SensorDeviceClass
+    from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
 
     if not (state := hass.states.get(entity_id)):
         raise ValueError(f"Entity {entity_id} does not exist")

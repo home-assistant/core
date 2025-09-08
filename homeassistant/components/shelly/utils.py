@@ -451,7 +451,7 @@ def get_rpc_entity_name(
 
 def get_device_entry_gen(entry: ConfigEntry) -> int:
     """Return the device generation from config entry."""
-    return entry.data.get(CONF_GEN, 1)
+    return entry.data.get(CONF_GEN, 1)  # type: ignore[no-any-return]
 
 
 def get_rpc_key_instances(
@@ -749,8 +749,12 @@ async def get_rpc_scripts_event_types(
 def get_rpc_device_info(
     device: RpcDevice,
     mac: str,
+    configuration_url: str,
+    model: str,
+    model_name: str | None = None,
     key: str | None = None,
     emeter_phase: str | None = None,
+    suggested_area: str | None = None,
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     if key is None:
@@ -770,7 +774,11 @@ def get_rpc_device_info(
             identifiers={(DOMAIN, f"{mac}-{key}-{emeter_phase.lower()}")},
             name=get_rpc_sub_device_name(device, key, emeter_phase),
             manufacturer="Shelly",
+            model=model_name,
+            model_id=model,
+            suggested_area=suggested_area,
             via_device=(DOMAIN, mac),
+            configuration_url=configuration_url,
         )
 
     if (
@@ -784,7 +792,11 @@ def get_rpc_device_info(
         identifiers={(DOMAIN, f"{mac}-{key}")},
         name=get_rpc_sub_device_name(device, key),
         manufacturer="Shelly",
+        model=model_name,
+        model_id=model,
+        suggested_area=suggested_area,
         via_device=(DOMAIN, mac),
+        configuration_url=configuration_url,
     )
 
 
@@ -805,7 +817,13 @@ def get_blu_trv_device_info(
 
 
 def get_block_device_info(
-    device: BlockDevice, mac: str, block: Block | None = None
+    device: BlockDevice,
+    mac: str,
+    configuration_url: str,
+    model: str,
+    model_name: str | None = None,
+    block: Block | None = None,
+    suggested_area: str | None = None,
 ) -> DeviceInfo:
     """Return device info for Block device."""
     if (
@@ -820,7 +838,11 @@ def get_block_device_info(
         identifiers={(DOMAIN, f"{mac}-{block.description}")},
         name=get_block_sub_device_name(device, block),
         manufacturer="Shelly",
+        model=model_name,
+        model_id=model,
+        suggested_area=suggested_area,
         via_device=(DOMAIN, mac),
+        configuration_url=configuration_url,
     )
 
 

@@ -24,7 +24,7 @@ class ReolinkEntityDescription(EntityDescription):
     """A class that describes entities for Reolink."""
 
     cmd_key: str | None = None
-    cmd_id: int | None = None
+    cmd_id: int | list[int] | None = None
     always_available: bool = False
 
 
@@ -75,7 +75,10 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         )
 
         http_s = "https" if self._host.api.use_https else "http"
-        self._conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
+        if self._host.api.baichuan_only:
+            self._conf_url = None
+        else:
+            self._conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
         self._dev_id = self._host.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._dev_id)},
@@ -117,12 +120,15 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         """Entity created."""
         await super().async_added_to_hass()
         cmd_key = self.entity_description.cmd_key
-        cmd_id = self.entity_description.cmd_id
+        cmd_ids = self.entity_description.cmd_id
         callback_id = f"{self.platform.domain}_{self._attr_unique_id}"
         if cmd_key is not None:
             self._host.async_register_update_cmd(cmd_key)
-        if cmd_id is not None:
-            self.register_callback(callback_id, cmd_id)
+        if isinstance(cmd_ids, int):
+            self.register_callback(callback_id, cmd_ids)
+        elif isinstance(cmd_ids, list):
+            for cmd_id in cmd_ids:
+                self.register_callback(callback_id, cmd_id)
         # Privacy mode
         self.register_callback(f"{callback_id}_623", 623)
 
@@ -161,7 +167,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         super().__init__(reolink_data, coordinator)
 
         self._channel = channel
-        if self._host.api.supported(channel, "UID"):
+        if self._host.api.is_nvr and self._host.api.supported(channel, "UID"):
             self._attr_unique_id = f"{self._host.unique_id}_{self._host.api.camera_uid(channel)}_{self.entity_description.key}"
         else:
             self._attr_unique_id = (
@@ -184,6 +190,11 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             if mac := self._host.api.baichuan.mac_address(dev_ch):
                 connections.add((CONNECTION_NETWORK_MAC, mac))
 
+            if self._conf_url is None:
+                conf_url = None
+            else:
+                conf_url = f"{self._conf_url}/?ch={dev_ch}"
+
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._dev_id)},
                 connections=connections,
@@ -195,7 +206,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 hw_version=self._host.api.camera_hardware_version(dev_ch),
                 sw_version=self._host.api.camera_sw_version(dev_ch),
                 serial_number=self._host.api.camera_uid(dev_ch),
-                configuration_url=f"{self._conf_url}/?ch={dev_ch}",
+                configuration_url=conf_url,
             )
 
     @property
@@ -242,6 +253,7 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
         coordinator: DataUpdateCoordinator[None] | None = None,
     ) -> None:
         """Initialize ReolinkChimeCoordinatorEntity for a chime."""
+        assert chime.channel is not None
         super().__init__(reolink_data, chime.channel, coordinator)
 
         self._chime = chime

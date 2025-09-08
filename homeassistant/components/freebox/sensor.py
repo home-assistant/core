@@ -68,7 +68,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensors."""
     router = entry.runtime_data
-    entities: list[SensorEntity] = []
 
     _LOGGER.debug(
         "%s - %s - %s temperature sensors",
@@ -76,7 +75,7 @@ async def async_setup_entry(
         router.mac,
         len(router.sensors_temperature),
     )
-    entities = [
+    entities: list[SensorEntity] = [
         FreeboxSensor(
             router,
             SensorEntityDescription(
@@ -105,14 +104,16 @@ async def async_setup_entry(
         for description in DISK_PARTITION_SENSORS
     )
 
-    for node in router.home_devices.values():
-        for endpoint in node["show_endpoints"]:
-            if (
-                endpoint["name"] == "battery"
-                and endpoint["ep_type"] == "signal"
-                and endpoint.get("value") is not None
-            ):
-                entities.append(FreeboxBatterySensor(hass, router, node, endpoint))
+    entities.extend(
+        FreeboxBatterySensor(router, node, endpoint)
+        for node in router.home_devices.values()
+        for endpoint in node["show_endpoints"]
+        if (
+            endpoint["name"] == "battery"
+            and endpoint["ep_type"] == "signal"
+            and endpoint.get("value") is not None
+        )
+    )
 
     if entities:
         async_add_entities(entities, True)

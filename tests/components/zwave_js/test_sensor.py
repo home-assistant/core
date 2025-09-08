@@ -1,6 +1,7 @@
 """Test the Z-Wave JS sensor platform."""
 
 import copy
+from datetime import timedelta
 
 import pytest
 from zwave_js_server.const.command_class.meter import MeterType
@@ -26,6 +27,7 @@ from homeassistant.components.zwave_js.sensor import (
     CONTROLLER_STATISTICS_KEY_MAP,
     NODE_STATISTICS_KEY_MAP,
 )
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -35,6 +37,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UV_INDEX,
     EntityCategory,
+    Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -45,6 +48,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
@@ -57,7 +61,94 @@ from .common import (
     VOLTAGE_SENSOR,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.SENSOR]
+
+
+async def test_battery_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ring_keypad: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test numeric battery sensors."""
+    entity_id = "sensor.keypad_v2_battery_level"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "100.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+    disabled_sensor_battery_entities = (
+        "sensor.keypad_v2_chargingstatus",
+        "sensor.keypad_v2_maximum_capacity",
+        "sensor.keypad_v2_rechargeorreplace",
+        "sensor.keypad_v2_temperature",
+    )
+
+    for entity_id in disabled_sensor_battery_entities:
+        state = hass.states.get(entity_id)
+        assert state is None  # disabled by default
+
+        entity_entry = entity_registry.async_get(entity_id)
+
+        assert entity_entry
+        assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+        assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+        entity_registry.async_update_entity(entity_id, disabled_by=None)
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "sensor.keypad_v2_chargingstatus"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Maintaining"
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert ATTR_STATE_CLASS not in state.attributes
+
+    entity_id = "sensor.keypad_v2_maximum_capacity"
+    state = hass.states.get(entity_id)
+    assert state
+    assert (
+        state.state == "0"
+    )  # This should be None/unknown but will be fixed in a future PR.
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    entity_id = "sensor.keypad_v2_rechargeorreplace"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "No"
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert ATTR_STATE_CLASS not in state.attributes
+
+    entity_id = "sensor.keypad_v2_temperature"
+    state = hass.states.get(entity_id)
+    assert state
+    assert (
+        state.state == "0"
+    )  # This should be None/unknown but will be fixed in a future PR.
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
 async def test_numeric_sensor(
@@ -156,7 +247,7 @@ async def test_invalid_multilevel_sensor_scale(
             "source": "controller",
             "event": "node added",
             "node": node_state,
-            "result": "",
+            "result": {},
         },
     )
     client.driver.controller.receive_event(event)
@@ -519,7 +610,7 @@ async def test_invalid_meter_scale(
             "source": "controller",
             "event": "node added",
             "node": node_state,
-            "result": "",
+            "result": {},
         },
     )
     client.driver.controller.receive_event(event)
@@ -564,6 +655,17 @@ async def test_special_meters(
             "value": 659.813,
         },
     )
+    node_data["endpoints"].append(
+        {
+            "nodeId": 102,
+            "index": 10,
+            "installerIcon": 1792,
+            "userIcon": 1792,
+            "commandClasses": [
+                {"id": 50, "name": "Meter", "version": 3, "isSecure": False}
+            ],
+        }
+    )
     # Add an ElectricScale.KILOVOLT_AMPERE_REACTIVE value to the state so we can test that
     # it is handled differently (no device class)
     node_data["values"].append(
@@ -586,6 +688,17 @@ async def test_special_meters(
             },
             "value": 659.813,
         },
+    )
+    node_data["endpoints"].append(
+        {
+            "nodeId": 102,
+            "index": 11,
+            "installerIcon": 1792,
+            "userIcon": 1792,
+            "commandClasses": [
+                {"id": 50, "name": "Meter", "version": 3, "isSecure": False}
+            ],
+        }
     )
     node = Node(client, node_data)
     event = {"node": node}
@@ -683,12 +796,14 @@ CONTROLLER_STATISTICS_SUFFIXES = {
 }
 # controller statistics with initial state of unknown
 CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN = {
-    "current_background_rssi_channel_0": -1,
-    "average_background_rssi_channel_0": -2,
-    "current_background_rssi_channel_1": -3,
-    "average_background_rssi_channel_1": -4,
-    "current_background_rssi_channel_2": STATE_UNKNOWN,
-    "average_background_rssi_channel_2": STATE_UNKNOWN,
+    "signal_noise_channel_0": -1,
+    "avg_signal_noise_channel_0": -2,
+    "signal_noise_channel_1": -3,
+    "avg_signal_noise_channel_1": -4,
+    "signal_noise_channel_2": -5,
+    "avg_signal_noise_channel_2": -6,
+    "signal_noise_channel_3": STATE_UNKNOWN,
+    "avg_signal_noise_channel_3": STATE_UNKNOWN,
 }
 NODE_STATISTICS_ENTITY_PREFIX = "sensor.4_in_1_sensor_"
 # node statistics with initial state of 0
@@ -702,7 +817,7 @@ NODE_STATISTICS_SUFFIXES = {
 # node statistics with initial state of unknown
 NODE_STATISTICS_SUFFIXES_UNKNOWN = {
     "round_trip_time": 6,
-    "rssi": 7,
+    "signal_strength": 7,
 }
 
 
@@ -754,7 +869,7 @@ async def test_statistics_sensors_migration(
             )
 
 
-async def test_statistics_sensors_no_last_seen(
+async def test_statistics_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     zp3111,
@@ -762,7 +877,7 @@ async def test_statistics_sensors_no_last_seen(
     integration,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test all statistics sensors but last seen which is enabled by default."""
+    """Test statistics sensors."""
 
     for prefix, suffixes in (
         (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES),
@@ -772,7 +887,7 @@ async def test_statistics_sensors_no_last_seen(
     ):
         for suffix_key in suffixes:
             entry = entity_registry.async_get(f"{prefix}{suffix_key}")
-            assert entry
+            assert entry, f"Entity {prefix}{suffix_key} not found"
             assert entry.disabled
             assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
@@ -798,12 +913,12 @@ async def test_statistics_sensors_no_last_seen(
     ):
         for suffix_key in suffixes:
             entry = entity_registry.async_get(f"{prefix}{suffix_key}")
-            assert entry
+            assert entry, f"Entity {prefix}{suffix_key} not found"
             assert not entry.disabled
             assert entry.disabled_by is None
 
             state = hass.states.get(entry.entity_id)
-            assert state
+            assert state, f"State for {entry.entity_id} not found"
             assert state.state == initial_state
 
     # Fire statistics updated for controller
@@ -830,6 +945,10 @@ async def test_statistics_sensors_no_last_seen(
                     "channel1": {
                         "current": -3,
                         "average": -4,
+                    },
+                    "channel2": {
+                        "current": -5,
+                        "average": -6,
                     },
                     "timestamp": 1681967176510,
                 },
@@ -910,11 +1029,197 @@ async def test_last_seen_statistics_sensors(
     entity_id = f"{NODE_STATISTICS_ENTITY_PREFIX}last_seen"
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert not entry.disabled
+    assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None  # disabled by default
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "2024-01-01T12:00:00+00:00"
+
+
+async def test_rssi_sensor_error(
+    hass: HomeAssistant,
+    zp3111: Node,
+    integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test rssi sensor error."""
+    entity_id = "sensor.4_in_1_sensor_signal_strength"
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+
+    # reload integration and check if entity is correctly there
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unknown"
+
+    # Fire statistics updated event for node
+    event = Event(
+        "statistics updated",
+        {
+            "source": "node",
+            "event": "statistics updated",
+            "nodeId": zp3111.node_id,
+            "statistics": {
+                "commandsTX": 1,
+                "commandsRX": 2,
+                "commandsDroppedTX": 3,
+                "commandsDroppedRX": 4,
+                "timeoutResponse": 5,
+                "rtt": 6,
+                "rssi": 7,  # baseline
+                "lwr": {
+                    "protocolDataRate": 1,
+                    "rssi": 1,
+                    "repeaters": [],
+                    "repeaterRSSI": [],
+                    "routeFailedBetween": [],
+                },
+                "nlwr": {
+                    "protocolDataRate": 2,
+                    "rssi": 2,
+                    "repeaters": [],
+                    "repeaterRSSI": [],
+                    "routeFailedBetween": [],
+                },
+                "lastSeen": "2024-01-01T00:00:00+0000",
+            },
+        },
+    )
+    zp3111.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "7"
+
+    event = Event(
+        "statistics updated",
+        {
+            "source": "node",
+            "event": "statistics updated",
+            "nodeId": zp3111.node_id,
+            "statistics": {
+                "commandsTX": 1,
+                "commandsRX": 2,
+                "commandsDroppedTX": 3,
+                "commandsDroppedRX": 4,
+                "timeoutResponse": 5,
+                "rtt": 6,
+                "rssi": 125,  # no signal detected
+                "lwr": {
+                    "protocolDataRate": 1,
+                    "rssi": 1,
+                    "repeaters": [],
+                    "repeaterRSSI": [],
+                    "routeFailedBetween": [],
+                },
+                "nlwr": {
+                    "protocolDataRate": 2,
+                    "rssi": 2,
+                    "repeaters": [],
+                    "repeaterRSSI": [],
+                    "routeFailedBetween": [],
+                },
+                "lastSeen": "2024-01-01T00:00:00+0000",
+            },
+        },
+    )
+    zp3111.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unknown"
+
+    event = Event(
+        "statistics updated",
+        {
+            "source": "node",
+            "event": "statistics updated",
+            "nodeId": zp3111.node_id,
+            "statistics": {
+                "commandsTX": 1,
+                "commandsRX": 2,
+                "commandsDroppedTX": 3,
+                "commandsDroppedRX": 4,
+                "timeoutResponse": 5,
+                "rtt": 6,
+                "rssi": 127,  # not available
+                "lwr": {
+                    "protocolDataRate": 1,
+                    "rssi": 1,
+                    "repeaters": [],
+                    "repeaterRSSI": [],
+                    "routeFailedBetween": [],
+                },
+                "nlwr": {
+                    "protocolDataRate": 2,
+                    "rssi": 2,
+                    "repeaters": [],
+                    "repeaterRSSI": [],
+                    "routeFailedBetween": [],
+                },
+                "lastSeen": "2024-01-01T00:00:00+0000",
+            },
+        },
+    )
+    zp3111.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unavailable"
+
+    event = Event(
+        "statistics updated",
+        {
+            "source": "node",
+            "event": "statistics updated",
+            "nodeId": zp3111.node_id,
+            "statistics": {
+                "commandsTX": 1,
+                "commandsRX": 2,
+                "commandsDroppedTX": 3,
+                "commandsDroppedRX": 4,
+                "timeoutResponse": 5,
+                "rtt": 6,
+                "rssi": 126,  # receiver saturated
+                "lwr": {
+                    "protocolDataRate": 1,
+                    "rssi": 1,
+                    "repeaters": [],
+                    "repeaterRSSI": [],
+                    "routeFailedBetween": [],
+                },
+                "nlwr": {
+                    "protocolDataRate": 2,
+                    "rssi": 2,
+                    "repeaters": [],
+                    "repeaterRSSI": [],
+                    "routeFailedBetween": [],
+                },
+                "lastSeen": "2024-01-01T00:00:00+0000",
+            },
+        },
+    )
+    zp3111.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unknown"
 
 
 ENERGY_PRODUCTION_ENTITY_MAP = {

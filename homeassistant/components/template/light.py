@@ -27,6 +27,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EFFECT,
     CONF_ENTITY_ID,
@@ -43,22 +44,28 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .const import DOMAIN
 from .entity import AbstractTemplateEntity
-from .template_entity import (
-    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
-    TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
-    TemplateEntity,
-    rewrite_common_legacy_to_modern_conf,
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
 )
+from .schemas import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
+    make_template_entity_common_modern_schema,
+)
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,7 +111,7 @@ CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
 
-LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+LEGACY_FIELDS = {
     CONF_COLOR_ACTION: CONF_HS_ACTION,
     CONF_COLOR_TEMPLATE: CONF_HS,
     CONF_EFFECT_LIST_TEMPLATE: CONF_EFFECT_LIST,
@@ -124,40 +131,39 @@ LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
 
 DEFAULT_NAME = "Template Light"
 
-LIGHT_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
-            vol.Inclusive(CONF_EFFECT_LIST, "effect"): cv.template,
-            vol.Inclusive(CONF_EFFECT, "effect"): cv.template,
-            vol.Optional(CONF_HS_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_HS): cv.template,
-            vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_LEVEL): cv.template,
-            vol.Optional(CONF_MAX_MIREDS): cv.template,
-            vol.Optional(CONF_MIN_MIREDS): cv.template,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Optional(CONF_PICTURE): cv.template,
-            vol.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_RGB): cv.template,
-            vol.Optional(CONF_RGBW_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_RGBW): cv.template,
-            vol.Optional(CONF_RGBWW_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_RGBWW): cv.template,
-            vol.Optional(CONF_STATE): cv.template,
-            vol.Optional(CONF_SUPPORTS_TRANSITION): cv.template,
-            vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_TEMPERATURE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
+LIGHT_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
+        vol.Inclusive(CONF_EFFECT_LIST, "effect"): cv.template,
+        vol.Inclusive(CONF_EFFECT, "effect"): cv.template,
+        vol.Optional(CONF_HS_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_HS): cv.template,
+        vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_LEVEL): cv.template,
+        vol.Optional(CONF_MAX_MIREDS): cv.template,
+        vol.Optional(CONF_MIN_MIREDS): cv.template,
+        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_RGB): cv.template,
+        vol.Optional(CONF_RGBW_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_RGBW): cv.template,
+        vol.Optional(CONF_RGBWW_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_RGBWW): cv.template,
+        vol.Optional(CONF_STATE): cv.template,
+        vol.Optional(CONF_SUPPORTS_TRANSITION): cv.template,
+        vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_TEMPERATURE): cv.template,
+    }
 )
 
-LEGACY_LIGHT_SCHEMA = vol.All(
+LIGHT_YAML_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
+).extend(make_template_entity_common_modern_schema(LIGHT_DOMAIN, DEFAULT_NAME).schema)
+
+LIGHT_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
@@ -196,50 +202,13 @@ PLATFORM_SCHEMA = vol.All(
     cv.removed(CONF_WHITE_VALUE_ACTION),
     cv.removed(CONF_WHITE_VALUE_TEMPLATE),
     LIGHT_PLATFORM_SCHEMA.extend(
-        {vol.Required(CONF_LIGHTS): cv.schema_with_slug_keys(LEGACY_LIGHT_SCHEMA)}
+        {vol.Required(CONF_LIGHTS): cv.schema_with_slug_keys(LIGHT_LEGACY_YAML_SCHEMA)}
     ),
 )
 
-
-def rewrite_legacy_to_modern_conf(
-    hass: HomeAssistant, config: dict[str, dict]
-) -> list[dict]:
-    """Rewrite legacy switch configuration definitions to modern ones."""
-    lights = []
-    for object_id, entity_conf in config.items():
-        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
-
-        entity_conf = rewrite_common_legacy_to_modern_conf(
-            hass, entity_conf, LEGACY_FIELDS
-        )
-
-        if CONF_NAME not in entity_conf:
-            entity_conf[CONF_NAME] = template.Template(object_id, hass)
-
-        lights.append(entity_conf)
-
-    return lights
-
-
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the Template Lights."""
-    lights = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        lights.append(LightTemplate(hass, entity_conf, unique_id))
-
-    async_add_entities(lights)
+LIGHT_CONFIG_ENTRY_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
 
 
 async def async_setup_platform(
@@ -249,32 +218,55 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template lights."""
-    if discovery_info is None:
-        _async_create_template_tracking_entities(
-            async_add_entities,
-            hass,
-            rewrite_legacy_to_modern_conf(hass, config[CONF_LIGHTS]),
-            None,
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerLightEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        LIGHT_DOMAIN,
+        config,
+        StateLightEntity,
+        TriggerLightEntity,
+        async_add_entities,
+        discovery_info,
+        LEGACY_FIELDS,
+        legacy_key=CONF_LIGHTS,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateLightEntity,
+        LIGHT_CONFIG_ENTRY_SCHEMA,
+        True,
+    )
+
+
+@callback
+def async_create_preview_light(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateLightEntity:
+    """Create a preview."""
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateLightEntity,
+        LIGHT_CONFIG_ENTRY_SCHEMA,
+        True,
     )
 
 
 class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     """Representation of a template lights features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -284,7 +276,6 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         """Initialize the features."""
 
         # Template attributes
-        self._template = config.get(CONF_STATE)
         self._level_template = config.get(CONF_LEVEL)
         self._temperature_template = config.get(CONF_TEMPERATURE)
         self._hs_template = config.get(CONF_HS)
@@ -409,7 +400,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         Returns True if any attribute was updated.
         """
         optimistic_set = False
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = True
             optimistic_set = True
 
@@ -544,7 +535,6 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
                     effect,
                     self.entity_id,
                     self._effect_list,
-                    exc_info=True,
                 )
 
             common_params["effect"] = effect
@@ -943,7 +933,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
             self._attr_supported_features |= LightEntityFeature.TRANSITION
 
 
-class LightTemplate(TemplateEntity, AbstractTemplateLight):
+class StateLightEntity(TemplateEntity, AbstractTemplateLight):
     """Representation of a templated Light, including dimmable."""
 
     _attr_should_poll = False
@@ -955,14 +945,8 @@ class LightTemplate(TemplateEntity, AbstractTemplateLight):
         unique_id: str | None,
     ) -> None:
         """Initialize the light."""
-        TemplateEntity.__init__(
-            self, hass, config=config, fallback_name=None, unique_id=unique_id
-        )
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateLight.__init__(self, config)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
@@ -1133,7 +1117,7 @@ class LightTemplate(TemplateEntity, AbstractTemplateLight):
             )
         else:
             await self.async_run_script(off_script, context=self._context)
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = False
             self.async_write_ha_state()
 
@@ -1233,7 +1217,6 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
             raw = self._rendered.get(CONF_STATE)
             self._state = template.result_as_boolean(raw)
 
-            self.async_set_context(self.coordinator.data["context"])
             write_ha_state = True
         elif self._optimistic and len(self._rendered) > 0:
             # In case any non optimistic template
@@ -1273,6 +1256,6 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
             )
         else:
             await self.async_run_script(off_script, context=self._context)
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = False
             self.async_write_ha_state()

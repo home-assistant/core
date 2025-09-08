@@ -14,7 +14,7 @@ async def test_squeezebox_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_player_preset_1"},
+        {ATTR_ENTITY_ID: "button.none_preset_1"},
         blocking=True,
     )
 

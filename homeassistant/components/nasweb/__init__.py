@@ -19,7 +19,7 @@ from .const import DOMAIN, MANUFACTURER, SUPPORT_EMAIL
 from .coordinator import NASwebCoordinator
 from .nasweb_data import NASwebData
 
-PLATFORMS: list[Platform] = [Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
 
 NASWEB_CONFIG_URL = "https://{host}/page"
 

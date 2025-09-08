@@ -11,12 +11,12 @@ from homeassistant.components.music_assistant.actions import (
     SERVICE_SEARCH,
 )
 from homeassistant.components.music_assistant.const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_FAVORITE,
     ATTR_MEDIA_TYPE,
     ATTR_SEARCH_NAME,
     DOMAIN,
 )
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 
 from .common import create_library_albums_from_fixture, setup_integration_from_fixtures

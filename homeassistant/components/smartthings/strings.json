@@ -595,17 +595,26 @@
       },
       "water_consumption": {
         "name": "Water consumption"
+      },
+      "water_filter_usage": {
+        "name": "Water filter usage"
       }
     },
     "switch": {
       "bubble_soak": {
         "name": "Bubble Soak"
       },
+      "display_lighting": {
+        "name": "Display lighting"
+      },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
       },
       "ice_maker": {
-        "name": "Ice maker"
+        "name": "Cubed ice"
+      },
+      "ice_maker_2": {
+        "name": "Ice Bites"
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
