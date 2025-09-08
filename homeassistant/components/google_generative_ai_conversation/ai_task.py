@@ -15,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
-from .const import CONF_RECOMMENDED, LOGGER, RECOMMENDED_IMAGE_MODEL
+from .const import CONF_CHAT_MODEL, CONF_RECOMMENDED, LOGGER, RECOMMENDED_IMAGE_MODEL
 from .entity import (
     ERROR_GETTING_RESPONSE,
     GoogleGenerativeAILLMBaseEntity,
@@ -61,8 +61,10 @@ class GoogleGenerativeAITaskEntity(
             ai_task.AITaskEntityFeature.GENERATE_DATA
             | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
         )
-        # We start with only supporting images when we use recommended settings
-        if subentry.data.get(CONF_RECOMMENDED):
+
+        if subentry.data.get(CONF_RECOMMENDED) or "-image-" in subentry.data.get(
+            CONF_CHAT_MODEL, ""
+        ):
             self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 
     async def _async_generate_data(
@@ -113,7 +115,7 @@ class GoogleGenerativeAITaskEntity(
         user_message = chat_log.content[-1]
         assert isinstance(user_message, conversation.UserContent)
 
-        model = RECOMMENDED_IMAGE_MODEL
+        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_IMAGE_MODEL)
         prompt_parts: list[PartUnionDict] = [user_message.content]
         if user_message.attachments:
             prompt_parts.extend(
