@@ -7,9 +7,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from PyTado.exceptions import TadoException
-from PyTado.http import DeviceActivationStatus
-from PyTado.interface import Tado
+from tadoasync import Tado, TadoError
 import voluptuous as vol
 from yarl import URL
 
@@ -22,6 +20,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
@@ -66,12 +65,14 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.tado is None:
             _LOGGER.debug("Initiating device activation")
             try:
-                self.tado = await self.hass.async_add_executor_job(Tado)
-            except TadoException:
+                self.tado = Tado(debug=True, session=async_get_clientsession(self.hass))
+                await self.tado.async_init()
+            except TadoError:
                 _LOGGER.exception("Error while initiating Tado")
                 return self.async_abort(reason="cannot_connect")
             assert self.tado is not None
-            tado_device_url = self.tado.device_verification_url()
+            tado_device_url = self.tado.device_verification_url
+            _LOGGER.debug("Tado device URL: %s", tado_device_url)
             user_code = URL(tado_device_url).query["user_code"]
 
         async def _wait_for_login() -> None:
@@ -79,15 +80,12 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.tado is not None
             _LOGGER.debug("Waiting for device activation")
             try:
-                await self.hass.async_add_executor_job(self.tado.device_activation)
+                await self.tado.device_activation()
             except Exception as ex:
                 _LOGGER.exception("Error while waiting for device activation")
                 raise CannotConnect from ex
 
-            if (
-                self.tado.device_activation_status()
-                is not DeviceActivationStatus.COMPLETED
-            ):
+            if self.tado.device_activation_status != "COMPLETED":
                 raise CannotConnect
 
         _LOGGER.debug("Checking login task")
@@ -99,9 +97,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Login task is done, checking results")
             if self.login_task.exception():
                 return self.async_show_progress_done(next_step_id="timeout")
-            self.refresh_token = await self.hass.async_add_executor_job(
-                self.tado.get_refresh_token
-            )
+            self.refresh_token = self.tado.refresh_token
             return self.async_show_progress_done(next_step_id="finish_login")
 
         return self.async_show_progress(
@@ -121,8 +117,9 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the finalization of reauth."""
         _LOGGER.debug("Finalizing reauth")
         assert self.tado is not None
-        tado_me = await self.hass.async_add_executor_job(self.tado.get_me)
+        tado_me = await self.tado.get_me()
 
+        # TODO ERWIN: continue from here!
         if "homes" not in tado_me or len(tado_me["homes"]) == 0:
             return self.async_abort(reason="no_homes")
 
