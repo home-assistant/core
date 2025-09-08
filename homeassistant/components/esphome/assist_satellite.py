@@ -152,7 +152,7 @@ class EsphomeAssistSatellite(
     @property
     def secondary_pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the secondary pipeline to use for the next conversation."""
-        return self._get_entity_id("pipeline-2")
+        return self._get_entity_id("pipeline_2")
 
     @property
     def wake_word_entity_id(self) -> str | None:
@@ -162,7 +162,7 @@ class EsphomeAssistSatellite(
     @property
     def secondary_wake_word_entity_id(self) -> str | None:
         """Return the entity ID of the secondary wake word select."""
-        return self._get_entity_id("wake_word-2")
+        return self._get_entity_id("wake_word_2")
 
     @property
     def vad_sensitivity_entity_id(self) -> str | None:
