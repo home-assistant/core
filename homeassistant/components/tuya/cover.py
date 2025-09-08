@@ -257,14 +257,12 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             self._motor_reverse_mode_enum = enum_type
 
     @property
-    def _is_motor_reverse_mode(self) -> bool:
+    def _is_motor_forward(self) -> bool:
         """Check if the cover direction should be reversed based on motor_reverse_mode."""
-        if (
+        return not (
             self._motor_reverse_mode_enum
             and self.device.status.get(self._motor_reverse_mode_enum.dpcode) == "back"
-        ):
-            return False
-        return True
+        )
 
     @property
     def current_cover_position(self) -> int | None:
@@ -277,7 +275,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         return round(
             self._current_position.remap_value_to(
-                position, 0, 100, reverse=self._is_motor_reverse_mode
+                position, 0, 100, reverse=self._is_motor_forward
             )
         )
 
@@ -334,7 +332,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                     "code": self._set_position.dpcode,
                     "value": round(
                         self._set_position.remap_value_from(
-                            100, 0, 100, reverse=self._is_motor_reverse_mode
+                            100, 0, 100, reverse=self._is_motor_forward
                         ),
                     ),
                 }
@@ -360,7 +358,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                     "code": self._set_position.dpcode,
                     "value": round(
                         self._set_position.remap_value_from(
-                            0, 0, 100, reverse=self._is_motor_reverse_mode
+                            0, 0, 100, reverse=self._is_motor_forward
                         ),
                     ),
                 }
@@ -383,7 +381,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                             kwargs[ATTR_POSITION],
                             0,
                             100,
-                            reverse=self._is_motor_reverse_mode,
+                            reverse=self._is_motor_forward,
                         )
                     ),
                 }
@@ -416,7 +414,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                             kwargs[ATTR_TILT_POSITION],
                             0,
                             100,
-                            reverse=self._is_motor_reverse_mode,
+                            reverse=self._is_motor_forward,
                         )
                     ),
                 }
