@@ -52,6 +52,7 @@ from .entity import async_prepare_files_for_prompt
 SERVICE_GENERATE_CONTENT = "generate_content"
 CONF_IMAGE_FILENAME = "image_filename"
 CONF_FILENAMES = "filenames"
+CONF_MODEL = "model"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (
@@ -111,7 +112,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         try:
             response = await client.aio.models.generate_content(
-                model=RECOMMENDED_CHAT_MODEL, contents=prompt_parts
+                model=call.data[CONF_MODEL], contents=prompt_parts
             )
         except (
             APIError,
@@ -146,6 +147,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Optional(CONF_FILENAMES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
+                vol.Optional(CONF_MODEL, default=RECOMMENDED_CHAT_MODEL): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,

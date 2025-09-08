@@ -169,6 +169,11 @@
           "name": "Attachment filenames",
           "description": "Attachments to add to the prompt (images, PDFs, etc)",
           "example": "/config/www/image.jpg"
+        },
+        "model": {
+          "name": "Model to use for the response",
+          "description": "The Gemini model to be used. See: ai.google.dev/gemini-api/docs/models",
+          "example": "gemini-2.5-pro"
         }
       }
     }
