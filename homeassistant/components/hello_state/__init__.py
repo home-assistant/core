@@ -1,9 +1,6 @@
 """Test state."""
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-
-CONFIG_SCHEMA = cv.empty_config_schema
 
 DOMAIN = "hello_state"
 
