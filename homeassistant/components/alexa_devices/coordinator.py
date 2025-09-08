@@ -49,7 +49,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             entry.data[CONF_PASSWORD],
             entry.data[CONF_LOGIN_DATA],
         )
-        self.previous_devices: dict[str, AmazonDevice] = {}
+        self.previous_devices: set[str] = set()
 
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
@@ -75,16 +75,17 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         else:
+            data_set = set(data.keys())
             if self.previous_devices:
-                await self._async_remove_device_stale(self.previous_devices, data)
+                await self._async_remove_device_stale(self.previous_devices, data_set)
 
-            self.previous_devices = data.copy()
+            self.previous_devices = data_set
             return data
 
     async def _async_remove_device_stale(
         self,
-        previous_list: dict[str, AmazonDevice],
-        current_list: dict[str, AmazonDevice],
+        previous_list: set[str],
+        current_list: set[str],
     ) -> None:
         """Remove stale device."""
         device_registry = dr.async_get(self.hass)
