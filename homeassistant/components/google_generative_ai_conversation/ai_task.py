@@ -62,7 +62,7 @@ class GoogleGenerativeAITaskEntity(
             | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
         )
 
-        if subentry.data.get(CONF_RECOMMENDED) or "-image-" in subentry.data.get(
+        if subentry.data.get(CONF_RECOMMENDED) or "-image" in subentry.data.get(
             CONF_CHAT_MODEL, ""
         ):
             self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
@@ -160,11 +160,10 @@ class GoogleGenerativeAITaskEntity(
                 and part.inline_data.mime_type
                 and part.inline_data.mime_type.startswith("image/")
             ):
-                if response_image is not None:
-                    raise HomeAssistantError(
-                        f"Prompt did not generate exactly one image.\n\nResponse text: {response.text}"
-                    )
-                response_image = part
+                if response_image is None:
+                    response_image = part
+                else:
+                    LOGGER.warning("Prompt generated multiple images")
             elif isinstance(part.text, str) and not part.thought:
                 response_text += part.text
 
