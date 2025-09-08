@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaus.com",
-  "terminal_id": "1747852059900mCJdQO",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "eb40f2a309edea3892f0o2",
   "name": "Medidor de Energia",
   "category": "dlq",
   "product_id": "dikb3dp6",
