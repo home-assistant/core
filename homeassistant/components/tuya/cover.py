@@ -258,7 +258,10 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     @property
     def _is_motor_forward(self) -> bool:
-        """Check if the cover direction should be reversed based on motor_reverse_mode."""
+        """Check if the cover direction should be reversed based on motor_reverse_mode.
+
+        If the motor is "forward" (=default) then the positions need to be reversed.
+        """
         return not (
             self._motor_reverse_mode_enum
             and self.device.status.get(self._motor_reverse_mode_enum.dpcode) == "back"
