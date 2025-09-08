@@ -8,7 +8,10 @@ from homeassistant.core import HomeAssistant, callback
 from .config_flow import HomeAssistantConnectZBT2ConfigFlow
 from .const import DOMAIN, HARDWARE_NAME, MANUFACTURER, PID, PRODUCT, SERIAL_NUMBER, VID
 
-DOCUMENTATION_URL = "https://support.nabucasa.com/hc/en-us/categories/24734620813469-Home-Assistant-Connect-ZBT-1"
+DOCUMENTATION_URL = (
+    "https://support.nabucasa.com/hc/en-us/categories/"
+    "24734620813469-Home-Assistant-Connect-ZBT-1"
+)
 EXPECTED_ENTRY_VERSION = (
     HomeAssistantConnectZBT2ConfigFlow.VERSION,
     HomeAssistantConnectZBT2ConfigFlow.MINOR_VERSION,

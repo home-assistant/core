@@ -248,7 +248,12 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
         },
         version=1,
         minor_version=1,
-        unique_id=f"{USB_DATA_ZBT2.vid}:{USB_DATA_ZBT2.pid}_{USB_DATA_ZBT2.serial_number}_{USB_DATA_ZBT2.manufacturer}_{USB_DATA_ZBT2.description}",
+        unique_id=(
+            f"{USB_DATA_ZBT2.vid}:{USB_DATA_ZBT2.pid}_"
+            f"{USB_DATA_ZBT2.serial_number}_"
+            f"{USB_DATA_ZBT2.manufacturer}_"
+            f"{USB_DATA_ZBT2.description}"
+        ),
     )
     config_entry.add_to_hass(hass)
 
