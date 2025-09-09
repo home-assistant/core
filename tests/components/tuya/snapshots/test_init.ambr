@@ -3835,7 +3835,7 @@
     'manufacturer': 'Tuya',
     'model': 'AIR_DETECTOR ',
     'model_id': 'yrr3eiyiacm31ski',
-    'name': 'AIR_DETECTOR ',
+    'name': 'AQI ',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

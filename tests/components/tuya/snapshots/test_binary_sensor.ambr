@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[binary_sensor.air_detector_safety-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.aqi_safety-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_detector_safety',
+    'entity_id': 'binary_sensor.aqi_safety',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -34,14 +34,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.air_detector_safety-state]
+# name: test_platform_setup_and_discovery[binary_sensor.aqi_safety-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
-      'friendly_name': 'AIR_DETECTOR  Safety',
+      'friendly_name': 'AQI  Safety',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_detector_safety',
+    'entity_id': 'binary_sensor.aqi_safety',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

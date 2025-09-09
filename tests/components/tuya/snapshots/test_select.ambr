@@ -235,7 +235,7 @@
     'state': 'power_on',
   })
 # ---
-# name: test_platform_setup_and_discovery[select.air_detector_volume-entry]
+# name: test_platform_setup_and_discovery[select.aqi_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -255,7 +255,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.air_detector_volume',
+    'entity_id': 'select.aqi_volume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -277,10 +277,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[select.air_detector_volume-state]
+# name: test_platform_setup_and_discovery[select.aqi_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AIR_DETECTOR  Volume',
+      'friendly_name': 'AQI  Volume',
       'options': list([
         'low',
         'middle',
@@ -289,7 +289,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.air_detector_volume',
+    'entity_id': 'select.aqi_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
