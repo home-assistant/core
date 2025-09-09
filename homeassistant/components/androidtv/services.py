@@ -23,7 +23,7 @@ SERVICE_UPLOAD = "upload"
 
 
 @callback
-def async_setup_services(hass: HomeAssistant) -> bool:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Android TV / Fire TV services."""
 
     service.async_register_platform_entity_service(
@@ -65,4 +65,3 @@ def async_setup_services(hass: HomeAssistant) -> bool:
         func="service_upload",
     )
 
-    return True
