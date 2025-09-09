@@ -268,7 +268,7 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
                 if "fields" in field:
                     # This is a section
                     section_fields.update(field["fields"].keys())
-            fields = {
+            translation_fields = {
                 field
                 for field in strings["services"][service_name].get("fields", {})
                 if field not in service_schema.get("fields", {})
