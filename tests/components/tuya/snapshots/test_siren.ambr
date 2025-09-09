@@ -37,7 +37,7 @@
 # name: test_platform_setup_and_discovery[siren.aqi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AQI ',
+      'friendly_name': 'AQI',
       'supported_features': <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,

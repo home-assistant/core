@@ -280,7 +280,7 @@
 # name: test_platform_setup_and_discovery[select.aqi_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AQI  Volume',
+      'friendly_name': 'AQI Volume',
       'options': list([
         'low',
         'middle',

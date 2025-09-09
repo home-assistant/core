@@ -38,7 +38,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
-      'friendly_name': 'AQI  Safety',
+      'friendly_name': 'AQI Safety',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.aqi_safety',
