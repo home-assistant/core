@@ -535,7 +535,10 @@ async def test_climate_set_temperature_unsupported_mode(
         states=states,
     )
 
-    with pytest.raises(ServiceValidationError) as exc:
+    with pytest.raises(
+        ServiceValidationError,
+        match="Setting target_temperature is only supported in heat or cool modes",
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -546,9 +549,6 @@ async def test_climate_set_temperature_unsupported_mode(
             blocking=True,
         )
 
-    assert "Setting target_temperature is only supported in heat or cool modes" in str(
-        exc.value
-    )
     mock_client.climate_command.assert_not_called()
 
 
