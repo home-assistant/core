@@ -1,8 +1,7 @@
 {
   "common": {
     "topic": "Topic",
-    "add_topic_description": "Set up a topic for notifications.",
-    "display_name": "Display name"
+    "add_topic_description": "Set up a topic for notifications."
   },
   "config": {
     "step": {
