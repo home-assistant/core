@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,7 +14,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import CONF_MAX_SUPPORTED_ZONES, CONF_ZONES, DOMAIN, SIGNAL_ZONE_CHANGED
+from . import (
+    CONF_ID,
+    CONF_MAX_SUPPORTED_ZONES,
+    CONF_NAME,
+    CONF_TYPE,
+    CONF_ZONES,
+    DOMAIN,
+    SIGNAL_ZONE_CHANGED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,16 +41,29 @@ async def async_setup_entry(
     # Total zones to create
     max_zones: int = config[CONF_MAX_SUPPORTED_ZONES]
 
-    # Map custom names if any are provided
-    custom_zones = {zone["id"]: zone["name"] for zone in config.get(CONF_ZONES, [])}
+    # Map custom names and types if any are provided
+    custom_zones = {}
+    for zone in config.get(CONF_ZONES, []):
+        zone_id = zone.get(CONF_ID)
+        if zone_id:
+            custom_zones[zone_id] = {
+                CONF_NAME: zone.get(CONF_NAME, f"Zone {zone_id}"),
+                CONF_TYPE: zone.get(CONF_TYPE, BinarySensorDeviceClass.MOTION),
+            }
 
-    # Generate sensors
     for zone_id in range(1, max_zones + 1):
-        name = custom_zones.get(zone_id, f"Zone {zone_id}")
+        if zone_id in custom_zones:
+            name = custom_zones[zone_id][CONF_NAME]
+            zone_type = custom_zones[zone_id][CONF_TYPE]
+        else:
+            name = f"Zone {zone_id}"
+            zone_type = BinarySensorDeviceClass.MOTION
+
         entities.append(
             NessZoneSensor(
                 zone_id,
                 name,
+                zone_type,
                 config_entry.entry_id,
             )
         )
@@ -52,15 +74,19 @@ async def async_setup_entry(
 class NessZoneSensor(BinarySensorEntity):
     """Representation of a Ness zone sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         zone_id: int,
         name: str,
+        zone_type: str | BinarySensorDeviceClass,
         entry_id: str,
     ) -> None:
         """Initialize the zone sensor."""
         self._zone_id = zone_id
         self._name = name
+        self._type = zone_type
         self._entry_id = entry_id
         self._state = False
 
@@ -99,6 +125,6 @@ class NessZoneSensor(BinarySensorEntity):
         return self._state
 
     @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the device class."""
-        return BinarySensorDeviceClass.MOTION
+    def device_class(self) -> BinarySensorDeviceClass | None:
+        """Return the class of this sensor."""
+        return cast(BinarySensorDeviceClass, self._type)

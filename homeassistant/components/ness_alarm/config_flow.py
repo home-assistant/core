@@ -20,6 +20,7 @@ from .const import (
     CONF_MAX_SUPPORTED_ZONES,
     CONF_NAME,
     CONF_SUPPORT_HOME_ARM,
+    CONF_TYPE,
     CONF_ZONES,
     DEFAULT_INFER_ARMING_STATE,
     DEFAULT_MAX_SUPPORTED_ZONES,
@@ -149,7 +150,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     CONF_ID: zone.get(CONF_ID),
                     CONF_NAME: zone.get(CONF_NAME),
-                    "type": zone.get("type", "motion"),
+                    CONF_TYPE: zone.get(CONF_TYPE, "motion"),
                 }
                 for zone in zones
                 if zone.get(CONF_ID) and zone.get(CONF_NAME)
