@@ -141,7 +141,7 @@ class HassIOIngress(HomeAssistantView):
         # Start proxy
         try:
             _LOGGER.debug(
-                "Proxing WebSocket to %s / %s, upstream url: %s", token, path, url
+                "Proxying WebSocket to %s / %s, upstream url: %s", token, path, url
             )
             async with self._websession.ws_connect(
                 url,
