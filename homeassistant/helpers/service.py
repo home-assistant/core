@@ -1203,7 +1203,7 @@ def async_register_platform_entity_service(
         return entities
 
     hass.services.async_register(
-        platform_domain,
+        platform_name,
         name,
         partial(
             entity_service_call,
