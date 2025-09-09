@@ -18,6 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 class MideaEntity(Entity):
     """Base Midea entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device: MideaDevice, entity_key: str) -> None:
         """Initialize Midea base entity."""
         self._device = device

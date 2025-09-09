@@ -41,18 +41,18 @@ _PLATFORMS: list[Platform] = [Platform.CLIMATE]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Register update listener called for config entry updates."""
     # Forward the unloading of an entry to platforms.
-    await hass.config_entries.async_unload_platforms(config_entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
     # forward the Config Entry to the platforms
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setups(config_entry, _PLATFORMS),
+        hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS),
     )
-    device_id: int = cast("int", config_entry.data.get(CONF_DEVICE_ID))
-    customize = config_entry.options.get(CONF_CUSTOMIZE, "")
-    ip_address = config_entry.options.get(CONF_IP_ADDRESS, "")
-    refresh_interval = config_entry.options.get(CONF_REFRESH_INTERVAL, None)
+    device_id: int = cast("int", entry.data.get(CONF_DEVICE_ID))
+    customize = entry.options.get(CONF_CUSTOMIZE, "")
+    ip_address = entry.options.get(CONF_IP_ADDRESS, "")
+    refresh_interval = entry.options.get(CONF_REFRESH_INTERVAL, None)
     dev: MideaDevice = hass.data[DOMAIN][DEVICES].get(device_id)
     if dev:
         dev.set_customize(customize)
@@ -79,27 +79,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Midea LAN from a config entry."""
 
-    device_type: int = config_entry.data.get(CONF_TYPE, 0)
-    name = config_entry.data.get(CONF_NAME)
-    device_id: int = config_entry.data[CONF_DEVICE_ID]
-    if name is None:
-        name = f"{device_id}"
-    if device_type is None:
-        device_type = 0xAC
-    token: str = config_entry.data.get(CONF_TOKEN) or ""
-    key: str = config_entry.data.get(CONF_KEY) or ""
-    ip_address: str = config_entry.options.get(CONF_IP_ADDRESS, "")
-    if ip_address is None:
-        ip_address = config_entry.data.get(CONF_IP_ADDRESS)
-    refresh_interval = config_entry.options.get(CONF_REFRESH_INTERVAL)
-    port: int = config_entry.data[CONF_PORT]
-    model: str = config_entry.data[CONF_MODEL]
-    subtype = config_entry.data.get(CONF_SUBTYPE, 0)
-    protocol: ProtocolVersion = ProtocolVersion(config_entry.data[CONF_PROTOCOL])
-    customize: str = config_entry.options.get(CONF_CUSTOMIZE, "")
+    data = entry.runtime_data
+
+    device_type: int = data.get(CONF_TYPE, 0xAC)
+    device_id: int = data[CONF_DEVICE_ID]
+    name: str = data.get(CONF_NAME, f"{device_id}")
+    token: str = data.get(CONF_TOKEN) or ""
+    key: str = data.get(CONF_KEY) or ""
+    ip_address: str = data.options.get(CONF_IP_ADDRESS, data.get(CONF_IP_ADDRESS))
+    refresh_interval: int | None = data.options.get(CONF_REFRESH_INTERVAL)
+    port: int = data[CONF_PORT]
+    model: str = data[CONF_MODEL]
+    subtype: int = data.get(CONF_SUBTYPE, 0)
+    protocol: ProtocolVersion = ProtocolVersion(data[CONF_PROTOCOL])
+    customize: str = data.options.get(CONF_CUSTOMIZE, "")
     if protocol == ProtocolVersion.V3 and (key == "" or token == ""):
         _LOGGER.error("For V3 devices, the key and the token is required")
         return False
@@ -127,18 +123,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             hass.data[DOMAIN][DEVICES] = {}
         hass.data[DOMAIN][DEVICES][device_id] = device
         # Forward the setup of an entry to all platforms
-        await hass.config_entries.async_forward_entry_setups(config_entry, _PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
         # Listener `update_listener` is
         # attached when the entry is loaded
         # and detached when it's unloaded
-        config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
+        entry.async_on_unload(entry.add_update_listener(update_listener))
         return True
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, _PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, _PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
