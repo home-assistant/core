@@ -11,7 +11,7 @@ from .const import DOMAIN
 
 
 class InelsBaseEntity(Entity):
-    """Base iNELS device."""
+    """Base iNELS entity."""
 
     _attr_should_poll = False
     _attr_has_entity_name = True
