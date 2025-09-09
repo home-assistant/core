@@ -49,7 +49,10 @@ rules:
   devices: done
   diagnostics: todo
   discovery-update-info: todo
-  discovery: todo
+  discovery:
+    status: exempt
+    comment: |
+      No discovery is implemented, since it's software based.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

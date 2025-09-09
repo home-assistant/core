@@ -5,7 +5,7 @@ from __future__ import annotations
 from pyportainer import Portainer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL, Platform
+from homeassistant.const import CONF_API_KEY, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -19,10 +19,7 @@ type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Set up Portainer from a config entry."""
 
-    session = async_create_clientsession(
-        hass,
-        entry.data[CONF_VERIFY_SSL],
-    )
+    session = async_create_clientsession(hass)
     client = Portainer(
         api_url=entry.data[CONF_HOST],
         api_key=entry.data[CONF_API_KEY],

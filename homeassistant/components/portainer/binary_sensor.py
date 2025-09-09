@@ -77,7 +77,7 @@ async def async_setup_entry(
             PortainerContainerSensor(
                 coordinator,
                 entity_description,
-                device_info,
+                container,
                 endpoint,
             )
             for container in endpoint.containers.values()

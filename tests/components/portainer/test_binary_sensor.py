@@ -2,15 +2,25 @@
 
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+from pyportainer.exceptions import (
+    PortainerAuthenticationError,
+    PortainerConnectionError,
+    PortainerTimeoutError,
+)
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.portainer.coordinator import DEFAULT_SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_entities(
@@ -29,3 +39,43 @@ async def test_all_entities(
         await snapshot_platform(
             hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
+
+
+@pytest.mark.parametrize(
+    ("exception"),
+    [
+        PortainerAuthenticationError("bad creds"),
+        PortainerConnectionError("cannot connect"),
+        PortainerTimeoutError("timeout"),
+    ],
+)
+async def test_refresh_exceptions(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test entities go unavailable after coordinator refresh failures."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_portainer_client.get_endpoints.side_effect = exception
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.practical_morse_status")
+    assert state.state == STATE_UNAVAILABLE
+
+    # Reset endpoints; fail on containers fetch
+    mock_portainer_client.get_endpoints.side_effect = None
+    mock_portainer_client.get_containers.side_effect = exception
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.practical_morse_status")
+    assert state.state == STATE_UNAVAILABLE

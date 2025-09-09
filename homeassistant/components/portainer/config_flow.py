@@ -14,7 +14,7 @@ from pyportainer import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -26,7 +26,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
@@ -34,13 +33,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    client = Portainer(
-        api_url=data[CONF_HOST],
-        api_key=data[CONF_API_KEY],
-        session=async_get_clientsession(hass),
-    )
-
     try:
+        client = Portainer(
+            api_url=data[CONF_HOST],
+            api_key=data[CONF_API_KEY],
+            session=async_get_clientsession(hass),
+        )
         endpoints = await client.get_endpoints()
     except PortainerAuthenticationError:
         raise InvalidAuth from None
@@ -49,14 +47,9 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     except PortainerTimeoutError as err:
         raise PortainerTimeout from err
 
-    _LOGGER.debug("Connected to Portainer API: %s", data[CONF_HOST])
+    del endpoints
 
-    for endpoint in endpoints:
-        assert endpoint.id
-        containers = await client.get_containers(endpoint.id)
-        _LOGGER.debug(
-            "Found %d containers on endpoint %s", len(containers), endpoint.name
-        )
+    _LOGGER.debug("Connected to Portainer API: %s", data[CONF_HOST])
 
     return {"title": data[CONF_HOST]}
 
