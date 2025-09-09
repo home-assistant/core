@@ -964,6 +964,9 @@ fing_agent_api==1.0.3
 # homeassistant.components.fints
 fints==3.1.0
 
+# homeassistant.components.fish_audio
+fish-audio-sdk==2025.4.2
+
 # homeassistant.components.fitbit
 fitbit-web-api==2.13.5
 
