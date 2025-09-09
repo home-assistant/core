@@ -61,8 +61,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
     _async_import_options_from_data_if_missing(hass, entry)
 
-    client = Tado("asd", "asd", session=async_get_clientsession(hass))
-    await client.login()
+    _LOGGER.debug("Refresh token: %s", entry.data[CONF_REFRESH_TOKEN])
+
+    client = Tado(
+        refresh_token=entry.data[CONF_REFRESH_TOKEN],
+        session=async_get_clientsession(hass),
+        debug=True,  # TODO: remove debug=True later
+    )
+    await client.async_init()
 
     coordinator = TadoDataUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()

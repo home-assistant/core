@@ -3,9 +3,9 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
-from PyTado.interface.api.my_tado import TadoZone
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tadoasync.models import ZoneState
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -96,7 +96,7 @@ async def test_aircon_set_hvac_mode(
         ) as mock_set_state,
         patch(
             "homeassistant.components.tado.__init__.PyTado.interface.api.Tado.get_zone_state",
-            return_value=TadoZone(
+            return_value=ZoneState(
                 zone_id=1,
                 current_temp=18.7,
                 connection=None,

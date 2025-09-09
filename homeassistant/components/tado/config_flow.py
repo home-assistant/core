@@ -119,13 +119,12 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.tado is not None
         tado_me = await self.tado.get_me()
 
-        # TODO ERWIN: continue from here!
-        if "homes" not in tado_me or len(tado_me["homes"]) == 0:
+        if tado_me.homes is None or len(tado_me.homes) == 0:
             return self.async_abort(reason="no_homes")
 
-        home = tado_me["homes"][0]
-        unique_id = str(home["id"])
-        name = home["name"]
+        home = tado_me.homes[0]
+        unique_id = str(home.id)
+        name = home.name
 
         if self.source != SOURCE_REAUTH:
             await self.async_set_unique_id(unique_id)

@@ -119,22 +119,23 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[TadoData]):
 
         await self._async_update_devices(devices)
         zones = await self._async_update_zones()
-        weather = await self._tado.get_weather()
+        weather = await self._tado.get_weather()  # TODO: remove this endpoint
         geofence = await self._tado.get_home_state()
 
-        return TadoData(devices, zones, weather, geofence)
+        if self._tado.refresh_token != self._refresh_token:
+            _LOGGER.debug(
+                "New refresh token obtained from Tado: %s", self._tado.refresh_token
+            )
+            self._refresh_token = self._tado.refresh_token
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={
+                    **self.config_entry.data,
+                    CONF_REFRESH_TOKEN: self._refresh_token,
+                },
+            )
 
-        # refresh_token = await self.hass.async_add_executor_job(
-        #     self._tado.get_refresh_token
-        # )
-        #
-        # if refresh_token != self._refresh_token:
-        #     _LOGGER.debug("New refresh token obtained from Tado: %s", refresh_token)
-        #     self._refresh_token = refresh_token
-        #     self.hass.config_entries.async_update_entry(
-        #         self.config_entry,
-        #         data={**self.config_entry.data, CONF_REFRESH_TOKEN: refresh_token},
-        #     )
+        return TadoData(devices, zones, weather, geofence)
 
     async def _async_update_devices(self, devices: dict[str, TadoDevice]) -> None:
         """Update the device data from Tado."""
@@ -218,68 +219,63 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[TadoData]):
     ) -> None:
         """Set a zone overlay."""
 
-        # _LOGGER.debug(
-        #     "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s, fan_speed=%s, swing=%s, fan_level=%s, vertical_swing=%s, horizontal_swing=%s",
-        #     zone_id,
-        #     overlay_mode,
-        #     temperature,
-        #     duration,
-        #     device_type,
-        #     mode,
-        #     fan_speed,
-        #     swing,
-        #     fan_level,
-        #     vertical_swing,
-        #     horizontal_swing,
-        # )
-        #
-        # try:
-        #     await self.hass.async_add_executor_job(
-        #         self._tado.set_zone_overlay,
-        #         zone_id,
-        #         overlay_mode,
-        #         temperature,
-        #         duration,
-        #         device_type,
-        #         "ON",
-        #         mode,
-        #         fan_speed,
-        #         swing,
-        #         fan_level,
-        #         vertical_swing,
-        #         horizontal_swing,
-        #     )
-        #
-        # except RequestException as err:
-        #     raise UpdateFailed(f"Error setting Tado overlay: {err}") from err
-        #
-        # await self._update_zone(zone_id)
+        _LOGGER.debug(
+            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s, fan_speed=%s, swing=%s, fan_level=%s, vertical_swing=%s, horizontal_swing=%s",
+            zone_id,
+            overlay_mode,
+            temperature,
+            duration,
+            device_type,
+            mode,
+            fan_speed,
+            swing,
+            fan_level,
+            vertical_swing,
+            horizontal_swing,
+        )
+
+        try:
+            await self._tado.set_zone_overlay(
+                zone_id,
+                overlay_mode,
+                temperature,
+                duration,
+                device_type,
+                "ON",
+                mode,
+                fan_speed,
+                swing,
+                fan_level,
+                vertical_swing,
+                horizontal_swing,
+            )
+        except TadoError as err:
+            raise UpdateFailed(f"Error setting Tado overlay: {err}") from err
+
+        await self._update_zone(zone_id)
 
     async def set_zone_off(self, zone_id, overlay_mode, device_type="HEATING"):
         """Set a zone to off."""
-        # try:
-        #     await self.hass.async_add_executor_job(
-        #         self._tado.set_zone_overlay,
-        #         zone_id,
-        #         overlay_mode,
-        #         None,
-        #         None,
-        #         device_type,
-        #         "OFF",
-        #     )
-        # except RequestException as err:
-        #     raise UpdateFailed(f"Error setting Tado overlay: {err}") from err
-        #
-        # await self._update_zone(zone_id)
+        try:
+            await self._tado.set_zone_overlay(
+                zone_id,
+                overlay_mode,
+                None,
+                None,
+                device_type,
+                "OFF",
+            )
+        except TadoError as err:
+            raise UpdateFailed(f"Error setting Tado overlay: {err}") from err
+
+        await self._update_zone(zone_id)
 
     async def set_temperature_offset(self, device_id, offset):
         """Set temperature offset of device."""
-        # try:
-        #     await self.hass.async_add_executor_job(
-        #         self._tado.set_temp_offset, device_id, offset
-        #     )
-        # except RequestException as err:
-        #     raise UpdateFailed(f"Error setting Tado temperature offset: {err}") from err
+        try:
+            await self._tado.set_temp_offset(device_id, offset)
+        except TadoError as err:
+            raise UpdateFailed(f"Error setting Tado temperature offset: {err}") from err
 
     async def set_meter_reading(self, reading: int) -> None:
         """Send meter reading to Tado."""

@@ -217,11 +217,16 @@ async def create_climate_entity(
     else:
         supported_hvac_modes.append(HVACMode.HEAT)
 
-    if CONST_MODE_HEAT in capabilities:
-        heat_temperatures = capabilities[CONST_MODE_HEAT]["temperatures"]
+    # This is on older interface style, where the temperatures are inside the HEATING data attribute
+    # TODO: see if this still relevant, whereas it will most likely always resolve in the second if-statement
+    # if capabilities.type == CONST_MODE_HEAT and capabilities[CONST_MODE_HEAT].get(
+    #     "temperatures"
+    # ):
+    #     heat_temperatures = capabilities[CONST_MODE_HEAT]["temperatures"]
+    # CHECK WITH A TADO DEV
 
-    if heat_temperatures is None and "temperatures" in capabilities:
-        heat_temperatures = capabilities["temperatures"]
+    if heat_temperatures is None and capabilities.temperatures:
+        heat_temperatures = capabilities.temperatures
 
     if cool_temperatures is None and heat_temperatures is None:
         _LOGGER.debug("Not adding zone %s since it has no temperatures", name)
@@ -235,14 +240,14 @@ async def create_climate_entity(
     cool_step = None
 
     if heat_temperatures is not None:
-        heat_min_temp = float(heat_temperatures["celsius"]["min"])
-        heat_max_temp = float(heat_temperatures["celsius"]["max"])
-        heat_step = heat_temperatures["celsius"].get("step", PRECISION_TENTHS)
+        heat_min_temp = float(heat_temperatures.celsius.min)
+        heat_max_temp = float(heat_temperatures.celsius.max)
+        heat_step = heat_temperatures.celsius.step or PRECISION_TENTHS
 
     if cool_temperatures is not None:
-        cool_min_temp = float(cool_temperatures["celsius"]["min"])
-        cool_max_temp = float(cool_temperatures["celsius"]["max"])
-        cool_step = cool_temperatures["celsius"].get("step", PRECISION_TENTHS)
+        cool_min_temp = float(cool_temperatures.celsius.min)
+        cool_max_temp = float(cool_temperatures.celsius.max)
+        cool_step = cool_temperatures.celsius.step or PRECISION_TENTHS
 
     auto_geofencing_supported = await tado.get_auto_geofencing_supported()
 
@@ -349,7 +354,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def _tado_zone_data(self) -> ZoneState:
         """Return the Tado zone data."""
-        return self.coordinator.data.zones[self.zone_id]
+        return self.coordinator.data.zones[str(self.zone_id)]
 
     @callback
     def _async_update_zone_data(self) -> None:
@@ -787,8 +792,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     def _is_valid_setting_for_hvac_mode(self, setting: str) -> bool:
         """Determine if a setting is valid for the current HVAC mode."""
-        capabilities: str | dict[str, str] = self._current_tado_capabilities.get(
-            self._current_tado_hvac_mode, {}
+        capabilities: str | dict[str, str] = getattr(
+            self._current_tado_capabilities, self._current_tado_hvac_mode.lower(), None
         )
         if isinstance(capabilities, dict):
             return capabilities.get(setting) is not None
@@ -798,8 +803,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self, setting: str, current_state: str | None
     ) -> bool:
         """Determine if the current setting is supported by the current HVAC mode."""
-        capabilities: str | dict[str, str] = self._current_tado_capabilities.get(
-            self._current_tado_hvac_mode, {}
+        capabilities: str | dict[str, str] = getattr(
+            self._current_tado_capabilities, self._current_tado_hvac_mode.lower(), None
         )
         if isinstance(capabilities, dict) and self._is_valid_setting_for_hvac_mode(
             setting
