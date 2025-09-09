@@ -15,7 +15,7 @@ from homeassistant.helpers import issue_registry as ir
 
 from .const import CONF_API_KEY, CRITICAL_CREDIT_BALANCE, DOMAIN, WARNING_CREDIT_BALANCE
 
-PLATFORMS: list[Platform] = [Platform.STT, Platform.TTS]
+PLATFORMS: list[Platform] = [Platform.TTS]
 
 _LOGGER = logging.getLogger(__name__)
 
