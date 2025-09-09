@@ -1060,6 +1060,8 @@ async def test_supervisor_issue_deprecated_addon(
             "addon": "test",
             "help_url": "https://www.home-assistant.io/help/",
             "community_url": "https://community.home-assistant.io/",
+            "addon_info": "homeassistant://hassio/addon/test/info",
+            "addon_documentation": "homeassistant://hassio/addon/test/documentation",
         },
         "last_step": True,
         "preview": None,
