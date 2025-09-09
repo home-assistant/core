@@ -63,6 +63,7 @@ SENSORS_NO_ARG = (
     "last_boot",
     "memory_pressure_",
     "io_pressure_",
+    "cpu_pressure_",
 )
 
 SENSORS_WITH_ARG = {
@@ -527,6 +528,42 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:timer-outline",
         value_fn=lambda entity: entity.coordinator.data.pressure.get("io", {}).get("full", {}).get("total"),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "cpu_pressure_some_avg10": SysMonitorSensorEntityDescription(
+        key="cpu_pressure_some_avg10",
+        translation_key="cpu_pressure_some_avg10",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:gauge",
+        value_fn=lambda entity: entity.coordinator.data.pressure.get("cpu", {}).get("some", {}).get("avg10"),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "cpu_pressure_some_avg60": SysMonitorSensorEntityDescription(
+        key="cpu_pressure_some_avg60",
+        translation_key="cpu_pressure_some_avg60",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:gauge",
+        value_fn=lambda entity: entity.coordinator.data.pressure.get("cpu", {}).get("some", {}).get("avg10"),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "cpu_pressure_some_avg300": SysMonitorSensorEntityDescription(
+        key="cpu_pressure_some_avg300",
+        translation_key="cpu_pressure_some_avg300",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:gauge",
+        value_fn=lambda entity: entity.coordinator.data.pressure.get("cpu", {}).get("some", {}).get("avg10"),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "cpu_pressure_some_total": SysMonitorSensorEntityDescription(
+        key="cpu_pressure_some_total",
+        translation_key="cpu_pressure_some_total",
+        native_unit_of_measurement=UnitOfTime.MICROSECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:timer-outline",
+        value_fn=lambda entity: entity.coordinator.data.pressure.get("cpu", {}).get("some", {}).get("total"),
         add_to_update=lambda entity: ("pressure", ""),
     ),
 

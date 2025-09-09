@@ -148,6 +148,18 @@
       },
       "io_pressure_full_total": {
         "name": "IO Pressure Full Total"
+      },
+      "cpu_pressure_some_avg10": {
+        "name": "CPU Pressure Some 10s Average"
+      },
+      "cpu_pressure_some_avg60": {
+        "name": "CPU Pressure Some 60s Average"
+      },
+      "cpu_pressure_some_avg300": {
+        "name": "CPU Pressure Some 300s Average"
+      },
+      "cpu_pressure_some_total": {
+        "name": "CPU Pressure Some Full"
       }
     }
   }
