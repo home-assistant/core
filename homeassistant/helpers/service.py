@@ -1177,8 +1177,8 @@ def async_register_entity_service(
 @callback
 def async_register_platform_entity_service(
     hass: HomeAssistant,
-    component_domain: str,
     platform_domain: str,
+    platform_name: str,
     name: str,
     *,
     func: str | Callable[..., Any],
@@ -1196,7 +1196,7 @@ def async_register_platform_entity_service(
 
     def get_entities() -> dict[str, Entity]:
         entities = hass.data.get(DATA_DOMAIN_PLATFORM_ENTITIES, {}).get(
-            (component_domain, platform_domain)
+            (platform_domain, platform_name)
         )
         if entities is None:
             return {}
