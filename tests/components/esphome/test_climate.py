@@ -440,7 +440,7 @@ async def test_climate_entity_with_heat(
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
-        [call(key=1, target_temperature=23, device_id=0)]
+        [call(key=1, target_temperature_low=23, device_id=0)]
     )
     mock_client.climate_command.reset_mock()
 
