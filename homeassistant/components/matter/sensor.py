@@ -1101,17 +1101,6 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="OperationalStateOperationalError",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            translation_key="operational_error",
-            state_class=None,
-        ),
-        entity_class=MatterSensor,
-        required_attributes=(clusters.OperationalState.Attributes.OperationalError,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
             key="OperationalStateCountdownTime",
             translation_key="estimated_end_time",
             device_class=SensorDeviceClass.TIMESTAMP,
