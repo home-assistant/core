@@ -42,7 +42,21 @@ class NessAlarmConnectionError(HomeAssistantError):
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect."""
+    """
+    Validate the user input and attempt to connect to the Ness Alarm device.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        data (dict[str, Any]): Dictionary containing user input, must include
+            CONF_HOST (str): Hostname or IP address of the Ness Alarm device.
+            CONF_PORT (int): Port number to connect to.
+
+    Returns:
+        dict[str, Any]: Dictionary with a "title" key describing the Ness Alarm device.
+
+    Raises:
+        NessAlarmConnectionError: If unable to connect to the specified host and port.
+    """
     host = data[CONF_HOST]
     port = data[CONF_PORT]
 
