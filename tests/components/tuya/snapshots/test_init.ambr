@@ -1084,6 +1084,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[8m3ggyvgycjwz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '8m3ggyvgycjwz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'SGS01',
+    'model_id': 'gvygg3m8',
+    'name': 'humid pelargonia',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[97k3pwirjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -2348,6 +2379,37 @@
     'model': 'Smart plug',
     'model_id': 'qm0iq4nqnrlzh4qc',
     'name': 'Elivco Kitchen Socket',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[cvowstbid97lokayjb2oc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'cvowstbid97lokayjb2oc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'PTH-9CW(QC)',
+    'model_id': 'yakol79dibtswovc',
+    'name': 'PTH-9CW 32',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -3991,6 +4053,37 @@
     'model': 'Smart',
     'model_id': 'y5obtqhuztqsf2mj',
     'name': 'Term - Prizemi',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[jzpap0inhkykqtlwgklc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'jzpap0inhkykqtlwgklc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Curtain switch',
+    'model_id': 'wltqkykhni0papzj',
+    'name': 'Roller shutter Living Room',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
