@@ -199,7 +199,6 @@ EXCEPTIONS = {
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
     "pymitv",  # MIT
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
-    "prowlpy",  # https://github.com/OMEGARAZER/prowlpy/pull/3/files
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
