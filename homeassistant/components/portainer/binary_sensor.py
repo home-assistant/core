@@ -66,9 +66,9 @@ async def async_setup_entry(
     for endpoint in coordinator.data.values():
         entities.extend(
             PortainerEndpointSensor(
-                coordinator=coordinator,
-                entity_description=entity_description,
-                device_info=endpoint,
+                coordinator,
+                entity_description,
+                endpoint,
             )
             for entity_description in ENDPOINT_SENSORS
         )
