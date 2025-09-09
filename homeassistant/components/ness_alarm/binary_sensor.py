@@ -80,7 +80,7 @@ class NessZoneSensor(BinarySensorEntity):
         self,
         zone_id: int,
         name: str,
-        zone_type: str | BinarySensorDeviceClass,
+        zone_type: str,
         entry_id: str,
     ) -> None:
         """Initialize the zone sensor."""

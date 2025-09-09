@@ -22,6 +22,7 @@ from .const import (
     CONF_SUPPORT_HOME_ARM,
     CONF_TYPE,
     CONF_ZONES,
+    CONNECTION_TIMEOUT_SECONDS,
     DEFAULT_INFER_ARMING_STATE,
     DEFAULT_MAX_SUPPORTED_ZONES,
     DEFAULT_PORT,
@@ -42,8 +43,7 @@ class NessAlarmConnectionError(HomeAssistantError):
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """
-    Validate the user input and attempt to connect to the Ness Alarm device.
+    """Validate the user input and attempt to connect to the Ness Alarm device.
 
     Args:
         hass (HomeAssistant): The Home Assistant instance.
@@ -62,7 +62,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     def test_connection():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(5)
+        sock.settimeout(CONNECTION_TIMEOUT_SECONDS)
         try:
             result = sock.connect_ex((host, port))
         except OSError:
