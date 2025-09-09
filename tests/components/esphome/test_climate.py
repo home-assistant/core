@@ -141,13 +141,23 @@ async def test_climate_entity_with_step_and_two_point(
     assert state is not None
     assert state.state == HVACMode.COOL
 
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 25},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 25},
+        blocking=True,
+    )
+
+    mock_client.climate_command.assert_has_calls(
+        [
+            call(
+                key=1,
+                target_temperature_high=25.0,
+                device_id=0,
+            )
+        ]
+    )
+    mock_client.climate_command.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -606,7 +616,7 @@ async def test_climate_entity_with_inf_value(
     assert attributes[ATTR_HUMIDITY] == 26
     assert attributes[ATTR_MAX_HUMIDITY] == 30
     assert attributes[ATTR_MIN_HUMIDITY] == 10
-    assert ATTR_TEMPERATURE not in attributes
+    assert attributes[ATTR_TEMPERATURE] is None
     assert attributes[ATTR_CURRENT_TEMPERATURE] is None
 
 
