@@ -196,7 +196,6 @@ class OptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Manage the options."""
-        # Fetch the config entry dynamically
         entry = self.hass.config_entries.async_get_entry(self._entry_id)
         if entry is None:
             return self.async_abort(reason="entry_not_found")
