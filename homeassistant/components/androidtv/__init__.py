@@ -33,6 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -47,6 +48,7 @@ from .const import (
     DEFAULT_ADB_SERVER_PORT,
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
+    DOMAIN,
     PROP_ETHMAC,
     PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
@@ -64,6 +66,8 @@ ADB_PYTHON_EXCEPTIONS: tuple = (
     TcpTimeoutException,
 )
 ADB_TCP_EXCEPTIONS: tuple = (ConnectionResetError, RuntimeError)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
