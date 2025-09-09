@@ -1838,6 +1838,79 @@ async def test_reload_during_setup_retrying_waits(hass: HomeAssistant) -> None:
     ]
 
 
+async def test_create_entry_next_flow(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test next_flow parameter for create entry."""
+
+    async def mock_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        """Mock setup."""
+        return True
+
+    async_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=mock_async_setup,
+            async_setup_entry=async_setup_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        async def async_step_import(
+            self, user_input: dict[str, Any] | None = None
+        ) -> config_entries.ConfigFlowResult:
+            """Test create entry with next_flow parameter."""
+            result = await hass.config_entries.flow.async_init(
+                "comp",
+                context={"source": config_entries.SOURCE_USER},
+            )
+            return self.async_create_entry(
+                title="import",
+                data={"flow": "import", "next_flow_id": result["flow_id"]},
+                next_flow=(config_entries.FlowType.CONFIG_FLOW, result["flow_id"]),
+            )
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> config_entries.ConfigFlowResult:
+            """Test next step."""
+            return self.async_create_entry(title="user", data={"flow": "user"})
+
+    with mock_config_flow("comp", TestFlow):
+        assert await async_setup_component(hass, "comp", {})
+
+        result = await hass.config_entries.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_IMPORT},
+        )
+        await hass.async_block_till_done()
+
+        assert async_setup_entry.call_count == 2
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "import"
+        assert result["data"]["flow"] == "import"
+        next_flow = result.get("next_flow")
+        assert next_flow is not None
+        assert next_flow[0] == config_entries.FlowType.CONFIG_FLOW
+        assert isinstance(next_flow[1], str)
+        assert next_flow[1] == result["data"]["next_flow_id"]
+
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 2
+
+        user_entry = next(
+            (entry for entry in entries if entry.data.get("flow") == "user"),
+            None,
+        )
+        assert user_entry is not None
+        assert user_entry.title == "user"
+
+
 async def test_create_entry_options(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
