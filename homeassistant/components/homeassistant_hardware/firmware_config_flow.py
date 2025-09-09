@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from enum import StrEnum
+import json
 import logging
 from typing import Any
 
@@ -23,6 +25,7 @@ from homeassistant.config_entries import (
     ConfigEntryBaseFlow,
     ConfigFlow,
     ConfigFlowResult,
+    FlowType,
     OptionsFlow,
 )
 from homeassistant.core import callback
@@ -50,11 +53,26 @@ STEP_PICK_FIRMWARE_THREAD = "pick_firmware_thread"
 STEP_PICK_FIRMWARE_ZIGBEE = "pick_firmware_zigbee"
 
 
+class PickedFirmwareType(StrEnum):
+    """Firmware types that can be picked."""
+
+    THREAD = "thread"
+    ZIGBEE = "zigbee"
+
+
+class ZigbeeIntegration(StrEnum):
+    """Zigbee integrations that can be picked."""
+
+    OTHER = "other"
+    ZHA = "zha"
+
+
 class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
     _failed_addon_name: str
     _failed_addon_reason: str
+    _picked_firmware_type: PickedFirmwareType
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Instantiate base flow."""
@@ -63,6 +81,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self._probed_firmware_info: FirmwareInfo | None = None
         self._device: str | None = None  # To be set in a subclass
         self._hardware_name: str = "unknown"  # To be set in a subclass
+        self._zigbee_integration = ZigbeeIntegration.ZHA
 
         self.addon_install_task: asyncio.Task | None = None
         self.addon_start_task: asyncio.Task | None = None
@@ -281,17 +300,81 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             },
         )
 
-    async def async_step_pick_firmware_zigbee(
+    async def async_step_zigbee_installation_type(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Pick Zigbee firmware."""
+        """Handle the installation type step."""
+        return self.async_show_menu(
+            step_id="zigbee_installation_type",
+            menu_options=[
+                "zigbee_intent_recommended",
+                "zigbee_intent_custom",
+            ],
+        )
+
+    async def async_step_zigbee_intent_recommended(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select recommended installation type."""
+        self._zigbee_integration = ZigbeeIntegration.ZHA
+        return await self._async_continue_picked_firmware()
+
+    async def async_step_zigbee_intent_custom(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select custom installation type."""
+        return await self.async_step_zigbee_integration()
+
+    async def async_step_zigbee_integration(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select Zigbee integration."""
+        return self.async_show_menu(
+            step_id="zigbee_integration",
+            menu_options=[
+                "zigbee_zha_integration",
+                "zigbee_other_integration",
+            ],
+        )
+
+    async def async_step_zigbee_zha_integration(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select ZHA integration."""
+        self._zigbee_integration = ZigbeeIntegration.ZHA
+        return await self._async_continue_picked_firmware()
+
+    async def async_step_zigbee_other_integration(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select other Zigbee integration."""
+        self._zigbee_integration = ZigbeeIntegration.OTHER
+        return await self._async_continue_picked_firmware()
+
+    async def _async_continue_picked_firmware(self) -> ConfigFlowResult:
+        """Continue to the picked firmware step."""
+        _LOGGER.debug("Probing all firmwares for: %s", self._picked_firmware_type)
         if not await self._probe_firmware_info():
             return self.async_abort(
                 reason="unsupported_firmware",
                 description_placeholders=self._get_translation_placeholders(),
             )
 
-        return await self.async_step_install_zigbee_firmware()
+        if self._picked_firmware_type == PickedFirmwareType.ZIGBEE:
+            _LOGGER.debug("Installing firmware for: %s", self._picked_firmware_type)
+            return await self.async_step_install_zigbee_firmware()
+
+        if result := await self._ensure_thread_addon_setup():
+            return result
+
+        return await self.async_step_install_thread_firmware()
+
+    async def async_step_pick_firmware_zigbee(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick Zigbee firmware."""
+        self._picked_firmware_type = PickedFirmwareType.ZIGBEE
+        return await self.async_step_zigbee_installation_type()
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -317,42 +400,55 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Pre-confirm Zigbee setup."""
 
         # This step is necessary to prevent `user_input` from being passed through
-        return await self.async_step_confirm_zigbee()
+        return await self.async_step_continue_zigbee()
 
-    async def async_step_confirm_zigbee(
+    async def async_step_continue_zigbee(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm Zigbee setup."""
+        """Continue Zigbee setup."""
         assert self._device is not None
         assert self._hardware_name is not None
 
-        if user_input is None:
-            return self.async_show_form(
-                step_id="confirm_zigbee",
-                description_placeholders=self._get_translation_placeholders(),
-            )
-
+        _LOGGER.debug(
+            "Continuing Zigbee setup with integration %s", self._zigbee_integration
+        )
+        _LOGGER.debug(
+            "Probing Zigbee: %s, firmware for: %s",
+            ApplicationType.EZSP,
+            self._picked_firmware_type,
+        )
         if not await self._probe_firmware_info(probe_methods=(ApplicationType.EZSP,)):
             return self.async_abort(
                 reason="unsupported_firmware",
                 description_placeholders=self._get_translation_placeholders(),
             )
 
-        await self.hass.config_entries.flow.async_init(
+        if self._zigbee_integration == ZigbeeIntegration.OTHER:
+            return self._async_flow_finished()
+
+        _LOGGER.debug("Starting ZHA config flow")
+        result = await self.hass.config_entries.flow.async_init(
             ZHA_DOMAIN,
             context={"source": "hardware"},
-            data={
-                "name": self._hardware_name,
-                "port": {
-                    "path": self._device,
-                    "baudrate": 115200,
-                    "flow_control": "hardware",
-                },
-                "radio_type": "ezsp",
-            },
+            data=(
+                {
+                    "name": self._hardware_name,
+                    "port": {
+                        "path": self._device,
+                        "baudrate": 115200,
+                        "flow_control": "hardware",
+                    },
+                    "radio_type": "ezsp",
+                }
+            ),
         )
+        _LOGGER.debug("ZHA flow result: %s", json.dumps(result))
+        return self._continue_zha_flow(result)
 
-        return self._async_flow_finished()
+    @callback
+    def _continue_zha_flow(self, zha_result: ConfigFlowResult) -> ConfigFlowResult:
+        """Continue the ZHA flow."""
+        raise NotImplementedError
 
     async def _ensure_thread_addon_setup(self) -> ConfigFlowResult | None:
         """Ensure the OTBR addon is set up and not running."""
@@ -391,16 +487,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Thread firmware."""
-        if not await self._probe_firmware_info():
-            return self.async_abort(
-                reason="unsupported_firmware",
-                description_placeholders=self._get_translation_placeholders(),
-            )
-
-        if result := await self._ensure_thread_addon_setup():
-            return result
-
-        return await self.async_step_install_thread_firmware()
+        self._picked_firmware_type = PickedFirmwareType.THREAD
+        return await self._async_continue_picked_firmware()
 
     async def async_step_install_thread_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -572,6 +660,23 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
 
         return await self.async_step_pick_firmware()
 
+    @callback
+    def _continue_zha_flow(self, zha_result: ConfigFlowResult) -> ConfigFlowResult:
+        """Continue the ZHA flow."""
+        next_flow_id = zha_result["flow_id"]
+
+        result = self._async_flow_finished()
+        result = (
+            self.async_create_entry(
+                title=result["title"] or self._hardware_name,
+                data=result["data"],
+                next_flow=(FlowType.CONFIG_FLOW, next_flow_id),
+            )
+            | result  # update all items with the child result
+        )
+        _LOGGER.debug("Flow result: %s", json.dumps(result))
+        return result
+
 
 class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlow):
     """Zigbee and Thread options flow handlers."""
@@ -629,3 +734,10 @@ class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlow):
                     )
 
         return await super().async_step_pick_firmware_thread(user_input)
+
+    @callback
+    def _continue_zha_flow(self, zha_result: ConfigFlowResult) -> ConfigFlowResult:
+        """Continue the ZHA flow."""
+        # The options flow cannot return a next_flow yet, so we just finish here.
+        # The options flow should be changed to a reconfigure flow.
+        return self._async_flow_finished()
