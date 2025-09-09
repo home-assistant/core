@@ -16,6 +16,7 @@ from homeassistant.components import camera, conversation, media_source
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession, async_get_chat_session
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
@@ -116,6 +117,7 @@ async def async_generate_data(
     instructions: str,
     structure: vol.Schema | None = None,
     attachments: list[dict] | None = None,
+    llm_api: llm.API | None = None,
 ) -> GenDataTaskResult:
     """Run a data generation task in the AI Task integration."""
     if entity_id is None:
@@ -151,6 +153,7 @@ async def async_generate_data(
                 instructions=instructions,
                 structure=structure,
                 attachments=resolved_attachments or None,
+                llm_api=llm_api,
             ),
         )
 
@@ -177,11 +180,17 @@ async def async_generate_image(
     hass: HomeAssistant,
     *,
     task_name: str,
-    entity_id: str,
+    entity_id: str | None = None,
     instructions: str,
     attachments: list[dict] | None = None,
 ) -> ServiceResponse:
     """Run an image generation task in the AI Task integration."""
+    if entity_id is None:
+        entity_id = hass.data[DATA_PREFERENCES].gen_image_entity_id
+
+    if entity_id is None:
+        raise HomeAssistantError("No entity_id provided and no preferred entity set")
+
     entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
     if entity is None:
         raise HomeAssistantError(f"AI Task entity {entity_id} not found")
@@ -265,6 +274,9 @@ class GenDataTask:
 
     attachments: list[conversation.Attachment] | None = None
     """List of attachments to go along the instructions."""
+
+    llm_api: llm.API | None = None
+    """API to provide to the LLM."""
 
     def __str__(self) -> str:
         """Return task as a string."""

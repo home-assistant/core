@@ -2,7 +2,7 @@
   "issues": {
     "deprecated_object_id": {
       "title": "Deprecated option object_id used",
-      "description": "Entity {entity_id} uses the `object_id` option which deprecated. To fix the issue, replace the `object_id: {object_id}` option with `default_entity_id: {domain}.{object_id}` in your \"configuration.yaml\", and restart Home Assistant."
+      "description": "Entity {entity_id} uses the `object_id` option which is deprecated. To fix the issue, replace the `object_id: {object_id}` option with `default_entity_id: {domain}.{object_id}` in your \"configuration.yaml\", and restart Home Assistant."
     },
     "deprecated_vacuum_battery_feature": {
       "title": "Deprecated battery feature used",
