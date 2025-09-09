@@ -56,7 +56,7 @@ async def test_refresh_exceptions(
 ) -> None:
     """Test entities go unavailable after coordinator refresh failures."""
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     coordinator: PortainerCoordinator = mock_config_entry.runtime_data
     coordinator.portainer.get_endpoints.side_effect = exception
