@@ -82,6 +82,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> bool:
     """Unload a config entry."""
     entry.runtime_data.mqtt.unsubscribe_listeners()
-    entry.runtime_data.mqtt.disconnect()
+    await hass.async_add_executor_job(entry.runtime_data.mqtt.disconnect)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
