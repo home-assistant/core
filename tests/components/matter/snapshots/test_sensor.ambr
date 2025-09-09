@@ -3763,7 +3763,7 @@
     'state': 'pre-soak',
   })
 # ---
-# name: test_sensors[laundry_dryer][sensor.mock_laundrydryer_none-entry]
+# name: test_sensors[laundry_dryer][sensor.mock_laundrydryer_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3783,7 +3783,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_laundrydryer_none',
+    'entity_id': 'sensor.mock_laundrydryer_operational_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3795,7 +3795,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Operational error',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3805,11 +3805,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[laundry_dryer][sensor.mock_laundrydryer_none-state]
+# name: test_sensors[laundry_dryer][sensor.mock_laundrydryer_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Mock Laundrydryer None',
+      'friendly_name': 'Mock Laundrydryer Operational error',
       'options': list([
         'no_error',
         'unable_to_start_or_resume',
@@ -3818,7 +3818,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_laundrydryer_none',
+    'entity_id': 'sensor.mock_laundrydryer_operational_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3989,7 +3989,7 @@
     'state': '2025-01-01T14:00:30+00:00',
   })
 # ---
-# name: test_sensors[microwave_oven][sensor.microwave_oven_none-entry]
+# name: test_sensors[microwave_oven][sensor.microwave_oven_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4009,7 +4009,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.microwave_oven_none',
+    'entity_id': 'sensor.microwave_oven_operational_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4021,7 +4021,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Operational error',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4031,11 +4031,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[microwave_oven][sensor.microwave_oven_none-state]
+# name: test_sensors[microwave_oven][sensor.microwave_oven_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Microwave Oven None',
+      'friendly_name': 'Microwave Oven Operational error',
       'options': list([
         'no_error',
         'unable_to_start_or_resume',
@@ -4044,7 +4044,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.microwave_oven_none',
+    'entity_id': 'sensor.microwave_oven_operational_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5069,7 +5069,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[silabs_dishwasher][sensor.dishwasher_none-entry]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5089,7 +5089,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.dishwasher_none',
+    'entity_id': 'sensor.dishwasher_operational_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5101,7 +5101,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Operational error',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5111,11 +5111,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_dishwasher][sensor.dishwasher_none-state]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Dishwasher None',
+      'friendly_name': 'Dishwasher Operational error',
       'options': list([
         'no_error',
         'unable_to_start_or_resume',
@@ -5124,7 +5124,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_none',
+    'entity_id': 'sensor.dishwasher_operational_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5992,7 +5992,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_none-entry]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6012,7 +6012,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.laundrywasher_none',
+    'entity_id': 'sensor.laundrywasher_operational_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6024,7 +6024,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Operational error',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6034,11 +6034,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_none-state]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'LaundryWasher None',
+      'friendly_name': 'LaundryWasher Operational error',
       'options': list([
         'no_error',
         'unable_to_start_or_resume',
@@ -6047,7 +6047,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.laundrywasher_none',
+    'entity_id': 'sensor.laundrywasher_operational_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -7202,7 +7202,7 @@
     'state': '2025-08-29T21:00:00+00:00',
   })
 # ---
-# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_none-entry]
+# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7237,7 +7237,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_vacuum_none',
+    'entity_id': 'sensor.mock_vacuum_operational_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7249,7 +7249,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Operational error',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7259,11 +7259,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_none-state]
+# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Mock Vacuum None',
+      'friendly_name': 'Mock Vacuum Operational error',
       'options': list([
         'no_error',
         'unable_to_start_or_resume',
@@ -7287,7 +7287,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_vacuum_none',
+    'entity_id': 'sensor.mock_vacuum_operational_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
