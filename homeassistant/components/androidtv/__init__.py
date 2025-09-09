@@ -36,6 +36,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ADB_SERVER_IP,
@@ -50,6 +51,7 @@ from .const import (
     PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
 )
+from .services import async_setup_services
 
 ADB_PYTHON_EXCEPTIONS: tuple = (
     AdbTimeoutError,
@@ -185,6 +187,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.minor_version,
     )
 
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Android TV / Fire TV integration."""
+    async_setup_services(hass)
     return True
 
 
