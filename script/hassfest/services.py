@@ -264,10 +264,10 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
 
         if integration.core and "services" in strings:
             section_fields = set()
-            for content in service_schema.get("fields", {}).values():
-                if "fields" in content:
+            for field in service_schema.get("fields", {}).values():
+                if "fields" in field:
                     # This is a section
-                    section_fields.update(content["fields"].keys())
+                    section_fields.update(field["fields"].keys())
             fields = {
                 field
                 for field in strings["services"][service_name].get("fields", {})
