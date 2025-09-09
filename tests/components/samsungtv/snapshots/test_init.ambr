@@ -22,7 +22,6 @@
           'be9554b9-c9fb-41f4-8920-22da015376a4',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': None,
@@ -32,7 +31,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -57,7 +55,6 @@
           '123456',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': None,
@@ -67,7 +64,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -96,7 +92,6 @@
           'be9554b9-c9fb-41f4-8920-22da015376a4',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': None,
@@ -106,7 +101,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),

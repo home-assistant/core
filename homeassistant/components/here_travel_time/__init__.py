@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.const import CONF_API_KEY, CONF_MODE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.start import async_at_started
 
-from .const import TRAVEL_MODE_PUBLIC
+from .const import CONF_TRAFFIC_MODE, TRAVEL_MODE_PUBLIC
 from .coordinator import (
     HereConfigEntry,
     HERERoutingDataUpdateCoordinator,
@@ -14,6 +16,8 @@ from .coordinator import (
 )
 
 PLATFORMS = [Platform.SENSOR]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: HereConfigEntry) -> bool:
@@ -43,3 +47,28 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: HereConfigEntry
+) -> bool:
+    """Migrate an old config entry."""
+
+    if config_entry.version == 1 and config_entry.minor_version == 1:
+        _LOGGER.debug(
+            "Migrating from version %s.%s",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+        options = dict(config_entry.options)
+        options[CONF_TRAFFIC_MODE] = True
+
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, version=1, minor_version=2
+        )
+        _LOGGER.debug(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+    return True

@@ -1,5 +1,7 @@
 """Test the Telemetry Diagnostics."""
 
+from unittest.mock import AsyncMock
+
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,6 +20,7 @@ async def test_diagnostics(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Test diagnostics."""
 

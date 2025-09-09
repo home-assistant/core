@@ -38,27 +38,25 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
-  discovery-update-info:
-    status: exempt
-    comment: is not locally discoverable
+  diagnostics: done
+  discovery-update-info: done
   discovery:
-    status: exempt
-    comment: is not locally discoverable
+    status: done
+    comment: hassio addon supports discovery, other installation methods are not discoverable
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: integration is a service
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
@@ -66,7 +64,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: has no repairs

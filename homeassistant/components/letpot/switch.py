@@ -25,7 +25,7 @@ class LetPotSwitchEntityDescription(LetPotEntityDescription, SwitchEntityDescrip
     """Describes a LetPot switch entity."""
 
     value_fn: Callable[[LetPotDeviceStatus], bool | None]
-    set_value_fn: Callable[[LetPotDeviceClient, bool], Coroutine[Any, Any, None]]
+    set_value_fn: Callable[[LetPotDeviceClient, str, bool], Coroutine[Any, Any, None]]
 
 
 SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
@@ -33,7 +33,9 @@ SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
         key="alarm_sound",
         translation_key="alarm_sound",
         value_fn=lambda status: status.system_sound,
-        set_value_fn=lambda device_client, value: device_client.set_sound(value),
+        set_value_fn=(
+            lambda device_client, serial, value: device_client.set_sound(serial, value)
+        ),
         entity_category=EntityCategory.CONFIG,
         supported_fn=lambda coordinator: coordinator.data.system_sound is not None,
     ),
@@ -41,25 +43,35 @@ SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
         key="auto_mode",
         translation_key="auto_mode",
         value_fn=lambda status: status.water_mode == 1,
-        set_value_fn=lambda device_client, value: device_client.set_water_mode(value),
+        set_value_fn=(
+            lambda device_client, serial, value: device_client.set_water_mode(
+                serial, value
+            )
+        ),
         entity_category=EntityCategory.CONFIG,
         supported_fn=(
             lambda coordinator: DeviceFeature.PUMP_AUTO
-            in coordinator.device_client.device_features
+            in coordinator.device_client.device_info(
+                coordinator.device.serial_number
+            ).features
         ),
     ),
     LetPotSwitchEntityDescription(
         key="power",
         translation_key="power",
         value_fn=lambda status: status.system_on,
-        set_value_fn=lambda device_client, value: device_client.set_power(value),
+        set_value_fn=lambda device_client, serial, value: device_client.set_power(
+            serial, value
+        ),
         entity_category=EntityCategory.CONFIG,
     ),
     LetPotSwitchEntityDescription(
         key="pump_cycling",
         translation_key="pump_cycling",
         value_fn=lambda status: status.pump_mode == 1,
-        set_value_fn=lambda device_client, value: device_client.set_pump_mode(value),
+        set_value_fn=lambda device_client, serial, value: device_client.set_pump_mode(
+            serial, value
+        ),
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -104,11 +116,13 @@ class LetPotSwitchEntity(LetPotEntity, SwitchEntity):
     @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.entity_description.set_value_fn(self.coordinator.device_client, True)
+        await self.entity_description.set_value_fn(
+            self.coordinator.device_client, self.coordinator.device.serial_number, True
+        )
 
     @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.set_value_fn(
-            self.coordinator.device_client, False
+            self.coordinator.device_client, self.coordinator.device.serial_number, False
         )

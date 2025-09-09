@@ -13,6 +13,39 @@
           "verify_ssl": "Enable SSL certificate verification for secure connections. Disable only if connecting to an Uptime Kuma instance using a self-signed certificate or via IP address",
           "api_key": "Enter an API key. To create a new API key navigate to **Settings → API Keys** and select **Add API Key**"
         }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate with Uptime Kuma: {name}",
+        "description": "The API key for **{name}** is invalid. To re-authenticate with Uptime Kuma provide a new API key below",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::uptime_kuma::config::step::user::data_description::api_key%]"
+        }
+      },
+      "reconfigure": {
+        "title": "Update configuration for Uptime Kuma",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "url": "[%key:component::uptime_kuma::config::step::user::data_description::url%]",
+          "verify_ssl": "[%key:component::uptime_kuma::config::step::user::data_description::verify_ssl%]",
+          "api_key": "[%key:component::uptime_kuma::config::step::user::data_description::api_key%]"
+        }
+      },
+      "hassio_confirm": {
+        "title": "Uptime Kuma via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the Uptime Kuma service provided by the add-on: {addon}?",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::uptime_kuma::config::step::user::data_description::api_key%]"
+        }
       }
     },
     "error": {
@@ -21,7 +54,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
@@ -81,6 +116,11 @@
       "port": {
         "name": "Monitored port"
       }
+    },
+    "update": {
+      "update": {
+        "name": "Uptime Kuma version"
+      }
     }
   },
   "exceptions": {
@@ -89,6 +129,9 @@
     },
     "request_failed_exception": {
       "message": "Connection to Uptime Kuma failed"
+    },
+    "update_check_failed": {
+      "message": "Failed to check for latest Uptime Kuma update"
     }
   }
 }

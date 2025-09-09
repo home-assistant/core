@@ -6,17 +6,19 @@ from datetime import timedelta
 import logging
 
 from pythonkuma import (
+    UpdateException,
     UptimeKuma,
     UptimeKumaAuthenticationException,
     UptimeKumaException,
     UptimeKumaMonitor,
     UptimeKumaVersion,
 )
+from pythonkuma.update import LatestRelease, UpdateChecker
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -24,6 +26,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL_UPDATES = timedelta(hours=3)
 
 type UptimeKumaConfigEntry = ConfigEntry[UptimeKumaDataUpdateCoordinator]
 
@@ -45,7 +50,7 @@ class UptimeKumaDataUpdateCoordinator(
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=SCAN_INTERVAL,
         )
         session = async_get_clientsession(hass, config_entry.data[CONF_VERIFY_SSL])
         self.api = UptimeKuma(
@@ -59,7 +64,7 @@ class UptimeKumaDataUpdateCoordinator(
         try:
             metrics = await self.api.metrics()
         except UptimeKumaAuthenticationException as e:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed_exception",
             ) from e
@@ -99,9 +104,39 @@ def async_migrate_entities_unique_ids(
             f"{registry_entry.config_entry_id}_"
         ).removesuffix(f"_{registry_entry.translation_key}")
         if monitor := next(
-            (m for m in metrics.values() if m.monitor_name == name), None
+            (
+                m
+                for m in metrics.values()
+                if m.monitor_name == name and m.monitor_id is not None
+            ),
+            None,
         ):
             entity_registry.async_update_entity(
                 registry_entry.entity_id,
                 new_unique_id=f"{registry_entry.config_entry_id}_{monitor.monitor_id!s}_{registry_entry.translation_key}",
             )
+
+
+class UptimeKumaSoftwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
+    """Uptime Kuma coordinator for retrieving update information."""
+
+    def __init__(self, hass: HomeAssistant, update_checker: UpdateChecker) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=None,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL_UPDATES,
+        )
+        self.update_checker = update_checker
+
+    async def _async_update_data(self) -> LatestRelease:
+        """Fetch data."""
+        try:
+            return await self.update_checker.latest_release()
+        except UpdateException as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_check_failed",
+            ) from e

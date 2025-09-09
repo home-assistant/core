@@ -4,6 +4,8 @@ from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from psnawp_api.models import User
+from psnawp_api.models.group.group import Group
 from psnawp_api.models.trophies import (
     PlatformType,
     TrophySet,
@@ -13,6 +15,7 @@ from psnawp_api.models.trophies import (
 import pytest
 
 from homeassistant.components.playstation_network.const import CONF_NPSSO, DOMAIN
+from homeassistant.config_entries import ConfigSubentryData
 
 from tests.common import MockConfigEntry
 
@@ -31,6 +34,15 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_NPSSO: NPSSO_TOKEN,
         },
         unique_id=PSN_ID,
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_id="ABCDEF",
+                subentry_type="friend",
+                title="PublicUniversalFriend",
+                unique_id="fren-psn-id",
+            )
+        ],
     )
 
 
@@ -156,6 +168,26 @@ def mock_psnawpapi(mock_user: MagicMock) -> Generator[MagicMock]:
                 ]
             }
         }
+        client.me.return_value.get_shareable_profile_link.return_value = {
+            "shareImageUrl": "https://xxxxx.cloudfront.net/profile-testuser?Expires=1753304493"
+        }
+        group = MagicMock(spec=Group, group_id="test-groupid")
+
+        group.get_group_information.return_value = {
+            "groupName": {"value": ""},
+            "members": [
+                {"onlineId": "PublicUniversalFriend", "accountId": "fren-psn-id"},
+                {"onlineId": "testuser", "accountId": PSN_ID},
+            ],
+        }
+        client.me.return_value.get_groups.return_value = [group]
+        fren = MagicMock(
+            spec=User, account_id="fren-psn-id", online_id="PublicUniversalFriend"
+        )
+        fren.get_presence.return_value = mock_user.get_presence.return_value
+
+        client.user.return_value.friends_list.return_value = [fren]
+
         yield client
 
 

@@ -120,8 +120,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[KNX_MODULE_KEY] = knx_module
 
-    entry.async_on_unload(entry.add_update_listener(async_update_entry))
-
     if CONF_KNX_EXPOSE in config:
         for expose_config in config[CONF_KNX_EXPOSE]:
             knx_module.exposures.append(
@@ -172,11 +170,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data.pop(DOMAIN)
 
     return unload_ok
-
-
-async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update a given config entry."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

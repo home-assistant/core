@@ -9,6 +9,7 @@
     'subentries': dict({
       'ulid-ai-task': dict({
         'data': dict({
+          'recommended': True,
         }),
         'subentry_id': 'ulid-ai-task',
         'subentry_type': 'ai_task_data',
@@ -34,8 +35,19 @@
         'title': 'Google AI Conversation',
         'unique_id': None,
       }),
+      'ulid-stt': dict({
+        'data': dict({
+          'prompt': 'Transcribe the attached audio',
+          'recommended': True,
+        }),
+        'subentry_id': 'ulid-stt',
+        'subentry_type': 'stt',
+        'title': 'Google AI STT',
+        'unique_id': None,
+      }),
       'ulid-tts': dict({
         'data': dict({
+          'recommended': True,
         }),
         'subentry_id': 'ulid-tts',
         'subentry_type': 'tts',

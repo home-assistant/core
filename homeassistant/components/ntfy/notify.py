@@ -12,7 +12,6 @@ from aiontfy.exceptions import (
     NtfyUnauthorizedAuthenticationError,
 )
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
@@ -21,16 +20,14 @@ from homeassistant.components.notify import (
     NotifyEntityDescription,
     NotifyEntityFeature,
 )
-from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_TOPIC, DOMAIN
+from .const import DOMAIN
 from .coordinator import NtfyConfigEntry
+from .entity import NtfyBaseEntity
 
 PARALLEL_UPDATES = 0
 
@@ -86,38 +83,15 @@ async def async_setup_entry(
     )
 
 
-class NtfyNotifyEntity(NotifyEntity):
+class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
     """Representation of a ntfy notification entity."""
 
     entity_description = NotifyEntityDescription(
         key="publish",
         translation_key="publish",
         name=None,
-        has_entity_name=True,
     )
     _attr_supported_features = NotifyEntityFeature.TITLE
-
-    def __init__(
-        self,
-        config_entry: NtfyConfigEntry,
-        subentry: ConfigSubentry,
-    ) -> None:
-        """Initialize a notification entity."""
-
-        self._attr_unique_id = f"{config_entry.entry_id}_{subentry.subentry_id}_{self.entity_description.key}"
-        self.topic = subentry.data[CONF_TOPIC]
-
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer="ntfy LLC",
-            model="ntfy",
-            name=subentry.data.get(CONF_NAME, self.topic),
-            configuration_url=URL(config_entry.data[CONF_URL]) / self.topic,
-            identifiers={(DOMAIN, f"{config_entry.entry_id}_{subentry.subentry_id}")},
-            via_device=(DOMAIN, config_entry.entry_id),
-        )
-        self.config_entry = config_entry
-        self.ntfy = config_entry.runtime_data.ntfy
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Publish a message to a topic."""

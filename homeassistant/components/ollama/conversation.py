@@ -8,7 +8,6 @@ from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OllamaConfigEntry
@@ -84,15 +83,4 @@ class OllamaConversationEntity(
 
         await self._async_handle_chat_log(chat_log)
 
-        # Create intent response
-        intent_response = intent.IntentResponse(language=user_input.language)
-        if not isinstance(chat_log.content[-1], conversation.AssistantContent):
-            raise TypeError(
-                f"Unexpected last message type: {type(chat_log.content[-1])}"
-            )
-        intent_response.async_set_speech(chat_log.content[-1].content or "")
-        return conversation.ConversationResult(
-            response=intent_response,
-            conversation_id=chat_log.conversation_id,
-            continue_conversation=chat_log.continue_conversation,
-        )
+        return conversation.async_get_result_from_chat_log(user_input, chat_log)
