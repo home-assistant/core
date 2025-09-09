@@ -12,6 +12,7 @@ from aiontfy.exceptions import (
     NtfyUnauthorizedAuthenticationError,
 )
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
