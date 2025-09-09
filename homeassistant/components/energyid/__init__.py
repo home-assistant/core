@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -21,7 +22,7 @@ from .const import (
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_ENERGYID_KEY,
-    CONF_HA_ENTITY_ID,
+    CONF_HA_ENTITY_UUID,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
 )
@@ -140,13 +141,30 @@ async def async_update_listeners(
     old_mappings = set(runtime_data.mappings.keys())
     new_mappings = set()
 
+    # Get entity registry
+    ent_reg = er.async_get(hass)
+
     for subentry in entry.subentries.values():
         subentry_data = subentry.data
-        ha_entity_id = subentry_data.get(CONF_HA_ENTITY_ID)
+
+        # Get entity UUID and look up current entity ID
+        entity_uuid = subentry_data.get(CONF_HA_ENTITY_UUID)
         energyid_key = subentry_data.get(CONF_ENERGYID_KEY)
 
-        if not (ha_entity_id and energyid_key):
+        if not (entity_uuid and energyid_key):
             continue
+
+        # Look up entity ID from UUID
+        entity_entry = ent_reg.async_get(entity_uuid)
+        if not entity_entry:
+            _LOGGER.warning(
+                "Entity with UUID %s does not exist, skipping mapping to %s",
+                entity_uuid,
+                energyid_key,
+            )
+            continue
+
+        ha_entity_id = entity_entry.entity_id
 
         if not hass.states.get(ha_entity_id):
             _LOGGER.warning(

@@ -11,5 +11,5 @@ CONF_DEVICE_ID: Final = "device_id"
 CONF_DEVICE_NAME: Final = "device_name"
 
 # --- Subentry (Mapping) Data ---
-CONF_HA_ENTITY_ID: Final = "ha_entity_id"
+CONF_HA_ENTITY_UUID: Final = "ha_entity_uuid"
 CONF_ENERGYID_KEY: Final = "energyid_key"

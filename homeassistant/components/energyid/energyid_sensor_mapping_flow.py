@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from .const import CONF_ENERGYID_KEY, CONF_HA_ENTITY_ID, DOMAIN
+from .const import CONF_ENERGYID_KEY, CONF_HA_ENTITY_UUID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,13 +68,25 @@ def _get_suggested_entities(hass: HomeAssistant) -> list[str]:
 def _validate_mapping_input(
     ha_entity_id: str | None,
     current_mappings: set[str],
+    ent_reg: er.EntityRegistry,
 ) -> dict[str, str]:
     """Validate mapping input and return errors if any."""
     errors: dict[str, str] = {}
     if not ha_entity_id:
-        errors[CONF_HA_ENTITY_ID] = "entity_required"
-    elif ha_entity_id in current_mappings:
-        errors[CONF_HA_ENTITY_ID] = "entity_already_mapped"
+        errors["base"] = "entity_required"
+        return errors
+
+    # Check if entity exists
+    entity_entry = ent_reg.async_get(ha_entity_id)
+    if not entity_entry:
+        errors["base"] = "entity_not_found"
+        return errors
+
+    # Check if entity is already mapped (by UUID)
+    entity_uuid = entity_entry.id
+    if entity_uuid in current_mappings:
+        errors["base"] = "entity_already_mapped"
+
     return errors
 
 
@@ -88,32 +100,39 @@ class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         config_entry = self._get_entry()
+        ent_reg = er.async_get(self.hass)
 
         if user_input is not None:
-            ha_entity_id = user_input.get(CONF_HA_ENTITY_ID)
+            ha_entity_id = user_input.get("ha_entity_id")
 
+            # Get current mappings by UUID
             current_mappings = {
-                sub.data[CONF_HA_ENTITY_ID] for sub in config_entry.subentries.values()
+                sub.data[CONF_HA_ENTITY_UUID]
+                for sub in config_entry.subentries.values()
             }
 
-            errors = _validate_mapping_input(ha_entity_id, current_mappings)
+            errors = _validate_mapping_input(ha_entity_id, current_mappings, ent_reg)
 
             if not errors and ha_entity_id:
-                energyid_key = ha_entity_id.split(".", 1)[-1]
+                # Get entity registry entry
+                entity_entry = ent_reg.async_get(ha_entity_id)
+                if entity_entry:
+                    energyid_key = ha_entity_id.split(".", 1)[-1]
 
-                subentry_data = {
-                    CONF_HA_ENTITY_ID: ha_entity_id,
-                    CONF_ENERGYID_KEY: energyid_key,
-                }
+                    subentry_data = {
+                        CONF_HA_ENTITY_UUID: entity_entry.id,  # Store UUID only
+                        CONF_ENERGYID_KEY: energyid_key,
+                    }
 
-                title = f"{ha_entity_id.split('.', 1)[-1]} connection to EnergyID"
-                return self.async_create_entry(title=title, data=subentry_data)
+                    title = f"{ha_entity_id.split('.', 1)[-1]} connection to EnergyID"
+                    return self.async_create_entry(title=title, data=subentry_data)
+                errors["base"] = "entity_not_found"
 
         suggested_entities = _get_suggested_entities(self.hass)
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_HA_ENTITY_ID): EntitySelector(
+                vol.Required("ha_entity_id"): EntitySelector(
                     EntitySelectorConfig(include_entities=suggested_entities)
                 ),
             }
