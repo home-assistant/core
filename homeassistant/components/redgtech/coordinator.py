@@ -37,7 +37,7 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
 
     config_entry: RedgtechConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: RedgtechConfigEntry):
+    def __init__(self, hass: HomeAssistant, config_entry: RedgtechConfigEntry) -> None:
         """Initialize the coordinator."""
         self.api = RedgtechAPI()
         self.access_token: str | None = None

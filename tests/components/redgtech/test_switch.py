@@ -4,9 +4,10 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.redgtech.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -212,7 +213,7 @@ async def test_coordinator_data_update_success(
     setup_redgtech_integration,
     mock_redgtech_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test successful data update through coordinator."""
     coordinator = mock_config_entry.runtime_data
@@ -244,7 +245,7 @@ async def test_coordinator_connection_error_during_update(
     setup_redgtech_integration,
     mock_redgtech_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator handling connection errors during data updates."""
     mock_redgtech_api.get_data.side_effect = RedgtechConnectionError(
@@ -269,7 +270,7 @@ async def test_coordinator_auth_error_with_token_renewal(
     setup_redgtech_integration,
     mock_redgtech_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator handling auth errors with token renewal."""
     # First call fails with auth error, second succeeds after token renewal
