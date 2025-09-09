@@ -94,6 +94,29 @@ RVC_OPERATIONAL_STATE_MAP = {
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kDocked: "docked",
 }
 
+RVC_OPERATIONAL_STATE_ERROR_STATE_MAP = {
+    # enum with known Error state values which we can translate
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kNoError: "no_error",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kUnableToStartOrResume: "unable_to_start_or_resume",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kUnableToCompleteOperation: "unable_to_complete_operation",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kCommandInvalidInState: "command_invalid_in_state",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kFailedToFindChargingDock: "failed_to_find_charging_dock",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kStuck: "stuck",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kDustBinMissing: "dust_bin_missing",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kDustBinFull: "dust_bin_full",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kWaterTankEmpty: "water_tank_empty",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kWaterTankMissing: "water_tank_missing",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kWaterTankLidOpen: "water_tank_lid_open",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kMopCleaningPadMissing: "mop_cleaning_pad_missing",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kLowBattery: "low_battery",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kCannotReachTargetArea: "cannot_reach_target_area",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kDirtyWaterTankFull: "dirty_water_tank_full",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kDirtyWaterTankMissing: "dirty_water_tank_missing",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kWheelsJammed: "wheels_jammed",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kBrushJammed: "brush_jammed",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kNavigationSensorObscured: "navigation_sensor_obscured",
+}
+
 BOOST_STATE_MAP = {
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive: "inactive",
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive: "active",
