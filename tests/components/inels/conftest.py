@@ -51,6 +51,7 @@ def mock_inelsmqtt_fixture():
         publish=publish,
         last_value=last_value,
         discovery_all=discovery_all,
+        test_connection=Mock(return_value=None),  # Default to successful connection
         mock_last_value=dict[str, Any](),
         mock_messages=dict[str, Any](),
         mock_discovery_all=dict[str, Any](),
