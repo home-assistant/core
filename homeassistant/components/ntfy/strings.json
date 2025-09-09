@@ -326,16 +326,5 @@
         "5": "Maximum"
       }
     }
-  },
-  "selector": {
-    "priority": {
-      "options": {
-        "1": "Minimum",
-        "2": "[%key:common::state::low%]",
-        "3": "Default",
-        "4": "[%key:common::state::high%]",
-        "5": "Maximum"
-      }
-    }
   }
 }
