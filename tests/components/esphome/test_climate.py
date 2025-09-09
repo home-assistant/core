@@ -75,11 +75,9 @@ async def test_climate_entity(
             swing_mode=ClimateSwingMode.BOTH,
         )
     ]
-    user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     state = hass.states.get("climate.test_my_climate")
@@ -130,11 +128,9 @@ async def test_climate_entity_with_step_and_two_point(
             swing_mode=ClimateSwingMode.BOTH,
         )
     ]
-    user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     state = hass.states.get("climate.test_my_climate")
@@ -220,11 +216,9 @@ async def test_climate_entity_with_step_and_target_temp(
             swing_mode=ClimateSwingMode.BOTH,
         )
     ]
-    user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     state = hass.states.get("climate.test_my_climate")
@@ -376,11 +370,9 @@ async def test_climate_entity_with_humidity(
             target_humidity=25.7,
         )
     ]
-    user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     state = hass.states.get("climate.test_my_climate")
@@ -432,11 +424,9 @@ async def test_climate_entity_with_heat(
             target_temperature=22,
         )
     ]
-    user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     state = hass.states.get("climate.test_my_climate")
@@ -483,11 +473,9 @@ async def test_climate_entity_with_heat_cool(
             target_temperature=22,
         )
     ]
-    user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     state = hass.states.get("climate.test_my_climate")
@@ -541,11 +529,9 @@ async def test_climate_set_temperature_unsupported_mode(
             target_temperature=20,
         )
     ]
-    user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
 
@@ -601,11 +587,9 @@ async def test_climate_entity_with_inf_value(
             target_humidity=25.7,
         )
     ]
-    user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     state = hass.states.get("climate.test_my_climate")
@@ -662,11 +646,9 @@ async def test_climate_entity_attributes(
             swing_mode=ClimateSwingMode.BOTH,
         )
     ]
-    user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     state = hass.states.get("climate.test_my_climate")
@@ -695,11 +677,9 @@ async def test_climate_entity_attribute_current_temperature_unsupported(
             current_temperature=30,
         )
     ]
-    user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     state = hass.states.get("climate.test_my_climate")
