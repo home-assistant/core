@@ -76,10 +76,10 @@ async def async_setup_entry(
         assert endpoint.containers
         entities.extend(
             PortainerContainerSensor(
-                coordinator=coordinator,
-                entity_description=entity_description,
-                device_info=container,
-                via_device=endpoint,
+                coordinator,
+                entity_description,
+                device_info,
+                endpoint,
             )
             for container in endpoint.containers.values()
             for entity_description in CONTAINER_SENSORS
