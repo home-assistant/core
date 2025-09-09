@@ -1,0 +1,56 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "PTH-9CW 32",
+  "category": "co2bj",
+  "product_id": "yakol79dibtswovc",
+  "product_name": "PTH-9CW(QC)",
+  "online": true,
+  "sub": false,
+  "time_zone": "+03:00",
+  "active_time": "2025-09-05T16:29:08+00:00",
+  "create_time": "2025-09-05T16:29:08+00:00",
+  "update_time": "2025-09-05T16:29:08+00:00",
+  "function": {},
+  "status_range": {
+    "co2_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "ppm",
+        "min": 0,
+        "max": 5000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -40,
+        "max": 125,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "humidity_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "co2_value": 450,
+    "temp_current": 25,
+    "humidity_value": 43
+  },
+  "set_up": true,
+  "support_local": true
+}
