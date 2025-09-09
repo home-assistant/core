@@ -38,16 +38,58 @@ async def test_device_info(
 
 
 @pytest.mark.parametrize(
-    ("minor_version", "country", "site_data", "site_login_data"),
+    ("minor_version", "extra_data"),
     [
         # Standard migration case
-        (1, "US", None, None),
-        # Edge case #1: no country, site already in login data
-        (1, None, None, "https://www.amazon.com"),
+        (
+            1,
+            {
+                CONF_COUNTRY: "US",
+                CONF_LOGIN_DATA: {
+                    "session": "test-session",
+                },
+            },
+        ),
+        # Edge case #1: no country, site already in login data, minor version 1
+        (
+            1,
+            {
+                CONF_LOGIN_DATA: {
+                    "session": "test-session",
+                    CONF_SITE: "https://www.amazon.com",
+                },
+            },
+        ),
         # Edge case #2: no country, site in data (wrong place), minor version 1
-        (1, None, "https://www.amazon.com", None),
-        # Edge case #3: no country, site in data (wrong place), minor version 2
-        (2, None, "https://www.amazon.com", None),
+        (
+            1,
+            {
+                CONF_SITE: "https://www.amazon.com",
+                CONF_LOGIN_DATA: {
+                    "session": "test-session",
+                },
+            },
+        ),
+        # Edge case #3: no country, site already in login data, minor version 2
+        (
+            2,
+            {
+                CONF_LOGIN_DATA: {
+                    "session": "test-session",
+                    CONF_SITE: "https://www.amazon.com",
+                },
+            },
+        ),
+        # Edge case #4: no country, site in data (wrong place), minor version 2
+        (
+            2,
+            {
+                CONF_SITE: "https://www.amazon.com",
+                CONF_LOGIN_DATA: {
+                    "session": "test-session",
+                },
+            },
+        ),
     ],
 )
 async def test_migrate_entry(
@@ -55,31 +97,18 @@ async def test_migrate_entry(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     minor_version: int,
-    country: str | None,
-    site_data: str | None,
-    site_login_data: str | None,
+    extra_data: dict[str, str],
 ) -> None:
     """Test successful migration of entry data."""
-
-    data = {
-        CONF_USERNAME: TEST_USERNAME,
-        CONF_PASSWORD: TEST_PASSWORD,
-        CONF_LOGIN_DATA: {"session": "test-session"},
-    }
-
-    if country:
-        data[CONF_COUNTRY] = country
-
-    if site_data:
-        data[CONF_SITE] = site_data
-
-    if site_login_data:
-        data[CONF_LOGIN_DATA].update({CONF_SITE: site_login_data})
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Amazon Test Account",
-        data=data,
+        data={
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            **(extra_data),
+        },
         unique_id=TEST_USERNAME,
         version=1,
         minor_version=minor_version,
