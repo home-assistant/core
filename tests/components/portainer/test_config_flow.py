@@ -131,7 +131,6 @@ async def test_duplicate_entry(
         result["flow_id"],
         user_input=MOCK_USER_SETUP,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
