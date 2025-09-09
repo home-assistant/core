@@ -254,53 +254,44 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
 def ensure_and_check_conflicting_scales_and_offsets(config: dict[str, Any]) -> dict:
     """Check for conflicts in scale/offset and ensure target/current temp scale/offset is set."""
 
-    if (
-        config[CONF_TARGET_TEMP_SCALE] != config[CONF_SCALE]
-        and config[CONF_SCALE] != DEFAULT_SCALE
-        and config[CONF_TARGET_TEMP_SCALE] != DEFAULT_SCALE
-    ):
+    if CONF_TARGET_TEMP_SCALE not in config:
+        config[CONF_TARGET_TEMP_SCALE] = config.get(CONF_SCALE, DEFAULT_SCALE)
+    elif CONF_SCALE in config and config[CONF_TARGET_TEMP_SCALE] != config[CONF_SCALE]:
         raise vol.Invalid(
             f"Invalid scales: {CONF_SCALE} and {CONF_TARGET_TEMP_SCALE} cannot be used together, please use only one of them."
         )
 
-    if config[CONF_SCALE] != DEFAULT_SCALE:
-        config[CONF_TARGET_TEMP_SCALE] = config[CONF_SCALE]
-
-    if (
-        config[CONF_CURRENT_TEMP_SCALE] != config[CONF_SCALE]
-        and config[CONF_SCALE] != DEFAULT_SCALE
-        and config[CONF_CURRENT_TEMP_SCALE] != DEFAULT_SCALE
-    ):
+    if CONF_CURRENT_TEMP_SCALE not in config:
+        config[CONF_CURRENT_TEMP_SCALE] = config.get(CONF_SCALE, DEFAULT_SCALE)
+    elif CONF_SCALE in config and config[CONF_CURRENT_TEMP_SCALE] != config[CONF_SCALE]:
         raise vol.Invalid(
             f"Invalid scales: {CONF_SCALE} and {CONF_CURRENT_TEMP_SCALE} cannot be used together, please use only one of them."
         )
 
-    if config[CONF_SCALE] != DEFAULT_SCALE:
-        config[CONF_CURRENT_TEMP_SCALE] = config[CONF_SCALE]
-
-    if (
-        config[CONF_TARGET_TEMP_OFFSET] != config[CONF_OFFSET]
-        and config[CONF_OFFSET] != DEFAULT_OFFSET
-        and config[CONF_TARGET_TEMP_OFFSET] != DEFAULT_OFFSET
+    if CONF_TARGET_TEMP_OFFSET not in config:
+        config[CONF_TARGET_TEMP_OFFSET] = config.get(CONF_OFFSET, DEFAULT_OFFSET)
+    elif (
+        CONF_OFFSET in config and config[CONF_TARGET_TEMP_OFFSET] != config[CONF_OFFSET]
     ):
         raise vol.Invalid(
-            f"Invalid scales: {CONF_OFFSET} and {CONF_TARGET_TEMP_OFFSET} cannot be used together, please use only one of them."
+            f"Invalid offsets: {CONF_OFFSET} and {CONF_TARGET_TEMP_OFFSET} cannot be used together, please use only one of them."
         )
 
-    if config[CONF_OFFSET] != DEFAULT_OFFSET:
-        config[CONF_TARGET_TEMP_OFFSET] = config[CONF_OFFSET]
-
-    if (
-        config[CONF_CURRENT_TEMP_OFFSET] != config[CONF_OFFSET]
-        and config[CONF_OFFSET] != DEFAULT_OFFSET
-        and config[CONF_CURRENT_TEMP_OFFSET] != DEFAULT_OFFSET
+    if CONF_CURRENT_TEMP_OFFSET not in config:
+        config[CONF_CURRENT_TEMP_OFFSET] = config.get(CONF_OFFSET, DEFAULT_OFFSET)
+    elif (
+        CONF_OFFSET in config
+        and config[CONF_CURRENT_TEMP_OFFSET] != config[CONF_OFFSET]
     ):
         raise vol.Invalid(
-            f"Invalid scales: {CONF_OFFSET} and {CONF_CURRENT_TEMP_OFFSET} cannot be used together, please use only one of them."
+            f"Invalid offsets: {CONF_OFFSET} and {CONF_CURRENT_TEMP_OFFSET} cannot be used together, please use only one of them."
         )
 
-    if config[CONF_OFFSET] != DEFAULT_OFFSET:
-        config[CONF_CURRENT_TEMP_OFFSET] = config[CONF_OFFSET]
+    if CONF_OFFSET in config:
+        del config[CONF_OFFSET]
+
+    if CONF_SCALE in config:
+        del config[CONF_SCALE]
 
     return config
 

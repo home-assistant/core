@@ -1808,12 +1808,10 @@ async def test_update_current_temp_scale_and_offset(
                         CONF_SCAN_INTERVAL: 0,
                         CONF_TARGET_TEMP_SCALE: 1,
                         CONF_TARGET_TEMP_OFFSET: 0,
-                        CONF_SCALE: 10,
-                        CONF_OFFSET: 20,
                     },
                 ]
             },
-            120,
+            10,
             [10],
         ),
         (

@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_DELAY,
     CONF_DEVICE_CLASS,
     CONF_NAME,
-    CONF_OFFSET,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
@@ -50,7 +49,6 @@ from .const import (
     CONF_MIN_VALUE,
     CONF_NAN_VALUE,
     CONF_PRECISION,
-    CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STATE_OFF,
     CONF_STATE_ON,
@@ -163,8 +161,6 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         self._swap = config[CONF_SWAP]
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
-        self._scale = config[CONF_SCALE]
-        self._offset = config[CONF_OFFSET]
         self._slave_count = config.get(CONF_SLAVE_COUNT) or config.get(
             CONF_VIRTUAL_COUNT, 0
         )
@@ -181,8 +177,6 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             self._precision = config.get(CONF_PRECISION, 2)
         else:
             self._precision = config.get(CONF_PRECISION, 0)
-            if self._precision > 0 or self._scale != int(self._scale):
-                self._value_is_int = False
 
     def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""

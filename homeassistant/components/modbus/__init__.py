@@ -150,8 +150,6 @@ from .const import (
     DEFAULT_HUB,
     DEFAULT_HVAC_OFF_VALUE,
     DEFAULT_HVAC_ON_VALUE,
-    DEFAULT_OFFSET,
-    DEFAULT_SCALE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
@@ -217,8 +215,8 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_STRUCTURE): cv.string,
-        vol.Optional(CONF_SCALE, default=DEFAULT_SCALE): vol.Coerce(float),
-        vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(float),
+        vol.Optional(CONF_SCALE): vol.Coerce(float),
+        vol.Optional(CONF_OFFSET): vol.Coerce(float),
         vol.Optional(CONF_PRECISION): cv.positive_int,
         vol.Optional(
             CONF_SWAP,
@@ -280,18 +278,10 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Exclusive(CONF_HVAC_ONOFF_COIL, "hvac_onoff_type"): cv.positive_int,
             vol.Exclusive(CONF_HVAC_ONOFF_REGISTER, "hvac_onoff_type"): cv.positive_int,
-            vol.Optional(CONF_CURRENT_TEMP_SCALE, default=DEFAULT_SCALE): vol.Coerce(
-                float
-            ),
-            vol.Optional(CONF_TARGET_TEMP_SCALE, default=DEFAULT_SCALE): vol.Coerce(
-                float
-            ),
-            vol.Optional(CONF_CURRENT_TEMP_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(
-                float
-            ),
-            vol.Optional(CONF_TARGET_TEMP_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(
-                float
-            ),
+            vol.Optional(CONF_CURRENT_TEMP_SCALE): vol.Coerce(float),
+            vol.Optional(CONF_TARGET_TEMP_SCALE): vol.Coerce(float),
+            vol.Optional(CONF_CURRENT_TEMP_OFFSET): vol.Coerce(float),
+            vol.Optional(CONF_TARGET_TEMP_OFFSET): vol.Coerce(float),
             vol.Optional(
                 CONF_HVAC_ON_VALUE, default=DEFAULT_HVAC_ON_VALUE
             ): cv.positive_int,
