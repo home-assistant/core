@@ -293,7 +293,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'low',
+    'state': 'mute',
   })
 # ---
 # name: test_platform_setup_and_discovery[select.aubess_cooker_indicator_light_mode-entry]

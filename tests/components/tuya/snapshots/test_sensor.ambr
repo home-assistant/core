@@ -507,6 +507,54 @@
     'state': '100.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.aqi_battery_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqi_battery_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery state',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_state',
+    'unique_id': 'tuya.iks13mcaiyie3rryjb2ocbattery_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aqi_battery_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AQI Battery state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqi_battery_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.aqi_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -560,7 +608,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '541.0',
+    'state': '419.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.aqi_formaldehyde-entry]
@@ -612,7 +660,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.002',
+    'state': '0.006',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.aqi_humidity-entry]
@@ -665,7 +713,60 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '53.0',
+    'state': '54.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aqi_pm10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aqi_pm10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
+    'original_icon': None,
+    'original_name': 'PM10',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm10',
+    'unique_id': 'tuya.iks13mcaiyie3rryjb2ocpm10',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aqi_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm10',
+      'friendly_name': 'AQI PM10',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqi_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.aqi_pm2_5-entry]
@@ -721,7 +822,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '17.0',
+    'state': '7.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.aqi_temperature-entry]
@@ -777,7 +878,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '26.0',
+    'state': '24.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.aqi_volatile_organic_compounds-entry]
@@ -830,7 +931,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.018',
+    'state': '0.071',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.aubess_cooker_current-entry]
