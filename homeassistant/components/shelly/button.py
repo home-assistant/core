@@ -195,7 +195,6 @@ async def async_setup_entry(
         coordinator.mac,
         BUTTON_PLATFORM,
         virtual_button_component_ids,
-        "button",
     )
 
 
@@ -323,7 +322,7 @@ class ShellyVirtualButton(ShellyBaseButton):
         """Initialize Shelly virtual component button."""
         super().__init__(coordinator, description)
 
-        self._attr_unique_id = f"{coordinator.mac}-{description.key}:{_id}-button"
+        self._attr_unique_id = f"{coordinator.mac}-{description.key}:{_id}"
         self._attr_device_info = get_entity_rpc_device_info(coordinator)
         self._attr_name = get_rpc_entity_name(
             coordinator.device, f"{description.key}:{_id}"

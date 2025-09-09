@@ -332,7 +332,7 @@ async def test_rpc_remove_virtual_button_when_orphaned(
         hass,
         BUTTON_DOMAIN,
         "test_name_button_200",
-        "button:200-button",
+        "button:200",
         config_entry,
         device_id=device_entry.id,
     )
