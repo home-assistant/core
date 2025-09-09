@@ -73,6 +73,9 @@
           "empty": "[%key:common::state::empty%]"
         }
       },
+      "last_feeding": {
+        "name": "Last feeding"
+      },
       "last_seen": {
         "name": "Last seen"
       },

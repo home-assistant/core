@@ -448,12 +448,13 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         assert isinstance(user_message, conversation.UserContent)
         chat_request: list[PartUnionDict] = [user_message.content]
         if user_message.attachments:
-            files = await async_prepare_files_for_prompt(
-                self.hass,
-                self._genai_client,
-                [a.path for a in user_message.attachments],
+            chat_request.extend(
+                await async_prepare_files_for_prompt(
+                    self.hass,
+                    self._genai_client,
+                    [a.path for a in user_message.attachments],
+                )
             )
-            chat_request = [*chat_request, *files]
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
