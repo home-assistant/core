@@ -2786,7 +2786,9 @@ def _async_abort_entries_match(
     Requires `already_configured` in strings.json in user visible flows.
     """
     if match_dict is None:
-        match_dict = {}  # Match any entry
+        if other_entries:
+            raise data_entry_flow.AbortFlow("already_configured")  # Match any entry
+        return
     for entry in other_entries:
         options_items = entry.options.items()
         data_items = entry.data.items()
