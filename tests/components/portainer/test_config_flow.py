@@ -42,7 +42,6 @@ async def test_form(
         user_input=MOCK_USER_SETUP,
     )
 
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "https://127.0.0.1:9000/"
