@@ -1,0 +1,96 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Fish Audio",
+        "description": "Enter your Fish Audio API key to begin.\n\nIf you don't have an account, you can sign up for a free one on [Fish Audio](https://fish.audio/?fpr=homeassistant).",
+        "data": {
+          "api_key": "API Key"
+        },
+        "data_description": {
+          "api_key": "Your personal API key for accessing the Fish Audio service."
+        }
+      },
+      "filter": {
+        "title": "Voice Selection Filters",
+        "description": "Apply filters to narrow down the voice list, then click Submit to see the results.",
+        "data": {
+          "self_only": "Show only my private voices",
+          "language": "Filter by language",
+          "sort_by": "Sort voices by"
+        },
+        "data_description": {
+          "self_only": "When checked, this will only show the voices you have personally created or cloned.",
+          "language": "Display only voices that support the selected language.",
+          "sort_by": "Choose the order in which the voices are displayed."
+        }
+      },
+      "model": {
+        "title": "Choose Your Voice and Model",
+        "description": "Select your preferred voice and the AI model to use for speech synthesis.",
+        "data": {
+          "voice_id": "Voice",
+          "backend": "AI Voice Model"
+        },
+        "data_description": {
+          "voice_id": "Choose from the list of available voices, or manually enter a specific voice ID.",
+          "backend": "Select the AI model that will generate the audio."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please check your API key and network connection.",
+      "no_models_found": "No voices found matching the specified filters.",
+      "no_model_selected": "You must select a voice to continue.",
+      "payment_required": "Text-to-speech failed due to a payment issue. Please check your Fish Audio account balance.",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Voice Selection Filters",
+        "description": "Apply filters to narrow down the voice list, then click Submit to see the results.",
+        "data": {
+          "self_only": "Show only my private voices",
+          "language": "Filter by language",
+          "sort_by": "Sort voices by"
+        },
+        "data_description": {
+          "self_only": "When checked, this will only show the voices you have personally created or cloned.",
+          "language": "Display only voices that support the selected language.",
+          "sort_by": "Choose the order in which the voices are displayed."
+        }
+      },
+      "model": {
+        "title": "Choose Your Voice and Model",
+        "description": "Select your preferred voice and the AI model to use for speech synthesis.",
+        "data": {
+          "voice_id": "Voice",
+          "backend": "AI Model"
+        },
+        "data_description": {
+          "voice_id": "Choose from the list of available voices, or manually enter a specific voice ID.",
+          "backend": "Select the AI model that will generate the audio."
+        }
+      }
+    },
+    "error": {
+      "no_model_selected": "You must select a voice to continue."
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "issues": {
+    "low_credit_balance": {
+      "title": "Fish Audio Credit Balance is Low",
+      "description": "Your Fish Audio credit balance is currently {balance}. Please top up your account to ensure the service continues to work without interruption."
+    },
+    "payment_required": {
+      "title": "Fish Audio Payment Required",
+      "description": "A request to the Fish Audio service failed because of a payment issue (e.g., no credit left). Please check your account billing details at [Fish Audio Billing](https://fish.audio/app/billing/) to ensure the service continues to work without interruption."
+    }
+  }
+}

@@ -196,6 +196,7 @@ FLOWS = {
         "file",
         "filesize",
         "fireservicerota",
+        "fish_audio",
         "fitbit",
         "fivem",
         "fjaraskupan",

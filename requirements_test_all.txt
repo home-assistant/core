@@ -820,6 +820,9 @@ file-read-backwards==2.0.0
 # homeassistant.components.fints
 fints==3.1.0
 
+# homeassistant.components.fish_audio
+fish-audio-sdk==2025.4.2
+
 # homeassistant.components.fitbit
 fitbit==0.3.1
 
