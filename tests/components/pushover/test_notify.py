@@ -28,10 +28,10 @@ def mock_send_message():
         yield mock
 
 
-async def test_send_message_with(
+async def test_send_message(
     hass: HomeAssistant, mock_pushover: MagicMock, mock_send_message: MagicMock
 ) -> None:
-    """Test sending a message with TTL included in the data."""
+    """Test sending a message."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -51,12 +51,6 @@ async def test_send_message_with(
         {"message": "Hello TTL", "data": {"ttl": 900}},
         blocking=True,
     )
-
-    assert mock_send_message.called
-
-    call_args = mock_send_message.call_args.kwargs
-    assert call_args["message"] == "Hello TTL"
-    assert call_args["ttl"] == 900
 
     mock_send_message.assert_called_once_with(
         user="USER_KEY",
