@@ -1051,6 +1051,17 @@ async def test_devices_payload_no_entities(
         model_id="test-model-id7",
     )
 
+    # Device with modified fields
+    mock_config_entry_2 = MockConfigEntry(domain="bluetooth")
+    mock_config_entry_2.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry_2.entry_id,
+        identifiers={("device", "8")},
+        manufacturer="test-manufacturer8",
+        model_id="test-model-id8",
+        sw_version="test-sw-version8",
+    )
+
     client = await hass_client()
     response = await client.get("/api/analytics/devices")
     assert response.status == HTTPStatus.OK
@@ -1058,11 +1069,30 @@ async def test_devices_payload_no_entities(
         "version": "home-assistant:1",
         "home_assistant": MOCK_VERSION,
         "integrations": {
+            "bluetooth": {
+                "devices": [
+                    {
+                        "entities": [],
+                        "entry_type": None,
+                        "extra": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer8",
+                        "model": None,
+                        "model_id": "test-model-id8",
+                        "sw_version": None,
+                        "via_device": None,
+                    },
+                ],
+                "entities": [],
+                "is_custom_integration": False,
+            },
             "hue": {
                 "devices": [
                     {
                         "entities": [],
                         "entry_type": None,
+                        "extra": None,
                         "has_configuration_url": True,
                         "hw_version": "test-hw-version",
                         "manufacturer": "test-manufacturer",
@@ -1074,6 +1104,7 @@ async def test_devices_payload_no_entities(
                     {
                         "entities": [],
                         "entry_type": "service",
+                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer",
@@ -1085,6 +1116,7 @@ async def test_devices_payload_no_entities(
                     {
                         "entities": [],
                         "entry_type": None,
+                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer",
@@ -1096,6 +1128,7 @@ async def test_devices_payload_no_entities(
                     {
                         "entities": [],
                         "entry_type": None,
+                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": None,
@@ -1107,6 +1140,7 @@ async def test_devices_payload_no_entities(
                     {
                         "entities": [],
                         "entry_type": None,
+                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer6",
@@ -1124,6 +1158,7 @@ async def test_devices_payload_no_entities(
                     {
                         "entities": [],
                         "entry_type": None,
+                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer7",
@@ -1216,6 +1251,14 @@ async def test_devices_payload_with_entities(
         unit_of_measurement="°C",
     )
 
+    # Entity with modified fields
+    entity_registry.async_get_or_create(
+        domain="input_select",
+        platform="input_select",
+        unique_id="1",
+        capabilities={"options": ["secret1", "secret2"]},
+    )
+
     client = await hass_client()
     response = await client.get("/api/analytics/devices")
     assert response.status == HTTPStatus.OK
@@ -1235,6 +1278,7 @@ async def test_devices_payload_with_entities(
                                 },
                                 "domain": "light",
                                 "entity_category": None,
+                                "extra": None,
                                 "has_entity_name": True,
                                 "original_device_class": None,
                                 "unit_of_measurement": None,
@@ -1244,12 +1288,14 @@ async def test_devices_payload_with_entities(
                                 "capabilities": None,
                                 "domain": "number",
                                 "entity_category": "config",
+                                "extra": None,
                                 "has_entity_name": True,
                                 "original_device_class": "temperature",
                                 "unit_of_measurement": None,
                             },
                         ],
                         "entry_type": None,
+                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer",
@@ -1265,12 +1311,14 @@ async def test_devices_payload_with_entities(
                                 "capabilities": None,
                                 "domain": "light",
                                 "entity_category": None,
+                                "extra": None,
                                 "has_entity_name": False,
                                 "original_device_class": None,
                                 "unit_of_measurement": None,
                             },
                         ],
                         "entry_type": None,
+                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer",
@@ -1286,9 +1334,26 @@ async def test_devices_payload_with_entities(
                         "capabilities": {"state_class": "measurement"},
                         "domain": "sensor",
                         "entity_category": None,
+                        "extra": None,
                         "has_entity_name": False,
                         "original_device_class": "temperature",
                         "unit_of_measurement": "°C",
+                    },
+                ],
+                "is_custom_integration": False,
+            },
+            "input_select": {
+                "devices": [],
+                "entities": [
+                    {
+                        "assumed_state": None,
+                        "capabilities": {"options": 2},
+                        "domain": "input_select",
+                        "entity_category": None,
+                        "extra": None,
+                        "has_entity_name": False,
+                        "original_device_class": None,
+                        "unit_of_measurement": None,
                     },
                 ],
                 "is_custom_integration": False,
@@ -1301,6 +1366,7 @@ async def test_devices_payload_with_entities(
                         "capabilities": None,
                         "domain": "light",
                         "entity_category": None,
+                        "extra": None,
                         "has_entity_name": True,
                         "original_device_class": None,
                         "unit_of_measurement": None,
