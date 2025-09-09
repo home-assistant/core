@@ -52,16 +52,19 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=1883): vol.Coerce(int),
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                    vol.Required(MQTT_TRANSPORT, default="tcp"): vol.In(
-                        ["tcp", "websockets"]
-                    ),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): str,
+                        vol.Required(CONF_PORT, default=1883): vol.Coerce(int),
+                        vol.Optional(CONF_USERNAME): str,
+                        vol.Optional(CONF_PASSWORD): str,
+                        vol.Required(MQTT_TRANSPORT, default="tcp"): vol.In(
+                            ["tcp", "websockets"]
+                        ),
+                    }
+                ),
+                user_input,
             ),
             errors=errors,
         )
