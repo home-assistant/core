@@ -27,6 +27,7 @@
     'original_name': 'Charging',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-charging',
@@ -75,6 +76,7 @@
     'original_name': 'Lock uncalibrated',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uncalibrated',
     'unique_id': '12345-uncalibrated',
@@ -123,6 +125,7 @@
     'original_name': 'Pullspring enabled',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pullspring_enabled',
     'unique_id': '12345-pullspring_enabled',
@@ -170,6 +173,7 @@
     'original_name': 'Semi locked',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'semi_locked',
     'unique_id': '12345-semi_locked',
@@ -217,6 +221,7 @@
     'original_name': 'Charging',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '98765-charging',
@@ -235,6 +240,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.lock_2c3d_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.lock_2c3d_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'tedee',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '98765-door_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.lock_2c3d_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Lock-2C3D Door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.lock_2c3d_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensors[binary_sensor.lock_2c3d_lock_uncalibrated-entry]
@@ -265,6 +319,7 @@
     'original_name': 'Lock uncalibrated',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uncalibrated',
     'unique_id': '98765-uncalibrated',
@@ -313,6 +368,7 @@
     'original_name': 'Pullspring enabled',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pullspring_enabled',
     'unique_id': '98765-pullspring_enabled',
@@ -360,6 +416,7 @@
     'original_name': 'Semi locked',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'semi_locked',
     'unique_id': '98765-semi_locked',

@@ -86,16 +86,6 @@ async def test_setup_entry_successful(hass: HomeAssistant) -> None:
         assert await emulated_roku.async_setup_entry(hass, entry) is True
 
     assert len(instantiate.mock_calls) == 1
-    assert hass.data[emulated_roku.DOMAIN]
-
-    roku_instance = hass.data[emulated_roku.DOMAIN]["Emulated Roku Test"]
-
-    assert roku_instance.roku_usn == "Emulated Roku Test"
-    assert roku_instance.host_ip == "1.2.3.5"
-    assert roku_instance.listen_port == 8060
-    assert roku_instance.advertise_ip == "1.2.3.4"
-    assert roku_instance.advertise_port == 8071
-    assert roku_instance.bind_multicast is False
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -113,10 +103,6 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     ):
         assert await emulated_roku.async_setup_entry(hass, entry) is True
 
-    assert emulated_roku.DOMAIN in hass.data
-
     await hass.async_block_till_done()
 
     assert await emulated_roku.async_unload_entry(hass, entry)
-
-    assert len(hass.data[emulated_roku.DOMAIN]) == 0

@@ -2,6 +2,7 @@
 
 import asyncio
 from functools import partial
+import inspect
 import logging
 import queue
 from unittest.mock import patch
@@ -102,7 +103,7 @@ def test_catch_log_exception() -> None:
     async def async_meth():
         pass
 
-    assert asyncio.iscoroutinefunction(
+    assert inspect.iscoroutinefunction(
         logging_util.catch_log_exception(partial(async_meth), lambda: None)
     )
 
@@ -120,7 +121,7 @@ def test_catch_log_exception() -> None:
     wrapped = logging_util.catch_log_exception(partial(sync_meth), lambda: None)
 
     assert not is_callback(wrapped)
-    assert not asyncio.iscoroutinefunction(wrapped)
+    assert not inspect.iscoroutinefunction(wrapped)
 
 
 @pytest.mark.no_fail_on_log_exception
@@ -160,6 +161,10 @@ async def test_catch_log_exception_catches_and_logs() -> None:
 
 
 @patch("homeassistant.util.logging.HomeAssistantQueueListener.MAX_LOGS_COUNT", 5)
+@patch(
+    "homeassistant.util.logging.HomeAssistantQueueListener.EXCLUDED_LOG_COUNT_MODULES",
+    ["excluded"],
+)
 @pytest.mark.parametrize(
     (
         "logger1_count",
@@ -182,12 +187,16 @@ async def test_noisy_loggers(
     logging_util.async_activate_log_queue_handler(hass)
     logger1 = logging.getLogger("noisy1")
     logger2 = logging.getLogger("noisy2.module")
+    logger_excluded = logging.getLogger("excluded.module")
 
     for _ in range(logger1_count):
         logger1.info("This is a log")
 
     for _ in range(logger2_count):
         logger2.info("This is another log")
+
+    for _ in range(logging_util.HomeAssistantQueueListener.MAX_LOGS_COUNT + 1):
+        logger_excluded.info("This log should not trigger a warning")
 
     await empty_log_queue()
 
@@ -203,6 +212,33 @@ async def test_noisy_loggers(
         )
         == logger2_expected_notices
     )
+    # Ensure that the excluded module did not trigger a warning
+    assert (
+        caplog.text.count("is logging too frequently")
+        == logger1_expected_notices + logger2_expected_notices
+    )
+
+    # close the handler so the queue thread stops
+    logging.root.handlers[0].close()
+
+
+@patch("homeassistant.util.logging.HomeAssistantQueueListener.MAX_LOGS_COUNT", 1)
+async def test_noisy_loggers_ignores_self(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that the noisy loggers warning does not trigger a warning for its own module."""
+
+    logging_util.async_activate_log_queue_handler(hass)
+    logger1 = logging.getLogger("noisy_module1")
+    logger2 = logging.getLogger("noisy_module2")
+    logger3 = logging.getLogger("noisy_module3")
+
+    logger1.info("This is a log")
+    logger2.info("This is a log")
+    logger3.info("This is a log")
+
+    await empty_log_queue()
+    assert caplog.text.count("logging too frequently") == 3
 
     # close the handler so the queue thread stops
     logging.root.handlers[0].close()

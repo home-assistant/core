@@ -279,6 +279,7 @@ async def test_browse_media(
         "media_content_id": "COLLECTION-FOLDER-UUID",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
         "children_media_class": None,
     }
@@ -307,6 +308,7 @@ async def test_browse_media(
         "media_content_id": "EPISODE-UUID",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
         "children_media_class": None,
     }
@@ -359,6 +361,47 @@ async def test_browse_media(
         response["error"]["message"]
         == "Media not found: collection / COLLECTION-UUID-404"
     )
+
+
+async def test_search_media(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test Jellyfin browse media."""
+    client = await hass_ws_client()
+
+    # browse root folder
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/search_media",
+            "entity_id": "media_player.jellyfin_device",
+            "media_content_id": "",
+            "media_content_type": "",
+            "search_query": "Fake Item 1",
+            "media_filter_classes": ["movie"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["result"] == [
+        {
+            "title": "FOLDER",
+            "media_class": MediaClass.DIRECTORY.value,
+            "media_content_type": "string",
+            "media_content_id": "FOLDER-UUID",
+            "children_media_class": None,
+            "can_play": False,
+            "can_expand": True,
+            "can_search": False,
+            "not_shown": 0,
+            "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
+            "children": [],
+        }
+    ]
 
 
 async def test_new_client_connected(

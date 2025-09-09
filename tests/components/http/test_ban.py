@@ -11,7 +11,6 @@ from aiohttp.web_middlewares import middleware
 import pytest
 
 from homeassistant.components import http
-from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
@@ -22,6 +21,7 @@ from homeassistant.components.http.ban import (
 from homeassistant.components.http.view import request_handler_factory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_get_persistent_notifications

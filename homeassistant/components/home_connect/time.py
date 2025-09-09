@@ -79,7 +79,7 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
-        if self.bsh_key == SettingKey.BSH_COMMON_ALARM_CLOCK:
+        if self.bsh_key is SettingKey.BSH_COMMON_ALARM_CLOCK:
             automations = automations_with_entity(self.hass, self.entity_id)
             scripts = scripts_with_entity(self.hass, self.entity_id)
             items = automations + scripts
@@ -123,7 +123,7 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
-        if self.bsh_key == SettingKey.BSH_COMMON_ALARM_CLOCK:
+        if self.bsh_key is SettingKey.BSH_COMMON_ALARM_CLOCK:
             async_delete_issue(
                 self.hass,
                 DOMAIN,

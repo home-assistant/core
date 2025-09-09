@@ -77,6 +77,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     recorder as recorder_helper,
 )
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -2798,3 +2799,22 @@ async def test_empty_entity_id(
     hass.bus.async_fire("hello", {"entity_id": ""})
     await async_wait_recording_done(hass)
     assert "Invalid entity ID" not in caplog.text
+
+
+async def test_setting_up_recorder_fails_entity_registry_listener(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test recorder setup fails if an entity registry listener is in place."""
+    async_track_entity_registry_updated_event(hass, "test.test", lambda x: x)
+    recorder_helper.async_initialize_recorder(hass)
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
+        assert not await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {recorder.DOMAIN: {recorder.CONF_DB_URL: "sqlite://"}},
+        )
+        await hass.async_block_till_done()
+    assert (
+        "The recorder entity registry listener must be installed before "
+        "async_track_entity_registry_updated_event is called" in caplog.text
+    )

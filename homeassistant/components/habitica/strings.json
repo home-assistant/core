@@ -4,10 +4,11 @@
     "dailies": "Dailies",
     "config_entry_name": "Select character",
     "task_name": "Task name",
-    "unit_tasks": "tasks",
     "unit_health_points": "HP",
     "unit_mana_points": "MP",
     "unit_experience_points": "XP",
+    "unit_items": "items",
+    "unit_rage": "rage",
     "config_entry_description": "Select the Habitica account to update a task.",
     "task_description": "The name (or task ID) of the task you want to update.",
     "rename_name": "Rename",
@@ -64,7 +65,8 @@
     "repeat_weekly_options_name": "Weekly repeat days",
     "repeat_weekly_options_description": "Options related to weekly repetition, applicable when the repetition interval is set to weekly.",
     "repeat_monthly_options_name": "Monthly repeat day",
-    "repeat_monthly_options_description": "Options related to monthly repetition, applicable when the repetition interval is set to monthly."
+    "repeat_monthly_options_description": "Options related to monthly repetition, applicable when the repetition interval is set to monthly.",
+    "quest_name": "Quest"
   },
   "config": {
     "abort": {
@@ -174,6 +176,9 @@
     "binary_sensor": {
       "pending_quest": {
         "name": "Pending quest invitation"
+      },
+      "quest_running": {
+        "name": "Quest status"
       }
     },
     "button": {
@@ -252,6 +257,9 @@
     "image": {
       "avatar": {
         "name": "Avatar"
+      },
+      "quest_image": {
+        "name": "[%key:component::habitica::common::quest_name%]"
       }
     },
     "sensor": {
@@ -274,10 +282,6 @@
       },
       "health": {
         "name": "Health",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
-      },
-      "health_max": {
-        "name": "Max. health",
         "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
       },
       "mana": {
@@ -318,14 +322,6 @@
           "wizard": "Mage",
           "rogue": "Rogue"
         }
-      },
-      "habits": {
-        "name": "Habits",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
-      },
-      "rewards": {
-        "name": "Rewards",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "strength": {
         "name": "Strength",
@@ -426,6 +422,60 @@
       "quest_scrolls": {
         "name": "Quest scrolls",
         "unit_of_measurement": "scrolls"
+      },
+      "pending_damage": {
+        "name": "Pending damage",
+        "unit_of_measurement": "damage"
+      },
+      "pending_quest_items": {
+        "name": "Pending quest items",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_items%]"
+      },
+      "member_count": {
+        "name": "Member count",
+        "unit_of_measurement": "members"
+      },
+      "group_leader": {
+        "name": "Group leader"
+      },
+      "quest": {
+        "name": "[%key:component::habitica::common::quest_name%]",
+        "state_attributes": {
+          "quest_details": {
+            "name": "Quest details"
+          }
+        }
+      },
+      "boss": {
+        "name": "Quest boss"
+      },
+      "boss_hp": {
+        "name": "Boss health",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
+      },
+      "boss_hp_remaining": {
+        "name": "Boss health remaining",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
+      },
+      "collected_items": {
+        "name": "Collected quest items",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_items%]"
+      },
+      "boss_rage_limit": {
+        "name": "Boss rage limit break",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_rage%]",
+        "state_attributes": {
+          "rage_skill": {
+            "name": "Rage skill"
+          },
+          "effect": {
+            "name": "Effect"
+          }
+        }
+      },
+      "boss_rage": {
+        "name": "Boss rage",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_rage%]"
       }
     },
     "switch": {
@@ -526,31 +576,9 @@
     "deprecated_entity": {
       "title": "The Habitica {name} entity is deprecated",
       "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
-    },
-    "deprecated_api_call": {
-      "title": "The Habitica action habitica.api_call is deprecated",
-      "description": "The Habitica action `habitica.api_call` is deprecated and will be removed in Home Assistant 2025.5.0.\n\nPlease update your automations and scripts to use other Habitica actions and entities."
     }
   },
   "services": {
-    "api_call": {
-      "name": "API name",
-      "description": "Calls Habitica API.",
-      "fields": {
-        "name": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "description": "Habitica's username to call for."
-        },
-        "path": {
-          "name": "[%key:common::config_flow::data::path%]",
-          "description": "Items from API URL in form of an array with method attached at the end. Consult https://habitica.com/apidoc/. Example uses https://habitica.com/apidoc/#api-Task-CreateUserTasks."
-        },
-        "args": {
-          "name": "Args",
-          "description": "Any additional JSON or URL parameter arguments. See apidoc mentioned for path. Example uses same API endpoint."
-        }
-      }
-    },
     "cast_skill": {
       "name": "Cast a skill",
       "description": "Uses a skill or spell from your Habitica character on a specific task to affect its progress or status.",

@@ -83,7 +83,6 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
         config_entry_entry_id: str,
     ) -> None:
         """Initialize the alarm panel."""
-        self._api = coordinator.api
         self._area_index = area.index
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id
@@ -137,30 +136,38 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        if code != str(self._api.device_pin):
+        if code != str(self.coordinator.api.device_pin):
             return
-        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS[DISABLE])
+        await self.coordinator.api.set_zone_status(
+            self._area.index, ALARM_ACTIONS[DISABLE]
+        )
         await self._async_update_state(
             AlarmAreaState.DISARMED, ALARM_AREA_ARMED_STATUS[DISABLE]
         )
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS[AWAY])
+        await self.coordinator.api.set_zone_status(
+            self._area.index, ALARM_ACTIONS[AWAY]
+        )
         await self._async_update_state(
             AlarmAreaState.ARMED, ALARM_AREA_ARMED_STATUS[AWAY]
         )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS[HOME])
+        await self.coordinator.api.set_zone_status(
+            self._area.index, ALARM_ACTIONS[HOME]
+        )
         await self._async_update_state(
             AlarmAreaState.ARMED, ALARM_AREA_ARMED_STATUS[HOME_P1]
         )
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS[NIGHT])
+        await self.coordinator.api.set_zone_status(
+            self._area.index, ALARM_ACTIONS[NIGHT]
+        )
         await self._async_update_state(
             AlarmAreaState.ARMED, ALARM_AREA_ARMED_STATUS[NIGHT]
         )

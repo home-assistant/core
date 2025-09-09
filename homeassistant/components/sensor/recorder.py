@@ -45,6 +45,7 @@ from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
+    AMBIGUOUS_UNITS,
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     DOMAIN,
@@ -79,7 +80,7 @@ EQUIVALENT_UNITS = {
     "ft3": UnitOfVolume.CUBIC_FEET,
     "m3": UnitOfVolume.CUBIC_METERS,
     "ft³/m": UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
-}
+} | AMBIGUOUS_UNITS
 
 
 # Keep track of entities for which a warning about decreasing value has been logged
@@ -160,7 +161,7 @@ def _time_weighted_arithmetic_mean(
 
 def _time_weighted_circular_mean(
     fstates: list[tuple[float, State]], start: datetime.datetime, end: datetime.datetime
-) -> float:
+) -> tuple[float, float]:
     """Calculate a time weighted circular mean.
 
     The circular mean is calculated by weighting the states by duration in seconds between
@@ -623,7 +624,7 @@ def compile_statistics(  # noqa: C901
                     valid_float_states, start, end
                 )
             case StatisticMeanType.CIRCULAR:
-                stat["mean"] = _time_weighted_circular_mean(
+                stat["mean"], stat["mean_weight"] = _time_weighted_circular_mean(
                     valid_float_states, start, end
                 )
 

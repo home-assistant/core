@@ -1,0 +1,167 @@
+# serializer version: 1
+# name: test_diagnostics[test_time0-Jerusalem]
+  dict({
+    'data': dict({
+      'candle_lighting_offset': 40,
+      'diaspora': False,
+      'havdalah_offset': 0,
+      'language': 'en',
+      'location': dict({
+        'altitude': '**REDACTED**',
+        'diaspora': False,
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+        'name': 'test home',
+        'timezone': dict({
+          '__type': "<class 'zoneinfo.ZoneInfo'>",
+          'repr': "zoneinfo.ZoneInfo(key='Asia/Jerusalem')",
+        }),
+      }),
+      'results': dict({
+        'dateinfo': dict({
+          'date': dict({
+            'day': 21,
+            'month': 10,
+            'year': 5785,
+          }),
+          'diaspora': False,
+          'nusach': 'sephardi',
+        }),
+        'zmanim': dict({
+          'candle_lighting_offset': 40,
+          'date': dict({
+            '__type': "<class 'freezegun.api.FakeDate'>",
+            'isoformat': '2025-05-19',
+          }),
+          'havdalah_offset': 0,
+          'location': dict({
+            'altitude': '**REDACTED**',
+            'diaspora': False,
+            'latitude': '**REDACTED**',
+            'longitude': '**REDACTED**',
+            'name': 'test home',
+            'timezone': dict({
+              '__type': "<class 'zoneinfo.ZoneInfo'>",
+              'repr': "zoneinfo.ZoneInfo(key='Asia/Jerusalem')",
+            }),
+          }),
+        }),
+      }),
+    }),
+    'entry_data': dict({
+      'diaspora': False,
+      'language': 'en',
+      'time_zone': 'Asia/Jerusalem',
+    }),
+  })
+# ---
+# name: test_diagnostics[test_time0-New York]
+  dict({
+    'data': dict({
+      'candle_lighting_offset': 18,
+      'diaspora': True,
+      'havdalah_offset': 0,
+      'language': 'en',
+      'location': dict({
+        'altitude': '**REDACTED**',
+        'diaspora': True,
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+        'name': 'test home',
+        'timezone': dict({
+          '__type': "<class 'zoneinfo.ZoneInfo'>",
+          'repr': "zoneinfo.ZoneInfo(key='America/New_York')",
+        }),
+      }),
+      'results': dict({
+        'dateinfo': dict({
+          'date': dict({
+            'day': 21,
+            'month': 10,
+            'year': 5785,
+          }),
+          'diaspora': True,
+          'nusach': 'sephardi',
+        }),
+        'zmanim': dict({
+          'candle_lighting_offset': 18,
+          'date': dict({
+            '__type': "<class 'freezegun.api.FakeDate'>",
+            'isoformat': '2025-05-19',
+          }),
+          'havdalah_offset': 0,
+          'location': dict({
+            'altitude': '**REDACTED**',
+            'diaspora': True,
+            'latitude': '**REDACTED**',
+            'longitude': '**REDACTED**',
+            'name': 'test home',
+            'timezone': dict({
+              '__type': "<class 'zoneinfo.ZoneInfo'>",
+              'repr': "zoneinfo.ZoneInfo(key='America/New_York')",
+            }),
+          }),
+        }),
+      }),
+    }),
+    'entry_data': dict({
+      'diaspora': True,
+      'language': 'en',
+      'time_zone': 'America/New_York',
+    }),
+  })
+# ---
+# name: test_diagnostics[test_time0-None]
+  dict({
+    'data': dict({
+      'candle_lighting_offset': 18,
+      'diaspora': False,
+      'havdalah_offset': 0,
+      'language': 'en',
+      'location': dict({
+        'altitude': '**REDACTED**',
+        'diaspora': False,
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+        'name': 'test home',
+        'timezone': dict({
+          '__type': "<class 'zoneinfo.ZoneInfo'>",
+          'repr': "zoneinfo.ZoneInfo(key='US/Pacific')",
+        }),
+      }),
+      'results': dict({
+        'dateinfo': dict({
+          'date': dict({
+            'day': 21,
+            'month': 10,
+            'year': 5785,
+          }),
+          'diaspora': False,
+          'nusach': 'sephardi',
+        }),
+        'zmanim': dict({
+          'candle_lighting_offset': 18,
+          'date': dict({
+            '__type': "<class 'freezegun.api.FakeDate'>",
+            'isoformat': '2025-05-19',
+          }),
+          'havdalah_offset': 0,
+          'location': dict({
+            'altitude': '**REDACTED**',
+            'diaspora': False,
+            'latitude': '**REDACTED**',
+            'longitude': '**REDACTED**',
+            'name': 'test home',
+            'timezone': dict({
+              '__type': "<class 'zoneinfo.ZoneInfo'>",
+              'repr': "zoneinfo.ZoneInfo(key='US/Pacific')",
+            }),
+          }),
+        }),
+      }),
+    }),
+    'entry_data': dict({
+      'language': 'en',
+    }),
+  })
+# ---

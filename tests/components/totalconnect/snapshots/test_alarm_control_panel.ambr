@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_attributes[alarm_control_panel.test-entry]
+# name: test_entities[alarm_control_panel.test-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -27,28 +27,21 @@
     'original_name': None,
     'platform': 'totalconnect',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 7>,
     'translation_key': None,
-    'unique_id': '123456',
+    'unique_id': '1234567',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_attributes[alarm_control_panel.test-state]
+# name: test_entities[alarm_control_panel.test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'ac_loss': False,
       'changed_by': None,
       'code_arm_required': False,
       'code_format': None,
-      'cover_tampered': False,
       'friendly_name': 'test',
-      'location_id': 123456,
-      'location_name': 'test',
-      'low_battery': False,
-      'partition': 1,
       'supported_features': <AlarmControlPanelEntityFeature: 7>,
-      'triggered_source': None,
-      'triggered_zone': None,
     }),
     'context': <ANY>,
     'entity_id': 'alarm_control_panel.test',
@@ -58,7 +51,7 @@
     'state': 'disarmed',
   })
 # ---
-# name: test_attributes[alarm_control_panel.test_partition_2-entry]
+# name: test_entities[alarm_control_panel.test_partition_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -86,28 +79,21 @@
     'original_name': 'Partition 2',
     'platform': 'totalconnect',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 7>,
     'translation_key': 'partition',
-    'unique_id': '123456_2',
+    'unique_id': '1234567_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_attributes[alarm_control_panel.test_partition_2-state]
+# name: test_entities[alarm_control_panel.test_partition_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'ac_loss': False,
       'changed_by': None,
       'code_arm_required': False,
       'code_format': None,
-      'cover_tampered': False,
       'friendly_name': 'test Partition 2',
-      'location_id': 123456,
-      'location_name': 'test partition 2',
-      'low_battery': False,
-      'partition': 2,
       'supported_features': <AlarmControlPanelEntityFeature: 7>,
-      'triggered_source': None,
-      'triggered_zone': None,
     }),
     'context': <ANY>,
     'entity_id': 'alarm_control_panel.test_partition_2',

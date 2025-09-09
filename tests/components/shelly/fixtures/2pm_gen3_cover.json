@@ -1,0 +1,242 @@
+{
+  "config": {
+    "ble": {
+      "enable": true,
+      "rpc": {
+        "enable": true
+      }
+    },
+    "bthome": {},
+    "cloud": {
+      "enable": false,
+      "server": "iot.shelly.cloud:6012/jrpc"
+    },
+    "cover:0": {
+      "current_limit": 10.0,
+      "id": 0,
+      "in_locked": false,
+      "in_mode": "dual",
+      "initial_state": "stopped",
+      "invert_directions": false,
+      "maintenance_mode": false,
+      "maxtime_close": 60.0,
+      "maxtime_open": 60.0,
+      "motor": {
+        "idle_confirm_period": 0.25,
+        "idle_power_thr": 2.0
+      },
+      "name": null,
+      "obstruction_detection": {
+        "action": "stop",
+        "direction": "both",
+        "enable": false,
+        "holdoff": 1.0,
+        "power_thr": 1000
+      },
+      "power_limit": 2800,
+      "safety_switch": {
+        "action": "stop",
+        "allowed_move": null,
+        "direction": "both",
+        "enable": false
+      },
+      "slat": {
+        "close_time": 1.5,
+        "enable": false,
+        "open_time": 1.5,
+        "precise_ctl": false,
+        "retain_pos": false,
+        "step": 20
+      },
+      "swap_inputs": false,
+      "undervoltage_limit": 0,
+      "voltage_limit": 280
+    },
+    "input:0": {
+      "enable": true,
+      "factory_reset": true,
+      "id": 0,
+      "invert": false,
+      "name": null,
+      "type": "switch"
+    },
+    "input:1": {
+      "enable": true,
+      "factory_reset": true,
+      "id": 1,
+      "invert": false,
+      "name": null,
+      "type": "switch"
+    },
+    "knx": {
+      "enable": false,
+      "ia": "15.15.255",
+      "routing": {
+        "addr": "224.0.23.12:3671"
+      }
+    },
+    "matter": {
+      "enable": false
+    },
+    "mqtt": {
+      "client_id": "shelly2pmg3-aabbccddeeff",
+      "enable": true,
+      "enable_control": true,
+      "enable_rpc": true,
+      "rpc_ntf": true,
+      "server": "mqtt.test.server",
+      "ssl_ca": null,
+      "status_ntf": true,
+      "topic_prefix": "shellies-gen3/shelly-2pm-gen3-365730",
+      "use_client_cert": false,
+      "user": "iot"
+    },
+    "sys": {
+      "cfg_rev": 171,
+      "debug": {
+        "file_level": null,
+        "level": 2,
+        "mqtt": {
+          "enable": false
+        },
+        "udp": {
+          "addr": null
+        },
+        "websocket": {
+          "enable": true
+        }
+      },
+      "device": {
+        "addon_type": null,
+        "discoverable": true,
+        "eco_mode": true,
+        "fw_id": "20250508-110823/1.6.1-g8dbd358",
+        "mac": "AABBCCDDEEFF",
+        "name": "Test Name",
+        "profile": "cover"
+      },
+      "location": {
+        "lat": 19.2201,
+        "lon": 34.0121,
+        "tz": "Europe/Warsaw"
+      },
+      "rpc_udp": {
+        "dst_addr": null,
+        "listen_port": null
+      },
+      "sntp": {
+        "server": "sntp.test.server"
+      },
+      "ui_data": {
+        "consumption_types": ["", "light"]
+      }
+    },
+    "wifi": {
+      "sta": {
+        "ssid": "Wifi-Network-Name",
+        "is_open": false,
+        "enable": true,
+        "ipv4mode": "dhcp",
+        "ip": null,
+        "netmask": null,
+        "gw": null,
+        "nameserver": null
+      }
+    },
+    "ws": {
+      "enable": false,
+      "server": null,
+      "ssl_ca": "ca.pem"
+    }
+  },
+  "shelly": {
+    "app": "S2PMG3",
+    "auth_domain": null,
+    "auth_en": false,
+    "fw_id": "20250508-110823/1.6.1-g8dbd358",
+    "gen": 3,
+    "id": "shelly2pmg3-aabbccddeeff",
+    "mac": "AABBCCDDEEFF",
+    "matter": false,
+    "model": "S3SW-002P16EU",
+    "name": "Test Name",
+    "profile": "cover",
+    "slot": 0,
+    "ver": "1.6.1"
+  },
+  "status": {
+    "ble": {},
+    "bthome": {},
+    "cloud": {
+      "connected": false
+    },
+    "cover:0": {
+      "aenergy": {
+        "by_minute": [0.0, 0.0, 0.0],
+        "minute_ts": 1747492440,
+        "total": 0.0
+      },
+      "apower": 0.0,
+      "current": 0.0,
+      "freq": 50.0,
+      "id": 0,
+      "last_direction": null,
+      "pf": 0.0,
+      "pos_control": false,
+      "source": "init",
+      "state": "stopped",
+      "temperature": {
+        "tC": 36.4,
+        "tF": 97.5
+      },
+      "voltage": 217.7
+    },
+    "input:0": {
+      "id": 0,
+      "state": false
+    },
+    "input:1": {
+      "id": 1,
+      "state": false
+    },
+    "knx": {},
+    "matter": {
+      "commissionable": false,
+      "num_fabrics": 0
+    },
+    "mqtt": {
+      "connected": true
+    },
+    "sys": {
+      "available_updates": {},
+      "btrelay_rev": 0,
+      "cfg_rev": 171,
+      "fs_free": 430080,
+      "fs_size": 917504,
+      "kvs_rev": 0,
+      "last_sync_ts": 1747492085,
+      "mac": "AABBCCDDEEFF",
+      "ram_free": 64632,
+      "ram_min_free": 51660,
+      "ram_size": 245568,
+      "reset_reason": 3,
+      "restart_required": false,
+      "schedule_rev": 23,
+      "time": "16:34",
+      "unixtime": 1747492463,
+      "uptime": 381,
+      "utc_offset": 7200,
+      "webhook_rev": 23
+    },
+    "wifi": {
+      "rssi": -53,
+      "ssid": "Wifi-Network-Name",
+      "sta_ip": "192.168.2.24",
+      "sta_ip6": [],
+      "status": "got ip"
+    },
+    "ws": {
+      "connected": false
+    }
+  }
+}

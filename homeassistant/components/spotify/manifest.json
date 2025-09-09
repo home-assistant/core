@@ -8,6 +8,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["spotifyaio"],
-  "requirements": ["spotifyaio==0.8.11"],
-  "zeroconf": ["_spotify-connect._tcp.local."]
+  "requirements": ["spotifyaio==1.0.0"]
 }

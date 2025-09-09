@@ -6,7 +6,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_MOTION
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER
@@ -36,7 +36,8 @@ async def test_block_binary_sensor(
     entity_registry: EntityRegistry,
 ) -> None:
     """Test block binary sensor."""
-    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_channel_1_overpowering"
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_overpowering"
     await init_integration(hass, 1)
 
     assert (state := hass.states.get(entity_id))
@@ -52,26 +53,24 @@ async def test_block_binary_sensor(
     assert entry.unique_id == "123456789ABC-relay_0-overpower"
 
 
-async def test_block_binary_sensor_extra_state_attr(
+async def test_block_binary_gas_sensor_creation(
     hass: HomeAssistant,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     entity_registry: EntityRegistry,
 ) -> None:
-    """Test block binary sensor extra state attributes."""
+    """Test block binary gas sensor creation."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_gas"
     await init_integration(hass, 1)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
-    assert state.attributes.get("detected") == "mild"
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "gas", "none")
     mock_block_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
-    assert state.attributes.get("detected") == "none"
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sensor_0-gas"
@@ -239,7 +238,7 @@ async def test_rpc_binary_sensor(
     entity_registry: EntityRegistry,
 ) -> None:
     """Test RPC binary sensor."""
-    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_cover_0_overpowering"
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_test_cover_0_overpowering"
     await init_integration(hass, 2)
 
     assert (state := hass.states.get(entity_id))
@@ -521,7 +520,7 @@ async def test_rpc_flood_entities(
     await init_integration(hass, 4)
 
     for entity in ("flood", "mute"):
-        entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_{entity}"
+        entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_kitchen_{entity}"
 
         state = hass.states.get(entity_id)
         assert state == snapshot(name=f"{entity_id}-state")

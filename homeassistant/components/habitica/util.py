@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, fields
 import datetime
 from math import floor
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal
 
 from dateutil.rrule import (
     DAILY,
@@ -21,7 +21,7 @@ from dateutil.rrule import (
     YEARLY,
     rrule,
 )
-from habiticalib import ContentData, Frequency, TaskData, UserData
+from habiticalib import ContentData, Frequency, GroupData, QuestBoss, TaskData, UserData
 
 from homeassistant.util import dt as dt_util
 
@@ -56,7 +56,12 @@ def next_due_date(task: TaskData, today: datetime.datetime) -> datetime.date | N
     return dt_util.as_local(task.nextDue[0]).date()
 
 
-FREQUENCY_MAP = {"daily": DAILY, "weekly": WEEKLY, "monthly": MONTHLY, "yearly": YEARLY}
+FREQUENCY_MAP: dict[str, Literal[0, 1, 2, 3]] = {
+    "daily": DAILY,
+    "weekly": WEEKLY,
+    "monthly": MONTHLY,
+    "yearly": YEARLY,
+}
 WEEKDAY_MAP = {"m": MO, "t": TU, "w": WE, "th": TH, "f": FR, "s": SA, "su": SU}
 
 
@@ -74,7 +79,7 @@ def build_rrule(task: TaskData) -> rrule:
 
     bysetpos = None
     if rrule_frequency == MONTHLY and task.weeksOfMonth:
-        bysetpos = task.weeksOfMonth
+        bysetpos = [i + 1 for i in task.weeksOfMonth]
         weekdays = weekdays if weekdays else [MO]
 
     return rrule(
@@ -95,21 +100,16 @@ def get_recurrence_rule(recurrence: rrule) -> str:
 
     'DTSTART:YYYYMMDDTHHMMSS\nRRULE:FREQ=YEARLY;INTERVAL=2'
 
-    Parameters
-    ----------
-    recurrence : rrule
-        An RRULE object.
+    Args:
+        recurrence: An RRULE object.
 
-    Returns
-    -------
-    str
+    Returns:
         The recurrence rule portion of the RRULE string, starting with 'FREQ='.
 
-    Example
-    -------
-    >>> rule = get_recurrence_rule(task)
-    >>> print(rule)
-    'FREQ=YEARLY;INTERVAL=2'
+    Example:
+        >>> rule = get_recurrence_rule(task)
+        >>> print(rule)
+        'FREQ=YEARLY;INTERVAL=2'
 
     """
     return str(recurrence).split("RRULE:")[1]
@@ -162,3 +162,63 @@ def inventory_list(
         for k, v in getattr(user.items, item_type, {}).items()
         if k != "Saddle"
     }
+
+
+def pending_quest_items(user: UserData, content: ContentData) -> int | None:
+    """Pending quest items."""
+
+    return (
+        user.party.quest.progress.collectedItems
+        if user.party.quest.key
+        and content.quests[user.party.quest.key].collect is not None
+        else None
+    )
+
+
+def pending_damage(user: UserData, content: ContentData) -> float | None:
+    """Pending damage."""
+
+    return (
+        user.party.quest.progress.up
+        if user.party.quest.key
+        and content.quests[user.party.quest.key].boss is not None
+        else None
+    )
+
+
+def quest_attributes(party: GroupData, content: ContentData) -> dict[str, Any]:
+    """Quest description."""
+    return {
+        "quest_details": content.quests[party.quest.key].notes
+        if party.quest.key
+        else None,
+        "quest_participants": f"{sum(x is True for x in party.quest.members.values())} / {party.memberCount}",
+    }
+
+
+def rage_attributes(party: GroupData, content: ContentData) -> dict[str, Any]:
+    """Display name of rage skill and description of it's effect in attributes."""
+    boss = quest_boss(party, content)
+    return {
+        "rage_skill": boss.rage.title if boss and boss.rage else None,
+        "effect": boss.rage.effect if boss and boss.rage else None,
+    }
+
+
+def quest_boss(party: GroupData, content: ContentData) -> QuestBoss | None:
+    """Quest boss."""
+
+    return content.quests[party.quest.key].boss if party.quest.key else None
+
+
+def collected_quest_items(party: GroupData, content: ContentData) -> dict[str, Any]:
+    """List collected quest items."""
+
+    return (
+        {
+            collect[k].text: f"{v} / {collect[k].count}"
+            for k, v in party.quest.progress.collect.items()
+        }
+        if party.quest.key and (collect := content.quests[party.quest.key].collect)
+        else {}
+    )

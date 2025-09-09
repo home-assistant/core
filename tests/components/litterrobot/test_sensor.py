@@ -5,7 +5,11 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.litterrobot.sensor import icon_for_gauge_level
-from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN, SensorDeviceClass
+from homeassistant.components.sensor import (
+    DOMAIN as PLATFORM_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import PERCENTAGE, STATE_UNKNOWN, UnitOfMass
 from homeassistant.core import HomeAssistant
 
@@ -70,6 +74,7 @@ async def test_gauge_icon() -> None:
 
 
 @pytest.mark.freeze_time("2022-09-18 23:00:44+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_litter_robot_sensor(
     hass: HomeAssistant, mock_account_with_litterrobot_4: MagicMock
 ) -> None:
@@ -94,6 +99,9 @@ async def test_litter_robot_sensor(
     sensor = hass.states.get("sensor.test_pet_weight")
     assert sensor.state == "12.0"
     assert sensor.attributes["unit_of_measurement"] == UnitOfMass.POUNDS
+    sensor = hass.states.get("sensor.test_total_cycles")
+    assert sensor.state == "158"
+    assert sensor.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
 
 
 async def test_feeder_robot_sensor(
@@ -105,6 +113,10 @@ async def test_feeder_robot_sensor(
     assert sensor.state == "10"
     assert sensor.attributes["unit_of_measurement"] == PERCENTAGE
 
+    sensor = hass.states.get("sensor.test_last_feeding")
+    assert sensor.state == "2022-09-08T18:00:00+00:00"
+    assert sensor.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
+
 
 async def test_pet_weight_sensor(
     hass: HomeAssistant, mock_account_with_pet: MagicMock
@@ -114,3 +126,22 @@ async def test_pet_weight_sensor(
     sensor = hass.states.get("sensor.kitty_weight")
     assert sensor.state == "9.1"
     assert sensor.attributes["unit_of_measurement"] == UnitOfMass.POUNDS
+
+
+@pytest.mark.freeze_time("2025-06-15 12:00:00+00:00")
+async def test_pet_visits_today_sensor(
+    hass: HomeAssistant, mock_account_with_pet: MagicMock
+) -> None:
+    """Tests pet visits today sensors."""
+    await setup_integration(hass, mock_account_with_pet, PLATFORM_DOMAIN)
+    sensor = hass.states.get("sensor.kitty_visits_today")
+    assert sensor.state == "2"
+
+
+async def test_litterhopper_sensor(
+    hass: HomeAssistant, mock_account_with_litterhopper: MagicMock
+) -> None:
+    """Tests LitterHopper sensors."""
+    await setup_integration(hass, mock_account_with_litterhopper, PLATFORM_DOMAIN)
+    sensor = hass.states.get("sensor.test_hopper_status")
+    assert sensor.state == "enabled"

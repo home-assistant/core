@@ -20,7 +20,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 FIXTURE_USER_INPUT = {
     CONF_EMAIL: "testemail@example.com",
@@ -37,6 +37,7 @@ def build_device_fixture(
             mode=OperationMode.ELECTRIC,
             original_name="ELECTRIC",
             has_day_selection=True,
+            supports_hot_water_plus=False,
         ),
     ]
 
@@ -46,6 +47,7 @@ def build_device_fixture(
                 mode=OperationMode.HYBRID,
                 original_name="HYBRID",
                 has_day_selection=False,
+                supports_hot_water_plus=False,
             )
         )
         supported_modes.append(
@@ -53,6 +55,7 @@ def build_device_fixture(
                 mode=OperationMode.HEAT_PUMP,
                 original_name="HEAT_PUMP",
                 has_day_selection=False,
+                supports_hot_water_plus=False,
             )
         )
 
@@ -62,6 +65,7 @@ def build_device_fixture(
                 mode=OperationMode.VACATION,
                 original_name="VACATION",
                 has_day_selection=True,
+                supports_hot_water_plus=False,
             )
         )
 
@@ -83,6 +87,7 @@ def build_device_fixture(
         serial="serial",
         install_location="Basement",
         supported_modes=supported_modes,
+        supports_hot_water_plus=False,
         status=DeviceStatus(
             firmware_version="2.14",
             is_online=True,
@@ -93,6 +98,7 @@ def build_device_fixture(
             temperature_setpoint_previous=130,
             temperature_setpoint_maximum=130,
             hot_water_status=90,
+            hot_water_plus_level=None,
         ),
     )
 
@@ -161,6 +167,7 @@ def get_devices_fixture_has_vacation_mode() -> bool:
 
 @pytest.fixture
 async def mock_client(
+    hass: HomeAssistant,
     get_devices_fixture_heat_pump: bool,
     get_devices_fixture_mode_pending: bool,
     get_devices_fixture_setpoint_pending: bool,
@@ -175,8 +182,8 @@ async def mock_client(
             has_vacation_mode=get_devices_fixture_has_vacation_mode,
         )
     ]
-    get_all_device_info_fixture = load_json_object_fixture(
-        "get_all_device_info.json", DOMAIN
+    get_all_device_info_fixture = await async_load_json_object_fixture(
+        hass, "get_all_device_info.json", DOMAIN
     )
 
     client_mock = MagicMock(AOSmithAPIClient)

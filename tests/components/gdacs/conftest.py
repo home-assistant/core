@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.gdacs import CONF_CATEGORIES, DOMAIN
+from homeassistant.components.gdacs.const import CONF_CATEGORIES, DOMAIN
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,

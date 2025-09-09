@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
@@ -266,7 +266,7 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     CONF_API_KEY: api_key,
                     CONF_FROM: train_from,
-                    CONF_TO: user_input[CONF_TO],
+                    CONF_TO: train_to,
                     CONF_TIME: train_time,
                     CONF_WEEKDAY: train_days,
                     CONF_FILTER_PRODUCT: filter_product,
@@ -329,7 +329,7 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class TVTrainOptionsFlowHandler(OptionsFlow):
+class TVTrainOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Trafikverket Train options."""
 
     async def async_step_init(

@@ -49,6 +49,8 @@ from .utils import (
     percentage_to_brightness,
 )
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

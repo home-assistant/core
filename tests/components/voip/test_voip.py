@@ -38,12 +38,12 @@ def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
     """Mock the TTS cache dir with empty dir."""
 
 
-def _empty_wav() -> bytes:
+def _empty_wav(framerate=16000) -> bytes:
     """Return bytes of an empty WAV file."""
     with io.BytesIO() as wav_io:
         wav_file: wave.Wave_write = wave.open(wav_io, "wb")
         with wav_file:
-            wav_file.setframerate(16000)
+            wav_file.setframerate(framerate)
             wav_file.setsampwidth(2)
             wav_file.setnchannels(1)
 
@@ -126,7 +126,7 @@ async def test_calls_not_allowed(
             await done.wait()
 
     assert sum(played_audio_bytes) > 0
-    assert played_audio_bytes == snapshot()
+    assert played_audio_bytes == snapshot
 
 
 async def test_pipeline_not_found(
@@ -307,10 +307,11 @@ async def test_pipeline(
         assert satellite.state == AssistSatelliteState.RESPONDING
 
         # Proceed with media output
+        mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
         event_callback(
             assist_pipeline.PipelineEvent(
                 type=assist_pipeline.PipelineEventType.TTS_END,
-                data={"tts_output": {"media_id": _MEDIA_ID}},
+                data={"tts_output": {"token": mock_tts_result_stream.token}},
             )
         )
 
@@ -326,28 +327,16 @@ async def test_pipeline(
         original_tts_response_finished()
         done.set()
 
-    async def async_get_media_source_audio(
-        hass: HomeAssistant,
-        media_source_id: str,
-    ) -> tuple[str, bytes]:
-        assert media_source_id == _MEDIA_ID
-        return ("wav", _empty_wav())
-
     with (
         patch(
             "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
             new=async_pipeline_from_audio_stream,
         ),
-        patch(
-            "homeassistant.components.voip.assist_satellite.tts.async_get_media_source_audio",
-            new=async_get_media_source_audio,
-        ),
         patch.object(satellite, "tts_response_finished", tts_response_finished),
     ):
         satellite._tones = Tones(0)
-        satellite.transport = Mock()
+        satellite.connection_made(Mock())
 
-        satellite.connection_made(satellite.transport)
         assert satellite.state == AssistSatelliteState.IDLE
 
         # Ensure audio queue is cleared before pipeline starts
@@ -457,10 +446,11 @@ async def test_tts_timeout(
         )
 
         # Proceed with media output
+        mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
         event_callback(
             assist_pipeline.PipelineEvent(
                 type=assist_pipeline.PipelineEventType.TTS_END,
-                data={"tts_output": {"media_id": _MEDIA_ID}},
+                data={"tts_output": {"token": mock_tts_result_stream.token}},
             )
         )
 
@@ -474,28 +464,15 @@ async def test_tts_timeout(
         # Block here to force a timeout in _send_tts
         await asyncio.sleep(2)
 
-    async def async_get_media_source_audio(
-        hass: HomeAssistant,
-        media_source_id: str,
-    ) -> tuple[str, bytes]:
-        # Should time out immediately
-        return ("wav", _empty_wav())
-
-    with (
-        patch(
-            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
-            new=async_pipeline_from_audio_stream,
-        ),
-        patch(
-            "homeassistant.components.voip.assist_satellite.tts.async_get_media_source_audio",
-            new=async_get_media_source_audio,
-        ),
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
     ):
         satellite._tts_extra_timeout = 0.001
         for tone in Tones:
             satellite._tone_bytes[tone] = tone_bytes
 
-        satellite.transport = Mock()
+        satellite.connection_made(Mock())
         satellite.send_audio = Mock()
 
         original_send_tts = satellite._send_tts
@@ -533,6 +510,7 @@ async def test_tts_wrong_extension(
     assert await async_setup_component(hass, "voip", {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
+    satellite.addr = ("192.168.1.1", 12345)
     assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
@@ -568,32 +546,19 @@ async def test_tts_wrong_extension(
         )
 
         # Proceed with media output
+        # Should fail because it's not "wav"
+        mock_tts_result_stream = MockResultStream(hass, "mp3", b"")
         event_callback(
             assist_pipeline.PipelineEvent(
                 type=assist_pipeline.PipelineEventType.TTS_END,
-                data={"tts_output": {"media_id": _MEDIA_ID}},
+                data={"tts_output": {"token": mock_tts_result_stream.token}},
             )
         )
 
-    async def async_get_media_source_audio(
-        hass: HomeAssistant,
-        media_source_id: str,
-    ) -> tuple[str, bytes]:
-        # Should fail because it's not "wav"
-        return ("mp3", b"")
-
-    with (
-        patch(
-            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
-            new=async_pipeline_from_audio_stream,
-        ),
-        patch(
-            "homeassistant.components.voip.assist_satellite.tts.async_get_media_source_audio",
-            new=async_get_media_source_audio,
-        ),
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
     ):
-        satellite.transport = Mock()
-
         original_send_tts = satellite._send_tts
 
         async def send_tts(*args, **kwargs):
@@ -605,6 +570,8 @@ async def test_tts_wrong_extension(
 
         satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
+        satellite.connection_made(Mock())
+
         # silence
         satellite.on_chunk(bytes(_ONE_SECOND))
 
@@ -612,10 +579,18 @@ async def test_tts_wrong_extension(
         satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
         # silence (assumes relaxed VAD sensitivity)
-        satellite.on_chunk(bytes(_ONE_SECOND * 4))
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
-        async with asyncio.timeout(1):
+        async with asyncio.timeout(3):
             await done.wait()
 
 
@@ -628,6 +603,7 @@ async def test_tts_wrong_wav_format(
     assert await async_setup_component(hass, "voip", {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
+    satellite.addr = ("192.168.1.1", 12345)
     assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
@@ -663,39 +639,19 @@ async def test_tts_wrong_wav_format(
         )
 
         # Proceed with media output
+        # Should fail because it's not 16Khz
+        mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav(22050))
         event_callback(
             assist_pipeline.PipelineEvent(
                 type=assist_pipeline.PipelineEventType.TTS_END,
-                data={"tts_output": {"media_id": _MEDIA_ID}},
+                data={"tts_output": {"token": mock_tts_result_stream.token}},
             )
         )
 
-    async def async_get_media_source_audio(
-        hass: HomeAssistant,
-        media_source_id: str,
-    ) -> tuple[str, bytes]:
-        # Should fail because it's not 16Khz, 16-bit mono
-        with io.BytesIO() as wav_io:
-            wav_file: wave.Wave_write = wave.open(wav_io, "wb")
-            with wav_file:
-                wav_file.setframerate(22050)
-                wav_file.setsampwidth(2)
-                wav_file.setnchannels(2)
-
-            return ("wav", wav_io.getvalue())
-
-    with (
-        patch(
-            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
-            new=async_pipeline_from_audio_stream,
-        ),
-        patch(
-            "homeassistant.components.voip.assist_satellite.tts.async_get_media_source_audio",
-            new=async_get_media_source_audio,
-        ),
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
     ):
-        satellite.transport = Mock()
-
         original_send_tts = satellite._send_tts
 
         async def send_tts(*args, **kwargs):
@@ -707,6 +663,8 @@ async def test_tts_wrong_wav_format(
 
         satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
+        satellite.connection_made(Mock())
+
         # silence
         satellite.on_chunk(bytes(_ONE_SECOND))
 
@@ -714,10 +672,18 @@ async def test_tts_wrong_wav_format(
         satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
         # silence (assumes relaxed VAD sensitivity)
-        satellite.on_chunk(bytes(_ONE_SECOND * 4))
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
-        async with asyncio.timeout(1):
+        async with asyncio.timeout(3):
             await done.wait()
 
 
@@ -730,6 +696,7 @@ async def test_empty_tts_output(
     assert await async_setup_component(hass, "voip", {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
+    satellite.addr = ("192.168.1.1", 12345)
     assert isinstance(satellite, VoipAssistSatellite)
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
@@ -779,7 +746,7 @@ async def test_empty_tts_output(
             "homeassistant.components.voip.assist_satellite.VoipAssistSatellite._send_tts",
         ) as mock_send_tts,
     ):
-        satellite.transport = Mock()
+        satellite.connection_made(Mock())
 
         # silence
         satellite.on_chunk(bytes(_ONE_SECOND))
@@ -788,10 +755,18 @@ async def test_empty_tts_output(
         satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
         # silence (assumes relaxed VAD sensitivity)
-        satellite.on_chunk(bytes(_ONE_SECOND * 4))
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to finish
-        async with asyncio.timeout(1):
+        async with asyncio.timeout(2):
             await satellite._tts_done.wait()
 
         mock_send_tts.assert_not_called()
@@ -836,7 +811,7 @@ async def test_pipeline_error(
         ),
     ):
         satellite._tones = Tones.ERROR
-        satellite.transport = Mock()
+        satellite.connection_made(Mock())
         satellite._async_send_audio = AsyncMock(side_effect=async_send_audio)  # type: ignore[method-assign]
 
         satellite.on_chunk(bytes(_ONE_SECOND))
@@ -846,7 +821,7 @@ async def test_pipeline_error(
             await done.wait()
 
         assert sum(played_audio_bytes) > 0
-        assert played_audio_bytes == snapshot()
+        assert played_audio_bytes == snapshot
 
 
 @pytest.mark.usefixtures("socket_enabled")
@@ -878,10 +853,11 @@ async def test_announce(
     assert err.value.translation_domain == "voip"
     assert err.value.translation_key == "non_tts_announcement"
 
+    mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
         media_id=_MEDIA_ID,
-        tts_token="test-token",
+        tts_token=mock_tts_result_stream.token,
         original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
@@ -895,19 +871,25 @@ async def test_announce(
             "homeassistant.components.voip.assist_satellite.VoipAssistSatellite._send_tts",
         ) as mock_send_tts,
     ):
-        satellite.transport = Mock()
         announce_task = hass.async_create_background_task(
             satellite.async_announce(announcement), "voip_announce"
         )
         await asyncio.sleep(0)
+        satellite.connection_made(Mock())
         mock_protocol.outgoing_call.assert_called_once()
 
         # Trigger announcement
         satellite.on_chunk(bytes(_ONE_SECOND))
-        async with asyncio.timeout(1):
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        async with asyncio.timeout(2):
             await announce_task
 
-        mock_send_tts.assert_called_once_with(_MEDIA_ID, wait_for_tone=False)
+        mock_send_tts.assert_called_once_with(
+            mock_tts_result_stream, wait_for_tone=False
+        )
 
 
 @pytest.mark.usefixtures("socket_enabled")
@@ -926,10 +908,11 @@ async def test_voip_id_is_ip_address(
         & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
     )
 
+    mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
         media_id=_MEDIA_ID,
-        tts_token="test-token",
+        tts_token=mock_tts_result_stream.token,
         original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
@@ -944,11 +927,11 @@ async def test_voip_id_is_ip_address(
             "homeassistant.components.voip.assist_satellite.VoipAssistSatellite._send_tts",
         ) as mock_send_tts,
     ):
-        satellite.transport = Mock()
         announce_task = hass.async_create_background_task(
             satellite.async_announce(announcement), "voip_announce"
         )
         await asyncio.sleep(0)
+        satellite.connection_made(Mock())
         mock_protocol.outgoing_call.assert_called_once()
         assert (
             mock_protocol.outgoing_call.call_args.kwargs["destination"].host
@@ -957,10 +940,16 @@ async def test_voip_id_is_ip_address(
 
         # Trigger announcement
         satellite.on_chunk(bytes(_ONE_SECOND))
-        async with asyncio.timeout(1):
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        async with asyncio.timeout(2):
             await announce_task
 
-        mock_send_tts.assert_called_once_with(_MEDIA_ID, wait_for_tone=False)
+        mock_send_tts.assert_called_once_with(
+            mock_tts_result_stream, wait_for_tone=False
+        )
 
 
 @pytest.mark.usefixtures("socket_enabled")
@@ -979,10 +968,11 @@ async def test_announce_timeout(
         & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
     )
 
+    mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
         media_id=_MEDIA_ID,
-        tts_token="test-token",
+        tts_token=mock_tts_result_stream.token,
         original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
@@ -999,7 +989,7 @@ async def test_announce_timeout(
             0.01,
         ),
     ):
-        satellite.transport = Mock()
+        satellite.connection_made(Mock())
         with pytest.raises(TimeoutError):
             await satellite.async_announce(announcement)
 
@@ -1020,10 +1010,11 @@ async def test_start_conversation(
         & assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
     )
 
+    mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
         media_id=_MEDIA_ID,
-        tts_token="test-token",
+        tts_token=mock_tts_result_stream.token,
         original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
@@ -1061,10 +1052,11 @@ async def test_start_conversation(
         )
 
         # Proceed with media output
+        mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
         event_callback(
             assist_pipeline.PipelineEvent(
                 type=assist_pipeline.PipelineEventType.TTS_END,
-                data={"tts_output": {"media_id": _MEDIA_ID}},
+                data={"tts_output": {"token": mock_tts_result_stream.token}},
             )
         )
 
@@ -1084,7 +1076,7 @@ async def test_start_conversation(
             new=async_pipeline_from_audio_stream,
         ),
     ):
-        satellite.transport = Mock()
+        satellite.connection_made(Mock())
         conversation_task = hass.async_create_background_task(
             satellite.async_start_conversation(announcement), "voip_start_conversation"
         )
@@ -1093,16 +1085,20 @@ async def test_start_conversation(
 
         # Trigger announcement and wait for it to finish
         satellite.on_chunk(bytes(_ONE_SECOND))
-        async with asyncio.timeout(1):
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        async with asyncio.timeout(2):
             await tts_sent.wait()
-
-        tts_sent.clear()
 
         # Trigger pipeline
         satellite.on_chunk(bytes(_ONE_SECOND))
-        async with asyncio.timeout(1):
-            # Wait for TTS
-            await tts_sent.wait()
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(3)
+        async with asyncio.timeout(3):
+            # Wait for Conversation end
             await conversation_task
 
 
@@ -1115,87 +1111,35 @@ async def test_start_conversation_user_doesnt_pick_up(
     """Test start conversation when the user doesn't pick up."""
     assert await async_setup_component(hass, "voip", {})
 
-    pipeline = assist_pipeline.Pipeline(
-        conversation_engine="test engine",
-        conversation_language="en",
-        language="en",
-        name="test pipeline",
-        stt_engine="test stt",
-        stt_language="en",
-        tts_engine="test tts",
-        tts_language="en",
-        tts_voice=None,
-        wake_word_entity=None,
-        wake_word_id=None,
-    )
-
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
+    satellite.addr = ("192.168.1.1", 12345)
     assert isinstance(satellite, VoipAssistSatellite)
     assert (
         satellite.supported_features
         & assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
     )
 
-    # Protocol has already been mocked, but "outgoing_call" is not async
+    # Protocol has already been mocked, but "outgoing_call" and "cancel_call" are not async
     mock_protocol: AsyncMock = hass.data[DOMAIN].protocol
     mock_protocol.outgoing_call = Mock()
+    mock_protocol.cancel_call = Mock()
 
-    pipeline_started = asyncio.Event()
+    announcement = assist_satellite.AssistSatelliteAnnouncement(
+        message="test announcement",
+        media_id=_MEDIA_ID,
+        tts_token="test-token",
+        original_media_id=_MEDIA_ID,
+        media_id_source="tts",
+    )
 
-    async def async_pipeline_from_audio_stream(
-        hass: HomeAssistant,
-        context: Context,
-        *args,
-        conversation_extra_system_prompt: str | None = None,
-        **kwargs,
-    ):
-        # System prompt should be not be set due to timeout (user not picking up)
-        assert conversation_extra_system_prompt is None
-
-        pipeline_started.set()
-
+    # Very short timeout which will trigger because we don't send any audio in
     with (
         patch(
-            "homeassistant.components.assist_satellite.entity.async_get_pipeline",
-            return_value=pipeline,
-        ),
-        patch(
-            "homeassistant.components.voip.assist_satellite.VoipAssistSatellite.async_start_conversation",
-            side_effect=TimeoutError,
-        ),
-        patch(
-            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
-            new=async_pipeline_from_audio_stream,
-        ),
-        patch(
-            "homeassistant.components.tts.generate_media_source_id",
-            return_value="media-source://bla",
-        ),
-        patch(
-            "homeassistant.components.tts.async_resolve_engine",
-            return_value="test tts",
-        ),
-        patch(
-            "homeassistant.components.tts.async_create_stream",
-            return_value=MockResultStream(hass, "wav", b""),
+            "homeassistant.components.voip.assist_satellite._ANNOUNCEMENT_RING_TIMEOUT",
+            0.1,
         ),
     ):
-        satellite.transport = Mock()
+        satellite.connection_made(Mock())
 
-        # Error should clear system prompt
         with pytest.raises(TimeoutError):
-            await hass.services.async_call(
-                assist_satellite.DOMAIN,
-                "start_conversation",
-                {
-                    "entity_id": satellite.entity_id,
-                    "start_message": "test announcement",
-                    "extra_system_prompt": "test prompt",
-                },
-                blocking=True,
-            )
-
-        # Trigger a pipeline so we can check if the system prompt was cleared
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        async with asyncio.timeout(1):
-            await pipeline_started.wait()
+            await satellite.async_start_conversation(announcement)

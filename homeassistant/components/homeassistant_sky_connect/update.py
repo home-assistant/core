@@ -124,6 +124,7 @@ def _async_create_update_entity(
         config_entry=config_entry,
         update_coordinator=FirmwareUpdateCoordinator(
             hass,
+            config_entry,
             session,
             NABU_CASA_FIRMWARE_RELEASES_URL,
         ),
@@ -168,7 +169,6 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """SkyConnect firmware update entity."""
 
     bootloader_reset_type = None
-    _attr_has_entity_name = True
 
     def __init__(
         self,

@@ -1,0 +1,193 @@
+name: Auto-detect non-English issues
+
+# yamllint disable-line rule:truthy
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+  models: read
+
+jobs:
+  detect-language:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check issue language
+        id: detect_language
+        uses: actions/github-script@v8
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_USER_TYPE: ${{ github.event.issue.user.type }}
+        with:
+          script: |
+            // Get the issue details from environment variables
+            const issueNumber = process.env.ISSUE_NUMBER;
+            const issueTitle = process.env.ISSUE_TITLE || '';
+            const issueBody = process.env.ISSUE_BODY || '';
+            const userType = process.env.ISSUE_USER_TYPE;
+
+            // Skip language detection for bot users
+            if (userType === 'Bot') {
+              console.log('Skipping language detection for bot user');
+              core.setOutput('should_continue', 'false');
+              return;
+            }
+
+            console.log(`Checking language for issue #${issueNumber}`);
+            console.log(`Title: ${issueTitle}`);
+
+            // Combine title and body for language detection
+            const fullText = `${issueTitle}\n\n${issueBody}`;
+
+            // Check if the text is too short to reliably detect language
+            if (fullText.trim().length < 20) {
+              console.log('Text too short for reliable language detection');
+              core.setOutput('should_continue', 'false'); // Skip processing for very short text
+              return;
+            }
+
+            core.setOutput('issue_number', issueNumber);
+            core.setOutput('issue_text', fullText);
+            core.setOutput('should_continue', 'true');
+
+      - name: Detect language using AI
+        id: ai_language_detection
+        if: steps.detect_language.outputs.should_continue == 'true'
+        uses: actions/ai-inference@v2.0.1
+        with:
+          model: openai/gpt-4o-mini
+          system-prompt: |
+            You are a language detection system. Your task is to determine if the provided text is written in English or another language.
+
+            Rules:
+            1. Analyze the text and determine the primary language of the USER'S DESCRIPTION only
+            2. IGNORE markdown headers (lines starting with #, ##, ###, etc.) as these are from issue templates, not user input
+            3. IGNORE all code blocks (text between ``` or ` markers) as they may contain system-generated error messages in other languages
+            4. IGNORE error messages, logs, and system output even if not in code blocks - these often appear in the user's system language
+            5. Consider technical terms, code snippets, URLs, and file paths as neutral (they don't indicate non-English)
+            6. Focus ONLY on the actual sentences and descriptions written by the user explaining their issue
+            7. If the user's explanation/description is in English but includes non-English error messages or logs, consider it ENGLISH
+            8. Return ONLY a JSON object with two fields:
+               - "is_english": boolean (true if the user's description is primarily in English, false otherwise)
+               - "detected_language": string (the name of the detected language, e.g., "English", "Spanish", "Chinese", etc.)
+            9. Be lenient - if the user's explanation is in English with non-English system output, it's still English
+            10. Common programming terms, error messages, and technical jargon should not be considered as non-English
+            11. If you cannot reliably determine the language, set detected_language to "undefined"
+
+            Example response:
+            {"is_english": false, "detected_language": "Spanish"}
+
+          prompt: |
+            Please analyze the following issue text and determine if it is written in English:
+
+            ${{ steps.detect_language.outputs.issue_text }}
+
+          max-tokens: 50
+
+      - name: Process non-English issues
+        if: steps.detect_language.outputs.should_continue == 'true'
+        uses: actions/github-script@v8
+        env:
+          AI_RESPONSE: ${{ steps.ai_language_detection.outputs.response }}
+          ISSUE_NUMBER: ${{ steps.detect_language.outputs.issue_number }}
+        with:
+          script: |
+            const issueNumber = parseInt(process.env.ISSUE_NUMBER);
+            const aiResponse = process.env.AI_RESPONSE;
+
+            console.log('AI language detection response:', aiResponse);
+
+            let languageResult;
+            try {
+              languageResult = JSON.parse(aiResponse.trim());
+
+              // Validate the response structure
+              if (!languageResult || typeof languageResult.is_english !== 'boolean') {
+                throw new Error('Invalid response structure');
+              }
+            } catch (error) {
+              core.error(`Failed to parse AI response: ${error.message}`);
+              console.log('Raw AI response:', aiResponse);
+
+              // Log more details for debugging
+              core.warning('Defaulting to English due to parsing error');
+
+              // Default to English if we can't parse the response
+              return;
+            }
+
+            if (languageResult.is_english) {
+              console.log('Issue is in English, no action needed');
+              return;
+            }
+
+            // If language is undefined or not detected, skip processing
+            if (!languageResult.detected_language || languageResult.detected_language === 'undefined') {
+              console.log('Language could not be determined, skipping processing');
+              return;
+            }
+
+            console.log(`Issue detected as non-English: ${languageResult.detected_language}`);
+
+            // Post comment explaining the language requirement
+            const commentBody = [
+              '<!-- workflow: detect-non-english-issues -->',
+              '### 🌐 Non-English issue detected',
+              '',
+              `This issue appears to be written in **${languageResult.detected_language}** rather than English.`,
+              '',
+              'The Home Assistant project uses English as the primary language for issues to ensure that everyone in our international community can participate and help resolve issues. This allows any of our thousands of contributors to jump in and provide assistance.',
+              '',
+              '**What to do:**',
+              '1. Re-create the issue using the English language',
+              '2. If you need help with translation, consider using:',
+              '   - Translation tools like Google Translate',
+              '   - AI assistants like ChatGPT or Claude',
+              '',
+              'This helps our community provide the best possible support and ensures your issue gets the attention it deserves from our global contributor base.',
+              '',
+              'Thank you for your understanding! 🙏'
+            ].join('\n');
+
+            try {
+              // Add comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: commentBody
+              });
+
+              console.log('Posted language requirement comment');
+
+              // Add non-english label
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                labels: ['non-english']
+              });
+
+              console.log('Added non-english label');
+
+              // Close the issue
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                state: 'closed',
+                state_reason: 'not_planned'
+              });
+
+              console.log('Closed the issue');
+
+            } catch (error) {
+              core.error('Failed to process non-English issue:', error.message);
+              if (error.status === 403) {
+                core.error('Permission denied or rate limit exceeded');
+              }
+            }
