@@ -72,10 +72,7 @@ async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
     if _is_yellow(hass) and device == "/dev/ttyAMA1":
         return f"Home Assistant Yellow ({discovery_info.name})"
 
-    if device and "SkyConnect" in device:
-        return f"Home Assistant SkyConnect ({discovery_info.name})"
-
-    if device and "Connect_ZBT-1" in device:
+    if device and ("Connect_ZBT-1" in device or "SkyConnect" in device):
         return f"Home Assistant Connect ZBT-1 ({discovery_info.name})"
 
     return discovery_info.name
