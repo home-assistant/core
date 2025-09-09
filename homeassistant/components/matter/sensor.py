@@ -88,10 +88,10 @@ OPERATIONAL_STATE_MAP = {
 
 OPERATIONAL_STATE_ERROR_MAP = {
     # enum with known Error state values which we can translate
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kNoError: "no_error",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kUnableToStartOrResume: "unable_to_start_or_resume",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kUnableToCompleteOperation: "unable_to_complete_operation",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kCommandInvalidInState: "command_invalid_in_state",
+    clusters.OperationalState.Enums.ErrorStateEnum.kNoError: "no_error",
+    clusters.OperationalState.Enums.ErrorStateEnum.kUnableToStartOrResume: "unable_to_start_or_resume",
+    clusters.OperationalState.Enums.ErrorStateEnum.kUnableToCompleteOperation: "unable_to_complete_operation",
+    clusters.OperationalState.Enums.ErrorStateEnum.kCommandInvalidInState: "command_invalid_in_state",
 }
 
 RVC_OPERATIONAL_STATE_MAP = {
@@ -104,25 +104,25 @@ RVC_OPERATIONAL_STATE_MAP = {
 
 RVC_OPERATIONAL_STATE_ERROR_MAP = {
     # enum with known Error state values which we can translate
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kNoError: "no_error",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kUnableToStartOrResume: "unable_to_start_or_resume",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kUnableToCompleteOperation: "unable_to_complete_operation",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kCommandInvalidInState: "command_invalid_in_state",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kFailedToFindChargingDock: "failed_to_find_charging_dock",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kStuck: "stuck",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kDustBinMissing: "dust_bin_missing",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kDustBinFull: "dust_bin_full",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kWaterTankEmpty: "water_tank_empty",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kWaterTankMissing: "water_tank_missing",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kWaterTankLidOpen: "water_tank_lid_open",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kMopCleaningPadMissing: "mop_cleaning_pad_missing",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kLowBattery: "low_battery",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kCannotReachTargetArea: "cannot_reach_target_area",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kDirtyWaterTankFull: "dirty_water_tank_full",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kDirtyWaterTankMissing: "dirty_water_tank_missing",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kWheelsJammed: "wheels_jammed",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kBrushJammed: "brush_jammed",
-    clusters.RVCOperationalState.Enums.ErrorStateEnum.kNavigationSensorObscured: "navigation_sensor_obscured",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kNoError: "no_error",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kUnableToStartOrResume: "unable_to_start_or_resume",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kUnableToCompleteOperation: "unable_to_complete_operation",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kCommandInvalidInState: "command_invalid_in_state",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kFailedToFindChargingDock: "failed_to_find_charging_dock",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kStuck: "stuck",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kDustBinMissing: "dust_bin_missing",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kDustBinFull: "dust_bin_full",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kWaterTankEmpty: "water_tank_empty",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kWaterTankMissing: "water_tank_missing",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kWaterTankLidOpen: "water_tank_lid_open",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kMopCleaningPadMissing: "mop_cleaning_pad_missing",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kLowBattery: "low_battery",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kCannotReachTargetArea: "cannot_reach_target_area",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kDirtyWaterTankFull: "dirty_water_tank_full",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kDirtyWaterTankMissing: "dirty_water_tank_missing",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kWheelsJammed: "wheels_jammed",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kBrushJammed: "brush_jammed",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kNavigationSensorObscured: "navigation_sensor_obscured",
 }
 
 BOOST_STATE_MAP = {
@@ -1218,7 +1218,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="RVCOperationalStateOperationalError",
+            key="RvcOperationalStateOperationalError",
             entity_category=EntityCategory.DIAGNOSTIC,
             translation_key="operational_error",
             device_class=SensorDeviceClass.ENUM,
