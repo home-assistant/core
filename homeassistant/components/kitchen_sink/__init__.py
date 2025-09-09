@@ -32,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -115,6 +116,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(
         entry, COMPONENTS_WITH_DEMO_PLATFORM
     )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+
+    # Allow deleting any device except statistics_issues, just to give
+    # something to test the negative case.
+    for identifier in device_entry.identifiers:
+        if identifier[0] == DOMAIN and identifier[1] == "statistics_issues":
+            return False
+
+    return True
 
 
 async def _notify_backup_listeners(hass: HomeAssistant) -> None:
