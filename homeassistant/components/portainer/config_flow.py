@@ -30,7 +30,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
 
     try:
@@ -39,7 +39,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
             api_key=data[CONF_API_KEY],
             session=async_get_clientsession(hass),
         )
-        endpoints = await client.get_endpoints()
+        await client.get_endpoints()
     except PortainerAuthenticationError:
         raise InvalidAuth from None
     except PortainerConnectionError as err:
@@ -47,11 +47,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     except PortainerTimeoutError as err:
         raise PortainerTimeout from err
 
-    del endpoints
-
     _LOGGER.debug("Connected to Portainer API: %s", data[CONF_HOST])
-
-    return {"title": data[CONF_HOST]}
 
 
 class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -65,7 +61,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
-                api = await _validate_input(self.hass, user_input)
+                await _validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -78,7 +74,9 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(user_input[CONF_API_KEY])
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=api["title"], data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
