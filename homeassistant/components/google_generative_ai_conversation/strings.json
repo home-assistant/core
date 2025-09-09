@@ -160,11 +160,6 @@
           "description": "The prompt",
           "example": "Describe what you see in these images"
         },
-        "image_filename": {
-          "name": "Image filename",
-          "description": "Deprecated. Use filenames instead.",
-          "example": "/config/www/image.jpg"
-        },
         "filenames": {
           "name": "Attachment filenames",
           "description": "Attachments to add to the prompt (images, PDFs, etc)",
