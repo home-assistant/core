@@ -1446,7 +1446,6 @@ async def test_pb_service_write_no_slave(
                 CONF_SCALE: 10,
                 CONF_OFFSET: 20,
                 CONF_CURRENT_TEMP_SCALE: 1,
-                CONF_CURRENT_TEMP_OFFSET: 0,
             },
         ),
         (
@@ -1458,7 +1457,6 @@ async def test_pb_service_write_no_slave(
                 CONF_SCAN_INTERVAL: 0,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 20,
-                CONF_CURRENT_TEMP_SCALE: 1,
                 CONF_CURRENT_TEMP_OFFSET: 0,
             },
         ),

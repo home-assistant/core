@@ -480,15 +480,15 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._target_temperature_register[
                 HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
             ],
-            scale=self._target_temp_scale,
-            offset=self._target_temp_offset,
+            self._target_temp_scale,
+            self._target_temp_offset,
         )
 
         self._attr_current_temperature = await self._async_read_register(
             self._input_type,
             self._address,
-            scale=self._current_temp_scale,
-            offset=self._current_temp_offset,
+            self._current_temp_scale,
+            self._current_temp_offset,
         )
 
         # Read the HVAC mode register if defined

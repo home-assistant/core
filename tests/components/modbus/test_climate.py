@@ -1764,7 +1764,7 @@ async def test_no_discovery_info_climate(
 async def test_update_current_temp_scale_and_offset(
     hass: HomeAssistant, mock_modbus_ha, result, register_words
 ) -> None:
-    """Test behavior with different configurations for temperature scaling."""
+    """Test behavior with different configurations for current temperature scaling/offset."""
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
 
     await hass.services.async_call(
@@ -1823,8 +1823,8 @@ async def test_update_current_temp_scale_and_offset(
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
-                        CONF_TARGET_TEMP_SCALE: 0.1,
-                        CONF_TARGET_TEMP_OFFSET: 5,
+                        CONF_SCALE: 0.1,
+                        CONF_OFFSET: 5,
                     },
                 ]
             },
@@ -1836,7 +1836,7 @@ async def test_update_current_temp_scale_and_offset(
 async def test_update_target_temp_scale_and_offset(
     hass: HomeAssistant, mock_modbus_ha, result, register_words
 ) -> None:
-    """Test behavior with different configurations for temperature scaling."""
+    """Test behavior with different configurations for target temperature scaling / offset."""
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
 
     await hass.services.async_call(

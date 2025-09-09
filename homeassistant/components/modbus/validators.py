@@ -253,45 +253,31 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
 
 def ensure_and_check_conflicting_scales_and_offsets(config: dict[str, Any]) -> dict:
     """Check for conflicts in scale/offset and ensure target/current temp scale/offset is set."""
+    config_keys = [
+        (CONF_SCALE, CONF_TARGET_TEMP_SCALE, CONF_CURRENT_TEMP_SCALE, DEFAULT_SCALE),
+        (
+            CONF_OFFSET,
+            CONF_TARGET_TEMP_OFFSET,
+            CONF_CURRENT_TEMP_OFFSET,
+            DEFAULT_OFFSET,
+        ),
+    ]
 
-    if CONF_TARGET_TEMP_SCALE not in config:
-        config[CONF_TARGET_TEMP_SCALE] = config.get(CONF_SCALE, DEFAULT_SCALE)
-    elif CONF_SCALE in config and config[CONF_TARGET_TEMP_SCALE] != config[CONF_SCALE]:
-        raise vol.Invalid(
-            f"Invalid scales: {CONF_SCALE} and {CONF_TARGET_TEMP_SCALE} cannot be used together, please use only one of them."
-        )
+    for generic_key, target_key, current_key, default_value in config_keys:
+        if generic_key in config and (target_key in config or current_key in config):
+            raise vol.Invalid(
+                f"Cannot use {target_key} or {current_key} with {generic_key} in the same configuration."
+            )
 
-    if CONF_CURRENT_TEMP_SCALE not in config:
-        config[CONF_CURRENT_TEMP_SCALE] = config.get(CONF_SCALE, DEFAULT_SCALE)
-    elif CONF_SCALE in config and config[CONF_CURRENT_TEMP_SCALE] != config[CONF_SCALE]:
-        raise vol.Invalid(
-            f"Invalid scales: {CONF_SCALE} and {CONF_CURRENT_TEMP_SCALE} cannot be used together, please use only one of them."
-        )
+        if generic_key in config:
+            value = config.pop(generic_key)
+            config[target_key] = value
+            config[current_key] = value
 
-    if CONF_TARGET_TEMP_OFFSET not in config:
-        config[CONF_TARGET_TEMP_OFFSET] = config.get(CONF_OFFSET, DEFAULT_OFFSET)
-    elif (
-        CONF_OFFSET in config and config[CONF_TARGET_TEMP_OFFSET] != config[CONF_OFFSET]
-    ):
-        raise vol.Invalid(
-            f"Invalid offsets: {CONF_OFFSET} and {CONF_TARGET_TEMP_OFFSET} cannot be used together, please use only one of them."
-        )
-
-    if CONF_CURRENT_TEMP_OFFSET not in config:
-        config[CONF_CURRENT_TEMP_OFFSET] = config.get(CONF_OFFSET, DEFAULT_OFFSET)
-    elif (
-        CONF_OFFSET in config
-        and config[CONF_CURRENT_TEMP_OFFSET] != config[CONF_OFFSET]
-    ):
-        raise vol.Invalid(
-            f"Invalid offsets: {CONF_OFFSET} and {CONF_CURRENT_TEMP_OFFSET} cannot be used together, please use only one of them."
-        )
-
-    if CONF_OFFSET in config:
-        del config[CONF_OFFSET]
-
-    if CONF_SCALE in config:
-        del config[CONF_SCALE]
+        if target_key not in config or config[target_key] == 0:
+            config[target_key] = default_value
+        if current_key not in config or config[current_key] == 0:
+            config[current_key] = default_value
 
     return config
 
