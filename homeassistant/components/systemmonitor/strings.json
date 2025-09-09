@@ -111,7 +111,19 @@
         "name": "Memory Pressure Some 300s Average"
       },
       "memory_pressure_some_total": {
-        "name": "Memory Pressure Some Total"
+        "name": "Memory Pressure Some Full"
+      },
+      "memory_pressure_full_avg10": {
+        "name": "Memory Pressure Full 10s Average"
+      },
+      "memory_pressure_full_avg60": {
+        "name": "Memory Pressure Full 60s Average"
+      },
+      "memory_pressure_full_avg300": {
+        "name": "Memory Pressure Full 300s Average"
+      },
+      "memory_pressure_full_total": {
+        "name": "Memory Pressure Full Total"
       }
     }
   }

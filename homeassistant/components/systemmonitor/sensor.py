@@ -420,6 +420,43 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {}).get("some", {}).get("total"),
         add_to_update=lambda entity: ("pressure", ""),
     ),
+    "memory_pressure_full_avg10": SysMonitorSensorEntityDescription(
+        key="memory_pressure_full_avg10",
+        translation_key="memory_pressure_full_avg10",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:gauge",
+        value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {}).get("full", {}).get("avg10"),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "memory_pressure_full_avg60": SysMonitorSensorEntityDescription(
+        key="memory_pressure_full_avg60",
+        translation_key="memory_pressure_full_avg60",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:gauge",
+        value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {}).get("full", {}).get("avg10"),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "memory_pressure_full_avg300": SysMonitorSensorEntityDescription(
+        key="memory_pressure_full_avg300",
+        translation_key="memory_pressure_full_avg300",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:gauge",
+        value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {}).get("full", {}).get("avg10"),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "memory_pressure_full_total": SysMonitorSensorEntityDescription(
+        key="memory_pressure_full_total",
+        translation_key="memory_pressure_full_total",
+        native_unit_of_measurement=UnitOfTime.MICROSECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:timer-outline",
+        value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {}).get("full", {}).get("total"),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+
 }
 
 
