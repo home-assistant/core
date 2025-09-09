@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from functools import partial
-import logging
 from math import isfinite
 from typing import Any, cast
 
@@ -56,7 +55,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ServiceValidationError
 
+from .const import DOMAIN
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
@@ -65,8 +66,6 @@ from .entity import (
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
-
-_LOGGER = logging.getLogger(__package__)
 
 PARALLEL_UPDATES = 0
 
@@ -299,14 +298,20 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             if not self._static_info.supports_two_point_target_temperature:
                 data["target_temperature"] = kwargs[ATTR_TEMPERATURE]
             else:
-                hvac_mode = data.get("mode", self.hvac_mode)
+                hvac_mode = kwargs.get(ATTR_HVAC_MODE) or self.hvac_mode
                 if hvac_mode == HVACMode.HEAT:
                     data["target_temperature_low"] = kwargs[ATTR_TEMPERATURE]
                 elif hvac_mode == HVACMode.COOL:
                     data["target_temperature_high"] = kwargs[ATTR_TEMPERATURE]
                 else:
-                    _LOGGER.error(
-                        "Setting target_temperature is only supported in a single-point mode"
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="action_call_failed",
+                        translation_placeholders={
+                            "call_name": "climate.set_temperature",
+                            "device_name": self._static_info.name,
+                            "error": f"Setting target_temperature is only supported in {HVACMode.HEAT} or {HVACMode.COOL} modes",
+                        },
                     )
         if ATTR_TARGET_TEMP_LOW in kwargs:
             data["target_temperature_low"] = kwargs[ATTR_TARGET_TEMP_LOW]
