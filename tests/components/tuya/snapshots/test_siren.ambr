@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[siren.aqi-entry]
+# name: test_platform_setup_and_discovery[siren.air_detector-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'siren.aqi',
+    'entity_id': 'siren.air_detector',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -34,14 +34,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[siren.aqi-state]
+# name: test_platform_setup_and_discovery[siren.air_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AQI',
+      'friendly_name': 'AIR_DETECTOR ',
       'supported_features': <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.aqi',
+    'entity_id': 'siren.air_detector',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
