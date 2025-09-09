@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
-import socket
 from typing import Any
 
+from nessclient import Client
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -22,7 +24,6 @@ from .const import (
     CONF_SUPPORT_HOME_ARM,
     CONF_TYPE,
     CONF_ZONES,
-    CONNECTION_TIMEOUT_SECONDS,
     DEFAULT_INFER_ARMING_STATE,
     DEFAULT_MAX_SUPPORTED_ZONES,
     DEFAULT_PORT,
@@ -43,41 +44,38 @@ class NessAlarmConnectionError(HomeAssistantError):
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input and attempt to connect to the Ness Alarm device.
+    """Validate the user input."""
 
-    Args:
-        hass (HomeAssistant): The Home Assistant instance.
-        data (dict[str, Any]): Dictionary containing user input, must include
-            CONF_HOST (str): Hostname or IP address of the Ness Alarm device.
-            CONF_PORT (int): Port number to connect to.
-
-    Returns:
-        dict[str, Any]: Dictionary with a "title" key describing the Ness Alarm device.
-
-    Raises:
-        NessAlarmConnectionError: If unable to connect to the specified host and port.
-    """
     host = data[CONF_HOST]
     port = data[CONF_PORT]
 
-    def test_connection():
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(CONNECTION_TIMEOUT_SECONDS)
-        try:
-            result = sock.connect_ex((host, port))
-        except OSError:
-            return False
-        else:
-            return result == 0
-        finally:
-            sock.close()
+    client = Client(host=host, port=port, update_interval=DEFAULT_SCAN_INTERVAL)
 
-    is_connected = await hass.async_add_executor_job(test_connection)
+    try:
+        keepalive_task = asyncio.create_task(client.keepalive())
 
-    if not is_connected:
-        raise NessAlarmConnectionError(f"Cannot connect to {host}:{port}")
+        panel_info = await asyncio.wait_for(client.get_panel_info(), timeout=5.0)
 
-    return {"title": f"Ness Alarm ({host})"}
+        keepalive_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await keepalive_task
+
+        await client.close()
+
+    except TimeoutError:
+        _LOGGER.error("Timeout connecting to Ness Alarm at %s:%s", host, port)
+        await client.close()
+        raise NessAlarmConnectionError(f"Timeout connecting to {host}:{port}") from None
+    except Exception as err:
+        _LOGGER.error("Failed to connect to Ness Alarm: %s", err)
+        await client.close()
+        raise NessAlarmConnectionError(f"Cannot connect to {host}:{port}") from err
+    else:
+        return {
+            "title": f"Ness Alarm {panel_info.model.value} ({host})",
+            "model": panel_info.model.value,
+            "version": panel_info.version,
+        }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -114,9 +112,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_MAX_SUPPORTED_ZONES, default=DEFAULT_MAX_SUPPORTED_ZONES
                 ): int,
-                vol.Optional(
+                vol.Required(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): vol.All(cv.positive_int, vol.Range(min=1, max=3600)),
+                ): vol.All(cv.positive_float, vol.Range(min=0.1, max=3600)),
                 vol.Optional(
                     CONF_INFER_ARMING_STATE, default=DEFAULT_INFER_ARMING_STATE
                 ): bool,
@@ -131,35 +129,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, import_config: dict[str, Any]
     ) -> config_entries.ConfigFlowResult:
         """Handle import from YAML."""
-        scan_interval = import_config.get(CONF_SCAN_INTERVAL)
-        if scan_interval and hasattr(scan_interval, "total_seconds"):
+
+        scan_interval = import_config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        if hasattr(scan_interval, "total_seconds"):
             scan_interval = int(scan_interval.total_seconds())
 
         zones = import_config.get(CONF_ZONES, [])
-
         if zones:
             zone_ids = [zone.get(CONF_ID, 0) for zone in zones]
-            if zone_ids:
-                max_zone_id = max(zone_ids)
-            else:
-                max_zone_id = DEFAULT_MAX_SUPPORTED_ZONES
+            max_zone_id = max(zone_ids) if zone_ids else DEFAULT_MAX_SUPPORTED_ZONES
         else:
-            max_zone_id = import_config.get(
-                CONF_MAX_SUPPORTED_ZONES, DEFAULT_MAX_SUPPORTED_ZONES
-            )
+            max_zone_id = DEFAULT_MAX_SUPPORTED_ZONES
 
         data = {
             CONF_HOST: import_config[CONF_HOST],
             CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
-            CONF_SCAN_INTERVAL: scan_interval or DEFAULT_SCAN_INTERVAL,
-            CONF_INFER_ARMING_STATE: import_config.get(
-                CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE
-            ),
-            CONF_SUPPORT_HOME_ARM: import_config.get(
-                CONF_SUPPORT_HOME_ARM, DEFAULT_SUPPORT_HOME_ARM
-            ),
             CONF_MAX_SUPPORTED_ZONES: max_zone_id,
-            CONF_ZONES: [
+        }
+
+        if zones:
+            data[CONF_ZONES] = [
                 {
                     CONF_ID: zone.get(CONF_ID),
                     CONF_NAME: zone.get(CONF_NAME),
@@ -167,14 +156,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
                 for zone in zones
                 if zone.get(CONF_ID) and zone.get(CONF_NAME)
-            ],
-        }
-        await self.async_set_unique_id(f"{data[CONF_HOST]}:{data[CONF_PORT]}")
-        self._abort_if_unique_id_configured()
+            ]
 
-        return self.async_create_entry(
-            title=f"Ness Alarm ({data[CONF_HOST]})", data=data
-        )
+        options = {
+            CONF_SCAN_INTERVAL: scan_interval,
+            CONF_INFER_ARMING_STATE: import_config.get(
+                CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE
+            ),
+        }
+
+        try:
+            info = await validate_input(self.hass, data)
+            unique_id = f"{info['model']}_{data[CONF_HOST]}_{data[CONF_PORT]}"
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+
+            return self.async_create_entry(
+                title=info["title"],
+                data=data,
+                options=options,
+            )
+        except NessAlarmConnectionError:
+            return self.async_abort(reason="cannot_connect")
 
     @staticmethod
     @callback

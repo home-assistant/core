@@ -14,14 +14,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import (
+from . import SIGNAL_ZONE_CHANGED
+from .const import (
     CONF_ID,
     CONF_MAX_SUPPORTED_ZONES,
     CONF_NAME,
     CONF_TYPE,
     CONF_ZONES,
+    DEFAULT_MAX_SUPPORTED_ZONES,
     DOMAIN,
-    SIGNAL_ZONE_CHANGED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,9 +38,10 @@ async def async_setup_entry(
     config = data["config"]
 
     entities = []
-
-    # Total zones to create
-    max_zones: int = config[CONF_MAX_SUPPORTED_ZONES]
+    max_zones: int = config_entry.options.get(
+        CONF_MAX_SUPPORTED_ZONES,
+        config_entry.data.get(CONF_MAX_SUPPORTED_ZONES, DEFAULT_MAX_SUPPORTED_ZONES),
+    )
 
     # Map custom names and types if any are provided
     custom_zones = {}

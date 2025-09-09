@@ -24,13 +24,11 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_ID,
     CONF_INFER_ARMING_STATE,
-    CONF_MAX_SUPPORTED_ZONES,
     CONF_NAME,
     CONF_SUPPORT_HOME_ARM,
     CONF_TYPE,
     CONF_ZONES,
     DEFAULT_INFER_ARMING_STATE,
-    DEFAULT_MAX_SUPPORTED_ZONES,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SUPPORT_HOME_ARM,
@@ -89,7 +87,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     if DOMAIN in config:
-        hass.data[DOMAIN]["yaml_config"] = config[DOMAIN]
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
@@ -112,14 +109,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     infer_arming_state = entry.options.get(
         CONF_INFER_ARMING_STATE,
         entry.data.get(CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE),
-    )
-    support_home_arm = entry.options.get(
-        CONF_SUPPORT_HOME_ARM,
-        entry.data.get(CONF_SUPPORT_HOME_ARM, DEFAULT_SUPPORT_HOME_ARM),
-    )
-    max_supported_zones = entry.options.get(
-        CONF_MAX_SUPPORTED_ZONES,
-        entry.data.get(CONF_MAX_SUPPORTED_ZONES, DEFAULT_MAX_SUPPORTED_ZONES),
     )
 
     client = Client(
@@ -150,8 +139,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_PORT: port,
             CONF_SCAN_INTERVAL: scan_interval,
             CONF_INFER_ARMING_STATE: infer_arming_state,
-            CONF_SUPPORT_HOME_ARM: support_home_arm,
-            CONF_MAX_SUPPORTED_ZONES: max_supported_zones,
             CONF_ZONES: entry.data.get(CONF_ZONES, []),
         },
     }
@@ -187,9 +174,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         data = hass.data[DOMAIN].pop(entry.entry_id)
         await data["client"].close()
-
-        if not hass.data[DOMAIN]:
-            await async_unload_services(hass)
 
     return unload_ok
 
