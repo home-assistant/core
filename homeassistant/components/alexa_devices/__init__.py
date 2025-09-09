@@ -43,6 +43,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Migrate old entry."""
 
+    if entry.version == 1 and entry.minor_version == 3:
+        # Current version, nothing to migrate
+        return True
+
     if CONF_SITE in entry.data:
         # Site in data (wrong place), just move to login data
         new_data = entry.data.copy()
