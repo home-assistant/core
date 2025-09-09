@@ -86,7 +86,7 @@ OPERATIONAL_STATE_MAP = {
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
 }
 
-OPERATIONAL_STATE_ERROR_STATE_MAP = {
+OPERATIONAL_STATE_ERROR_MAP = {
     # enum with known Error state values which we can translate
     clusters.RVCOperationalState.Enums.ErrorStateEnum.kNoError: "no_error",
     clusters.RVCOperationalState.Enums.ErrorStateEnum.kUnableToStartOrResume: "unable_to_start_or_resume",
@@ -102,7 +102,7 @@ RVC_OPERATIONAL_STATE_MAP = {
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kDocked: "docked",
 }
 
-RVC_OPERATIONAL_STATE_ERROR_STATE_MAP = {
+RVC_OPERATIONAL_STATE_ERROR_MAP = {
     # enum with known Error state values which we can translate
     clusters.RVCOperationalState.Enums.ErrorStateEnum.kNoError: "no_error",
     clusters.RVCOperationalState.Enums.ErrorStateEnum.kUnableToStartOrResume: "unable_to_start_or_resume",
@@ -1145,7 +1145,10 @@ DISCOVERY_SCHEMAS = [
             key="OperationalStateOperationalError",
             entity_category=EntityCategory.DIAGNOSTIC,
             translation_key="operational_error",
-            state_class=None,
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(OPERATIONAL_STATE_ERROR_MAP.values()),
+            device_to_ha=OPERATIONAL_STATE_ERROR_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.OperationalState.Attributes.OperationalError,),
@@ -1216,10 +1219,13 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="OperationalStateOperationalError",
+            key="RVCOperationalStateOperationalError",
             entity_category=EntityCategory.DIAGNOSTIC,
             translation_key="operational_error",
-            state_class=None,
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(RVC_OPERATIONAL_STATE_ERROR_MAP.values()),
+            device_to_ha=RVC_OPERATIONAL_STATE_ERROR_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.RvcOperationalState.Attributes.OperationalError,),
