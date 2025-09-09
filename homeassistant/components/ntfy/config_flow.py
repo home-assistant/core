@@ -121,38 +121,36 @@ STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
     }
 )
 
+TOPIC_FILTER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_PRIORITY): SelectSelector(
+            SelectSelectorConfig(
+                multiple=True,
+                options=["5", "4", "3", "2", "1"],
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="priority",
+            )
+        ),
+        vol.Optional(CONF_TAGS): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
+            ),
+        ),
+        vol.Optional(CONF_TITLE): str,
+        vol.Optional(CONF_MESSAGE): str,
+    }
+)
+
+
 STEP_USER_TOPIC_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOPIC): str,
         vol.Optional(CONF_NAME): str,
         vol.Required(SECTION_FILTER): data_entry_flow.section(
-            vol.Schema(
-                {
-                    vol.Optional(CONF_PRIORITY): SelectSelector(
-                        SelectSelectorConfig(
-                            multiple=True,
-                            options=["5", "4", "3", "2", "1"],
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="priority",
-                        )
-                    ),
-                    vol.Optional(CONF_TAGS): TextSelector(
-                        TextSelectorConfig(
-                            type=TextSelectorType.TEXT,
-                            multiple=True,
-                        ),
-                    ),
-                    vol.Optional(CONF_TITLE): str,
-                    vol.Optional(CONF_MESSAGE): str,
-                }
-            ),
+            TOPIC_FILTER_SCHEMA,
             {"collapsed": True},
         ),
-    }
-)
-STEP_RECONFIGURE_TOPIC_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=""): str,
     }
 )
 
@@ -481,7 +479,7 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=STEP_RECONFIGURE_TOPIC_SCHEMA,
+                data_schema=TOPIC_FILTER_SCHEMA,
                 suggested_values=subentry_data,
             ),
             description_placeholders={CONF_TOPIC: subentry_data[CONF_TOPIC]},

@@ -14,6 +14,10 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.ntfy.const import (
+    CONF_MESSAGE,
+    CONF_PRIORITY,
+    CONF_TAGS,
+    CONF_TITLE,
     CONF_TOPIC,
     DOMAIN,
     SECTION_AUTH,
@@ -212,14 +216,25 @@ async def test_add_topic_flow(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             CONF_TOPIC: "mytopic",
-            SECTION_FILTER: {},
+            SECTION_FILTER: {
+                CONF_PRIORITY: ["5"],
+                CONF_TAGS: ["octopus", "+1"],
+                CONF_TITLE: "title",
+                CONF_MESSAGE: "triggered",
+            },
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry_id = list(config_entry.subentries)[0]
     assert config_entry.subentries == {
         subentry_id: ConfigSubentry(
-            data={CONF_TOPIC: "mytopic"},
+            data={
+                CONF_TOPIC: "mytopic",
+                CONF_PRIORITY: ["5"],
+                CONF_TAGS: ["octopus", "+1"],
+                CONF_TITLE: "title",
+                CONF_MESSAGE: "triggered",
+            },
             subentry_id=subentry_id,
             subentry_type="topic",
             title="mytopic",
@@ -766,7 +781,13 @@ async def test_topic_reconfigure_flow(hass: HomeAssistant) -> None:
         data={CONF_URL: "https://ntfy.sh/", CONF_USERNAME: None},
         subentries_data=[
             config_entries.ConfigSubentryData(
-                data={CONF_TOPIC: "mytopic", CONF_NAME: ""},
+                data={
+                    CONF_TOPIC: "mytopic",
+                    CONF_PRIORITY: ["1"],
+                    CONF_TAGS: ["owl", "-1"],
+                    CONF_TITLE: "",
+                    CONF_MESSAGE: "",
+                },
                 subentry_id="subentry_id",
                 subentry_type="topic",
                 title="mytopic",
@@ -785,7 +806,12 @@ async def test_topic_reconfigure_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_NAME: "mytopic_displayname"},
+        user_input={
+            CONF_PRIORITY: ["5"],
+            CONF_TAGS: ["octopus", "+1"],
+            CONF_TITLE: "title",
+            CONF_MESSAGE: "triggered",
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -793,7 +819,13 @@ async def test_topic_reconfigure_flow(hass: HomeAssistant) -> None:
 
     assert config_entry.subentries == {
         "subentry_id": ConfigSubentry(
-            data={CONF_TOPIC: "mytopic", CONF_NAME: "mytopic_displayname"},
+            data={
+                CONF_TOPIC: "mytopic",
+                CONF_PRIORITY: ["5"],
+                CONF_TAGS: ["octopus", "+1"],
+                CONF_TITLE: "title",
+                CONF_MESSAGE: "triggered",
+            },
             subentry_id="subentry_id",
             subentry_type="topic",
             title="mytopic",

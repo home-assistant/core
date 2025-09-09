@@ -124,13 +124,19 @@
           }
         },
         "reconfigure": {
-          "title": "[%key:component::ntfy::common::topic%]",
-          "description": "Update configuration for topic **{topic}**",
+          "title": "Message filters for {topic}",
+          "description": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::description%]",
           "data": {
-            "name": "[%key:component::ntfy::config_subentries::topic::step::add_topic::data::name%]"
+            "filter_priority": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data::filter_priority%]",
+            "filter_tags": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data::filter_tags%]",
+            "filter_title": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data::filter_title%]",
+            "filter_message": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data::filter_message%]"
           },
           "data_description": {
-            "name": "[%key:component::ntfy::config_subentries::topic::step::add_topic::data_description::name%]"
+            "filter_priority": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data_description::filter_priority%]",
+            "filter_tags": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data_description::filter_tags%]",
+            "filter_title": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data_description::filter_title%]",
+            "filter_message": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data_description::filter_message%]"
           }
         }
       },
