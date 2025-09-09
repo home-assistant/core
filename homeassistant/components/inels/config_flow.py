@@ -48,7 +48,7 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-            errors["base"] = connect_val_to_error(test_connect)
+            errors["base"] = TEST_CONNECT_ERRORS.get(test_connect, "unknown")
 
         return self.async_show_form(
             step_id="user",
@@ -97,10 +97,3 @@ TEST_CONNECT_ERRORS: dict[int, str] = {
     4: "invalid_auth",
     5: "unauthorized",
 }
-
-
-def connect_val_to_error(test_connect: int | None) -> str:
-    """Turn test_connect value into an error string."""
-    if test_connect in TEST_CONNECT_ERRORS:
-        return TEST_CONNECT_ERRORS[test_connect]
-    return "unknown"
