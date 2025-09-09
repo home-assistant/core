@@ -177,11 +177,17 @@ async def async_generate_image(
     hass: HomeAssistant,
     *,
     task_name: str,
-    entity_id: str,
+    entity_id: str | None = None,
     instructions: str,
     attachments: list[dict] | None = None,
 ) -> ServiceResponse:
     """Run an image generation task in the AI Task integration."""
+    if entity_id is None:
+        entity_id = hass.data[DATA_PREFERENCES].gen_image_entity_id
+
+    if entity_id is None:
+        raise HomeAssistantError("No entity_id provided and no preferred entity set")
+
     entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
     if entity is None:
         raise HomeAssistantError(f"AI Task entity {entity_id} not found")
