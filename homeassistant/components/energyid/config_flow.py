@@ -1,5 +1,6 @@
 """Config flow for EnergyID integration."""
 
+import asyncio
 import logging
 from typing import Any
 
@@ -31,6 +32,10 @@ _LOGGER = logging.getLogger(__name__)
 
 ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX = "homeassistant_eid_"
 
+# Polling configuration
+POLLING_INTERVAL = 2  # seconds
+MAX_POLLING_ATTEMPTS = 60  # 2 minutes total
+
 
 class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the configuration flow for the EnergyID integration."""
@@ -38,6 +43,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._flow_data: dict[str, Any] = {}
+        self._polling_task: asyncio.Task | None = None
 
     async def _perform_auth_and_get_details(self) -> str | None:
         """Authenticate with EnergyID and retrieve device details."""
@@ -52,11 +58,13 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             is_claimed = await client.authenticate()
             _LOGGER.debug("Authentication successful, claimed: %s", is_claimed)
-        except ClientError:
-            _LOGGER.error("Failed to connect to EnergyID during authentication")
+        except ClientError as err:
+            _LOGGER.error(
+                "Failed to connect to EnergyID during authentication: %s", err
+            )
             return "cannot_connect"
-        except RuntimeError:
-            _LOGGER.exception("Unexpected runtime error during EnergyID authentication")
+        except Exception:
+            _LOGGER.exception("Unexpected error during EnergyID authentication")
             return "unknown_auth_error"
 
         if is_claimed:
@@ -74,6 +82,32 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             "Device needs claim, claim info: %s", self._flow_data["claim_info"]
         )
         return "needs_claim"
+
+    async def _async_poll_for_claim(self) -> None:
+        """Poll EnergyID to check if device has been claimed."""
+        attempts = 0
+
+        while attempts < MAX_POLLING_ATTEMPTS:
+            attempts += 1
+            await asyncio.sleep(POLLING_INTERVAL)
+
+            _LOGGER.debug("Polling attempt %s for claim status", attempts)
+            auth_status = await self._perform_auth_and_get_details()
+
+            if auth_status is None:
+                # Device has been claimed
+                _LOGGER.debug("Device claimed detected during polling")
+                # Trigger the flow to continue
+                self.hass.async_create_task(
+                    self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
+                )
+                return
+            if auth_status != "needs_claim":
+                # Some other error occurred
+                _LOGGER.error("Error during polling: %s", auth_status)
+                return
+
+        _LOGGER.debug("Max polling attempts reached without successful claim")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -126,34 +160,47 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_auth_and_claim(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the step for device claiming if needed."""
+        """Handle the step for device claiming using external step with polling."""
         _LOGGER.debug("Starting auth and claim step with input: %s", user_input)
-        if user_input is not None:
-            auth_status = await self._perform_auth_and_get_details()
 
-            if auth_status is None:
-                await self.async_set_unique_id(self._flow_data["record_number"])
-                self._abort_if_unique_id_configured()
-                _LOGGER.debug(
-                    "Creating entry with title: %s", self._flow_data["record_name"]
-                )
-                return self.async_create_entry(
-                    title=self._flow_data["record_name"], data=self._flow_data
-                )
+        claim_info = self._flow_data.get("claim_info", {})
 
-            _LOGGER.debug(
-                "Claim failed or timed out, errors: %s",
-                {"base": "claim_failed_or_timed_out"},
+        # Start polling when we first enter this step
+        if self._polling_task is None:
+            self._polling_task = self.hass.async_create_task(
+                self._async_poll_for_claim()
             )
-            return self.async_show_form(
+
+            # Show external step to open the EnergyID website
+            return self.async_external_step(
                 step_id="auth_and_claim",
-                description_placeholders=self._flow_data.get("claim_info", {}),
-                errors={"base": "claim_failed_or_timed_out"},
+                url=claim_info.get("claim_url", ""),
+                description_placeholders=claim_info,
             )
 
-        return self.async_show_form(
+        # Check if device has been claimed
+        auth_status = await self._perform_auth_and_get_details()
+
+        if auth_status is None:
+            # Device has been claimed
+            await self.async_set_unique_id(self._flow_data["record_number"])
+            self._abort_if_unique_id_configured()
+            return self.async_external_step_done(next_step_id="create_entry")
+
+        # Device not claimed yet, show the external step again
+        return self.async_external_step(
             step_id="auth_and_claim",
-            description_placeholders=self._flow_data.get("claim_info", {}),
+            url=claim_info.get("claim_url", ""),
+            description_placeholders=claim_info,
+        )
+
+    async def async_step_create_entry(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Final step to create the entry after successful claim."""
+        _LOGGER.debug("Creating entry with title: %s", self._flow_data["record_name"])
+        return self.async_create_entry(
+            title=self._flow_data["record_name"], data=self._flow_data
         )
 
     @classmethod
