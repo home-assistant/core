@@ -310,7 +310,10 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
                         translation_placeholders={
                             "call_name": "climate.set_temperature",
                             "device_name": self._static_info.name,
-                            "error": f"Setting target_temperature is only supported in {HVACMode.HEAT} or {HVACMode.COOL} modes",
+                            "error": (
+                                f"Setting target_temperature is only supported in "
+                                f"{HVACMode.HEAT} or {HVACMode.COOL} modes"
+                            ),
                         },
                     )
         if ATTR_TARGET_TEMP_LOW in kwargs:
