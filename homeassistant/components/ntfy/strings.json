@@ -146,7 +146,18 @@
             "state": {
               "triggered": "Triggered"
             }
-          }
+          },
+          "time": { "name": "Time" },
+          "expires": { "name": "Expires" },
+          "topic": { "name": "[%key:component::ntfy::common::topic%]" },
+          "message": { "name": "Message" },
+          "title": { "name": "Title" },
+          "tags": { "name": "Tags" },
+          "priority": { "name": "Priority" },
+          "click": { "name": "Click" },
+          "icon": { "name": "Icon" },
+          "actions": { "name": "Actions" },
+          "attachment": { "name": "Attachment" }
         }
       }
     },
