@@ -53,26 +53,24 @@ async def test_block_binary_sensor(
     assert entry.unique_id == "123456789ABC-relay_0-overpower"
 
 
-async def test_block_binary_sensor_extra_state_attr(
+async def test_block_binary_gas_sensor_creation(
     hass: HomeAssistant,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     entity_registry: EntityRegistry,
 ) -> None:
-    """Test block binary sensor extra state attributes."""
+    """Test block binary gas sensor creation."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_gas"
     await init_integration(hass, 1)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
-    assert state.attributes.get("detected") == "mild"
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "gas", "none")
     mock_block_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
-    assert state.attributes.get("detected") == "none"
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sensor_0-gas"

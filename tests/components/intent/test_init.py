@@ -73,6 +73,32 @@ async def test_http_handle_intent(
     }
 
 
+async def test_http_handle_intent_match_failure(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test handle intent match failure via HTTP API."""
+
+    assert await async_setup_component(hass, "intent", {})
+
+    hass.states.async_set(
+        "cover.garage_door_1", "closed", {ATTR_FRIENDLY_NAME: "Garage Door"}
+    )
+    hass.states.async_set(
+        "cover.garage_door_2", "closed", {ATTR_FRIENDLY_NAME: "Garage Door"}
+    )
+    async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/intent/handle",
+        json={"name": "HassTurnOn", "data": {"name": "Garage Door"}},
+    )
+    assert resp.status == 200
+    data = await resp.json()
+
+    assert "DUPLICATE_NAME" in data["speech"]["plain"]["speech"]
+
+
 async def test_cover_intents_loading(hass: HomeAssistant) -> None:
     """Test Cover Intents Loading."""
     assert await async_setup_component(hass, "intent", {})
