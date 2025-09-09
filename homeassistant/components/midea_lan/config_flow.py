@@ -761,9 +761,10 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     dm.close_socket()
                 else:
                     dm.close_socket()
+                    device_id = user_input[CONF_DEVICE_ID]
                     data = {
                         CONF_NAME: user_input[CONF_NAME],
-                        CONF_DEVICE_ID: user_input[CONF_DEVICE_ID],
+                        CONF_DEVICE_ID: device_id,
                         CONF_TYPE: user_input[CONF_TYPE],
                         CONF_PROTOCOL: user_input[CONF_PROTOCOL],
                         CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
@@ -775,6 +776,9 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                     # save device json config when adding new device
                     self._save_device_config(data)
+                    # unique identifier
+                    await self.async_set_unique_id(device_id)
+                    self._abort_if_unique_id_configured()
                     # finish add device entry
                     return self.async_create_entry(
                         title=f"{user_input[CONF_NAME]}",
