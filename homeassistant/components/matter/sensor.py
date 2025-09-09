@@ -86,6 +86,14 @@ OPERATIONAL_STATE_MAP = {
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
 }
 
+OPERATIONAL_STATE_ERROR_STATE_MAP = {
+    # enum with known Error state values which we can translate
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kNoError: "no_error",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kUnableToStartOrResume: "unable_to_start_or_resume",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kUnableToCompleteOperation: "unable_to_complete_operation",
+    clusters.RVCOperationalState.Enums.ErrorStateEnum.kCommandInvalidInState: "command_invalid_in_state",
+}
+
 RVC_OPERATIONAL_STATE_MAP = {
     # enum with known Operation state values which we can translate
     **OPERATIONAL_STATE_MAP,
