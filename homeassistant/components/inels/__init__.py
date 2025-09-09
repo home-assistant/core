@@ -57,22 +57,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> boo
     def connect_and_discover_devices() -> list[Device]:
         """Test connection and discover devices."""
         conn_result = mqtt.test_connection()
-        if isinstance(conn_result, int):  # None -> no error, int -> error code
+        if conn_result is not None:
             mqtt.close()
             if conn_result in (4, 5):
                 raise ConfigEntryAuthFailed("Invalid authentication")
             if conn_result == 3:
                 raise ConfigEntryNotReady("MQTT Broker is offline or cannot be reached")
-            raise ConfigEntryError("..")
+            raise ConfigEntryError(f"Unexpected result: {conn_result}")
         return inels_discovery(mqtt)
 
-    # Raising errors signals to Home Assistant that the setup should be retried later.
-    # It is better to retry the entire setup than to recover from errors.
     devices = await hass.async_add_executor_job(connect_and_discover_devices)
 
     # If no devices are discovered, continue with the setup
     if not devices:
-        LOGGER.warning("No devices discovered")
+        LOGGER.info("No devices discovered")
 
     entry.runtime_data = InelsData(mqtt=mqtt, devices=devices)
 
