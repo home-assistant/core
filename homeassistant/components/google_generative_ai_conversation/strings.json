@@ -167,11 +167,5 @@
         }
       }
     }
-  },
-  "issues": {
-    "deprecated_image_filename_parameter": {
-      "title": "Deprecated 'image_filename' parameter",
-      "description": "The 'image_filename' parameter in Google Gemini actions is deprecated. Please edit scripts and automations to use 'filenames' instead."
-    }
   }
 }
