@@ -287,7 +287,7 @@
         },
         "priority": {
           "name": "Message priority",
-          "description": "All messages have a priority, which defines how urgently your phone notifies you, depending on the configured vibration patterns, notification sounds and visibility in notification drawer or pop-over."
+          "description": "All messages have a priority, which defines how urgently your phone notifies you, depending on the configured vibration patterns, notification sounds, and visibility in notification drawer or pop-over."
         },
         "click": {
           "name": "Click URL",
