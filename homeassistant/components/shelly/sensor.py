@@ -32,6 +32,8 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -1457,6 +1459,44 @@ RPC_SENSORS: Final = {
         name="Detected objects",
         state_class=SensorStateClass.MEASUREMENT,
         entity_class=RpcPresenceSensor,
+    ),
+    "water_consumption": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        value=lambda status, _: float(status["counter"]["total"]),
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        object_role="water_consumption",
+    ),
+    "zone0_duration": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        name="Duration zone 1",
+        value=lambda status, _: float(status["zone0"]["duration"]),
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        object_role="zones_status",
+    ),
+    "zone1_duration": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        name="Duration zone 2",
+        value=lambda status, _: float(status["zone1"]["duration"]),
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        object_role="zones_status",
+    ),
+    "phase_info_consumption": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        value=lambda status, _: float(status["counter"]["total"]),
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        object_role="phase_info",
     ),
 }
 
