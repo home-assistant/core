@@ -5,7 +5,7 @@
         "title": "Set up London Underground",
         "description": "Select which tube lines you want to monitor",
         "data": {
-          "line": "Tube Lines"
+          "line": "Tube lines"
         }
       }
     },
