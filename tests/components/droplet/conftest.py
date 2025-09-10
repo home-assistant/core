@@ -1,6 +1,7 @@
 """Common fixtures for the Droplet tests."""
 
 from collections.abc import Generator
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -47,7 +48,30 @@ def mock_droplet() -> Generator[AsyncMock]:
         client.get_model.return_value = MOCK_MODEL
         client.get_fw_version.return_value = MOCK_SW_VERSION
         client.get_sn.return_value = MOCK_SN
+        client.get_volume_last_fetched.return_value = datetime(
+            year=2020, month=1, day=1
+        )
         yield client
+
+
+@pytest.fixture(autouse=True)
+def mock_timeout() -> Generator[None]:
+    """Mock the timeout."""
+    with (
+        patch(
+            "homeassistant.components.droplet.coordinator.TIMEOUT",
+            0.05,
+        ),
+        patch(
+            "homeassistant.components.droplet.coordinator.VERSION_TIMEOUT",
+            0.1,
+        ),
+        patch(
+            "homeassistant.components.droplet.coordinator.CONNECT_DELAY",
+            0.1,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -82,18 +106,3 @@ def mock_droplet_discovery(request: pytest.FixtureRequest) -> Generator[AsyncMoc
         client.try_connect.return_value = True
         client.get_device_id.return_value = MOCK_DEVICE_ID
         yield client
-
-
-def mock_setup():
-    """Mock setup function."""
-    return True
-
-
-@pytest.fixture
-def mock_coordinator_setup():
-    """Mock the droplet coordinator's setup."""
-    with patch(
-        "homeassistant.components.droplet.coordinator.DropletDataCoordinator.setup",
-        new_callable=mock_setup,
-    ) as coordinator_mock:
-        yield coordinator_mock

@@ -21,6 +21,7 @@ VERSION_TIMEOUT = 5
 
 _LOGGER = logging.getLogger(__name__)
 
+TIMEOUT = 1
 
 type DropletConfigEntry = ConfigEntry[DropletDataCoordinator]
 
@@ -52,7 +53,7 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
         # Droplet should send its metadata within 5 seconds
         end = time.time() + VERSION_TIMEOUT
         while not self.droplet.version_info_available():
-            await asyncio.sleep(1)
+            await asyncio.sleep(TIMEOUT)
             if time.time() > end:
                 _LOGGER.warning("Failed to get version info from Droplet")
                 return
@@ -75,7 +76,7 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
         while time.time() < end:
             if self.droplet.connected:
                 return True
-            await asyncio.sleep(1)
+            await asyncio.sleep(TIMEOUT)
         return False
 
     def get_availability(self) -> bool:

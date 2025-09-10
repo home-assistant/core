@@ -5,8 +5,15 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_CODE, CONF_DEVICE_ID, CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.components.droplet.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.const import (
+    ATTR_CODE,
+    CONF_CODE,
+    CONF_DEVICE_ID,
+    CONF_IP_ADDRESS,
+    CONF_PORT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -24,14 +31,14 @@ async def test_user_setup(
 ) -> None:
     """Test successful Droplet user setup."""
     result = await hass.config_entries.flow.async_init(
-        "droplet", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result is not None
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"),
+        result["flow_id"],
         user_input={CONF_CODE: MOCK_CODE, CONF_IP_ADDRESS: "192.168.1.2"},
     )
     assert result is not None
@@ -59,15 +66,15 @@ async def test_user_setup(
 )
 async def test_user_setup_fail(
     hass: HomeAssistant,
-    device_id,
-    connect_res,
-    mock_droplet_discovery,
-    mock_droplet_connection,
-    mock_droplet,
+    device_id: str,
+    connect_res: bool,
+    mock_droplet_discovery: AsyncMock,
+    mock_droplet_connection: AsyncMock,
+    mock_droplet: AsyncMock,
 ) -> None:
     """Test user setup failing due to no device ID or failed connection."""
     result = await hass.config_entries.flow.async_init(
-        "droplet", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result is not None
     assert result.get("type") is FlowResultType.FORM
@@ -80,7 +87,7 @@ async def test_user_setup_fail(
     mock_droplet_discovery.configure_mock(**attrs)
 
     result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"),
+        result["flow_id"],
         user_input={CONF_CODE: MOCK_CODE, CONF_IP_ADDRESS: MOCK_HOST},
     )
     assert result is not None
@@ -94,7 +101,7 @@ async def test_user_setup_fail(
     }
     mock_droplet_discovery.configure_mock(**attrs)
     result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"),
+        result["flow_id"],
         user_input={CONF_CODE: MOCK_CODE, CONF_IP_ADDRESS: MOCK_HOST},
     )
     assert result is not None
@@ -104,21 +111,21 @@ async def test_user_setup_fail(
 async def test_user_setup_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_droplet_discovery,
-    mock_droplet,
-    mock_droplet_connection,
+    mock_droplet_discovery: AsyncMock,
+    mock_droplet: AsyncMock,
+    mock_droplet_connection: AsyncMock,
 ) -> None:
     """Test user setup of an already-configured device."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        "droplet", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result is not None
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"),
+        result["flow_id"],
         user_input={CONF_CODE: MOCK_CODE, CONF_IP_ADDRESS: MOCK_HOST},
     )
     assert result is not None
@@ -143,8 +150,8 @@ async def test_zeroconf_setup(
         properties={},
     )
     result = await hass.config_entries.flow.async_init(
-        "droplet",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
     assert result is not None
@@ -152,9 +159,8 @@ async def test_zeroconf_setup(
     assert result.get("step_id") == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"), user_input={CONF_CODE: MOCK_CODE}
+        result["flow_id"], user_input={CONF_CODE: MOCK_CODE}
     )
-    await hass.async_block_till_done()
     assert result is not None
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("data") == {
@@ -169,15 +175,16 @@ async def test_zeroconf_setup(
 
 @pytest.mark.parametrize("mock_droplet_discovery", ["192.168.1.5"], indirect=True)
 async def test_zeroconf_update(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_droplet_discovery
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_droplet_discovery: AsyncMock,
 ) -> None:
     """Test updating Droplet's host with zeroconf."""
     mock_config_entry.add_to_hass(hass)
 
     # We start with a different host
     new_host = "192.168.1.5"
-    entries = hass.config_entries.async_entries("droplet")
-    assert entries[0].data.get(CONF_IP_ADDRESS) != new_host
+    assert mock_config_entry.data[CONF_IP_ADDRESS] != new_host
 
     # After this discovery message, host should be updated
     discovery_info = ZeroconfServiceInfo(
@@ -191,16 +198,15 @@ async def test_zeroconf_update(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "droplet",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
     assert result is not None
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
-    entries = hass.config_entries.async_entries("droplet")
-    assert entries[0].data.get(CONF_IP_ADDRESS) == new_host
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == new_host
 
 
 async def test_zeroconf_invalid_discovery(hass: HomeAssistant) -> None:
@@ -215,12 +221,12 @@ async def test_zeroconf_invalid_discovery(hass: HomeAssistant) -> None:
         properties={},
     )
     result = await hass.config_entries.flow.async_init(
-        "droplet",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
     assert result is not None
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "invalid_discovery_info"
 
 
@@ -242,21 +248,24 @@ async def test_confirm_cannot_connect(
         properties={},
     )
     result = await hass.config_entries.flow.async_init(
-        "droplet",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
 
     # Mock the connection failing
     mock_droplet_discovery.try_connect.return_value = False
 
     result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"), user_input={"code": MOCK_CODE}
+        result["flow_id"], {ATTR_CODE: MOCK_CODE}
     )
-    await hass.async_block_till_done()
-    assert result is not None
-    assert result.get("type") == FlowResultType.FORM
-    errors = result.get("errors")
-    assert errors
-    assert errors.get("base") == "cannot_connect"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors")["base"] == "cannot_connect"
+
+    mock_droplet_discovery.try_connect.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={ATTR_CODE: MOCK_CODE}
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY, result
