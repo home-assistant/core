@@ -6,13 +6,13 @@ import asyncio
 import logging
 from typing import Any
 
+import voluptuous as vol
 from pyhausbus.BusDataMessage import BusDataMessage
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import ModuleId
 from pyhausbus.HausBusUtils import HOMESERVER_DEVICE_ID
 from pyhausbus.HomeServer import HomeServer
 from pyhausbus.IBusDataListener import IBusDataListener
 from pyhausbus.ObjectId import ObjectId
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
