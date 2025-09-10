@@ -67,7 +67,7 @@ SLEEP_DICT: Final[dict[str, int]] = {
     "90m": SleepTimeout.SLEEP_90,
 }
 
-QADAPT_DICT: Final[dict[str, int]] = {
+Q_ADAPT_DICT: Final[dict[str, int]] = {
     "standard": QAdapt.STANDARD,
     "power": QAdapt.POWER,
     "silence": QAdapt.SILENCE,
@@ -97,9 +97,9 @@ MAIN_ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         api_param=API_Q_ADAPT,
         entity_category=EntityCategory.CONFIG,
         key=AZD_Q_ADAPT,
-        options=list(QADAPT_DICT),
-        options_dict=QADAPT_DICT,
-        translation_key="qadapt",
+        options=list(Q_ADAPT_DICT),
+        options_dict=Q_ADAPT_DICT,
+        translation_key="q_adapt",
     ),
 )
 
