@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from typing import TypeAlias
@@ -11,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .gateway import HausbusGateway
@@ -37,9 +35,7 @@ class HausbusConfig:
 
     gateway: HausbusGateway
 
-
-HausbusConfigEntry: TypeAlias = ConfigEntry[HausbusConfig]
-
+HausbusConfigEntry = ConfigEntry[HausbusConfig]
 
 async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> bool:
     """Set up Haus-Bus integration from a config entry."""

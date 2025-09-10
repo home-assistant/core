@@ -141,10 +141,10 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
             self.devices[device_id] = HausbusDevice(
                 device_id,
                 module.getFirmwareId().getTemplateId()
-                + " "
-                + str(module.getMajorRelease())
-                + "."
-                + str(module.getMinorRelease()),
+                +" "
+                +str(module.getMajorRelease())
+                +"."
+                +str(module.getMinorRelease()),
                 module.getName(),
                 module.getFirmwareId(),
             )
@@ -249,7 +249,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
                 return
 
             if new_channel is not None:
-                LOGGER.debug(f"create {new_domain} channel for {instance}")
+                LOGGER.debug("create %s channel for %s", new_domain, instance)
                 channel_list[self.get_channel_id(object_id)] = new_channel
                 asyncio.run_coroutine_threadsafe(
                     self._new_channel_listeners[new_domain](new_channel), self.hass.loop
@@ -261,7 +261,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
                 isinstance(instance, Taster)
                 and self.get_event_entity(instance.getObjectId()) is None
             ):
-                LOGGER.debug(f"create event channel for {instance}")
+                LOGGER.debug("create event channel for %s", instance)
                 new_channel = HausBusEvent(instance, device)
                 self.events[instance.getObjectId()] = new_channel
                 asyncio.run_coroutine_threadsafe(
@@ -317,13 +317,13 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         ]:
             return
 
-        LOGGER.debug(f"busDataReceived with data = {data} from {object_id}")
+        LOGGER.debug("busDataReceived with data = %s from %s", data, object_id)
 
         controller = Controller(object_id.getValue())
 
         # ModuleId -> getConfiguration
         if isinstance(data, ModuleId):
-            LOGGER.debug(f"got moduleId of {object_id.getDeviceId()} with data: {data}")
+            LOGGER.debug("got moduleId of %s with data: %s", object_id.getDeviceId(), data)
             self.add_device(str(object_id.getDeviceId()), data)
             controller.getConfiguration()
             return
@@ -411,7 +411,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
                             instanceObjectId.getClassId()
                         ).rsplit(".", 1)[-1]
                         name = f"{className} {instanceObjectId.getInstanceId()}"
-                        LOGGER.debug(f"specialName {name}")
+                        LOGGER.debug("specialName %s", name)
 
                     # automatische Namen für dynamische Elemente, die nicht alle in den Template stehen sollen
                     if name is None:
@@ -450,7 +450,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         # Device_trigger und Events melden
         eventEntity = self.get_event_entity(object_id.getValue())
         if eventEntity is not None:
-            LOGGER.debug(f"eventEntity is {eventEntity}")
+            LOGGER.debug("eventEntity is %s", eventEntity)
             eventEntity.handle_event(data)
             self.generate_device_trigger(data, device, object_id)
 
@@ -459,11 +459,11 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
 
         # all channel events
         if isinstance(channel, HausbusEntity):
-            LOGGER.debug(f" handle_event {channel} {data}")
+            LOGGER.debug("handle_event %s %s", channel, data)
             channel.handle_event(data)
 
         if isinstance(channel, HausbusRfidSensor) and isinstance(data, RfidEvData):
-            LOGGER.debug(f" rfid data {channel} {data}")
+            LOGGER.debug("rfid data %s %s", channel, data)
             self.hass.loop.call_soon_threadsafe(
                 lambda: self.hass.bus.async_fire(
                     "hausbus_rfid_event",
@@ -507,7 +507,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
                     )
                 )
             else:
-                LOGGER.debug(f"unknown name for event {data}")
+                LOGGER.debug("unknown name for event %s", data)
 
     def register_platform_add_channel_callback(
         self,
@@ -528,7 +528,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         device_entry = device_registry.async_update_device(
             device.hass_device_entry_id, name=device.name
         )
-        LOGGER.debug(f"updated hassEntryId = {device_entry.id}")
+        LOGGER.debug("updated hassEntryId = %s", device_entry.id)
 
     async def async_create_device_registry(self, device: HausbusDevice):
         device_registry = async_get_device_registry(self.hass)
@@ -539,7 +539,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
             model=device.model_id,
             name=device.name,
         )
-        LOGGER.debug(f"hassEntryId = {device_entry.id}")
+        LOGGER.debug("hassEntryId = %s", device_entry.id)
         device.set_hass_device_entry_id(device_entry.id)
 
     def was_automatic_get_module_id_already_sent(self, device_id: int) -> bool:
@@ -556,10 +556,10 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         return False
 
     async def removeDevice(self, device_id: str):
-        LOGGER.debug(f"delete device {device_id}")
+        LOGGER.debug("delete device %s", device_id)
         for objectIdStr, hausBusDevice in self.devices.items():
             if hausBusDevice.device_id == device_id:
-                LOGGER.debug(f"found delete device {hausBusDevice}")
+                LOGGER.debug("found delete device %s", hausBusDevice)
                 del self.devices[device_id]
                 del self.channels[device_id]
                 to_delete = [
@@ -575,13 +575,13 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         return True
 
     def resetDevice(self, device_id: str):
-        LOGGER.debug(f"reset device {device_id}")
+        LOGGER.debug("reset device %s", device_id)
 
         for objectIdStr, hausBusDevice in self.devices.items():
             if hausBusDevice.hass_device_entry_id == device_id:
                 device_id_int = int(hausBusDevice.device_id)
-                LOGGER.debug(f"resetting device {device_id_int}")
+                LOGGER.debug("resetting device %s", device_id_int)
                 Controller.create(device_id_int, 1).reset()
                 return True
-            LOGGER.debug(f"passt nicht {hausBusDevice.hass_device_entry_id}")
+            LOGGER.debug("passt nicht %s", hausBusDevice.hass_device_entry_id)
         return False

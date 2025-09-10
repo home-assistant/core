@@ -50,7 +50,7 @@ async def async_get_triggers(
     if not isinstance(inputs, list) or not all(isinstance(i, str) for i in inputs):
         return []
 
-    LOGGER.debug(f"Device {device_id} report inputs: {inputs}")
+    LOGGER.debug("Device %s report inputs: %s", device_id, inputs)
 
     return [
         {

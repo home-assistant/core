@@ -36,7 +36,7 @@ class HausbusDevice:
         self.hass_device_entry_id = None
         self.special_type = 0
 
-        LOGGER.debug(f"new device {self.name}")
+        LOGGER.debug("new device %s", self.name)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -68,10 +68,10 @@ class HausbusDevice:
     def set_model_id(self, model_id: str) -> bool:
 
         if self.model_id != model_id:
-            LOGGER.debug(f"old model_id: {self.model_id}, new model_id: {model_id}")
+            LOGGER.debug("old model_id: %s, new model_id: %s", self.model_id, model_id)
             self.model_id = model_id
             self.name = f"{self.model_id} {self.device_id}"
-            LOGGER.debug(f"new name {self.name}")
+            LOGGER.debug("new name %s ", self.name)
             return True
 
         return False

@@ -368,7 +368,7 @@ class HausbusDimmerLight(HausbusLight):
 
     async def async_dimmer_start_ramp(self, direction: str):
         """Starte eine Dimmrampe hoch, runter oder entgegengesetzt der letzten Richtung."""
-        LOGGER.debug(f"async_dimmer_start_ramp direction {direction}")
+        LOGGER.debug("async_dimmer_start_ramp direction %s", direction)
         if direction == "up":
             self._channel.start(EDirection.TO_LIGHT)
         elif direction == "down":
@@ -483,7 +483,7 @@ class HausbusRGBDimmerLight(HausbusLight):
     @callback
     async def async_rgb_set_configuration(self, dimming_time: int):
         """Setzt die Konfiguration eines RGB Dimmers."""
-        LOGGER.debug(f"async_rgb_set_configuration dimming_time {dimming_time}")
+        LOGGER.debug("async_rgb_set_configuration dimming_time %s", dimming_time)
         self._channel.setConfiguration(dimming_time)
         self._channel.getConfiguration()
 
@@ -531,7 +531,7 @@ class HausbusLedLight(HausbusLight):
     # SERVICES
     async def async_led_off(self, offDelay: int):
         """Schaltet eine LED mit Ausschaltverzögerung aus."""
-        LOGGER.debug(f"async_led_off offDelay {offDelay}")
+        LOGGER.debug("async_led_off offDelay %s", offDelay)
         self._channel.off(offDelay)
 
     async def async_led_on(self, brightness: int, duration: int, onDelay: int):
@@ -552,13 +552,13 @@ class HausbusLedLight(HausbusLight):
 
     async def async_led_set_min_brightness(self, minBrightness: int):
         """Setzt eine Mindesthelligkeit, die auch dann erhalten bleibt, wenn die LED per off ausgeschaltet wird."""
-        LOGGER.debug(f"async_led_min_brightness minBrightness {minBrightness}")
+        LOGGER.debug("async_led_min_brightness minBrightness %s", minBrightness)
         self._channel.setMinBrightness(minBrightness)
 
     @callback
     async def async_led_set_configuration(self, time_base: int):
         """Setzt die Konfiguration einer Led."""
-        LOGGER.debug(f"async_led_set_configuration time_base {time_base}")
+        LOGGER.debug("async_led_set_configuration time_base %s", time_base)
 
         if not await self.ensure_configuration():
             raise HomeAssistantError(

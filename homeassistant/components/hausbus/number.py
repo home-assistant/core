@@ -73,7 +73,7 @@ class HausbusControl(HausbusEntity, NumberEntity):
         self._attr_native_step = 1.0
         self._attr_native_unit_of_measurement = "%"
         self._value = 0
-        LOGGER.debug(f"HausBusControl created {self._attr_name}")
+        LOGGER.debug("HausBusControl created %s", self._attr_name)
 
     def set_native_value_internal(self, native_value: float):
         self._value = native_value
@@ -84,7 +84,7 @@ class HausbusControl(HausbusEntity, NumberEntity):
         return self._value
 
     async def async_set_native_value(self, value: float):
-        LOGGER.debug(f"async_set_native_value value {value}")
+        LOGGER.debug("async_set_native_value value %s", value)
         value = int(value)
         self._channel.toggleByDuty(value, 0)
         self.set_native_value_internal(value)
@@ -93,7 +93,7 @@ class HausbusControl(HausbusEntity, NumberEntity):
         """Handle control events from Haus-Bus."""
         if isinstance(data, SchalterEvToggleByDuty):
             newValue = data.getDuty()
-            LOGGER.debug(f"new value by event {newValue}")
+            LOGGER.debug("new value by event %s", newValue)
             self.set_native_value_internal(newValue)
         elif isinstance(data, SchalterEvOn):
             self.set_native_value_internal(100)
@@ -108,7 +108,7 @@ class HausbusControl(HausbusEntity, NumberEntity):
                 ) * 100
                 newValue = min(newValue, 100)
 
-                LOGGER.debug(f"new value by event {newValue}")
+                LOGGER.debug("new value by event %s", newValue)
                 self.set_native_value_internal(newValue)
         elif isinstance(data, (SchalterEvOff)):
             self.set_native_value_internal(0)

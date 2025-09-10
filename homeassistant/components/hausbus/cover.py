@@ -142,7 +142,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs):
         """Moves cover to the given position."""
         position = kwargs.get("position")
-        LOGGER.debug(f"async_set_cover_position position {position}")
+        LOGGER.debug("async_set_cover_position position %s", position)
 
         if position is None:
             return
@@ -162,7 +162,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
                 self._is_opening = False
                 self._is_closing = True
             else:
-                LOGGER.debug(f"unexpected direction {direction}")
+                LOGGER.debug("unexpected direction %s", direction)
             self.schedule_update_ha_state()
         elif isinstance(data, EvClosed):
             self._is_opening = False

@@ -142,7 +142,7 @@ class HausBusEvent(HausbusEntity, EventEntity):
             }.get(type(data), "unknown")
 
             if eventType != "unknown":
-                LOGGER.debug(f"sending event {eventType}")
+                LOGGER.debug("sending event %s", eventType)
                 self._trigger_event(eventType)
                 self.schedule_update_ha_state()
 

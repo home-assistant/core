@@ -278,7 +278,7 @@ class HausbusSensor(HausbusEntity, SensorEntity):
         if result == "Unknown":
             for front, (a, b) in mapping.items():
                 produkt = a * b
-                LOGGER.debug(f"{key} {front}: {produkt}")
+                LOGGER.debug("%s %s: %s", key, front, produkt)
         return result
 
 
@@ -298,7 +298,7 @@ class HausbusTemperaturSensor(HausbusSensor):
 
         if isinstance(data, (TemperatursensorEvStatus, TemperatursensorStatus)):
             value = float(data.getCelsius()) + float(data.getCentiCelsius()) / 100
-            LOGGER.debug(f"Temperatur empfangen: {value} Â°C")
+            LOGGER.debug("Temperatur empfangen: %s °C", value)
             self._attr_native_value = value
             self.schedule_update_ha_state()
         elif isinstance(data, TemperaturSensorConfiguration):
@@ -365,7 +365,7 @@ class HausbusPowerMeter(HausbusSensor):
 
         if isinstance(data, (PowerMeterEvStatus, PowerMeterStatus)):
             value = float(data.getPower()) + float(data.getCentiPower()) / 100
-            LOGGER.debug(f"Power empfangen: {value} kW")
+            LOGGER.debug("Power empfangen: %s kW", value)
             self._attr_native_value = value
             self.schedule_update_ha_state()
         elif isinstance(data, PowerMeterConfiguration):
@@ -432,7 +432,7 @@ class HausbusBrightnessSensor(HausbusSensor):
 
         if isinstance(data, (HelligkeitssensorEvStatus, HelligkeitssensorStatus)):
             value = float(data.getBrightness())
-            LOGGER.debug(f"Helligkeit empfangen: {value} lx")
+            LOGGER.debug("Helligkeit empfangen: %s lx", value)
             self._attr_native_value = value
             self.schedule_update_ha_state()
         elif isinstance(data, HelligkeitsSensorConfiguration):
@@ -499,7 +499,7 @@ class HausbusHumiditySensor(HausbusSensor):
             value = (
                 float(data.getRelativeHumidity()) + float(data.getCentiHumidity()) / 100
             )
-            LOGGER.debug(f"Feuchtigkeit empfangen: {value} %")
+            LOGGER.debug("Feuchtigkeit empfangen: %s %", value)
             self._attr_native_value = value
             self.schedule_update_ha_state()
         elif isinstance(data, FeuchteSensorConfiguration):
@@ -566,7 +566,7 @@ class HausbusAnalogEingang(HausbusSensor):
 
         if isinstance(data, (AnalogEingangEvStatus, AnalogEingangStatus)):
             value = data.getValue()
-            LOGGER.debug(f"Analogwert empfangen: {value}")
+            LOGGER.debug("Analogwert empfangen: %s", value)
             self._attr_native_value = value
             self.schedule_update_ha_state()
         elif isinstance(data, AnalogEingangConfiguration):
@@ -631,7 +631,7 @@ class HausbusRfidSensor(HausbusSensor):
         """Handle rfid events from Haus-Bus."""
 
         if isinstance(data, RfidEvData):
-            LOGGER.debug(f"rfid data: {data}")
+            LOGGER.debug("rfid data: %s", data)
             self._attr_native_value = data.getTagID()
 
             self._attr_extra_state_attributes["last_tag"] = self._attr_native_value
@@ -640,7 +640,7 @@ class HausbusRfidSensor(HausbusSensor):
             self.schedule_update_ha_state()
 
         elif isinstance(data, RfidEvError):
-            LOGGER.debug(f"rfid error: {data}")
+            LOGGER.debug("rfid error: %s", data)
             self._attr_extra_state_attributes["last_tag"] = ""
             self._attr_extra_state_attributes["last_time"] = datetime.now().isoformat()
             self._attr_extra_state_attributes["last_error"] = data.getErrorCode()

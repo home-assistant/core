@@ -34,7 +34,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str):
 
     registry = er.async_get(hass)
     entities = [ent for ent in registry.entities.values() if ent.device_id == device_id]
-    _LOGGER.debug(f"entities for {device_id} returns {entities}")
+    _LOGGER.debug("entities for %s returns %s", device_id, entities)
     for ent in entities:
         if DOMAIN in ent.options:
             hausbus_type = ent.options[DOMAIN].get("hausbus_type")
@@ -80,7 +80,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str):
             # if hausbus_special_type == 1:
             #  addAction("ssr_control", name, device_id, ent.entity_id, actions)
 
-    _LOGGER.debug(f"async_get_actions for {device_id} returns {actions}")
+    _LOGGER.debug("async_get_actions for %s returns %s", device_id, actions)
     return actions
 
 
@@ -122,13 +122,13 @@ async def async_call_action_from_config(
 async def async_get_action_capabilities(hass: HomeAssistant, config: dict[str, Any]):
 
     service_type = config["type"]
-    _LOGGER.debug(f"async_get_action_capabilities {service_type}")
+    _LOGGER.debug("async_get_action_capabilities %s ", service_type)
 
     result = {}
 
     registry = er.async_get(hass)
     entity = registry.entities.get(config["entity_id"])
-    _LOGGER.debug(f"entity {entity} {entity.options}")
+    _LOGGER.debug("entity %s %s", entity, entity.options)
 
     if entity and DOMAIN in entity.options:
         hausbus_type = entity.options[DOMAIN].get("hausbus_type")
@@ -296,5 +296,5 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict[str, A
 
         result = {"extra_fields": SCHEMA}
 
-    _LOGGER.debug(f"returns {result}")
+    _LOGGER.debug("returns %s", result)
     return result
