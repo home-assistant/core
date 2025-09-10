@@ -1182,7 +1182,6 @@ async def test_light_ui_create(
         entity_data={"name": "test"},
         knx_data={
             "ga_switch": {"write": "1/1/1", "state": "2/2/2"},
-            "_light_color_mode_schema": "default",
             "sync_state": True,
         },
     )
@@ -1223,7 +1222,6 @@ async def test_light_ui_color_temp(
                 "write": "3/3/3",
                 "dpt": color_temp_mode,
             },
-            "_light_color_mode_schema": "default",
             "sync_state": True,
         },
     )
@@ -1257,7 +1255,6 @@ async def test_light_ui_multi_mode(
         knx_data={
             "color_temp_min": 2700,
             "color_temp_max": 6000,
-            "_light_color_mode_schema": "default",
             "ga_switch": {
                 "write": "1/1/1",
                 "passive": [],
@@ -1275,11 +1272,13 @@ async def test_light_ui_multi_mode(
                 "state": "0/6/3",
                 "passive": [],
             },
-            "ga_color": {
-                "write": "0/6/4",
-                "dpt": "251.600",
-                "state": "0/6/5",
-                "passive": [],
+            "color": {
+                "ga_color": {
+                    "write": "0/6/4",
+                    "dpt": "251.600",
+                    "state": "0/6/5",
+                    "passive": [],
+                },
             },
         },
     )

@@ -4,7 +4,13 @@ import datetime
 from unittest.mock import AsyncMock, patch
 import zoneinfo
 
-from aioautomower.model import MowerAttributes, MowerModes, MowerStates
+from aioautomower.model import (
+    ExternalReasons,
+    MowerAttributes,
+    MowerModes,
+    MowerStates,
+    RestrictedReasons,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -121,6 +127,41 @@ async def test_work_area_sensor(
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_work_area")
     assert state.state == "no_work_area_active"
+
+
+async def test_restricted_reason_sensor(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
+) -> None:
+    """Test the work area sensor."""
+    sensor = "sensor.test_mower_1_restricted_reason"
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get(sensor)
+    assert state is not None
+    assert state.state == RestrictedReasons.WEEK_SCHEDULE
+
+    values[TEST_MOWER_ID].planner.restricted_reason = RestrictedReasons.EXTERNAL
+    values[TEST_MOWER_ID].planner.external_reason = None
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(sensor)
+    assert state.state == RestrictedReasons.EXTERNAL
+
+    values[TEST_MOWER_ID].planner.restricted_reason = RestrictedReasons.EXTERNAL
+    values[
+        TEST_MOWER_ID
+    ].planner.external_reason = ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(sensor)
+    assert state.state == ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

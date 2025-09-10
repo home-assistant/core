@@ -4,7 +4,7 @@
       "addon_get_discovery_info_failed": "Failed to get Z-Wave add-on discovery info.",
       "addon_info_failed": "Failed to get Z-Wave add-on info.",
       "addon_install_failed": "Failed to install the Z-Wave add-on.",
-      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave Supervisor add-on. You can still use the Backup and Restore buttons to migrate your network manually.",
+      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave Supervisor add-on. If you are using Z-Wave JS UI, please follow our [migration instructions]({zwave_js_ui_migration}).",
       "addon_set_config_failed": "Failed to set Z-Wave configuration.",
       "addon_start_failed": "Failed to start the Z-Wave add-on.",
       "addon_stop_failed": "Failed to stop the Z-Wave add-on.",
@@ -82,13 +82,21 @@
         "title": "Installing add-on"
       },
       "manual": {
+        "description": "The Z-Wave integration requires a running Z-Wave Server. If you don't already have that set up, please read the [instructions]({server_instructions}) in our documentation.\n\nWhen you have a Z-Wave Server running, enter its URL below to allow the integration to connect.",
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The URL of the Z-Wave Server WebSocket API, e.g. {example_server_url}"
         }
       },
       "manual_reconfigure": {
+        "description": "[%key:component::zwave_js::config::step::manual::description%]",
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::zwave_js::config::step::manual::data_description::url%]"
         }
       },
       "on_supervisor": {
@@ -104,6 +112,16 @@
         },
         "description": "[%key:component::zwave_js::config::step::on_supervisor::description%]",
         "title": "[%key:component::zwave_js::config::step::on_supervisor::title%]"
+      },
+      "rf_region": {
+        "title": "Z-Wave region",
+        "description": "Select the RF region for your Z-Wave network.",
+        "data": {
+          "rf_region": "RF region"
+        },
+        "data_description": {
+          "rf_region": "The radio frequency region for your Z-Wave network. This must match the region of your Z-Wave devices."
+        }
       },
       "start_addon": {
         "title": "Configuring add-on"
@@ -122,6 +140,10 @@
         "menu_options": {
           "intent_migrate": "Migrate to a new adapter",
           "intent_reconfigure": "Re-configure the current adapter"
+        },
+        "menu_option_descriptions": {
+          "intent_migrate": "This will move your Z-Wave network to a new adapter.",
+          "intent_reconfigure": "This will let you change the adapter configuration."
         }
       },
       "instruct_unplug": {
@@ -274,7 +296,7 @@
         },
         "step": {
           "init": {
-            "description": "The device configuration file for {device_name} has changed.\n\nZ-Wave discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and and the device must be re-interviewed to pick up the changes.\n\n This is not a required operation and device functionality will be impacted during the re-interview process, but you may see improvements for your device once it is complete.\n\nIf you decide to proceed with the re-interview, it will take place in the background.",
+            "description": "The device configuration file for {device_name} has changed.\n\nZ-Wave discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and the device must be re-interviewed to pick up the changes.\n\nThis is not a required operation and device functionality will be impacted during the re-interview process, but you may see improvements for your device once it is complete.\n\nIf you decide to proceed with the re-interview, it will take place in the background.\n\nNote: Battery-powered sleeping devices need to be woken up during re-interview for it to work. How to wake up the device is device-specific and is normally explained in the device manual.",
             "menu_options": {
               "confirm": "Re-interview device",
               "ignore": "Ignore device config update"

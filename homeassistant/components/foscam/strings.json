@@ -11,7 +11,12 @@
           "stream": "Stream"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Foscam camera."
+          "host": "The hostname or IP address of your Foscam camera.",
+          "port": "The port of your Foscam camera, default is 88.",
+          "username": "The username to log in to your Foscam camera.",
+          "password": "The password to log in to your Foscam camera.",
+          "rtsp_port": "The RTSP protocol port of the camera, used to pull the camera's real-time video stream. New model cameras only support RTSP ports 88 and 554, while old model cameras only support ports 88 and 65534.",
+          "stream": "Select the video stream type to pull. The main stream offers higher clarity but requires a better network environment."
         }
       }
     },
@@ -27,8 +32,35 @@
   },
   "entity": {
     "switch": {
+      "flip_switch": {
+        "name": "Flip"
+      },
+      "mirror_switch": {
+        "name": "Mirror"
+      },
+      "ir_switch": {
+        "name": "Infrared mode"
+      },
       "sleep_switch": {
-        "name": "Sleep"
+        "name": "Sleep mode"
+      },
+      "white_light_switch": {
+        "name": "White light"
+      },
+      "siren_alarm_switch": {
+        "name": "Siren alarm"
+      },
+      "turn_off_volume_switch": {
+        "name": "Volume muted"
+      },
+      "turn_off_light_switch": {
+        "name": "Light"
+      },
+      "hdr_switch": {
+        "name": "HDR"
+      },
+      "wdr_switch": {
+        "name": "WDR"
       }
     }
   },

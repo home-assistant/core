@@ -124,7 +124,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'matter',
@@ -140,7 +140,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 51,
-      'device_class': 'awning',
+      'device_class': 'shade',
       'friendly_name': 'Longan link WNCV DA01',
       'supported_features': <CoverEntityFeature: 15>,
     }),
@@ -175,7 +175,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'matter',
@@ -191,7 +191,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_tilt_position': 100,
-      'device_class': 'awning',
+      'device_class': 'blind',
       'friendly_name': 'Mock PA Tilt Window Covering',
       'supported_features': <CoverEntityFeature: 139>,
     }),
@@ -226,7 +226,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'matter',
@@ -241,7 +241,7 @@
 # name: test_covers[window_covering_tilt][cover.mock_tilt_window_covering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'awning',
+      'device_class': 'blind',
       'friendly_name': 'Mock Tilt Window Covering',
       'supported_features': <CoverEntityFeature: 139>,
     }),

@@ -47,11 +47,12 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
-from .template_entity import (
+from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    TemplateEntity,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_modern_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,7 +114,11 @@ ALARM_CONTROL_PANEL_COMMON_SCHEMA = vol.Schema(
 )
 
 ALARM_CONTROL_PANEL_YAML_SCHEMA = ALARM_CONTROL_PANEL_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_schema(DEFAULT_NAME).schema
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
+).extend(
+    make_template_entity_common_modern_schema(
+        ALARM_CONTROL_PANEL_DOMAIN, DEFAULT_NAME
+    ).schema
 )
 
 ALARM_CONTROL_PANEL_LEGACY_YAML_SCHEMA = vol.Schema(
@@ -205,13 +210,12 @@ class AbstractTemplateAlarmControlPanel(
     """Representation of a templated Alarm Control Panel features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-        self._template = config.get(CONF_STATE)
-
         self._attr_code_arm_required: bool = config[CONF_CODE_ARM_REQUIRED]
         self._attr_code_format = config[CONF_CODE_FORMAT].value
 
@@ -273,18 +277,14 @@ class AbstractTemplateAlarmControlPanel(
 
     async def _async_alarm_arm(self, state: Any, script: Script | None, code: Any):
         """Arm the panel to specified state with supplied script."""
-        optimistic_set = False
-
-        if self._template is None:
-            self._state = state
-            optimistic_set = True
 
         if script:
             await self.async_run_script(
                 script, run_variables={ATTR_CODE: code}, context=self._context
             )
 
-        if optimistic_set:
+        if self._attr_assumed_state:
+            self._state = state
             self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:

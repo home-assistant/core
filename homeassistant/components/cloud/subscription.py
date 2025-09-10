@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
 
-from aiohttp.client_exceptions import ClientError
-from hass_nabucasa import Cloud, cloud_api
-from hass_nabucasa.payments_api import PaymentsApiError, SubscriptionInfo
+from hass_nabucasa import (
+    Cloud,
+    MigratePaypalAgreementInfo,
+    PaymentsApiError,
+    SubscriptionInfo,
+)
 
 from .client import CloudClient
 from .const import REQUEST_TIMEOUT
@@ -29,17 +31,17 @@ async def async_subscription_info(cloud: Cloud[CloudClient]) -> SubscriptionInfo
 
 async def async_migrate_paypal_agreement(
     cloud: Cloud[CloudClient],
-) -> dict[str, Any] | None:
+) -> MigratePaypalAgreementInfo | None:
     """Migrate a paypal agreement from legacy."""
     try:
         async with asyncio.timeout(REQUEST_TIMEOUT):
-            return await cloud_api.async_migrate_paypal_agreement(cloud)
+            return await cloud.payments.migrate_paypal_agreement()
     except TimeoutError:
         _LOGGER.error(
             "A timeout of %s was reached while trying to start agreement migration",
             REQUEST_TIMEOUT,
         )
-    except ClientError as exception:
+    except PaymentsApiError as exception:
         _LOGGER.error("Failed to start agreement migration - %s", exception)
 
     return None

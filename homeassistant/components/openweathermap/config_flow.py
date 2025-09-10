@@ -69,6 +69,10 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=data, options=options
                 )
 
+        description_placeholders["doc_url"] = (
+            "https://www.home-assistant.io/integrations/openweathermap/"
+        )
+
         schema = vol.Schema(
             {
                 vol.Required(CONF_API_KEY): str,

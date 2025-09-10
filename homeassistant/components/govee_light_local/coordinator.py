@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from ipaddress import IPv4Address
 import logging
 
 from govee_local_api import GoveeController, GoveeDevice
@@ -11,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    CONF_DISCOVERY_INTERVAL_DEFAULT,
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
@@ -26,10 +26,11 @@ type GoveeLocalConfigEntry = ConfigEntry[GoveeLocalApiCoordinator]
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     """Govee light local coordinator."""
 
-    config_entry: GoveeLocalConfigEntry
-
     def __init__(
-        self, hass: HomeAssistant, config_entry: GoveeLocalConfigEntry
+        self,
+        hass: HomeAssistant,
+        config_entry: GoveeLocalConfigEntry,
+        source_ips: list[IPv4Address],
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
@@ -40,32 +41,40 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self._controller = GoveeController(
-            loop=hass.loop,
-            logger=_LOGGER,
-            broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
-            broadcast_port=CONF_TARGET_PORT_DEFAULT,
-            listening_port=CONF_LISTENING_PORT_DEFAULT,
-            discovery_enabled=True,
-            discovery_interval=CONF_DISCOVERY_INTERVAL_DEFAULT,
-            discovered_callback=None,
-            update_enabled=False,
-        )
+        self._controllers: list[GoveeController] = [
+            GoveeController(
+                loop=hass.loop,
+                logger=_LOGGER,
+                listening_address=str(source_ip),
+                broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
+                broadcast_port=CONF_TARGET_PORT_DEFAULT,
+                listening_port=CONF_LISTENING_PORT_DEFAULT,
+                discovery_enabled=True,
+                discovery_interval=1,
+                update_enabled=False,
+            )
+            for source_ip in source_ips
+        ]
 
     async def start(self) -> None:
         """Start the Govee coordinator."""
-        await self._controller.start()
-        self._controller.send_update_message()
+
+        for controller in self._controllers:
+            await controller.start()
+            controller.send_update_message()
 
     async def set_discovery_callback(
         self, callback: Callable[[GoveeDevice, bool], bool]
     ) -> None:
         """Set discovery callback for automatic Govee light discovery."""
-        self._controller.set_device_discovered_callback(callback)
 
-    def cleanup(self) -> asyncio.Event:
-        """Stop and cleanup the cooridinator."""
-        return self._controller.cleanup()
+        for controller in self._controllers:
+            controller.set_device_discovered_callback(callback)
+
+    def cleanup(self) -> list[asyncio.Event]:
+        """Stop and cleanup the coordinator."""
+
+        return [controller.cleanup() for controller in self._controllers]
 
     async def turn_on(self, device: GoveeDevice) -> None:
         """Turn on the light."""
@@ -96,8 +105,13 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     @property
     def devices(self) -> list[GoveeDevice]:
         """Return a list of discovered Govee devices."""
-        return self._controller.devices
+
+        devices: list[GoveeDevice] = []
+        for controller in self._controllers:
+            devices = devices + controller.devices
+        return devices
 
     async def _async_update_data(self) -> list[GoveeDevice]:
-        self._controller.send_update_message()
-        return self._controller.devices
+        for controller in self._controllers:
+            controller.send_update_message()
+        return self.devices
