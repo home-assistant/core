@@ -707,6 +707,7 @@ select = [
   "RUF032", # Decimal() called with float literal argument
   "RUF033", # __post_init__ method with argument defaults
   "RUF034", # Useless if-else condition
+  "RUF059", # unused-unpacked-variable
   "RUF100", # Unused `noqa` directive
   "RUF101", # noqa directives that use redirected rule codes
   "RUF200", # Failed to parse pyproject.toml: {message}
