@@ -27,8 +27,10 @@ import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.components.media_source import (
     generate_media_source_id as ms_generate_media_source_id,
+    is_media_source_id,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, PLATFORM_FORMAT

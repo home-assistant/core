@@ -19,15 +19,7 @@ import wave
 import hass_nabucasa
 import voluptuous as vol
 
-from homeassistant.components import (
-    conversation,
-    media_player,
-    media_source,
-    stt,
-    tts,
-    wake_word,
-    websocket_api,
-)
+from homeassistant.components import conversation, stt, tts, wake_word, websocket_api
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -1417,7 +1409,9 @@ class PipelineRun:
                 ),
             ) from err
 
-    async def text_to_speech(self, tts_input: str) -> None:
+    async def text_to_speech(
+        self, tts_input: str, override_media_id: str | None = None
+    ) -> None:
         """Run text-to-speech portion of pipeline."""
         assert self.tts_stream is not None
 
@@ -1433,7 +1427,9 @@ class PipelineRun:
             )
         )
 
-        if not self._streamed_response_text:
+        if override_media_id:
+            self.tts_stream.async_override_result(override_media_id)
+        elif not self._streamed_response_text:
             self.tts_stream.async_set_message(tts_input)
 
         tts_output = {
@@ -1442,31 +1438,6 @@ class PipelineRun:
             "url": self.tts_stream.url,
             "mime_type": self.tts_stream.content_type,
         }
-
-        self.process_event(
-            PipelineEvent(PipelineEventType.TTS_END, {"tts_output": tts_output})
-        )
-
-    async def acknowledge(self, media_id: str, tts_input: str | None) -> None:
-        """Respond with acknowledge media instead of text-to-speech."""
-        self.process_event(
-            PipelineEvent(
-                PipelineEventType.TTS_START,
-                {
-                    "language": self.pipeline.tts_language,
-                    "voice": self.pipeline.tts_voice,
-                    "tts_input": tts_input or "",
-                },
-            )
-        )
-
-        if media_source.is_media_source_id(media_id):
-            media = await media_source.async_resolve_media(self.hass, media_id, None)
-            media_id = media.url
-        else:
-            media_id = media_player.async_process_play_media_url(self.hass, media_id)
-
-        tts_output = {"url": media_id}
 
         self.process_event(
             PipelineEvent(PipelineEventType.TTS_END, {"tts_output": tts_output})
@@ -1777,8 +1748,9 @@ class PipelineInput:
                     if current_stage == PipelineStage.TTS:
                         if can_acknowledge and self.run.pipeline.acknowledge_media_id:
                             # Use acknowledge media instead of full response
-                            await self.run.acknowledge(
-                                self.run.pipeline.acknowledge_media_id, tts_input
+                            await self.run.text_to_speech(
+                                tts_input or "",
+                                override_media_id=self.run.pipeline.acknowledge_media_id,
                             )
                         else:
                             assert tts_input is not None
