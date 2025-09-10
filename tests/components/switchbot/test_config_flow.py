@@ -1120,12 +1120,19 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
 async def test_user_setup_worelay_switch_1pm_key(hass: HomeAssistant) -> None:
     """Test the user initiated form for a relay switch 1pm."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WORELAY_SWITCH_1PM_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "encrypted_choose_method"
@@ -1168,12 +1175,19 @@ async def test_user_setup_worelay_switch_1pm_key(hass: HomeAssistant) -> None:
 async def test_user_setup_worelay_switch_1pm_auth(hass: HomeAssistant) -> None:
     """Test the user initiated form for a relay switch 1pm."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WORELAY_SWITCH_1PM_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "encrypted_choose_method"
