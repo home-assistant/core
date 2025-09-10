@@ -4,13 +4,11 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "host": "The host/URL, including the port, of your Portainer instance",
-          "api_key": "The API key for authenticating with Portainer",
-          "verify_ssl": "Verify the SSL certificate of the Portainer instance"
+          "api_key": "The API key for authenticating with Portainer"
         },
         "description": "You can create an API key in the Portainer UI. Go to **My account > API keys** and select **Add API key**"
       }
