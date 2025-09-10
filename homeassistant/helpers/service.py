@@ -1177,10 +1177,10 @@ def async_register_entity_service(
 @callback
 def async_register_platform_entity_service(
     hass: HomeAssistant,
-    platform_domain: str,
-    platform_name: str,
-    name: str,
+    service_domain: str,
+    service_name: str,
     *,
+    entity_domain: str,
     func: str | Callable[..., Any],
     required_features: Iterable[int] | None = None,
     schema: VolDictType | VolSchemaType | None,
@@ -1196,15 +1196,15 @@ def async_register_platform_entity_service(
 
     def get_entities() -> dict[str, Entity]:
         entities = hass.data.get(DATA_DOMAIN_PLATFORM_ENTITIES, {}).get(
-            (platform_domain, platform_name)
+            (entity_domain, service_domain)
         )
         if entities is None:
             return {}
         return entities
 
     hass.services.async_register(
-        platform_name,
-        name,
+        service_domain,
+        service_name,
         partial(
             entity_service_call,
             hass,

@@ -2477,9 +2477,9 @@ async def test_register_platform_entity_service(
 
     service.async_register_platform_entity_service(
         hass,
-        "mock_integration",
         "mock_platform",
         "hello",
+        entity_domain="mock_integration",
         schema={},
         func=handle_service,
     )
@@ -2516,9 +2516,9 @@ async def test_register_platform_entity_service_response_data(
 
     service.async_register_platform_entity_service(
         hass,
-        "mock_integration",
         "mock_platform",
         "hello",
+        entity_domain="mock_integration",
         schema={"some": str},
         func=generate_response,
         supports_response=SupportsResponse.ONLY,
@@ -2556,9 +2556,9 @@ async def test_register_platform_entity_service_response_data_multiple_matches(
 
     service.async_register_platform_entity_service(
         hass,
-        "mock_integration",
         "mock_platform",
         "hello",
+        entity_domain="mock_integration",
         schema={"some": str},
         func=generate_response,
         supports_response=SupportsResponse.ONLY,
@@ -2604,9 +2604,9 @@ async def test_register_platform_entity_service_response_data_multiple_matches_r
 
     service.async_register_platform_entity_service(
         hass,
-        "mock_integration",
         "mock_platform",
         "hello",
+        entity_domain="mock_integration",
         schema={"some": str},
         func=generate_response,
         supports_response=SupportsResponse.ONLY,
@@ -2664,9 +2664,9 @@ async def test_register_platform_entity_service_limited_to_matching_platforms(
 
     service.async_register_platform_entity_service(
         hass,
-        "base_platform",
         "mock_platform",
         "hello",
+        entity_domain="base_platform",
         schema={"some": str},
         func=generate_response,
         supports_response=SupportsResponse.ONLY,
@@ -2726,9 +2726,9 @@ async def test_register_platform_entity_service_none_schema(
 
     service.async_register_platform_entity_service(
         hass,
-        "mock_integration",
         "mock_platform",
         "hello",
+        entity_domain="mock_integration",
         schema=None,
         func=handle_service,
     )
@@ -2764,9 +2764,9 @@ async def test_register_platform_entity_service_non_entity_service_schema(
     ):
         service.async_register_platform_entity_service(
             hass,
-            "mock_integration",
             "mock_platform",
             f"hello_{idx}",
+            entity_domain="mock_integration",
             schema=schema,
             func=Mock(),
         )
@@ -2782,9 +2782,9 @@ async def test_register_platform_entity_service_non_entity_service_schema(
     ):
         service.async_register_platform_entity_service(
             hass,
-            "mock_integration",
             "mock_platform",
             f"test_service_{idx}",
+            entity_domain="mock_integration",
             schema=schema,
             func=Mock(),
         )
