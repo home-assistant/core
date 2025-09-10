@@ -1608,7 +1608,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     ) -> None:
         """Clear config entry from registry entries."""
         now_time = time.time()
-        now_time = time.time()
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
             self.async_update_device(
                 device.id,
