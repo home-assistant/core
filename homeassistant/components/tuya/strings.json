@@ -238,8 +238,8 @@
       "inverter_output_power_limit": {
         "name": "Inverter output power limit"
       },
-      "fan_duration": {
-        "name": "Fan duration"
+      "fan_timer": {
+        "name": "Fan timer"
       }
     },
     "select": {

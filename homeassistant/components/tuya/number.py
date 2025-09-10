@@ -111,7 +111,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "fsd": (
         NumberEntityDescription(
             key=DPCode.COUNTDOWN_LEFT_FAN,
-            translation_key="fan_duration",
+            translation_key="fan_timer",
             device_class=NumberDeviceClass.DURATION,
             entity_category=EntityCategory.CONFIG,
         ),
