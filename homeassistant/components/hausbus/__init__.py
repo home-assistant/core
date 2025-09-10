@@ -1,4 +1,4 @@
-"""Integration for all haus-bus.de modules"""
+"""Integration for all haus-bus.de modules."""
 
 from __future__ import annotations
 

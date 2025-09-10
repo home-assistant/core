@@ -1,4 +1,4 @@
-"""Defines device_trigger of the haus-bus integration"""
+"""Defines device_trigger of the haus-bus integration."""
 
 from collections.abc import Awaitable, Callable
 import logging
