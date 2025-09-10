@@ -63,7 +63,7 @@
           "stop": "Stop"
         }
       },
-      "qadapt": {
+      "q_adapt": {
         "name": "Q-Adapt",
         "state": {
           "standard": "Standard",
