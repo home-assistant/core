@@ -1951,6 +1951,57 @@ async def test_repair_issue_created_for_passive_mode_fallback(
 
 
 @pytest.mark.usefixtures("one_adapter")
+async def test_repair_issue_created_for_passive_mode_fallback_uart(
+    hass: HomeAssistant,
+) -> None:
+    """Test repair issue is created with UART-specific message for UART adapters."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    manager = _get_manager()
+
+    scanner = HaScanner(
+        mode=BluetoothScanningMode.ACTIVE,
+        adapter="hci0",
+        address="00:11:22:33:44:55",
+    )
+    scanner.async_setup()
+
+    cancel = manager.async_register_scanner(scanner, connection_slots=1)
+
+    # Mock adapter details to indicate UART adapter
+    mock_adapters = {
+        "hci0": {
+            "address": "00:11:22:33:44:55",
+            "sw_version": "homeassistant",
+            "hw_version": "uart:bcm2711",
+            "passive_scan": False,
+            "manufacturer": "Raspberry Pi",
+            "product": "BCM2711",
+            "adapter_type": "uart",  # UART adapter type
+        }
+    }
+
+    with patch.object(manager._bluetooth_adapters, "adapters", mock_adapters):
+        # Set scanner to passive mode when active was requested
+        scanner.set_requested_mode(BluetoothScanningMode.ACTIVE)
+        scanner.set_current_mode(BluetoothScanningMode.PASSIVE)
+
+        manager.on_scanner_start(scanner)
+
+    # Check repair issue is created with UART-specific translation key
+    issue_id = f"bluetooth_adapter_passive_mode_{scanner.source}"
+    registry = ir.async_get(hass)
+    issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_key == "bluetooth_adapter_passive_mode_uart"
+    assert not issue.is_fixable
+
+    cancel()
+
+
+@pytest.mark.usefixtures("one_adapter")
 async def test_repair_issue_deleted_when_passive_mode_resolved(
     hass: HomeAssistant,
 ) -> None:
