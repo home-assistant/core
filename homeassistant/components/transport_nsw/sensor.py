@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import timedelta
 from typing import Any
 
@@ -39,6 +40,8 @@ from .const import (
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
+_LOGGER = logging.getLogger(__name__)
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -65,7 +68,7 @@ class TransportNSWCoordinator(DataUpdateCoordinator):
 
         super().__init__(
             hass,
-            logger=__name__,
+            logger=_LOGGER,
             name=f"Transport NSW {self.stop_id}",
             update_interval=SCAN_INTERVAL,
         )
