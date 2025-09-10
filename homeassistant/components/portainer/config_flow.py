@@ -33,12 +33,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
 
+    client = Portainer(
+        api_url=data[CONF_HOST],
+        api_key=data[CONF_API_KEY],
+        session=async_get_clientsession(hass),
+    )
     try:
-        client = Portainer(
-            api_url=data[CONF_HOST],
-            api_key=data[CONF_API_KEY],
-            session=async_get_clientsession(hass),
-        )
         await client.get_endpoints()
     except PortainerAuthenticationError:
         raise InvalidAuth from None
