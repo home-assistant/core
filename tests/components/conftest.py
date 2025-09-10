@@ -41,6 +41,7 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.util import yaml as yaml_util
 
@@ -977,6 +978,33 @@ async def check_translations(
             )
             raise
 
+    @property
+    def _entity_name_translation_key(self: Entity) -> str | None:
+        if self.translation_key is None:
+            return None
+        platform_data = self.platform_data
+        translation_key = (
+            f"component.{platform_data.platform_name}.entity.{platform_data.domain}"
+            f".{self.translation_key}.name"
+        )
+
+        if self.hass and translation_key is not None:
+            key = f"{platform_data.domain}.{self.translation_key}.name"
+
+            translation_coros.add(
+                _validate_translation(
+                    self.hass,
+                    translation_errors,
+                    ignored_domains,
+                    "entity",
+                    platform_data.platform_name,
+                    key,
+                    self.translation_placeholders,
+                    translation_required=True,
+                )
+            )
+        return translation_key
+
     # Use override functions
     with (
         patch(
@@ -990,6 +1018,10 @@ async def check_translations(
         patch(
             "homeassistant.core.ServiceRegistry.async_call",
             _service_registry_async_call,
+        ),
+        patch(
+            "homeassistant.helpers.entity.Entity._name_translation_key",
+            _entity_name_translation_key,
         ),
     ):
         yield
