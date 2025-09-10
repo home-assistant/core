@@ -8,7 +8,6 @@
   "loggers": [
     "TransportNSW"
   ],
-  "quality_scale": "silver",
   "requirements": [
     "PyTransportNSW==0.1.1"
   ]
