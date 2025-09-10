@@ -843,7 +843,6 @@ async def test_user_cloud_login(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
-    # Choose to sign in to cloud account
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": "cloud_login"},
@@ -897,7 +896,6 @@ async def test_user_cloud_login_auth_failed(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
-    # Choose to sign in to cloud account
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": "cloud_login"},
@@ -932,7 +930,6 @@ async def test_user_cloud_login_api_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
-    # Choose to sign in to cloud account
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": "cloud_login"},
@@ -965,7 +962,6 @@ async def test_user_cloud_login_then_encrypted_device(hass: HomeAssistant) -> No
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
-    # Choose to sign in to cloud account
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": "cloud_login"},
@@ -973,7 +969,6 @@ async def test_user_cloud_login_then_encrypted_device(hass: HomeAssistant) -> No
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud_login"
 
-    # Successful cloud login
     with (
         patch(
             "homeassistant.components.switchbot.config_flow.fetch_cloud_devices",
@@ -1003,19 +998,15 @@ async def test_user_cloud_login_then_encrypted_device(hass: HomeAssistant) -> No
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encrypted_auth"
 
-    # Submit with no user input to trigger use of saved credentials
-    # This exercises line 188 where saved credentials are auto-populated
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        None,  # No user input, should use saved credentials
+        None,
     )
     await hass.async_block_till_done()
 
-    # The form is shown again (the auto-population happens but form is re-displayed)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encrypted_auth"
 
-    # Now complete the flow successfully
     with (
         patch_async_setup_entry() as mock_setup_entry,
         patch(

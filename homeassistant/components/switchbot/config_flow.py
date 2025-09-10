@@ -179,9 +179,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the SwitchBot API auth step."""
-        errors = {}
+        errors: dict[str, str] = {}
         assert self._discovered_adv is not None
-        description_placeholders = {}
+        description_placeholders: dict[str, str] = {}
 
         # If we have saved credentials from cloud login, try them first
         if user_input is None and self._cloud_username and self._cloud_password:
@@ -253,7 +253,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the encryption key step."""
-        errors = {}
+        errors: dict[str, str] = {}
         assert self._discovered_adv is not None
         if user_input is not None:
             model: SwitchbotModel = self._discovered_adv.data["modelName"]
@@ -332,8 +332,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the cloud login step."""
-        errors = {}
-        description_placeholders = {}
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
 
         if user_input is not None:
             try:
@@ -354,7 +354,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": "auth_failed"}
                 description_placeholders = {"error_detail": str(ex)}
             else:
-                # Save credentials for potential encrypted device auth
+                # Save credentials temporarily for the duration of this flow
+                # to avoid re-prompting if encrypted device auth is needed
+                # These will be discarded when the flow completes
                 self._cloud_username = user_input[CONF_USERNAME]
                 self._cloud_password = user_input[CONF_PASSWORD]
                 return await self.async_step_select_device()
