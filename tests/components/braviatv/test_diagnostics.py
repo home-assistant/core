@@ -46,6 +46,7 @@ async def test_entry_diagnostics(
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
+        title="BRAVIA TV-Model",
         data={
             CONF_HOST: "localhost",
             CONF_MAC: "AA:BB:CC:DD:EE:FF",

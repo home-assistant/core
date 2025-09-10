@@ -18,6 +18,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COVERS,
     CONF_DEVICE_CLASS,
@@ -31,19 +32,27 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_platform
-from .template_entity import (
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
+from .schemas import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    TemplateEntity,
     make_template_entity_common_modern_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,23 +100,31 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Cover"
 
+COVER_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
+        vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_POSITION): cv.template,
+        vol.Optional(CONF_STATE): cv.template,
+        vol.Optional(CONF_TILT): cv.template,
+        vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
+    }
+)
+
 COVER_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
-            vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_POSITION): cv.template,
-            vol.Optional(CONF_STATE): cv.template,
             vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_TILT): cv.template,
-            vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
         }
     )
-    .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
-    .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA),
+    .extend(COVER_COMMON_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA)
+    .extend(
+        make_template_entity_common_modern_schema(COVER_DOMAIN, DEFAULT_NAME).schema
+    ),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
@@ -139,6 +156,11 @@ PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_LEGACY_YAML_SCHEMA)}
 )
 
+COVER_CONFIG_ENTRY_SCHEMA = vol.All(
+    COVER_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema),
+    cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
+)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -160,11 +182,43 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateCoverEntity,
+        COVER_CONFIG_ENTRY_SCHEMA,
+        True,
+    )
+
+
+@callback
+def async_create_preview_cover(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateCoverEntity:
+    """Create a preview."""
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateCoverEntity,
+        COVER_CONFIG_ENTRY_SCHEMA,
+        True,
+    )
+
+
 class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
     """Representation of a template cover features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _extra_optimistic_options = (CONF_POSITION,)
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -492,7 +546,6 @@ class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
                 write_ha_state = True
 
         if not self._attr_assumed_state:
-            self.async_set_context(self.coordinator.data["context"])
             write_ha_state = True
         elif self._attr_assumed_state and len(self._rendered) > 0:
             # In case any non optimistic template

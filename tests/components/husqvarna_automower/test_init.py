@@ -14,7 +14,7 @@ from aioautomower.exceptions import (
     HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.model import Calendar, MowerAttributes, WorkArea
+from aioautomower.model import Calendar, MowerAttributes, MowerStates, WorkArea
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -484,3 +484,214 @@ async def test_add_and_remove_work_area(
         - ADDITIONAL_NUMBER_ENTITIES
         - ADDITIONAL_SENSOR_ENTITIES
     )
+
+
+@pytest.mark.parametrize(
+    ("mower1_connected", "mower1_state", "mower2_connected", "mower2_state"),
+    [
+        (True, MowerStates.OFF, False, MowerStates.OFF),  # False
+        (False, MowerStates.PAUSED, False, MowerStates.OFF),  # False
+        (False, MowerStates.OFF, True, MowerStates.OFF),  # False
+        (False, MowerStates.OFF, False, MowerStates.PAUSED),  # False
+        (True, MowerStates.OFF, True, MowerStates.OFF),  # False
+        (False, MowerStates.OFF, False, MowerStates.OFF),  # False
+    ],
+)
+async def test_dynamic_polling(
+    hass: HomeAssistant,
+    mock_automower_client,
+    mock_config_entry,
+    freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
+    mower1_connected: bool,
+    mower1_state: MowerStates,
+    mower2_connected: bool,
+    mower2_state: MowerStates,
+) -> None:
+    """Test that the ws_ready_callback triggers an attempt to start the Watchdog task.
+
+    and that the pong callback stops polling when all mowers are inactive.
+    """
+    websocket_values = deepcopy(values)
+    poll_values = deepcopy(values)
+    callback_holder: dict[str, Callable] = {}
+
+    @callback
+    def fake_register_websocket_response(
+        cb: Callable[[dict[str, MowerAttributes]], None],
+    ) -> None:
+        callback_holder["data_cb"] = cb
+
+    mock_automower_client.register_data_callback.side_effect = (
+        fake_register_websocket_response
+    )
+    ws_ready_callbacks: list[Callable[[], None]] = []
+
+    @callback
+    def fake_register_ws_ready_callback(cb: Callable[[], None]) -> None:
+        ws_ready_callbacks.append(cb)
+
+    mock_automower_client.register_ws_ready_callback.side_effect = (
+        fake_register_ws_ready_callback
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    for cb in ws_ready_callbacks:
+        cb()
+
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 1
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 2
+
+    # websocket is still active, but mowers are inactive -> no polling required
+    poll_values[TEST_MOWER_ID].metadata.connected = mower1_connected
+    poll_values[TEST_MOWER_ID].mower.state = mower1_state
+    poll_values["1234"].metadata.connected = mower2_connected
+    poll_values["1234"].mower.state = mower2_state
+
+    mock_automower_client.get_status.return_value = poll_values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 3
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 4
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 4
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 4
+
+    # websocket is still active, and mowers are active -> polling required
+    mock_automower_client.get_status.reset_mock()
+    assert mock_automower_client.get_status.call_count == 0
+    poll_values[TEST_MOWER_ID].metadata.connected = True
+    poll_values[TEST_MOWER_ID].mower.state = MowerStates.PAUSED
+    poll_values["1234"].metadata.connected = False
+    poll_values["1234"].mower.state = MowerStates.OFF
+    websocket_values = deepcopy(poll_values)
+    callback_holder["data_cb"](websocket_values)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 1
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("mower1_connected", "mower1_state", "mower2_connected", "mower2_state"),
+    [
+        (True, MowerStates.OFF, False, MowerStates.OFF),  # False
+        (False, MowerStates.PAUSED, False, MowerStates.OFF),  # False
+        (False, MowerStates.OFF, True, MowerStates.OFF),  # False
+        (False, MowerStates.OFF, False, MowerStates.PAUSED),  # False
+        (True, MowerStates.OFF, True, MowerStates.OFF),  # False
+        (False, MowerStates.OFF, False, MowerStates.OFF),  # False
+    ],
+)
+async def test_websocket_watchdog(
+    hass: HomeAssistant,
+    mock_automower_client,
+    mock_config_entry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    values: dict[str, MowerAttributes],
+    mower1_connected: bool,
+    mower1_state: MowerStates,
+    mower2_connected: bool,
+    mower2_state: MowerStates,
+) -> None:
+    """Test that the ws_ready_callback triggers an attempt to start the Watchdog task.
+
+    and that the pong callback stops polling when all mowers are inactive.
+    """
+    poll_values = deepcopy(values)
+    callback_holder: dict[str, Callable] = {}
+
+    @callback
+    def fake_register_websocket_response(
+        cb: Callable[[dict[str, MowerAttributes]], None],
+    ) -> None:
+        callback_holder["data_cb"] = cb
+
+    mock_automower_client.register_data_callback.side_effect = (
+        fake_register_websocket_response
+    )
+    ws_ready_callbacks: list[Callable[[], None]] = []
+
+    @callback
+    def fake_register_ws_ready_callback(cb: Callable[[], None]) -> None:
+        ws_ready_callbacks.append(cb)
+
+    mock_automower_client.register_ws_ready_callback.side_effect = (
+        fake_register_ws_ready_callback
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    for cb in ws_ready_callbacks:
+        cb()
+
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 1
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 2
+
+    # websocket is still active, but mowers are inactive -> no polling required
+    poll_values[TEST_MOWER_ID].metadata.connected = mower1_connected
+    poll_values[TEST_MOWER_ID].mower.state = mower1_state
+    poll_values["1234"].metadata.connected = mower2_connected
+    poll_values["1234"].mower.state = mower2_state
+
+    mock_automower_client.get_status.return_value = poll_values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 3
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 4
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 4
+
+    # Simulate Pong loss and reset mock -> polling required
+    mock_automower_client.send_empty_message.return_value = False
+    mock_automower_client.get_status.reset_mock()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 0
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 1
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.get_status.call_count == 2

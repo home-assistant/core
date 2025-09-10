@@ -2073,7 +2073,7 @@ async def test_platform_async_get_conditions(hass: HomeAssistant) -> None:
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
     with patch(
         "homeassistant.components.device_automation.condition.async_get_conditions",
-        AsyncMock(return_value={"device": AsyncMock()}),
+        AsyncMock(return_value={"_device": AsyncMock()}),
     ) as device_automation_async_get_conditions_mock:
         await condition.async_validate_condition_config(hass, config)
         device_automation_async_get_conditions_mock.assert_awaited()
@@ -2089,7 +2089,7 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
             """Initialize condition."""
 
         @classmethod
-        async def async_validate_condition_config(
+        async def async_validate_config(
             cls, hass: HomeAssistant, config: ConfigType
         ) -> ConfigType:
             """Validate config."""
@@ -2098,14 +2098,14 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     class MockCondition1(MockCondition):
         """Mock condition 1."""
 
-        async def async_condition_from_config(self) -> condition.ConditionCheckerType:
+        async def async_get_checker(self) -> condition.ConditionCheckerType:
             """Evaluate state based on configuration."""
             return lambda hass, vars: True
 
     class MockCondition2(MockCondition):
         """Mock condition 2."""
 
-        async def async_condition_from_config(self) -> condition.ConditionCheckerType:
+        async def async_get_checker(self) -> condition.ConditionCheckerType:
             """Evaluate state based on configuration."""
             return lambda hass, vars: False
 
@@ -2113,8 +2113,8 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
         hass: HomeAssistant,
     ) -> dict[str, type[condition.Condition]]:
         return {
-            "test": MockCondition1,
-            "test.cond_2": MockCondition2,
+            "_": MockCondition1,
+            "cond_2": MockCondition2,
         }
 
     mock_integration(hass, MockModule("test"))
@@ -2337,7 +2337,7 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
     "sun_condition_descriptions",
     [
         """
-        sun:
+        _:
           fields:
             after:
               example: sunrise
@@ -2371,7 +2371,7 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
         .offset_selector: &offset_selector
           selector:
             time: null
-        sun:
+        _:
           fields:
             after: *sunrise_sunset_selector
             after_offset: *offset_selector
@@ -2385,7 +2385,15 @@ async def test_async_get_all_descriptions(
 ) -> None:
     """Test async_get_all_descriptions."""
     device_automation_condition_descriptions = """
-        device: {}
+        _device:
+          fields:
+            entity:
+              selector:
+                entity:
+                  filter:
+                    domain: alarm_control_panel
+                    supported_features:
+                      - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
         """
 
     assert await async_setup_component(hass, DOMAIN_SUN, {})
@@ -2415,7 +2423,7 @@ async def test_async_get_all_descriptions(
 
     # Test we only load conditions.yaml for integrations with conditions,
     # system_health has no conditions
-    assert proxy_load_conditions_files.mock_calls[0][1][1] == unordered(
+    assert proxy_load_conditions_files.mock_calls[0][1][0] == unordered(
         [
             await async_get_integration(hass, DOMAIN_SUN),
         ]
@@ -2423,18 +2431,32 @@ async def test_async_get_all_descriptions(
 
     # system_health does not have conditions and should not be in descriptions
     assert descriptions == {
-        DOMAIN_SUN: {
+        "sun": {
             "fields": {
                 "after": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "after_offset": {"selector": {"time": None}},
+                "after_offset": {"selector": {"time": {}}},
                 "before": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "before_offset": {"selector": {"time": None}},
+                "before_offset": {"selector": {"time": {}}},
             }
         }
     }
@@ -2456,21 +2478,50 @@ async def test_async_get_all_descriptions(
         new_descriptions = await condition.async_get_all_descriptions(hass)
     assert new_descriptions is not descriptions
     assert new_descriptions == {
-        "device": {
-            "fields": {},
-        },
-        DOMAIN_SUN: {
+        "sun": {
             "fields": {
                 "after": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "after_offset": {"selector": {"time": None}},
+                "after_offset": {"selector": {"time": {}}},
                 "before": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "before_offset": {"selector": {"time": None}},
+                "before_offset": {"selector": {"time": {}}},
+            }
+        },
+        "device": {
+            "fields": {
+                "entity": {
+                    "selector": {
+                        "entity": {
+                            "filter": [
+                                {
+                                    "domain": ["alarm_control_panel"],
+                                    "supported_features": [1],
+                                }
+                            ],
+                            "multiple": False,
+                            "reorder": False,
+                        },
+                    },
+                },
             }
         },
     }
@@ -2525,7 +2576,7 @@ async def test_async_get_all_descriptions_with_bad_description(
 ) -> None:
     """Test async_get_all_descriptions."""
     sun_service_descriptions = """
-        sun:
+        _:
           fields: not_a_dict
     """
 
@@ -2545,11 +2596,11 @@ async def test_async_get_all_descriptions_with_bad_description(
     ):
         descriptions = await condition.async_get_all_descriptions(hass)
 
-    assert descriptions == {DOMAIN_SUN: None}
+    assert descriptions == {"sun": None}
 
     assert (
         "Unable to parse conditions.yaml for the sun integration: "
-        "expected a dictionary for dictionary value @ data['sun']['fields']"
+        "expected a dictionary for dictionary value @ data['_']['fields']"
     ) in caplog.text
 
 
