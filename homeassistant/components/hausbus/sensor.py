@@ -1,4 +1,4 @@
-"""Support for Haus-Bus temperatur sensor."""
+﻿"""Support for Haus-Bus temperatur sensor."""
 
 from __future__ import annotations
 

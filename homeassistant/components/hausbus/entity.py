@@ -69,7 +69,7 @@ class HausbusEntity(Entity):
         """State push update."""
         raise NotImplementedError
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self): 
         """Called when entity is added to HA."""
         registry = er.async_get(self.hass)
         registry.async_update_entity_options(
@@ -92,10 +92,10 @@ class HausbusEntity(Entity):
 
         try:
             await asyncio.wait_for(self._wait_for_configuration(), timeout=5.0)
-            return True
         except TimeoutError:
             LOGGER.warning("Timeout while waiting for configuration of %s", self.entity_id)
-            return False
+        else:
+            return True
 
     async def _wait_for_configuration(self):
         """Waits until configuration is received."""

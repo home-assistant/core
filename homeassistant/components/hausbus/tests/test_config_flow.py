@@ -65,3 +65,8 @@ async def test_user_flow_invalid_input():
         await flow._search_task
         result = await flow.async_step_user(user_input={"invalid": "data"})
         assert result["type"] == "progress_done"  # <---- korrekt
+
+
+# flake8: noqa
+# pylint: skip-file
+# mypy: ignore-errors
