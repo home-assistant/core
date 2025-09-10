@@ -1,6 +1,7 @@
 """Alexa Devices tests configuration."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 from aioamazondevices.const import DEVICE_TYPE_TO_MODEL
@@ -45,7 +46,9 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.login_mode_interactive.return_value = {
             "customer_info": {"user_id": TEST_USERNAME},
         }
-        client.get_devices_data.return_value = {TEST_SERIAL_NUMBER: TEST_DEVICE}
+        client.get_devices_data.return_value = {
+            TEST_SERIAL_NUMBER: deepcopy(TEST_DEVICE)
+        }
         client.get_model_details = lambda device: DEVICE_TYPE_TO_MODEL.get(
             device.device_type
         )
