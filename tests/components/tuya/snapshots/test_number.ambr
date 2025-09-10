@@ -407,7 +407,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.ceiling_fan_light_v2_none-entry]
+# name: test_platform_setup_and_discovery[number.ceiling_fan_light_v2_fan_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -425,7 +425,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.ceiling_fan_light_v2_none',
+    'entity_id': 'number.ceiling_fan_light_v2_fan_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -437,7 +437,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Fan duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -447,11 +447,11 @@
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.ceiling_fan_light_v2_none-state]
+# name: test_platform_setup_and_discovery[number.ceiling_fan_light_v2_fan_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'ceiling fan/Light v2 None',
+      'friendly_name': 'ceiling fan/Light v2 Fan duration',
       'max': 540.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -459,7 +459,7 @@
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.ceiling_fan_light_v2_none',
+    'entity_id': 'number.ceiling_fan_light_v2_fan_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
