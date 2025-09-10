@@ -17,6 +17,7 @@ from .config_flow import ConfigFlow
 
 @pytest.mark.asyncio
 async def test_user_flow_success():
+    """test successful user flow."""
     hass_mock = MagicMock()
 
     async def dummy_wait(user_input=None):
@@ -43,6 +44,7 @@ async def test_user_flow_success():
 
 @pytest.mark.asyncio
 async def test_user_flow_invalid_input():
+    """test invalid user flow."""
     hass_mock = MagicMock()
 
     async def dummy_wait(user_input=None):
