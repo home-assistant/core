@@ -1,6 +1,5 @@
 """Test OpenUV binary sensors."""
 
-from typing import Literal
 from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
@@ -15,7 +14,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 async def test_binary_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_pyopenuv: Literal[None],
+    mock_pyopenuv: None,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
