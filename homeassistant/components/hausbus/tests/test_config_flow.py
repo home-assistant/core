@@ -67,6 +67,7 @@ async def test_user_flow_invalid_input():
         assert result["type"] == "progress_done"  # <---- korrekt
 
 
-# flake8: noqa
+
+# flake8: noqa: D103,D104
 # pylint: skip-file
 # mypy: ignore-errors
