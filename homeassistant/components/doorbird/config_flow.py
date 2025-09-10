@@ -19,8 +19,10 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
@@ -103,6 +105,41 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the DoorBird config flow."""
         self.discovery_schema: vol.Schema | None = None
 
+    async def _async_verify_existing_device_for_discovery(
+        self,
+        existing_entry: ConfigEntry,
+        host: str,
+        macaddress: str,
+    ) -> None:
+        """Verify discovered device matches existing entry before updating IP."""
+        # Check if the host is actually changing
+        # Verify the device at the discovered IP actually has this MAC
+        # and that our credentials work before updating
+        info, errors = await self._async_validate_or_error(
+            {
+                **existing_entry.data,
+                CONF_HOST: host,
+            }
+        )
+
+        if errors:
+            _LOGGER.debug(
+                "Cannot validate DoorBird at %s with existing credentials: %s",
+                host,
+                errors,
+            )
+            raise AbortFlow("cannot_connect")
+
+        # Verify the MAC address matches what was advertised
+        if format_mac(info["mac_addr"]) != format_mac(macaddress):
+            _LOGGER.debug(
+                "DoorBird at %s reports MAC %s but zeroconf advertised %s, ignoring",
+                host,
+                info["mac_addr"],
+                macaddress,
+            )
+            raise AbortFlow("wrong_device")
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -172,7 +209,22 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(macaddress)
         host = discovery_info.host
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        # Check if we have an existing entry for this MAC
+        existing_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, macaddress
+        )
+
+        if existing_entry:
+            # Check if the host is actually changing
+            if existing_entry.data.get(CONF_HOST) != host:
+                await self._async_verify_existing_device_for_discovery(
+                    existing_entry, host, macaddress
+                )
+
+            # All checks passed or no change needed, abort
+            # if already configured with potential IP update
+            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         self._async_abort_entries_match({CONF_HOST: host})
 
