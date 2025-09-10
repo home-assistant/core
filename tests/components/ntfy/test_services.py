@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from aiontfy import Message
+from aiontfy import BroadcastAction, HttpAction, Message, ViewAction
 from aiontfy.exceptions import (
     NtfyException,
     NtfyHTTPError,
@@ -15,14 +15,17 @@ from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.components.ntfy.const import DOMAIN
 from homeassistant.components.ntfy.notify import (
     ATTR_ATTACH,
+    ATTR_BROADCAST,
     ATTR_CALL,
     ATTR_CLICK,
     ATTR_DELAY,
     ATTR_EMAIL,
+    ATTR_HTTP,
     ATTR_ICON,
     ATTR_MARKDOWN,
     ATTR_PRIORITY,
     ATTR_TAGS,
+    ATTR_VIEW,
     SERVICE_PUBLISH,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -60,6 +63,32 @@ async def test_ntfy_publish(
             ATTR_MARKDOWN: True,
             ATTR_PRIORITY: "5",
             ATTR_TAGS: ["partying_face", "grin"],
+            ATTR_HTTP: [
+                {
+                    "label": "Close door",
+                    "url": "https://api.example.local/",
+                    "method": "PUT",
+                    "headers": {"Authorization": "Bearer ..."},
+                    "clear": False,
+                }
+            ],
+            ATTR_VIEW: [
+                {
+                    "label": "Open website",
+                    "url": "https://example.com",
+                    "position": 3,
+                    "clear": False,
+                }
+            ],
+            ATTR_BROADCAST: [
+                {
+                    "label": "Take picture",
+                    "intent": "com.example.AN_INTENT",
+                    "extras": {"cmd": "pic"},
+                    "position": 1,
+                    "clear": True,
+                }
+            ],
         },
         blocking=True,
     )
@@ -76,6 +105,27 @@ async def test_ntfy_publish(
             markdown=True,
             icon=URL("https://example.org/logo.png"),
             delay="86430.0s",
+            actions=[
+                BroadcastAction(
+                    label="Take picture",
+                    intent="com.example.AN_INTENT",
+                    extras={"cmd": "pic"},
+                    clear=True,
+                ),
+                ViewAction(
+                    label="Open website",
+                    url="https://example.com",
+                    clear=False,
+                ),
+                HttpAction(
+                    label="Close door",
+                    url="https://api.example.local/",
+                    method="PUT",
+                    headers={"Authorization": "Bearer ..."},
+                    body=None,
+                    clear=False,
+                ),
+            ],
         )
     )
 
@@ -142,12 +192,23 @@ async def test_send_message_exception(
             {ATTR_DELAY: {"days": 1, "seconds": 30}, ATTR_EMAIL: "mail@example.org"},
             "Delayed email notifications are not supported",
         ),
+        (
+            {
+                ATTR_BROADCAST: [
+                    {"label": "1"},
+                    {"label": "2"},
+                    {"label": "3"},
+                    {"label": "4"},
+                ],
+            },
+            "Too many actions defined. Only 3 allowed",
+        ),
     ],
 )
+@pytest.mark.usefixtures("mock_aiontfy")
 async def test_send_message_validation_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_aiontfy: AsyncMock,
     payload: dict[str, Any],
     error_msg: str,
 ) -> None:
