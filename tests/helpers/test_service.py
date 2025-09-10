@@ -2506,7 +2506,7 @@ async def test_register_platform_entity_service(
 async def test_register_platform_entity_service_response_data(
     hass: HomeAssistant,
 ) -> None:
-    """Test an entity service that does supports response data."""
+    """Test an entity service that supports response data."""
 
     async def generate_response(
         target: MockEntity, call: ServiceCall
@@ -2546,7 +2546,7 @@ async def test_register_platform_entity_service_response_data(
 async def test_register_platform_entity_service_response_data_multiple_matches(
     hass: HomeAssistant,
 ) -> None:
-    """Test an entity service that does supports response data and matching many entities."""
+    """Test an entity service with response data and matching many entities."""
 
     async def generate_response(
         target: MockEntity, call: ServiceCall
@@ -2635,7 +2635,7 @@ async def test_register_platform_entity_service_limited_to_matching_platforms(
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
 ) -> None:
-    """Test an entity services only targets entities for the platform and domain."""
+    """Test entity services only target entities for the platform and domain."""
 
     mock_area = area_registry.async_get_or_create("mock_area")
 
