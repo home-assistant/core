@@ -1002,7 +1002,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             via_device_id=via_device_id,
         )
 
-        # This is safe because async_update_device will always return a device
+        # This is safe because _async_update_device will always return a device
         # in this use case.
         assert device
         return device
@@ -1279,7 +1279,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # Change modified_at if we are changing something that we store
             new_values["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("device_registry.async_update_device")
+        self.hass.verify_event_loop_thread("device_registry._async_update_device")
         new = attr.evolve(old, **new_values)
         self.devices[device_id] = new
 
@@ -1451,7 +1451,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
         for other_device in list(self.devices.values()):
             if other_device.via_device_id == device_id:
-                self.async_update_device(other_device.id, via_device_id=None)
+                self._async_update_device(other_device.id, via_device_id=None)
         self.hass.bus.async_fire_internal(
             EVENT_DEVICE_REGISTRY_UPDATED,
             _EventDeviceRegistryUpdatedData_Remove(
@@ -1574,7 +1574,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Clear config entry from registry entries."""
         now_time = time.time()
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
-            self.async_update_device(device.id, remove_config_entry_id=config_entry_id)
+            self._async_update_device(device.id, remove_config_entry_id=config_entry_id)
         for deleted_device in list(self.deleted_devices.values()):
             config_entries = deleted_device.config_entries
             if config_entry_id not in config_entries:
@@ -1609,7 +1609,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Clear config entry from registry entries."""
         now_time = time.time()
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
-            self.async_update_device(
+            self._async_update_device(
                 device.id,
                 remove_config_entry_id=config_entry_id,
                 remove_config_subentry_id=config_subentry_id,
@@ -1670,7 +1670,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     def async_clear_area_id(self, area_id: str) -> None:
         """Clear area id from registry entries."""
         for device in self.devices.get_devices_for_area_id(area_id):
-            self.async_update_device(device.id, area_id=None)
+            self._async_update_device(device.id, area_id=None)
         for deleted_device in list(self.deleted_devices.values()):
             if deleted_device.area_id != area_id:
                 continue
@@ -1683,7 +1683,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     def async_clear_label_id(self, label_id: str) -> None:
         """Clear label from registry entries."""
         for device in self.devices.get_devices_for_label(label_id):
-            self.async_update_device(device.id, labels=device.labels - {label_id})
+            self._async_update_device(device.id, labels=device.labels - {label_id})
         for deleted_device in list(self.deleted_devices.values()):
             if label_id not in deleted_device.labels:
                 continue
@@ -1747,7 +1747,7 @@ def async_config_entry_disabled_by_changed(
         for device in devices:
             if device.disabled_by is not DeviceEntryDisabler.CONFIG_ENTRY:
                 continue
-            registry.async_update_device(device.id, disabled_by=None)
+            registry._async_update_device(device.id, disabled_by=None)  # noqa: SLF001
         return
 
     enabled_config_entries = {
@@ -1764,7 +1764,7 @@ def async_config_entry_disabled_by_changed(
             enabled_config_entries
         ):
             continue
-        registry.async_update_device(
+        registry._async_update_device(  # noqa: SLF001
             device.id, disabled_by=DeviceEntryDisabler.CONFIG_ENTRY
         )
 
@@ -1802,7 +1802,7 @@ def async_cleanup(
     for device in list(dev_reg.devices.values()):
         for config_entry_id in device.config_entries:
             if config_entry_id not in config_entry_ids:
-                dev_reg.async_update_device(
+                dev_reg._async_update_device(  # noqa: SLF001
                     device.id, remove_config_entry_id=config_entry_id
                 )
 
