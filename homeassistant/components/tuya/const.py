@@ -145,6 +145,7 @@ class DPCode(StrEnum):
     CH2O_VALUE = "ch2o_value"
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
+    CHARGE_STATE = "charge_state"
     CHILD_LOCK = "child_lock"  # Child lock
     CISTERN = "cistern"
     CLEAN_AREA = "clean_area"

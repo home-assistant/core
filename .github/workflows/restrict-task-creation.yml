@@ -12,7 +12,7 @@ jobs:
     if: github.event.issue.type.name == 'Task'
     steps:
       - name: Check if user is authorized
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const issueAuthor = context.payload.issue.user.login;

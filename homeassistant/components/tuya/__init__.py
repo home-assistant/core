@@ -157,9 +157,7 @@ class DeviceListener(SharingDeviceListener):
         self.hass = hass
         self.manager = manager
 
-    # pylint disable can be removed when issue fixed in library
-    # https://github.com/tuya/tuya-device-sharing-sdk/pull/35
-    def update_device(  # pylint: disable=arguments-renamed
+    def update_device(
         self,
         device: CustomerDevice,
         updated_status_properties: list[str] | None = None,

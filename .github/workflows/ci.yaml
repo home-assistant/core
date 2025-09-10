@@ -517,7 +517,7 @@ jobs:
             env.HA_SHORT_VERSION }}-
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -579,7 +579,7 @@ jobs:
       - base
     steps:
       - name: Install additional OS dependencies
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -879,7 +879,7 @@ jobs:
     name: Split tests for full run
     steps:
       - name: Install additional OS dependencies
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -940,7 +940,7 @@ jobs:
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     steps:
       - name: Install additional OS dependencies
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -1074,7 +1074,7 @@ jobs:
       Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -1215,7 +1215,7 @@ jobs:
       Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -1347,7 +1347,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v5.5.0
+        uses: codecov/codecov-action@v5.5.1
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1377,7 +1377,7 @@ jobs:
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     steps:
       - name: Install additional OS dependencies
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -1498,7 +1498,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v5.5.0
+        uses: codecov/codecov-action@v5.5.1
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}

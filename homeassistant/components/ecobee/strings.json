@@ -175,10 +175,6 @@
       "name": "Set sensors used in climate",
       "description": "Sets the participating sensors for a climate program.",
       "fields": {
-        "entity_id": {
-          "name": "Entity",
-          "description": "ecobee thermostat on which to set active sensors."
-        },
         "preset_mode": {
           "name": "Climate Name",
           "description": "Name of the climate program to set the sensors active on.\nDefaults to currently active program."
