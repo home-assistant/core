@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from const import DOMAIN
 from london_tube_status import TubeData
 import voluptuous as vol
 
@@ -18,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_LINE, DEFAULT_LINES, TUBE_LINES
+from .const import CONF_LINE, DEFAULT_LINES, DOMAIN, TUBE_LINES
 from .coordinator import LondonTubeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ async def async_setup_entry(
 
     async_add_entities(
         LondonTubeSensor(coordinator, line)
-        for line in entry.data.get(CONF_LINE, DEFAULT_LINES)
+        for line in entry.options.get(CONF_LINE, DEFAULT_LINES)
     )
 
 
@@ -83,11 +83,27 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
 
     _attr_attribution = "Powered by TfL Open Data"
     _attr_icon = "mdi:subway"
+    _attr_has_entity_name = True  # Use modern entity naming
 
     def __init__(self, coordinator: LondonTubeCoordinator, name: str) -> None:
         """Initialize the London Underground sensor."""
         super().__init__(coordinator)
         self._name = name
+        # Add unique_id for proper entity registry
+        self._attr_unique_id = f"tube_{name.lower().replace(' ', '_')}"
+        # Add translation key for proper entity naming
+        self._attr_translation_key = "line_status"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, "tfl_tube")},
+            name="London Underground",
+            manufacturer="Transport for London",
+            model="Tube Status",
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def name(self) -> str:

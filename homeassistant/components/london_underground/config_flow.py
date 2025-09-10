@@ -9,8 +9,13 @@ from typing import Any
 from london_tube_status import TubeData
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -35,10 +40,57 @@ async def validate_input(hass: HomeAssistant) -> bool:
         return True
 
 
+class LondonUndergroundOptionsFlow(OptionsFlow):
+    """Handle options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            _LOGGER.debug(
+                "Updating london underground with options flow user_input: %s",
+                user_input,
+            )
+            return self.async_create_entry(
+                title="",
+                data={CONF_LINE: user_input[CONF_LINE]},
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_LINE,
+                        default=self.config_entry.options.get(
+                            CONF_LINE,
+                            self.config_entry.data.get(CONF_LINE, DEFAULT_LINES),
+                        ),
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=TUBE_LINES,
+                            multiple=True,
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                }
+            ),
+        )
+
+
 class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for London Underground."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> LondonUndergroundOptionsFlow:
+        """Get the options flow for this handler."""
+        return LondonUndergroundOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -60,7 +112,8 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title="London Underground",
-                    data={CONF_LINE: user_input.get(CONF_LINE, DEFAULT_LINES)},
+                    data={},
+                    options={CONF_LINE: user_input.get(CONF_LINE, DEFAULT_LINES)},
                 )
 
         return self.async_show_form(

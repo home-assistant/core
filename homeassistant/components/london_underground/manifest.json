@@ -4,6 +4,7 @@
   "codeowners": ["@jpbede"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/london_underground",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["london_tube_status"],
   "quality_scale": "legacy",
