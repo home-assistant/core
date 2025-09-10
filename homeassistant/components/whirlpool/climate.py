@@ -25,6 +25,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import WhirlpoolConfigEntry
 from .entity import WhirlpoolEntity
 
+PARALLEL_UPDATES = 1
+
 AIRCON_MODE_MAP = {
     AirconMode.Cool: HVACMode.COOL,
     AirconMode.Heat: HVACMode.HEAT,
