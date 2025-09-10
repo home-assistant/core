@@ -5013,7 +5013,7 @@ async def test_async_get_or_create_thread_safety(
 
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls device_registry.async_update_device from a thread.",
+        match="Detected code that calls device_registry._async_update_device from a thread.",
     ):
         await hass.async_add_executor_job(
             partial(
