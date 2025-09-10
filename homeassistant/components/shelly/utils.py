@@ -57,6 +57,7 @@ from .const import (
     COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
+    DEVICE_UNIT_MAP,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -65,7 +66,6 @@ from .const import (
     GEN2_RELEASE_URL,
     LOGGER,
     MAX_SCRIPT_SIZE,
-    ROLE_TO_UNIT_MAP,
     RPC_INPUTS_EVENTS_TYPES,
     SHAIR_MAX_WORK_HOURS,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -660,7 +660,7 @@ def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
     If the unit is not set, the device sends an empty string
     """
     unit = config["meta"]["ui"]["unit"]
-    return ROLE_TO_UNIT_MAP.get(unit, unit) if unit else None
+    return DEVICE_UNIT_MAP.get(unit, unit) if unit else None
 
 
 @callback

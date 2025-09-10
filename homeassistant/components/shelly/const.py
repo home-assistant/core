@@ -295,7 +295,7 @@ ROLE_TO_DEVICE_CLASS_MAP = {
 
 # Mapping for units that require conversion to a Home Assistant recognized unit
 # e.g. "m3/min" to "m³/min"
-ROLE_TO_UNIT_MAP = {
+DEVICE_UNIT_MAP = {
     "m3/min": UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
 }
 
