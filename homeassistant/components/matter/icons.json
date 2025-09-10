@@ -57,6 +57,15 @@
       "current_phase": {
         "default": "mdi:state-machine"
       },
+      "eve_weather_trend": {
+        "default": "mdi:weather",
+        "state": {
+          "sunny": "mdi:weather-sunny",
+          "cloudy": "mdi:weather-cloudy",
+          "rainy": "mdi:weather-rainy",
+          "stormy": "mdi:weather-windy"
+        }
+      },
       "air_quality": {
         "default": "mdi:air-filter"
       },

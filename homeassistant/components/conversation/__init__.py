@@ -40,6 +40,7 @@ from .chat_log import (
     ConverseError,
     SystemContent,
     ToolResultContent,
+    ToolResultContentDeltaDict,
     UserContent,
     async_get_chat_log,
 )
@@ -79,6 +80,7 @@ __all__ = [
     "ConverseError",
     "SystemContent",
     "ToolResultContent",
+    "ToolResultContentDeltaDict",
     "UserContent",
     "async_conversation_trace_append",
     "async_converse",

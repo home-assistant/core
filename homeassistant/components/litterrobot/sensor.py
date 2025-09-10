@@ -170,7 +170,17 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda robot: robot.food_level,
-        )
+        ),
+        RobotSensorEntityDescription[FeederRobot](
+            key="last_feeding",
+            translation_key="last_feeding",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            value_fn=(
+                lambda robot: (
+                    robot.last_feeding["timestamp"] if robot.last_feeding else None
+                )
+            ),
+        ),
     ],
 }
 

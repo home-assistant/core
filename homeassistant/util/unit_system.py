@@ -281,6 +281,7 @@ METRIC_SYSTEM = UnitSystem(
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        ("gas", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert non-metric precipitation
         ("precipitation", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
         # Convert non-metric precipitation intensity
@@ -312,10 +313,12 @@ METRIC_SYSTEM = UnitSystem(
         ("volume", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("volume", UnitOfVolume.FLUID_OUNCES): UnitOfVolume.MILLILITERS,
         ("volume", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
+        ("volume", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert non-metric volumes of water meters
         ("water", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
+        ("water", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert wind speeds except knots to km/h
         **{
             ("wind_speed", unit): UnitOfSpeed.KILOMETERS_PER_HOUR

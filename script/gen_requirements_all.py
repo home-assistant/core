@@ -135,7 +135,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.9.0
+anyio==4.10.0
 h11==0.16.0
 httpcore==1.0.9
 
@@ -194,7 +194,7 @@ poetry==1000000000.0.0
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
-charset-normalizer==3.4.0
+charset-normalizer==3.4.3
 
 # dacite: Ensure we have a version that is able to handle type unions for
 # NAM, Brother, and GIOS.
@@ -246,6 +246,12 @@ num2words==0.5.14
 # downgraded or upgraded by custom components
 # This ensures all use the same version
 pymodbus==3.11.1
+
+# Some packages don't support gql 4.0.0 yet
+gql<4.0.0
+
+# Pin pytest-rerunfailures to prevent accidental breaks
+pytest-rerunfailures==16.0.1
 """
 
 GENERATED_MESSAGE = (
