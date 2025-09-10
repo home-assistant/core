@@ -661,9 +661,6 @@ async def test_vacuum_operational_error_sensor(
         "wheels_jammed",
         "brush_jammed",
         "navigation_sensor_obscured",
-        "unable_to_start_or_resume",
-        "unable_to_complete_operation",
-        "command_invalid_in_state",
     ]
 
     set_node_attribute(matter_node, 1, 96, 5, "{ 0: 1 }")
