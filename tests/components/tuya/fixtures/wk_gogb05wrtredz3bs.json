@@ -1,0 +1,195 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "smart thermostats",
+  "category": "wk",
+  "product_id": "gogb05wrtredz3bs",
+  "product_name": "smart thermostats",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-01-23T13:07:21+00:00",
+  "create_time": "2025-01-23T13:07:21+00:00",
+  "update_time": "2025-01-23T13:07:21+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "manual"]
+      }
+    },
+    "frost": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 5,
+        "max": 90,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "upper_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 30,
+        "max": 90,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "lower_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 5,
+        "max": 20,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_correction": {
+      "type": "Integer",
+      "value": {
+        "unit": "摄氏度",
+        "min": -9,
+        "max": 9,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sensor_choose": {
+      "type": "Enum",
+      "value": {
+        "range": ["in", "out"]
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "manual"]
+      }
+    },
+    "frost": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 5,
+        "max": 90,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "upper_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 30,
+        "max": 90,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 0,
+        "max": 900,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "lower_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 5,
+        "max": 20,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_correction": {
+      "type": "Integer",
+      "value": {
+        "unit": "摄氏度",
+        "min": -9,
+        "max": 9,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "valve_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["open", "close"]
+      }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sensor_choose": {
+      "type": "Enum",
+      "value": {
+        "range": ["in", "out"]
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["e1", "e2", "e3"]
+      }
+    }
+  },
+  "status": {
+    "switch": false,
+    "mode": "manual",
+    "frost": true,
+    "temp_set": 12,
+    "upper_temp": 30,
+    "temp_current": 215,
+    "lower_temp": 5,
+    "temp_correction": -2,
+    "valve_state": "close",
+    "factory_reset": false,
+    "child_lock": false,
+    "sensor_choose": "in",
+    "fault": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

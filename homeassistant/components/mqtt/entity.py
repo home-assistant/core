@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_MODEL_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    CONF_URL,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import Event, HassJobType, HomeAssistant, callback
@@ -74,6 +75,7 @@ from .const import (
     CONF_AVAILABILITY_TOPIC,
     CONF_CONFIGURATION_URL,
     CONF_CONNECTIONS,
+    CONF_DEFAULT_ENTITY_ID,
     CONF_ENABLED_BY_DEFAULT,
     CONF_ENCODING,
     CONF_ENTITY_PICTURE,
@@ -83,6 +85,7 @@ from .const import (
     CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
     CONF_OBJECT_ID,
+    CONF_ORIGIN,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
@@ -248,6 +251,58 @@ def async_setup_entity_entry_helper(
     mqtt_data = hass.data[DATA_MQTT]
 
     @callback
+    def _async_migrate_subentry(
+        config: dict[str, Any], raw_config: dict[str, Any], migration_type: str
+    ) -> bool:
+        """Start a repair flow to allow migration of MQTT device subentries.
+
+        If a YAML config or discovery is detected using the ID
+        of an existing mqtt subentry, and exported configuration is detected,
+        and a repair flow is offered to migrate the subentry.
+        """
+        if (
+            CONF_DEVICE in config
+            and CONF_IDENTIFIERS in config[CONF_DEVICE]
+            and config[CONF_DEVICE][CONF_IDENTIFIERS]
+            and (subentry_id := config[CONF_DEVICE][CONF_IDENTIFIERS][0])
+            in entry.subentries
+        ):
+            name: str = config[CONF_DEVICE].get(CONF_NAME, "-")
+            if migration_type == "subentry_migration_yaml":
+                _LOGGER.info(
+                    "Starting migration repair flow for MQTT subentry %s "
+                    "for migration to YAML config: %s",
+                    subentry_id,
+                    raw_config,
+                )
+            elif migration_type == "subentry_migration_discovery":
+                _LOGGER.info(
+                    "Starting migration repair flow for MQTT subentry %s "
+                    "for migration to configuration via MQTT discovery: %s",
+                    subentry_id,
+                    raw_config,
+                )
+            async_create_issue(
+                hass,
+                DOMAIN,
+                subentry_id,
+                issue_domain=DOMAIN,
+                is_fixable=True,
+                severity=IssueSeverity.WARNING,
+                learn_more_url=learn_more_url(domain),
+                data={
+                    "entry_id": entry.entry_id,
+                    "subentry_id": subentry_id,
+                    "name": name,
+                },
+                translation_placeholders={"name": name},
+                translation_key=migration_type,
+            )
+            return True
+
+        return False
+
+    @callback
     def _async_setup_entity_entry_from_discovery(
         discovery_payload: MQTTDiscoveryPayload,
     ) -> None:
@@ -263,9 +318,22 @@ def async_setup_entity_entry_helper(
                 entity_class = schema_class_mapping[config[CONF_SCHEMA]]
             if TYPE_CHECKING:
                 assert entity_class is not None
-            async_add_entities(
-                [entity_class(hass, config, entry, discovery_payload.discovery_data)]
-            )
+            if _async_migrate_subentry(
+                config, discovery_payload, "subentry_migration_discovery"
+            ):
+                _handle_discovery_failure(hass, discovery_payload)
+                _LOGGER.debug(
+                    "MQTT discovery skipped, as device exists in subentry, "
+                    "and repair flow must be completed first"
+                )
+            else:
+                async_add_entities(
+                    [
+                        entity_class(
+                            hass, config, entry, discovery_payload.discovery_data
+                        )
+                    ]
+                )
         except vol.Invalid as err:
             _handle_discovery_failure(hass, discovery_payload)
             async_handle_schema_error(discovery_payload, err)
@@ -346,6 +414,11 @@ def async_setup_entity_entry_helper(
                     entity_class = schema_class_mapping[config[CONF_SCHEMA]]
                 if TYPE_CHECKING:
                     assert entity_class is not None
+                if _async_migrate_subentry(
+                    config, yaml_config, "subentry_migration_yaml"
+                ):
+                    continue
+
                 entities.append(entity_class(hass, config, entry, None))
             except vol.Invalid as exc:
                 error = str(exc)
@@ -387,16 +460,6 @@ def async_setup_entity_entry_helper(
     # discover manual configured MQTT items
     mqtt_data.reload_handlers[domain] = _async_setup_entities
     _async_setup_entities()
-
-
-def init_entity_id_from_config(
-    hass: HomeAssistant, entity: Entity, config: ConfigType, entity_id_format: str
-) -> None:
-    """Set entity_id from object_id if defined in config."""
-    if CONF_OBJECT_ID in config:
-        entity.entity_id = async_generate_entity_id(
-            entity_id_format, config[CONF_OBJECT_ID], None, hass
-        )
 
 
 class MqttAttributesMixin(Entity):
@@ -1312,6 +1375,7 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
+    _update_registry_entity_id: str | None = None
 
     def __init__(
         self,
@@ -1345,14 +1409,84 @@ class MqttEntity(
         ensure_via_device_exists(self.hass, self.device_info, self._config_entry)
 
     def _init_entity_id(self) -> None:
-        """Set entity_id from object_id if defined in config."""
-        init_entity_id_from_config(
-            self.hass, self, self._config, self._entity_id_format
+        """Set entity_id from default_entity_id if defined in config."""
+        object_id: str
+        default_entity_id: str | None
+        # Setting the default entity_id through the CONF_OBJECT_ID is deprecated
+        # Support will be removed with HA Core 2026.4
+        if (
+            CONF_DEFAULT_ENTITY_ID not in self._config
+            and CONF_OBJECT_ID not in self._config
+        ):
+            return
+        if (default_entity_id := self._config.get(CONF_DEFAULT_ENTITY_ID)) is None:
+            object_id = self._config[CONF_OBJECT_ID]
+        else:
+            _, _, object_id = default_entity_id.partition(".")
+        self.entity_id = async_generate_entity_id(
+            self._entity_id_format, object_id, None, self.hass
         )
+        if CONF_OBJECT_ID in self._config:
+            domain = self.entity_id.split(".")[0]
+            if not self._discovery:
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    self.entity_id,
+                    issue_domain=DOMAIN,
+                    is_fixable=False,
+                    breaks_in_ha_version="2026.4",
+                    severity=IssueSeverity.WARNING,
+                    learn_more_url=f"{learn_more_url(domain)}#default_enity_id",
+                    translation_placeholders={
+                        "entity_id": self.entity_id,
+                        "object_id": self._config[CONF_OBJECT_ID],
+                        "domain": domain,
+                    },
+                    translation_key="deprecated_object_id",
+                )
+            else:
+                if CONF_ORIGIN in self._config:
+                    origin_name = self._config[CONF_ORIGIN][CONF_NAME]
+                    url = self._config[CONF_ORIGIN].get(CONF_URL)
+                    origin = f"[{origin_name}]({url})" if url else origin_name
+                else:
+                    origin = "the integration"
+                _LOGGER.warning(
+                    "The configuration for entity %s uses the deprecated option "
+                    "`object_id` to set the default entity id. Replace the "
+                    '`"object_id": "%s"` option with `"default_entity_id": '
+                    '"%s"` in your published discovery configuration to fix this '
+                    "issue, or contact the maintainer of %s that published this config "
+                    "to fix this. This will stop working in Home Assistant Core 2026.4",
+                    self.entity_id,
+                    self._config[CONF_OBJECT_ID],
+                    f"{domain}.{self._config[CONF_OBJECT_ID]}",
+                    origin,
+                )
+
+        if self.unique_id is None:
+            return
+        # Check for previous deleted entities
+        entity_registry = er.async_get(self.hass)
+        entity_platform = self._entity_id_format.split(".")[0]
+        if (
+            deleted_entry := entity_registry.deleted_entities.get(
+                (entity_platform, DOMAIN, self.unique_id)
+            )
+        ) and deleted_entry.entity_id != self.entity_id:
+            #  Plan to update the entity_id basis on `object_id` if a deleted entity was found
+            self._update_registry_entity_id = self.entity_id
 
     @final
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
+        if self._update_registry_entity_id is not None:
+            entity_registry = er.async_get(self.hass)
+            entity_registry.async_update_entity(
+                self.entity_id, new_entity_id=self._update_registry_entity_id
+            )
+
         await super().async_added_to_hass()
         self._subscriptions = {}
         self._prepare_subscribe_topics()

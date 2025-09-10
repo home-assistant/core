@@ -41,5 +41,5 @@
   "iot_class": "local_push",
   "loggers": ["switchbot"],
   "quality_scale": "gold",
-  "requirements": ["PySwitchbot==0.68.1"]
+  "requirements": ["PySwitchbot==0.69.0"]
 }

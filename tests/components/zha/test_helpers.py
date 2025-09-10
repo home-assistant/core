@@ -71,12 +71,14 @@ async def test_zcl_schema_conversions(hass: HomeAssistant) -> None:
             "options": ["Execute if off present"],
             "name": "options_mask",
             "optional": True,
+            "required": False,
         },
         {
             "type": "multi_select",
             "options": ["Execute if off"],
             "name": "options_override",
             "optional": True,
+            "required": False,
         },
     ]
     vol_schema = voluptuous_serialize.convert(

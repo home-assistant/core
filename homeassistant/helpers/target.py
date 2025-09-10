@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import dataclasses
+import logging
 from logging import Logger
-from typing import TypeGuard
+from typing import Any, TypeGuard
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -14,7 +16,14 @@ from homeassistant.const import (
     ATTR_LABEL_ID,
     ENTITY_MATCH_NONE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+)
+from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     area_registry as ar,
@@ -25,7 +34,18 @@ from . import (
     group,
     label_registry as lr,
 )
+from .event import async_track_state_change_event
 from .typing import ConfigType
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass(slots=True, frozen=True)
+class TargetStateChangedData:
+    """Data for state change events related to targets."""
+
+    state_change_event: Event[EventStateChangedData]
+    targeted_entity_ids: set[str]
 
 
 def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
@@ -238,3 +258,107 @@ def async_extract_referenced_entity_ids(
     )
 
     return selected
+
+
+class TargetStateChangeTracker:
+    """Helper class to manage state change tracking for targets."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        selector_data: TargetSelectorData,
+        action: Callable[[TargetStateChangedData], Any],
+        entity_filter: Callable[[set[str]], set[str]],
+    ) -> None:
+        """Initialize the state change tracker."""
+        self._hass = hass
+        self._selector_data = selector_data
+        self._action = action
+        self._entity_filter = entity_filter
+
+        self._state_change_unsub: CALLBACK_TYPE | None = None
+        self._registry_unsubs: list[CALLBACK_TYPE] = []
+
+    def async_setup(self) -> Callable[[], None]:
+        """Set up the state change tracking."""
+        self._setup_registry_listeners()
+        self._track_entities_state_change()
+        return self._unsubscribe
+
+    def _track_entities_state_change(self) -> None:
+        """Set up state change tracking for currently selected entities."""
+        selected = async_extract_referenced_entity_ids(
+            self._hass, self._selector_data, expand_group=False
+        )
+
+        tracked_entities = self._entity_filter(
+            selected.referenced.union(selected.indirectly_referenced)
+        )
+
+        @callback
+        def state_change_listener(event: Event[EventStateChangedData]) -> None:
+            """Handle state change events."""
+            if (
+                event.data["entity_id"] in selected.referenced
+                or event.data["entity_id"] in selected.indirectly_referenced
+            ):
+                self._action(TargetStateChangedData(event, tracked_entities))
+
+        _LOGGER.debug("Tracking state changes for entities: %s", tracked_entities)
+        self._state_change_unsub = async_track_state_change_event(
+            self._hass, tracked_entities, state_change_listener
+        )
+
+    def _setup_registry_listeners(self) -> None:
+        """Set up listeners for registry changes that require resubscription."""
+
+        @callback
+        def resubscribe_state_change_event(event: Event[Any] | None = None) -> None:
+            """Resubscribe to state change events when registry changes."""
+            if self._state_change_unsub:
+                self._state_change_unsub()
+            self._track_entities_state_change()
+
+        # Subscribe to registry updates that can change the entities to track:
+        # - Entity registry: entity added/removed; entity labels changed; entity area changed.
+        # - Device registry: device labels changed; device area changed.
+        # - Area registry: area floor changed.
+        #
+        # We don't track other registries (like floor or label registries) because their
+        # changes don't affect which entities are tracked.
+        self._registry_unsubs = [
+            self._hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED, resubscribe_state_change_event
+            ),
+            self._hass.bus.async_listen(
+                dr.EVENT_DEVICE_REGISTRY_UPDATED, resubscribe_state_change_event
+            ),
+            self._hass.bus.async_listen(
+                ar.EVENT_AREA_REGISTRY_UPDATED, resubscribe_state_change_event
+            ),
+        ]
+
+    def _unsubscribe(self) -> None:
+        """Unsubscribe from all events."""
+        for registry_unsub in self._registry_unsubs:
+            registry_unsub()
+        self._registry_unsubs.clear()
+        if self._state_change_unsub:
+            self._state_change_unsub()
+            self._state_change_unsub = None
+
+
+def async_track_target_selector_state_change_event(
+    hass: HomeAssistant,
+    target_selector_config: ConfigType,
+    action: Callable[[TargetStateChangedData], Any],
+    entity_filter: Callable[[set[str]], set[str]] = lambda x: x,
+) -> CALLBACK_TYPE:
+    """Track state changes for entities referenced directly or indirectly in a target selector."""
+    selector_data = TargetSelectorData(target_selector_config)
+    if not selector_data.has_any_selector:
+        raise HomeAssistantError(
+            f"Target selector {target_selector_config} does not have any selectors defined"
+        )
+    tracker = TargetStateChangeTracker(hass, selector_data, action, entity_filter)
+    return tracker.async_setup()

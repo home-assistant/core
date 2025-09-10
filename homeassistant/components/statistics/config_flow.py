@@ -161,6 +161,8 @@ OPTIONS_FLOW = {
 class StatisticsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for Statistics."""
 
+    MINOR_VERSION = 2
+
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 
@@ -234,15 +236,15 @@ async def ws_start_preview(
         )
     preview_entity = StatisticsSensor(
         hass,
-        entity_id,
-        name,
-        None,
-        state_characteristic,
-        sampling_size,
-        max_age,
-        msg["user_input"].get(CONF_KEEP_LAST_SAMPLE),
-        msg["user_input"].get(CONF_PRECISION),
-        msg["user_input"].get(CONF_PERCENTILE),
+        source_entity_id=entity_id,
+        name=name,
+        unique_id=None,
+        state_characteristic=state_characteristic,
+        samples_max_buffer_size=sampling_size,
+        samples_max_age=max_age,
+        samples_keep_last=msg["user_input"].get(CONF_KEEP_LAST_SAMPLE),
+        precision=msg["user_input"].get(CONF_PRECISION),
+        percentile=msg["user_input"].get(CONF_PERCENTILE),
     )
     preview_entity.hass = hass
 

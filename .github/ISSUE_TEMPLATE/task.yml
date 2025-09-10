@@ -21,7 +21,7 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: Task description
+      label: Description
       description: |
         Provide a clear and detailed description of the task that needs to be accomplished.
 
@@ -43,9 +43,11 @@ body:
 
         Include links to related issues, research, prototypes, roadmap opportunities etc.
       placeholder: |
-        - Roadmap opportunity: [links]
+        - Roadmap opportunity: [link]
+        - Epic: [link]
         - Feature request: [link]
         - Technical design documents: [link]
         - Prototype/mockup: [link]
+        - Dependencies: [links]
     validations:
       required: false

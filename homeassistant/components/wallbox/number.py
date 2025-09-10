@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from typing import cast
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -24,7 +23,7 @@ from .const import (
     CHARGER_PART_NUMBER_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
 )
-from .coordinator import WallboxCoordinator
+from .coordinator import WallboxConfigEntry, WallboxCoordinator
 from .entity import WallboxEntity
 
 
@@ -79,7 +78,7 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WallboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox number entities in HASS."""
@@ -103,7 +102,7 @@ class WallboxNumber(WallboxEntity, NumberEntity):
     def __init__(
         self,
         coordinator: WallboxCoordinator,
-        entry: ConfigEntry,
+        entry: WallboxConfigEntry,
         description: WallboxNumberEntityDescription,
     ) -> None:
         """Initialize a Wallbox number entity."""

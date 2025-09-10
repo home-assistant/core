@@ -12,7 +12,6 @@ from hole.exceptions import HoleConnectionError, HoleError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_API_VERSION,
     CONF_HOST,
     CONF_LOCATION,
     CONF_NAME,
@@ -52,13 +51,13 @@ class PiHoleData:
 
     api: Hole
     coordinator: DataUpdateCoordinator[None]
+    api_version: int
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bool:
     """Set up Pi-hole entry."""
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
-    version = entry.data.get(CONF_API_VERSION)
 
     # remove obsolet CONF_STATISTICS_ONLY from entry.data
     if CONF_STATISTICS_ONLY in entry.data:
@@ -100,15 +99,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
 
     await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-    if version is None:
-        _LOGGER.debug(
-            "No API version specified, determining Pi-hole API version for %s", host
-        )
-        version = await determine_api_version(hass, dict(entry.data))
-        _LOGGER.debug("Pi-hole API version determined: %s", version)
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_API_VERSION: version}
-        )
+    _LOGGER.debug("Determining Pi-hole API version for %s", host)
+    version = await determine_api_version(hass, dict(entry.data))
+    _LOGGER.debug("Pi-hole API version determined: %s", version)
+
     # Once API version 5 is deprecated we should instantiate Hole directly
     api = api_by_version(hass, dict(entry.data), version)
 
@@ -151,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
 
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = PiHoleData(api, coordinator)
+    entry.runtime_data = PiHoleData(api, coordinator, version)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -223,6 +217,13 @@ async def determine_api_version(
         _LOGGER.debug(
             "Connection to %s failed: %s, trying API version 5", holeV6.base_url, ex_v6
         )
+    else:
+        # It seems that occasionally the auth can succeed unexpectedly when there is a valid session
+        _LOGGER.warning(
+            "Authenticated with %s through v6 API, but succeeded with an incorrect password. This is a known bug",
+            holeV6.base_url,
+        )
+        return 6
     holeV5 = api_by_version(hass, entry, 5, password="wrong_token")
     try:
         await holeV5.get_data()

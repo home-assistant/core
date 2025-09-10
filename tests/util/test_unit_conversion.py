@@ -8,11 +8,13 @@ from itertools import chain
 import pytest
 
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfApparentPower,
     UnitOfArea,
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
@@ -27,6 +29,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfReactiveEnergy,
+    UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -37,6 +40,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
@@ -54,6 +58,7 @@ from homeassistant.util.unit_conversion import (
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
+    ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -82,9 +87,11 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         EnergyConverter,
         InformationConverter,
         MassConverter,
+        ApparentPowerConverter,
         PowerConverter,
         PressureConverter,
         ReactiveEnergyConverter,
+        ReactivePowerConverter,
         SpeedConverter,
         TemperatureConverter,
         UnitlessRatioConverter,
@@ -96,6 +103,11 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
+    ApparentPowerConverter: (
+        UnitOfApparentPower.MILLIVOLT_AMPERE,
+        UnitOfApparentPower.VOLT_AMPERE,
+        1000,
+    ),
     AreaConverter: (UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_METERS, 0.000001),
     BloodGlucoseConcentrationConverter: (
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
@@ -144,6 +156,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
         1000,
     ),
+    ReactivePowerConverter: (
+        UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+        UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        1000,
+    ),
     SpeedConverter: (
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.MILES_PER_HOUR,
@@ -167,6 +184,32 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
 _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
+    ApparentPowerConverter: [
+        (
+            10,
+            UnitOfApparentPower.MILLIVOLT_AMPERE,
+            0.01,
+            UnitOfApparentPower.VOLT_AMPERE,
+        ),
+        (
+            10,
+            UnitOfApparentPower.MILLIVOLT_AMPERE,
+            0.00001,
+            UnitOfApparentPower.KILO_VOLT_AMPERE,
+        ),
+        (
+            10,
+            UnitOfApparentPower.VOLT_AMPERE,
+            0.01,
+            UnitOfApparentPower.KILO_VOLT_AMPERE,
+        ),
+        (
+            10,
+            UnitOfApparentPower.KILO_VOLT_AMPERE,
+            10000,
+            UnitOfApparentPower.VOLT_AMPERE,
+        ),
+    ],
     AreaConverter: [
         # Square Meters to other units
         (5, UnitOfArea.SQUARE_METERS, 50000, UnitOfArea.SQUARE_CENTIMETERS),
@@ -665,6 +708,32 @@ _CONVERTED_VALUE: dict[
             UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
         ),
     ],
+    ReactivePowerConverter: [
+        (
+            10,
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+            10000,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        ),
+        (
+            10,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+            0.01,
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+        ),
+        (
+            10,
+            UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+            0.01,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        ),
+        (
+            10,
+            UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+            0.00001,
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+        ),
+    ],
     SpeedConverter: [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h
         (5, UnitOfSpeed.KILOMETERS_PER_HOUR, 3.106856, UnitOfSpeed.MILES_PER_HOUR),
@@ -762,6 +831,13 @@ _CONVERTED_VALUE: dict[
             2000,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
+        # 3 g/m³ = 3000 mg/m³
+        (
+            3,
+            CONCENTRATION_GRAMS_PER_CUBIC_METER,
+            3000,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
     ],
     VolumeConverter: [
         (5, UnitOfVolume.LITERS, 1.32086, UnitOfVolume.GALLONS),
@@ -803,6 +879,11 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 478753.24, UnitOfVolume.FLUID_OUNCES),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 3740.26, UnitOfVolume.GALLONS),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 14158.42, UnitOfVolume.LITERS),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 5000, UnitOfVolume.CUBIC_FEET),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 141.5842, UnitOfVolume.CUBIC_METERS),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 4787532.4, UnitOfVolume.FLUID_OUNCES),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 37402.6, UnitOfVolume.GALLONS),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 141584.2, UnitOfVolume.LITERS),
     ],
     VolumeFlowRateConverter: [
         (
@@ -887,6 +968,12 @@ _CONVERTED_VALUE: dict[
             3.6,
             UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
             1,
+            UnitOfVolumeFlowRate.LITERS_PER_SECOND,
+        ),
+        (
+            0.6,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
+            10,
             UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         ),
     ],

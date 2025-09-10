@@ -2,9 +2,6 @@
 
 import pytest
 
-# TODO(abmantis): is this import needed?
-# To prevent circular import when running just this file
-import homeassistant.components  # noqa: F401
 from homeassistant.components.group import Group
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -17,22 +14,49 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
+    label_registry as lr,
     target,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
+    MockConfigEntry,
     RegistryEntryWithDefaults,
     mock_area_registry,
     mock_device_registry,
     mock_registry,
 )
+
+
+async def set_states_and_check_target_events(
+    hass: HomeAssistant,
+    events: list[target.TargetStateChangedData],
+    state: str,
+    entities_to_set_state: list[str],
+    entities_to_assert_change: list[str],
+) -> None:
+    """Toggle the state entities and check for events."""
+    for entity_id in entities_to_set_state:
+        hass.states.async_set(entity_id, state)
+    await hass.async_block_till_done()
+
+    assert len(events) == len(entities_to_assert_change)
+    entities_seen = set()
+    for event in events:
+        state_change_event = event.state_change_event
+        entities_seen.add(state_change_event.data["entity_id"])
+        assert state_change_event.data["new_state"].state == state
+        assert event.targeted_entity_ids == set(entities_to_assert_change)
+    assert entities_seen == set(entities_to_assert_change)
+    events.clear()
 
 
 @pytest.fixture
@@ -457,3 +481,268 @@ async def test_extract_referenced_entity_ids(
         )
         == expected_selected
     )
+
+
+async def test_async_track_target_selector_state_change_event_empty_selector(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_track_target_selector_state_change_event with empty selector."""
+
+    @callback
+    def state_change_callback(event):
+        """Handle state change events."""
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        target.async_track_target_selector_state_change_event(
+            hass, {}, state_change_callback
+        )
+    assert str(excinfo.value) == (
+        "Target selector {} does not have any selectors defined"
+    )
+
+
+async def test_async_track_target_selector_state_change_event(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_track_target_selector_state_change_event with multiple targets."""
+    events: list[target.TargetStateChangedData] = []
+
+    @callback
+    def state_change_callback(event: target.TargetStateChangedData):
+        """Handle state change events."""
+        events.append(event)
+
+    last_state = STATE_OFF
+
+    async def set_states_and_check_events(
+        entities_to_set_state: list[str], entities_to_assert_change: list[str]
+    ) -> None:
+        """Toggle the state entities and check for events."""
+        nonlocal last_state
+        last_state = STATE_ON if last_state == STATE_OFF else STATE_OFF
+        await set_states_and_check_target_events(
+            hass, events, last_state, entities_to_set_state, entities_to_assert_change
+        )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    device_reg = dr.async_get(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device_1")},
+    )
+
+    untargeted_device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "area_device")},
+    )
+
+    entity_reg = er.async_get(hass)
+    device_entity = entity_reg.async_get_or_create(
+        domain="light",
+        platform="test",
+        unique_id="device_light",
+        device_id=device_entry.id,
+    ).entity_id
+
+    untargeted_device_entity = entity_reg.async_get_or_create(
+        domain="light",
+        platform="test",
+        unique_id="area_device_light",
+        device_id=untargeted_device_entry.id,
+    ).entity_id
+
+    untargeted_entity = entity_reg.async_get_or_create(
+        domain="light",
+        platform="test",
+        unique_id="untargeted_light",
+    ).entity_id
+
+    targeted_entity = "light.test_light"
+
+    targeted_entities = [targeted_entity, device_entity]
+    await set_states_and_check_events(targeted_entities, [])
+
+    label = lr.async_get(hass).async_create("Test Label").name
+    area = ar.async_get(hass).async_create("Test Area").id
+    floor = fr.async_get(hass).async_create("Test Floor").floor_id
+
+    selector_config = {
+        ATTR_ENTITY_ID: targeted_entity,
+        ATTR_DEVICE_ID: device_entry.id,
+        ATTR_AREA_ID: area,
+        ATTR_FLOOR_ID: floor,
+        ATTR_LABEL_ID: label,
+    }
+    unsub = target.async_track_target_selector_state_change_event(
+        hass, selector_config, state_change_callback
+    )
+
+    # Test directly targeted entity and device
+    await set_states_and_check_events(targeted_entities, targeted_entities)
+
+    # Add new entity to the targeted device -> should trigger on state change
+    device_entity_2 = entity_reg.async_get_or_create(
+        domain="light",
+        platform="test",
+        unique_id="device_light_2",
+        device_id=device_entry.id,
+    ).entity_id
+
+    targeted_entities = [targeted_entity, device_entity, device_entity_2]
+    await set_states_and_check_events(targeted_entities, targeted_entities)
+
+    # Test untargeted entity -> should not trigger
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], targeted_entities
+    )
+
+    # Add label to untargeted entity -> should trigger now
+    entity_reg.async_update_entity(untargeted_entity, labels={label})
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], [*targeted_entities, untargeted_entity]
+    )
+
+    # Remove label from untargeted entity -> should not trigger anymore
+    entity_reg.async_update_entity(untargeted_entity, labels={})
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], targeted_entities
+    )
+
+    # Add area to untargeted entity -> should trigger now
+    entity_reg.async_update_entity(untargeted_entity, area_id=area)
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], [*targeted_entities, untargeted_entity]
+    )
+
+    # Remove area from untargeted entity -> should not trigger anymore
+    entity_reg.async_update_entity(untargeted_entity, area_id=None)
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], targeted_entities
+    )
+
+    # Add area to untargeted device -> should trigger on state change
+    device_reg.async_update_device(untargeted_device_entry.id, area_id=area)
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_device_entity],
+        [*targeted_entities, untargeted_device_entity],
+    )
+
+    # Remove area from untargeted device -> should not trigger anymore
+    device_reg.async_update_device(untargeted_device_entry.id, area_id=None)
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_device_entity], targeted_entities
+    )
+
+    # Set the untargeted area on the untargeted entity -> should not trigger
+    untracked_area = ar.async_get(hass).async_create("Untargeted Area").id
+    entity_reg.async_update_entity(untargeted_entity, area_id=untracked_area)
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], targeted_entities
+    )
+
+    # Set targeted floor on the untargeted area -> should trigger now
+    ar.async_get(hass).async_update(untracked_area, floor_id=floor)
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity],
+        [*targeted_entities, untargeted_entity],
+    )
+
+    # Remove untargeted area from targeted floor -> should not trigger anymore
+    ar.async_get(hass).async_update(untracked_area, floor_id=None)
+    await set_states_and_check_events(
+        [*targeted_entities, untargeted_entity], targeted_entities
+    )
+
+    # After unsubscribing, changes should not trigger
+    unsub()
+    await set_states_and_check_events(targeted_entities, [])
+
+
+async def test_async_track_target_selector_state_change_event_filter(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_track_target_selector_state_change_event with entity filter."""
+    events: list[target.TargetStateChangedData] = []
+
+    filtered_entity = ""
+
+    @callback
+    def entity_filter(entity_ids: set[str]) -> set[str]:
+        return {entity_id for entity_id in entity_ids if entity_id != filtered_entity}
+
+    @callback
+    def state_change_callback(event: target.TargetStateChangedData):
+        """Handle state change events."""
+        events.append(event)
+
+    last_state = STATE_OFF
+
+    async def set_states_and_check_events(
+        entities_to_set_state: list[str], entities_to_assert_change: list[str]
+    ) -> None:
+        """Toggle the state entities and check for events."""
+        nonlocal last_state
+        last_state = STATE_ON if last_state == STATE_OFF else STATE_OFF
+        await set_states_and_check_target_events(
+            hass, events, last_state, entities_to_set_state, entities_to_assert_change
+        )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    entity_reg = er.async_get(hass)
+
+    label = lr.async_get(hass).async_create("Test Label").name
+    label_entity = entity_reg.async_get_or_create(
+        domain="light",
+        platform="test",
+        unique_id="label_light",
+    ).entity_id
+    entity_reg.async_update_entity(label_entity, labels={label})
+
+    targeted_entity = "light.test_light"
+
+    targeted_entities = [targeted_entity, label_entity]
+    await set_states_and_check_events(targeted_entities, [])
+
+    selector_config = {
+        ATTR_ENTITY_ID: targeted_entity,
+        ATTR_LABEL_ID: label,
+    }
+    unsub = target.async_track_target_selector_state_change_event(
+        hass, selector_config, state_change_callback, entity_filter
+    )
+
+    await set_states_and_check_events(
+        targeted_entities, [targeted_entity, label_entity]
+    )
+
+    filtered_entity = targeted_entity
+    # Fire an event so that the targeted entities are re-evaluated
+    hass.bus.async_fire(
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        {
+            "action": "update",
+            "entity_id": "light.other",
+            "changes": {},
+        },
+    )
+    await set_states_and_check_events([targeted_entity, label_entity], [label_entity])
+
+    filtered_entity = label_entity
+    # Fire an event so that the targeted entities are re-evaluated
+    hass.bus.async_fire(
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        {
+            "action": "update",
+            "entity_id": "light.other",
+            "changes": {},
+        },
+    )
+    await set_states_and_check_events(
+        [targeted_entity, label_entity], [targeted_entity]
+    )
+
+    unsub()
