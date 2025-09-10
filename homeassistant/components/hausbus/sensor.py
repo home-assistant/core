@@ -255,7 +255,7 @@ class HausbusSensor(HausbusEntity, SensorEntity):
 
     @staticmethod
     def getTimeIntervalMapping(key):
-        """Lookup-Funktion, die zu einem Internal Base und Value liefert oder zum Tupel den Value"""
+        """Lookup-Funktion, die zu einem Internal Base und Value liefert oder zum Tupel den Value."""
 
         mapping = {
             "1 second": (1, 1),
@@ -522,7 +522,7 @@ class HausbusHumiditySensor(HausbusSensor):
     async def async_humidity_sensor_set_configuration(
         self, correction: float, auto_event_diff: float, manual_event_interval: str
     ):
-        """Sets configuration of a humidity sensor"""
+        """Sets configuration of a humidity sensor."""
         LOGGER.debug(
             "async_humidity_sensor_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s", correction, auto_event_diff, manual_event_interval
         )
@@ -625,7 +625,7 @@ class HausbusRfidSensor(HausbusSensor):
         self._attr_native_value = None
 
     def get_hardware_status(self) -> None:
-        """Overriding base class to suppress getStatus calls"""
+        """Overriding base class to suppress getStatus calls."""
 
     def handle_event(self, data: Any) -> None:
         """Handle rfid events from Haus-Bus."""
