@@ -663,9 +663,9 @@ async def test_vacuum_operational_error_sensor(
         "navigation_sensor_obscured",
     ]
 
-    set_node_attribute(matter_node, 1, 96, 5, {0: 1})
+    set_node_attribute(matter_node, 1, 96, 5, {0: 66})
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.mock_vacuum_operational_error")
     assert state
-    assert state.state == "unable_to_start_or_resume"
+    assert state.state == "dust_bin_missing"
