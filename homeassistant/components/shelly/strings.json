@@ -218,7 +218,7 @@
           "opening": "[%key:common::state::opening%]"
         }
       },
-      "illuminance_illumination": {
+      "illuminance_level": {
         "state": {
           "dark": "Dark",
           "twilight": "Twilight",
