@@ -1,0 +1,84 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "HL400",
+  "category": "kj",
+  "product_id": "CAjWAxBUZt7QZHfz",
+  "product_name": "air purifier",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-05-13T11:02:55+00:00",
+  "create_time": "2025-05-13T11:02:55+00:00",
+  "update_time": "2025-05-13T11:02:55+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "speed": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2", "3"]
+      }
+    },
+    "anion": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "uv": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "uv": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "anion": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "speed": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2", "3"]
+      }
+    },
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "pm25": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 500,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch": true,
+    "lock": false,
+    "anion": true,
+    "speed": 3,
+    "uv": true,
+    "pm25": 45
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -36,7 +36,7 @@ async def test_humidifier_set_nightlight_level(
     )
 
     # Assert that setter API was invoked with the expected translated value
-    humidifier_300s.set_night_light_brightness.assert_called_once_with(
+    humidifier_300s.set_nightlight_brightness.assert_called_once_with(
         HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP[HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM]
     )
     # Assert that devices were refreshed

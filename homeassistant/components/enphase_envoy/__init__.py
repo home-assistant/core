@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pyenphase import Envoy
 
 from homeassistant.const import CONF_HOST
@@ -41,6 +43,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
                 "actual_serial": str(envoy.serial_number),
             },
         )
+
+    # register envoy before via_device is used
+    device_registry = dr.async_get(hass)
+    if TYPE_CHECKING:
+        assert envoy.serial_number
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, envoy.serial_number)},
+        manufacturer="Enphase",
+        name=coordinator.name,
+        model=envoy.envoy_model,
+        sw_version=str(envoy.firmware),
+        hw_version=envoy.part_number,
+        serial_number=envoy.serial_number,
+    )
 
     entry.runtime_data = coordinator
 

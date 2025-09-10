@@ -174,6 +174,15 @@ async def test_send_message(
     assert len(events) == 1
     assert events[0].context == context
 
+    config_entry = hass.config_entries.async_entry_for_domain_unique_id(
+        DOMAIN, "1234567890:ABC"
+    )
+    assert events[0].data["bot"]["config_entry_id"] == config_entry.entry_id
+    assert events[0].data["bot"]["id"] == 123456
+    assert events[0].data["bot"]["first_name"] == "Testbot"
+    assert events[0].data["bot"]["last_name"] == "mock last name"
+    assert events[0].data["bot"]["username"] == "mock username"
+
     assert len(response["chats"]) == 1
     assert (response["chats"][0]["message_id"]) == 12345
 
@@ -364,7 +373,7 @@ async def test_webhook_endpoint_generates_telegram_text_event(
     events = async_capture_events(hass, "telegram_text")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL,
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         json=update_message_text,
         headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
     )
@@ -391,7 +400,7 @@ async def test_webhook_endpoint_generates_telegram_command_event(
     events = async_capture_events(hass, "telegram_command")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL,
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         json=update_message_command,
         headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
     )
@@ -418,7 +427,7 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
     events = async_capture_events(hass, "telegram_callback")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL,
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         json=update_callback_query,
         headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
     )
@@ -479,6 +488,16 @@ async def test_polling_platform_message_text_update(
 
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
+
+    config_entry = hass.config_entries.async_entry_for_domain_unique_id(
+        DOMAIN, "1234567890:ABC"
+    )
+    assert events[0].data["bot"]["config_entry_id"] == config_entry.entry_id
+    assert events[0].data["bot"]["id"] == 123456
+    assert events[0].data["bot"]["first_name"] == "Testbot"
+    assert events[0].data["bot"]["last_name"] == "mock last name"
+    assert events[0].data["bot"]["username"] == "mock username"
+
     assert isinstance(events[0].context, Context)
 
 
@@ -594,7 +613,7 @@ async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_tex
     events = async_capture_events(hass, "telegram_text")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL,
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         json=unauthorized_update_message_text,
         headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
     )
@@ -618,7 +637,7 @@ async def test_webhook_endpoint_without_secret_token_is_denied(
     async_capture_events(hass, "telegram_text")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL,
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         json=update_message_text,
     )
     assert response.status == 401
@@ -636,7 +655,7 @@ async def test_webhook_endpoint_invalid_secret_token_is_denied(
     async_capture_events(hass, "telegram_text")
 
     response = await client.post(
-        TELEGRAM_WEBHOOK_URL,
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
         json=update_message_text,
         headers={"X-Telegram-Bot-Api-Secret-Token": incorrect_secret_token},
     )
@@ -752,7 +771,7 @@ async def test_send_message_no_chat_id_error(
         )
 
     assert err.value.translation_key == "missing_allowed_chat_ids"
-    assert err.value.translation_placeholders["bot_name"] == "Testbot"
+    assert err.value.translation_placeholders["bot_name"] == "Testbot mock last name"
 
 
 async def test_send_message_config_entry_error(
