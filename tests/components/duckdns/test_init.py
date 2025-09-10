@@ -206,3 +206,28 @@ async def test_async_track_time_interval_backoff(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert call_count == _idx
+
+
+async def test_load_unload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test loading and unloading of the config entry."""
+
+    aioclient_mock.get(
+        UPDATE_URL,
+        params={"domains": TEST_SUBDOMAIN, "token": TEST_TOKEN},
+        text="OK",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
