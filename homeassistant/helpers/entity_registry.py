@@ -1899,11 +1899,25 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
     @callback
     def cleanup_restored_states_filter(event_data: Mapping[str, Any]) -> bool:
         """Clean up restored states filter."""
-        return bool(event_data["action"] == "remove")
+        return (event_data["action"] == "remove") or (
+            event_data["action"] == "update"
+            and "old_entity_id" in event_data
+            and event_data["entity_id"] != event_data["old_entity_id"]
+        )
 
     @callback
     def cleanup_restored_states(event: Event[EventEntityRegistryUpdatedData]) -> None:
         """Clean up restored states."""
+        if event.data["action"] == "update":
+            old_entity_id = event.data["old_entity_id"]
+            old_state = hass.states.get(old_entity_id)
+            if old_state is None or not old_state.attributes.get(ATTR_RESTORED):
+                return
+            hass.states.async_remove(old_entity_id, context=event.context)
+            if entry := registry.async_get(event.data["entity_id"]):
+                entry.write_unavailable_state(hass)
+            return
+
         state = hass.states.get(event.data["entity_id"])
 
         if state is None or not state.attributes.get(ATTR_RESTORED):

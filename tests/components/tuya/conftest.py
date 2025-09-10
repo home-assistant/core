@@ -209,7 +209,11 @@ async def _create_device(hass: HomeAssistant, mock_device_code: str) -> Customer
     }
     device.status = details["status"]
     for key, value in device.status.items():
-        if device.status_range[key].type == "Json":
+        # Some devices to not provide a status_range for all status DPs
+        dp_type = device.status_range.get(key)
+        if dp_type is None:
+            dp_type = device.function[key]
+        if dp_type.type == "Json":
             device.status[key] = json_dumps(value)
     return device
 

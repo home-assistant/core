@@ -5334,6 +5334,19 @@ async def test_async_abort_entries_match(
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == reason
 
+    # For a domain with no entries, there should never be a match
+    mock_integration(hass, MockModule("not_comp", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "not_comp.config_flow", None)
+
+    with mock_config_flow("not_comp", TestFlow), mock_config_flow("invalid_flow", 5):
+        result = await manager.flow.async_init(
+            "not_comp", context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_match"
+
 
 @pytest.mark.parametrize(
     ("matchers", "reason"),
