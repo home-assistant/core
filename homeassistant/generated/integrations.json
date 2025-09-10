@@ -22,8 +22,7 @@
       "name": "AccuWeather",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling",
-      "single_config_entry": true
+      "iot_class": "cloud_polling"
     },
     "acer_projector": {
       "name": "Acer Projector",
@@ -1437,6 +1436,12 @@
     },
     "drop_connect": {
       "name": "DROP",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "droplet": {
+      "name": "Droplet",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -5065,6 +5070,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "portainer": {
+      "name": "Portainer",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "portlandgeneral": {
       "name": "Portland General Electric (PGE)",

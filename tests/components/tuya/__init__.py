@@ -24,7 +24,9 @@ DEVICE_MOCKS = [
     "cl_qqdxfdht",  # https://github.com/orgs/home-assistant/discussions/539
     "cl_zah67ekd",  # https://github.com/home-assistant/core/issues/71242
     "clkg_nhyj64w2",  # https://github.com/home-assistant/core/issues/136055
-    "co2bj_yrr3eiyiacm31ski",  # https://github.com/home-assistant/core/issues/133173
+    "clkg_wltqkykhni0papzj",  # https://github.com/home-assistant/core/issues/151635
+    "co2bj_yakol79dibtswovc",  # https://github.com/home-assistant/core/issues/151784
+    "co2bj_yrr3eiyiacm31ski",  # https://github.com/orgs/home-assistant/discussions/842
     "cobj_hcdy5zrq3ikzthws",  # https://github.com/orgs/home-assistant/discussions/482
     "cs_ipmyy4nigpqcnd8q",  # https://github.com/home-assistant/core/pull/148726
     "cs_ka2wfrdoogpvgzfi",  # https://github.com/home-assistant/core/issues/119865
@@ -32,6 +34,7 @@ DEVICE_MOCKS = [
     "cs_vmxuxszzjwp5smli",  # https://github.com/home-assistant/core/issues/119865
     "cs_zibqa9dutqyaxym2",  # https://github.com/home-assistant/core/pull/125098
     "cwjwq_agwu93lr",  # https://github.com/orgs/home-assistant/discussions/79
+    "cwwsq_lxfvx41gqdotrkgi",  # https://github.com/orgs/home-assistant/discussions/730
     "cwwsq_wfkzyy0evslzsmoi",  # https://github.com/home-assistant/core/issues/144745
     "cwysj_akln8rb04cav403q",  # https://github.com/home-assistant/core/pull/146599
     "cwysj_z3rpyvznfcch99aa",  # https://github.com/home-assistant/core/pull/146599
@@ -41,12 +44,14 @@ DEVICE_MOCKS = [
     "cz_37mnhia3pojleqfh",  #  https://github.com/home-assistant/core/issues/146164
     "cz_39sy2g68gsjwo2xv",  #  https://github.com/home-assistant/core/issues/141278
     "cz_6fa7odsufen374x2",  #  https://github.com/home-assistant/core/issues/150029
+    "cz_79a7z01v3n35kytb",  # https://github.com/orgs/home-assistant/discussions/221
     "cz_9ivirni8wemum6cw",  #  https://github.com/home-assistant/core/issues/139735
     "cz_AiHXxAyyn7eAkLQY",  # https://github.com/home-assistant/core/issues/150662
     "cz_CHLZe9HQ6QIXujVN",  # https://github.com/home-assistant/core/issues/149233
     "cz_HBRBzv1UVBVfF6SL",  # https://github.com/tuya/tuya-home-assistant/issues/754
     "cz_anwgf2xugjxpkfxb",  # https://github.com/orgs/home-assistant/discussions/539
     "cz_cuhokdii7ojyw8k2",  # https://github.com/home-assistant/core/issues/149704
+    "cz_dhto3y4uachr1wll",  # https://github.com/orgs/home-assistant/discussions/169
     "cz_dntgh2ngvshfxpsz",  # https://github.com/home-assistant/core/issues/149704
     "cz_fencxse0bnut96ig",  # https://github.com/home-assistant/core/issues/63978
     "cz_gbtxrqfy9xcsakyp",  #  https://github.com/home-assistant/core/issues/141278
@@ -149,6 +154,7 @@ DEVICE_MOCKS = [
     "mcs_8yhypbo7",  # https://github.com/orgs/home-assistant/discussions/482
     "mcs_hx5ztlztij4yxxvg",  #  https://github.com/home-assistant/core/issues/148347
     "mcs_qxu3flpqjsc1kqu3",  #  https://github.com/home-assistant/core/issues/141278
+    "msp_3ddulzljdjjwkhoy",  # https://github.com/orgs/home-assistant/discussions/262
     "mzj_jlapoy5liocmtdvd",  # https://github.com/home-assistant/core/issues/150662
     "mzj_qavcakohisj5adyh",  # https://github.com/home-assistant/core/issues/141278
     "ntq_9mqdhwklpvnnvb7t",  # https://github.com/orgs/home-assistant/discussions/517
@@ -158,11 +164,13 @@ DEVICE_MOCKS = [
     "pc_yku9wsimasckdt15",  # https://github.com/orgs/home-assistant/discussions/482
     "pir_3amxzozho9xp4mkh",  # https://github.com/home-assistant/core/issues/149704
     "pir_fcdjzz3s",  # https://github.com/home-assistant/core/issues/149704
+    "pir_j5jgnjvdaczeb6dc",  # https://github.com/orgs/home-assistant/discussions/582
     "pir_wqz93nrdomectyoz",  # https://github.com/home-assistant/core/issues/149704
     "qccdz_7bvgooyjhiua1yyq",  # https://github.com/home-assistant/core/issues/136207
     "qn_5ls2jw49hpczwqng",  # https://github.com/home-assistant/core/issues/149233
     "qxj_fsea1lat3vuktbt6",  # https://github.com/orgs/home-assistant/discussions/318
     "qxj_is2indt9nlth6esa",  # https://github.com/home-assistant/core/issues/136472
+    "qxj_xbwbniyt6bgws9ia",  # https://github.com/orgs/home-assistant/discussions/823
     "rqbj_4iqe2hsfyd86kwwc",  # https://github.com/orgs/home-assistant/discussions/100
     "sd_i6hyjg3af7doaswm",  # https://github.com/orgs/home-assistant/discussions/539
     "sd_lr33znaodtyarrrz",  # https://github.com/home-assistant/core/issues/141278
@@ -172,22 +180,28 @@ DEVICE_MOCKS = [
     "sfkzq_nxquc5lb",  # https://github.com/home-assistant/core/issues/150662
     "sfkzq_o6dagifntoafakst",  # https://github.com/home-assistant/core/issues/148116
     "sfkzq_rzklytdei8i8vo37",  #  https://github.com/home-assistant/core/issues/146164
+    "sgbj_DYgId0sz6zWlmmYu",  # https://github.com/orgs/home-assistant/discussions/583
     "sgbj_im2eqqhj72suwwko",  # https://github.com/home-assistant/core/issues/151082
     "sgbj_ulv4nnue7gqp0rjk",  # https://github.com/home-assistant/core/issues/149704
     "sj_rzeSU2h9uoklxEwq",  # https://github.com/home-assistant/core/issues/150683
     "sj_tgvtvdoc",  # https://github.com/orgs/home-assistant/discussions/482
+    "sjz_ftbc8rp8ipksdfpv",  # https://github.com/orgs/home-assistant/discussions/51
+    "sp_6bmk1remyscwyx6i",  # https://github.com/orgs/home-assistant/discussions/842
     "sp_drezasavompxpcgm",  # https://github.com/home-assistant/core/issues/149704
     "sp_nzauwyj3mcnjnf35",  #  https://github.com/home-assistant/core/issues/141278
     "sp_rjKXWRohlvOTyLBu",  # https://github.com/home-assistant/core/issues/149704
     "sp_rudejjigkywujjvs",  #  https://github.com/home-assistant/core/issues/146164
     "sp_sdd5f5f2dl5wydjf",  # https://github.com/home-assistant/core/issues/144087
     "swtz_3rzngbyy",  # https://github.com/orgs/home-assistant/discussions/688
+    "szjcy_u5xgcpcngk3pfxb4",  # https://github.com/orgs/home-assistant/discussions/934
     "tdq_1aegphq4yfd50e6b",  # https://github.com/home-assistant/core/issues/143209
     "tdq_9htyiowaf5rtdhrv",  # https://github.com/home-assistant/core/issues/143209
     "tdq_cq1p0nt0a4rixnex",  # https://github.com/home-assistant/core/issues/146845
     "tdq_nockvv2k39vbrxxk",  # https://github.com/home-assistant/core/issues/145849
+    "tdq_p6sqiuesvhmhvv4f",  # https://github.com/orgs/home-assistant/discussions/430
     "tdq_pu8uhxhwcp3tgoz7",  # https://github.com/home-assistant/core/issues/141278
     "tdq_uoa3mayicscacseb",  # https://github.com/home-assistant/core/issues/128911
+    "tdq_x3o8epevyeo3z3oa",  # https://github.com/orgs/home-assistant/discussions/430
     "tyndj_pyakuuoc",  # https://github.com/home-assistant/core/issues/149704
     "wfcon_b25mh8sxawsgndck",  # https://github.com/home-assistant/core/issues/149704
     "wfcon_lieerjyy6l4ykjor",  #  https://github.com/home-assistant/core/issues/136055
@@ -198,13 +212,16 @@ DEVICE_MOCKS = [
     "wg2_tmwhss6ntjfc7prs",  # https://github.com/home-assistant/core/issues/150662
     "wg2_v7owd9tzcaninc36",  # https://github.com/orgs/home-assistant/discussions/539
     "wk_6kijc7nd",  # https://github.com/home-assistant/core/issues/136513
+    "wk_IAYz2WK1th0cMLmL",  # https://github.com/orgs/home-assistant/discussions/842
     "wk_aqoouq7x",  # https://github.com/home-assistant/core/issues/146263
     "wk_ccpwojhalfxryigz",  # https://github.com/home-assistant/core/issues/145551
+    "wk_cpmgn2cf",  # https://github.com/orgs/home-assistant/discussions/684
     "wk_fi6dne5tu4t1nm6j",  # https://github.com/orgs/home-assistant/discussions/243
     "wk_gc1bxoq2hafxpa35",  # https://github.com/home-assistant/core/issues/145551
     "wk_gogb05wrtredz3bs",  # https://github.com/home-assistant/core/issues/136337
     "wk_y5obtqhuztqsf2mj",  # https://github.com/home-assistant/core/issues/139735
     "wkcz_gc4b1mdw7kebtuyz",  #  https://github.com/home-assistant/core/issues/135617
+    "wnykq_kzwdw5bpxlbs9h9g",  # https://github.com/orgs/home-assistant/discussions/842
     "wnykq_npbbca46yiug8ysk",  # https://github.com/orgs/home-assistant/discussions/539
     "wnykq_om518smspsaltzdi",  # https://github.com/home-assistant/core/issues/150662
     "wnykq_rqhxdyusjrwxyff6",  #  https://github.com/home-assistant/core/issues/133173
@@ -218,6 +235,7 @@ DEVICE_MOCKS = [
     "wsdcg_yqiqbaldtr0i7mru",  #  https://github.com/home-assistant/core/issues/136223
     "wxkg_ja5osu5g",  # https://github.com/orgs/home-assistant/discussions/482
     "wxkg_l8yaz4um5b3pwyvf",  # https://github.com/home-assistant/core/issues/93975
+    "wxnbq_5l1ht8jygsyr1wn1",  # https://github.com/orgs/home-assistant/discussions/685
     "xdd_shx9mmadyyeaq88t",  # https://github.com/home-assistant/core/issues/151141
     "xnyjcn_pb0tc75khaik8qbg",  # https://github.com/home-assistant/core/pull/149237
     "ydkt_jevroj5aguwdbs2e",  # https://github.com/orgs/home-assistant/discussions/288
@@ -234,8 +252,10 @@ DEVICE_MOCKS = [
     "zndb_4ggkyflayu1h1ho9",  # https://github.com/home-assistant/core/pull/149317
     "zndb_v5jlnn5hwyffkhp3",  #  https://github.com/home-assistant/core/issues/143209
     "zndb_ze8faryrxr0glqnn",  # https://github.com/home-assistant/core/issues/138372
+    "znnbq_0kllybtbzftaee7y",  # https://github.com/orgs/home-assistant/discussions/685
     "znnbq_6b3pbbuqbfabhfiq",  # https://github.com/orgs/home-assistant/discussions/707
     "znrb_db81ge24jctwx8lo",  #  https://github.com/home-assistant/core/issues/136513
+    "zwjcy_gvygg3m8",  # https://github.com/orgs/home-assistant/discussions/949
     "zwjcy_myd45weu",  # https://github.com/orgs/home-assistant/discussions/482
 ]
 
