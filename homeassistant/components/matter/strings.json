@@ -204,8 +204,8 @@
       "temperature_setpoint": {
         "name": "Temperature setpoint"
       },
-      "pir_occupied_to_unoccupied_delay": {
-        "name": "Occupied to unoccupied delay"
+      "hold_time": {
+        "name": "Hold time"
       },
       "auto_relock_timer": {
         "name": "Autorelock time"

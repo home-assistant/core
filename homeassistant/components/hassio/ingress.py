@@ -303,9 +303,9 @@ async def _websocket_forward(
             elif msg.type is aiohttp.WSMsgType.BINARY:
                 await ws_to.send_bytes(msg.data)
             elif msg.type is aiohttp.WSMsgType.PING:
-                await ws_to.ping()
+                await ws_to.ping(msg.data)
             elif msg.type is aiohttp.WSMsgType.PONG:
-                await ws_to.pong()
+                await ws_to.pong(msg.data)
             elif ws_to.closed:
                 await ws_to.close(code=ws_to.close_code, message=msg.extra)  # type: ignore[arg-type]
     except RuntimeError:
