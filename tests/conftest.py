@@ -179,21 +179,24 @@ def pytest_runtest_setup() -> None:
     """Prepare pytest_socket and freezegun.
 
     pytest_socket:
-    Throw if tests attempt to open sockets.
+    - Throw if tests attempt to open sockets.
 
-    allow_unix_socket is set to True because it's needed by asyncio.
-    Important: socket_allow_hosts must be called before disable_socket, otherwise all
-    destinations will be allowed.
+    - allow_unix_socket is set to True because it's needed by asyncio.
+      Important: socket_allow_hosts must be called before disable_socket, otherwise all
+      destinations will be allowed.
+
+    - Replace pytest_socket.SocketBlockedError with a variant which inherits from
+      "BaseException" instead of "RuntimeError" so that it is not caught when catching
+      and logging "Exception".
 
     freezegun:
-    Modified to include https://github.com/spulec/freezegun/pull/424
+    - Modified to include https://github.com/spulec/freezegun/pull/424
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
-    class SocketBlockedError(RuntimeError):
+    class SocketBlockedError(BaseException):
         def __init__(self, *_args, **_kwargs) -> None:
-            pytest.fail("A test tried to use socket.socket.")
             super().__init__("A test tried to use socket.socket.")
 
     pytest_socket.SocketBlockedError = SocketBlockedError
