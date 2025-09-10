@@ -162,7 +162,6 @@ ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
 class ThermostatRunningState(IntEnum):
     """Thermostat Running State, Matter spec Thermostat 7.33."""
 
-    Off = 0
     Heat = 1  # 1 << 0 = 1
     Cool = 2  # 1 << 1 = 2
     Fan = 4  # 1 << 2 = 4
