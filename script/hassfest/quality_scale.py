@@ -486,7 +486,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hp_ilo",
     "html5",
     "http",
-    "huawei_lte",
     "hue",
     "huisbaasje",
     "hunterdouglas_powerview",
