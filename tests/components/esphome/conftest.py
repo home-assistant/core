@@ -517,6 +517,9 @@ async def _mock_generic_device_entry(
     mock_client.list_entities_services = AsyncMock(
         return_value=mock_list_entities_services
     )
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(mock_device.device_info, *mock_list_entities_services)
+    )
 
     def _subscribe_home_assistant_states_and_services(
         *,

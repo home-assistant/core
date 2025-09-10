@@ -99,6 +99,18 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 config_entry, version=1, minor_version=3
             )
 
+        if config_entry.minor_version < 4:
+            # Ensure we use the correct units
+            new_options = {**config_entry.options}
+
+            if new_options.get("unit_prefix") == "\u00b5":
+                # Ensure we use the preferred coding of μ
+                new_options["unit_prefix"] = "\u03bc"
+
+            hass.config_entries.async_update_entry(
+                config_entry, options=new_options, version=1, minor_version=4
+            )
+
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",
         config_entry.version,

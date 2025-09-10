@@ -377,7 +377,6 @@ async def test_cpu_sensors_http(
     connect_http_sens_detect,
 ) -> None:
     """Test creating AsusWRT cpu sensors."""
-    connect_http_sens_detect(AsusData.CPU)
     config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_HTTP, SENSORS_CPU)
     config_entry.add_to_hass(hass)
 

@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from airos.airos8 import AirOSData
+from airos.airos8 import AirOS8Data
 import pytest
 
 from homeassistant.components.airos.const import DOMAIN
@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 def ap_fixture():
     """Load fixture data for AP mode."""
     json_data = load_json_object_fixture("airos_loco5ac_ap-ptp.json", DOMAIN)
-    return AirOSData.from_dict(json_data)
+    return AirOS8Data.from_dict(json_data)
 
 
 @pytest.fixture
@@ -30,15 +30,15 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_airos_client(
-    request: pytest.FixtureRequest, ap_fixture: AirOSData
+    request: pytest.FixtureRequest, ap_fixture: AirOS8Data
 ) -> Generator[AsyncMock]:
     """Fixture to mock the AirOS API client."""
     with (
         patch(
-            "homeassistant.components.airos.config_flow.AirOS", autospec=True
+            "homeassistant.components.airos.config_flow.AirOS8", autospec=True
         ) as mock_airos,
-        patch("homeassistant.components.airos.coordinator.AirOS", new=mock_airos),
-        patch("homeassistant.components.airos.AirOS", new=mock_airos),
+        patch("homeassistant.components.airos.coordinator.AirOS8", new=mock_airos),
+        patch("homeassistant.components.airos.AirOS8", new=mock_airos),
     ):
         client = mock_airos.return_value
         client.status.return_value = ap_fixture
