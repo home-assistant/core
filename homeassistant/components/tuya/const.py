@@ -180,6 +180,7 @@ class DPCode(StrEnum):
     COUNTDOWN_7 = "countdown_7"
     COUNTDOWN_8 = "countdown_8"
     COUNTDOWN_LEFT = "countdown_left"
+    COUNTDOWN_LEFT_FAN = "countdown_left_fan"
     COUNTDOWN_SET = "countdown_set"  # Countdown setting
     CRY_DETECTION_SWITCH = "cry_detection_switch"
     CUP_NUMBER = "cup_number"  # NUmber of cups
