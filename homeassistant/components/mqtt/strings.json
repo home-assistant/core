@@ -1,5 +1,9 @@
 {
   "issues": {
+    "deprecated_object_id": {
+      "title": "Deprecated option object_id used",
+      "description": "Entity {entity_id} uses the `object_id` option which deprecated. To fix the issue, replace the `object_id: {object_id}` option with `default_entity_id: {domain}.{object_id}` in your \"configuration.yaml\", and restart Home Assistant."
+    },
     "deprecated_vacuum_battery_feature": {
       "title": "Deprecated battery feature used",
       "description": "Vacuum entity {entity_id} implements the battery feature which is deprecated. This will stop working in Home Assistant 2026.2. Implement a separate entity for the battery state instead. To fix the issue, remove the `battery` feature from the configured supported features, and restart Home Assistant."

@@ -56,6 +56,6 @@ async def test_select_mode(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "smart-grid"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "smart_grid"},
         blocking=True,
     )

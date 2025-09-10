@@ -2385,7 +2385,15 @@ async def test_async_get_all_descriptions(
 ) -> None:
     """Test async_get_all_descriptions."""
     device_automation_condition_descriptions = """
-        _device: {}
+        _device:
+          fields:
+            entity:
+              selector:
+                entity:
+                  filter:
+                    domain: alarm_control_panel
+                    supported_features:
+                      - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
         """
 
     assert await async_setup_component(hass, DOMAIN_SUN, {})
@@ -2427,14 +2435,28 @@ async def test_async_get_all_descriptions(
             "fields": {
                 "after": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "after_offset": {"selector": {"time": None}},
+                "after_offset": {"selector": {"time": {}}},
                 "before": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "before_offset": {"selector": {"time": None}},
+                "before_offset": {"selector": {"time": {}}},
             }
         }
     }
@@ -2456,21 +2478,50 @@ async def test_async_get_all_descriptions(
         new_descriptions = await condition.async_get_all_descriptions(hass)
     assert new_descriptions is not descriptions
     assert new_descriptions == {
-        "device": {
-            "fields": {},
-        },
         "sun": {
             "fields": {
                 "after": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "after_offset": {"selector": {"time": None}},
+                "after_offset": {"selector": {"time": {}}},
                 "before": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "before_offset": {"selector": {"time": None}},
+                "before_offset": {"selector": {"time": {}}},
+            }
+        },
+        "device": {
+            "fields": {
+                "entity": {
+                    "selector": {
+                        "entity": {
+                            "filter": [
+                                {
+                                    "domain": ["alarm_control_panel"],
+                                    "supported_features": [1],
+                                }
+                            ],
+                            "multiple": False,
+                            "reorder": False,
+                        },
+                    },
+                },
             }
         },
     }

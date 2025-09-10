@@ -25,7 +25,7 @@
     "inverter_charging_current_limit": 50,
     "inverter_injection_power_limit": 5000.0,
     "manager_inverter_state": "grid_consumption",
-    "manager_inverter_mode": "smart-grid"
+    "manager_inverter_mode": "smg"
   },
   "meter": {
     "meter_power": 2000.0

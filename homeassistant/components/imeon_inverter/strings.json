@@ -91,6 +91,7 @@
       "manager_inverter_state": {
         "name": "Inverter state",
         "state": {
+          "not_connected": "Not connected",
           "unsynchronized": "Unsynchronized",
           "grid_consumption": "Grid consumption",
           "grid_injection": "Grid injection",
@@ -218,10 +219,10 @@
       "manager_inverter_mode": {
         "name": "Inverter mode",
         "state": {
-          "smart-grid": "Smart-grid",
+          "smart_grid": "Smart-grid",
           "backup": "Backup",
-          "on-grid": "On-grid",
-          "off-grid": "Off-grid"
+          "on_grid": "On-grid",
+          "off_grid": "Off-grid"
         }
       }
     }

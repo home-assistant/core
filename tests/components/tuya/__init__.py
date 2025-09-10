@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import patch
 
-from tuya_sharing import CustomerDevice
+from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya import DeviceListener, ManagerCompat
+from homeassistant.components.tuya import DeviceListener
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -66,6 +66,7 @@ DEVICE_MOCKS = [
     "cz_t0a4hwsf8anfsadp",  # https://github.com/home-assistant/core/issues/149704
     "cz_tf6qp8t3hl9h7m94",  #  https://github.com/home-assistant/core/issues/143209
     "cz_tkn2s79mzedk6pwr",  #  https://github.com/home-assistant/core/issues/146164
+    "cz_vrbpx6h7fsi5mujb",  #  https://github.com/home-assistant/core/pull/149234
     "cz_vxqn72kwtosoy4d3",  #  https://github.com/home-assistant/core/issues/141278
     "cz_w0qqde0g",  # https://github.com/orgs/home-assistant/discussions/482
     "cz_wifvoilfrqeo6hvu",  #  https://github.com/home-assistant/core/issues/146164
@@ -115,6 +116,7 @@ DEVICE_MOCKS = [
     "dj_zputiamzanuk6yky",  # https://github.com/home-assistant/core/issues/149704
     "dlq_0tnvg2xaisqdadcf",  # https://github.com/home-assistant/core/issues/102769
     "dlq_cnpkf4xdmd9v49iq",  # https://github.com/home-assistant/core/pull/149320
+    "dlq_dikb3dp6",  # https://github.com/home-assistant/core/pull/151601
     "dlq_jdj6ccklup7btq3a",  #  https://github.com/home-assistant/core/issues/143209
     "dlq_kxdr6su0c55p7bbo",  # https://github.com/home-assistant/core/issues/143499
     "dlq_r9kg2g1uhhyicycb",  #  https://github.com/home-assistant/core/issues/149650
@@ -217,6 +219,7 @@ DEVICE_MOCKS = [
     "wxkg_ja5osu5g",  # https://github.com/orgs/home-assistant/discussions/482
     "wxkg_l8yaz4um5b3pwyvf",  # https://github.com/home-assistant/core/issues/93975
     "xdd_shx9mmadyyeaq88t",  # https://github.com/home-assistant/core/issues/151141
+    "xnyjcn_pb0tc75khaik8qbg",  # https://github.com/home-assistant/core/pull/149237
     "ydkt_jevroj5aguwdbs2e",  # https://github.com/orgs/home-assistant/discussions/288
     "ygsb_l6ax0u6jwbz82atk",  #  https://github.com/home-assistant/core/issues/146319
     "ykq_bngwdjsr",  # https://github.com/orgs/home-assistant/discussions/482
@@ -262,7 +265,7 @@ class MockDeviceListener(DeviceListener):
 
 async def initialize_entry(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: CustomerDevice | list[CustomerDevice],
 ) -> None:
@@ -275,8 +278,6 @@ async def initialize_entry(
     mock_config_entry.add_to_hass(hass)
 
     # Initialize the component
-    with patch(
-        "homeassistant.components.tuya.ManagerCompat", return_value=mock_manager
-    ):
+    with patch("homeassistant.components.tuya.Manager", return_value=mock_manager):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

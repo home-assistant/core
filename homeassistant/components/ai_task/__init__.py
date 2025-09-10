@@ -211,7 +211,6 @@ class ImageView(HomeAssistantView):
 
     url = f"/api/{DOMAIN}/images/{{filename}}"
     name = f"api:{DOMAIN}/images"
-    requires_auth = False
 
     async def get(
         self,
