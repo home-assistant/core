@@ -28,11 +28,14 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): TextSelector(),
         vol.Required(CONF_STOP_ID): TextSelector(),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        vol.Optional(CONF_ROUTE, default=""): TextSelector(),
+        vol.Optional(CONF_DESTINATION, default=""): TextSelector(),
     }
 )
 
 OPTIONS_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
         vol.Optional(CONF_ROUTE, default=""): TextSelector(),
         vol.Optional(CONF_DESTINATION, default=""): TextSelector(),
     }
@@ -113,19 +116,37 @@ class TransportNSWOptionsFlow(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            # If name was changed, update the config entry data as well
+            updates = {}
+            if CONF_NAME in user_input and user_input[CONF_NAME] != self.config_entry.data.get(CONF_NAME):
+                updates[CONF_NAME] = user_input[CONF_NAME]
+            
+            result = self.async_create_entry(title="", data=user_input)
+            
+            # Update config entry data if name was changed
+            if updates:
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data={**self.config_entry.data, **updates}
+                )
+            
+            return result
+
+        # Prepare current values for the form
+        current_options = dict(self.config_entry.options)
+        # Include current name from config entry data
+        if CONF_NAME not in current_options and CONF_NAME in self.config_entry.data:
+            current_options[CONF_NAME] = self.config_entry.data[CONF_NAME]
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 OPTIONS_SCHEMA,
-                user_input or self.config_entry.options,
+                user_input or current_options,
             ),
         )
