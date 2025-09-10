@@ -19,7 +19,8 @@ from pyhausbus.de.hausbus.homeassistant.proxy.schalter.data.Status import (
 )
 from pyhausbus.de.hausbus.homeassistant.proxy.schalter.params.EState import EState
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntity
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.number import NumberEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 

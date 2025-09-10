@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import voluptuous as vol
 from pyhausbus.de.hausbus.homeassistant.proxy.Schalter import Schalter
 from pyhausbus.de.hausbus.homeassistant.proxy.schalter.data.Configuration import (
     Configuration as SchalterConfiguration,
@@ -18,9 +19,9 @@ from pyhausbus.de.hausbus.homeassistant.proxy.schalter.data.Status import (
     Status as SchalterStatus,
 )
 from pyhausbus.de.hausbus.homeassistant.proxy.schalter.params.EState import EState
-import voluptuous as vol
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform

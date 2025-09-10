@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 import logging
 import re
 import time
+from collections.abc import Callable, Coroutine
 from typing import Any, cast
 
 from custom_components.hausbus.number import HausbusControl

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+import voluptuous as vol
 from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.de.hausbus.homeassistant.proxy.AnalogEingang import AnalogEingang
 from pyhausbus.de.hausbus.homeassistant.proxy.analogEingang.data.Configuration import (
@@ -64,10 +65,9 @@ from pyhausbus.de.hausbus.homeassistant.proxy.temperatursensor.data.EvStatus imp
 from pyhausbus.de.hausbus.homeassistant.proxy.temperatursensor.data.Status import (
     Status as TemperatursensorStatus,
 )
-import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,

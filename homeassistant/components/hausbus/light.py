@@ -6,6 +6,8 @@ import colorsys
 import logging
 from typing import TYPE_CHECKING, Any
 
+import voluptuous as vol
+
 # from .number import HausBusNumber
 from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.de.hausbus.homeassistant.proxy.Dimmer import Dimmer
@@ -44,16 +46,14 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rGBDimmer.data.EvOn import (
 from pyhausbus.de.hausbus.homeassistant.proxy.rGBDimmer.data.Status import (
     Status as rgbDimmerStatus,
 )
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_HS_COLOR,
-    DOMAIN as LIGHT_DOMAIN,
-    ColorMode,
-    LightEntity,
 )
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
