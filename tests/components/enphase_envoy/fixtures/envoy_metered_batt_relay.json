@@ -407,6 +407,35 @@
         "type": "NONE"
       }
     },
+    "collar": {
+      "admin_state": 88,
+      "admin_state_str": "ENCMN_MDE_ON_GRID",
+      "firmware_loaded_date": 1752939759,
+      "firmware_version": "3.0.6-D0",
+      "installed_date": 1752939759,
+      "last_report_date": 1752939759,
+      "communicating": true,
+      "mid_state": "close",
+      "grid_state": "on_grid",
+      "part_number": "865-00400-r22",
+      "serial_number": "482520020939",
+      "temperature": 42,
+      "temperature_unit": "C",
+      "control_error": 0,
+      "collar_state": "Installed"
+    },
+    "c6cc": {
+      "admin_state": 82,
+      "admin_state_str": "ENCMN_C6_CC_READY",
+      "firmware_loaded_date": 1752945451,
+      "firmware_version": "0.1.20-D1",
+      "installed_date": 1752945451,
+      "last_report_date": 1752945451,
+      "communicating": true,
+      "part_number": "800-02403-r08",
+      "serial_number": "482523040549",
+      "dmir_version": "0.1.20-D1"
+    },
     "inverters": {
       "1": {
         "serial_number": "1",

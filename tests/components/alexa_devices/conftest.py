@@ -7,10 +7,14 @@ from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor
 from aioamazondevices.const import DEVICE_TYPE_TO_MODEL
 import pytest
 
-from homeassistant.components.alexa_devices.const import CONF_LOGIN_DATA, DOMAIN
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.alexa_devices.const import (
+    CONF_LOGIN_DATA,
+    CONF_SITE,
+    DOMAIN,
+)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import TEST_COUNTRY, TEST_PASSWORD, TEST_SERIAL_NUMBER, TEST_USERNAME
+from .const import TEST_PASSWORD, TEST_SERIAL_NUMBER, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +54,6 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
                 device_type="echo",
                 device_owner_customer_id="amazon_ower_id",
                 device_cluster_members=[TEST_SERIAL_NUMBER],
-                device_locale="en-US",
                 online=True,
                 serial_number=TEST_SERIAL_NUMBER,
                 software_version="echo_test_software_version",
@@ -80,10 +83,14 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Amazon Test Account",
         data={
-            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_LOGIN_DATA: {"session": "test-session"},
+            CONF_LOGIN_DATA: {
+                "session": "test-session",
+                CONF_SITE: "https://www.amazon.com",
+            },
         },
         unique_id=TEST_USERNAME,
+        version=1,
+        minor_version=3,
     )
