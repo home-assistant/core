@@ -637,7 +637,7 @@ async def test_vacuum_operational_error_sensor(
     matter_node: MatterNode,
 ) -> None:
     """Test RVC Operational Error sensor, using a dishwasher fixture."""
-    # RvcOperationalState Cluster / OperationalError attribute (1/96/5)
+    # RvcOperationalState Cluster / OperationalError attribute (1/97/5)
     state = hass.states.get("sensor.mock_vacuum_operational_error")
     assert state
     assert state.state == "no_error"
