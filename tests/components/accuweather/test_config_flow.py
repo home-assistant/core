@@ -87,7 +87,7 @@ async def test_integration_already_exists(
     """Test we only allow a single config flow."""
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="123456",
+        unique_id="0123456",
         data=VALID_CONFIG,
     ).add_to_hass(hass)
 
@@ -98,7 +98,7 @@ async def test_integration_already_exists(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
 async def test_create_entry(
