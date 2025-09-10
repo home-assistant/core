@@ -38,6 +38,7 @@ async def async_setup_entry(
 
     async_add_entities(
         HassioAddonSwitch(
+            entity_registry_enabled_default=False,
             addon=addon,
             coordinator=coordinator,
             entity_description=ENTITY_DESCRIPTION,
