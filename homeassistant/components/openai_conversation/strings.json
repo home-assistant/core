@@ -189,6 +189,12 @@
       }
     }
   },
+  "issues": {
+    "organization_verification_required": {
+      "title": "Organization verification required",
+      "description": "Your organization must be verified to use this model. Please go to {platform_settings} and select Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate."
+    }
+  },
   "exceptions": {
     "invalid_config_entry": {
       "message": "Invalid config entry provided. Got {config_entry}"

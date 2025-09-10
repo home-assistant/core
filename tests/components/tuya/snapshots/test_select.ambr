@@ -293,7 +293,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'low',
+    'state': 'mute',
   })
 # ---
 # name: test_platform_setup_and_discovery[select.aubess_cooker_indicator_light_mode-entry]
@@ -1702,6 +1702,63 @@
     'state': 'unknown',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.cbe_pro_2_inverter_work_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'self_powered',
+        'time_of_use',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.cbe_pro_2_inverter_work_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Inverter work mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'inverter_work_mode',
+    'unique_id': 'tuya.gbq8kiahk57ct0bpncjynxwork_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.cbe_pro_2_inverter_work_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CBE Pro 2 Inverter work mode',
+      'options': list([
+        'self_powered',
+        'time_of_use',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.cbe_pro_2_inverter_work_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'self_powered',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.ceiling_fan_with_light_countdown-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2721,6 +2778,124 @@
     'state': 'unknown',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_indicator_light_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'relay',
+        'pos',
+        'none',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.jie_hashuang_xiang_ji_liang_cha_zuo_indicator_light_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indicator light mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_mode',
+    'unique_id': 'tuya.bjum5isf7h6xpbrvzclight_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_indicator_light_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '接HA双向计量插座 Indicator light mode',
+      'options': list([
+        'relay',
+        'pos',
+        'none',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.jie_hashuang_xiang_ji_liang_cha_zuo_indicator_light_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'relay',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'power_off',
+        'power_on',
+        'last',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.jie_hashuang_xiang_ji_liang_cha_zuo_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power on behavior',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': 'tuya.bjum5isf7h6xpbrvzcrelay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.jie_hashuang_xiang_ji_liang_cha_zuo_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '接HA双向计量插座 Power on behavior',
+      'options': list([
+        'power_off',
+        'power_on',
+        'last',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.jie_hashuang_xiang_ji_liang_cha_zuo_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'power_off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.kalado_air_purifier_countdown-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2959,6 +3134,122 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'power_on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mirilla_puerta_anti_flicker-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mirilla_puerta_anti_flicker',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Anti-flicker',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'basic_anti_flicker',
+    'unique_id': 'tuya.i6xywcsymer1kmb6psbasic_anti_flicker',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mirilla_puerta_anti_flicker-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mirilla puerta Anti-flicker',
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mirilla_puerta_anti_flicker',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mirilla_puerta_ipc_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mirilla_puerta_ipc_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IPC mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ipc_work_mode',
+    'unique_id': 'tuya.i6xywcsymer1kmb6psipc_work_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mirilla_puerta_ipc_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mirilla puerta IPC mode',
+      'options': list([
+        '0',
+        '1',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mirilla_puerta_ipc_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[select.office_indicator_light_mode-entry]

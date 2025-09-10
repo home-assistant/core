@@ -191,6 +191,24 @@ _CONVERTED_VALUE: dict[
             0.01,
             UnitOfApparentPower.VOLT_AMPERE,
         ),
+        (
+            10,
+            UnitOfApparentPower.MILLIVOLT_AMPERE,
+            0.00001,
+            UnitOfApparentPower.KILO_VOLT_AMPERE,
+        ),
+        (
+            10,
+            UnitOfApparentPower.VOLT_AMPERE,
+            0.01,
+            UnitOfApparentPower.KILO_VOLT_AMPERE,
+        ),
+        (
+            10,
+            UnitOfApparentPower.KILO_VOLT_AMPERE,
+            10000,
+            UnitOfApparentPower.VOLT_AMPERE,
+        ),
     ],
     AreaConverter: [
         # Square Meters to other units
@@ -861,6 +879,11 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 478753.24, UnitOfVolume.FLUID_OUNCES),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 3740.26, UnitOfVolume.GALLONS),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 14158.42, UnitOfVolume.LITERS),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 5000, UnitOfVolume.CUBIC_FEET),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 141.5842, UnitOfVolume.CUBIC_METERS),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 4787532.4, UnitOfVolume.FLUID_OUNCES),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 37402.6, UnitOfVolume.GALLONS),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 141584.2, UnitOfVolume.LITERS),
     ],
     VolumeFlowRateConverter: [
         (

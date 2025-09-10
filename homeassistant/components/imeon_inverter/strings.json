@@ -91,6 +91,7 @@
       "manager_inverter_state": {
         "name": "Inverter state",
         "state": {
+          "not_connected": "Not connected",
           "unsynchronized": "Unsynchronized",
           "grid_consumption": "Grid consumption",
           "grid_injection": "Grid injection",
