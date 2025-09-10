@@ -384,6 +384,7 @@ class DPCode(StrEnum):
     SWITCH_VERTICAL = "switch_vertical"  # Vertical swing flap switch
     SWITCH_VOICE = "switch_voice"  # Voice switch
     TARGET_DIS_CLOSEST = "target_dis_closest"  # Closest target distance
+    TDS_IN = "tds_in"  # Total dissolved solids
     TEMP = "temp"  # Temperature setting
     TEMP_BOILING_C = "temp_boiling_c"
     TEMP_BOILING_F = "temp_boiling_f"

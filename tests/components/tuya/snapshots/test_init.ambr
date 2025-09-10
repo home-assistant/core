@@ -330,7 +330,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'YINMIK Water Quality Tester (unsupported)',
+    'model': 'YINMIK Water Quality Tester',
     'model_id': 'u5xgcpcngk3pfxb4',
     'name': 'YINMIK Water Quality Tester',
     'name_by_user': None,
