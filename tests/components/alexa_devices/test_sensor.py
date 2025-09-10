@@ -113,8 +113,8 @@ async def test_offline_device(
             "30.0",  # State machine converts to °C
             "°C",  # State machine converts to °C
         ),
-        ("illuminance", "800", None, "800", "lx"),
         ("temperature", "22.5", "CELSIUS", "22.5", "°C"),
+        ("illuminance", "800", None, "800", "lx"),
     ],
 )
 async def test_unit_of_measurement(
