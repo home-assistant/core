@@ -40,9 +40,10 @@
     "message": "Resource is not supported for this vehicle"
   },
   "targetBatteryChargeLevel": {
-    "status": "ERROR",
-    "code": "NOT_SUPPORTED",
-    "message": "Resource is not supported for this vehicle"
+    "status": "OK",
+    "value": 80,
+    "unit": "percentage",
+    "updatedAt": "2024-09-22T09:40:12Z"
   },
   "chargingPower": {
     "status": "ERROR",

@@ -336,7 +336,7 @@ async def test_firmware_update_success(
 
     async def endpoint_reply(cluster, sequence, data, **kwargs):
         if cluster == general.Ota.cluster_id:
-            hdr, cmd = ota_cluster.deserialize(data)
+            _hdr, cmd = ota_cluster.deserialize(data)
             if isinstance(cmd, general.Ota.ImageNotifyCommand):
                 zha_device.device.device.packet_received(
                     make_packet(
@@ -532,7 +532,7 @@ async def test_firmware_update_raises(
 
     async def endpoint_reply(cluster, sequence, data, **kwargs):
         if cluster == general.Ota.cluster_id:
-            hdr, cmd = ota_cluster.deserialize(data)
+            _hdr, cmd = ota_cluster.deserialize(data)
             if isinstance(cmd, general.Ota.ImageNotifyCommand):
                 zha_device.device.device.packet_received(
                     make_packet(

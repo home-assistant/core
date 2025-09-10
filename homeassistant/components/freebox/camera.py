@@ -74,7 +74,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
     ) -> None:
         """Initialize a camera."""
 
-        super().__init__(hass, router, node)
+        super().__init__(router, node)
         device_info = {
             CONF_NAME: node["label"].strip(),
             CONF_INPUT: node["props"]["Stream"],

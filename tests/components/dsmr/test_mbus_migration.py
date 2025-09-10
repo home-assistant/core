@@ -27,7 +27,7 @@ async def test_migrate_gas_to_mbus(
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test migration of unique_id."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -138,7 +138,7 @@ async def test_migrate_hourly_gas_to_mbus(
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test migration of unique_id."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -249,7 +249,7 @@ async def test_migrate_gas_with_devid_to_mbus(
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test migration of unique_id."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -357,7 +357,7 @@ async def test_migrate_gas_to_mbus_exists(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test migration of unique_id."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,

@@ -134,7 +134,12 @@ async def test_get_trigger_capabilities(
         )
         assert capabilities == {
             "extra_fields": [
-                {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+                {
+                    "name": "for",
+                    "optional": True,
+                    "required": False,
+                    "type": "positive_time_period_dict",
+                }
             ]
         }
 
@@ -166,7 +171,12 @@ async def test_get_trigger_capabilities_legacy(
         )
         assert capabilities == {
             "extra_fields": [
-                {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+                {
+                    "name": "for",
+                    "optional": True,
+                    "required": False,
+                    "type": "positive_time_period_dict",
+                }
             ]
         }
 

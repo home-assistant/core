@@ -776,7 +776,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01:03:05:07:12:34-pm25',
-    'unit_of_measurement': <Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 'µg/m³'>,
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[v6][sensor.ruuvitag_884f_pm2_5-state]
@@ -785,7 +785,7 @@
       'device_class': 'pm25',
       'friendly_name': 'RuuviTag 884F PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 'µg/m³'>,
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ruuvitag_884f_pm2_5',

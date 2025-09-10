@@ -164,6 +164,31 @@ async def test_unhealthy_issues(
 
 
 @pytest.mark.usefixtures("all_setup_requests")
+@pytest.mark.parametrize("unhealthy_reason", list(UnhealthyReason))
+async def test_unhealthy_reasons(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+    unhealthy_reason: UnhealthyReason,
+) -> None:
+    """Test all unhealthy reasons in client library are properly made into repairs with a translation."""
+    mock_resolution_info(supervisor_client, unhealthy=[unhealthy_reason])
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_repair_in_list(
+        msg["result"]["issues"], unhealthy=True, reason=unhealthy_reason.value
+    )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_unsupported_issues(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
@@ -188,6 +213,34 @@ async def test_unsupported_issues(
         msg["result"]["issues"], unhealthy=False, reason="content_trust"
     )
     assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+@pytest.mark.parametrize(
+    "unsupported_reason",
+    [r for r in UnsupportedReason if r != UnsupportedReason.PRIVILEGED],
+)
+async def test_unsupported_reasons(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+    unsupported_reason: UnsupportedReason,
+) -> None:
+    """Test all unsupported reasons in client library are properly made into repairs with a translation."""
+    mock_resolution_info(supervisor_client, unsupported=[unsupported_reason])
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_repair_in_list(
+        msg["result"]["issues"], unhealthy=False, reason=unsupported_reason.value
+    )
 
 
 @pytest.mark.usefixtures("all_setup_requests")

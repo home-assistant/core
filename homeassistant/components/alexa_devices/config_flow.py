@@ -10,20 +10,24 @@ from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
-    WrongCountry,
 )
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_CODE, CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.selector import CountrySelector
 
 from .const import CONF_LOGIN_DATA, DOMAIN
 
 STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_CODE): cv.string,
+    }
+)
+STEP_RECONFIGURE = vol.Schema(
     {
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_CODE): cv.string,
@@ -37,7 +41,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     session = aiohttp_client.async_create_clientsession(hass)
     api = AmazonEchoApi(
         session,
-        data[CONF_COUNTRY],
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
     )
@@ -47,6 +50,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
 class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Alexa Devices."""
+
+    VERSION = 1
+    MINOR_VERSION = 3
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -58,12 +64,10 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 data = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except CannotAuthenticate:
+            except (CannotAuthenticate, TypeError):
                 errors["base"] = "invalid_auth"
             except CannotRetrieveData:
                 errors["base"] = "cannot_retrieve_data"
-            except WrongCountry:
-                errors["base"] = "wrong_country"
             else:
                 await self.async_set_unique_id(data["customer_info"]["user_id"])
                 self._abort_if_unique_id_configured()
@@ -78,9 +82,6 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_COUNTRY, default=self.hass.config.country
-                    ): CountrySelector(),
                     vol.Required(CONF_USERNAME): cv.string,
                     vol.Required(CONF_PASSWORD): cv.string,
                     vol.Required(CONF_CODE): cv.string,
@@ -109,7 +110,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, {**reauth_entry.data, **user_input})
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except CannotAuthenticate:
+            except (CannotAuthenticate, TypeError):
                 errors["base"] = "invalid_auth"
             except CannotRetrieveData:
                 errors["base"] = "cannot_retrieve_data"
@@ -127,5 +128,49 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             description_placeholders={CONF_USERNAME: entry_data[CONF_USERNAME]},
             data_schema=STEP_REAUTH_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        if not user_input:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=STEP_RECONFIGURE,
+            )
+
+        updated_password = user_input[CONF_PASSWORD]
+
+        self._async_abort_entries_match(
+            {CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME]}
+        )
+
+        errors: dict[str, str] = {}
+
+        try:
+            data = await validate_input(
+                self.hass, {**reconfigure_entry.data, **user_input}
+            )
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except CannotAuthenticate:
+            errors["base"] = "invalid_auth"
+        except CannotRetrieveData:
+            errors["base"] = "cannot_retrieve_data"
+        else:
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                data_updates={
+                    CONF_PASSWORD: updated_password,
+                    CONF_LOGIN_DATA: data,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=STEP_RECONFIGURE,
             errors=errors,
         )

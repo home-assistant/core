@@ -152,7 +152,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         time: int | None = None
         # Convert time to minutes since minute
         if "time" in call.data:
-            (hours, minutes, *seconds) = call.data["time"].split(":")
+            (hours, minutes, *_seconds) = call.data["time"].split(":")
             time = int(hours) * 60 + int(minutes)
         elif call.data["enable"]:
             raise ServiceValidationError(
@@ -191,7 +191,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         departure_time: int | None = None
         if ATTR_DEPARTURE_TIME in call.data:
-            (hours, minutes, *seconds) = call.data[ATTR_DEPARTURE_TIME].split(":")
+            (hours, minutes, *_seconds) = call.data[ATTR_DEPARTURE_TIME].split(":")
             departure_time = int(hours) * 60 + int(minutes)
         elif preconditioning_enabled:
             raise ServiceValidationError(
@@ -207,7 +207,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         end_off_peak_time: int | None = None
 
         if ATTR_END_OFF_PEAK_TIME in call.data:
-            (hours, minutes, *seconds) = call.data[ATTR_END_OFF_PEAK_TIME].split(":")
+            (hours, minutes, *_seconds) = call.data[ATTR_END_OFF_PEAK_TIME].split(":")
             end_off_peak_time = int(hours) * 60 + int(minutes)
         elif off_peak_charging_enabled:
             raise ServiceValidationError(

@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "host": "The host/URL, including the port, of your Portainer instance",
+          "api_key": "The API key for authenticating with Portainer"
+        },
+        "description": "You can create an API key in the Portainer UI. Go to **My account > API keys** and select **Add API key**"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "device": {
+    "unknown_container": {
+      "name": "Unknown container"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "An error occurred while trying to connect to the Portainer instance: {error}"
+    },
+    "invalid_auth": {
+      "message": "An error occurred while trying authenticate: {error}"
+    },
+    "timeout_connect": {
+      "message": "A timeout occurred while trying to connect to the Portainer instance: {error}"
+    }
+  }
+}

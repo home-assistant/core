@@ -130,6 +130,115 @@
     'state': 'heat',
   })
 # ---
+# name: test_all_entities[da_ac_cac_01001][climate.ar_varanda-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_modes': list([
+        'windFree',
+      ]),
+      'swing_modes': list([
+        'vertical',
+        'off',
+        'horizontal',
+        'both',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.ar_varanda',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 441>,
+    'translation_key': None,
+    'unique_id': '23c6d296-4656-20d8-f6eb-2ff13e041753_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][climate.ar_varanda-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 28,
+      'drlc_status_duration': 0,
+      'drlc_status_level': 0,
+      'drlc_status_override': False,
+      'drlc_status_start': '1970-01-01T00:00:00Z',
+      'fan_mode': 'high',
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'friendly_name': 'Ar Varanda',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': None,
+      'preset_modes': list([
+        'windFree',
+      ]),
+      'supported_features': <ClimateEntityFeature: 441>,
+      'swing_mode': 'off',
+      'swing_modes': list([
+        'vertical',
+        'off',
+        'horizontal',
+        'both',
+      ]),
+      'temperature': 20,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.ar_varanda',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ac_ehs_01001][climate.heat_pump_indoor1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

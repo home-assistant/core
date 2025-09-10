@@ -1,0 +1,77 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Mesh-Gateway",
+  "category": "wg2",
+  "product_id": "2gowdgni",
+  "product_name": "Mesh-Gateway",
+  "online": true,
+  "sub": true,
+  "time_zone": "-05:00",
+  "active_time": "2024-07-29T18:45:22+00:00",
+  "create_time": "2024-07-29T18:45:22+00:00",
+  "update_time": "2024-07-29T18:45:22+00:00",
+  "function": {
+    "switch_alarm_sound": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "muffling": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "master_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["normal", "alarm"]
+      }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_active": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    }
+  },
+  "status_range": {
+    "switch_alarm_sound": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "muffling": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "master_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["normal", "alarm"]
+      }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_active": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    }
+  },
+  "status": {
+    "switch_alarm_sound": false,
+    "muffling": false,
+    "master_state": "normal",
+    "factory_reset": false,
+    "alarm_active": ""
+  },
+  "set_up": false,
+  "support_local": true
+}

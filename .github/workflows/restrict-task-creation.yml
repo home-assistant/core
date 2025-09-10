@@ -9,10 +9,10 @@ jobs:
   check-authorization:
     runs-on: ubuntu-latest
     # Only run if this is a Task issue type (from the issue form)
-    if: github.event.issue.issue_type == 'Task'
+    if: github.event.issue.type.name == 'Task'
     steps:
       - name: Check if user is authorized
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const issueAuthor = context.payload.issue.user.login;

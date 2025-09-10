@@ -43,6 +43,9 @@
       },
       "valve_status": {
         "default": "mdi:valve"
+      },
+      "illuminance_level": {
+        "default": "mdi:brightness-5"
       }
     },
     "switch": {

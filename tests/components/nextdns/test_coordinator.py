@@ -12,17 +12,18 @@ from homeassistant.core import HomeAssistant
 
 from . import init_integration
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_auth_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test authentication error when polling data."""
-    entry = await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     freezer.tick(timedelta(minutes=10))
     with (
@@ -62,7 +63,7 @@ async def test_auth_error(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -73,4 +74,4 @@ async def test_auth_error(
 
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
-    assert flow["context"].get("entry_id") == entry.entry_id
+    assert flow["context"].get("entry_id") == mock_config_entry.entry_id

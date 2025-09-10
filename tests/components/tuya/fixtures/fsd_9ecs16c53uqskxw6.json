@@ -1,0 +1,151 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "ceiling fan/Light v2",
+  "category": "fsd",
+  "product_id": "9ecs16c53uqskxw6",
+  "product_name": "ceiling fan/Light v2",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-08T17:05:22+00:00",
+  "create_time": "2025-07-08T17:05:22+00:00",
+  "update_time": "2025-07-08T17:05:22+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "scene_data": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "fan_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "fan_speed": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 1,
+        "max": 6,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "fan_direction": {
+      "type": "Enum",
+      "value": {
+        "range": ["forward", "reverse"]
+      }
+    },
+    "countdown_left_fan": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 0,
+        "max": 540,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "fan_beep": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "scene_data": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "fan_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "fan_speed": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 1,
+        "max": 6,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "fan_direction": {
+      "type": "Enum",
+      "value": {
+        "range": ["forward", "reverse"]
+      }
+    },
+    "countdown_left_fan": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 0,
+        "max": 540,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "fan_beep": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_led": true,
+    "work_mode": "white",
+    "temp_value": 0,
+    "scene_data": "",
+    "fan_switch": true,
+    "fan_speed": 2,
+    "fan_direction": "forward",
+    "countdown_left_fan": 0,
+    "fan_beep": false
+  },
+  "set_up": true,
+  "support_local": true
+}

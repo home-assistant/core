@@ -38,5 +38,11 @@
       "remote_adapters_not_supported": "Bluetooth configuration for remote adapters is not supported.",
       "local_adapters_no_passive_support": "Local Bluetooth adapters that do not support passive scanning cannot be configured."
     }
+  },
+  "issues": {
+    "bluetooth_adapter_missing_permissions": {
+      "title": "Bluetooth adapter requires additional permissions",
+      "description": "The Bluetooth adapter **{adapter}** ({model}) is operating in degraded mode because your container needs additional permissions to fully access Bluetooth hardware.\n\nPlease follow the instructions in our documentation to add the required permissions:\n[Bluetooth permissions for Docker]({docs_url})\n\nAfter adding these permissions, restart your Home Assistant container for the changes to take effect."
+    }
   }
 }

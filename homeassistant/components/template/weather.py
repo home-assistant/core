@@ -53,7 +53,8 @@ from homeassistant.util.unit_conversion import (
 
 from .coordinator import TriggerUpdateCoordinator
 from .helpers import async_setup_template_platform
-from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
+from .schemas import make_template_entity_common_modern_schema
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 CHECK_FORECAST_KEYS = (
@@ -132,7 +133,7 @@ WEATHER_YAML_SCHEMA = vol.Schema(
         vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
         vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
     }
-).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+).extend(make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema)
 
 PLATFORM_SCHEMA = vol.Schema(
     {

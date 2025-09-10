@@ -35,8 +35,19 @@
       "battery_soc": {
         "name": "Battery state of charge"
       },
+      "battery_status": {
+        "name": "Battery status",
+        "state": {
+          "charged": "Charged",
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]"
+        }
+      },
       "battery_stored": {
         "name": "Battery stored"
+      },
+      "battery_consumed": {
+        "name": "Battery consumed"
       },
       "grid_current_l1": {
         "name": "Grid current L1"
@@ -76,6 +87,16 @@
       },
       "inverter_injection_power_limit": {
         "name": "Injection power limit"
+      },
+      "manager_inverter_state": {
+        "name": "Inverter state",
+        "state": {
+          "not_connected": "Not connected",
+          "unsynchronized": "Unsynchronized",
+          "grid_consumption": "Grid consumption",
+          "grid_injection": "Grid injection",
+          "grid_synchronised_but_not_used": "Grid unsynchronized but used"
+        }
       },
       "meter_power": {
         "name": "Meter power"
@@ -135,25 +156,63 @@
         "name": "Component temperature"
       },
       "monitoring_self_consumption": {
-        "name": "Monitoring self-consumption"
+        "name": "Self-consumption"
       },
       "monitoring_self_sufficiency": {
-        "name": "Monitoring self-sufficiency"
+        "name": "Self-sufficiency"
       },
       "monitoring_minute_building_consumption": {
-        "name": "Monitoring building consumption (minute)"
+        "name": "Building consumption"
       },
       "monitoring_minute_grid_consumption": {
-        "name": "Monitoring grid consumption (minute)"
+        "name": "Grid consumption"
       },
       "monitoring_minute_grid_injection": {
-        "name": "Monitoring grid injection (minute)"
+        "name": "Grid injection"
       },
       "monitoring_minute_grid_power_flow": {
-        "name": "Monitoring grid power flow (minute)"
+        "name": "Grid power flow"
       },
       "monitoring_minute_solar_production": {
-        "name": "Monitoring solar production (minute)"
+        "name": "Solar production"
+      },
+      "timeline_type_msg": {
+        "name": "Timeline status",
+        "state": {
+          "com_lost": "Communication lost.",
+          "warning_grid": "Power grid warning detected.",
+          "warning_pv": "PV system warning detected.",
+          "warning_bat": "Battery warning detected.",
+          "error_ond": "Inverter error detected.",
+          "error_soft": "Software error detected.",
+          "error_pv": "PV system error detected.",
+          "error_grid": "Power grid error detected.",
+          "error_bat": "Battery error detected.",
+          "good_1": "System operating normally.",
+          "web_account": "Web account notification.",
+          "info_soft": "Software information available.",
+          "info_ond": "Inverter information available.",
+          "info_bat": "Battery information available.",
+          "info_smartlo": "Smart load information available."
+        }
+      },
+      "energy_pv": {
+        "name": "Today PV energy"
+      },
+      "energy_grid_injected": {
+        "name": "Today grid-injected energy"
+      },
+      "energy_grid_consumed": {
+        "name": "Today grid-consumed energy"
+      },
+      "energy_building_consumption": {
+        "name": "Today building consumption"
+      },
+      "energy_battery_stored": {
+        "name": "Today battery-stored energy"
+      },
+      "energy_battery_consumed": {
+        "name": "Today battery-consumed energy"
       }
     }
   }

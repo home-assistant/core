@@ -7,7 +7,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components.bayesian import DOMAIN, binary_sensor as bayesian
+from homeassistant.components.bayesian import binary_sensor as bayesian
+from homeassistant.components.bayesian.const import DOMAIN
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,

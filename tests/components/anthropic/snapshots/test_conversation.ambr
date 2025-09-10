@@ -40,6 +40,7 @@
       'thinking_content': "Okay, let's give it a shot. Will I pass the test?",
       'tool_calls': list([
         dict({
+          'external': False,
           'id': 'toolu_0123456789AbCdEfGhIjKlM',
           'tool_args': dict({
             'param1': 'test_value',

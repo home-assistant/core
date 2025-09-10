@@ -60,7 +60,7 @@ class PlaystationNetwork:
         self.legacy_profile: dict[str, Any] | None = None
         self.trophy_titles: list[TrophyTitle] = []
         self._title_icon_urls: dict[str, str] = {}
-        self.friends_list: dict[str, User] | None = None
+        self.friends_list: dict[str, User] = {}
 
     def _setup(self) -> None:
         """Setup PSN."""
@@ -68,6 +68,9 @@ class PlaystationNetwork:
         self.client = self.psn.me()
         self.shareable_profile_link = self.client.get_shareable_profile_link()
         self.trophy_titles = list(self.user.trophy_titles(page_size=500))
+        self.friends_list = {
+            friend.account_id: friend for friend in self.user.friends_list()
+        }
 
     async def async_setup(self) -> None:
         """Setup PSN."""

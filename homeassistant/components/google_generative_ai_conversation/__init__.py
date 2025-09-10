@@ -30,7 +30,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -72,18 +71,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def generate_content(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
 
-        if call.data[CONF_IMAGE_FILENAME]:
-            # Deprecated in 2025.3, to remove in 2025.9
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_image_filename_parameter",
-                breaks_in_ha_version="2025.9.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_image_filename_parameter",
-            )
-
         prompt_parts = [call.data[CONF_PROMPT]]
 
         config_entry: GoogleGenerativeAIConfigEntry = (
@@ -92,7 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         client = config_entry.runtime_data
 
-        files = call.data[CONF_IMAGE_FILENAME] + call.data[CONF_FILENAMES]
+        files = call.data[CONF_FILENAMES]
 
         if files:
             for filename in files:
@@ -140,9 +127,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema(
             {
                 vol.Required(CONF_PROMPT): cv.string,
-                vol.Optional(CONF_IMAGE_FILENAME, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
                 vol.Optional(CONF_FILENAMES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -260,9 +244,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 entity_disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
                 and not all_disabled
             ):
-                # Device and entity registries don't update the disabled_by flag
-                # when moving a device or entity from one config entry to another,
-                # so we need to do it manually.
+                # Device and entity registries will set the disabled_by flag to None
+                # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
+                # config entry, but we want to set it to DEVICE or USER instead,
                 entity_disabled_by = (
                     er.RegistryEntryDisabler.DEVICE
                     if device
@@ -277,9 +261,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             )
 
         if device is not None:
-            # Device and entity registries don't update the disabled_by flag when
-            # moving a device or entity from one config entry to another, so we
-            # need to do it manually.
+            # Device and entity registries will set the disabled_by flag to None
+            # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
+            # config entry, but we want to set it to USER instead,
             device_disabled_by = device.disabled_by
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
