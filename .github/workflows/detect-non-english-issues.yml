@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Check issue language
         id: detect_language
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
@@ -90,7 +90,7 @@ jobs:
 
       - name: Process non-English issues
         if: steps.detect_language.outputs.should_continue == 'true'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           AI_RESPONSE: ${{ steps.ai_language_detection.outputs.response }}
           ISSUE_NUMBER: ${{ steps.detect_language.outputs.issue_number }}
