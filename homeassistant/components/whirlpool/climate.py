@@ -94,7 +94,9 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self._appliance.set_temp(kwargs.get(ATTR_TEMPERATURE))
+        AirConEntity._check_service_request(
+            await self._appliance.set_temp(kwargs.get(ATTR_TEMPERATURE))
+        )
 
     @property
     def current_humidity(self) -> int:
@@ -108,7 +110,9 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        await self._appliance.set_humidity(humidity)
+        AirConEntity._check_service_request(
+            await self._appliance.set_humidity(humidity)
+        )
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -122,13 +126,17 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         if hvac_mode == HVACMode.OFF:
-            await self._appliance.set_power_on(False)
+            AirConEntity._check_service_request(
+                await self._appliance.set_power_on(False)
+            )
             return
 
         mode = HVAC_MODE_TO_AIRCON_MODE[hvac_mode]
-        await self._appliance.set_mode(mode)
+        AirConEntity._check_service_request(await self._appliance.set_mode(mode))
         if not self._appliance.get_power_on():
-            await self._appliance.set_power_on(True)
+            AirConEntity._check_service_request(
+                await self._appliance.set_power_on(True)
+            )
 
     @property
     def fan_mode(self) -> str:
@@ -139,7 +147,9 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         fanspeed = FAN_MODE_TO_AIRCON_FANSPEED[fan_mode]
-        await self._appliance.set_fanspeed(fanspeed)
+        AirConEntity._check_service_request(
+            await self._appliance.set_fanspeed(fanspeed)
+        )
 
     @property
     def swing_mode(self) -> str:
@@ -147,13 +157,15 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
         return SWING_HORIZONTAL if self._appliance.get_h_louver_swing() else SWING_OFF
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
-        """Set new target temperature."""
-        await self._appliance.set_h_louver_swing(swing_mode == SWING_HORIZONTAL)
+        """Set swing mode."""
+        AirConEntity._check_service_request(
+            await self._appliance.set_h_louver_swing(swing_mode == SWING_HORIZONTAL)
+        )
 
     async def async_turn_on(self) -> None:
         """Turn device on."""
-        await self._appliance.set_power_on(True)
+        AirConEntity._check_service_request(await self._appliance.set_power_on(True))
 
     async def async_turn_off(self) -> None:
         """Turn device off."""
-        await self._appliance.set_power_on(False)
+        AirConEntity._check_service_request(await self._appliance.set_power_on(False))
