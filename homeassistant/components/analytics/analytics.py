@@ -89,8 +89,12 @@ from .const import (
 DATA_ANALYTICS_DEVICE_MODIFIERS = "analytics_device_modifiers"
 DATA_ANALYTICS_ENTITY_MODIFIERS = "analytics_entity_modifiers"
 
-type DeviceModifier = Callable[[HomeAssistant, str, DeviceAnalytics], Awaitable[None]]
-type EntityModifier = Callable[[HomeAssistant, str, EntityAnalytics], Awaitable[None]]
+type DeviceModifier = Callable[
+    [HomeAssistant, dict[str, DeviceAnalytics]], Awaitable[None]
+]
+type EntityModifier = Callable[
+    [HomeAssistant, dict[str, EntityAnalytics]], Awaitable[None]
+]
 
 
 @singleton(DATA_ANALYTICS_DEVICE_MODIFIERS)
@@ -135,14 +139,14 @@ class AnalyticsPlatformProtocol(Protocol):
     """Define the format of analytics platforms."""
 
     async def async_modify_device_analytics(
-        self, hass: HomeAssistant, device_id: str, analytics: DeviceAnalytics
+        self, hass: HomeAssistant, devices_analytics: dict[str, DeviceAnalytics]
     ) -> None:
-        """Modify the device analytics."""
+        """Modify the analytics for devices."""
 
     async def async_modify_entity_analytics(
-        self, hass: HomeAssistant, entity_id: str, analytics: EntityAnalytics
+        self, hass: HomeAssistant, entities_analytics: dict[str, EntityAnalytics]
     ) -> None:
-        """Modify the entity analytics."""
+        """Modify the analytics for entities."""
 
 
 async def _async_get_analytics_platform(
@@ -516,11 +520,9 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
 
     dev_reg = dr.async_get(hass)
 
-    # We need to refer to other devices, for example in `via_device` field.
-    # We don't however send the original device ids outside of Home Assistant,
-    # instead we refer to devices by (integration_domain, index_in_integration_device_list).
-    device_id_mapping: dict[str, tuple[str, int]] = {}
+    modifiable_devices_infos: dict[str, dict[str, DeviceAnalytics]] = {}
 
+    # Get modifiable device infos
     for device_entry in dev_reg.devices.values():
         if not device_entry.primary_config_entry:
             continue
@@ -533,21 +535,28 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
             continue
 
         integration_domain = config_entry.domain
-        integration_info = integrations_info.setdefault(
-            integration_domain, {"devices": [], "entities": []}
-        )
 
-        modifiable_device_info = DeviceAnalytics(
+        modifiable_devices_info = modifiable_devices_infos.setdefault(
+            integration_domain, {}
+        )
+        modifiable_devices_info[device_entry.id] = DeviceAnalytics(
             sw_version=device_entry.sw_version,
         )
 
+    # We need to refer to other devices, for example in `via_device` field.
+    # We don't however send the original device ids outside of Home Assistant,
+    # instead we refer to devices by (integration_domain, index_in_integration_device_list).
+    device_id_mapping: dict[str, tuple[str, int]] = {}
+
+    # Fill out remaining information about devices
+    for integration_domain, modifiable_devices_info in modifiable_devices_infos.items():
         if (
             device_modifier := await _async_get_device_modifier(
                 hass, integration_domain
             )
         ) is not None:
             try:
-                await device_modifier(hass, device_entry.id, modifiable_device_info)
+                await device_modifier(hass, modifiable_devices_info)
             except Exception as err:  # noqa: BLE001
                 LOGGER.exception(
                     "Calling async_modify_device_analytics for integration '%s' failed: %s",
@@ -556,24 +565,31 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
                 )
                 continue
 
+        integration_info = integrations_info.setdefault(
+            integration_domain, {"devices": [], "entities": []}
+        )
+
         devices_info = integration_info["devices"]
 
-        device_id_mapping[device_entry.id] = (integration_domain, len(devices_info))
+        for device_id, modifiable_device_info in modifiable_devices_info.items():
+            device_entry = dev_reg.devices[device_id]
 
-        devices_info.append(
-            {
-                "entities": [],
-                "entry_type": device_entry.entry_type,
-                "extra": modifiable_device_info.extra,
-                "has_configuration_url": device_entry.configuration_url is not None,
-                "hw_version": device_entry.hw_version,
-                "manufacturer": device_entry.manufacturer,
-                "model": device_entry.model,
-                "model_id": device_entry.model_id,
-                "sw_version": modifiable_device_info.sw_version,
-                "via_device": device_entry.via_device_id,
-            }
-        )
+            device_id_mapping[device_entry.id] = (integration_domain, len(devices_info))
+
+            devices_info.append(
+                {
+                    "entities": [],
+                    "entry_type": device_entry.entry_type,
+                    "extra": modifiable_device_info.extra,
+                    "has_configuration_url": device_entry.configuration_url is not None,
+                    "hw_version": device_entry.hw_version,
+                    "manufacturer": device_entry.manufacturer,
+                    "model": device_entry.model,
+                    "model_id": device_entry.model_id,
+                    "sw_version": modifiable_device_info.sw_version,
+                    "via_device": device_entry.via_device_id,
+                }
+            )
 
     # Fill out via_device with new device ids
     for integration_info in integrations_info.values():
@@ -584,27 +600,33 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
 
     ent_reg = er.async_get(hass)
 
+    modifiable_entities_infos: dict[str, dict[str, EntityAnalytics]] = {}
+
+    # Get modifiable entity infos
     for entity_entry in ent_reg.entities.values():
         integration_domain = entity_entry.platform
-        integration_info = integrations_info.setdefault(
-            integration_domain, {"devices": [], "entities": []}
-        )
 
-        modifiable_entity_info = EntityAnalytics(
+        modifiable_entities_info = modifiable_entities_infos.setdefault(
+            integration_domain, {}
+        )
+        modifiable_entities_info[entity_entry.entity_id] = EntityAnalytics(
             capabilities=dict(entity_entry.capabilities)
             if entity_entry.capabilities is not None
             else None,
         )
 
+    # Fill out remaining information about entities
+    for (
+        integration_domain,
+        modifiable_entities_info,
+    ) in modifiable_entities_infos.items():
         if (
             entity_modifier := await _async_get_entity_modifier(
                 hass, integration_domain
             )
         ) is not None:
             try:
-                await entity_modifier(
-                    hass, entity_entry.entity_id, modifiable_entity_info
-                )
+                await entity_modifier(hass, modifiable_entities_info)
             except Exception as err:  # noqa: BLE001
                 LOGGER.exception(
                     "Calling async_modify_entity_analytics for integration '%s' failed: %s",
@@ -613,39 +635,46 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
                 )
                 continue
 
+        integration_info = integrations_info.setdefault(
+            integration_domain, {"devices": [], "entities": []}
+        )
+
         devices_info = integration_info["devices"]
         entities_info = integration_info["entities"]
 
-        entity_state = hass.states.get(entity_entry.entity_id)
+        for entity_id, modifiable_entity_info in modifiable_entities_info.items():
+            entity_entry = ent_reg.entities[entity_id]
 
-        entity_info = {
-            # LIMITATION: `assumed_state` can be overridden by users;
-            # we should replace it with the original value in the future.
-            # It is also not present, if entity is not in the state machine,
-            # which can happen for disabled entities.
-            "assumed_state": entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
-            if entity_state is not None
-            else None,
-            "capabilities": modifiable_entity_info.capabilities,
-            "domain": entity_entry.domain,
-            "entity_category": entity_entry.entity_category,
-            "extra": modifiable_entity_info.extra,
-            "has_entity_name": entity_entry.has_entity_name,
-            "original_device_class": entity_entry.original_device_class,
-            # LIMITATION: `unit_of_measurement` can be overridden by users;
-            # we should replace it with the original value in the future.
-            "unit_of_measurement": entity_entry.unit_of_measurement,
-        }
+            entity_state = hass.states.get(entity_entry.entity_id)
 
-        if (
-            ((device_id := entity_entry.device_id) is not None)
-            and ((new_device_id := device_id_mapping.get(device_id)) is not None)
-            and (new_device_id[0] == integration_domain)
-        ):
-            device_info = devices_info[new_device_id[1]]
-            device_info["entities"].append(entity_info)
-        else:
-            entities_info.append(entity_info)
+            entity_info = {
+                # LIMITATION: `assumed_state` can be overridden by users;
+                # we should replace it with the original value in the future.
+                # It is also not present, if entity is not in the state machine,
+                # which can happen for disabled entities.
+                "assumed_state": entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
+                if entity_state is not None
+                else None,
+                "capabilities": modifiable_entity_info.capabilities,
+                "domain": entity_entry.domain,
+                "entity_category": entity_entry.entity_category,
+                "extra": modifiable_entity_info.extra,
+                "has_entity_name": entity_entry.has_entity_name,
+                "original_device_class": entity_entry.original_device_class,
+                # LIMITATION: `unit_of_measurement` can be overridden by users;
+                # we should replace it with the original value in the future.
+                "unit_of_measurement": entity_entry.unit_of_measurement,
+            }
+
+            if (
+                ((device_id_ := entity_entry.device_id) is not None)
+                and ((new_device_id := device_id_mapping.get(device_id_)) is not None)
+                and (new_device_id[0] == integration_domain)
+            ):
+                device_info = devices_info[new_device_id[1]]
+                device_info["entities"].append(entity_info)
+            else:
+                entities_info.append(entity_info)
 
     integrations = {
         domain: integration

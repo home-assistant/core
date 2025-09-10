@@ -5,7 +5,8 @@ from homeassistant.core import HomeAssistant
 
 
 async def async_modify_device_analytics(
-    hass: HomeAssistant, entity_id: str, analytics: DeviceAnalytics
+    hass: HomeAssistant, devices_analytics: dict[str, DeviceAnalytics]
 ) -> None:
-    """Modify the analytics for a device."""
-    analytics.sw_version = None
+    """Modify the analytics for devices."""
+    for device_analytics in devices_analytics.values():
+        device_analytics.sw_version = None
