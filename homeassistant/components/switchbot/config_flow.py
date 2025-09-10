@@ -11,6 +11,7 @@ from switchbot import (
     SwitchbotApiError,
     SwitchbotAuthenticationError,
     SwitchbotModel,
+    fetch_cloud_devices,
     parse_advertisement_data,
 )
 import voluptuous as vol
@@ -308,7 +309,59 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the user step to pick discovered device."""
+        """Handle the user step to choose cloud login or direct discovery."""
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["cloud_login", "select_device"],
+        )
+
+    async def async_step_cloud_login(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the cloud login step."""
+        errors = {}
+        description_placeholders = {}
+
+        if user_input is not None:
+            try:
+                await fetch_cloud_devices(
+                    async_get_clientsession(self.hass),
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                )
+            except (SwitchbotApiError, SwitchbotAccountConnectionError) as ex:
+                _LOGGER.debug(
+                    "Failed to connect to SwitchBot API: %s", ex, exc_info=True
+                )
+                raise AbortFlow(
+                    "api_error", description_placeholders={"error_detail": str(ex)}
+                ) from ex
+            except SwitchbotAuthenticationError as ex:
+                _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
+                errors = {"base": "auth_failed"}
+                description_placeholders = {"error_detail": str(ex)}
+            else:
+                return await self.async_step_select_device()
+
+        user_input = user_input or {}
+        return self.async_show_form(
+            step_id="cloud_login",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_select_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the step to pick discovered device."""
         errors: dict[str, str] = {}
         device_adv: SwitchBotAdvertisement | None = None
         if user_input is not None:
@@ -333,7 +386,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_confirm()
 
         return self.async_show_form(
-            step_id="user",
+            step_id="select_device",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): vol.In(
