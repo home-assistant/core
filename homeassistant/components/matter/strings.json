@@ -435,6 +435,9 @@
       "evse_soc": {
         "name": "State of charge"
       },
+      "nitrogen_dioxide": {
+        "name": "Nitrogen dioxide"
+      },
       "pump_control_mode": {
         "name": "Control mode",
         "state": {
