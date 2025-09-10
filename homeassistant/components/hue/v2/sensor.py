@@ -31,6 +31,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from ..bridge import HueBridge, HueConfigEntry
 from .entity import HueBaseEntity
+from .scene_activity import get_or_create_scene_activity_manager
+from .scene_sensor import (
+    HueActiveSceneLastRecallSensor,
+    HueActiveSceneSensor,
+    HueActiveSmartSceneSensor,
+    SceneActivityBaseEntity,
+)
 
 type SensorType = DevicePower | LightLevel | Temperature | ZigbeeConnectivity
 type ControllerType = (
@@ -75,6 +82,32 @@ async def async_setup_entry(
     register_items(ctrl_base.light_level, HueLightLevelSensor)
     register_items(ctrl_base.device_power, HueBatterySensor)
     register_items(ctrl_base.zigbee_connectivity, HueZigbeeConnectivitySensor)
+
+    # Register group scene activity (regular scene + smart scene related sensors)
+    scene_activity_manager = get_or_create_scene_activity_manager(hass, api)
+
+    @callback
+    def _add_group_scene_activity_entities(
+        group_controller, sensor_cls: type[SceneActivityBaseEntity]
+    ):
+        for group in group_controller:
+            async_add_entities([sensor_cls(bridge, scene_activity_manager, group.id)])
+
+        @callback
+        def _added(event_type: EventType, group) -> None:
+            async_add_entities([sensor_cls(bridge, scene_activity_manager, group.id)])
+
+        config_entry.async_on_unload(
+            group_controller.subscribe(_added, event_filter=EventType.RESOURCE_ADDED)
+        )
+
+    for scene_sensor_cls in (
+        HueActiveSceneSensor,
+        HueActiveSmartSceneSensor,
+        HueActiveSceneLastRecallSensor,
+    ):
+        _add_group_scene_activity_entities(api.groups.room, scene_sensor_cls)
+        _add_group_scene_activity_entities(api.groups.zone, scene_sensor_cls)
 
 
 # pylint: disable-next=hass-enforce-class-module
