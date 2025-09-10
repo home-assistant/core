@@ -155,7 +155,7 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
         return SWING_HORIZONTAL if self._appliance.get_h_louver_swing() else SWING_OFF
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
-        """Set new target temperature."""
+        """Set swing mode."""
         AirConEntity._check_service_request(
             await self._appliance.set_h_louver_swing(swing_mode == SWING_HORIZONTAL)
         )
