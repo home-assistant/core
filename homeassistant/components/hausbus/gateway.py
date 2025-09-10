@@ -111,7 +111,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         # asyncio.run_coroutine_threadsafe(self.async_delete_devices(), self.hass.loop)
 
     async def createDiscoveryButtonAndStartDiscovery(self):
-        """Creates a Button to manually start device discovery and starts discovery"""
+        """Creates a Button to manually start device discovery and starts discovery."""
 
         async def discovery_callback():
             LOGGER.debug("Search devices")
@@ -128,6 +128,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         name: str,
         callback: Callable[[], Coroutine[Any, Any, None]],
     ):
+        """Creates a Button that calls a method."""
         asyncio.run_coroutine_threadsafe(
             self._new_channel_listeners[BUTTON_DOMAIN](
                 HausbusButton(uniqueId, name, callback)
@@ -406,7 +407,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
                         "name for firmwareId %s, fcke: %s, classId %s, instanceId %s is %s", device.firmware_id, device.fcke, instanceObjectId.getClassId(), instanceObjectId.getInstanceId(), name
                     )
 
-                    if deviceId == 22784 or deviceId == 29725:
+                    if deviceId in (HOMESERVER_DEVICE_ID, 9999, 12222):
                         className = ProxyFactory.getBusClassNameForClass(
                             instanceObjectId.getClassId()
                         ).rsplit(".", 1)[-1]
@@ -475,7 +476,8 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
             LOGGER.debug("kein zugehöriger channel")
 
     def generate_device_trigger(self, data, device: HausbusDevice, object_id: ObjectId):
-
+        """Generates device trigger from a haus-bus event."""
+        
         eventType = {
             EvCovered: "button_pressed",
             EvFree: "button_released",
@@ -518,12 +520,14 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         self._new_channel_listeners[platform] = add_channel_callback
 
     def extract_final_number(self, text: str) -> int | None:
+        """Extract a number from the end of the given string."""
         match = re.search(r"(\d+)$", text.strip())
         if match:
             return int(match.group(1))
         return None
 
     async def async_update_device_registry(self, device: HausbusDevice):
+        """Updates the device name in the hass registry."""
         device_registry = async_get_device_registry(self.hass)
         device_entry = device_registry.async_update_device(
             device.hass_device_entry_id, name=device.name
@@ -531,6 +535,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         LOGGER.debug("updated hassEntryId = %s", device_entry.id)
 
     async def async_create_device_registry(self, device: HausbusDevice):
+        """Creates a device in the hass registry."""
         device_registry = async_get_device_registry(self.hass)
         device_entry = device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
@@ -543,6 +548,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         device.set_hass_device_entry_id(device_entry.id)
 
     def was_automatic_get_module_id_already_sent(self, device_id: int) -> bool:
+        """Checks if an automatic get_module_id call makes sense."""
         now = time.time()
         last_time = self.automatic_get_module_id_time.get(device_id)
 
@@ -556,6 +562,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         return False
 
     async def removeDevice(self, device_id: str):
+        """Removes a device from the integration."""
         LOGGER.debug("delete device %s", device_id)
         for objectIdStr, hausBusDevice in self.devices.items():
             if hausBusDevice.device_id == device_id:
@@ -575,6 +582,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         return True
 
     def resetDevice(self, device_id: str):
+        """Resets a Device."""
         LOGGER.debug("reset device %s", device_id)
 
         for objectIdStr, hausBusDevice in self.devices.items():

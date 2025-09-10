@@ -52,7 +52,7 @@ class HausbusButton(ButtonEntity):
         LOGGER.debug("button pressed %s", self._attr_name)
         try:
             await self._callback()
-        except Exception as err:
+        except Exception:
             LOGGER.exception(
-                "Error executing button %s: %s", self._attr_name, err
+                "Error executing button %s", self._attr_name
             )

@@ -28,7 +28,7 @@ ACTION_SCHEMA = vol.Schema(
 # Actions für ein Device holen
 # ----------------------------
 async def async_get_actions(hass: HomeAssistant, device_id: str):
-    """Liefert Actions für ein Device"""
+    """Liefert Actions für ein Device."""
 
     actions = []
 

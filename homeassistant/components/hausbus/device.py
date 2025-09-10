@@ -66,7 +66,8 @@ class HausbusDevice:
             )
 
     def set_model_id(self, model_id: str) -> bool:
-
+        """Sets model id."""
+        
         if self.model_id != model_id:
             LOGGER.debug("old model_id: %s, new model_id: %s", self.model_id, model_id)
             self.model_id = model_id
@@ -77,14 +78,17 @@ class HausbusDevice:
         return False
 
     def set_hass_device_entry_id(self, hass_device_entry_id: str):
-        """Sets the hass device entry"""
+        """Sets the hass device entry."""
         self.hass_device_entry_id = hass_device_entry_id
 
     def is_special_type(self) -> bool:
+        """Returns True if the device has a special type."""
         return self.special_type == 1 or self.special_type == 2
 
     def is_leistungs_regler(self) -> bool:
+        """Returns True if the device is a solid state power regulator."""
         return self.special_type == 1
 
     def is_rollo_modul(self) -> bool:
+        """Returns True if the device is a cover module."""
         return self.special_type == 2
