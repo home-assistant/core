@@ -251,12 +251,19 @@ async def test_async_step_bluetooth_not_connectable(hass: HomeAssistant) -> None
 async def test_user_setup_wohand(hass: HomeAssistant) -> None:
     """Test the user initiated form with password and valid mac."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOHAND_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -292,12 +299,20 @@ async def test_user_setup_wohand_already_configured(hass: HomeAssistant) -> None
         unique_id="aabbccddeeff",
     )
     entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOHAND_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
@@ -309,12 +324,20 @@ async def test_user_setup_wohand_replaces_ignored(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={}, unique_id="aabbccddeeff", source=SOURCE_IGNORE
     )
     entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOHAND_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -339,12 +362,19 @@ async def test_user_setup_wohand_replaces_ignored(hass: HomeAssistant) -> None:
 async def test_user_setup_wocurtain(hass: HomeAssistant) -> None:
     """Test the user initiated form with password and valid mac."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOCURTAIN_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -370,6 +400,12 @@ async def test_user_setup_wocurtain(hass: HomeAssistant) -> None:
 async def test_user_setup_wocurtain_or_bot(hass: HomeAssistant) -> None:
     """Test the user initiated form with valid address."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[
@@ -379,11 +415,12 @@ async def test_user_setup_wocurtain_or_bot(hass: HomeAssistant) -> None:
             WOHAND_SERVICE_INFO_NOT_CONNECTABLE,
         ],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "select_device"
     assert result["errors"] == {}
 
     with patch_async_setup_entry() as mock_setup_entry:
@@ -406,6 +443,12 @@ async def test_user_setup_wocurtain_or_bot(hass: HomeAssistant) -> None:
 async def test_user_setup_wocurtain_or_bot_with_password(hass: HomeAssistant) -> None:
     """Test the user initiated form and valid address and a bot with a password."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[
@@ -414,11 +457,12 @@ async def test_user_setup_wocurtain_or_bot_with_password(hass: HomeAssistant) ->
             WOHAND_SERVICE_INFO_NOT_CONNECTABLE,
         ],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "select_device"
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -450,12 +494,19 @@ async def test_user_setup_wocurtain_or_bot_with_password(hass: HomeAssistant) ->
 async def test_user_setup_single_bot_with_password(hass: HomeAssistant) -> None:
     """Test the user initiated form for a bot with a password."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOHAND_ENCRYPTED_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "password"
@@ -482,12 +533,19 @@ async def test_user_setup_single_bot_with_password(hass: HomeAssistant) -> None:
 async def test_user_setup_woencrypted_key(hass: HomeAssistant) -> None:
     """Test the user initiated form for a lock."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOLOCK_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "encrypted_choose_method"
@@ -548,12 +606,19 @@ async def test_user_setup_woencrypted_key(hass: HomeAssistant) -> None:
 async def test_user_setup_woencrypted_auth(hass: HomeAssistant) -> None:
     """Test the user initiated form for a lock."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOLOCK_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "encrypted_choose_method"
@@ -623,12 +688,19 @@ async def test_user_setup_woencrypted_auth_switchbot_api_down(
 ) -> None:
     """Test the user initiated form for a lock when the switchbot api is down."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOLOCK_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "encrypted_choose_method"
@@ -661,6 +733,12 @@ async def test_user_setup_woencrypted_auth_switchbot_api_down(
 async def test_user_setup_wolock_or_bot(hass: HomeAssistant) -> None:
     """Test the user initiated form for a lock."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[
@@ -668,11 +746,12 @@ async def test_user_setup_wolock_or_bot(hass: HomeAssistant) -> None:
             WOHAND_SERVICE_ALT_ADDRESS_INFO,
         ],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "select_device"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
@@ -721,12 +800,19 @@ async def test_user_setup_wolock_or_bot(hass: HomeAssistant) -> None:
 
 async def test_user_setup_wosensor(hass: HomeAssistant) -> None:
     """Test the user initiated form with password and valid mac."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOSENSORTH_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -749,14 +835,110 @@ async def test_user_setup_wosensor(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_user_cloud_login(hass: HomeAssistant) -> None:
+    """Test the cloud login flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    # Choose to sign in to cloud account
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "cloud_login"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_login"
+
+    # Test successful cloud login
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.fetch_cloud_devices",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[WOHAND_SERVICE_INFO],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test@example.com",
+                CONF_PASSWORD: "testpass",
+            },
+        )
+
+    # Should proceed to device selection with single device, so go to confirm
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    # Confirm device setup
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Bot EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_SENSOR_TYPE: "bot",
+    }
+
+
+async def test_user_cloud_login_auth_failed(hass: HomeAssistant) -> None:
+    """Test the cloud login flow with authentication failure."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    # Choose to sign in to cloud account
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "cloud_login"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_login"
+
+    # Test authentication failure
+    with patch(
+        "homeassistant.components.switchbot.config_flow.fetch_cloud_devices",
+        side_effect=SwitchbotAuthenticationError("Invalid credentials"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test@example.com",
+                CONF_PASSWORD: "wrongpass",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_login"
+    assert result["errors"] == {"base": "auth_failed"}
+    assert "Invalid credentials" in result["description_placeholders"]["error_detail"]
+
+
 async def test_user_no_devices(hass: HomeAssistant) -> None:
     """Test the user initiated form with password and valid mac."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
@@ -774,13 +956,20 @@ async def test_async_step_user_takes_precedence_over_discovery(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOCURTAIN_SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
         )
         assert result["type"] is FlowResultType.FORM
 
