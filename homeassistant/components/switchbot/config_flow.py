@@ -88,6 +88,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_adv: SwitchBotAdvertisement | None = None
         self._discovered_advs: dict[str, SwitchBotAdvertisement] = {}
+        self._cloud_username: str | None = None
+        self._cloud_password: str | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -180,6 +182,14 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         assert self._discovered_adv is not None
         description_placeholders = {}
+
+        # If we have saved credentials from cloud login, try them first
+        if user_input is None and self._cloud_username and self._cloud_password:
+            user_input = {
+                CONF_USERNAME: self._cloud_username,
+                CONF_PASSWORD: self._cloud_password,
+            }
+
         if user_input is not None:
             model: SwitchbotModel = self._discovered_adv.data["modelName"]
             cls = ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS[model]
@@ -201,6 +211,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
                 errors = {"base": "auth_failed"}
                 description_placeholders = {"error_detail": str(ex)}
+                # Clear saved credentials if auth failed
+                self._cloud_username = None
+                self._cloud_password = None
             else:
                 return await self.async_step_encrypted_key(key_details)
 
@@ -341,6 +354,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": "auth_failed"}
                 description_placeholders = {"error_detail": str(ex)}
             else:
+                # Save credentials for potential encrypted device auth
+                self._cloud_username = user_input[CONF_USERNAME]
+                self._cloud_password = user_input[CONF_PASSWORD]
                 return await self.async_step_select_device()
 
         user_input = user_input or {}
