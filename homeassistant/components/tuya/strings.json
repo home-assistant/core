@@ -139,6 +139,9 @@
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
+      "indexed_temperature": {
+        "name": "Temperature {index}"
+      },
       "time": {
         "name": "Time"
       },
@@ -177,6 +180,9 @@
       },
       "cook_temperature": {
         "name": "Cook temperature"
+      },
+      "indexed_cook_temperature": {
+        "name": "Cook temperature {index}"
       },
       "cook_time": {
         "name": "Cook time"
