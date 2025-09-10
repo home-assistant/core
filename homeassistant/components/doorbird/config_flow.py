@@ -111,8 +111,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         host: str,
         macaddress: str,
     ) -> None:
-        """
-        Verify discovered device matches existing entry before updating IP.
+        """Verify discovered device matches existing entry before updating IP.
 
         This method performs the following verification steps:
         1. Checks if the host is actually changing.
