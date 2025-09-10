@@ -251,7 +251,8 @@ class BackblazeBackupAgent(BackupAgent):
                 "metadata_version": METADATA_VERSION,
                 "backup_id": backup.backup_id,
                 "backup_metadata": backup.as_dict(),
-            }
+            },
+            indent=2,
         ).encode("utf-8")
 
         # Safety check: validate backup size
