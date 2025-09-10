@@ -1,5 +1,7 @@
 """Base entity for the Whirlpool integration."""
 
+import logging
+
 from whirlpool.appliance import Appliance
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -7,12 +9,15 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class WhirlpoolEntity(Entity):
     """Base class for Whirlpool entities."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _unavailable_logged: bool = False
 
     def __init__(self, appliance: Appliance, unique_id_suffix: str = "") -> None:
         """Initialize the entity."""
@@ -37,4 +42,14 @@ class WhirlpoolEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._appliance.get_online()
+        is_online = self._appliance.get_online()
+
+        if not is_online:
+            if not self._unavailable_logged:
+                _LOGGER.info("The entity %s is unavailable", self.entity_id)
+                self._unavailable_logged = True
+        elif self._unavailable_logged:
+            _LOGGER.info("The entity %s is back online", self.entity_id)
+            self._unavailable_logged = False
+
+        return is_online
