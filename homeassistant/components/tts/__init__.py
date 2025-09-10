@@ -23,12 +23,15 @@ import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
 from propcache.api import cached_property
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.components.media_source import (
     async_resolve_media,
     generate_media_source_id as ms_generate_media_source_id,
+    is_media_source_id,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, PLATFORM_FORMAT
@@ -43,7 +46,6 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
@@ -577,39 +579,31 @@ class ResultStream:
     async def _async_stream_override_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of the overridden result."""
         assert self._override_media_id is not None
-        media = await async_resolve_media(self.hass, self._override_media_id)
 
-        # Determine if we need to do audio conversion
-        preferred_extension: str | None = self.options.get(ATTR_PREFERRED_FORMAT)
-        sample_rate: int | None = self.options.get(ATTR_PREFERRED_SAMPLE_RATE)
-        sample_channels: int | None = self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
-        sample_bytes: int | None = self.options.get(ATTR_PREFERRED_SAMPLE_BYTES)
-
-        needs_conversion = (
-            preferred_extension
-            or (sample_rate is not None)
-            or (sample_channels is not None)
-            or (sample_bytes is not None)
-        )
-
-        if not needs_conversion:
-            # Stream directly from URL (no conversion)
-            session = async_get_clientsession(self.hass)
-            async with session.get(media.url) as response:
-                async for chunk in response.content:
-                    yield chunk
-
-            return
+        if is_media_source_id(self._override_media_id):
+            media = await async_resolve_media(self.hass, self._override_media_id)
+            media_path_or_url = media.path or media.url
+        else:
+            media_path_or_url = async_process_play_media_url(
+                self.hass, self._override_media_id
+            )
 
         # Use ffmpeg to convert audio to preferred format
+        if not (to_extension := self.options.get(ATTR_PREFERRED_FORMAT)):
+            # We have to have a file extension
+            if isinstance(media_path_or_url, Path):
+                to_extension = media_path_or_url.suffix
+            else:
+                to_extension = Path(URL(media_path_or_url).path).suffix[1:]
+
         converted_audio = _async_convert_audio(
             self.hass,
             from_extension=None,
-            audio_input=media.path or media.url,
-            to_extension=preferred_extension,
-            to_sample_rate=sample_rate,
-            to_sample_channels=sample_channels,
-            to_sample_bytes=sample_bytes,
+            audio_input=media_path_or_url,
+            to_extension=to_extension,
+            to_sample_rate=self.options.get(ATTR_PREFERRED_SAMPLE_RATE),
+            to_sample_channels=self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
+            to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),
         )
         async for chunk in converted_audio:
             yield chunk
