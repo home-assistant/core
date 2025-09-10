@@ -663,7 +663,7 @@ async def test_vacuum_operational_error_sensor(
         "navigation_sensor_obscured",
     ]
 
-    set_node_attribute(matter_node, 1, 96, 5, {0: 66})
+    set_node_attribute(matter_node, 1, 97, 5, {0: 66})
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.mock_vacuum_operational_error")
