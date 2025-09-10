@@ -275,7 +275,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict[str, A
         elif hausbus_type == "HausbusCover":
             if service_type.startswith("cover_toggle"):
                 SCHEMA = vol.Schema({})
-        elif hausbus_type == "HausbusEvent" or hausbus_type == "HausbusBinarySensor":
+        elif hausbus_type in {"HausbusEvent", "HausbusBinarySensor"}:
             if service_type.startswith("push_button_configure_events"):
                 SCHEMA = vol.Schema(
                     {

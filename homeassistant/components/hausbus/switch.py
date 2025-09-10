@@ -173,19 +173,19 @@ class HausbusSwitch(HausbusEntity, SwitchEntity):
 
     @callback
     async def async_switch_off(self, offDelay: int):
-        """Switches a relay with the given off delay time"""
+        """Switches a relay with the given off delay time."""
         LOGGER.debug("async_switch_off offDelay %s", offDelay)
         self._channel.off(offDelay)
 
     @callback
     async def async_switch_on(self, duration: int, onDelay: int):
-        """Switches a relay for given duration and on delay time"""
+        """Switches a relay for given duration and on delay time."""
         LOGGER.debug("async_switch_on duration %s, onDelay %s", duration, onDelay)
         self._channel.on(duration, onDelay)
 
     @callback
     async def async_switch_toggle(self, offTime: int, onTime: int, quantity: int):
-        """Toggels a relay with interval with given off and on time and quantity"""
+        """Toggels a relay with interval with given off and on time and quantity."""
         LOGGER.debug(
             "async_switch_toggle offTime %s, onTime %s, quantity %s", offTime, onTime, quantity
         )

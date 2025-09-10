@@ -278,7 +278,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         templates = Templates.get_instance()
 
         # ignore messages sent from this module
-        if deviceId == HOMESERVER_DEVICE_ID or deviceId == 9999 or deviceId == 12222:
+        if deviceId in {HOMESERVER_DEVICE_ID, 9999, 12222}:
             return
 
         if deviceId in [
@@ -564,7 +564,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
     async def removeDevice(self, device_id: str):
         """Removes a device from the integration."""
         LOGGER.debug("delete device %s", device_id)
-        for objectIdStr, hausBusDevice in self.devices.items():
+        for hausBusDevice in self.devices.values():
             if hausBusDevice.device_id == device_id:
                 LOGGER.debug("found delete device %s", hausBusDevice)
                 del self.devices[device_id]
@@ -585,7 +585,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         """Resets a Device."""
         LOGGER.debug("reset device %s", device_id)
 
-        for objectIdStr, hausBusDevice in self.devices.items():
+        for hausBusDevice in self.devices.values():
             if hausBusDevice.hass_device_entry_id == device_id:
                 device_id_int = int(hausBusDevice.device_id)
                 LOGGER.debug("resetting device %s", device_id_int)

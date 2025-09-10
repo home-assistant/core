@@ -76,14 +76,17 @@ class HausbusControl(HausbusEntity, NumberEntity):
         LOGGER.debug("HausBusControl created %s", self._attr_name)
 
     def set_native_value_internal(self, native_value: float):
+        """Sets native value and trigger ha state update."""
         self._value = native_value
         self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
     @property
     def native_value(self):
+        """Returns native value."""
         return self._value
 
     async def async_set_native_value(self, value: float):
+        """Sets native value."""
         LOGGER.debug("async_set_native_value value %s", value)
         value = int(value)
         self._channel.toggleByDuty(value, 0)

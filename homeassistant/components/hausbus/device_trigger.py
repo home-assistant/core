@@ -38,7 +38,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
-    """Used by HA to read the device_trigger of a given device_id"""
+    """Used by HA to read the device_trigger of a given device_id."""
 
     device_registry = async_get_device_registry(hass)
     device = device_registry.async_get(device_id)

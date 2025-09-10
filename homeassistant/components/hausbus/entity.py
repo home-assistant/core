@@ -1,5 +1,6 @@
 """Representation of a Haus-Bus Entity."""
 
+import logging
 from __future__ import annotations
 
 import asyncio
@@ -15,8 +16,6 @@ from homeassistant.helpers.entity import Entity
 from .device import HausbusDevice
 
 DOMAIN = "hausbus"
-
-import logging
 
 LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +84,7 @@ class HausbusEntity(Entity):
         )
 
     async def ensure_configuration(self) -> bool:
-        """Ensures that the channel configuration is known"""
+        """Ensures that the channel configuration is known."""
         if self._configuration:
             return True
 
@@ -95,12 +94,10 @@ class HausbusEntity(Entity):
             await asyncio.wait_for(self._wait_for_configuration(), timeout=5.0)
             return True
         except TimeoutError:
-            LOGGER.warning(
-                "Timeout while waiting for configuration of %s", self.entity_id
-            )
+            LOGGER.warning("Timeout while waiting for configuration of %s", self.entity_id)
             return False
 
     async def _wait_for_configuration(self):
-        """Waits until configuration is received"""
+        """Waits until configuration is received."""
         while not self._configuration:
             await asyncio.sleep(0.1)
