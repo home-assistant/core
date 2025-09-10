@@ -54,7 +54,6 @@ async def _validate_input(
             longitude=user_input[CONF_LOCATION][CONF_LONGITUDE],
         )
     except GoogleWeatherApiError as err:
-        _LOGGER.error("Error connecting to Google Weather API: %s", str(err))
         errors["base"] = "cannot_connect"
         description_placeholders["error_message"] = str(err)
     except Exception:
