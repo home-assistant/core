@@ -5,16 +5,27 @@
         "title": "Set up London Underground",
         "description": "Select which tube lines you want to monitor",
         "data": {
-          "lines": "Tube Lines"
+          "line": "Tube Lines"
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect",
-      "unknown": "Unexpected error"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "London Underground is already configured"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure London Underground",
+        "description": "[%key:component::london_underground::config::step::user::description%]",
+        "data": {
+          "line": "[%key:component::london_underground::config::step::user::data::line%]"
+        }
+      }
     }
   }
 }

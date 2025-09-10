@@ -33,7 +33,6 @@ async def validate_input(hass: HomeAssistant) -> bool:
     try:
         async with asyncio.timeout(10):
             await data.update()
-            _LOGGER.debug("Validation call returned API data: %s", data.data)
     except Exception as error:
         raise CannotConnect from error
     else:
@@ -97,6 +96,8 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
             try:
@@ -106,10 +107,6 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
             else:
-                # Only allow a single instance
-                await self.async_set_unique_id(DOMAIN)
-                self._abort_if_unique_id_configured()
-
                 return self.async_create_entry(
                     title="London Underground",
                     data={},
