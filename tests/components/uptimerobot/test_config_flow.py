@@ -451,7 +451,7 @@ async def test_reconfigure_with_key_present(
         )
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] is None
+    assert result2["errors"] == {}
     assert result2["step_id"] == "reconfigure"
 
     new_key = "u0242ac120003-new"
