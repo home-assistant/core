@@ -83,7 +83,7 @@ class HausbusDevice:
 
     def is_special_type(self) -> bool:
         """Returns True if the device has a special type."""
-        return self.special_type == 1 or self.special_type == 2
+        return self.special_type in {1, 2}
 
     def is_leistungs_regler(self) -> bool:
         """Returns True if the device is a solid state power regulator."""

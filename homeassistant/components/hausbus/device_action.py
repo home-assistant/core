@@ -28,7 +28,7 @@ ACTION_SCHEMA = vol.Schema(
 # Actions für ein Device holen
 # ----------------------------
 async def async_get_actions(hass: HomeAssistant, device_id: str):
-    """Liefert Actions für ein Device."""
+    """Returns the device actions for a device."""
 
     actions = []
 
@@ -66,9 +66,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str):
                 addAction("switch_toggle", name, device_id, ent.entity_id, actions)
             elif hausbus_type == "HausbusCover":
                 addAction("cover_toggle", name, device_id, ent.entity_id, actions)
-            elif (
-                hausbus_type == "HausbusEvent" or hausbus_type == "HausbusBinarySensor"
-            ):
+            elif hausbus_type in {"HausbusEvent", "HausbusBinarySensor"}:
                 addAction(
                     "push_button_configure_events",
                     name,
@@ -91,6 +89,7 @@ def addAction(
     entity_id: str,
     actions: list[dict],
 ):
+    """Adds an action to the given list."""
     actions.append(
         {
             "domain": DOMAIN,
@@ -107,7 +106,7 @@ def addAction(
 async def async_call_action_from_config(
     hass: HomeAssistant, config: dict[str, Any], variables: dict[str, Any], context
 ) -> None:
-
+    """Processes an device action call."""
     service = config["type"].partition(" ")[0]
     service_data = {
         k: v for k, v in config.items() if k not in ("domain", "type", "device_id")
@@ -120,7 +119,8 @@ async def async_call_action_from_config(
 # Action-Capabilities
 # ----------------------------
 async def async_get_action_capabilities(hass: HomeAssistant, config: dict[str, Any]):
-
+    """Returns capabilities for a device action."""
+    
     service_type = config["type"]
     _LOGGER.debug("async_get_action_capabilities %s ", service_type)
 
