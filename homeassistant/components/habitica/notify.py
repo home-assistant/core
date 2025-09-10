@@ -70,12 +70,10 @@ async def async_setup_entry(
             new_members.discard(coordinator.data.user.id)
             if new_members:
                 async_add_entities(
-                    [
-                        HabiticaPrivateMessageNotifyEntity(
-                            coordinator, party_coordinator.data.members[member]
-                        )
-                        for member in new_members
-                    ]
+                    HabiticaPrivateMessageNotifyEntity(
+                        coordinator, party_coordinator.data.members[member]
+                    )
+                    for member in new_members
                 )
                 members_added |= new_members
 
@@ -97,8 +95,6 @@ async def async_setup_entry(
 class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
     """Habitica base notify entity."""
 
-    entity_description: NotifyEntityDescription
-
     def __init__(
         self,
         coordinator: HabiticaDataUpdateCoordinator,
@@ -112,8 +108,6 @@ class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
-        if TYPE_CHECKING:
-            assert self.entity_description.translation_placeholders
         try:
             await self._send_message(message)
         except NotAuthorizedError as e:
@@ -121,7 +115,7 @@ class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
                 translation_domain=DOMAIN,
                 translation_key="send_message_forbidden",
                 translation_placeholders={
-                    **self.entity_description.translation_placeholders,
+                    **self.translation_placeholders,
                     "reason": e.error.message,
                 },
             ) from e
@@ -130,7 +124,7 @@ class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
                 translation_domain=DOMAIN,
                 translation_key="send_message_not_found",
                 translation_placeholders={
-                    **self.entity_description.translation_placeholders,
+                    **self.translation_placeholders,
                     "reason": e.error.message,
                 },
             ) from e
@@ -163,10 +157,11 @@ class HabiticaPartyChatNotifyEntity(HabiticaBaseNotifyEntity):
         party: GroupData,
     ) -> None:
         """Initialize a Habitica entity."""
+        self._attr_translation_placeholders = {CONF_NAME: party.name}
+
         self.entity_description = NotifyEntityDescription(
             key=HabiticaNotify.PARTY_CHAT,
             translation_key=HabiticaNotify.PARTY_CHAT,
-            translation_placeholders={CONF_NAME: party.name},
         )
         self.party = party
         super().__init__(coordinator)
@@ -189,11 +184,10 @@ class HabiticaPrivateMessageNotifyEntity(HabiticaBaseNotifyEntity):
         member: UserData,
     ) -> None:
         """Initialize a Habitica entity."""
-
+        self._attr_translation_placeholders = {CONF_NAME: member.profile.name or ""}
         self.entity_description = NotifyEntityDescription(
             key=f"{member.id!s}_{HabiticaNotify.PRIVATE_MESSAGE}",
             translation_key=HabiticaNotify.PRIVATE_MESSAGE,
-            translation_placeholders={CONF_NAME: member.profile.name or ""},
         )
         self.member = member
         super().__init__(coordinator)
