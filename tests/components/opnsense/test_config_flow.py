@@ -146,3 +146,31 @@ async def test_on_unknown_error(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
+
+
+async def test_reconfigure_successful(hass: HomeAssistant) -> None:
+    """Test reconfiguration of an existing entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_DATA,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.opnsense.config_flow.diagnostics"
+    ) as mock_diagnostics:
+        setup_mock_diagnostics(mock_diagnostics)
+
+        result = await entry.start_reconfigure_flow(hass)
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_TRACKER_INTERFACES: "LAN"},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert entry.data[CONF_TRACKER_INTERFACES] == "LAN"
