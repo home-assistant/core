@@ -6716,7 +6716,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'geniodesk (unsupported)',
+    'model': 'geniodesk',
     'model_id': 'ftbc8rp8ipksdfpv',
     'name': 'mesa',
     'name_by_user': None,

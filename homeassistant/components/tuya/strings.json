@@ -184,6 +184,9 @@
       "cloud_recipe": {
         "name": "Cloud recipe"
       },
+      "height": {
+        "name": "Height"
+      },
       "volume": {
         "name": "Volume"
       },
@@ -501,6 +504,15 @@
         "state": {
           "smart": "Smart",
           "interim": "Interim"
+        }
+      },
+      "desk_level": {
+        "name": "Level",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4"
         }
       },
       "inverter_work_mode": {
