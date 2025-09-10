@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
 import logging
 import re
 import time
-from collections.abc import Callable, Coroutine
 from typing import Any, cast
 
 from custom_components.hausbus.number import HausbusControl
@@ -477,7 +477,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
 
     def generate_device_trigger(self, data, device: HausbusDevice, object_id: ObjectId):
         """Generates device trigger from a haus-bus event."""
-        
+
         eventType = {
             EvCovered: "button_pressed",
             EvFree: "button_released",

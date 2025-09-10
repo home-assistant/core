@@ -67,7 +67,7 @@ class HausbusDevice:
 
     def set_model_id(self, model_id: str) -> bool:
         """Sets model id."""
-        
+
         if self.model_id != model_id:
             LOGGER.debug("old model_id: %s, new model_id: %s", self.model_id, model_id)
             self.model_id = model_id

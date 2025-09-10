@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
 from pyhausbus.de.hausbus.homeassistant.proxy.Rollladen import Rollladen
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.Configuration import (
     Configuration,
@@ -16,9 +15,10 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.Status import Statu
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.params.EDirection import (
     EDirection,
 )
+import voluptuous as vol
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,

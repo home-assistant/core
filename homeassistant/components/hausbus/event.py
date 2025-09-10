@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
 from pyhausbus.de.hausbus.homeassistant.proxy.Taster import Taster
 from pyhausbus.de.hausbus.homeassistant.proxy.taster.data.Configuration import (
     Configuration as TasterConfiguration,
@@ -23,6 +22,7 @@ from pyhausbus.de.hausbus.homeassistant.proxy.taster.params.MEventMask import ME
 from pyhausbus.de.hausbus.homeassistant.proxy.taster.params.MOptionMask import (
     MOptionMask,
 )
+import voluptuous as vol
 
 from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant

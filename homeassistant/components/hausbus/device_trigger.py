@@ -1,7 +1,7 @@
 """Defines device_trigger of the haus-bus integration."""
 
-import logging
 from collections.abc import Awaitable, Callable
+import logging
 from typing import Any
 
 import voluptuous as vol

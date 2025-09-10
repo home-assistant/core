@@ -6,8 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 
 DOMAIN = "hausbus"
 
@@ -120,7 +119,7 @@ async def async_call_action_from_config(
 # ----------------------------
 async def async_get_action_capabilities(hass: HomeAssistant, config: dict[str, Any]):
     """Returns capabilities for a device action."""
-    
+
     service_type = config["type"]
     _LOGGER.debug("async_get_action_capabilities %s ", service_type)
 

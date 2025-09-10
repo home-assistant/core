@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "flow_title": "{host}",
+        "progress": {
+            "wait_for_device": "Searching for Haus-Bus devices..."
+        },
+        "step": {
+            "search_timeout": {
+                "description": "Device discovery timeout. Click Submit to try again."
+            },
+            "user": {
+                "description": "Perform auto-discovery of Haus-Bus devices."
+            }
+        }
+    },
+    "entity": {
+        "light": {
+            "dimmer": {
+                "name": "Dimmer"
+            },
+            "led": {
+                "name": "LED"
+            },
+            "rgbdimmer": {
+                "name": "RGB Dimmer"
+            }
+        }
+    }
+}
