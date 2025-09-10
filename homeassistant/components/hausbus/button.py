@@ -49,10 +49,10 @@ class HausbusButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Is called if a button is pressed."""
-        LOGGER.debug("button pressed %s",self._attr_name)
+        LOGGER.debug("button pressed %s", self._attr_name)
         try:
             await self._callback()
         except Exception as err:
-            LOGGER.error(
-                "Error executing button %s: %s", self._attr_name, err, exc_info=True
+            LOGGER.exception(
+                "Error executing button %s: %s", self._attr_name, err
             )

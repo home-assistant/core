@@ -183,7 +183,7 @@ class HausbusBinarySensor(HausbusEntity, BinarySensorEntity):
             self._attr_extra_state_attributes["debounce_time"] = data.getDebounceTime()
 
             LOGGER.debug(
-                "_attr_extra_state_attributes ", self._attr_extra_state_attributes
+                "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
     @callback

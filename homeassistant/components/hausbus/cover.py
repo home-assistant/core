@@ -109,19 +109,19 @@ class HausbusCover(HausbusEntity, CoverEntity):
 
     @property
     def is_closed(self) -> bool | None:
-        """Returns true if cover is closed"""
+        """Returns true if cover is closed."""
         if self._position is None:
             return None
         return self._position == 0
 
     @property
     def is_opening(self) -> bool | None:
-        """Returns true if cover is open"""
+        """Returns true if cover is open."""
         return self._is_opening
 
     @property
     def is_closing(self) -> bool | None:
-        """Returns true if cover is actually closing"""
+        """Returns true if cover is actually closing."""
         return self._is_closing
 
     async def async_open_cover(self, **kwargs):
@@ -186,7 +186,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
             )
 
     async def async_cover_toggle(self):
-        """Starts the cover in the opposite direction than last time"""
+        """Starts the cover in the opposite direction than last time."""
         LOGGER.debug("async_cover_toggle")
         self._channel.start(EDirection.TOGGLE)
 
@@ -195,7 +195,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
     ):
         """Set cover configuration."""
         LOGGER.debug(
-            f"async_cover_set_configuration close_time {close_time}, open_time {open_time}, invert_direction {invert_direction}"
+            "async_cover_set_configuration close_time %s, open_time %s, invert_direction %s", close_time, open_time, invert_direction
         )
 
         if not await self.ensure_configuration():
