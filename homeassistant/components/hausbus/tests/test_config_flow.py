@@ -1,3 +1,4 @@
+"""Tests for the Hausbus config flow integration."""
 # start in custom_components directory: pytest hausbus/tests/ --cov=hausbus --cov-branch
 import os
 import sys
@@ -37,7 +38,7 @@ async def test_user_flow_success():
         assert result["type"] == "progress"
 
         # Task abwarten -> Progress Done
-        await flow._search_task
+        await flow._search_task # noqa: SLF001
         result = await flow.async_step_user(user_input={})
         assert result["type"] == "progress_done"  # <---- korrekt
 
