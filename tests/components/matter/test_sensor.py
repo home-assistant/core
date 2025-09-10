@@ -354,6 +354,25 @@ async def test_operational_state_sensor(
     assert state.state == "extra_state"
 
 
+@pytest.mark.parametrize("node_fixture", ["silabs_dishwasher"])
+async def test_operational_error_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Operational Error sensor, using a dishwasher fixture."""
+    # OperationalState Cluster / OperationalError attribute (1/96/5)
+    state = hass.states.get("sensor.dishwasher_operational_error")
+    assert state
+    assert state.state == "no_error"
+    assert state.attributes["options"] == [
+        "no_error",
+        "unable_to_start_or_resume",
+        "unable_to_complete_operation",
+        "command_invalid_in_state",
+    ]
+
+
 @pytest.mark.parametrize("node_fixture", ["yandex_smart_socket"])
 async def test_draft_electrical_measurement_sensor(
     hass: HomeAssistant,
