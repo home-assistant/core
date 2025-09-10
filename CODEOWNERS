@@ -1191,6 +1191,8 @@ build.json @home-assistant/supervisor
 /tests/components/pooldose/ @lmaertin
 /homeassistant/components/poolsense/ @haemishkyd
 /tests/components/poolsense/ @haemishkyd
+/homeassistant/components/portainer/ @erwindouna
+/tests/components/portainer/ @erwindouna
 /homeassistant/components/powerfox/ @klaasnicolaas
 /tests/components/powerfox/ @klaasnicolaas
 /homeassistant/components/powerwall/ @bdraco @jrester @daniel-simpson

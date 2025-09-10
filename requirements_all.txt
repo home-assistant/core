@@ -2266,6 +2266,9 @@ pyplaato==0.0.19
 # homeassistant.components.point
 pypoint==3.0.0
 
+# homeassistant.components.portainer
+pyportainer==0.1.7
+
 # homeassistant.components.probe_plus
 pyprobeplus==1.0.1
 
