@@ -19,7 +19,7 @@ DoorBirdPy==3.0.8
 HAP-python==5.0.0
 
 # homeassistant.components.tasmota
-HATasmota==0.10.0
+HATasmota==0.10.1
 
 # homeassistant.components.mastodon
 Mastodon.py==2.1.2
@@ -119,7 +119,7 @@ Tami4EdgeAPI==3.0
 WSDiscovery==2.1.2
 
 # homeassistant.components.accuweather
-accuweather==4.2.0
+accuweather==4.2.1
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -170,7 +170,7 @@ aioairq==0.4.6
 aioairzone-cloud==0.7.2
 
 # homeassistant.components.airzone
-aioairzone==1.0.0
+aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
 aioamazondevices==6.0.0
@@ -235,7 +235,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==40.0.1
+aioesphomeapi==40.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -307,7 +307,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.5.4
+aiontfy==0.5.5
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -366,7 +366,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.8.0
+aioshelly==13.9.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -562,7 +562,7 @@ bimmer-connected[china]==0.17.3
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==3.2.0
+bleak-esphome==3.3.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.4.3
@@ -998,7 +998,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.5
 
 # homeassistant.components.bluetooth
-habluetooth==5.3.1
+habluetooth==5.6.2
 
 # homeassistant.components.cloud
 hass-nabucasa==1.1.0
@@ -1108,7 +1108,7 @@ iometer==0.1.0
 iottycloud==0.3.0
 
 # homeassistant.components.isal
-isal==1.7.1
+isal==1.8.0
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.2
@@ -1527,7 +1527,7 @@ pyDuotecno==2024.10.1
 pyElectra==1.2.4
 
 # homeassistant.components.homee
-pyHomee==1.2.10
+pyHomee==1.3.8
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -1772,7 +1772,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2024.2.3
+pylitterbot==2024.2.4
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.24.0
@@ -2573,7 +2573,7 @@ webmin-xmlrpc==0.0.2
 weheat==2025.6.10
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.21.1
+whirlpool-sixth-sense==0.21.3
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -2637,7 +2637,7 @@ youless-api==2.2.0
 youtubeaio==2.0.0
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.08.11
+yt-dlp[default]==2025.09.05
 
 # homeassistant.components.zamg
 zamg==0.3.6
