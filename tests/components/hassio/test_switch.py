@@ -188,8 +188,17 @@ async def test_switch_state(
         assert result
     await hass.async_block_till_done()
 
+    # Verify that the entity is disabled by default.
+    assert hass.states.get(entity_id) is None
+
+    # Enable the entity.
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     # Verify that the entity have the expected state.
     state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == expected
 
 
@@ -221,8 +230,17 @@ async def test_switch_turn_on(
         assert result
     await hass.async_block_till_done()
 
+    # Verify that the entity is disabled by default.
+    assert hass.states.get(entity_id) is None
+
+    # Enable the entity.
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     # Verify initial state is off
     state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == "off"
 
     # Turn on the switch
@@ -271,8 +289,17 @@ async def test_switch_turn_off(
         assert result
     await hass.async_block_till_done()
 
+    # Verify that the entity is disabled by default.
+    assert hass.states.get(entity_id) is None
+
+    # Enable the entity.
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     # Verify initial state is on
     state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == "on"
 
     # Turn off the switch
