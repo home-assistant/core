@@ -459,6 +459,9 @@
           "navigation_sensor_obscured": "Navigation sensor obscured"
         }
       },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
       "pump_control_mode": {
         "name": "Control mode",
         "state": {
