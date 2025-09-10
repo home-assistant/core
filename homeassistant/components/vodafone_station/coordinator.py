@@ -78,9 +78,10 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         entity_reg = er.async_get(hass)
         self.previous_devices = {
             entry.unique_id
-            for entry in entity_reg.entities.values()
-            if entry.config_entry_id == self.config_entry.entry_id
-            and entry.domain == DEVICE_TRACKER_DOMAIN
+            for entry in er.async_entries_for_config_entry(
+                entity_reg, config_entry.entry_id
+            )
+            if entry.domain == DEVICE_TRACKER_DOMAIN
         }
 
     def _calculate_update_time_and_consider_home(
