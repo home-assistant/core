@@ -1879,6 +1879,8 @@ async def test_create_entry_next_flow(
             self, user_input: dict[str, Any] | None = None
         ) -> config_entries.ConfigFlowResult:
             """Test next step."""
+            if user_input is None:
+                return self.async_show_form(step_id="user")
             return self.async_create_entry(title="user", data={"flow": "user"})
 
     with mock_config_flow("comp", TestFlow):
@@ -1890,7 +1892,7 @@ async def test_create_entry_next_flow(
         )
         await hass.async_block_till_done()
 
-        assert async_setup_entry.call_count == 2
+        assert async_setup_entry.call_count == 1
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "import"
         assert result["data"]["flow"] == "import"
@@ -1901,14 +1903,22 @@ async def test_create_entry_next_flow(
         assert next_flow[1] == result["data"]["next_flow_id"]
 
         entries = hass.config_entries.async_entries("comp")
-        assert len(entries) == 2
+        assert len(entries) == 1
 
-        user_entry = next(
-            (entry for entry in entries if entry.data.get("flow") == "user"),
-            None,
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 1
+        user_flow = flows[0]
+        assert user_flow["flow_id"] == next_flow[1]
+
+        result = await hass.config_entries.flow.async_configure(
+            user_flow["flow_id"], {}
         )
-        assert user_entry is not None
-        assert user_entry.title == "user"
+
+        await hass.async_block_till_done()
+        assert async_setup_entry.call_count == 2
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "user"
+        assert result["data"]["flow"] == "user"
 
 
 async def test_create_entry_options(
