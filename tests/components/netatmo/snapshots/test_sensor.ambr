@@ -7933,8 +7933,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery',
-    'unique_id': '12:34:56:00:86:99-battery_percent',
+    'translation_key': 'Battery',
+    'unique_id': '12:34:56:00:86:99-battery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -7952,56 +7952,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '75',
-  })
-# ---
-# name: test_entity[sensor.window_hall_reachability-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.window_hall_reachability',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reachability',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reachable',
-    'unique_id': '12:34:56:00:86:99-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.window_hall_reachability-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Window Hall Reachability',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.window_hall_reachability',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'False',
+    'state': 'unavailable',
   })
 # ---
 # name: test_entity[sensor.window_hall_rf_strength-entry]
@@ -8028,13 +7979,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:signal',
     'original_name': 'RF strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'rf_strength',
+    'translation_key': 'RF strength',
     'unique_id': '12:34:56:00:86:99-rf_status',
     'unit_of_measurement': None,
   })
@@ -8044,12 +7995,13 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Window Hall RF strength',
+      'icon': 'mdi:signal',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.window_hall_rf_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Full',
+    'state': 'unavailable',
   })
 # ---
