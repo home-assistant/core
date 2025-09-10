@@ -371,6 +371,12 @@ async def test_operational_error_sensor(
         "unable_to_complete_operation",
         "command_invalid_in_state",
     ]
+    set_node_attribute(matter_node, 1, 96, 5, "{ 0: 1 }")
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.dishwasher_operational_error")
+    assert state
+    assert state.state == "unable_to_start_or_resume"
 
 
 @pytest.mark.parametrize("node_fixture", ["yandex_smart_socket"])
@@ -622,3 +628,47 @@ async def test_vacuum_actions(
     state = hass.states.get("sensor.mock_vacuum_estimated_end_time")
     assert state
     assert state.state == "2025-08-29T21:13:20+00:00"
+
+
+@pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
+async def test_vacuum_operational_error_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test RVC Operational Error sensor, using a dishwasher fixture."""
+    # RvcOperationalState Cluster / OperationalError attribute (1/96/5)
+    state = hass.states.get("sensor.mock_vacuum_operational_error")
+    assert state
+    assert state.state == "no_error"
+    assert state.attributes["options"] == [
+        "no_error",
+        "unable_to_start_or_resume",
+        "unable_to_complete_operation",
+        "command_invalid_in_state",
+        "failed_to_find_charging_dock",
+        "stuck",
+        "dust_bin_missing",
+        "dust_bin_full",
+        "water_tank_empty",
+        "water_tank_missing",
+        "water_tank_lid_open",
+        "mop_cleaning_pad_missing",
+        "low_battery",
+        "cannot_reach_target_area",
+        "dirty_water_tank_full",
+        "dirty_water_tank_missing",
+        "wheels_jammed",
+        "brush_jammed",
+        "navigation_sensor_obscured",
+        "unable_to_start_or_resume",
+        "unable_to_complete_operation",
+        "command_invalid_in_state",
+    ]
+
+    set_node_attribute(matter_node, 1, 96, 5, "{ 0: 1 }")
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_vacuum_operational_error")
+    assert state
+    assert state.state == "unable_to_start_or_resume"
