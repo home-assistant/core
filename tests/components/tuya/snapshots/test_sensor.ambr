@@ -6731,7 +6731,7 @@
     'state': '42.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.house_water_level_distance-entry]
+# name: test_platform_setup_and_discovery[sensor.house_water_level_depth-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6746,7 +6746,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.house_water_level_distance',
+    'entity_id': 'sensor.house_water_level_depth',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6761,7 +6761,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'Distance',
+    'original_name': 'Depth',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6771,16 +6771,16 @@
     'unit_of_measurement': 'm',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.house_water_level_distance-state]
+# name: test_platform_setup_and_discovery[sensor.house_water_level_depth-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'House Water Level Distance',
+      'friendly_name': 'House Water Level Depth',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.house_water_level_distance',
+    'entity_id': 'sensor.house_water_level_depth',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -13042,7 +13042,7 @@
     'state': '25.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_distance-entry]
+# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_depth-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13057,7 +13057,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.rainwater_tank_level_distance',
+    'entity_id': 'sensor.rainwater_tank_level_depth',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -13072,7 +13072,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'Distance',
+    'original_name': 'Depth',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -13082,16 +13082,16 @@
     'unit_of_measurement': 'm',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_distance-state]
+# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_depth-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'Rainwater Tank Level Distance',
+      'friendly_name': 'Rainwater Tank Level Depth',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rainwater_tank_level_distance',
+    'entity_id': 'sensor.rainwater_tank_level_depth',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
