@@ -97,22 +97,19 @@ publish:
               label_field: "label"
               description_field: "url"
               multiple: true
+              translation_key: view
               fields:
                 label:
-                  label: Label
                   selector:
                     text:
                 url:
-                  label: URL
                   selector:
                     text:
                       type: url
                 clear:
-                  label: Clear
                   selector:
                     boolean:
                 position:
-                  label: Position
                   selector:
                     select:
                       options:
@@ -126,25 +123,21 @@ publish:
               label_field: "label"
               description_field: "intent"
               multiple: true
+              translation_key: broadcast
               fields:
                 label:
-                  label: Label
                   selector:
                     text:
                 intent:
-                  label: Android intent
                   selector:
                     text:
                 extras:
-                  label: Intent extras
                   selector:
                     object:
                 clear:
-                  label: Clear
                   selector:
                     boolean:
                 position:
-                  label: Position
                   selector:
                     select:
                       options:
@@ -158,18 +151,16 @@ publish:
               label_field: "label"
               description_field: "url"
               multiple: true
+              translation_key: http
               fields:
                 label:
-                  label: Label
                   selector:
                     text:
                 url:
-                  label: URL
                   selector:
                     text:
                       type: url
                 method:
-                  label: HTTP method
                   selector:
                     select:
                       options:
@@ -179,20 +170,16 @@ publish:
                         - DELETE
                       custom_value: true
                 headers:
-                  label: HTTP headers
                   selector:
                     object:
                 body:
-                  label: HTTP body
                   selector:
                     text:
                       multiline: true
                 clear:
-                  label: Clear
                   selector:
                     boolean:
                 position:
-                  label: Position
                   selector:
                     select:
                       options:
