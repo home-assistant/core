@@ -1,6 +1,8 @@
 # serializer version: 1
 # name: test_entry_diagnostics
   dict({
+    'command_list': list([
+    ]),
     'config_entry': dict({
       'data': dict({
         'host': 'localhost',

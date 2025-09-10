@@ -18,8 +18,10 @@ async def async_get_config_entry_diagnostics(
     coordinator = config_entry.runtime_data
 
     device_info = await coordinator.client.get_system_info()
+    command_list = await coordinator.client.get_command_list()
 
     return {
+        "command_list": command_list,
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
         "device_info": async_redact_data(device_info, TO_REDACT),
     }
