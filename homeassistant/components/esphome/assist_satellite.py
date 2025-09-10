@@ -7,7 +7,9 @@ from collections.abc import AsyncIterable
 from functools import partial
 import io
 from itertools import chain
+import json
 import logging
+from pathlib import Path
 import socket
 from typing import Any, cast
 import wave
@@ -19,9 +21,11 @@ from aioesphomeapi import (
     VoiceAssistantAudioSettings,
     VoiceAssistantCommandFlag,
     VoiceAssistantEventType,
+    VoiceAssistantExternalWakeWord,
     VoiceAssistantFeature,
     VoiceAssistantTimerEventType,
 )
+from aiohttp import web
 
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import (
@@ -29,6 +33,7 @@ from homeassistant.components.assist_pipeline import (
     PipelineEventType,
     PipelineStage,
 )
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.intent import (
     TimerEventType,
     TimerInfo,
@@ -129,17 +134,14 @@ class EsphomeAssistSatellite(
 
         self._active_pipeline_index = 0
 
+        # id -> wake word info
+        self._external_wake_words: dict[str, VoiceAssistantExternalWakeWord] = {}
+        self._wake_words_dir = Path(self.hass.config.path("custom_wake_word"))
+
     def _get_entity_id(self, suffix: str) -> str | None:
         """Return the entity id for pipeline select, etc."""
         if self._entry_data.device_info is None:
             return None
-
-        ent_reg = er.async_get(self.hass)
-        return ent_reg.async_get_entity_id(
-            Platform.SELECT,
-            DOMAIN,
-            f"{self._entry_data.device_info.mac_address}-{suffix}",
-        )
 
     @property
     def pipeline_entity_id(self) -> str | None:
@@ -180,11 +182,46 @@ class EsphomeAssistSatellite(
         # Ensure configuration is updated
         await self._update_satellite_config()
 
+    def _get_custom_wake_words(self) -> dict[str, VoiceAssistantExternalWakeWord]:
+        """Get a list of custom wake words."""
+        wake_words = {}
+        for config_path in self._wake_words_dir.glob("*.json"):
+            wake_word_id = config_path.stem
+
+            with open(config_path, encoding="utf-8") as config_file:
+                config_dict = json.load(config_file)
+                if not (model := config_dict.get("model")) or (
+                    not (self._wake_words_dir / model).exists()
+                ):
+                    # Missing model file
+                    continue
+
+                if not (model_type := config_dict.get("type")) or (
+                    not (wake_word := config_dict.get("wake_word"))
+                ):
+                    # Invalid config
+                    continue
+
+                wake_words[wake_word_id] = VoiceAssistantExternalWakeWord(
+                    id=wake_word_id,
+                    wake_word=wake_word,
+                    trained_languages=config_dict.get("trained_languages", []),
+                    model_type=model_type,
+                    url="",  # TODO
+                )
+
+        return wake_words
+
     async def _update_satellite_config(self) -> None:
         """Get the latest satellite configuration from the device."""
+        self._external_wake_words = await self.hass.async_add_executor_job(
+            self._get_custom_wake_words
+        )
+
         try:
             config = await self.cli.get_voice_assistant_configuration(
-                _CONFIG_TIMEOUT_SEC
+                _CONFIG_TIMEOUT_SEC,
+                external_wake_words=self._external_wake_words.values(),
             )
         except TimeoutError:
             # Placeholder config will be used
@@ -784,3 +821,22 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             return
 
         self.transport.sendto(data, self.remote_addr)
+
+
+class WakeWordModelView(HomeAssistantView):
+    """Web view for custom wake word models."""
+
+    requires_auth = False
+    url = "/api/esphome/wake_words/{filename}"
+    name = "api:esphome:wake_words"
+
+    def __init__(self, wake_words_dir: Path) -> None:
+        self._wake_words_dir = wake_words_dir
+
+    async def get(self, request: web.Request, filename: str) -> web.FileResponse:
+        """Start a get request."""
+        model_path = (self._wake_words_dir / filename).resolve()
+        if not model_path.is_relative_to(self._wake_words_dir):
+            raise RuntimeError  # TODO
+
+        return web.FileResponse(model_path)
