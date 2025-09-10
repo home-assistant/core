@@ -936,7 +936,7 @@ faadelays==2023.9.1
 fastdotcom==0.0.3
 
 # homeassistant.components.feedreader
-feedparser==6.0.11
+feedparser==6.0.12
 
 # homeassistant.components.file
 file-read-backwards==2.0.0
