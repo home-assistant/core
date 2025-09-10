@@ -500,7 +500,7 @@
     'area_id': None,
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
-    'configuration_url': 'https://my.netatmo.com/app/weather',
+    'configuration_url': 'https://home.netatmo.com/security',
     'connections': set({
     }),
     'disabled_by': None,
@@ -513,7 +513,6 @@
         '12:34:56:00:86:99',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Netatmo',
@@ -523,7 +522,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
