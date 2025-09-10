@@ -7,7 +7,7 @@ from asyncio import timeout
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict as dataclass_asdict, dataclass
 from datetime import datetime
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 import uuid
 
 import aiohttp
@@ -86,30 +86,19 @@ from .const import (
     STORAGE_VERSION,
 )
 
-DATA_ANALYTICS_DEVICE_MODIFIERS = "analytics_device_modifiers"
-DATA_ANALYTICS_ENTITY_MODIFIERS = "analytics_entity_modifiers"
+DATA_ANALYTICS_MODIFIERS = "analytics_modifiers"
 
-type DeviceModifier = Callable[
-    [HomeAssistant, dict[str, DeviceAnalytics]], Awaitable[None]
-]
-type EntityModifier = Callable[
-    [HomeAssistant, dict[str, EntityAnalytics]], Awaitable[None]
+type AnalyticsModifier = Callable[
+    [HomeAssistant, dict[str, DeviceAnalytics], dict[str, EntityAnalytics]],
+    Awaitable[None],
 ]
 
 
-@singleton(DATA_ANALYTICS_DEVICE_MODIFIERS)
-def _async_get_device_modifiers(
+@singleton(DATA_ANALYTICS_MODIFIERS)
+def _async_get_modifiers(
     hass: HomeAssistant,
-) -> dict[str, DeviceModifier | None]:
-    """Return the device modifiers."""
-    return {}
-
-
-@singleton(DATA_ANALYTICS_ENTITY_MODIFIERS)
-def _async_get_entity_modifiers(
-    hass: HomeAssistant,
-) -> dict[str, EntityModifier | None]:
-    """Return the entity modifiers."""
+) -> dict[str, AnalyticsModifier | None]:
+    """Return the analytics modifiers."""
     return {}
 
 
@@ -138,15 +127,13 @@ class EntityAnalytics:
 class AnalyticsPlatformProtocol(Protocol):
     """Define the format of analytics platforms."""
 
-    async def async_modify_device_analytics(
-        self, hass: HomeAssistant, devices_analytics: dict[str, DeviceAnalytics]
+    async def async_modify_analytics(
+        self,
+        hass: HomeAssistant,
+        devices_analytics: dict[str, DeviceAnalytics],
+        entities_analytics: dict[str, EntityAnalytics],
     ) -> None:
-        """Modify the analytics for devices."""
-
-    async def async_modify_entity_analytics(
-        self, hass: HomeAssistant, entities_analytics: dict[str, EntityAnalytics]
-    ) -> None:
-        """Modify the analytics for entities."""
+        """Modify the analytics."""
 
 
 async def _async_get_analytics_platform(
@@ -163,11 +150,11 @@ async def _async_get_analytics_platform(
         return None
 
 
-async def _async_get_device_modifier(
+async def _async_get_modifier(
     hass: HomeAssistant, domain: str
-) -> DeviceModifier | None:
-    """Get device modifier."""
-    modifiers = _async_get_device_modifiers(hass)
+) -> AnalyticsModifier | None:
+    """Get analytics modifier."""
+    modifiers = _async_get_modifiers(hass)
     modifier = modifiers.get(domain, UNDEFINED)
 
     if modifier is not UNDEFINED:
@@ -178,27 +165,7 @@ async def _async_get_device_modifier(
         modifiers[domain] = None
         return None
 
-    modifier = getattr(platform, "async_modify_device_analytics", None)
-    modifiers[domain] = modifier
-    return modifier
-
-
-async def _async_get_entity_modifier(
-    hass: HomeAssistant, domain: str
-) -> EntityModifier | None:
-    """Get entity modifier."""
-    modifiers = _async_get_entity_modifiers(hass)
-    modifier = modifiers.get(domain, UNDEFINED)
-
-    if modifier is not UNDEFINED:
-        return modifier
-
-    platform = await _async_get_analytics_platform(hass, domain)
-    if platform is None:
-        modifiers[domain] = None
-        return None
-
-    modifier = getattr(platform, "async_modify_entity_analytics", None)
+    modifier = getattr(platform, "async_modify_analytics", None)
     modifiers[domain] = modifier
     return modifier
 
@@ -516,11 +483,12 @@ def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
 
 async def async_devices_payload(hass: HomeAssistant) -> dict:
     """Return detailed information about entities and devices."""
-    integrations_info: dict[str, dict[str, Any]] = {}
-
     dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
 
-    modifiable_devices_infos: dict[str, dict[str, DeviceAnalytics]] = {}
+    modifiable_infos: dict[
+        str, tuple[dict[str, DeviceAnalytics], dict[str, EntityAnalytics]] | None
+    ] = {}
 
     # Get modifiable device infos
     for device_entry in dev_reg.devices.values():
@@ -536,12 +504,46 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
 
         integration_domain = config_entry.domain
 
-        modifiable_devices_info = modifiable_devices_infos.setdefault(
-            integration_domain, {}
-        )
+        modifiable_info = modifiable_infos.setdefault(integration_domain, ({}, {}))
+        if TYPE_CHECKING:
+            assert modifiable_info is not None
+        modifiable_devices_info = modifiable_info[0]
         modifiable_devices_info[device_entry.id] = DeviceAnalytics(
             sw_version=device_entry.sw_version,
         )
+
+    # Get modifiable entity infos
+    for entity_entry in ent_reg.entities.values():
+        integration_domain = entity_entry.platform
+
+        modifiable_info = modifiable_infos.setdefault(integration_domain, ({}, {}))
+        if TYPE_CHECKING:
+            assert modifiable_info is not None
+        modifiable_entities_info = modifiable_info[1]
+        modifiable_entities_info[entity_entry.entity_id] = EntityAnalytics(
+            capabilities=dict(entity_entry.capabilities)
+            if entity_entry.capabilities is not None
+            else None,
+        )
+
+    # Pass modifiable infos to integrations
+    for integration_domain, modifiable_info in modifiable_infos.items():
+        if TYPE_CHECKING:
+            assert modifiable_info is not None
+        if (
+            modifier := await _async_get_modifier(hass, integration_domain)
+        ) is not None:
+            try:
+                await modifier(hass, modifiable_info[0], modifiable_info[1])
+            except Exception as err:  # noqa: BLE001
+                LOGGER.exception(
+                    "Calling async_modify_analytics for integration '%s' failed: %s",
+                    integration_domain,
+                    err,
+                )
+                modifiable_infos[integration_domain] = None
+
+    integrations_info: dict[str, dict[str, Any]] = {}
 
     # We need to refer to other devices, for example in `via_device` field.
     # We don't however send the original device ids outside of Home Assistant,
@@ -549,21 +551,11 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
     device_id_mapping: dict[str, tuple[str, int]] = {}
 
     # Fill out remaining information about devices
-    for integration_domain, modifiable_devices_info in modifiable_devices_infos.items():
-        if (
-            device_modifier := await _async_get_device_modifier(
-                hass, integration_domain
-            )
-        ) is not None:
-            try:
-                await device_modifier(hass, modifiable_devices_info)
-            except Exception as err:  # noqa: BLE001
-                LOGGER.exception(
-                    "Calling async_modify_device_analytics for integration '%s' failed: %s",
-                    integration_domain,
-                    err,
-                )
-                continue
+    for integration_domain, modifiable_info in modifiable_infos.items():
+        if modifiable_info is None:
+            continue
+
+        modifiable_devices_info = modifiable_info[0]
 
         integration_info = integrations_info.setdefault(
             integration_domain, {"devices": [], "entities": []}
@@ -598,42 +590,12 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
                 continue
             device_info["via_device"] = device_id_mapping.get(device_info["via_device"])
 
-    ent_reg = er.async_get(hass)
-
-    modifiable_entities_infos: dict[str, dict[str, EntityAnalytics]] = {}
-
-    # Get modifiable entity infos
-    for entity_entry in ent_reg.entities.values():
-        integration_domain = entity_entry.platform
-
-        modifiable_entities_info = modifiable_entities_infos.setdefault(
-            integration_domain, {}
-        )
-        modifiable_entities_info[entity_entry.entity_id] = EntityAnalytics(
-            capabilities=dict(entity_entry.capabilities)
-            if entity_entry.capabilities is not None
-            else None,
-        )
-
     # Fill out remaining information about entities
-    for (
-        integration_domain,
-        modifiable_entities_info,
-    ) in modifiable_entities_infos.items():
-        if (
-            entity_modifier := await _async_get_entity_modifier(
-                hass, integration_domain
-            )
-        ) is not None:
-            try:
-                await entity_modifier(hass, modifiable_entities_info)
-            except Exception as err:  # noqa: BLE001
-                LOGGER.exception(
-                    "Calling async_modify_entity_analytics for integration '%s' failed: %s",
-                    integration_domain,
-                    err,
-                )
-                continue
+    for integration_domain, modifiable_info in modifiable_infos.items():
+        if modifiable_info is None:
+            continue
+
+        modifiable_entities_info = modifiable_info[1]
 
         integration_info = integrations_info.setdefault(
             integration_domain, {"devices": [], "entities": []}
