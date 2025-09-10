@@ -250,9 +250,8 @@ pymodbus==3.11.1
 # Some packages don't support gql 4.0.0 yet
 gql<4.0.0
 
-# pytest-rerunfailures 16.0 breaks pytest, pin 15.1 until resolved
-# https://github.com/pytest-dev/pytest-rerunfailures/issues/302
-pytest-rerunfailures==15.1
+# Pin pytest-rerunfailures to prevent accidental breaks
+pytest-rerunfailures==16.0.1
 """
 
 GENERATED_MESSAGE = (

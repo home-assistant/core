@@ -1,4 +1,35 @@
 # serializer version: 1
+# name: test_device_registry[1nw1rysgyj8th1l5qbnxw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '1nw1rysgyj8th1l5qbnxw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'SORIA (unsupported)',
+    'model_id': '5l1ht8jygsyr1wn1',
+    'name': 'Panneaux solaires 2',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[2k8wyjo7iidkohuczc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -271,6 +302,37 @@
     'model': 'smart meter with CT-2',
     'model_id': 'tf6qp8t3hl9h7m94',
     'name': 'Consommation',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[4bxfp3kgncpcgx5uycjzs]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '4bxfp3kgncpcgx5uycjzs',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'YINMIK Water Quality Tester (unsupported)',
+    'model_id': 'u5xgcpcngk3pfxb4',
+    'name': 'YINMIK Water Quality Tester',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -712,6 +774,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[6pd3bkidqld]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '6pd3bkidqld',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Metering_3PN_ZB',
+    'model_id': 'dikb3dp6',
+    'name': 'Medidor de Energia',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[6tbtkuv3tal1aesfjxq]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -991,6 +1084,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[8m3ggyvgycjwz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '8m3ggyvgycjwz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'SGS01',
+    'model_id': 'gvygg3m8',
+    'name': 'humid pelargonia',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[97k3pwirjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1232,6 +1356,37 @@
     'model': 'Rewireable Plug 6930HA',
     'model_id': 'HBRBzv1UVBVfF6SL',
     'name': 'Rewireable Plug 6930HA',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[LmLMc0ht1KW2zYAIkw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'LmLMc0ht1KW2zYAIkw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'thermostat',
+    'model_id': 'IAYz2WK1th0cMLmL',
+    'name': 'El termostato de la cocina',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -1487,6 +1642,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[ai9swgb6tyinbwbxjxq]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'ai9swgb6tyinbwbxjxq',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'SWS 16600 WiFi SH',
+    'model_id': 'xbwbniyt6bgws9ia',
+    'name': 'SWS 16600 WiFi SH',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[aje5kxgmhhxdihqizc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1542,6 +1728,37 @@
     'model': 'ST64 Clear',
     'model_id': 'fuupmcr2mb1odkja',
     'name': 'Slaapkamer',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[ao3z3oeyvepe8o3xqdt]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'ao3z3oeyvepe8o3xqdt',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'T & H Sensor (unsupported)',
+    'model_id': 'x3o8epevyeo3z3oa',
+    'name': 'Interior Bedroom Sensor',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -1828,6 +2045,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[bjum5isf7h6xpbrvzc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'bjum5isf7h6xpbrvzc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': '接HA双向计量插座',
+    'model_id': 'vrbpx6h7fsi5mujb',
+    'name': '接HA双向计量插座',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[bl5cuqxnqzkfs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1852,6 +2100,37 @@
     'model': 'Smart Water Timer',
     'model_id': 'nxquc5lb',
     'name': 'Smart Water Timer',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[btyk53n3v10z7a97zc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'btyk53n3v10z7a97zc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Double Digital Meter (unsupported)',
+    'model_id': '79a7z01v3n35kytb',
+    'name': 'Double Digital Meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -1945,6 +2224,37 @@
     'model': 'Tower bladeless fan  (unsupported)',
     'model_id': 'ibytpo6fpnugft1c',
     'name': 'Ventilador Cama',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[cd6bezcadvjngj5jrip]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'cd6bezcadvjngj5jrip',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'QNECT WI-FI PIR SENSOR (unsupported)',
+    'model_id': 'j5jgnjvdaczeb6dc',
+    'name': 'QNECT WI-FI PIR SENSOR',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -2100,6 +2410,37 @@
     'model': 'Smart plug',
     'model_id': 'qm0iq4nqnrlzh4qc',
     'name': 'Elivco Kitchen Socket',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[cvowstbid97lokayjb2oc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'cvowstbid97lokayjb2oc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'PTH-9CW(QC)',
+    'model_id': 'yakol79dibtswovc',
+    'name': 'PTH-9CW 32',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -2324,6 +2665,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[f4vvhmhvseuiqs6pqdt]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'f4vvhmhvseuiqs6pqdt',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Contact Sensor (unsupported)',
+    'model_id': 'p6sqiuesvhmhvv4f',
+    'name': 'Entrance Door',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[fasvixqysw1lxvjprd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -2379,6 +2751,37 @@
     'model': 'Tank A Level',
     'model_id': 'h8lvyoahr6s6aybf',
     'name': 'Rainwater Tank Level',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[fc2ngmpckw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'fc2ngmpckw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'SmartTRV',
+    'model_id': 'cpmgn2cf',
+    'name': 'Bathroom radiator',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -2658,6 +3061,68 @@
     'model': 'Smart Power Strip',
     'model_id': 'tsbguim4trl6fa7g',
     'name': 'Keller',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[g9h9sblxpb5wdwzkqkynw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'g9h9sblxpb5wdwzkqkynw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart IR  (unsupported)',
+    'model_id': 'kzwdw5bpxlbs9h9g',
+    'name': 'IR Minero',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[gbq8kiahk57ct0bpncjynx]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'gbq8kiahk57ct0bpncjynx',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'CBE Pro',
+    'model_id': 'pb0tc75khaik8qbg',
+    'name': 'CBE Pro 2',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -3099,6 +3564,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[i6xywcsymer1kmb6ps]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'i6xywcsymer1kmb6ps',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart DoorBell （WiFi）',
+    'model_id': '6bmk1remyscwyx6i',
+    'name': 'Mirilla puerta',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[iaagy4qigcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -3185,6 +3681,37 @@
     'model': 'Emma Dehumidifier - eeese air care',
     'model_id': 'ka2wfrdoogpvgzfi',
     'name': 'Dehumidifer',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[igkrtodqg14xvfxlqswwc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'igkrtodqg14xvfxlqswwc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Wi-Fi Pet Feeder',
+    'model_id': 'lxfvx41gqdotrkgi',
+    'name': 'Cat Feeder',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -3595,6 +4122,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[jzpap0inhkykqtlwgklc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'jzpap0inhkykqtlwgklc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Curtain switch',
+    'model_id': 'wltqkykhni0papzj',
+    'name': 'Roller shutter Living Room',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[kcdngswaxs8hm52bnocfw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -3991,6 +4549,37 @@
     'model': 'Tower Fan CA-407G Smart',
     'model_id': 'j9fa8ahzac8uvlfl',
     'name': 'Tower Fan CA-407G Smart',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[llw1rhcau4y3othdzc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'llw1rhcau4y3othdzc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Double Digital Meter (unsupported)',
+    'model_id': 'dhto3y4uachr1wll',
+    'name': 'Meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -5889,6 +6478,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[uYmmlWz6zs0dIgYDjbgs]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'uYmmlWz6zs0dIgYDjbgs',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Siren (unsupported)',
+    'model_id': 'DYgId0sz6zWlmmYu',
+    'name': 'Siren',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[uew54dymycjwz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -6068,6 +6688,37 @@
     'model': 'LED Strip Lights',
     'model_id': 'hp6orhaqm6as3jnv',
     'name': 'Master bedroom TV lights',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[vpfdskpi8pr8cbtfzjs]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'vpfdskpi8pr8cbtfzjs',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'geniodesk (unsupported)',
+    'model_id': 'ftbc8rp8ipksdfpv',
+    'name': 'mesa',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -6354,6 +7005,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[y7eeatfzbtbyllk0qbnnz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'y7eeatfzbtbyllk0qbnnz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Soria',
+    'model_id': '0kllybtbzftaee7y',
+    'name': 'Soria',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[yky6kunazmaitupzjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -6409,6 +7091,37 @@
     'model': '',
     'model_id': 'fsxtzzhujkrak2oy',
     'name': 'Kalado Air Purifier',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[yohkwjjdjlzludd3psm]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'yohkwjjdjlzludd3psm',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'ZEDAR K1200 (unsupported)',
+    'model_id': '3ddulzljdjjwkhoy',
+    'name': 'Kattenbak',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
