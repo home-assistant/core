@@ -39,6 +39,7 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
 
     _attr_attribution = "Powered by Waze"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_suggested_display_precision = 0
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_device_info = DeviceInfo(
@@ -63,11 +64,8 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if (
-            self.coordinator.data is not None
-            and self.coordinator.data.duration is not None
-        ):
-            return round(self.coordinator.data.duration)
+        if self.coordinator.data is not None:
+            return self.coordinator.data.duration
         return None
 
     @property

@@ -118,6 +118,17 @@
           }
         }
       }
+    },
+    "sensor": {
+      "next_alarm": {
+        "name": "Next alarm"
+      },
+      "alarm_label": {
+        "name": "Alarm label",
+        "state": {
+          "alarm": "Alarm"
+        }
+      }
     }
   }
 }

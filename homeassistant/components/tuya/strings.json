@@ -148,6 +148,9 @@
       "heat_preservation_time": {
         "name": "Heat preservation time"
       },
+      "indexed_irrigation_duration": {
+        "name": "Irrigation duration {index}"
+      },
       "feed": {
         "name": "Feed"
       },
@@ -223,11 +226,17 @@
       "alarm_minimum": {
         "name": "Alarm minimum"
       },
+      "battery_backup_reserve": {
+        "name": "Battery backup reserve"
+      },
       "installation_height": {
         "name": "Installation height"
       },
       "maximum_liquid_depth": {
         "name": "Maximum liquid depth"
+      },
+      "inverter_output_power_limit": {
+        "name": "Inverter output power limit"
       }
     },
     "select": {
@@ -493,6 +502,14 @@
           "smart": "Smart",
           "interim": "Interim"
         }
+      },
+      "inverter_work_mode": {
+        "name": "Inverter work mode",
+        "state": {
+          "self_powered": "Self-powered",
+          "time_of_use": "Time of use",
+          "manual": "Manual mode"
+        }
       }
     },
     "sensor": {
@@ -531,6 +548,18 @@
       },
       "air_pressure": {
         "name": "Air pressure"
+      },
+      "precipitation_today": {
+        "name": "Total precipitation today"
+      },
+      "precipitation_intensity": {
+        "name": "[%key:component::sensor::entity_component::precipitation_intensity::name%]"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "wind_direction": {
+        "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
       },
       "pm25": {
         "name": "[%key:component::sensor::entity_component::pm25::name%]"
@@ -571,6 +600,9 @@
       "status": {
         "name": "Status"
       },
+      "depth": {
+        "name": "Depth"
+      },
       "last_amount": {
         "name": "Last amount"
       },
@@ -582,6 +614,9 @@
       },
       "total_energy": {
         "name": "Total energy"
+      },
+      "total_power": {
+        "name": "Total power"
       },
       "total_production": {
         "name": "Total production"
@@ -740,6 +775,9 @@
       },
       "liquid_level": {
         "name": "Liquid level"
+      },
+      "supply_frequency": {
+        "name": "Supply frequency"
       }
     },
     "switch": {
@@ -898,6 +936,14 @@
       },
       "frost_protection": {
         "name": "Frost protection"
+      },
+      "output_power_limit": {
+        "name": "Output power limit"
+      }
+    },
+    "valve": {
+      "indexed_valve": {
+        "name": "Valve {index}"
       }
     }
   },

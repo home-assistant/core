@@ -113,6 +113,10 @@ async def test_feeder_robot_sensor(
     assert sensor.state == "10"
     assert sensor.attributes["unit_of_measurement"] == PERCENTAGE
 
+    sensor = hass.states.get("sensor.test_last_feeding")
+    assert sensor.state == "2022-09-08T18:00:00+00:00"
+    assert sensor.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
+
 
 async def test_pet_weight_sensor(
     hass: HomeAssistant, mock_account_with_pet: MagicMock

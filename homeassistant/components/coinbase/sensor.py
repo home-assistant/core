@@ -6,6 +6,7 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -67,6 +68,22 @@ async def async_setup_entry(
     exchange_precision: int = config_entry.options.get(
         CONF_EXCHANGE_PRECISION, CONF_EXCHANGE_PRECISION_DEFAULT
     )
+
+    # Remove orphaned entities
+    registry = er.async_get(hass)
+    existing_entities = er.async_entries_for_config_entry(
+        registry, config_entry.entry_id
+    )
+    for entity in existing_entities:
+        currency = entity.unique_id.split("-")[-1]
+        if (
+            "xe" in entity.unique_id
+            and currency not in config_entry.options.get(CONF_EXCHANGE_RATES, [])
+        ) or (
+            "wallet" in entity.unique_id
+            and currency not in config_entry.options.get(CONF_CURRENCIES, [])
+        ):
+            registry.async_remove(entity.entity_id)
 
     for currency in desired_currencies:
         _LOGGER.debug(
