@@ -121,6 +121,22 @@
               "description": "Apply filters to narrow down the messages received when Home Assistant subscribes to the topic. Filters apply only to the event entity."
             }
           }
+        },
+        "reconfigure": {
+          "title": "Message filters for {topic}",
+          "description": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::description%]",
+          "data": {
+            "filter_priority": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data::filter_priority%]",
+            "filter_tags": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data::filter_tags%]",
+            "filter_title": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data::filter_title%]",
+            "filter_message": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data::filter_message%]"
+          },
+          "data_description": {
+            "filter_priority": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data_description::filter_priority%]",
+            "filter_tags": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data_description::filter_tags%]",
+            "filter_title": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data_description::filter_title%]",
+            "filter_message": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data_description::filter_message%]"
+          }
         }
       },
       "initiate_flow": {
@@ -134,7 +150,8 @@
         "invalid_topic": "Invalid topic. Only letters, numbers, underscores, or dashes allowed."
       },
       "abort": {
-        "already_configured": "Topic is already configured"
+        "already_configured": "Topic is already configured",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       }
     }
   },

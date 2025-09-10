@@ -3,13 +3,16 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+import httpx
+from openai import PermissionDeniedError
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
+from homeassistant.components.openai_conversation import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers import entity_registry as er, issue_registry as ir, selector
 
 from . import create_image_gen_call_item, create_message_item
 
@@ -214,6 +217,7 @@ async def test_generate_image(
     mock_config_entry: MockConfigEntry,
     mock_create_stream: AsyncMock,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test AI Task image generation."""
     entity_id = "ai_task.openai_ai_task"
@@ -257,3 +261,39 @@ async def test_generate_image(
     assert image_data.data == b"A"
     assert image_data.mime_type == "image/png"
     assert image_data.title == "Mock revised prompt."
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "organization_verification_required")
+        is None
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_repair_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that repair issue is raised when verification is required."""
+    with (
+        patch(
+            "openai.resources.responses.AsyncResponses.create",
+            side_effect=PermissionDeniedError(
+                response=httpx.Response(
+                    status_code=403, request=httpx.Request(method="GET", url="")
+                ),
+                body=None,
+                message="Please click on Verify Organization.",
+            ),
+        ),
+        pytest.raises(HomeAssistantError, match="Error talking to OpenAI"),
+    ):
+        await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.openai_ai_task",
+            instructions="Generate test image",
+        )
+
+    assert issue_registry.async_get_issue(DOMAIN, "organization_verification_required")

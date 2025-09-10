@@ -43,13 +43,6 @@ AIRCON_FANSPEED_MAP = {
 
 FAN_MODE_TO_AIRCON_FANSPEED = {v: k for k, v in AIRCON_FANSPEED_MAP.items()}
 
-SUPPORTED_FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW, FAN_OFF]
-SUPPORTED_HVAC_MODES = [
-    HVACMode.COOL,
-    HVACMode.HEAT,
-    HVACMode.FAN_ONLY,
-    HVACMode.OFF,
-]
 SUPPORTED_MAX_TEMP = 30
 SUPPORTED_MIN_TEMP = 16
 SUPPORTED_SWING_MODES = [SWING_HORIZONTAL, SWING_OFF]
@@ -71,9 +64,9 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
 
     _appliance: Aircon
 
-    _attr_fan_modes = SUPPORTED_FAN_MODES
     _attr_name = None
-    _attr_hvac_modes = SUPPORTED_HVAC_MODES
+    _attr_fan_modes = [*FAN_MODE_TO_AIRCON_FANSPEED.keys()]
+    _attr_hvac_modes = [HVACMode.OFF, *HVAC_MODE_TO_AIRCON_MODE.keys()]
     _attr_max_temp = SUPPORTED_MAX_TEMP
     _attr_min_temp = SUPPORTED_MIN_TEMP
     _attr_supported_features = (
@@ -143,8 +136,7 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
-        if not (fanspeed := FAN_MODE_TO_AIRCON_FANSPEED.get(fan_mode)):
-            raise ValueError(f"Invalid fan mode {fan_mode}")
+        fanspeed = FAN_MODE_TO_AIRCON_FANSPEED[fan_mode]
         await self._appliance.set_fanspeed(fanspeed)
 
     @property
