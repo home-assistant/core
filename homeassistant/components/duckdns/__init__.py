@@ -103,6 +103,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: DuckDnsConfigEntry) -> b
     return True
 
 
+async def async_unload_entry(hass: HomeAssistant, entry: DuckDnsConfigEntry) -> bool:
+    """Unload a config entry."""
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        hass.services.async_remove(DOMAIN, SERVICE_SET_TXT)
+    return True
+
+
 _SENTINEL = object()
 
 
