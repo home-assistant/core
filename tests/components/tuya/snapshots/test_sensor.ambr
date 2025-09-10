@@ -3052,7 +3052,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_speed',
+    'translation_key': None,
     'unique_id': 'tuya.6tbtkuv3tal1aesfjxqwindspeed_avg',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -16374,7 +16374,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_speed',
+    'translation_key': None,
     'unique_id': 'tuya.ai9swgb6tyinbwbxjxqwindspeed_avg',
     'unit_of_measurement': 'km/h',
   })
