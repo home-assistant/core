@@ -37,7 +37,9 @@ async def async_setup_entry(
     multiple_entities = entry.data[CONF_MULTIPLE_ENTITIES]
 
     # DataUpdateCoordinator for cyclic requests
-    coordinator = TFAmeDataCoordinator(hass, host, delta_interval, multiple_entities)
+    coordinator = TFAmeDataCoordinator(
+        hass, entry, host, delta_interval, multiple_entities
+    )
 
     # Register listener for option changes
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
@@ -66,7 +68,12 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+    return unload_ok
+    # return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 # ---- Options update listener: option is pull/request interval ----

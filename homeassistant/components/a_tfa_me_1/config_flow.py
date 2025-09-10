@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -106,8 +106,8 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 client = TFAmeData(user_input[CONF_IP_ADDRESS])
                 identifier = await client.get_identifier()
-            except TFAmeException:
-                errors["base"] = "cannot_connect"
+            except TFAmeException as error:
+                errors["base"] = str(error)  #  "host_empty"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -126,10 +126,10 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def _reload_sensors(self):
-        """Reload the sensors."""
-        hass: HomeAssistant = self.config_entry.hass
-        await hass.config_entries.async_reload(self.config_entry.entry_id)
+    # async def _reload_sensors(self):
+    #    """Reload the sensors."""
+    #    hass: HomeAssistant = self.config_entry.hass
+    #    await hass.config_entries.async_reload(self.config_entry.entry_id)
 
     @staticmethod
     @callback
@@ -162,21 +162,12 @@ def is_valid_ip_or_tfa_me(to_verify: dict) -> bool:
     if re.match(mdns_pattern, host):
         return True
 
-    # Letzter Test: Lässt sich der Hostname auflösen?
-    # try:
-    #    socket.gethostbyname(host)
-    #    return True
-    # except socket.gaierror:
     return False
 
 
 # ---- Options handler: set poll interval ----
 class OptionsFlowHandler(OptionsFlow):
     """Options flow for for TFA.me integration."""
-
-    # def __init__(self, config_entry):
-    #    """Initialize options flow."""
-    #    self.config_entry = config_entry
 
     async def async_step_init(self, user_input: None) -> ConfigFlowResult:
         """Handle options menu flow."""
@@ -193,10 +184,8 @@ class OptionsFlowHandler(OptionsFlow):
                     return await self.async_discover_sensors(user_input)
                 if user_input["select_option"] == "action_rain":
                     return await self.async_step_action_rain(user_input)
-                if user_input["select_option"] == "udapte_data":
-                    return await self.async_udpate_data(user_input)
-                # elif user_input["select_option"] == "action_sensors":
-                #    return await self.async_step_action_sensors()
+                if user_input["select_option"] == "update_data":
+                    return await self.async_update_data(user_input)
 
         # No option seletced -> build main option menu
         opt_dict = [
@@ -204,8 +193,7 @@ class OptionsFlowHandler(OptionsFlow):
             SelectOptionDict(value="menu_interval", label="Change request interval"),
             SelectOptionDict(value="discover_sensors", label="Discover new sensors"),
             SelectOptionDict(value="action_rain", label="Reset all rain sensors"),
-            SelectOptionDict(value="udapte_data", label="Reload sensor data"),
-            # SelectOptionDict(value="action_sensors", label="Reload sensors"),
+            SelectOptionDict(value="update_data", label="Reload sensor data"),
         ]
 
         options_schema = vol.Schema(
@@ -216,7 +204,6 @@ class OptionsFlowHandler(OptionsFlow):
                     SelectSelectorConfig(
                         options=opt_dict,
                         mode=SelectSelectorMode.DROPDOWN,  # Dropdown-Menu
-                        # translation_key="Hello World",
                     )
                 )
             }
@@ -263,29 +250,14 @@ class OptionsFlowHandler(OptionsFlow):
             },
         )
 
-    # ---- Change option: Reload/reinit coordinator ----
-    async def async_step_action_sensors(self) -> ConfigFlowResult:
-        """Entry point for option: Reload sensors (Warniung: reinits coordinator!)."""
-        # if user_input is not None:
-        #    if user_input["select_option"] == "action_sensors":
-        # Call reload function
-        await self._reload_sensors()
-        # Update sensors and entities
-        return self.async_create_entry(title="", data={})
-
-    # ---- Reload sensors from TFA.me device ----
-    async def _reload_sensors(self):
-        """Reload the sensor list from device (reinits coordinator!)."""
-        await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-
     # ---- Change option: Reset all rain sensors ----
     async def async_step_action_rain(self, user_input=None) -> ConfigFlowResult:
         """Entry point for option: Reset all rain sensors."""
-        if user_input is not None:
-            if user_input["select_option"] == "action_rain":
+        if user_input is not None:  # Remove?
+            if user_input["select_option"] == "action_rain":  #  remove?
                 coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
                 coordinator.reset_rain_sensors = True
-                # Store in options TODO remove ?
+                # Store in options
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     options={**self.config_entry.options, "action_rain": True},
@@ -301,28 +273,36 @@ class OptionsFlowHandler(OptionsFlow):
                         "homeassistant", "update_entity", {"entity_id": entity}
                     )
 
-                return self.async_create_entry(title="", data=self.config_entry.options)
-
+                return self.async_create_entry(
+                    title="action_rain", data=self.config_entry.options
+                )
+        # Remove ?
         action_schema_rain = vol.Schema({vol.Required("action_rain"): vol.Boolean()})
-
         return self.async_show_form(
-            step_id="action_rain", data_schema=action_schema_rain
+            step_id="action_rain",
+            data_schema=action_schema_rain,
         )
 
     # ---- Change option: Reload all sensor data ----
-    async def async_udpate_data(self, user_input=None) -> ConfigFlowResult:
+    async def async_update_data(self, user_input=None) -> ConfigFlowResult:
         """Entry point for option: Reload all sensor data."""
         if user_input is not None:
-            if user_input["select_option"] == "udapte_data":
+            if user_input["select_option"] == "update_data":
                 coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-                await coordinator.async_refresh()
+                await coordinator.async_refresh()  # get sensor data
+
                 # Update all entities on dashboard
-                for entity in coordinator.sensor_entity_list:
+                for entity_id in coordinator.sensor_entity_list:
+                    ent_str = str(entity_id)
                     await self.hass.services.async_call(
-                        "homeassistant", "update_entity", {"entity_id": entity}
+                        "homeassistant",
+                        "update_entity",
+                        {"entity_id": ent_str},
                     )
 
-        return self.async_create_entry(title="", data=self.config_entry.options)
+        return self.async_create_entry(
+            title="update_data", data=self.config_entry.options
+        )
 
     # ---- Change option: Discover new sensors ----
     async def async_discover_sensors(self, user_input=None) -> ConfigFlowResult:
@@ -333,14 +313,16 @@ class OptionsFlowHandler(OptionsFlow):
                 await coordinator.async_refresh()
                 await coordinator.async_discover_new_entities()
 
-        return self.async_create_entry(title="", data=self.config_entry.options)
-
-    async def _save_device_list(self, device_list):
-        """Save list will all TFA.me stations."""
-        self.hass.config_entries.async_update_entry(
-            self.config_entry, data={"tfa_me_stations": device_list}
+        return self.async_create_entry(
+            title="discover_sensors", data=self.config_entry.options
         )
 
-    def _load_device_list(self):
-        """Load list with all TFA.me stations."""
-        return self.config_entry.data.get("tfa_me_stations", [])
+    # async def _save_device_list(self, device_list):
+    #    """Save list will all TFA.me stations."""
+    #    self.hass.config_entries.async_update_entry(
+    #        self.config_entry, data={"tfa_me_stations": device_list}
+    #    )
+
+    # def _load_device_list(self):
+    #    """Load list with all TFA.me stations."""
+    #    return self.config_entry.data.get("tfa_me_stations", [])

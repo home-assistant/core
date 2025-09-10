@@ -23,7 +23,8 @@
       "invalid_ip_host": "Invalid IP or station ID.",
       "cannot_connect": "Cannot connect to the station.",
       "invalid_multiple_entities": "Invalid value for multiple entities",
-      "unknown": "Unexpected error."
+      "unknown": "Unexpected error.",
+      "host_empty": "Invalid IP or station ID (empty)."
     }
   },
   "options": {
@@ -34,6 +35,10 @@
         "data": {
           "select_option": "Select an option:",
           "interval": "Request interval (Seconds)"
+        },
+        "data_description": {
+          "select_option": "Select an option",
+          "interval": "Polling interval in seconds (10–3600)"
         }
       }
     }

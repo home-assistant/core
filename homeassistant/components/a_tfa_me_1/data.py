@@ -14,8 +14,8 @@ class TFAmeData:
     def __init__(self, host: str) -> None:
         """Initialize client with host."""
 
-        # if host== "unfug":
-        #    raise TFAmeException("Host empty")
+        if host == "":
+            raise TFAmeException("host_empty")
 
         self.host = host
 

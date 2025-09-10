@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEVICE_MAPPING, DOMAIN, ICON_MAPPING, TIMEOUT_MAPPING
 from .coordinator import TFAmeDataCoordinator
@@ -21,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,  # TFAmeConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,  # AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TFA.me as Sensor."""
 
@@ -87,7 +88,7 @@ async def async_setup_entry(
 
 
 # ---- TFA.me sensor entity ----
-class TFAmeSensorEntity(SensorEntity):
+class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
     """Represents in Home Assistant a single measurement of a sensor."""
 
     _attr_has_entity_name = True
@@ -100,51 +101,86 @@ class TFAmeSensorEntity(SensorEntity):
         entity_id: str,
     ) -> None:
         """Initialize sensor entity."""
-        self.coordinator = coordinator
-        self.host = coordinator.host
-        self.multiple_entities = coordinator.multiple_entities
-        # self.gateway_id = gateway_id
-        self.entity_id = entity_id
-        self.gateway_id = self.coordinator.data[self.entity_id]["gateway_id"]
-        self.sensor_id = sensor_id
-        self._attr_icon = ""
-        self._attr_unique_id = entity_id  # just the entity ID
-        self._attr_name = entity_id  # just the entity ID
-        ids_str = f"{sensor_id}_{self.gateway_id}"
-        self._attr_device_info = {
-            "identifiers": {
-                (
-                    DOMAIN,
-                    ids_str,
-                )  # this IDs are used to ground entities tom sensors
-            },  # Unique ID for device/sensor
-            "name": self.format_string_tfa_id(
-                self.sensor_id, self.gateway_id, self.multiple_entities
-            ),  # 'TFA.me XXX-XXX-XXX'
-            "manufacturer": "TFA/Dostmann",
-            "model": self.format_string_tfa_type(sensor_id),  # 'Sensor/Station type XX'
-            # "sw_version": "1.0",
-            # "hw_version": "1.0",
-            # "serial_number": "123"
-        }
-        # History
-        self.rain_history: SensorHistory = SensorHistory(max_age_minutes=60)
-        self.rain_history_24: SensorHistory = SensorHistory(max_age_minutes=(24 * 60))
+        try:
+            super().__init__(coordinator)
+            self.coordinator = coordinator
+            self.host = coordinator.host
+            self.multiple_entities = coordinator.multiple_entities
+            # self.gateway_id = gateway_id
+            self.entity_id = entity_id
+            self.gateway_id = self.coordinator.data[self.entity_id]["gateway_id"]
 
-        # When this is a station add URL to station
-        hex_value = int(sensor_id[:2], 16)
-        if hex_value < 160:
-            self._attr_device_info["configuration_url"] = (
-                f"http://{coordinator.host}/ha_menu"
+            self.sensor_id = sensor_id
+            self._attr_icon = ""
+            self._attr_unique_id = entity_id  # just the entity ID
+            self._attr_name = entity_id  # just the entity ID
+            ids_str = f"{sensor_id}_{self.gateway_id}"
+            self._attr_device_info = {
+                "identifiers": {
+                    (
+                        DOMAIN,
+                        ids_str,
+                    )  # this IDs are used to ground entities tom sensors
+                },  # Unique ID for device/sensor
+                "name": self.format_string_tfa_id(
+                    self.sensor_id, self.gateway_id, self.multiple_entities
+                ),  # 'TFA.me XXX-XXX-XXX'
+                "manufacturer": "TFA/Dostmann",
+                "model": self.format_string_tfa_type(
+                    sensor_id
+                ),  # 'Sensor/Station type XX'
+                # "sw_version": "1.0",
+                # "hw_version": "1.0",
+                # "serial_number": "123"
+            }
+            # History
+            self.rain_history: SensorHistory = SensorHistory(max_age_minutes=60)
+            self.rain_history_24: SensorHistory = SensorHistory(
+                max_age_minutes=(24 * 60)
             )
 
-        # Add icon for measurement
-        self.measure_name = self.coordinator.data[self.entity_id]["measurement"]
-        self.init_measure_value = self.coordinator.data[self.entity_id]["value"]
+            # When this is a station add URL to station
+            hex_value = int(sensor_id[:2], 16)
+            if hex_value < 160:
+                self._attr_device_info["configuration_url"] = (
+                    f"http://{coordinator.host}/ha_menu"
+                )
 
-        self._attr_icon = self.get_icon(
-            self.measure_name, float(self.init_measure_value)
-        )
+            # Add icon for measurement
+            self.measure_name = self.coordinator.data[self.entity_id]["measurement"]
+            self.init_measure_value = self.coordinator.data[self.entity_id]["value"]
+
+            self._attr_icon = self.get_icon(
+                self.measure_name, float(self.init_measure_value)
+            )
+
+        except (ValueError, TypeError, KeyError):
+            return
+
+    # ---- Called when coordinator has new data, used to update rain histories ----
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+
+        if "rain_hour" in self.entity_id:
+            try:
+                value = self.coordinator.data[self.entity_id]["value"]
+                ts = self.coordinator.data[self.entity_id]["ts"]
+                self.rain_history.add_measurement(value, ts)
+
+            except (ValueError, TypeError, KeyError):
+                value = 0
+
+        if "rain_24hours" in self.entity_id:
+            try:
+                value = self.coordinator.data[self.entity_id]["value"]
+                ts = self.coordinator.data[self.entity_id]["ts"]
+                self.rain_history_24.add_measurement(value, ts)
+
+            except (ValueError, TypeError, KeyError):
+                value = 0
+
+        # Update state in HA
+        super()._handle_coordinator_update()
 
     # ---- String helper for sensor names ----
     def format_string_tfa_id(self, s: str, gw_id: str, multiple_entities: bool):
@@ -224,66 +260,33 @@ class TFAmeSensorEntity(SensorEntity):
 
                 # Is this rain sensor last hour
                 if "rain_hour" in self.entity_id:
-                    try:
-                        str_rain = self.entity_id
-                        str_rain = str_rain.replace("_hour", "")
-                        value = self.coordinator.data[str_rain]["value"]
-                        ts = self.coordinator.data[str_rain]["ts"]
-                        self.rain_history.add_measurement(value, ts)
-                        measurement_value = float(0)
-                        if len(self.rain_history.data) >= 2:
-                            oldest, newest = self.rain_history.get_oldest_and_newest()
-                            measurement_value = float(newest[0]) - float(oldest[0])
-                            measurement_value = round(measurement_value, 1)
-                    except Exception as error:
-                        msg2: str = (
-                            "Exception requesting data: str_rain = '"
-                            + str_rain
-                            + "' "
-                            + str(error.__doc__)
-                        )
-                        _LOGGER.error(msg2)
-                        measurement_value = float(0)
+                    # try:
+                    measurement_value = float(0)
+                    # str_rain = self.entity_id
+                    # value = self.coordinator.data[str_rain]["value"]
+                    if len(self.rain_history.data) >= 2:
+                        oldest, newest = self.rain_history.get_oldest_and_newest()
+                        measurement_value = float(newest[0]) - float(oldest[0])
                         measurement_value = round(measurement_value, 1)
-                        raise
+                    # except Exception as error:
+                    #    msg2: str = (
+                    #        "Exception requesting data: str_rain = '"
+                    #        + self.entity_id
+                    #        + "' "
+                    #        + str(error.__doc__)
+                    #    )
+                    #    _LOGGER.error(msg2)
+                    #    measurement_value = float(0)
+                    #    measurement_value = round(measurement_value, 1)
+                    #    raise
 
                 # Is this rain sensor last 24 hours
                 if "rain_24hours" in self.entity_id:
-                    try:
-                        str_rain_24 = self.entity_id
-                        str_rain_24 = str_rain_24.replace("_24hours", "")
-                        value = self.coordinator.data[str_rain_24]["value"]
-                        ts = self.coordinator.data[str_rain_24]["ts"]
-                        self.rain_history_24.add_measurement(value, ts)
-                        measurement_value = float(0)
-                        if len(self.rain_history_24.data) >= 2:
-                            oldest, newest = (
-                                self.rain_history_24.get_oldest_and_newest()
-                            )
-                            measurement_value = float(newest[0]) - float(oldest[0])
-                            measurement_value = round(measurement_value, 1)
-                    except Exception as error:
-                        msg: str = (
-                            "Exception requesting data: str_rain_24 = '"
-                            + str_rain_24
-                            + "' "
-                            + str(error.__doc__)
-                        )
-                        _LOGGER.error(msg)
-                        measurement_value = float(0)
+                    measurement_value = float(0)
+                    if len(self.rain_history_24.data) >= 2:
+                        oldest, newest = self.rain_history_24.get_oldest_and_newest()
+                        measurement_value = float(newest[0]) - float(oldest[0])
                         measurement_value = round(measurement_value, 1)
-                        raise
-
-                # Is this rain sensor last changed
-                if "rain_last" in self.entity_id:
-                    try:
-                        measurement_value = 0
-                        state = self.hass.states.get(self.entity_id)
-                        if state is not None:
-                            measurement_value = state.last_changed_timestamp
-                    except Exception:
-                        measurement_value = 0
-                        raise
 
                 # Is this wind sensor, add degrees entity
                 if "wind_direction_deg" in self.entity_id:
@@ -291,7 +294,6 @@ class TFAmeSensorEntity(SensorEntity):
                         str_wind_deg = self.entity_id
                         str_wind_deg = str_wind_deg.replace("_deg", "")
                         value = self.coordinator.data[str_wind_deg]["value"]
-                        ts = self.coordinator.data[str_wind_deg]["ts"]
                         measurement_value = float(0)
                         measurement_value = float(value) * (360 / 16)
                     except Exception as error:
@@ -316,13 +318,12 @@ class TFAmeSensorEntity(SensorEntity):
 
     # ---- Property: Unit of measurement value, e.g. for wind speed unit is "m/s" ----
     @property
-    # def unit_of_measurement(self) -> str | None:
     def native_unit_of_measurement(self) -> str | None:
         """Unit of measurement value."""
         try:
             unit = self.coordinator.data[self.entity_id]["unit"]
             if unit is None:
-                return None  # Home Assistant shows "unavailable" ?
+                return None  # Home Assistant shows "unavailable"
             return str(unit)
         except (ValueError, TypeError, KeyError):
             return ""
@@ -435,25 +436,24 @@ class TFAmeSensorEntity(SensorEntity):
             | (measurement_type == "rain_1_hour")
             | (measurement_type == "rain_24_hours")
         ):
-            return self.get_rain_direction_icon(value)
+            return self.get_rain_icon(value)
 
         # Unknown measurement type
         return "mdi:help-circle"  # Fallback-Icon
 
     # ---- Get an icon for rain ----
-    def get_rain_direction_icon(self, value):
+    def get_rain_icon(self, value):
         """Return icon for rain based on value."""
         if value is None:
-            return "mdi:compass-outline"
+            return "mdi:help-circle"
         if value < 0.1:
             return ICON_MAPPING["rain"]["none"]
         if 0.1 <= value < 0.5:
             return ICON_MAPPING["rain"]["light"]
         if 0.5 <= value < 4:
             return ICON_MAPPING["rain"]["moderate"]
-        if value >= 4:
-            return ICON_MAPPING["rain"]["heavy"]
-        return ICON_MAPPING["rain"]["moderate"]
+        # if value >= 4:
+        return ICON_MAPPING["rain"]["heavy"]
 
     # ---- Get an icon for wind direction based on values (0...15) ----
     # Remark: there are only 8 arrows for direction but 16 wind direction so icon does not match optimal
@@ -465,7 +465,7 @@ class TFAmeSensorEntity(SensorEntity):
         if 0 <= value <= 1:
             return "mdi:arrow-down"  # N (North)
         if 2 <= value <= 3:
-            return "mdi:aarrow-bottom-left"  # NE (North-East)
+            return "mdi:arrow-bottom-left"  # NE (North-East)
         if 4 <= value <= 5:
             return "mdi:arrow-left"  # E (East)
         if 6 <= value <= 7:
@@ -507,8 +507,16 @@ class SensorHistory:
 
     def add_measurement(self, value, ts):
         """Add new value with time stamp."""
-        self.data.append((value, ts))
-        self.cleanup()
+        ts_last = 0
+        val_last = 0
+        length = len(self.data)
+        if length != 0:
+            entry_last = self.data[-1]
+            ts_last = entry_last[1]
+            val_last = entry_last[0]
+        if (ts_last != ts) & (val_last != value):
+            self.data.append((value, ts))
+            self.cleanup()
 
     def cleanup(self):
         """Remove entries older max_age seconds."""
@@ -531,4 +539,4 @@ class SensorHistory:
         """Return oldest and newest measuerement tuple."""
         if not self.data:
             return None, None  # If list is empty
-        return self.data[0], self.data[-1]  # First and last entry
+        return self.data[0], self.data[-1]  # First(oldest) and last(newest) entry

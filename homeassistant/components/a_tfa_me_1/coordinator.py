@@ -4,10 +4,11 @@ import asyncio
 import logging
 import socket
 
-import aiohttp
-from requests import HTTPError
-
+from homeassistant.components.hassio import async_get_clientsession
 from homeassistant.components.sensor import timedelta
+from homeassistant.config_entries import ConfigEntry
+
+# from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -23,23 +24,29 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         host: str,
         interval: timedelta,
         multiple_entities: bool,
     ) -> None:
         """Initialize data update coordinator."""
-        self.host = host
+        self.host = host  # config_entry.data[CONF_IP_ADDRESS]  # host
         self.first_init = 0
         self.ha = hass
-        self.sensor_entity_list = [str]  # [Entity ID strings]
+        self.config_entry = config_entry
+        self.sensor_entity_list: list[str] = []  # [Entity ID strings]
         self.reset_rain_sensors = False
-        self.multiple_entities = multiple_entities
+        self.multiple_entities = multiple_entities  # config_entry.data[CONF_MULTIPLE_ENTITIES]  #  multiple_entities
         self.gateway_id = ""
-        self.poll_interval = interval
+        self.poll_interval = interval  # config_entry.data[CONF_INTERVAL]  # interval
 
-        # self.devices = hass.config_entry.data.get("tfa_me_stations", [])
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=self.poll_interval)
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=self.poll_interval,
+            config_entry=self.config_entry,
+        )
 
     async def _async_update_data(self):
         """Request and update data."""
@@ -60,12 +67,15 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
         msg: str = "Request URL " + url
         _LOGGER.info(msg)
         try:
-            async with aiohttp.ClientSession() as session:
-                async with asyncio.timeout(5):  # 5 seconds timeout
-                    async with session.get(url) as response:
-                        if response.status != 200:
-                            raise UpdateFailed(f"HTTP Error {response.status}")  # noqa: TRY301
+            session = async_get_clientsession(
+                self.hass
+            )  # ✅ HA-Session statt eigener ClientSession
+            async with asyncio.timeout(5):  # 5 seconds timeout
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        raise UpdateFailed(f"HTTP Error {response.status}")  # noqa: TRY301
 
+                    if response.status == 200:
                         # Get JSON reply from response
                         json_data = await response.json()
 
@@ -219,33 +229,11 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
                                         "ts": sensor["ts"],
                                         "reset_rain": self.reset_rain_sensors,
                                     }
-                                    # rain last changed
-                                    # entity_id_4 = f"{entity_id}_last"  # Entity ID
-                                    # parsed_data[entity_id_4] = {
-                                    #    "sensor_id": sensor_id,
-                                    #    "gateway_id": gateway_id,
-                                    #    "sensor_name": f"{sensor['name']}",
-                                    #    "measurement": f"{measurement}_last",
-                                    #    "value": values["value"],
-                                    #    "unit": "",
-                                    #    "timestamp": sensor.get(
-                                    #        "timestamp", "unknown"
-                                    #    ),  # datetime.utcnow()
-                                    #    "ts": sensor["ts"],
-                                    #    "reset_rain": self.reset_rain_sensors,
-                                    # }
 
                         self.reset_rain_sensors = False
                         if self.first_init < 2:
                             self.first_init += 1
                         return parsed_data  # values are available with self.coordinator.data[self.entity_id]["keyword"]
-
-        except HTTPError as error:
-            msg: str = "HTTP Error requesting data: " + str(error.__doc__)
-            _LOGGER.error(msg)
-            if self.first_init == 0:
-                raise ConfigEntryNotReady(msg) from error  # Never updated
-            raise UpdateFailed(msg) from error  # After first update
 
         except Exception as error:
             msg: str = "Exception requesting data: " + str(error.__doc__)

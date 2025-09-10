@@ -42,6 +42,26 @@ ICON_MAPPING = {
     },
 }
 
+ICON_MAPPING_WIND_DIR = {
+    "0": "mdi:arrow-down",  # N (North)
+    "1": "mdi:arrow-down",  # N (North)
+    "2": "mdi:arrow-bottom-left",  # NE (North-East)
+    "3": "mdi:arrow-bottom-left",  # NE (North-East)
+    "4": "mdi:arrow-left",  # E (East)
+    "5": "mdi:arrow-left",  # E (East)
+    "6": "mdi:arrow-top-left",  # SE (South-East)
+    "7": "mdi:arrow-top-left",  # SE (South-East)
+    "8": "mdi:arrow-up",  # S (South)
+    "9": "mdi:arrow-up",  # S (South)
+    "10": "mdi:arrow-top-right",  # SW (South-West)
+    "11": "mdi:arrow-top-right",  # SW (South-West)
+    "12": "mdi:arrow-right",  # W (West)
+    "13": "mdi:arrow-right",  # W (West)
+    "14": "mdi:arrow-bottom-right",  # NW (North-West)
+    "15": "mdi:arrow-bottom-right",  # NW (North-West)
+}
+
+
 # Short description of all stations & sensors
 DEVICE_MAPPING = {
     # Stations

@@ -52,12 +52,21 @@ class TFAmeTextEntity(TextEntity):
         }
 
         # Add icon for measurement
-        self.measure_name = self.coordinator.data[self.entity_id]["measurement"]
+        try:
+            self.measure_name = self.coordinator.data[self.entity_id]["measurement"]
+        except (ValueError, TypeError, KeyError):
+            self.measure_name = (
+                ""  # Wrong data, Home Assistant shows sensor as "unavailable"
+            )
+
         self.init_measure_value = self.coordinator.data[self.entity_id]["value"]
 
-        self._attr_icon = self.get_icon(
-            self.measure_name, float(self.init_measure_value)
-        )
+        if self.init_measure_value is not None:
+            self._attr_icon = self.get_icon(
+                self.measure_name, float(self.init_measure_value)
+            )
+        else:
+            self._attr_icon = ""
 
     # ---- Property: text value of an entity itself ----
     @property

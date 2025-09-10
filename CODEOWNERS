@@ -39,6 +39,7 @@ build.json @home-assistant/supervisor
 
 # Integrations
 /homeassistant/components/a_tfa_me_1/ @DrMatthiasBlaschke
+/tests/components/a_tfa_me_1/ @DrMatthiasBlaschke
 /homeassistant/components/abode/ @shred86
 /tests/components/abode/ @shred86
 /homeassistant/components/acaia/ @zweckj
