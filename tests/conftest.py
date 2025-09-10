@@ -186,7 +186,7 @@ def pytest_runtest_setup() -> None:
       destinations will be allowed.
 
     - Replace pytest_socket.SocketBlockedError with a variant which inherits from
-      "BaseException" instead of "RuntimeError" so that it is not caught when catching
+      "pytest.Failed" instead of "RuntimeError" so that it is not caught when catching
       and logging "Exception".
 
     freezegun:
@@ -195,7 +195,7 @@ def pytest_runtest_setup() -> None:
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
-    class SocketBlockedError(BaseException):
+    class SocketBlockedError(pytest.Failed):
         def __init__(self, *_args, **_kwargs) -> None:
             super().__init__("A test tried to use socket.socket.")
 
