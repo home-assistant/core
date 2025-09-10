@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
+from homeassistant.util import dt as dt_util
 
 from .bridge import HueBridge, HueConfigEntry
 from .const import DOMAIN
@@ -108,7 +109,7 @@ async def async_setup_entry(
             if active_mode is not None:
                 setattr(scene, "_ha_active_mode", active_mode)
             if last_recall is not None:
-                setattr(scene, "_ha_last_recall", last_recall)
+                setattr(scene, "_ha_last_recall", dt_util.parse_datetime(last_recall))
 
     config_entry.async_on_unload(
         api.events.subscribe(handle_scene_event, resource_filter=ResourceTypes.SCENE)
