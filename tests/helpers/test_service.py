@@ -5,6 +5,7 @@ from collections.abc import Iterable
 from copy import deepcopy
 import dataclasses
 import io
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -2789,3 +2790,4 @@ async def test_register_platform_entity_service_non_entity_service_schema(
             func=Mock(),
         )
         assert expected_message not in caplog.text
+        assert not any(x.levelno > logging.DEBUG for x in caplog.records)
