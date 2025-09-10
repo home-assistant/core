@@ -328,7 +328,7 @@
     'state': '50.0',
   })
 # ---
-# name: test_sensors[air_purifier][sensor.air_purifier_none-entry]
+# name: test_sensors[air_purifier][sensor.air_purifier_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -343,7 +343,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_purifier_none',
+    'entity_id': 'sensor.air_purifier_nitrogen_dioxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -355,25 +355,25 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'nitrogen_dioxide',
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-NitrogenDioxideSensor-1043-0',
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[air_purifier][sensor.air_purifier_none-state]
+# name: test_sensors[air_purifier][sensor.air_purifier_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier None',
+      'friendly_name': 'Air Purifier Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_purifier_none',
+    'entity_id': 'sensor.air_purifier_nitrogen_dioxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -929,7 +929,7 @@
     'state': '28.75',
   })
 # ---
-# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_none-entry]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -944,7 +944,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_none',
+    'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -956,25 +956,25 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'nitrogen_dioxide',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-NitrogenDioxideSensor-1043-0',
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_none-state]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'lightfi-aq1-air-quality-sensor None',
+      'friendly_name': 'lightfi-aq1-air-quality-sensor Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_none',
+    'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
