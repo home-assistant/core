@@ -58,7 +58,7 @@
       },
       "abort": {
         "entry_not_loaded": "Cannot add things while the configuration is disabled.",
-        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
       }
     }
   }
