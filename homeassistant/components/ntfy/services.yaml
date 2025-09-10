@@ -88,3 +88,115 @@ publish:
           type: url
           autocomplete: url
       example: https://example.org/logo.png
+    actions:
+      collapsed: true
+      fields:
+        view:
+          selector:
+            object:
+              label_field: "label"
+              description_field: "url"
+              multiple: true
+              fields:
+                label:
+                  label: Label
+                  selector:
+                    text:
+                url:
+                  label: URL
+                  selector:
+                    text:
+                      type: url
+                clear:
+                  label: Clear
+                  selector:
+                    boolean:
+                position:
+                  label: Position
+                  selector:
+                    select:
+                      options:
+                        - 1
+                        - 2
+                        - 3
+                      mode: dropdown
+        broadcast:
+          selector:
+            object:
+              label_field: "label"
+              description_field: "intent"
+              multiple: true
+              fields:
+                label:
+                  label: Label
+                  selector:
+                    text:
+                intent:
+                  label: Android intent
+                  selector:
+                    text:
+                extras:
+                  label: Intent extras
+                  selector:
+                    object:
+                clear:
+                  label: Clear
+                  selector:
+                    boolean:
+                position:
+                  label: Position
+                  selector:
+                    select:
+                      options:
+                        - 1
+                        - 2
+                        - 3
+                      mode: dropdown
+        http:
+          selector:
+            object:
+              label_field: "label"
+              description_field: "url"
+              multiple: true
+              fields:
+                label:
+                  label: Label
+                  selector:
+                    text:
+                url:
+                  label: URL
+                  selector:
+                    text:
+                      type: url
+                method:
+                  label: HTTP method
+                  selector:
+                    select:
+                      options:
+                        - GET
+                        - POST
+                        - PUT
+                        - DELETE
+                      custom_value: true
+                headers:
+                  label: HTTP headers
+                  selector:
+                    object:
+                body:
+                  label: HTTP body
+                  selector:
+                    text:
+                      multiline: true
+                clear:
+                  label: Clear
+                  selector:
+                    boolean:
+                position:
+                  label: Position
+                  selector:
+                    select:
+                      options:
+                        - 1
+                        - 2
+                        - 3
+                      mode: dropdown

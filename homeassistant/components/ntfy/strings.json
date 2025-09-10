@@ -290,6 +290,9 @@
     },
     "delay_no_call": {
       "message": "Delayed call notifications are not supported"
+    },
+    "too_many_actions": {
+      "message": "Too many actions defined. Only 3 allowed"
     }
   },
   "services": {
@@ -340,6 +343,24 @@
         "icon": {
           "name": "Icon URL",
           "description": "Include an icon that will appear next to the text of the notification. Only JPEG and PNG images are supported."
+        },
+        "view": {
+          "name": "Open website/app",
+          "description": "Adds a 'view' button action that opens a website or app when the action button is tapped. See the documentation for details: https://docs.ntfy.sh/publish/#open-websiteapp"
+        },
+        "broadcast": {
+          "name": "Send Android broadcast",
+          "description": "Adds a 'broadcast' button action that sends an Android broadcast intent when the action button is tapped. This action is only supported on Android. See the documentation for details: https://docs.ntfy.sh/publish/#send-android-broadcast"
+        },
+        "http": {
+          "name": "Send HTTP request",
+          "description": "Adds an 'http' button action that sends an HTTP request when the action button is tapped. See the documentation for details: https://docs.ntfy.sh/publish/#send-http-request"
+        }
+      },
+      "sections": {
+        "actions": {
+          "name": "Action buttons",
+          "description": "Up to three actions ('view', 'broadcast', or 'http') can be defined for a notification. These appear as buttons below the notification content. Actions are executed when the corresponding button is tapped or clicked."
         }
       }
     }
