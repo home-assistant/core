@@ -78,7 +78,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ness Alarm."""
 
     VERSION = 1

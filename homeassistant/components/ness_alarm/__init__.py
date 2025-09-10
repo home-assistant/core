@@ -33,6 +33,9 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SUPPORT_HOME_ARM,
     DOMAIN,
+    SERVICE_AUX,
+    SERVICE_CODE,
+    SERVICE_PANIC,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -185,7 +188,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Ness Alarm."""
-    if hass.services.has_service(DOMAIN, "aux"):
+    if hass.services.has_service(DOMAIN, SERVICE_AUX):
         return
 
     async def handle_aux(call: ServiceCall) -> None:
@@ -201,7 +204,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     async def handle_panic(call: ServiceCall) -> None:
         """Handle panic service call."""
-        code = call.data.get("code")
+        code = call.data.get(SERVICE_CODE)
 
         for entry_data in hass.data[DOMAIN].values():
             if isinstance(entry_data, dict) and "client" in entry_data:
@@ -211,7 +214,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        "aux",
+        SERVICE_AUX,
         handle_aux,
         schema=vol.Schema(
             {
@@ -223,17 +226,11 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        "panic",
+        SERVICE_PANIC,
         handle_panic,
         schema=vol.Schema(
             {
-                vol.Optional("code"): cv.string,
+                vol.Optional(SERVICE_CODE): cv.string,
             }
         ),
     )
-
-
-async def async_unload_services(hass: HomeAssistant) -> None:
-    """Unload Ness Alarm services."""
-    hass.services.async_remove(DOMAIN, "aux")
-    hass.services.async_remove(DOMAIN, "panic")
