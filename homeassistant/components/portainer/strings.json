@@ -12,7 +12,7 @@
           "api_key": "The API key for authenticating with Portainer",
           "verify_ssl": "Verify the SSL certificate of the Portainer instance"
         },
-        "description": "You can create an API key in the Portainer UI. Go to **My account > API keys** and click on **Add API key**"
+        "description": "You can create an API key in the Portainer UI. Go to **My account > API keys** and select **Add API key**"
       }
     },
     "error": {
