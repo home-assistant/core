@@ -1277,7 +1277,7 @@ iottycloud==0.3.0
 iperf3==0.1.11
 
 # homeassistant.components.isal
-isal==1.7.1
+isal==1.8.0
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.2
