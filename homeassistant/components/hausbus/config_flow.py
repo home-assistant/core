@@ -39,7 +39,7 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
     def remove_bus_event_listeners(self) -> None:
         """Cleanup after finishing the config flow."""
         self.home_server.removeBusEventListener(self)
-        #self.home_server.removeBusEventListener(self.home_server)
+        # self.home_server.removeBusEventListener(self.home_server)
 
     def async_remove(self) -> None:
         """Trigger cleanup of bus event listeners after config flow."""
@@ -59,13 +59,21 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
             step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors
         )
 
-    async def async_step_wait_for_device(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_wait_for_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Wait for a hausbus device to be found."""
         if not self._search_task:
-            self._search_task = self.hass.async_create_task(self._async_wait_for_device())
+            self._search_task = self.hass.async_create_task(
+                self._async_wait_for_device()
+            )
 
         if not self._search_task.done():
-            return self.async_show_progress(step_id="wait_for_device",progress_action="wait_for_device",progress_task=self._search_task)
+            return self.async_show_progress(
+                step_id="wait_for_device",
+                progress_action="wait_for_device",
+                progress_task=self._search_task,
+            )
 
         try:
             await self._search_task
@@ -76,14 +84,18 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
 
         return self.async_show_progress_done(next_step_id="search_complete")
 
-    async def async_step_search_timeout(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_search_timeout(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Inform the user that no device has been found."""
         if user_input is not None:
             return await self.async_step_wait_for_device()
 
         return self.async_show_form(step_id="search_timeout")
 
-    async def async_step_search_complete(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_search_complete(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Create a configuration entry for the hausbus devices."""
         return self.async_create_entry(title="Haus-Bus", data={})
 
