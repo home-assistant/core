@@ -195,7 +195,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         # going for a longer hostname we abort so the user
         # does not see two flows if discovery fails.
         for progress in self._async_in_progress():
-            flow_unique_id = progress.get("context", {}).get("unique_id")
+            flow_unique_id = progress["context"].get("unique_id")
             if not flow_unique_id:
                 continue
             if flow_unique_id.startswith(self.blid):

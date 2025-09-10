@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from propcache.api import cached_property
-
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -43,13 +41,13 @@ class IRobotEntity(Entity):
                 (dr.CONNECTION_NETWORK_MAC, mac_address)
             }
 
-    @cached_property
-    def robot_unique_id(self) -> str:
+    @property
+    def robot_unique_id(self):
         """Return the uniqueid of the vacuum cleaner."""
         return f"roomba_{self._blid}"
 
-    @cached_property
-    def unique_id(self) -> str:
+    @property
+    def unique_id(self):
         """Return the uniqueid of the vacuum cleaner."""
         return self.robot_unique_id
 
