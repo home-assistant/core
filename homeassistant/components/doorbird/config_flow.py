@@ -114,9 +114,8 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         """Verify discovered device matches existing entry before updating IP.
 
         This method performs the following verification steps:
-        1. Checks if the host is actually changing.
+        1. Ensures that the provided credentials work before updating the entry.
         2. Verifies that the device at the discovered IP address has the expected MAC address.
-        3. Ensures that the provided credentials work before updating the entry.
         """
         info, errors = await self._async_validate_or_error(
             {
