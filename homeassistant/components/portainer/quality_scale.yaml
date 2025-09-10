@@ -48,7 +48,10 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      No discovery is implemented, since it's software based.
   discovery:
     status: exempt
     comment: |
