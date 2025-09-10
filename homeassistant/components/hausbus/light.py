@@ -356,13 +356,13 @@ class HausbusDimmerLight(HausbusLight):
                 data.getDimmingRangeEnd()
             )
             LOGGER.debug(
-                f"_attr_extra_state_attributes {self._attr_extra_state_attributes}"
+                "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
     async def async_dimmer_set_brightness(self, brightness: int, duration: int):
         """Setzt eine Helligkeit mit einer Dauer."""
         LOGGER.debug(
-            f"async_dimmer_set_brightness brightness {brightness}, duration {duration}"
+            "async_dimmer_set_brightness brightness %s, duration %s", brightness, duration
         )
         self._channel.setBrightness(brightness, duration)
 
@@ -392,7 +392,7 @@ class HausbusDimmerLight(HausbusLight):
     ):
         """Setzt die Konfiguration eines Dimmers."""
         LOGGER.debug(
-            f"async_dimmer_set_configuration mode {mode}, dimming_time {dimming_time}, ramp_time {ramp_time}, dimming_start_brightness {dimming_start_brightness}, dimming_end_brightness {dimming_end_brightness}"
+           "async_dimmer_set_configuration mode %s, dimming_time %s, ramp_time %s, dimming_start_brightness %s, dimming_end_brightness %s", mode, dimming_time, ramp_time, dimming_start_brightness, dimming_end_brightness
         )
 
         hbDimmerMode = {
@@ -462,7 +462,7 @@ class HausbusRGBDimmerLight(HausbusLight):
             self._attr_extra_state_attributes = {}
             self._attr_extra_state_attributes["dimming_time"] = data.getFadingTime()
             LOGGER.debug(
-                f"_attr_extra_state_attributes {self._attr_extra_state_attributes}"
+                "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
     async def async_rgb_set_color(
@@ -474,7 +474,7 @@ class HausbusRGBDimmerLight(HausbusLight):
     ):
         """Schaltet ein RGB Licht mit einer Dauer ein."""
         LOGGER.debug(
-            f"async_rgb_set_color brightnessRed {brightness_red}, brightnessGreen {brightness_green}, brightnessBlue {brightness_blue}, duration {duration}"
+            "async_rgb_set_color brightnessRed %s, brightnessGreen %s, brightnessBlue %s, duration %s", brightness_red, brightness_green, brightness_blue, duration
         )
         self._channel.setColor(
             brightness_red, brightness_green, brightness_blue, duration
@@ -525,7 +525,7 @@ class HausbusLedLight(HausbusLight):
             # self._extra_state_attributes["min_brightness"] = data.getMinBrightness()
             self._attr_extra_state_attributes["time_base"] = data.getTimeBase()
             LOGGER.debug(
-                f"_attr_extra_state_attributes {self._attr_extra_state_attributes}"
+                "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
     # SERVICES
@@ -537,7 +537,7 @@ class HausbusLedLight(HausbusLight):
     async def async_led_on(self, brightness: int, duration: int, onDelay: int):
         """Schaltet eine LED mit Einschaltverzögerung ein."""
         LOGGER.debug(
-            f"async_led_on brightness {brightness}, duration {duration}, onDelay {onDelay}"
+            "async_led_on brightness %s, duration %s, onDelay %s", brightness, duration, onDelay
         )
         self._channel.on(brightness, duration, onDelay)
 
@@ -546,7 +546,7 @@ class HausbusLedLight(HausbusLight):
     ):
         """Lässt eine LED blinken."""
         LOGGER.debug(
-            f"async_led_blink brightness {brightness} offTime {offTime} onTime {onTime} quantity {quantity}"
+            "async_led_blink brightness %s offTime %s onTime %s quantity %s", brightness, offTime, onTime, quantity
         )
         self._channel.blink(brightness, offTime, onTime, quantity)
 

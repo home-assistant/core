@@ -332,7 +332,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         device = self.get_device(object_id)
         if device is None:
             LOGGER.debug(
-                f"got event of unknown device {object_id.getDeviceId()} with data: {data}"
+                "got event of unknown device %s with data: %s", object_id.getDeviceId(), data
             )
             if not self.was_automatic_get_module_id_already_sent(deviceId):
                 LOGGER.debug("-> calling getModuleId")
@@ -342,7 +342,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         # Configuration -> getRemoteObjects
         if isinstance(data, Configuration):
             LOGGER.debug(
-                f"got configuration of {object_id.getDeviceId()} with data: {data}"
+                "got configuration of %s with data: %s", object_id.getDeviceId(), data
             )
             config = cast(Configuration, data)
             device = self.get_device(object_id)
@@ -360,7 +360,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         # RemoteObjects -> Channel anlegen
         if isinstance(data, RemoteObjects):
             LOGGER.debug(
-                f"got remoteObjects of {object_id.getDeviceId()} with data: {data}"
+                "got remoteObjects of %s with data: %s", object_id.getDeviceId(), data
             )
 
             device = self.get_device(object_id)
@@ -403,7 +403,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
                     )
 
                     LOGGER.debug(
-                        f"name for firmwareId {device.firmware_id}, fcke: {device.fcke}, classId {instanceObjectId.getClassId()}, instanceId {instanceObjectId.getInstanceId()} is {name}"
+                        "name for firmwareId %s, fcke: %s, classId %s, instanceId %s is %s", device.firmware_id, device.fcke, instanceObjectId.getClassId(), instanceObjectId.getInstanceId(), name
                     )
 
                     if deviceId == 22784 or deviceId == 29725:
@@ -442,7 +442,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
                         "inputs": inputs
                     }
                     LOGGER.debug(
-                        f"{inputs} inputs angemeldet {device.hass_device_entry_id} deviceId {deviceId}"
+                        "%s inputs angemeldet %s deviceId %s", inputs, device.hass_device_entry_id, deviceId
                     )
 
                 return
@@ -494,7 +494,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
             )
             if name is not None:
                 LOGGER.debug(
-                    f"sending trigger {eventType} name {name} hass_device_id {device.hass_device_entry_id}"
+                    "sending trigger %s name %s hass_device_id %s", eventType, name, device.hass_device_entry_id
                 )
                 self.hass.loop.call_soon_threadsafe(
                     lambda: self.hass.bus.async_fire(
@@ -548,7 +548,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
 
         if last_time is not None and now - last_time < 60:
             LOGGER.debug(
-                f"no automatic get_module_id to {device_id} because done before {now - last_time:.1f} s"
+                "no automatic get_module_id to %s because done before %.1f s", device_id, now - last_time
             )
             return True
 

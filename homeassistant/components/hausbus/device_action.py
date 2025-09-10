@@ -42,7 +42,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str):
             name = ent.name or ent.original_name
 
             _LOGGER.debug(
-                f"{name} is type {hausbus_type} special_type {hausbus_special_type}"
+                "%s is type %s special_type %s", name, hausbus_type, hausbus_special_type
             )
 
             if hausbus_type == "HausbusDimmerLight":
@@ -135,7 +135,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict[str, A
         hausbus_special_type = entity.options[DOMAIN].get("hausbus_special_type")
 
         _LOGGER.debug(
-            f"hausbus_type {hausbus_type} hausbus_special_type {hausbus_special_type}"
+            "hausbus_type %s hausbus_special_type %s", hausbus_type, hausbus_special_type
         )
 
         if hausbus_type == "HausbusDimmerLight":

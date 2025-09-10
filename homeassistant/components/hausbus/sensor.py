@@ -314,7 +314,7 @@ class HausbusTemperaturSensor(HausbusSensor):
                 )
             )
             LOGGER.debug(
-                f"_attr_extra_state_attributes {self._attr_extra_state_attributes}"
+                "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
     @callback
@@ -323,7 +323,7 @@ class HausbusTemperaturSensor(HausbusSensor):
     ):
         """Setzt die Konfiguration eines Temperatursensors."""
         LOGGER.debug(
-            f"async_temperatur_sensor_set_configuration correction {correction}, auto_event_diff {auto_event_diff}, manual_event_interval {manual_event_interval}"
+            "async_temperatur_sensor_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s", correction, auto_event_diff, manual_event_interval
         )
 
         if not await self.ensure_configuration():
@@ -381,7 +381,7 @@ class HausbusPowerMeter(HausbusSensor):
                 )
             )
             LOGGER.debug(
-                f"_attr_extra_state_attributes {self._attr_extra_state_attributes}"
+                "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
     @callback
@@ -390,7 +390,7 @@ class HausbusPowerMeter(HausbusSensor):
     ):
         """Setzt die Konfiguration eines LogicalButton."""
         LOGGER.debug(
-            f"async_power_meter_set_configuration correction {correction}, auto_event_diff {auto_event_diff}, manual_event_interval {manual_event_interval}"
+            "async_power_meter_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s", correction, auto_event_diff, manual_event_interval
         )
 
         if not await self.ensure_configuration():
@@ -448,7 +448,7 @@ class HausbusBrightnessSensor(HausbusSensor):
                 )
             )
             LOGGER.debug(
-                f"_attr_extra_state_attributes {self._attr_extra_state_attributes}"
+                "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
     @callback
@@ -457,7 +457,7 @@ class HausbusBrightnessSensor(HausbusSensor):
     ):
         """Setzt die Konfiguration eines Helligkeitssensors."""
         LOGGER.debug(
-            f"async_brightness_sensor_set_configuration correction {correction}, auto_event_diff {auto_event_diff}, manual_event_interval {manual_event_interval}"
+            "async_brightness_sensor_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s", correction, auto_event_diff, manual_event_interval
         )
 
         if not await self.ensure_configuration():
@@ -515,7 +515,7 @@ class HausbusHumiditySensor(HausbusSensor):
                 )
             )
             LOGGER.debug(
-                f"_attr_extra_state_attributes {self._attr_extra_state_attributes}"
+                "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
     @callback
@@ -524,7 +524,7 @@ class HausbusHumiditySensor(HausbusSensor):
     ):
         """Sets configuration of a humidity sensor"""
         LOGGER.debug(
-            f"async_humidity_sensor_set_configuration correction {correction}, auto_event_diff {auto_event_diff}, manual_event_interval {manual_event_interval}"
+            "async_humidity_sensor_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s", correction, auto_event_diff, manual_event_interval
         )
 
         if not await self.ensure_configuration():
@@ -580,7 +580,7 @@ class HausbusAnalogEingang(HausbusSensor):
                 )
             )
             LOGGER.debug(
-                f"_attr_extra_state_attributes {self._attr_extra_state_attributes}"
+                "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
     @callback
@@ -589,7 +589,7 @@ class HausbusAnalogEingang(HausbusSensor):
     ):
         """Setzt die Konfiguration eines Analogeingangs."""
         LOGGER.debug(
-            f"async_analog_eingang_set_configuration correction {correction}, auto_event_diff {auto_event_diff}, manual_event_interval {manual_event_interval}"
+            "async_analog_eingang_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s", correction, auto_event_diff, manual_event_interval
         )
 
         if not await self.ensure_configuration():

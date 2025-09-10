@@ -183,7 +183,7 @@ class HausbusBinarySensor(HausbusEntity, BinarySensorEntity):
             self._attr_extra_state_attributes["debounce_time"] = data.getDebounceTime()
 
             LOGGER.debug(
-                f"_attr_extra_state_attributes {self._attr_extra_state_attributes}"
+                "_attr_extra_state_attributes ", self._attr_extra_state_attributes
             )
 
     @callback
@@ -202,7 +202,7 @@ class HausbusBinarySensor(HausbusEntity, BinarySensorEntity):
     ):
         """Disables all events from this input for the given time or activates them again."""
         LOGGER.debug(
-            f"async_push_button_configure_events eventActivationStatus {eventActivationStatus}, disabled_duration {disabled_duration}"
+            "async_push_button_configure_events eventActivationStatus %s, disabled_duration %s", eventActivationStatus, disabled_duration
         )
 
         enable = {
@@ -229,7 +229,7 @@ class HausbusBinarySensor(HausbusEntity, BinarySensorEntity):
     ):
         """Sets configuration for this input."""
         LOGGER.debug(
-            f"async_push_button_set_configuration hold_timeout {hold_timeout}, double_click_timeout {double_click_timeout}, event_button_pressed_active {event_button_pressed_active}, event_button_released_active {event_button_released_active}, event_button_hold_start_active {event_button_hold_start_active}, event_button_hold_end_active {event_button_hold_end_active}, event_button_clicked_active {event_button_clicked_active}, event_button_double_clicked_active {event_button_double_clicked_active}, led_feedback_active {led_feedback_active}, inverted {inverted}, debounce_time {debounce_time}"
+            "async_push_button_set_configuration hold_timeout %s double_click_timeout %s event_button_pressed_active %s event_button_released_active %s event_button_hold_start_active %s event_button_hold_end_active %s event_button_clicked_active %s event_button_double_clicked_active %s led_feedback_active %s inverted %s debounce_time %s", hold_timeout, double_click_timeout, event_button_pressed_active, event_button_released_active, event_button_hold_start_active, event_button_hold_end_active, event_button_clicked_active, event_button_double_clicked_active, led_feedback_active, inverted, debounce_time
         )
 
         if not await self.ensure_configuration():

@@ -157,7 +157,7 @@ class HausbusSwitch(HausbusEntity, SwitchEntity):
             self._attr_extra_state_attributes["off_delay_time"] = data.getOffDelayTime()
             self._attr_extra_state_attributes["time_base"] = data.getTimeBase()
             LOGGER.debug(
-                f"_attr_extra_state_attributes {self._attr_extra_state_attributes}"
+                "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
     @callback
@@ -187,7 +187,7 @@ class HausbusSwitch(HausbusEntity, SwitchEntity):
     async def async_switch_toggle(self, offTime: int, onTime: int, quantity: int):
         """Toggels a relay with interval with given off and on time and quantity"""
         LOGGER.debug(
-            f"async_switch_toggle offTime {offTime}, onTime {onTime}, quantity {quantity}"
+            "async_switch_toggle offTime %s, onTime %s, quantity %s", offTime, onTime, quantity
         )
         self._channel.toggle(offTime, onTime, quantity)
 
@@ -197,7 +197,7 @@ class HausbusSwitch(HausbusEntity, SwitchEntity):
     ):
         """Setzt die Konfiguration eines Relais."""
         LOGGER.debug(
-            f"async_switch_set_configuration max_on_time {max_on_time}, off_delay_time {off_delay_time}, time_base {time_base}"
+            "async_switch_set_configuration max_on_time %s, off_delay_time %s, time_base %s", max_on_time, off_delay_time, time_base
         )
         if not self._configuration:
             LOGGER.debug("reading missing configuration")

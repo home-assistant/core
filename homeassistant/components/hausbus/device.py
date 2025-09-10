@@ -57,7 +57,7 @@ class HausbusDevice:
         self.special_type = configuration.getStartupDelay()
 
         LOGGER.debug(
-            f"fcke {self.fcke}, special_type {self.special_type}, isSpecialType {self.is_special_type()}, configuration = {configuration}"
+            "fcke %s, special_type %s, isSpecialType %s, configuration = %s", self.fcke, self.special_type, self.is_special_type(), configuration
         )
 
         if not self.is_special_type():

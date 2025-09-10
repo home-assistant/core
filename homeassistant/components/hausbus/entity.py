@@ -30,7 +30,7 @@ class HausbusEntity(Entity):
         self,
         channel: ABusFeature,
         device: HausbusDevice,
-        alternativeType: str | None = None,
+        alternativeType: str | None=None,
     ) -> None:
         """Set up channel."""
         super().__init__()
@@ -81,7 +81,7 @@ class HausbusEntity(Entity):
                 self.entity_id, DOMAIN, {"hausbus_special_type": self._special_type}
             )
         LOGGER.debug(
-            f"added_to_hass {self._attr_name} type {self.__class__.__name__} special_type {self._special_type}"
+            "added_to_hass %s type %s special_type %s", self._attr_name, self.__class__.__name__, self._special_type
         )
 
     async def ensure_configuration(self) -> bool:
