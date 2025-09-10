@@ -82,6 +82,7 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for London Underground."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     @staticmethod
     @callback
