@@ -637,7 +637,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.12.0"
+required-version = ">=0.13.0"
 
 [tool.ruff.lint]
 select = [
