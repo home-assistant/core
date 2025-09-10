@@ -71,6 +71,16 @@ def mock_hub_configuration_prod_awning_dimmer() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_hub_configuration_prod_load_switch() -> Generator[AsyncMock]:
+    """Override WebControlPro._getConfiguration."""
+    with patch(
+        "wmspro.webcontrol.WebControlPro._getConfiguration",
+        return_value=load_json_object_fixture("config_prod_load_switch.json", DOMAIN),
+    ) as mock_hub_configuration:
+        yield mock_hub_configuration
+
+
+@pytest.fixture
 def mock_hub_configuration_prod_roller_shutter() -> Generator[AsyncMock]:
     """Override WebControlPro._getConfiguration."""
     with patch(
@@ -98,6 +108,16 @@ def mock_hub_status_prod_dimmer() -> Generator[AsyncMock]:
     with patch(
         "wmspro.webcontrol.WebControlPro._getStatus",
         return_value=load_json_object_fixture("status_prod_dimmer.json", DOMAIN),
+    ) as mock_hub_status:
+        yield mock_hub_status
+
+
+@pytest.fixture
+def mock_hub_status_prod_load_switch() -> Generator[AsyncMock]:
+    """Override WebControlPro._getStatus."""
+    with patch(
+        "wmspro.webcontrol.WebControlPro._getStatus",
+        return_value=load_json_object_fixture("status_prod_load_switch.json", DOMAIN),
     ) as mock_hub_status:
         yield mock_hub_status
 
