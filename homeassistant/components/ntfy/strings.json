@@ -374,6 +374,34 @@
         "4": "[%key:common::state::high%]",
         "5": "Maximum"
       }
+    },
+    "view": {
+      "fields": {
+        "label": "Label of the action button",
+        "url": "URL to open when action is tapped",
+        "clear": "Clear notification after action button is tapped",
+        "position": "Position of the action button"
+      }
+    },
+    "broadcast": {
+      "fields": {
+        "label": "[%key:component::ntfy::selector::view::fields::label%]",
+        "intent": "Android intent to send when action is tapped",
+        "extras": "Extras to include in the intent (key-value pairs)",
+        "clear": "[%key:component::ntfy::selector::view::fields::clear%]",
+        "position": "[%key:component::ntfy::selector::view::fields::position%]"
+      }
+    },
+    "http": {
+      "fields": {
+        "label": "[%key:component::ntfy::selector::view::fields::label%]",
+        "url": "URL to which the HTTP request will be sent",
+        "method": "HTTP method to use for request",
+        "headers": "Additional HTTP headers (key-value pairs)",
+        "body": "Body of the HTTP request",
+        "clear": "[%key:component::ntfy::selector::view::fields::clear%]",
+        "position": "[%key:component::ntfy::selector::view::fields::position%]"
+      }
     }
   },
   "issues": {
