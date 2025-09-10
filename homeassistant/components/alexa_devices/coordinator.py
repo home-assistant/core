@@ -75,32 +75,30 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         else:
-            data_set = set(data.keys())
-            if self.previous_devices:
-                await self._async_remove_device_stale(self.previous_devices, data_set)
+            current_devices = set(data.keys())
+            if stale_devices := self.previous_devices - current_devices:
+                await self._async_remove_device_stale(stale_devices)
 
-            self.previous_devices = data_set
+            self.previous_devices = current_devices
             return data
 
     async def _async_remove_device_stale(
         self,
-        previous_list: set[str],
-        current_list: set[str],
+        stale_devices: set[str],
     ) -> None:
         """Remove stale device."""
         device_registry = dr.async_get(self.hass)
 
-        for serial_num in previous_list:
-            if serial_num not in current_list:
-                _LOGGER.debug(
-                    "Detected change in devices: serial %s removed",
-                    serial_num,
+        for serial_num in stale_devices:
+            _LOGGER.debug(
+                "Detected change in devices: serial %s removed",
+                serial_num,
+            )
+            device = device_registry.async_get_device(
+                identifiers={(DOMAIN, serial_num)}
+            )
+            if device:
+                device_registry.async_update_device(
+                    device_id=device.id,
+                    remove_config_entry_id=self.config_entry.entry_id,
                 )
-                device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, serial_num)}
-                )
-                if device:
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
