@@ -363,7 +363,7 @@ async def test_get_events_entities_filtered_away(
         },
         {
             "id": "zone.home",
-            "filtered": True,  # Zone is an always continuous domain
+            "filtered": False,  # Zone is not an always continuous domain
         },
     ]
 
