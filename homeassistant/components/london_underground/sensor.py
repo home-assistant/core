@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from const import DOMAIN
 from london_tube_status import TubeData
 import voluptuous as vol
 
@@ -12,15 +13,19 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_LINE, TUBE_LINES
+from .const import CONF_LINE, DEFAULT_LINES, TUBE_LINES
 from .coordinator import LondonTubeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,6 +55,26 @@ async def async_setup_platform(
 
     async_add_entities(
         LondonTubeSensor(coordinator, line) for line in config[CONF_LINE]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the London Underground sensor from config entry."""
+    session = async_get_clientsession(hass)
+    data = TubeData(session)
+    coordinator = LondonTubeCoordinator(hass, data)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    async_add_entities(
+        LondonTubeSensor(coordinator, line)
+        for line in entry.data.get(CONF_LINE, DEFAULT_LINES)
     )
 
 

@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up London Underground",
+        "description": "Select which tube lines you want to monitor",
+        "data": {
+          "lines": "Tube Lines"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "London Underground is already configured"
+    }
+  }
+}
