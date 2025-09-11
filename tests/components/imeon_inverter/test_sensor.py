@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+from .conftest import TEST_SERIAL
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -57,7 +58,7 @@ async def test_sensor_unavailable_on_update_error(
     entity_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN,
         DOMAIN,
-        "111111111111111_battery_power",
+        f"{TEST_SERIAL}_battery_power",
     )
 
     state = hass.states.get(entity_id)
