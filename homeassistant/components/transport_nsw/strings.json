@@ -7,8 +7,8 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "stop_id": "Stop ID",
           "name": "[%key:common::config_flow::data::name%]",
-          "route": "Route Filter (optional)",
-          "destination": "Destination Filter (optional)"
+          "route": "Route filter (optional)",
+          "destination": "Destination filter (optional)"
         }
       }
     },
