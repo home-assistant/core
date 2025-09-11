@@ -23,9 +23,9 @@
         "title": "Transport NSW Options",
         "description": "Configure filtering options for departures.",
         "data": {
-          "name": "Name",
-          "route": "Route Filter (optional)",
-          "destination": "Destination Filter (optional)"
+          "name": "[%key:common::config_flow::data::name%]",
+          "route": "[%key:component::transport_nsw::config::step::user::data::route%]",
+          "destination": "[%key:component::transport_nsw::config::step::user::data::destination%]"
         }
       }
     }
