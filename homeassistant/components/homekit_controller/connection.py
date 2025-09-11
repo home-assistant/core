@@ -894,8 +894,10 @@ class HKDevice:
 
         Args:
             now: The current time (used by time interval callbacks).
-            poll_all: If True, poll all readable characteristics instead of just the registered ones.
-                     This is useful during initial setup before entities have registered their characteristics.
+            poll_all: If True, poll all readable characteristics instead
+                     of just the registered ones.
+                     This is useful during initial setup before entities have
+                     registered their characteristics.
         """
         if poll_all:
             # Poll all readable characteristics during initial startup
