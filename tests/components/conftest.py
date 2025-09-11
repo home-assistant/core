@@ -892,6 +892,27 @@ async def _check_exception_translation(
     )
 
 
+def _check_entity_name_translations(
+    entity: Entity, computed_name: str, translation_errors: dict[str, str]
+) -> None:
+    if computed_name is not UNDEFINED:
+        return
+
+    platform_data = entity.platform_data
+    if translation_key := entity._name_translation_key:
+        translation_errors[translation_key] = (
+            f"Translation not found for {platform_data.platform_name}: "
+            f"`entity.{platform_data.domain}.{entity.translation_key}.name`. "
+            "Please add to homeassistant/components/"
+            f"{platform_data.platform_name}/strings.json"
+        )
+    else:
+        translation_errors[translation_key] = (
+            "Unable to compute entity name for "
+            f"{platform_data.platform_name} entity: {entity.unique_id}"
+        )
+
+
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_missing_translations: str | list[str],
@@ -988,19 +1009,7 @@ async def check_translations(
         result = _original_entity_name_internal(
             self, device_class_name, platform_translations
         )
-        if (
-            self.has_entity_name
-            and result is UNDEFINED
-            and (translation_key := self._name_translation_key)
-        ):
-            # We want to avoid "device_name_none"
-            platform_data = self.platform_data
-            translation_errors[translation_key] = (
-                f"Translation not found for {platform_data.platform_name}: "
-                f"`entity.{platform_data.domain}.{self.translation_key}.name`. "
-                f"Please add to homeassistant/components/{platform_data.platform_name}/strings.json"
-            )
-
+        _check_entity_name_translations(self, result, translation_errors)
         return result
 
     # Use override functions
