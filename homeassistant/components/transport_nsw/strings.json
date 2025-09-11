@@ -14,7 +14,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect to Transport NSW API. Please check your API key and stop ID.",
-      "unknown": "Unexpected error occurred."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "options": {
