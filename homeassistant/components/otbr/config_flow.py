@@ -2,18 +2,28 @@
 
 from __future__ import annotations
 
+import asyncio
 from contextlib import suppress
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
+from aiohttp.client_exceptions import ClientConnectorError
 import python_otbr_api
 from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
+from serial.tools import list_ports
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.hassio import AddonError, AddonManager
+from homeassistant.components import usb
+from homeassistant.components.hassio import (
+    AddonError,
+    AddonInfo,
+    AddonManager,
+    AddonState,
+)
+from homeassistant.components.homeassistant_hardware.util import get_otbr_addon_manager
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import (
@@ -24,8 +34,10 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import DEFAULT_CHANNEL, DOMAIN
@@ -39,6 +51,13 @@ if TYPE_CHECKING:
     from . import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+CONF_DEVICE = "device"
+
+# Timeout and retry constants for OTBR connection
+OTBR_CONNECTION_TIMEOUT = 10.0
+OTBR_RETRY_BACKOFF = 0.5
 
 
 class AlreadyConfigured(HomeAssistantError):
@@ -78,10 +97,59 @@ async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
     return discovery_info.name
 
 
+def get_usb_ports() -> dict[str, str]:
+    """Return a dict of USB ports and their friendly names."""
+    ports = list_ports.comports()
+    port_descriptions = {}
+    for port in ports:
+        vid: str | None = None
+        pid: str | None = None
+        if port.vid is not None and port.pid is not None:
+            usb_device = usb.usb_device_from_port(port)
+            vid = usb_device.vid
+            pid = usb_device.pid
+        dev_path = usb.get_serial_by_id(port.device)
+        human_name = usb.human_readable_device_name(
+            dev_path,
+            port.serial_number,
+            port.manufacturer,
+            port.description,
+            vid,
+            pid,
+        )
+        port_descriptions[dev_path] = human_name
+
+    # Filter out "n/a" descriptions only if there are other ports available
+    non_na_ports = {
+        path: desc
+        for path, desc in port_descriptions.items()
+        if not desc.lower().startswith("n/a")
+    }
+
+    # If we have non-"n/a" ports, return only those; otherwise return all ports as-is
+    return non_na_ports if non_na_ports else port_descriptions
+
+
+async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
+    """Return a dict of USB ports and their friendly names."""
+    return await hass.async_add_executor_job(get_usb_ports)
+
+
 class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Open Thread Border Router."""
 
     VERSION = 1
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Instantiate otbr config flow."""
+        super().__init__(*args, **kwargs)
+
+        self._device: str | None = None
+        self._url: str | None = None  # used only in recommended setup
+
+        self.addon_install_task: asyncio.Task | None = None
+        self.addon_start_task: asyncio.Task | None = None
+        self.addon_connect_task: asyncio.Task | None = None
 
     async def _set_dataset(self, api: python_otbr_api.OTBR, otbr_url: str) -> None:
         """Connect to the OTBR and create or apply a dataset if it doesn't have one."""
@@ -153,10 +221,257 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return border_agent_id
 
+    async def _connect_with_retry(self, url: str) -> bytes:
+        """Connect to OTBR with retry logic for up to 10 seconds."""
+        start_time = asyncio.get_event_loop().time()
+
+        while True:
+            elapsed_time = asyncio.get_event_loop().time() - start_time
+
+            if elapsed_time >= OTBR_CONNECTION_TIMEOUT:
+                _LOGGER.warning(
+                    "Failed to connect to OTBR@%s after %.1f seconds",
+                    url,
+                    OTBR_CONNECTION_TIMEOUT,
+                )
+                raise HomeAssistantError(
+                    f"Failed to connect to OTBR after {OTBR_CONNECTION_TIMEOUT} seconds"
+                )
+
+            try:
+                return await self._connect_and_configure_router(url)
+            except ClientConnectorError as exc:
+                _LOGGER.debug(
+                    "ClientConnectorError after %.2f seconds, retrying in %.1fs: %s",
+                    elapsed_time,
+                    OTBR_RETRY_BACKOFF,
+                    exc,
+                )
+                await asyncio.sleep(OTBR_RETRY_BACKOFF)
+
+    async def _async_get_addon_info(self, addon_manager: AddonManager) -> AddonInfo:
+        """Return add-on info."""
+        try:
+            addon_info = await addon_manager.async_get_addon_info()
+        except AddonError as err:
+            _LOGGER.error(err)
+            raise AbortFlow(
+                "addon_info_failed",
+                description_placeholders={
+                    "addon_name": addon_manager.addon_name,
+                },
+            ) from err
+
+        return addon_info
+
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Set up by user."""
+        if not is_hassio(self.hass):
+            # skip to url step if not hassio
+            return await self.async_step_url()
+
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["recommended", "url"],
+        )
+
+    async def async_step_recommended(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Select usb device."""
+        if self._device:
+            # device already set, skip to addon step
+            return await self.async_step_addon()
+
+        if user_input is not None and (
+            usb_path := user_input.get(CONF_DEVICE, "").strip()
+        ):
+            self._device = usb_path
+            return await self.async_step_addon()
+
+        try:
+            ports = await async_get_usb_ports(self.hass)
+        except OSError as err:
+            _LOGGER.error("Failed to get USB ports: %s", err)
+            return self.async_abort(reason="usb_ports_failed")
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_DEVICE): vol.In(ports),
+            }
+        )
+        return self.async_show_form(step_id="recommended", data_schema=data_schema)
+
+    async def async_step_addon(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Set up the addon."""
+        otbr_manager = get_otbr_addon_manager(self.hass)
+        addon_info = await self._async_get_addon_info(otbr_manager)
+
+        if addon_info.state == AddonState.NOT_INSTALLED:
+            return await self.async_step_install_otbr_addon()
+
+        if addon_info.state == AddonState.RUNNING:
+            await otbr_manager.async_stop_addon()
+
+        return await self.async_step_start_otbr_addon()
+
+    async def async_step_install_otbr_addon(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show progress dialog for installing the OTBR addon."""
+        addon_manager = get_otbr_addon_manager(self.hass)
+        addon_info = await self._async_get_addon_info(addon_manager)
+
+        _LOGGER.debug("OTBR addon info: %s", addon_info)
+
+        if not self.addon_install_task:
+            self.addon_install_task = self.hass.async_create_task(
+                addon_manager.async_install_addon_waiting(),
+                "OTBR addon install",
+            )
+
+        if not self.addon_install_task.done():
+            return self.async_show_progress(
+                step_id="install_otbr_addon",
+                progress_action="install_otbr_addon",
+                description_placeholders={
+                    "addon_name": addon_manager.addon_name,
+                },
+                progress_task=self.addon_install_task,
+            )
+
+        try:
+            await self.addon_install_task
+        except AddonError as err:
+            _LOGGER.error(err)
+            return self.async_abort(
+                reason="addon_install_failed",
+                description_placeholders={
+                    "addon_name": addon_manager.addon_name,
+                },
+            )
+        finally:
+            self.addon_install_task = None
+
+        return self.async_show_progress_done(next_step_id="addon")
+
+    async def async_step_start_otbr_addon(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure OTBR to point to the SkyConnect and run the addon."""
+        otbr_manager = get_otbr_addon_manager(self.hass)
+
+        if not self.addon_start_task:
+            addon_info = await self._async_get_addon_info(otbr_manager)
+
+            assert self._device is not None
+            new_addon_config = {
+                **addon_info.options,
+                "device": self._device,
+                "autoflash_firmware": False,
+            }
+
+            _LOGGER.debug("Reconfiguring OTBR addon with %s", new_addon_config)
+
+            try:
+                await otbr_manager.async_set_addon_options(new_addon_config)
+            except AddonError as err:
+                _LOGGER.error(err)
+                raise AbortFlow(
+                    "addon_set_config_failed",
+                    description_placeholders={
+                        "addon_name": otbr_manager.addon_name,
+                    },
+                ) from err
+
+            self.addon_start_task = self.hass.async_create_task(
+                otbr_manager.async_start_addon_waiting()
+            )
+
+        if not self.addon_start_task.done():
+            return self.async_show_progress(
+                step_id="start_otbr_addon",
+                progress_action="start_otbr_addon",
+                description_placeholders={
+                    "addon_name": otbr_manager.addon_name,
+                },
+                progress_task=self.addon_start_task,
+            )
+
+        try:
+            await self.addon_start_task
+        except (AddonError, AbortFlow) as err:
+            _LOGGER.error(err)
+            return self.async_abort(
+                reason="addon_start_failed",
+                description_placeholders={
+                    "addon_name": otbr_manager.addon_name,
+                },
+            )
+        finally:
+            self.addon_start_task = None
+
+        return self.async_show_progress_done(next_step_id="connect_otbr")
+
+    async def async_step_connect_otbr(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Connect to OTBR with retry logic."""
+        otbr_manager = get_otbr_addon_manager(self.hass)
+        addon_info = await self._async_get_addon_info(otbr_manager)
+        self._url = f"http://{addon_info.hostname}:8081"
+
+        if not self.addon_connect_task:
+            self.addon_connect_task = self.hass.async_create_task(
+                self._connect_with_retry(self._url)
+            )
+
+        if not self.addon_connect_task.done():
+            return self.async_show_progress(
+                step_id="connect_otbr",
+                progress_action="connect_otbr",
+                description_placeholders={
+                    "addon_name": otbr_manager.addon_name,
+                },
+                progress_task=self.addon_connect_task,
+            )
+
+        try:
+            border_agent_id = await self.addon_connect_task
+        except AlreadyConfigured:
+            return self.async_abort(reason="already_configured")
+        except (
+            python_otbr_api.OTBRError,
+            aiohttp.ClientError,
+            TimeoutError,
+            HomeAssistantError,
+        ) as exc:
+            _LOGGER.warning("Failed to communicate with OTBR@%s: %s", self._url, exc)
+            return self.async_abort(reason="unknown")
+        finally:
+            self.addon_connect_task = None
+
+        await self.async_set_unique_id(border_agent_id.hex())
+        return self.async_show_progress_done(next_step_id="addon_done")
+
+    async def async_step_addon_done(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add-on done."""
+        config_entry_data = {"url": self._url, "device": self._device}
+        return self.async_create_entry(
+            title="Open Thread Border Router",
+            data=config_entry_data,
+        )
+
+    async def async_step_url(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Custom step to set up by URL."""
         errors = {}
 
         if user_input is not None:
@@ -181,7 +496,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema({CONF_URL: str})
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="url", data_schema=data_schema, errors=errors
         )
 
     async def async_step_hassio(

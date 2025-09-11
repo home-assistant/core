@@ -2,11 +2,27 @@
   "config": {
     "step": {
       "user": {
+        "menu_options": {
+          "recommended": "Recommended installation",
+          "url": "Custom"
+        },
+        "menu_option_descriptions": {
+          "recommended": "Set up the OTBR add-on",
+          "url": "Manually set OTBR URL"
+        },
+        "description": "Please choose a setup process"
+      },
+      "url": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
         },
         "description": "Provide URL for the OpenThread Border Router's REST API"
       }
+    },
+    "progress": {
+      "start_otbr_addon": "Starting OTBR add-on",
+      "install_otbr_addon": "Installing OTBR add-on",
+      "connect_otbr": "Connecting to OTBR add-on"
     },
     "error": {
       "already_configured": "The Thread border router is already configured",
@@ -14,8 +30,12 @@
     },
     "abort": {
       "already_configured": "The Thread border router is already configured",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "addon_info_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_info_failed%]",
+      "addon_install_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_install_failed%]",
+      "addon_start_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_start_failed%]",
+      "addon_set_config_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_set_config_failed%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "usb_ports_failed": "Failed to get USB devices."
     }
   },
   "issues": {
