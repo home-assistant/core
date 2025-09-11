@@ -61,6 +61,7 @@ from .utils import (
     get_device_uptime,
     get_shelly_air_lamp_life,
     get_virtual_component_ids,
+    get_virtual_component_unit,
     is_rpc_wifi_stations_disabled,
 )
 
@@ -1376,9 +1377,7 @@ RPC_SENSORS: Final = {
     "number": RpcSensorDescription(
         key="number",
         sub_key="value",
-        unit=lambda config: config["meta"]["ui"]["unit"]
-        if config["meta"]["ui"]["unit"]
-        else None,
+        unit=get_virtual_component_unit,
         device_class_fn=lambda config: ROLE_TO_DEVICE_CLASS_MAP.get(config["role"])
         if "role" in config
         else None,

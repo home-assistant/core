@@ -30,6 +30,7 @@ from aioshelly.const import (
 
 from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import UnitOfVolumeFlowRate
 
 DOMAIN: Final = "shelly"
 
@@ -287,6 +288,15 @@ COMPONENT_ID_PATTERN = re.compile(r"[a-z\d]+:\d+")
 ROLE_TO_DEVICE_CLASS_MAP = {
     "current_humidity": SensorDeviceClass.HUMIDITY,
     "current_temperature": SensorDeviceClass.TEMPERATURE,
+    "flow_rate": SensorDeviceClass.VOLUME_FLOW_RATE,
+    "water_pressure": SensorDeviceClass.PRESSURE,
+    "water_temperature": SensorDeviceClass.TEMPERATURE,
+}
+
+# Mapping for units that require conversion to a Home Assistant recognized unit
+# e.g. "m3/min" to "m³/min"
+DEVICE_UNIT_MAP = {
+    "m3/min": UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
 }
 
 # We want to check only the first 5 KB of the script if it contains emitEvent()
