@@ -552,6 +552,7 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
+            libxml2-utils \
             libavcodec-dev \
             libavdevice-dev \
             libavfilter-dev \
