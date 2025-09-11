@@ -1,4 +1,6 @@
-"""Test for TFA.me: test of coordinator.py."""
+"""Test the TFA.me integration: test of coordinator.py."""
+
+# For test run: "pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv"
 
 from datetime import timedelta
 from http import HTTPStatus
@@ -6,7 +8,6 @@ from unittest.mock import patch
 
 import pytest
 
-# from tests.components.a_tfa_me_1.test_config_flow import CONF_MULTIPLE_ENTITIES, DOMAIN
 from homeassistant.components.a_tfa_me_1.const import (
     CONF_INTERVAL,
     CONF_MULTIPLE_ENTITIES,
@@ -43,7 +44,7 @@ def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
 async def test_update_data_with_ip(
     aioclient_mock: AiohttpClientMocker, hass: HomeAssistant, tfa_me_mock_entry
 ) -> None:
-    """Test normal update (with IP) with all sensor types."""
+    """Test normal update (with IP) with some sensor types."""
     now = datetime.now().timestamp()
 
     aioclient_mock.get(
@@ -116,7 +117,7 @@ async def test_update_data_with_mdns(
     hass: HomeAssistant,
     tfa_me_mock_entry,
 ) -> None:
-    """Test normal update (with MDNS name) with all sensor types."""
+    """Test normal update (with MDNS name) with some sensor types."""
     now = datetime.now().timestamp()
 
     aioclient_mock.get(

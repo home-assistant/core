@@ -1,4 +1,6 @@
-"""TFA.me station integration: test of text.py."""
+"""Test the TFA.me integration: test of text.py."""
+
+# For test run: "pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv"
 
 from datetime import datetime
 from unittest.mock import AsyncMock

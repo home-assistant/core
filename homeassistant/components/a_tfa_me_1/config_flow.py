@@ -316,13 +316,3 @@ class OptionsFlowHandler(OptionsFlow):
         return self.async_create_entry(
             title="discover_sensors", data=self.config_entry.options
         )
-
-    # async def _save_device_list(self, device_list):
-    #    """Save list will all TFA.me stations."""
-    #    self.hass.config_entries.async_update_entry(
-    #        self.config_entry, data={"tfa_me_stations": device_list}
-    #    )
-
-    # def _load_device_list(self):
-    #    """Load list with all TFA.me stations."""
-    #    return self.config_entry.data.get("tfa_me_stations", [])

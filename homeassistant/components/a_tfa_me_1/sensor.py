@@ -106,7 +106,6 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
             self.coordinator = coordinator
             self.host = coordinator.host
             self.multiple_entities = coordinator.multiple_entities
-            # self.gateway_id = gateway_id
             self.entity_id = entity_id
             self.gateway_id = self.coordinator.data[self.entity_id]["gateway_id"]
 
@@ -262,23 +261,10 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                 if "rain_hour" in self.entity_id:
                     # try:
                     measurement_value = float(0)
-                    # str_rain = self.entity_id
-                    # value = self.coordinator.data[str_rain]["value"]
                     if len(self.rain_history.data) >= 2:
                         oldest, newest = self.rain_history.get_oldest_and_newest()
                         measurement_value = float(newest[0]) - float(oldest[0])
                         measurement_value = round(measurement_value, 1)
-                    # except Exception as error:
-                    #    msg2: str = (
-                    #        "Exception requesting data: str_rain = '"
-                    #        + self.entity_id
-                    #        + "' "
-                    #        + str(error.__doc__)
-                    #    )
-                    #    _LOGGER.error(msg2)
-                    #    measurement_value = float(0)
-                    #    measurement_value = round(measurement_value, 1)
-                    #    raise
 
                 # Is this rain sensor last 24 hours
                 if "rain_24hours" in self.entity_id:
@@ -309,7 +295,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                         raise
 
             else:
-                measurement_value = None  # STATE_UNAVAILABLE  #   None  # TO.DO insert again or use other value STATE_UNAVAILABLE
+                measurement_value = None  # STATE_UNAVAILABLE
 
         except (ValueError, TypeError, KeyError):
             return None  # Wrong data, Home Assistant shows sensor as "unavailable"

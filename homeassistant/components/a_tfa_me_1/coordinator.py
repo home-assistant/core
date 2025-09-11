@@ -7,8 +7,6 @@ import socket
 from homeassistant.components.hassio import async_get_clientsession
 from homeassistant.components.sensor import timedelta
 from homeassistant.config_entries import ConfigEntry
-
-# from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -67,9 +65,7 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
         msg: str = "Request URL " + url
         _LOGGER.info(msg)
         try:
-            session = async_get_clientsession(
-                self.hass
-            )  # ✅ HA-Session statt eigener ClientSession
+            session = async_get_clientsession(self.hass)  # HA session
             async with asyncio.timeout(5):  # 5 seconds timeout
                 async with session.get(url) as response:
                     if response.status != 200:
@@ -157,7 +153,6 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
                                             "N",
                                         ]
                                         uint_str = direction[val]
-                                    # parsed_data[entity_id]["unit"] = uint_str
 
                                     # wind direction in degrees
                                     parsed_data[entity_id_wind2] = {

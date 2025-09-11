@@ -1,10 +1,10 @@
 """Tests for the TFA.me integration: test of data.py."""
 
+# For test run: "pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv"
+
 import pytest
 
 from homeassistant.components.a_tfa_me_1.data import TFAmeData, TFAmeException
-
-# pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv
 
 
 @pytest.mark.asyncio

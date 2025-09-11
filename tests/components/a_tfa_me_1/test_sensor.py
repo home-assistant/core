@@ -1,4 +1,6 @@
-"""Tests for TFA.me: test of sensor.py."""
+"""Test the TFA.me integration: test of sensor.py."""
+
+# For test run: "pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv"
 
 from datetime import datetime, timedelta
 import socket
@@ -38,7 +40,6 @@ def mock_coordinator():
 
     now = datetime.now().timestamp()
 
-    # {'sensor_id': 'a6f169ad1', 'gateway_id': '99fffff9d', 'sensor_name': 'A6F169AD1', 'measurement': 'temperature', 'value': '24.6', 'unit': '°C', 'timestamp': '2025-09-01T08:09:00Z', 'ts': '1756714140', 'info': ''}
     coordinator.data = {
         "sensor.a01234567_temperature": {
             "sensor_id": "a01234567",
@@ -150,7 +151,6 @@ def mock_coordinator():
             "ts": int(now),
             "info": "",
         },
-        # 'sensor.a4481290f_rssi': {'sensor_id': 'a4481290f', 'gateway_id': '99fffff9d', 'sensor_name': 'A4481290F', 'measurement': 'rssi', 'value': '213', 'unit': '/255', 'timestamp': '2025-09-02T09:15:16Z', 'ts': '1756804516', 'info': ''}, 'sensor.a4481290f_lowbatt': {'sensor_id': 'a4481290f', 'gateway_id': '99fffff9d', 'sensor_name': 'A4481290F', 'measurement': 'lowbatt', 'value': '1', 'unit': '', 'timestamp': '2025-09-02T09:15:16Z', 'ts': '1756804516', 'info': ''}, 'sensor.a4481290f_lowbatt_txt': {'sensor_id': 'a4481290f', 'gateway_id': '99fffff9d', 'sensor_name': 'A4481290F', 'measurement': 'lowbatt_text', 'value': '1', 'text': 'Yes', 'uint': '', 'timestamp': '2025-09-02T09:15:16Z', 'ts': '1756804516'}, 'sensor.a4481290f_temperature': {'sensor_id': 'a4481290f', 'gateway_id': '99fffff9d', 'sensor_name': 'A4481290F', 'measurement': 'temperature', 'value': '24.2', 'unit': '°C', 'timestamp': '2025-09-02T09:15:16Z', 'ts': '1756804516', 'info': ''}, 'sensor.a4481290f_humidity': {'sensor_id': 'a4481290f', 'gateway_id': '99fffff9d', 'sensor_name': 'A4481290F', 'measurement': 'humidity', 'value': '52', 'unit': '%', 'timestamp': '2025-09-02T09:15:16Z', 'ts': '1756804516', 'info': ''}, 'sensor.a4481290f_temperature_probe': {'sensor_id': 'a4481290f', 'gateway_id': '99fffff9d', 'sensor_name': 'A4481290F', 'measurement': 'temperature_probe', 'value': '24.5', 'unit': '°C', 'timestamp': '2025-09-02T09:15:16Z', 'ts': '1756804516', 'info': ''}, 'sensor.a2ffffffb_rssi': {'sensor_id': 'a2ffffffb', 'gateway_id': '99fffff9d', 'sensor_name': 'A2FFFFFFB', 'measurement': 'rssi', 'value': '226', 'unit': '/255', 'timestamp': '2025-09-02T09:15:11Z', 'ts': '1756804511', 'info': ''}, 'sensor.a2ffffffb_lowbatt': {'sensor_id': 'a2ffffffb', 'gateway_id': '99fffff9d', 'sensor_name': 'A2FFFFFFB', 'measurement': 'lowbatt', 'value': '0', 'unit': '', 'timestamp': '2025-09-02T09:15:11Z', 'ts': '1756804511', 'info': ''}, 'sensor.a2ffffffb_lowbatt_txt': {'sensor_id': 'a2ffffffb', 'gateway_id': '99fffff9d', 'sensor_name': 'A2FFFFFFB', 'measurement': 'lowbatt_text', 'value': '0', 'text': 'No', 'uint': '', 'timestamp': '2025-09-02T09:15:11Z', 'ts': '1756804511'}, 'sensor.a2ffffffb_wind_direction': {'sensor_id': 'a2ffffffb', 'gateway_id': '99fffff9d', 'sensor_name': 'A2FFFFFFB', 'measurement': 'wind_direction', 'value': '8', 'unit': '', 'timestamp': '2025-09-02T09:15:11Z', 'ts': '1756804511', 'info': ''},
         "sensor.a2ffffffb_wind_direction": {
             "sensor_id": "a2ffffffb",
             "gateway_id": "017654321",
@@ -518,7 +518,6 @@ async def test_sensor_entity_properties(mock_coordinator) -> None:
 
     # mock_coordinator.async_discover_new_entities()
     await mock_coordinator._handle_coordinator_update()
-    # assert entity8.native_unit_of_measurement == ""
 
 
 async def test_wind_sensor(mock_coordinator) -> None:

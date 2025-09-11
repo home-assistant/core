@@ -1,4 +1,6 @@
-"""Test the TFA.me: test of config_flow.py."""
+"""Test the TFA.me integration: test of config_flow.py."""
+
+# For test run: "pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv"
 
 from unittest.mock import AsyncMock, patch
 

@@ -26,7 +26,6 @@ class TFAmeTextEntity(TextEntity):
         self.coordinator = coordinator
         self.host = coordinator.host
         self.multiple_entities = coordinator.multiple_entities
-        # self.gateway_id = gateway_id
         self.entity_id = entity_id
         self.gateway_id = self.coordinator.data[self.entity_id]["gateway_id"]
         self.sensor_id = sensor_id

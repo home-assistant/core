@@ -1,4 +1,6 @@
-"""Test the TFA.me: test of additional functions."""
+"""Test the TFA.me integration: test of additional functions."""
+
+# For test run: "pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv"
 
 from homeassistant.components.a_tfa_me_1.config_flow import is_valid_ip_or_tfa_me
 

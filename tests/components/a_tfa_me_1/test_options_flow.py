@@ -1,4 +1,6 @@
-"""Tests for TFA.me: test of config_flow (options flow).py."""
+"""Test the TFA.me integration: test of config_flow (options flow).py."""
+
+# For test run: "pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv"
 
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
@@ -19,19 +21,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-# from tests.components.androidtv.patchers import PATCH_SETUP_ENTRY
-
-
-PATCH_SETUP_ENTRY = patch(
-    "homeassistant.components.a_tfa_me_1.async_setup_entry",
-    return_value=True,
-)
-
-PATCH_SETUP_INTERVAL = patch(
-    "homeassistant.components.a_tfa_me_1.config_flow.OptionsFlowHandler.async_step_set_interval",
-    return_value=True,
-)
 
 # ----------------------------
 # Fixtures
@@ -137,11 +126,7 @@ async def test_options_flow_action_rain(
 ) -> None:
     """Test the action_rain option in OptionsFlowHandler."""
 
-    # Simulate dummy reply from gateway
-    # aioclient_mock.get(
-    #    "http://127.0.0.1/sensors",
-    #    json={"gateway_id": "001", "sensors": []},
-    # )
+    # Fake JSON reply from gateway
     fake_json = {"gateway_id": "001", "sensors": []}
 
     # Create mock config entry
@@ -195,12 +180,7 @@ async def test_setup_entry_and_action_rain(
 ) -> None:
     """Test a successful setup."""
 
-    # simulate dummy reply from gateway
-    # aioclient_mock.get(
-    #    "http://127.0.0.1/sensors",
-    #    json={"gateway_id": "001", "sensors": []},
-    # )
-
+    # Fake JSON reply from gateway
     fake_json = {"gateway_id": "001", "sensors": []}
 
     # Create dummy config entry
@@ -241,13 +221,9 @@ async def test_setup_entry_and_action_update_data(
 ) -> None:
     """Test a successful setup: async_update_data()."""
 
-    # Simulate dummy reply from gateway
-    # aioclient_mock.get(
-    #    "http://127.0.0.1/sensors",
-    #    json={"gateway_id": "001", "sensors": []},
-    # )
-
+    # Fake JSON reply from gateway
     fake_json = {"gateway_id": "001", "sensors": []}
+
     # Create dummy config entry and add it to hass
     cfg_entry_x = create_default_mock_entry(hass)
 
@@ -305,12 +281,9 @@ async def test_setup_entry_and_menu_interval(
 ) -> None:
     """Test a successful setup."""
 
-    # Simulate dummy reply from gateway
-    # aioclient_mock.get(
-    #    "http://127.0.0.1/sensors",
-    #    json={"gateway_id": "001", "sensors": []},
-    # )
+    # Fake JSON reply from gateway
     fake_json = {"gateway_id": "001", "sensors": []}
+
     # Create dummy config entry and add it to hass
     cfg_entry_x = create_default_mock_entry(hass)
 

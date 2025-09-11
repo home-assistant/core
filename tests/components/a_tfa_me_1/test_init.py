@@ -1,5 +1,7 @@
 """Tests for TFA.me: test of __init__.py."""
 
+# For test run: "pytest ./tests/components/a_tfa_me_1/ --cov=homeassistant.components.a_tfa_me_1 --cov-report term-missing -vv"
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
