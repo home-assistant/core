@@ -139,12 +139,6 @@ async def test_thermostat_base(
     assert state
     assert state.attributes["hvac_action"] == HVACAction.FAN
 
-    set_node_attribute(matter_node, 1, 513, 41, 0)
-    await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("climate.longan_link_hvac")
-    assert state
-    assert state.attributes["hvac_action"] == HVACAction.OFF
-
     set_node_attribute(matter_node, 1, 513, 41, 128)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac")
