@@ -4,28 +4,28 @@
       "user": {
         "description": "Set up Transport NSW to get real-time departure information.\n\nTo get a free API key:\n1. Go to [Transport NSW Open Data](https://opendata.transport.nsw.gov.au/)\n2. Register an account\n3. Create a new application\n4. Add the 'Trip Planner APIs' to your application",
         "data": {
-          "api_key": "API Key",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "stop_id": "Stop ID",
-          "name": "Name",
-          "route": "Route Filter (optional)",
-          "destination": "Destination Filter (optional)"
+          "name": "[%key:common::config_flow::data::name%]",
+          "route": "Route filter (optional)",
+          "destination": "Destination filter (optional)"
         }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to Transport NSW API. Please check your API key and stop ID.",
-      "unknown": "Unexpected error occurred."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Transport NSW Options",
+        "title": "Transport NSW options",
         "description": "Configure filtering options for departures.",
         "data": {
-          "name": "Name",
-          "route": "Route Filter (optional)",
-          "destination": "Destination Filter (optional)"
+          "name": "[%key:common::config_flow::data::name%]",
+          "route": "[%key:component::transport_nsw::config::step::user::data::route%]",
+          "destination": "[%key:component::transport_nsw::config::step::user::data::destination%]"
         }
       }
     }
