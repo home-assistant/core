@@ -1,9 +1,12 @@
 """Test the switchbot config flow."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import Mock, patch
 
+import pytest
 from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError
 
+from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.switchbot.const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
@@ -39,6 +42,30 @@ from . import (
 from tests.common import MockConfigEntry
 
 DOMAIN = "switchbot"
+
+
+@pytest.fixture
+def mock_scanners_all_active() -> Generator[None]:
+    """Mock all scanners as active mode."""
+    mock_scanner = Mock()
+    mock_scanner.current_mode = BluetoothScanningMode.ACTIVE
+    with patch(
+        "homeassistant.components.switchbot.config_flow.async_current_scanners",
+        return_value=[mock_scanner],
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_scanners_all_passive() -> Generator[None]:
+    """Mock all scanners as passive mode."""
+    mock_scanner = Mock()
+    mock_scanner.current_mode = BluetoothScanningMode.PASSIVE
+    with patch(
+        "homeassistant.components.switchbot.config_flow.async_current_scanners",
+        return_value=[mock_scanner],
+    ):
+        yield
 
 
 async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
@@ -248,6 +275,7 @@ async def test_async_step_bluetooth_not_connectable(hass: HomeAssistant) -> None
     assert result["reason"] == "not_supported"
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_wohand(hass: HomeAssistant) -> None:
     """Test the user initiated form with password and valid mac."""
 
@@ -286,6 +314,7 @@ async def test_user_setup_wohand(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_wohand_already_configured(hass: HomeAssistant) -> None:
     """Test the user initiated form with password and valid mac."""
     entry = MockConfigEntry(
@@ -318,6 +347,7 @@ async def test_user_setup_wohand_already_configured(hass: HomeAssistant) -> None
     assert result["reason"] == "no_devices_found"
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_wohand_replaces_ignored(hass: HomeAssistant) -> None:
     """Test setting up a switchbot replaces an ignored entry."""
     entry = MockConfigEntry(
@@ -359,6 +389,7 @@ async def test_user_setup_wohand_replaces_ignored(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_wocurtain(hass: HomeAssistant) -> None:
     """Test the user initiated form with password and valid mac."""
 
@@ -397,6 +428,7 @@ async def test_user_setup_wocurtain(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_wocurtain_or_bot(hass: HomeAssistant) -> None:
     """Test the user initiated form with valid address."""
 
@@ -440,6 +472,7 @@ async def test_user_setup_wocurtain_or_bot(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_wocurtain_or_bot_with_password(hass: HomeAssistant) -> None:
     """Test the user initiated form and valid address and a bot with a password."""
 
@@ -491,6 +524,7 @@ async def test_user_setup_wocurtain_or_bot_with_password(hass: HomeAssistant) ->
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_single_bot_with_password(hass: HomeAssistant) -> None:
     """Test the user initiated form for a bot with a password."""
 
@@ -530,6 +564,7 @@ async def test_user_setup_single_bot_with_password(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_woencrypted_key(hass: HomeAssistant) -> None:
     """Test the user initiated form for a lock."""
 
@@ -603,6 +638,7 @@ async def test_user_setup_woencrypted_key(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_woencrypted_auth(hass: HomeAssistant) -> None:
     """Test the user initiated form for a lock."""
 
@@ -683,6 +719,7 @@ async def test_user_setup_woencrypted_auth(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_woencrypted_auth_switchbot_api_down(
     hass: HomeAssistant,
 ) -> None:
@@ -730,6 +767,7 @@ async def test_user_setup_woencrypted_auth_switchbot_api_down(
     assert result["description_placeholders"] == {"error_detail": "Switchbot API down"}
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_wolock_or_bot(hass: HomeAssistant) -> None:
     """Test the user initiated form for a lock."""
 
@@ -798,6 +836,7 @@ async def test_user_setup_wolock_or_bot(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_wosensor(hass: HomeAssistant) -> None:
     """Test the user initiated form with password and valid mac."""
     result = await hass.config_entries.flow.async_init(
@@ -835,6 +874,7 @@ async def test_user_setup_wosensor(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_cloud_login(hass: HomeAssistant) -> None:
     """Test the cloud login flow."""
     result = await hass.config_entries.flow.async_init(
@@ -888,6 +928,7 @@ async def test_user_cloud_login(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_cloud_login_auth_failed(hass: HomeAssistant) -> None:
     """Test the cloud login flow with authentication failure."""
     result = await hass.config_entries.flow.async_init(
@@ -922,6 +963,7 @@ async def test_user_cloud_login_auth_failed(hass: HomeAssistant) -> None:
     assert "Invalid credentials" in result["description_placeholders"]["error_detail"]
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_cloud_login_api_error(hass: HomeAssistant) -> None:
     """Test the cloud login flow with API error."""
     result = await hass.config_entries.flow.async_init(
@@ -954,6 +996,7 @@ async def test_user_cloud_login_api_error(hass: HomeAssistant) -> None:
     assert result["description_placeholders"] == {"error_detail": "API is down"}
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_cloud_login_then_encrypted_device(hass: HomeAssistant) -> None:
     """Test cloud login followed by encrypted device setup using saved credentials."""
     result = await hass.config_entries.flow.async_init(
@@ -1039,6 +1082,7 @@ async def test_user_cloud_login_then_encrypted_device(hass: HomeAssistant) -> No
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_no_devices(hass: HomeAssistant) -> None:
     """Test the user initiated form with password and valid mac."""
     result = await hass.config_entries.flow.async_init(
@@ -1059,6 +1103,7 @@ async def test_user_no_devices(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_devices_found"
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_async_step_user_takes_precedence_over_discovery(
     hass: HomeAssistant,
 ) -> None:
@@ -1232,6 +1277,7 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
     assert entry.options[CONF_LOCK_NIGHTLATCH] is True
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_worelay_switch_1pm_key(hass: HomeAssistant) -> None:
     """Test the user initiated form for a relay switch 1pm."""
 
@@ -1287,6 +1333,7 @@ async def test_user_setup_worelay_switch_1pm_key(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_worelay_switch_1pm_auth(hass: HomeAssistant) -> None:
     """Test the user initiated form for a relay switch 1pm."""
 
@@ -1366,6 +1413,7 @@ async def test_user_setup_worelay_switch_1pm_auth(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_worelay_switch_1pm_auth_switchbot_api_down(
     hass: HomeAssistant,
 ) -> None:
@@ -1411,3 +1459,128 @@ async def test_user_setup_worelay_switch_1pm_auth_switchbot_api_down(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "api_error"
     assert result["description_placeholders"] == {"error_detail": "Switchbot API down"}
+
+
+@pytest.mark.usefixtures("mock_scanners_all_active")
+async def test_user_skip_menu_when_all_scanners_active(hass: HomeAssistant) -> None:
+    """Test that menu is skipped when all scanners are in active mode."""
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[WOHAND_SERVICE_INFO],
+        ),
+        patch_async_setup_entry() as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        # Should skip menu and go directly to select_device -> confirm
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Bot EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_SENSOR_TYPE: "bot",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_show_menu_when_passive_scanner_present(hass: HomeAssistant) -> None:
+    """Test that menu is shown when any scanner is in passive mode."""
+    mock_scanner_active = Mock()
+    mock_scanner_active.current_mode = BluetoothScanningMode.ACTIVE
+    mock_scanner_passive = Mock()
+    mock_scanner_passive.current_mode = BluetoothScanningMode.PASSIVE
+
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_current_scanners",
+            return_value=[mock_scanner_active, mock_scanner_passive],
+        ),
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[WOHAND_SERVICE_INFO],
+        ),
+        patch_async_setup_entry() as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        # Should show menu since not all scanners are active
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "user"
+        assert set(result["menu_options"]) == {"cloud_login", "select_device"}
+
+        # Choose select_device from menu
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "select_device"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+
+        # Confirm the device
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Bot EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_SENSOR_TYPE: "bot",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_show_menu_when_no_scanners(hass: HomeAssistant) -> None:
+    """Test that menu is shown when no scanners are available."""
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_current_scanners",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[WOHAND_SERVICE_INFO],
+        ),
+        patch_async_setup_entry() as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        # Should show menu when no scanners are available
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "user"
+        assert set(result["menu_options"]) == {"cloud_login", "select_device"}
+
+        # Choose select_device from menu
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "select_device"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+
+        # Confirm the device
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Bot EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_SENSOR_TYPE: "bot",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1

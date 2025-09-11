@@ -17,7 +17,9 @@ from switchbot import (
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
     BluetoothServiceInfoBleak,
+    async_current_scanners,
     async_discovered_service_info,
 )
 from homeassistant.config_entries import (
@@ -323,6 +325,15 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step to choose cloud login or direct discovery."""
+        # Check if all scanners are in active mode
+        # If so, skip the menu and go directly to device selection
+        scanners = async_current_scanners(self.hass)
+        if scanners and all(
+            scanner.current_mode == BluetoothScanningMode.ACTIVE for scanner in scanners
+        ):
+            # All scanners are active, skip the menu
+            return await self.async_step_select_device()
+
         return self.async_show_menu(
             step_id="user",
             menu_options=["cloud_login", "select_device"],
