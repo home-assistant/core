@@ -195,7 +195,7 @@ async def test_migration_from_v1(
                 },
                 {
                     "sensor_entity_id": "sensor.not_de_jongweg_utrecht_air_quality_index",
-                    "device_disabled_by": None,
+                    "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
                     "entity_disabled_by": None,
                     "device": 1,
                 },
