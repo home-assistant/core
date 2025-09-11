@@ -42,6 +42,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -96,7 +97,9 @@ class TransportNSWCoordinator(DataUpdateCoordinator):
                 ATTR_MODE: _get_value(data.get("mode")),
             }
         except Exception as exc:
-            raise UpdateFailed(f"Error communicating with Transport NSW API: {exc}") from exc
+            raise UpdateFailed(
+                f"Error communicating with Transport NSW API: {exc}"
+            ) from exc
 
 
 def _get_value(value):
@@ -112,7 +115,9 @@ class TransportNSWSensor(CoordinatorEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
-    def __init__(self, coordinator: TransportNSWCoordinator, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, coordinator: TransportNSWCoordinator, config_entry: ConfigEntry
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.config_entry = config_entry

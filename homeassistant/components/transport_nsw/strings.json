@@ -1,34 +1,33 @@
 {
-    "config": {
-        "step": {
-            "user": {
-                "title": "Transport NSW",
-                "description": "Set up Transport NSW to get real-time departure information.\n\nTo get a free API key:\n1. Go to [Transport NSW Open Data](https://opendata.transport.nsw.gov.au/)\n2. Register an account\n3. Create a new application\n4. Add the 'Trip Planner APIs' to your application",
-                "data": {
-                    "api_key": "API Key",
-                    "stop_id": "Stop ID",
-                    "name": "Name",
-                    "route": "Route Filter (optional)",
-                    "destination": "Destination Filter (optional)"
-                }
-            }
-        },
-        "error": {
-            "cannot_connect": "Failed to connect to Transport NSW API. Please check your API key and stop ID.",
-            "unknown": "Unexpected error occurred."
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up Transport NSW to get real-time departure information.\n\nTo get a free API key:\n1. Go to [Transport NSW Open Data](https://opendata.transport.nsw.gov.au/)\n2. Register an account\n3. Create a new application\n4. Add the 'Trip Planner APIs' to your application",
+        "data": {
+          "api_key": "API Key",
+          "stop_id": "Stop ID",
+          "name": "Name",
+          "route": "Route Filter (optional)",
+          "destination": "Destination Filter (optional)"
         }
+      }
     },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Transport NSW Options",
-                "description": "Configure filtering options for departures.",
-                "data": {
-                    "name": "Name",
-                    "route": "Route Filter (optional)",
-                    "destination": "Destination Filter (optional)"
-                }
-            }
-        }
+    "error": {
+      "cannot_connect": "Failed to connect to Transport NSW API. Please check your API key and stop ID.",
+      "unknown": "Unexpected error occurred."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Transport NSW Options",
+        "description": "Configure filtering options for departures.",
+        "data": {
+          "name": "Name",
+          "route": "Route Filter (optional)",
+          "destination": "Destination Filter (optional)"
+        }
+      }
+    }
+  }
 }

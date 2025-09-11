@@ -16,7 +16,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import TextSelector
 
 from .const import CONF_DESTINATION, CONF_ROUTE, CONF_STOP_ID, DEFAULT_NAME, DOMAIN
@@ -87,7 +86,7 @@ class TransportNSWConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except ValueError:
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -98,11 +97,13 @@ class TransportNSWConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                DATA_SCHEMA, user_input
-            ),
+            data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, user_input),
             errors=errors,
         )
+
+    def is_matching(self, other_flow: ConfigFlow) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return False
 
     @staticmethod
     @callback
@@ -124,17 +125,19 @@ class TransportNSWOptionsFlow(OptionsFlow):
         if user_input is not None:
             # If name was changed, update the config entry data as well
             updates = {}
-            if CONF_NAME in user_input and user_input[CONF_NAME] != self.config_entry.data.get(CONF_NAME):
+            if CONF_NAME in user_input and user_input[
+                CONF_NAME
+            ] != self.config_entry.data.get(CONF_NAME):
                 updates[CONF_NAME] = user_input[CONF_NAME]
-            
+
             result = self.async_create_entry(title="", data=user_input)
-            
+
             # Update config entry data if name was changed
             if updates:
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data={**self.config_entry.data, **updates}
                 )
-            
+
             return result
 
         # Prepare current values for the form
