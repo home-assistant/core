@@ -525,7 +525,7 @@ async def test_async_unload_entry_success(
     result = await async_unload_entry(hass, mock_config_entry)
 
     assert result is True
-    mock_listener.assert_called_once()
+    mock_listener.cancel.assert_called_once()
     mock_webhook_client.close.assert_called_once()
 
 
