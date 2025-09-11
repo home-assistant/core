@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -26,6 +28,7 @@ from .const import (
     TRANSPORT_ICONS,
 )
 from .coordinator import TransportNSWCoordinator
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
