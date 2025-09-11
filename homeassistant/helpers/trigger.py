@@ -83,7 +83,7 @@ _FIELD_SCHEMA = vol.Schema(
 
 _TRIGGER_SCHEMA = vol.Schema(
     {
-        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
+        vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
         vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
     },
     extra=vol.ALLOW_EXTRA,

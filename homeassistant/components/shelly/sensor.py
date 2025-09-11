@@ -61,6 +61,7 @@ from .utils import (
     get_device_uptime,
     get_shelly_air_lamp_life,
     get_virtual_component_ids,
+    get_virtual_component_unit,
     is_rpc_wifi_stations_disabled,
 )
 
@@ -382,10 +383,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         translation_key="lamp_life",
         value=get_shelly_air_lamp_life,
         suggested_display_precision=1,
-        # Deprecated, remove in 2025.10
-        extra_state_attributes=lambda block: {
-            "Operational hours": round(cast(int, block.totalWorkTime) / 3600, 1)
-        },
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ("adc", "adc"): BlockSensorDescription(
@@ -403,8 +400,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         options=["warmup", "normal", "fault"],
         translation_key="operation",
         value=lambda value: None if value == "unknown" else value,
-        # Deprecated, remove in 2025.10
-        extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
     ("valve", "valve"): BlockSensorDescription(
         key="valve|valve",
@@ -1382,9 +1377,7 @@ RPC_SENSORS: Final = {
     "number": RpcSensorDescription(
         key="number",
         sub_key="value",
-        unit=lambda config: config["meta"]["ui"]["unit"]
-        if config["meta"]["ui"]["unit"]
-        else None,
+        unit=get_virtual_component_unit,
         device_class_fn=lambda config: ROLE_TO_DEVICE_CLASS_MAP.get(config["role"])
         if "role" in config
         else None,
@@ -1426,6 +1419,14 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_class=RpcBluTrvSensor,
+    ),
+    "illuminance_illumination": RpcSensorDescription(
+        key="illuminance",
+        sub_key="illumination",
+        name="Illuminance Level",
+        translation_key="illuminance_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["dark", "twilight", "bright"],
     ),
 }
 

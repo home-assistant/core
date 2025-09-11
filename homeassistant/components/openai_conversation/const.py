@@ -60,6 +60,15 @@ UNSUPPORTED_WEB_SEARCH_MODELS: list[str] = [
     "o3-mini",
 ]
 
+UNSUPPORTED_IMAGE_MODELS: list[str] = [
+    "gpt-5",
+    "o3-mini",
+    "o4",
+    "o1",
+    "gpt-3.5",
+    "gpt-4-turbo",
+]
+
 RECOMMENDED_CONVERSATION_OPTIONS = {
     CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],

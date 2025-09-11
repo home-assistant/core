@@ -22,8 +22,7 @@
       "name": "AccuWeather",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling",
-      "single_config_entry": true
+      "iot_class": "cloud_polling"
     },
     "acer_projector": {
       "name": "Acer Projector",
@@ -186,6 +185,12 @@
           "name": "Airzone Cloud"
         }
       }
+    },
+    "aladdin_connect": {
+      "name": "Aladdin Connect",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "alarmdecoder": {
       "name": "AlarmDecoder",
@@ -437,11 +442,6 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
-    "aps": {
-      "name": "Arizona Public Service (APS)",
-      "integration_type": "virtual",
-      "supported_by": "opower"
-    },
     "apsystems": {
       "name": "APsystems",
       "integration_type": "device",
@@ -669,6 +669,12 @@
       "name": "Bauknecht",
       "integration_type": "virtual",
       "supported_by": "whirlpool"
+    },
+    "bayesian": {
+      "name": "Bayesian",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "calculated"
     },
     "bbox": {
       "name": "Bbox",
@@ -1434,6 +1440,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "droplet": {
+      "name": "Droplet",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "dsmr": {
       "name": "DSMR Smart Meter",
       "integration_type": "hub",
@@ -2144,25 +2156,25 @@
       ]
     },
     "fritzbox": {
-      "name": "FRITZ!Box",
+      "name": "FRITZ!",
       "integrations": {
         "fritz": {
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_polling",
-          "name": "AVM FRITZ!Box Tools"
+          "name": "FRITZ!Box Tools"
         },
         "fritzbox": {
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_polling",
-          "name": "AVM FRITZ!SmartHome"
+          "name": "FRITZ!SmartHome"
         },
         "fritzbox_callmonitor": {
           "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
-          "name": "AVM FRITZ!Box Call Monitor"
+          "name": "FRITZ!Box Call Monitor"
         }
       }
     },
@@ -2704,6 +2716,11 @@
       "name": "Legrand Home+ Control",
       "integration_type": "virtual",
       "supported_by": "netatmo"
+    },
+    "homeassistant_connect_zbt2": {
+      "name": "Home Assistant Connect ZBT-2",
+      "integration_type": "hardware",
+      "config_flow": true
     },
     "homeassistant_green": {
       "name": "Home Assistant Green",
@@ -3476,6 +3493,12 @@
           "name": "LG webOS TV"
         }
       }
+    },
+    "libre_hardware_monitor": {
+      "name": "Libre Hardware Monitor",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "lidarr": {
       "name": "Lidarr",
@@ -4723,7 +4746,7 @@
       }
     },
     "opnsense": {
-      "name": "OPNSense",
+      "name": "OPNsense",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
@@ -5036,11 +5059,23 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "pooldose": {
+      "name": "SEKO PoolDose",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "poolsense": {
       "name": "PoolSense",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "portainer": {
+      "name": "Portainer",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "portlandgeneral": {
       "name": "Portland General Electric (PGE)",
@@ -5853,6 +5888,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "sftp_storage": {
+      "name": "SFTP Storage",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "sharkiq": {
       "name": "Shark IQ",
       "integration_type": "hub",
@@ -5993,6 +6034,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"
+    },
+    "sleep_as_android": {
+      "name": "Sleep as Android",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "sleepiq": {
       "name": "SleepIQ",
@@ -7287,12 +7334,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "vulcan": {
-      "name": "Uonet+ Vulcan",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "vultr": {
       "name": "Vultr",
       "integration_type": "hub",
@@ -7763,12 +7804,6 @@
     }
   },
   "helper": {
-    "bayesian": {
-      "name": "Bayesian",
-      "integration_type": "helper",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "counter": {
       "integration_type": "helper",
       "config_flow": false
