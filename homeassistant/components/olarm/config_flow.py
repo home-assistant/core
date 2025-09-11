@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from olarmflowclient import OlarmFlowClient, OlarmFlowClientApiError
+from olarmflowclient import DevicesNotFound, OlarmFlowClient, OlarmFlowClientApiError
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
@@ -78,12 +78,11 @@ class OlarmOauth2FlowHandler(
 
         try:
             api_result = await olarm_connect_client.get_devices()
-        except OlarmFlowClientApiError as err:
-            # If the API returned a 404 or indicates nothing found, treat it as no devices
-            err_str = str(err).lower()
-            if "404" in err_str or "not found" in err_str:
-                return self.async_abort(reason="no_devices_found")
-
+        except DevicesNotFound:
+            # Handle if user has no devices
+            _LOGGER.info("No devices found for this account - aborting setup")
+            return self.async_abort(reason="no_devices_found")
+        except OlarmFlowClientApiError:
             # Otherwise, assume it's an auth-related error
             errors["base"] = "invalid_auth"
             return self.async_show_form(step_id="user", errors=errors)
