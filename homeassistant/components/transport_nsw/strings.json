@@ -20,7 +20,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Transport NSW Options",
+        "title": "Transport NSW options",
         "description": "Configure filtering options for departures.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
