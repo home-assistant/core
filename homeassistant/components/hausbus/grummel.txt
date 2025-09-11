@@ -36,7 +36,6 @@ Command line or configuration file:1:0: E0013: Plugin 'pylint_per_file_ignores' 
 ************* Module homeassistant.components.hausbus
 homeassistant/components/hausbus/__init__.py:8:0: E0611: No name 'config_entries' in module 'homeassistant' (no-name-in-module)
 homeassistant/components/hausbus/__init__.py:10:0: E0611: No name 'core' in module 'homeassistant' (no-name-in-module)
-homeassistant/components/hausbus/__init__.py:17:0: W7451: Platforms must be sorted alphabetically (hass-enforce-sorted-platforms)
 ************* Module homeassistant.components.hausbus.binary_sensor
 homeassistant/components/hausbus/binary_sensor.py:33:0: E0611: No name 'core' in module 'homeassistant' (no-name-in-module)
 ************* Module homeassistant.components.hausbus.button
@@ -48,7 +47,6 @@ homeassistant/components/hausbus/cover.py:20:0: E0611: No name 'cover' in module
 homeassistant/components/hausbus/cover.py:26:0: E0611: No name 'core' in module 'homeassistant' (no-name-in-module)
 ************* Module homeassistant.components.hausbus.device
 homeassistant/components/hausbus/device.py:15:0: E0611: No name 'device_registry' in module 'homeassistant.helpers' (no-name-in-module)
-homeassistant/components/hausbus/device.py:56:8: W0201: Attribute 'fcke' defined outside __init__ (attribute-defined-outside-init)
 ************* Module homeassistant.components.hausbus.device_action
 homeassistant/components/hausbus/device_action.py:8:0: E0611: No name 'core' in module 'homeassistant' (no-name-in-module)
 homeassistant/components/hausbus/device_action.py:9:0: E0611: No name 'config_validation' in module 'homeassistant.helpers' (no-name-in-module)
@@ -56,8 +54,8 @@ homeassistant/components/hausbus/device_action.py:9:0: E0611: No name 'entity_re
 ************* Module homeassistant.components.hausbus.device_trigger
 homeassistant/components/hausbus/device_trigger.py:9:0: E0611: No name 'device_automation' in module 'homeassistant.components' (no-name-in-module)
 homeassistant/components/hausbus/device_trigger.py:12:0: E0611: No name 'core' in module 'homeassistant' (no-name-in-module)
-homeassistant/components/hausbus/device_trigger.py:14:0: W7425: `async_get` should not be imported directly. Please import `homeassistant.helpers.device_registry` as `dr` and use `dr.async_get` (hass-helper-namespace-import)
 homeassistant/components/hausbus/device_trigger.py:14:0: E0611: No name 'device_registry' in module 'homeassistant.helpers' (no-name-in-module)
+homeassistant/components/hausbus/device_trigger.py:15:0: W0404: Reimport 'CALLBACK_TYPE' (imported line 12) (reimported)
 homeassistant/components/hausbus/device_trigger.py:15:0: E0611: No name 'typing' in module 'homeassistant.helpers' (no-name-in-module)
 ************* Module homeassistant.components.hausbus.entity
 homeassistant/components/hausbus/entity.py:12:0: E0611: No name 'core' in module 'homeassistant' (no-name-in-module)
@@ -69,7 +67,6 @@ homeassistant/components/hausbus/event.py:28:0: E0611: No name 'core' in module 
 homeassistant/components/hausbus/gateway.py:47:0: E0611: No name 'cover' in module 'homeassistant.components' (no-name-in-module)
 homeassistant/components/hausbus/gateway.py:52:0: E0611: No name 'config_entries' in module 'homeassistant' (no-name-in-module)
 homeassistant/components/hausbus/gateway.py:53:0: E0611: No name 'core' in module 'homeassistant' (no-name-in-module)
-homeassistant/components/hausbus/gateway.py:54:0: W7425: `async_get` should not be imported directly. Please import `homeassistant.helpers.device_registry` as `dr` and use `dr.async_get` (hass-helper-namespace-import)
 homeassistant/components/hausbus/gateway.py:54:0: E0611: No name 'device_registry' in module 'homeassistant.helpers' (no-name-in-module)
 ************* Module homeassistant.components.hausbus.light
 homeassistant/components/hausbus/light.py:57:0: E0611: No name 'core' in module 'homeassistant' (no-name-in-module)
@@ -77,7 +74,6 @@ homeassistant/components/hausbus/light.py:57:0: E0611: No name 'core' in module 
 homeassistant/components/hausbus/number.py:23:0: E0611: No name 'core' in module 'homeassistant' (no-name-in-module)
 ************* Module homeassistant.components.hausbus.sensor
 homeassistant/components/hausbus/sensor.py:76:0: E0611: No name 'core' in module 'homeassistant' (no-name-in-module)
-homeassistant/components/hausbus/sensor.py:502:12: E1201: Logging format string ends in middle of conversion specifier (logging-format-truncated)
 ************* Module homeassistant.components.hausbus.switch
 homeassistant/components/hausbus/switch.py:24:0: E0611: No name 'core' in module 'homeassistant' (no-name-in-module)
 
