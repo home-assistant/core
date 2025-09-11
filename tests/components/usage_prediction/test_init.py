@@ -1,7 +1,7 @@
 """Test usage_prediction integration."""
 
 import asyncio
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -27,7 +27,7 @@ async def test_usage_prediction_caching(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.usage_prediction.common_control.async_predict_common_control",
-        return_value=prediction_mock,
+        Mock(return_value=prediction_mock),
     ):
         # First call, should trigger prediction
         task1 = asyncio.create_task(get_cached_common_control(hass, "user_1"))
