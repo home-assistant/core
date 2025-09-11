@@ -13,6 +13,7 @@ from homeassistant.components.fish_audio.const import (
     CONF_API_KEY,
     CONF_BACKEND,
     CONF_LANGUAGE,
+    CONF_NAME,
     CONF_SELF_ONLY,
     CONF_SORT_BY,
     CONF_USER_ID,
@@ -211,14 +212,26 @@ class TestSubentryFlow:
             result["flow_id"],
             user_input={CONF_VOICE_ID: "a-id", CONF_BACKEND: "s1"},
         )
+        await hass.async_block_till_done()
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "name"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={CONF_NAME: "My Custom Voice"},
+        )
+        await hass.async_block_till_done()
+
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Alpha"  # Title of the specific voice
+        assert result["title"] == "My Custom Voice"
         assert result["data"] == {
             CONF_SELF_ONLY: True,
             CONF_LANGUAGE: "en",
             CONF_SORT_BY: "score",
             CONF_VOICE_ID: "a-id",
             CONF_BACKEND: "s1",
+            CONF_NAME: "My Custom Voice",
         }
 
     async def test_subflow_no_models_found(

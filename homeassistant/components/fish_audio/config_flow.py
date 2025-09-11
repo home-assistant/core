@@ -26,6 +26,7 @@ from .const import (
     CONF_API_KEY,
     CONF_BACKEND,
     CONF_LANGUAGE,
+    CONF_NAME,
     CONF_SELF_ONLY,
     CONF_SORT_BY,
     CONF_USER_ID,
@@ -38,8 +39,19 @@ from .error import (
     InvalidAuthError,
     UnexpectedError,
 )
-from .schemas import get_api_key_schema, get_filter_schema, get_model_selection_schema
-from .types import SubentryInitUserInput, SubentryModelUserInput, TTSConfigData
+from .schemas import (
+    get_api_key_schema,
+    get_filter_schema,
+    get_model_selection_schema,
+    get_name_schema,
+)
+from .types import (
+    SubentryInitUserInput,
+    SubentryModelUserInput,
+    SubentryNameUserInput,
+    TTSConfigData,
+    UserInput,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,9 +165,9 @@ class FishAudioConfigFlowManager:
         """Show the model selection form."""
         try:
             models = await self.async_get_models(
-                self_only=cast(bool, handler.config_data.get(CONF_SELF_ONLY, False)),
-                language=cast(str | None, handler.config_data.get(CONF_LANGUAGE)),
-                sort_by=cast(str, handler.config_data.get(CONF_SORT_BY, "score")),
+                self_only=handler.config_data.get(CONF_SELF_ONLY, False),
+                language=handler.config_data.get(CONF_LANGUAGE),
+                sort_by=handler.config_data.get(CONF_SORT_BY, "score"),
             )
         except CannotGetModelsError:
             models = []
@@ -172,6 +184,19 @@ class FishAudioConfigFlowManager:
             errors=form_errors,
         )
 
+    def show_name_form(
+        self,
+        handler: FishAudioSubentryFlowHandler,
+        errors: dict[str, str] | None = None,
+        default: str | None = None,
+    ) -> SubentryFlowResult:
+        """Show the name form."""
+        return handler.async_show_form(
+            step_id="name",
+            data_schema=get_name_schema(handler.config_data, default),
+            errors=errors or {},
+        )
+
 
 class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fish Audio."""
@@ -185,7 +210,7 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         self._reauth_entry = None
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: UserInput | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -264,7 +289,7 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: UserInput | None = None
     ) -> ConfigFlowResult:
         """Handle re-authentication confirmation."""
         errors: dict[str, str] = {}
@@ -360,7 +385,7 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             if (voice_id := user_input.get(CONF_VOICE_ID)) and (
-                backend := user_input.get(CONF_BACKEND)
+                user_input.get(CONF_BACKEND)
             ):
                 self.config_data.update(user_input)
                 if self._is_new:
@@ -368,11 +393,9 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
                         (m["label"] for m in self.models if m["value"] == voice_id),
                         "Fish Audio TTS",
                     )
-                    unique_id = f"{voice_id}-{backend}"
 
-                    return self.async_create_entry(
-                        title=voice_name, data=self.config_data, unique_id=unique_id
-                    )
+                    return await self.async_step_name(default=voice_name)
+
                 return self.async_update_and_abort(
                     self._get_entry(),
                     self._get_reconfigure_subentry(),
@@ -381,3 +404,24 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
             errors["base"] = "no_model_selected"
 
         return await self.manager.show_model_form(self, errors=errors)
+
+    async def async_step_name(
+        self,
+        user_input: SubentryNameUserInput | None = None,
+        default: str | None = None,
+        unique_id: str | None = None,
+    ) -> SubentryFlowResult:
+        """Handle the name selection step."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self.config_data.update(user_input)
+            unique_id = (
+                f"{self.config_data[CONF_VOICE_ID]}-{self.config_data[CONF_BACKEND]}"
+            )
+            return self.async_create_entry(
+                title=user_input[CONF_NAME],
+                data=self.config_data,
+                unique_id=unique_id,
+            )
+        return self.manager.show_name_form(self, errors=errors, default=default)

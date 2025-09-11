@@ -80,6 +80,13 @@
             "voice_id": "Choose from the list of available voices, or manually enter a specific voice ID.",
             "backend": "Select the AI model that will generate the audio."
           }
+        },
+        "name": {
+          "title": "Name Your TTS Voice",
+          "description": "Enter a unique name for this TTS voice to easily identify it in Home Assistant.",
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]"
+          }
         }
       },
       "error": {
