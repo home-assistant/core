@@ -34,7 +34,7 @@ NUMBER_DESCRIPTIONS: list[FoscamNumberEntityDescription] = [
         native_step=1,
         native_value_fn=lambda coordinator: coordinator.data.device_volume,
         set_value_fn=lambda session, value: session.setAudioVolume(value),
-        exists_fn=lambda coordinator: True,
+        exists_fn=lambda _: True,
     ),
     FoscamNumberEntityDescription(
         key="speak_volume",
@@ -87,7 +87,7 @@ class FoscamVolumeNumberEntity(FoscamEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
-        self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             self.entity_description.set_value_fn, self.coordinator.session, value
         )
         await self.coordinator.async_request_refresh()
