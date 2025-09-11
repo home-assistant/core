@@ -227,6 +227,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Ceiling Fan Light
+    # https://developer.tuya.com/en/docs/iot/fsd?id=Kaof8eiei4c2v
+    "fsd": (
+        SwitchEntityDescription(
+            key=DPCode.FAN_BEEP,
+            translation_key="sound",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Irrigator
     # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
     "ggq": (
@@ -653,6 +662,14 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Electric desk
+    "sjz": (
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Smart Camera
     # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
     "sp": (
@@ -861,6 +878,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.DO_NOT_DISTURB,
             translation_key="do_not_disturb",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Micro Storage Inverter
+    # Energy storage and solar PV inverter system with monitoring capabilities
+    "xnyjcn": (
+        SwitchEntityDescription(
+            key=DPCode.FEEDIN_POWER_LIMIT_ENABLE,
+            translation_key="output_power_limit",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

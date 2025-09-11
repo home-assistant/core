@@ -33,6 +33,7 @@ from .util import (
     pending_quest_items,
     quest_attributes,
     quest_boss,
+    rage_attributes,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,6 +112,8 @@ class HabiticaSensorEntity(StrEnum):
     BOSS_HP = "boss_hp"
     BOSS_HP_REMAINING = "boss_hp_remaining"
     COLLECTED_ITEMS = "collected_items"
+    BOSS_RAGE = "boss_rage"
+    BOSS_RAGE_LIMIT = "boss_rage_limit"
 
 
 SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
@@ -341,6 +344,25 @@ SENSOR_DESCRIPTIONS_PARTY: tuple[HabiticaPartySensorEntityDescription, ...] = (
             and (k := next(iter(p.quest.progress.collect), None))
             else None
         ),
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.BOSS_RAGE,
+        translation_key=HabiticaSensorEntity.BOSS_RAGE,
+        value_fn=lambda p, _: p.quest.progress.rage,
+        entity_picture=ha.RAGE,
+        suggested_display_precision=2,
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.BOSS_RAGE_LIMIT,
+        translation_key=HabiticaSensorEntity.BOSS_RAGE_LIMIT,
+        value_fn=(
+            lambda p, c: boss.rage.value
+            if (boss := quest_boss(p, c)) and boss.rage
+            else None
+        ),
+        entity_picture=ha.RAGE,
+        suggested_display_precision=0,
+        attributes_fn=rage_attributes,
     ),
 )
 

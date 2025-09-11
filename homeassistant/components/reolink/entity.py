@@ -253,6 +253,7 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
         coordinator: DataUpdateCoordinator[None] | None = None,
     ) -> None:
         """Initialize ReolinkChimeCoordinatorEntity for a chime."""
+        assert chime.channel is not None
         super().__init__(reolink_data, chime.channel, coordinator)
 
         self._chime = chime

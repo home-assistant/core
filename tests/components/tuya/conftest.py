@@ -6,9 +6,14 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from tuya_sharing import CustomerApi, CustomerDevice, DeviceFunction, DeviceStatusRange
+from tuya_sharing import (
+    CustomerApi,
+    CustomerDevice,
+    DeviceFunction,
+    DeviceStatusRange,
+    Manager,
+)
 
-from homeassistant.components.tuya import ManagerCompat
 from homeassistant.components.tuya.const import (
     CONF_APP_TYPE,
     CONF_ENDPOINT,
@@ -56,7 +61,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 async def mock_loaded_entry(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> MockConfigEntry:
@@ -69,7 +74,7 @@ async def mock_loaded_entry(
 
     # Initialize the component
     with (
-        patch("homeassistant.components.tuya.ManagerCompat", return_value=mock_manager),
+        patch("homeassistant.components.tuya.Manager", return_value=mock_manager),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -114,9 +119,9 @@ def mock_tuya_login_control() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_manager() -> ManagerCompat:
+def mock_manager() -> Manager:
     """Mock Tuya Manager."""
-    manager = MagicMock(spec=ManagerCompat)
+    manager = MagicMock(spec=Manager)
     manager.device_map = {}
     manager.mq = MagicMock()
     manager.mq.client = MagicMock()
@@ -203,15 +208,17 @@ async def _create_device(hass: HomeAssistant, mock_device_code: str) -> Customer
     }
     device.status = details["status"]
     for key, value in device.status.items():
-        if device.status_range[key].type == "Json":
+        # Some devices to not provide a status_range for all status DPs
+        dp_type = device.status_range.get(key)
+        if dp_type is None:
+            dp_type = device.function[key]
+        if dp_type.type == "Json":
             device.status[key] = json_dumps(value)
     return device
 
 
 @pytest.fixture
-def mock_listener(
-    hass: HomeAssistant, mock_manager: ManagerCompat
-) -> MockDeviceListener:
+def mock_listener(hass: HomeAssistant, mock_manager: Manager) -> MockDeviceListener:
     """Create a DeviceListener for testing."""
     listener = MockDeviceListener(hass, mock_manager)
     mock_manager.add_device_listener(listener)

@@ -850,7 +850,7 @@ async def test_validation_gas(
                     "affected_entities": {("sensor.gas_consumption_1", "beers")},
                     "translation_placeholders": {
                         "energy_units": ENERGY_UNITS_STRING,
-                        "gas_units": "CCF, ft³, m³, L",
+                        "gas_units": "CCF, ft³, m³, L, MCF",
                     },
                 },
                 {
@@ -879,7 +879,7 @@ async def test_validation_gas(
                     "affected_entities": {("sensor.gas_price_2", "EUR/invalid")},
                     "translation_placeholders": {
                         "price_units": (
-                            f"{ENERGY_PRICE_UNITS_STRING}, EUR/CCF, EUR/ft³, EUR/m³, EUR/L"
+                            f"{ENERGY_PRICE_UNITS_STRING}, EUR/CCF, EUR/ft³, EUR/m³, EUR/L, EUR/MCF"
                         )
                     },
                 },
@@ -1060,7 +1060,9 @@ async def test_validation_water(
                 {
                     "type": "entity_unexpected_unit_water",
                     "affected_entities": {("sensor.water_consumption_1", "beers")},
-                    "translation_placeholders": {"water_units": "CCF, ft³, m³, gal, L"},
+                    "translation_placeholders": {
+                        "water_units": "CCF, ft³, m³, gal, L, MCF"
+                    },
                 },
                 {
                     "type": "recorder_untracked",
@@ -1087,7 +1089,7 @@ async def test_validation_water(
                     "type": "entity_unexpected_unit_water_price",
                     "affected_entities": {("sensor.water_price_2", "EUR/invalid")},
                     "translation_placeholders": {
-                        "price_units": "EUR/CCF, EUR/ft³, EUR/m³, EUR/gal, EUR/L"
+                        "price_units": "EUR/CCF, EUR/ft³, EUR/m³, EUR/gal, EUR/L, EUR/MCF"
                     },
                 },
             ],

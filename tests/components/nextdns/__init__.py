@@ -13,8 +13,6 @@ from nextdns import (
     Settings,
 )
 
-from homeassistant.components.nextdns.const import CONF_PROFILE_ID, DOMAIN
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -155,20 +153,12 @@ def mock_nextdns():
         yield
 
 
-async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Set up the NextDNS integration in Home Assistant."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Fake Profile",
-        unique_id="xyz12",
-        data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
-        entry_id="d9aa37407ddac7b964a99e86312288d6",
-    )
-
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     with mock_nextdns():
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-
-    return entry
