@@ -4,6 +4,7 @@
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/transport_nsw",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["TransportNSW"],
   "requirements": ["PyTransportNSW==0.1.1"]
