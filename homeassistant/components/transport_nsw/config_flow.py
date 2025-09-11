@@ -22,6 +22,12 @@ from .const import CONF_DESTINATION, CONF_ROUTE, CONF_STOP_ID, DEFAULT_NAME, DOM
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _raise_no_data() -> None:
+    """Raise ValueError for no data returned."""
+    raise ValueError("No data returned from API")
+
+
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): TextSelector(),
@@ -60,7 +66,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
         # Check if we got a valid response
         if result is None:
-            raise ValueError("No data returned from API")
+            _raise_no_data()
 
     except Exception as exc:
         _LOGGER.error("Error connecting to Transport NSW API: %s", exc)
