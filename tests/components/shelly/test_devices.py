@@ -518,7 +518,7 @@ async def test_blu_trv_device_info(
     entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
 ) -> None:
-    """Test BLU TRV device_info.sw_version."""
+    """Test BLU TRV device info."""
     await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     entry = entity_registry.async_get("climate.trv_name")
