@@ -15,14 +15,14 @@ from .gateway import HausbusGateway
 
 # , Platform.NUMBER
 PLATFORMS: list[Platform] = [
-    Platform.LIGHT,
-    Platform.SWITCH,
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
-    Platform.EVENT,
-    Platform.COVER,
     Platform.BUTTON,
+    Platform.COVER,
+    Platform.EVENT,
+    Platform.LIGHT,
     Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 LOGGER = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     return True
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Haus-Bus integration (global services etc.)."""
 
     async def discover_devices(call: ServiceCall):
@@ -100,7 +100,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_remove_config_entry_device(hass, config_entry, device_entry):
+async def async_remove_config_entry_device(hass: HomeAssistant, config_entry:ConfigEntry, device_entry: DeviceEntry) -> bool:
     """Handle removal of a device from the integration."""
 
     gateway = config_entry.runtime_data.gateway

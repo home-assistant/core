@@ -76,7 +76,7 @@ from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfPower, UnitOfTemper
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .device import HausbusDevice
 from .entity import HausbusEntity
@@ -90,7 +90,7 @@ if TYPE_CHECKING:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HausbusConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Haus-Bus sensor from a config entry."""
 
@@ -317,7 +317,6 @@ class HausbusTemperaturSensor(HausbusSensor):
                 "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
-    @callback
     async def async_temperatur_sensor_set_configuration(
         self, correction: float, auto_event_diff: float, manual_event_interval: str
     ):
@@ -384,7 +383,6 @@ class HausbusPowerMeter(HausbusSensor):
                 "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
-    @callback
     async def async_power_meter_set_configuration(
         self, correction: float, auto_event_diff: float, manual_event_interval: str
     ):
@@ -451,7 +449,6 @@ class HausbusBrightnessSensor(HausbusSensor):
                 "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
-    @callback
     async def async_brightness_sensor_set_configuration(
         self, correction: float, auto_event_diff: float, manual_event_interval: str
     ):
@@ -499,7 +496,7 @@ class HausbusHumiditySensor(HausbusSensor):
             value = (
                 float(data.getRelativeHumidity()) + float(data.getCentiHumidity()) / 100
             )
-            LOGGER.debug("Feuchtigkeit empfangen: %s %", value)
+            LOGGER.debug("Feuchtigkeit empfangen: %s %%", value)
             self._attr_native_value = value
             self.schedule_update_ha_state()
         elif isinstance(data, FeuchteSensorConfiguration):
@@ -518,7 +515,6 @@ class HausbusHumiditySensor(HausbusSensor):
                 "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
-    @callback
     async def async_humidity_sensor_set_configuration(
         self, correction: float, auto_event_diff: float, manual_event_interval: str
     ):
@@ -583,7 +579,6 @@ class HausbusAnalogEingang(HausbusSensor):
                 "_attr_extra_state_attributes %s", self._attr_extra_state_attributes
             )
 
-    @callback
     async def async_analog_eingang_set_configuration(
         self, correction: float, auto_event_diff: float, manual_event_interval: str
     ):

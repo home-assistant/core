@@ -21,7 +21,7 @@ from pyhausbus.de.hausbus.homeassistant.proxy.schalter.params.EState import ESta
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .device import HausbusDevice
 from .entity import HausbusEntity
@@ -37,7 +37,7 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HausbusConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Haus-Bus number entity from a config entry."""
     gateway = config_entry.runtime_data.gateway
@@ -80,11 +80,11 @@ class HausbusControl(HausbusEntity, NumberEntity):
         self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Returns native value."""
         return self._value
 
-    async def async_set_native_value(self, value: float):
+    async def async_set_native_value(self, value: float) -> None:
         """Sets native value."""
         LOGGER.debug("async_set_native_value value %s", value)
         value = int(value)

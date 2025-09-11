@@ -26,7 +26,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .device import HausbusDevice
 from .entity import HausbusEntity
@@ -42,7 +42,7 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HausbusConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a cover from a config entry."""
     gateway = config_entry.runtime_data.gateway
@@ -124,22 +124,22 @@ class HausbusCover(HausbusEntity, CoverEntity):
         """Returns true if cover is actually closing."""
         return self._is_closing
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Opens the cover."""
         LOGGER.debug("async_open_cover")
         self._channel.start(EDirection.TO_OPEN)
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Closes the cover."""
         LOGGER.debug("async_close_cover")
         self._channel.start(EDirection.TO_CLOSE)
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stops the actual cover movevent."""
         LOGGER.debug("async_stop_cover")
         self._channel.stop()
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs:Any) -> None:
         """Moves cover to the given position."""
         position = kwargs.get("position")
         LOGGER.debug("async_set_cover_position position %s", position)
@@ -150,6 +150,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
         position = max(position, 0)
 
         self._channel.moveToPosition(100 - position)
+
 
     def handle_event(self, data: Any) -> None:
         """Handle haus-bus cover events."""

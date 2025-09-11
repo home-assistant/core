@@ -35,6 +35,7 @@ class HausbusDevice:
         self.firmware_id = firmware_id
         self.hass_device_entry_id = None
         self.special_type = 0
+        self.fcke=0
 
         LOGGER.debug("new device %s", self.name)
 

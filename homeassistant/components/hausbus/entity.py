@@ -69,7 +69,7 @@ class HausbusEntity(Entity):
         """State push update."""
         raise NotImplementedError
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Called when entity is added to HA."""
         registry = er.async_get(self.hass)
         registry.async_update_entity_options(

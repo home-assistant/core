@@ -15,7 +15,7 @@ from pyhausbus.ObjectId import ObjectId
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowResult as ConfigFlowResult
 
 from .const import DOMAIN
 
@@ -48,7 +48,7 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             # start searching for devices
@@ -61,7 +61,7 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
 
     async def async_step_wait_for_device(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Wait for a hausbus device to be found."""
         if not self._search_task:
             self._search_task = self.hass.async_create_task(
@@ -86,7 +86,7 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
 
     async def async_step_search_timeout(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Inform the user that no device has been found."""
         if user_input is not None:
             return await self.async_step_wait_for_device()
@@ -95,7 +95,7 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
 
     async def async_step_search_complete(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create a configuration entry for the hausbus devices."""
         return self.async_create_entry(title="Haus-Bus", data={})
 

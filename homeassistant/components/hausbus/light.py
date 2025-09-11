@@ -57,7 +57,7 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_ON_STATE
 from .device import HausbusDevice
@@ -72,7 +72,7 @@ if TYPE_CHECKING:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HausbusConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Haus-Bus lights from a config entry."""
 
@@ -381,7 +381,6 @@ class HausbusDimmerLight(HausbusLight):
         LOGGER.debug("async_dimmer_stop_ramp")
         self._channel.stop()
 
-    @callback
     async def async_dimmer_set_configuration(
         self,
         mode: str,
@@ -480,7 +479,6 @@ class HausbusRGBDimmerLight(HausbusLight):
             brightness_red, brightness_green, brightness_blue, duration
         )
 
-    @callback
     async def async_rgb_set_configuration(self, dimming_time: int):
         """Setzt die Konfiguration eines RGB Dimmers."""
         LOGGER.debug("async_rgb_set_configuration dimming_time %s", dimming_time)
@@ -555,7 +553,7 @@ class HausbusLedLight(HausbusLight):
         LOGGER.debug("async_led_min_brightness minBrightness %s", minBrightness)
         self._channel.setMinBrightness(minBrightness)
 
-    @callback
+
     async def async_led_set_configuration(self, time_base: int):
         """Setzt die Konfiguration einer Led."""
         LOGGER.debug("async_led_set_configuration time_base %s", time_base)

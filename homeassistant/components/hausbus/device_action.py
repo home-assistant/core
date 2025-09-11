@@ -26,7 +26,8 @@ ACTION_SCHEMA = vol.Schema(
 # ----------------------------
 # Actions für ein Device holen
 # ----------------------------
-async def async_get_actions(hass: HomeAssistant, device_id: str):
+async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
+
     """Returns the device actions for a device."""
 
     actions = []
@@ -103,7 +104,7 @@ def addAction(
 # Action ausführen
 # ----------------------------
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict[str, Any], variables: dict[str, Any], context
+    hass: HomeAssistant, config: ConfigType, variables: TemplateVarsType, context: Context
 ) -> None:
     """Processes an device action call."""
     service = config["type"].partition(" ")[0]
@@ -113,11 +114,10 @@ async def async_call_action_from_config(
     _LOGGER.debug("Rufe Service hausbus.%s mit %s", service, service_data)
     await hass.services.async_call(DOMAIN, service, service_data, context=context)
 
-
 # ----------------------------
 # Action-Capabilities
 # ----------------------------
-async def async_get_action_capabilities(hass: HomeAssistant, config: dict[str, Any]):
+async def async_get_action_capabilities(hass: HomeAssistant, config: ConfigType) -> dict[str, Schema]:
     """Returns capabilities for a device action."""
 
     service_type = config["type"]

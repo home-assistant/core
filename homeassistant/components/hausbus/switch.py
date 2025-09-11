@@ -24,7 +24,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntit
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_ON_STATE
 from .device import HausbusDevice
@@ -41,7 +41,7 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HausbusConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Haus-Bus switch from a config entry."""
     gateway = config_entry.runtime_data.gateway
@@ -170,19 +170,16 @@ class HausbusSwitch(HausbusEntity, SwitchEntity):
         if state_changed:
             self.schedule_update_ha_state()
 
-    @callback
     async def async_switch_off(self, offDelay: int):
         """Switches a relay with the given off delay time."""
         LOGGER.debug("async_switch_off offDelay %s", offDelay)
         self._channel.off(offDelay)
 
-    @callback
     async def async_switch_on(self, duration: int, onDelay: int):
         """Switches a relay for given duration and on delay time."""
         LOGGER.debug("async_switch_on duration %s, onDelay %s", duration, onDelay)
         self._channel.on(duration, onDelay)
 
-    @callback
     async def async_switch_toggle(self, offTime: int, onTime: int, quantity: int):
         """Toggels a relay with interval with given off and on time and quantity."""
         LOGGER.debug(
@@ -190,7 +187,6 @@ class HausbusSwitch(HausbusEntity, SwitchEntity):
         )
         self._channel.toggle(offTime, onTime, quantity)
 
-    @callback
     async def async_switch_set_configuration(
         self, max_on_time: int, off_delay_time: int, time_base: int
     ):

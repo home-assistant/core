@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 if TYPE_CHECKING:
     from . import HausbusConfigEntry
@@ -20,7 +20,7 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HausbusConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a button from a config entry."""
     gateway = config_entry.runtime_data.gateway

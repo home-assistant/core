@@ -11,8 +11,8 @@ from homeassistant.components.device_automation.trigger import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import ConfigType, TriggerActionType, TriggerInfo, CALLBACK_TYPE
 
 LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ async def async_get_triggers(
 ) -> list[dict[str, Any]]:
     """Used by HA to read the device_trigger of a given device_id."""
 
-    device_registry = async_get_device_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
     if device is None:
         return []
@@ -78,8 +78,8 @@ async def async_validate_trigger_config(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: Callable[[dict[str, Any]], Awaitable[None]],
-    trigger_info: dict[str, Any],
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Connects event listener and automation."""
 

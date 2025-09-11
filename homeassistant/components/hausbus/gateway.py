@@ -51,7 +51,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from homeassistant.helpers import device_registry as dr
 
 from .binary_sensor import HausbusBinarySensor
 from .button import HausbusButton
@@ -528,7 +528,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
 
     async def async_update_device_registry(self, device: HausbusDevice):
         """Updates the device name in the hass registry."""
-        device_registry = async_get_device_registry(self.hass)
+        device_registry = dr.get(self.hass)
         device_entry = device_registry.async_update_device(
             device.hass_device_entry_id, name=device.name
         )
@@ -536,7 +536,7 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
 
     async def async_create_device_registry(self, device: HausbusDevice):
         """Creates a device in the hass registry."""
-        device_registry = async_get_device_registry(self.hass)
+        device_registry = dr.get(self.hass)
         device_entry = device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, device.device_id)},
