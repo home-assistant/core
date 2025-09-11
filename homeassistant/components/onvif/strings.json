@@ -43,7 +43,7 @@
       },
       "configure_profile": {
         "description": "Create camera entity for {profile} at {resolution} resolution?",
-        "title": "Configure Profiles",
+        "title": "Configure profiles",
         "data": {
           "include": "Create camera entity"
         }
