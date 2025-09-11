@@ -44,6 +44,13 @@
           "reuse_settings": "Keep radio network settings",
           "choose_automatic_backup": "Restore an automatic backup",
           "upload_manual_backup": "Upload a manual backup"
+        },
+        "menu_option_descriptions": {
+          "form_new_network": "This will create a new Zigbee network",
+          "form_initial_network": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::form_new_network%]",
+          "reuse_settings": "This will let ZHA import the settings from a stick that was used with other software, migrating some of the network automatically",
+          "choose_automatic_backup": "This will let you change your adapter's network settings back to a previous state, in case you have changed them",
+          "upload_manual_backup": "This will let you upload a backup JSON file from ZHA or the Zigbee2MQTT `coordinator_backup.json` file"
         }
       },
       "choose_automatic_backup": {
@@ -93,6 +100,10 @@
         "menu_options": {
           "intent_migrate": "Migrate to a new radio",
           "intent_reconfigure": "Re-configure the current radio"
+        },
+        "menu_option_descriptions": {
+          "intent_migrate": "This will help you migrate your Zigbee network from your old radio to a new one",
+          "intent_reconfigure": "This will let you change the serial port for your current Zigbee radio"
         }
       },
       "intent_migrate": {
@@ -139,6 +150,13 @@
           "reuse_settings": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::reuse_settings%]",
           "choose_automatic_backup": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::choose_automatic_backup%]",
           "upload_manual_backup": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::upload_manual_backup%]"
+        },
+        "menu_option_descriptions": {
+          "form_new_network": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::form_new_network%]",
+          "form_initial_network": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::form_new_network%]",
+          "reuse_settings": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::reuse_settings%]",
+          "choose_automatic_backup": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::choose_automatic_backup%]",
+          "upload_manual_backup": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::upload_manual_backup%]"
         }
       },
       "choose_automatic_backup": {
@@ -532,6 +550,10 @@
             "menu_options": {
               "use_new_settings": "Keep the new settings",
               "restore_old_settings": "Restore backup (recommended)"
+            },
+            "menu_option_descriptions": {
+              "use_new_settings": "This will keep the new settings written to the stick. Only choose this option if you have intentionally changed settings.",
+              "restore_old_settings": "This will restore your network settings back to the last working state"
             }
           }
         }
