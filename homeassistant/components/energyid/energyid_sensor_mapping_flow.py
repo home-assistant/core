@@ -125,6 +125,15 @@ class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
                     }
 
                     title = f"{ha_entity_id.split('.', 1)[-1]} connection to EnergyID"
+                    _LOGGER.debug(
+                        "Creating subentry with title='%s', data=%s",
+                        title,
+                        subentry_data,
+                    )
+                    _LOGGER.debug("Parent config entry ID: %s", config_entry.entry_id)
+                    _LOGGER.debug(
+                        "Creating subentry with parent: %s", self._get_entry().entry_id
+                    )
                     return self.async_create_entry(title=title, data=subentry_data)
                 errors["base"] = "entity_not_found"
 

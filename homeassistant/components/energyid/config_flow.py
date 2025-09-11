@@ -1,6 +1,7 @@
 """Config flow for EnergyID integration."""
 
 import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -198,6 +199,56 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Creating entry with title: %s", self._flow_data["record_name"])
         return self.async_create_entry(
             title=self._flow_data["record_name"], data=self._flow_data
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauthentication upon an API authentication error."""
+        self._flow_data = {
+            CONF_DEVICE_ID: entry_data[CONF_DEVICE_ID],
+            CONF_DEVICE_NAME: entry_data[CONF_DEVICE_NAME],
+        }
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._flow_data.update(user_input)
+            auth_status = await self._perform_auth_and_get_details()
+
+            if auth_status is None:
+                # Authentication successful and claimed
+                await self.async_set_unique_id(self._flow_data["record_number"])
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={
+                        CONF_PROVISIONING_KEY: user_input[CONF_PROVISIONING_KEY],
+                        CONF_PROVISIONING_SECRET: user_input[CONF_PROVISIONING_SECRET],
+                    },
+                )
+
+            if auth_status == "needs_claim":
+                return await self.async_step_auth_and_claim()
+
+            errors["base"] = auth_status
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PROVISIONING_KEY): str,
+                    vol.Required(CONF_PROVISIONING_SECRET): cv.string,
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "docs_url": "https://app.energyid.eu/integrations/home-assistant"
+            },
         )
 
     @classmethod

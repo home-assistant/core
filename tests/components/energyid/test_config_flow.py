@@ -329,3 +329,55 @@ async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) 
         result4 = await hass.config_entries.flow.async_configure(result2["flow_id"])
         assert result4["type"] is FlowResultType.EXTERNAL_STEP
         assert result4["step_id"] == "auth_and_claim"
+
+
+async def test_config_flow_reauth_success(hass: HomeAssistant) -> None:
+    """Test the reauthentication flow for EnergyID integration (success path)."""
+    # Existing config entry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="site_12345",
+        data={
+            CONF_PROVISIONING_KEY: "old_key",
+            CONF_PROVISIONING_SECRET: "old_secret",
+            CONF_DEVICE_ID: "existing_device",
+            CONF_DEVICE_NAME: "Existing Device",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Mock client for successful reauth
+    mock_client = MagicMock()
+    mock_client.authenticate = AsyncMock(return_value=True)
+    mock_client.recordNumber = "site_12345"
+    mock_client.recordName = "My Test Site"
+
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=mock_client,
+    ):
+        # Start reauth flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth", "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "reauth_confirm"
+
+        # Submit new credentials
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: "new_key",
+                CONF_PROVISIONING_SECRET: "new_secret",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == "abort"
+        assert result2["reason"] == "reauth_successful"
+        # Entry should be updated
+        updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+        assert updated_entry.data[CONF_PROVISIONING_KEY] == "new_key"
+        assert updated_entry.data[CONF_PROVISIONING_SECRET] == "new_secret"

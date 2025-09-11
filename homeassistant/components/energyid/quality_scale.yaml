@@ -1,10 +1,11 @@
 rules:
+  # Bronze
   action-setup:
     status: exempt
-    comment: |
-      This integration does not provide additional service actions.
+    comment: The integration does not expose any custom service actions.
   appropriate-polling:
-    status: done
+    status: exempt
+    comment: The integration uses a push-based mechanism with a background sync task, not polling.
   brands:
     status: done
   common-modules:
@@ -17,8 +18,7 @@ rules:
     status: done
   docs-actions:
     status: exempt
-    comment: |
-      This integration does not provide additional service actions.
+    comment: The integration does not expose any custom service actions.
   docs-high-level-description:
     status: done
   docs-installation-instructions:
@@ -27,16 +27,13 @@ rules:
     status: done
   entity-event-setup:
     status: exempt
-    comment: |
-      Creates only a diagnostic sensor which follows standard setup patterns.
+    comment: This integration does not create its own entities.
   entity-unique-id:
     status: exempt
-    comment: |
-      Creates only a single diagnostic sensor tied to the config entry ID.
+    comment: This integration does not create its own entities.
   has-entity-name:
     status: exempt
-    comment: |
-      Diagnostic sensor uses has_entity_name = True. No other entities created.
+    comment: This integration does not create its own entities.
   runtime-data:
     status: done
   test-before-configure:
@@ -46,10 +43,10 @@ rules:
   unique-config-entry:
     status: done
 
+  # Silver
   action-exceptions:
     status: exempt
-    comment: |
-      No service actions defined.
+    comment: The integration does not expose any custom service actions.
   config-entry-unloading:
     status: done
   docs-configuration-parameters:
@@ -58,35 +55,33 @@ rules:
     status: done
   entity-unavailable:
     status: exempt
-    comment: |
-      Diagnostic sensor reflects connection status via attributes, not availability state.
+    comment: This integration does not create its own entities.
   integration-owner:
     status: done
   log-when-unavailable:
     status: done
+    comment: The integration logs a single  message when the EnergyID service is unavailable.
   parallel-updates:
-    status: done
+    status: exempt
+    comment: This integration does not create its own entities.
   reauthentication-flow:
-    status: exempt # Reconfigure flow handles credential updates for V2 API.
-    comment: |
-      Uses provisioning credentials managed via reconfigure flow. No separate password/token reauth needed.
+    status: done
   test-coverage:
     status: done
 
+  # Gold
   devices:
-    status: exempt
-    comment: |
-      Creates a single device entry for the EnergyID connection itself via the diagnostic sensor.
+    status: done
+    comment: A device entry is created to represent the connection to the EnergyID service.
   diagnostics:
     status: todo
+    comment: Diagnostics will be added in a follow-up PR to help with debugging.
   discovery:
     status: exempt
-    comment: |
-      Requires manual entry of provisioning credentials. No discovery mechanism applicable.
+    comment: Configuration requires manual entry of provisioning credentials.
   discovery-update-info:
     status: exempt
-    comment: |
-      No discovery mechanism used.
+    comment: No discovery mechanism is used.
   docs-data-update:
     status: done
   docs-examples:
@@ -95,8 +90,7 @@ rules:
     status: done
   docs-supported-devices:
     status: exempt
-    comment: |
-      This integration is a service bridge for HA sensor data, not tied to specific device models.
+    comment: This is a service integration not tied to specific device models.
   docs-supported-functions:
     status: done
   docs-troubleshooting:
@@ -105,44 +99,39 @@ rules:
     status: done
   dynamic-devices:
     status: exempt
-    comment: |
-      Does not dynamically add devices.
+    comment: The integration creates a single device entry for the service connection.
   entity-category:
     status: exempt
-    comment: |
-      Diagnostic sensor correctly uses EntityCategory.DIAGNOSTIC.
+    comment: This integration does not create its own entities.
   entity-device-class:
     status: exempt
-    comment: |
-      Diagnostic sensor does not require a specific device class.
+    comment: This integration does not create its own entities.
   entity-disabled-by-default:
     status: exempt
-    comment: |
-      Diagnostic sensor is enabled by default.
+    comment: This integration does not create its own entities.
   entity-translations:
     status: exempt
-    comment: |
-      Diagnostic sensor name "Status" is handled by core translations or not translated.
+    comment: This integration does not create its own entities.
   exception-translations:
     status: done
   icon-translations:
     status: exempt
-    comment: |
-      Diagnostic sensor uses a fixed mdi icon.
+    comment: This integration does not create its own entities.
   reconfiguration-flow:
     status: todo
+    comment: Reconfiguration will be added in a follow-up PR to allow updating the device name.
   repair-issues:
     status: exempt
-    comment: |
-      No specific repair flows needed beyond standard reconfigure/reauth prompts.
+    comment: Authentication issues are handled via the reauthentication flow.
   stale-devices:
     status: exempt
-    comment: |
-      Only creates a single service device entry tied to the config entry.
+    comment: Creates a single service device entry tied to the config entry.
 
+  # Platinum
   async-dependency:
     status: done
   inject-websession:
     status: done
   strict-typing:
-    status: done
+    status: todo
+    comment: Full strict typing compliance will be addressed in a future update.

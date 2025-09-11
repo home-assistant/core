@@ -16,6 +16,18 @@
       "auth_and_claim": {
         "title": "Claim device in EnergyID",
         "description": "This Home Assistant connection needs to be claimed in your EnergyID portal before it can send data.\n\n1. Go to: {claim_url}\n2. Enter code: **{claim_code}**\n3. (Code expires: {valid_until})\n\nAfter successfully claiming the device in EnergyID, click **Submit** below to continue."
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate EnergyID",
+        "description": "Please re-enter your EnergyID provisioning key and secret to restore the connection.\n\nMore info: {docs_url}",
+        "data": {
+          "provisioning_key": "Provisioning key",
+          "provisioning_secret": "Provisioning secret"
+        },
+        "data_description": {
+          "provisioning_key": "Your unique key for provisioning.",
+          "provisioning_secret": "Your secret associated with the provisioning key."
+        }
       }
     },
     "error": {
@@ -24,7 +36,8 @@
       "claim_failed_or_timed_out": "Claiming the device failed or the code expired."
     },
     "abort": {
-      "already_configured": "This EnergyID site is already configured."
+      "already_configured": "This EnergyID site is already configured.",
+      "reauth_successful": "Reauthentication was successful! Your EnergyID integration is now reconnected."
     }
   },
   "config_subentries": {

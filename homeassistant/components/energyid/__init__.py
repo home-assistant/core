@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import datetime as dt
 import functools
@@ -13,7 +14,7 @@ from energyid_webhooks.client_v2 import WebhookClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event
@@ -43,8 +44,9 @@ class EnergyIDRuntimeData:
     """Runtime data for the EnergyID integration."""
 
     client: WebhookClient
-    listeners: dict[str, CALLBACK_TYPE]
+    listeners: dict[str, CALLBACK_TYPE | asyncio.Task[None]]
     mappings: dict[str, str]
+    unavailable_logged: bool = False
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
@@ -64,43 +66,51 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         mappings={},
     )
 
-    async def _authenticate_client() -> None:
-        """Authenticate the client and handle errors appropriately."""
-        try:
-            is_claimed = await client.authenticate()
-        except TimeoutError as err:
-            raise ConfigEntryNotReady(
-                f"Timeout authenticating with EnergyID: {err}"
-            ) from err
-        except Exception as err:
-            _LOGGER.exception("Unexpected error authenticating with EnergyID")
-            raise ConfigEntryNotReady(
-                f"Unexpected error authenticating with EnergyID: {err}"
-            ) from err
-
-        if not is_claimed:
-            raise ConfigEntryError(
-                "Device is not claimed. Please claim the device first."
-            )
-
-    await _authenticate_client()
+    is_claimed = None
+    try:
+        is_claimed = await client.authenticate()
+    except TimeoutError as err:
+        raise ConfigEntryNotReady(
+            f"Timeout authenticating with EnergyID: {err}"
+        ) from err
+    except Exception as err:
+        raise ConfigEntryAuthFailed(
+            f"Failed to authenticate with EnergyID: {err}"
+        ) from err
+    if not is_claimed:
+        raise ConfigEntryAuthFailed("Device is not claimed. Please re-authenticate.")
 
     _LOGGER.debug("EnergyID device '%s' authenticated successfully", client.device_name)
 
+    async def _async_background_sync() -> None:
+        """Background task to synchronize sensor data and log unavailability only once."""
+        while True:
+            try:
+                await client.synchronize_sensors()
+                if entry.runtime_data.unavailable_logged:
+                    _LOGGER.info("Connection to EnergyID re-established")
+                    entry.runtime_data.unavailable_logged = False
+            except (OSError, RuntimeError) as err:
+                if not entry.runtime_data.unavailable_logged:
+                    _LOGGER.info("EnergyID is unavailable: %s", err)
+                    entry.runtime_data.unavailable_logged = True
+            upload_interval = DEFAULT_UPLOAD_INTERVAL_SECONDS
+            if client.webhook_policy:
+                upload_interval = client.webhook_policy.get(
+                    "uploadInterval", DEFAULT_UPLOAD_INTERVAL_SECONDS
+                )
+            await asyncio.sleep(upload_interval)
+
+    sync_task = hass.async_create_task(_async_background_sync())
+    entry.runtime_data.listeners["background_sync"] = sync_task
     entry.async_on_unload(entry.add_update_listener(async_config_entry_update_listener))
+
     await async_update_listeners(hass, entry)
 
-    upload_interval = DEFAULT_UPLOAD_INTERVAL_SECONDS
-    if client.webhook_policy:
-        upload_interval = client.webhook_policy.get(
-            "uploadInterval", DEFAULT_UPLOAD_INTERVAL_SECONDS
-        )
     _LOGGER.debug(
-        "Starting EnergyID auto-sync for '%s' with interval: %s seconds",
+        "Starting EnergyID background sync for '%s'",
         client.device_name,
-        upload_interval,
     )
-    client.start_auto_sync(interval_seconds=upload_interval)
 
     return True
 
@@ -122,7 +132,10 @@ async def async_update_listeners(
 
     if old_state_listener := runtime_data.listeners.pop(LISTENER_KEY_STATE, None):
         _LOGGER.debug("Removing old state listener for %s", entry.entry_id)
-        old_state_listener()
+        if isinstance(old_state_listener, asyncio.Task):
+            old_state_listener.cancel()
+        else:
+            old_state_listener()
 
     mappings: dict[str, str] = {}
     entities_to_track: list[str] = []
@@ -130,12 +143,12 @@ async def async_update_listeners(
     new_mappings = set()
     ent_reg = er.async_get(hass)
 
-    # Correctly find sub-entries linked to the parent entry
-    subentries = [
-        e
-        for e in hass.config_entries.async_entries(DOMAIN)
-        if getattr(e, "parent_entry", None) == entry.entry_id
-    ]
+    subentries = list(entry.subentries.values()) if hasattr(entry, "subentries") else []
+    _LOGGER.debug(
+        "Found %d subentries in entry.subentries: %s",
+        len(subentries),
+        [s.data for s in subentries],
+    )
 
     for subentry in subentries:
         entity_uuid = subentry.data.get(CONF_HA_ENTITY_UUID)
@@ -208,9 +221,12 @@ async def async_update_listeners(
     runtime_data.listeners[LISTENER_KEY_STATE] = unsub_state_change
 
     _LOGGER.debug(
-        "Now tracking state changes for %d entities for '%s'",
+        "Now tracking state changes for %d entities for '%s' (interval: %ss)",
         len(entities_to_track),
         client.device_name,
+        client.webhook_policy.get("uploadInterval", DEFAULT_UPLOAD_INTERVAL_SECONDS)
+        if client.webhook_policy
+        else DEFAULT_UPLOAD_INTERVAL_SECONDS,
     )
 
 
@@ -246,20 +262,28 @@ def _async_handle_state_change(
 async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Unloading EnergyID entry for %s", entry.title)
+
     try:
-        if subentries := [
-            e.entry_id
-            for e in hass.config_entries.async_entries(DOMAIN)
-            if getattr(e, "parent_entry", None) == entry.entry_id
-        ]:
+        # Unload subentries if present (guarded for test and reload scenarios)
+        if hasattr(hass.config_entries, "async_entries") and hasattr(entry, "entry_id"):
+            subentries = [
+                e.entry_id
+                for e in hass.config_entries.async_entries(DOMAIN)
+                if getattr(e, "parent_entry", None) == entry.entry_id
+            ]
             for subentry_id in subentries:
                 await hass.config_entries.async_unload(subentry_id)
 
-        if runtime_data := getattr(entry, "runtime_data", None):
-            for unsub in runtime_data.listeners.values():
-                unsub()
+        # Only clean up listeners and client if runtime_data is present
+        if hasattr(entry, "runtime_data"):
+            for listener in entry.runtime_data.listeners.values():
+                if hasattr(listener, "cancel"):
+                    listener.cancel()  # It's a task
+                else:
+                    listener()  # It's a callable
+
             try:
-                await runtime_data.client.close()
+                await entry.runtime_data.client.close()
             except Exception:
                 _LOGGER.exception("Error closing EnergyID client for %s", entry.title)
             del entry.runtime_data
