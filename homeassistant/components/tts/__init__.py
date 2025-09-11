@@ -18,20 +18,17 @@ import secrets
 from time import monotonic
 from typing import Any, Final, Generic, Protocol, TypeVar
 
+import aiofiles
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
 from propcache.api import cached_property
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.components.media_source import (
-    async_resolve_media,
     generate_media_source_id as ms_generate_media_source_id,
-    is_media_source_id,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, PLATFORM_FORMAT
@@ -505,7 +502,7 @@ class ResultStream:
     _manager: SpeechManager
 
     # Override
-    _override_media_id: str | None = None
+    _override_media_path: Path | None = None
 
     @cached_property
     def url(self) -> str:
@@ -558,7 +555,7 @@ class ResultStream:
 
     async def async_stream_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of this result."""
-        if self._override_media_id is not None:
+        if self._override_media_path is not None:
             # Overridden
             async for chunk in self._async_stream_override_result():
                 yield chunk
@@ -572,35 +569,46 @@ class ResultStream:
 
         self.last_used = monotonic()
 
-    def async_override_result(self, media_id: str) -> None:
-        """Override the TTS stream with a different media id."""
-        self._override_media_id = media_id
+    def async_override_result(self, media_path: str | Path) -> None:
+        """Override the TTS stream with a different media path."""
+        self._override_media_path = Path(media_path)
 
     async def _async_stream_override_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of the overridden result."""
-        assert self._override_media_id is not None
+        assert self._override_media_path is not None
 
-        if is_media_source_id(self._override_media_id):
-            media = await async_resolve_media(self.hass, self._override_media_id)
-            media_path_or_url = media.path or media.url
-        else:
-            media_path_or_url = async_process_play_media_url(
-                self.hass, self._override_media_id
-            )
+        preferred_format = self.options.get(ATTR_PREFERRED_FORMAT)
+        to_sample_rate = self.options.get(ATTR_PREFERRED_SAMPLE_RATE)
+        to_sample_channels = self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
+        to_sample_bytes = self.options.get(ATTR_PREFERRED_SAMPLE_BYTES)
+
+        needs_conversion = (
+            (preferred_format is not None)
+            or (to_sample_rate is not None)
+            or (to_sample_channels is not None)
+            or (to_sample_bytes is not None)
+        )
+
+        if not needs_conversion:
+            # Read file directly (no conversion)
+            async with aiofiles.open(self._override_media_path, "rb") as media_file:
+                while True:
+                    chunk = await media_file.read(FFMPEG_CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    yield chunk
+
+            return
 
         # Use ffmpeg to convert audio to preferred format
-        if not (to_extension := self.options.get(ATTR_PREFERRED_FORMAT)):
-            # We have to have a file extension
-            if isinstance(media_path_or_url, Path):
-                to_extension = media_path_or_url.suffix
-            else:
-                to_extension = Path(URL(media_path_or_url).path).suffix[1:]
+        if not preferred_format:
+            preferred_format = self._override_media_path.suffix[1:]  # strip .
 
         converted_audio = _async_convert_audio(
             self.hass,
             from_extension=None,
-            audio_input=media_path_or_url,
-            to_extension=to_extension,
+            audio_input=self._override_media_path,
+            to_extension=preferred_format,
             to_sample_rate=self.options.get(ATTR_PREFERRED_SAMPLE_RATE),
             to_sample_channels=self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
             to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),

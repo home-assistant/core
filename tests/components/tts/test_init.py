@@ -12,7 +12,7 @@ import wave
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import ffmpeg, media_source, tts
+from homeassistant.components import ffmpeg, tts
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
@@ -2071,14 +2071,12 @@ async def test_async_internal_get_tts_audio_called(
 async def test_stream_override(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:
-    """Test overriding streams with a media id."""
+    """Test overriding streams with a media path."""
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
     stream.async_set_message("beer")
-    stream.async_override_result("test-media-id")
 
-    # Use a temp file here since ffmpeg will read it directly
     with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file:
         with wave.open(wav_file, "wb") as wav_writer:
             wav_writer.setframerate(16000)
@@ -2088,17 +2086,8 @@ async def test_stream_override(
 
         wav_file.seek(0)
 
-        url = f"file://{wav_file.name}"
-        with (
-            patch("homeassistant.components.tts.is_media_source_id", return_value=True),
-            patch(
-                "homeassistant.components.tts.async_resolve_media",
-                return_value=media_source.PlayMedia(url=url, mime_type="audio/wav"),
-            ),
-        ):
-            result_data = b"".join(
-                [chunk async for chunk in stream.async_stream_result()]
-            )
+        stream.async_override_result(wav_file.name)
+        result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
 
     # Verify the result
     with io.BytesIO(result_data) as wav_io, wave.open(wav_io, "rb") as wav_reader:
@@ -2113,7 +2102,7 @@ async def test_stream_override(
 async def test_stream_override_with_conversion(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:
-    """Test overriding streams with a media id that requires conversion."""
+    """Test overriding streams with a media path that requires conversion."""
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     stream = tts.async_create_stream(
@@ -2137,7 +2126,7 @@ async def test_stream_override_with_conversion(
             wav_writer.writeframes(bytes(16000 * 2))  # 1 second @ 16Khz/mono
 
         wav_file.seek(0)
-        stream.async_override_result(f"file://{wav_file.name}")
+        stream.async_override_result(wav_file.name)
         result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
 
     # Verify the result has the preferred format
@@ -2148,53 +2137,3 @@ async def test_stream_override_with_conversion(
         assert wav_reader.readframes(wav_reader.getnframes()) == bytes(
             22050 * 2 * 2
         )  # 1 second @ 22.5Khz/stereo
-
-
-async def test_stream_override_with_conversion_path_preferred(
-    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
-) -> None:
-    """Test overriding streams with a media id that requires conversion and has a path."""
-    await mock_config_entry_setup(hass, mock_tts_entity)
-
-    stream = tts.async_create_stream(
-        hass,
-        mock_tts_entity.entity_id,
-        options={tts.ATTR_PREFERRED_FORMAT: "wav"},
-    )
-    stream.async_set_message("beer")
-    stream.async_override_result("test-media-id")
-
-    # Use a temp file here since ffmpeg will read it directly
-    with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file:
-        with wave.open(wav_file, "wb") as wav_writer:
-            wav_writer.setframerate(16000)
-            wav_writer.setsampwidth(2)
-            wav_writer.setnchannels(1)
-            wav_writer.writeframes(bytes(16000 * 2))  # 1 second @ 16Khz/mono
-
-        wav_file.seek(0)
-
-        # Path is preferred over URL
-        with (
-            patch("homeassistant.components.tts.is_media_source_id", return_value=True),
-            patch(
-                "homeassistant.components.tts.async_resolve_media",
-                return_value=media_source.PlayMedia(
-                    path=Path(wav_file.name),
-                    url="http://bad-url.com",
-                    mime_type="audio/wav",
-                ),
-            ),
-        ):
-            result_data = b"".join(
-                [chunk async for chunk in stream.async_stream_result()]
-            )
-
-    # Verify the result
-    with io.BytesIO(result_data) as wav_io, wave.open(wav_io, "rb") as wav_reader:
-        assert wav_reader.getframerate() == 16000
-        assert wav_reader.getsampwidth() == 2
-        assert wav_reader.getnchannels() == 1
-        assert wav_reader.readframes(wav_reader.getnframes()) == bytes(
-            16000 * 2
-        )  # 1 second @ 16Khz/mono
