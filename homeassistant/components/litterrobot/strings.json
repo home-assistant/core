@@ -60,7 +60,8 @@
     },
     "sensor": {
       "food_dispensed_today": {
-        "name": "Food dispensed today"
+        "name": "Food dispensed today",
+        "unit_of_measurement": "cups"
       },
       "food_level": {
         "name": "Food level"

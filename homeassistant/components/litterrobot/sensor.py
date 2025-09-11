@@ -167,7 +167,6 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             key="food_dispensed_today",
             translation_key="food_dispensed_today",
             state_class=SensorStateClass.TOTAL,
-            native_unit_of_measurement="cups",
             last_reset_fn=dt_util.start_of_local_day,
             value_fn=(
                 lambda robot: (
