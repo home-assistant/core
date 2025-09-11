@@ -351,7 +351,7 @@ class SensorDeviceClass(StrEnum):
     - `Pa`, `hPa`, `kPa`
     - `inHg`
     - `psi`
-    - `inH2O`
+    - `inH₂O`
     """
 
     REACTIVE_ENERGY = "reactive_energy"
