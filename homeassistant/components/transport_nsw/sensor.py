@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import ATTR_MODE, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -25,6 +25,7 @@ from .const import (
     ATTR_STOP_ID,
     CONF_STOP_ID,
     DOMAIN,
+    SUBENTRY_TYPE_STOP,
     TRANSPORT_ICONS,
 )
 from .coordinator import TransportNSWCoordinator
@@ -36,10 +37,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Transport NSW sensor from a config entry."""
-    coordinator = TransportNSWCoordinator(hass, config_entry)
-    await coordinator.async_config_entry_first_refresh()
 
-    async_add_entities([TransportNSWSensor(coordinator, config_entry)], True)
+    # Handle legacy entries (migrate if needed)
+    if CONF_STOP_ID in config_entry.data:
+        # Legacy entry - create single sensor
+        coordinator = TransportNSWCoordinator(hass, config_entry, None)
+        await coordinator.async_config_entry_first_refresh()
+        async_add_entities([TransportNSWSensor(coordinator, config_entry, None)], True)
+        return
+
+    # New subentry-based setup
+    sensors = []
+    for subentry in config_entry.subentries.values():
+        if subentry.subentry_type == SUBENTRY_TYPE_STOP:
+            coordinator = TransportNSWCoordinator(hass, config_entry, subentry)
+            await coordinator.async_config_entry_first_refresh()
+            sensors.append(TransportNSWSensor(coordinator, config_entry, subentry))
+
+    async_add_entities(sensors, True)
 
 
 class TransportNSWSensor(CoordinatorEntity, SensorEntity):
@@ -51,18 +66,31 @@ class TransportNSWSensor(CoordinatorEntity, SensorEntity):
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
-        self, coordinator: TransportNSWCoordinator, config_entry: ConfigEntry
+        self,
+        coordinator: TransportNSWCoordinator,
+        config_entry: ConfigEntry,
+        subentry: ConfigSubentry | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.config_entry = config_entry
-        self._attr_name = config_entry.data[CONF_NAME]
-        self._attr_unique_id = f"{DOMAIN}_{config_entry.entry_id}"
+        self.subentry = subentry
 
-        # Device info for grouping entities
+        if subentry:
+            # New subentry mode
+            self._attr_name = subentry.title or f"Stop {subentry.data[CONF_STOP_ID]}"
+            self._attr_unique_id = (
+                f"{DOMAIN}_{config_entry.entry_id}_{subentry.subentry_id}"
+            )
+        else:
+            # Legacy mode
+            self._attr_name = config_entry.data[CONF_NAME]
+            self._attr_unique_id = f"{DOMAIN}_{config_entry.entry_id}"
+
+        # Device info for grouping entities - all sensors for same API key group together
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, config_entry.data[CONF_STOP_ID])},
-            name=f"Transport NSW Stop {config_entry.data[CONF_STOP_ID]}",
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            name="Transport NSW",
             manufacturer="Transport NSW",
             entry_type=DeviceEntryType.SERVICE,
         )
@@ -80,8 +108,13 @@ class TransportNSWSensor(CoordinatorEntity, SensorEntity):
         if self.coordinator.data is None:
             return None
 
+        if self.subentry:
+            stop_id = self.subentry.data[CONF_STOP_ID]
+        else:
+            stop_id = self.config_entry.data[CONF_STOP_ID]
+
         return {
-            ATTR_STOP_ID: self.config_entry.data[CONF_STOP_ID],
+            ATTR_STOP_ID: stop_id,
             ATTR_ROUTE: self.coordinator.data.get(ATTR_ROUTE),
             ATTR_DELAY: self.coordinator.data.get(ATTR_DELAY),
             ATTR_REAL_TIME: self.coordinator.data.get(ATTR_REAL_TIME),

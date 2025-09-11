@@ -7,6 +7,9 @@ CONF_STOP_ID = "stop_id"
 CONF_ROUTE = "route"
 CONF_DESTINATION = "destination"
 
+# Subentry constants
+SUBENTRY_TYPE_STOP = "stop"
+
 # Attribute constants
 ATTR_STOP_ID = "stop_id"
 ATTR_ROUTE = "route"
@@ -17,6 +20,7 @@ ATTR_DESTINATION = "destination"
 
 # Default values
 DEFAULT_NAME = "Transport NSW"
+DEFAULT_STOP_NAME = "Transport NSW Stop"
 
 # Transport mode icons
 TRANSPORT_ICONS = {

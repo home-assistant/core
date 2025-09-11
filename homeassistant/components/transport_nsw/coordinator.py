@@ -8,7 +8,7 @@ from typing import Any, NoReturn
 
 from TransportNSW import TransportNSW
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import ATTR_MODE, CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -22,6 +22,7 @@ from .const import (
     CONF_DESTINATION,
     CONF_ROUTE,
     CONF_STOP_ID,
+    DEFAULT_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,20 +45,37 @@ def _get_value(value):
 class TransportNSWCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Transport NSW data."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        subentry: ConfigSubentry | None = None,
+    ) -> None:
         """Initialize the coordinator."""
         self.config_entry = config_entry
         self.api_key = config_entry.data[CONF_API_KEY]
-        self.stop_id = config_entry.data[CONF_STOP_ID]
-        self.route = config_entry.options.get(CONF_ROUTE, "")
-        self.destination = config_entry.options.get(CONF_DESTINATION, "")
+
+        if subentry:
+            # New subentry mode
+            self.stop_id = subentry.data[CONF_STOP_ID]
+            self.route = subentry.data.get(CONF_ROUTE, "")
+            self.destination = subentry.data.get(CONF_DESTINATION, "")
+            name = subentry.title or f"Stop {self.stop_id}"
+        else:
+            # Legacy mode
+            self.stop_id = config_entry.data[CONF_STOP_ID]
+            self.route = config_entry.options.get(CONF_ROUTE, "")
+            self.destination = config_entry.options.get(CONF_DESTINATION, "")
+            name = config_entry.data.get("name", DEFAULT_NAME)
+
         self.transport_nsw = TransportNSW()
 
         super().__init__(
             hass,
             logger=_LOGGER,
-            name=f"Transport NSW {self.stop_id}",
+            name=f"Transport NSW {name}",
             update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
