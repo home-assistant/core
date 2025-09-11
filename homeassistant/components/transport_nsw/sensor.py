@@ -42,7 +42,6 @@ async def async_setup_entry(
     async_add_entities([TransportNSWSensor(coordinator, config_entry)], True)
 
 
-
 class TransportNSWSensor(CoordinatorEntity, SensorEntity):
     """Implementation of an Transport NSW sensor."""
 
