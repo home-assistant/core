@@ -32,7 +32,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_PROBE_COUNT
+from .const import CONF_PROBE_COUNT, DOMAIN
 
 type ToGrillConfigEntry = ConfigEntry[ToGrillCoordinator]
 
@@ -74,12 +74,18 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             name="ToGrill",
             update_interval=SCAN_INTERVAL,
         )
-        self.address = config_entry.data[CONF_ADDRESS]
+        self.address: str = config_entry.data[CONF_ADDRESS]
         self.data = {}
-        self.device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, self.address)}
-        )
         self._packet_listeners: list[Callable[[Packet], None]] = []
+
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(CONNECTION_BLUETOOTH, self.address)},
+            identifiers={(DOMAIN, self.address)},
+            name=config_entry.data[CONF_MODEL],
+            model_id=config_entry.data[CONF_MODEL],
+        )
 
         config_entry.async_on_unload(
             async_register_callback(
@@ -88,6 +94,23 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
                 BluetoothCallbackMatcher(address=self.address, connectable=True),
                 BluetoothScanningMode.ACTIVE,
             )
+        )
+
+    def get_device_info(self, probe_number: int | None) -> DeviceInfo:
+        """Return device info."""
+
+        if probe_number is None:
+            return DeviceInfo(
+                identifiers={(DOMAIN, self.address)},
+            )
+
+        return DeviceInfo(
+            translation_key="probe",
+            translation_placeholders={
+                "probe_number": str(probe_number),
+            },
+            identifiers={(DOMAIN, f"{self.address}_{probe_number}")},
+            via_device=(DOMAIN, self.address),
         )
 
     @callback
@@ -132,9 +155,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
-            connections={(CONNECTION_BLUETOOTH, self.address)},
-            name=config_entry.data[CONF_MODEL],
-            model_id=config_entry.data[CONF_MODEL],
+            identifiers={(DOMAIN, self.address)},
             sw_version=get_version_string(packet_a0),
         )
 

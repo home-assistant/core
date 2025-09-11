@@ -52,7 +52,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Alexa Devices."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 3
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -64,7 +64,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 data = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except CannotAuthenticate:
+            except (CannotAuthenticate, TypeError):
                 errors["base"] = "invalid_auth"
             except CannotRetrieveData:
                 errors["base"] = "cannot_retrieve_data"
@@ -110,7 +110,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, {**reauth_entry.data, **user_input})
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except CannotAuthenticate:
+            except (CannotAuthenticate, TypeError):
                 errors["base"] = "invalid_auth"
             except CannotRetrieveData:
                 errors["base"] = "cannot_retrieve_data"

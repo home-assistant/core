@@ -1,13 +1,16 @@
 """Test AI Task platform of Google Generative AI Conversation integration."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from google.genai.types import File, FileState, GenerateContentResponse
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
+from homeassistant.components.google_generative_ai_conversation.const import (
+    RECOMMENDED_IMAGE_MODEL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
@@ -216,3 +219,66 @@ async def test_generate_data(
             instructions="Test prompt",
             structure=vol.Schema({vol.Required("bla"): str}),
         )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_generate_content: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test AI Task image generation."""
+    mock_image_data = b"fake_image_data"
+    mock_generate_content.return_value = Mock(
+        text="Here is your generated image",
+        prompt_feedback=None,
+        candidates=[
+            Mock(
+                content=Mock(
+                    parts=[
+                        Mock(
+                            text="Here is your generated image",
+                            inline_data=None,
+                            thought=False,
+                        ),
+                        Mock(
+                            inline_data=Mock(
+                                data=mock_image_data, mime_type="image/png"
+                            ),
+                            text=None,
+                            thought=False,
+                        ),
+                    ]
+                )
+            )
+        ],
+    )
+
+    assert hass.data[ai_task.DATA_IMAGES] == {}
+
+    result = await ai_task.async_generate_image(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.google_ai_task",
+        instructions="Generate a test image",
+    )
+
+    assert result["height"] is None
+    assert result["width"] is None
+    assert result["revised_prompt"] == "Generate a test image"
+    assert result["mime_type"] == "image/png"
+    assert result["model"] == RECOMMENDED_IMAGE_MODEL.partition("/")[-1]
+
+    assert len(hass.data[ai_task.DATA_IMAGES]) == 1
+    image_data = next(iter(hass.data[ai_task.DATA_IMAGES].values()))
+    assert image_data.data == mock_image_data
+    assert image_data.mime_type == "image/png"
+    assert image_data.title == "Generate a test image"
+
+    # Verify that generate_content was called with correct parameters
+    assert mock_generate_content.called
+    call_args = mock_generate_content.call_args
+    assert call_args.kwargs["model"] == RECOMMENDED_IMAGE_MODEL
+    assert call_args.kwargs["contents"] == ["Generate a test image"]
+    assert call_args.kwargs["config"].response_modalities == ["TEXT", "IMAGE"]
