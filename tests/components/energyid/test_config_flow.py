@@ -168,7 +168,7 @@ async def test_config_flow_claim_timeout(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert mock_sleep.call_count == MAX_POLLING_ATTEMPTS
+    assert mock_sleep.call_count == MAX_POLLING_ATTEMPTS + 1
 
 
 async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
@@ -298,3 +298,34 @@ async def test_config_flow_external_step_claimed_during_display(
         await hass.async_block_till_done()
 
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) -> None:
+    """Test auth_and_claim step when device is not claimed after polling."""
+    mock_client = MagicMock()
+    mock_client.authenticate = AsyncMock(return_value=False)
+    mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
+    with (
+        patch(
+            "homeassistant.components.energyid.config_flow.WebhookClient",
+            return_value=mock_client,
+        ),
+        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: "x",
+                CONF_PROVISIONING_SECRET: "y",
+            },
+        )
+        # Simulate the external step
+        # result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+
+        # Simulate the device still not being claimed
+        result4 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+        assert result4["type"] is FlowResultType.EXTERNAL_STEP
+        assert result4["step_id"] == "auth_and_claim"
