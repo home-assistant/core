@@ -7119,7 +7119,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'ZEDAR K1200 (unsupported)',
+    'model': 'ZEDAR K1200',
     'model_id': '3ddulzljdjjwkhoy',
     'name': 'Kattenbak',
     'name_by_user': None,
