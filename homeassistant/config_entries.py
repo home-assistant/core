@@ -3172,7 +3172,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
             flow_type, flow_id = next_flow
             if flow_type != FlowType.CONFIG_FLOW:
                 raise HomeAssistantError("Invalid next_flow type")
-            self.hass.config_entries.flow.async_get(flow_id)  # Ensure the flow exists.
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.flow.async_get(flow_id)
             result["next_flow"] = next_flow
         result["options"] = options or {}
         result["subentries"] = subentries or ()
