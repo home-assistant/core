@@ -22,9 +22,11 @@ from .mqtt import OlarmFlowClientMQTT
 class OlarmData:
     """A class that holds runtime data."""
 
-    coordinator: OlarmDataUpdateCoordinator | None = None
-    mqtt_client: OlarmFlowClientMQTT | None = None
+    coordinator: OlarmDataUpdateCoordinator
+    mqtt_client: OlarmFlowClientMQTT
 
+
+type OlarmConfigEntry = ConfigEntry[OlarmData]
 
 _PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -33,10 +35,8 @@ _PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> bool:
     """Set up olarm from a config entry."""
-
-    entry.runtime_data = OlarmData()
 
     # use oauth2 to get tokens
     implementation = (
@@ -69,7 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session,
         olarm_client,
     )
-    entry.runtime_data.coordinator = coordinator
 
     # Fetch initial data using DataUpdateCoordinator pattern
     await coordinator.async_config_entry_first_refresh()
@@ -83,7 +82,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator,
     )
     await mqtt_client.init_mqtt()
-    entry.runtime_data.mqtt_client = mqtt_client
+
+    # Set runtime data
+    entry.runtime_data = OlarmData(
+        coordinator=coordinator,
+        mqtt_client=mqtt_client,
+    )
 
     # setup platforms
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
@@ -91,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> bool:
     """Unload a config entry."""
     mqtt_client = entry.runtime_data.mqtt_client
 
