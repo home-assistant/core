@@ -23,6 +23,7 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
+    DOMAIN as LIGHT_DOMAIN,
     ENTITY_ID_FORMAT,
     FLASH_LONG,
     FLASH_SHORT,
@@ -34,6 +35,7 @@ from homeassistant.components.light import (
     valid_supported_color_modes,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_BRIGHTNESS,
     CONF_COLOR_TEMP,
     CONF_EFFECT,
@@ -45,7 +47,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
@@ -62,6 +64,7 @@ from ..const import (
     CONF_FLASH,
     CONF_FLASH_TIME_LONG,
     CONF_FLASH_TIME_SHORT,
+    CONF_GROUP,
     CONF_MAX_KELVIN,
     CONF_MAX_MIREDS,
     CONF_MIN_KELVIN,
@@ -77,6 +80,7 @@ from ..const import (
     DEFAULT_FLASH_TIME_LONG,
     DEFAULT_FLASH_TIME_SHORT,
     DEFAULT_WHITE_SCALE,
+    DOMAIN,
 )
 from ..entity import MqttEntity
 from ..models import ReceiveMessage
@@ -90,8 +94,6 @@ from .schema_basic import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "mqtt_json"
 
 DEFAULT_NAME = "MQTT JSON Light"
 
@@ -115,6 +117,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(
                 CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT
             ): cv.positive_int,
+            vol.Optional(CONF_GROUP): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_MAX_KELVIN): cv.positive_int,
@@ -171,16 +174,20 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
     _fixed_color_mode: ColorMode | str | None = None
     _flash_times: dict[str, int | None]
+    _group_member_entity_ids_resolved: bool
     _topic: dict[str, str | None]
     _optimistic: bool
+    _extra_state_attributes: dict[str, Any] | None = None
 
     @staticmethod
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_JSON
 
+    @callback
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._group_member_entity_ids_resolved = False
         self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
         self._attr_min_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(max_mireds)
@@ -225,6 +232,43 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         else:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
+
+        self._update_extra_state_and_group_info()
+
+    @callback
+    def _update_extra_state_and_group_info(self) -> None:
+        """Set the entity_id property if the light represents a group of lights.
+
+        Setting entity_id in the extra state attributes will show the discover the light
+        as a group and allow to control the member light manually.
+        """
+        if CONF_GROUP not in self._config:
+            self._attr_extra_state_attributes = self._extra_state_attributes or {}
+            self._default_entity = None
+            return
+        self._default_entity = "mdi:lightbulb-group"
+        entity_registry = er.async_get(self.hass)
+        _group_entity_ids: list[str] = []
+        self._group_member_entity_ids_resolved = True
+        for resource_id in self._config[CONF_GROUP]:
+            if entity_id := entity_registry.async_get_entity_id(
+                LIGHT_DOMAIN, DOMAIN, resource_id
+            ):
+                _group_entity_ids.append(entity_id)
+            else:
+                # The ID is not (yet) resolved, so we retry at the next state update.
+                # This can only happen the first time the member entities
+                # are discovered, and added to the entity registry.
+                self._group_member_entity_ids_resolved = False
+
+        entity_attribute: dict[str, Any] = {ATTR_ENTITY_ID: _group_entity_ids}
+        if self._extra_state_attributes is None:
+            self._attr_extra_state_attributes = entity_attribute
+            return
+
+        self._attr_extra_state_attributes = (
+            self._extra_state_attributes | entity_attribute
+        )
 
     def _update_color(self, values: dict[str, Any]) -> None:
         color_mode: str = values["color_mode"]
@@ -326,6 +370,18 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         if self.supported_features and LightEntityFeature.EFFECT:
             with suppress(KeyError):
                 self._attr_effect = cast(str, values["effect"])
+
+        # We update the group info on a received state up, as member
+        if not self._group_member_entity_ids_resolved:
+            self._update_extra_state_and_group_info()
+
+    @callback
+    def _process_update_extra_state_attributes(
+        self, extra_state_attributes: dict[str, Any]
+    ) -> None:
+        """Extract group members if the light is a group."""
+        self._extra_state_attributes = extra_state_attributes
+        self._update_extra_state_and_group_info()
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
