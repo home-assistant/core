@@ -4,7 +4,7 @@
       "user": {
         "description": "Set up Transport NSW to get real-time departure information.\n\nTo get a free API key:\n1. Go to [Transport NSW Open Data](https://opendata.transport.nsw.gov.au/)\n2. Register an account\n3. Create a new application\n4. Add the 'Trip Planner APIs' to your application",
         "data": {
-          "api_key": "API Key",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "stop_id": "Stop ID",
           "name": "Name",
           "route": "Route Filter (optional)",
