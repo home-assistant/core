@@ -34,7 +34,7 @@ dbus-fast==2.44.3
 fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
-habluetooth==5.3.1
+habluetooth==5.6.2
 hass-nabucasa==1.1.0
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1
@@ -53,7 +53,7 @@ propcache==0.3.2
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
 pymicro-vad==1.0.1
-PyNaCl==1.5.0
+PyNaCl==1.6.0
 pyOpenSSL==25.1.0
 pyserial==3.5
 pyspeex-noise==1.0.2
