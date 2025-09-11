@@ -1,5 +1,7 @@
 """Constants for the Assist pipeline integration."""
 
+from pathlib import Path
+
 DOMAIN = "assist_pipeline"
 
 DATA_CONFIG = f"{DOMAIN}.config"
@@ -24,5 +26,4 @@ BYTES_PER_CHUNK = SAMPLES_PER_CHUNK * SAMPLE_WIDTH * SAMPLE_CHANNELS  # 16-bit
 
 OPTION_PREFERRED = "preferred"
 
-ACKNOWLEDGE_FILENAME = "acknowledge.mp3"
-ACKNOWLEDGE_URL = f"/api/assist_pipeline/static/{ACKNOWLEDGE_FILENAME}"
+ACKNOWLEDGE_PATH = Path(__file__).parent / "acknowledge.mp3"

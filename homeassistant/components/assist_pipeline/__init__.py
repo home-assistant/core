@@ -3,19 +3,16 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterable
-from pathlib import Path
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import http, stt
+from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import chat_session
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ACKNOWLEDGE_FILENAME,
-    ACKNOWLEDGE_URL,
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
     DATA_LAST_WAKE_UP,
@@ -88,15 +85,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await async_setup_pipeline_store(hass)
     async_register_websocket_api(hass)
-
-    await hass.http.async_register_static_paths(
-        [
-            http.StaticPathConfig(
-                ACKNOWLEDGE_URL,
-                str(Path(__file__).parent / ACKNOWLEDGE_FILENAME),
-            )
-        ]
-    )
 
     return True
 

@@ -50,7 +50,7 @@ from homeassistant.util.limited_size_dict import LimitedSizeDict
 
 from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadSpeexEnhancer
 from .const import (
-    ACKNOWLEDGE_URL,
+    ACKNOWLEDGE_PATH,
     BYTES_PER_CHUNK,
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
@@ -119,7 +119,6 @@ PIPELINE_FIELDS: VolDictType = {
     vol.Required("wake_word_entity"): vol.Any(str, None),
     vol.Required("wake_word_id"): vol.Any(str, None),
     vol.Optional("prefer_local_intents"): bool,
-    vol.Optional("acknowledge_same_area"): str,
     vol.Optional("acknowledge_media_id"): str,
 }
 
@@ -420,8 +419,6 @@ class Pipeline:
     wake_word_entity: str | None
     wake_word_id: str | None
     prefer_local_intents: bool = False
-    acknowledge_same_area: bool = True
-    acknowledge_media_id: str | None = None
 
     id: str = field(default_factory=ulid_util.ulid_now)
 
@@ -446,8 +443,6 @@ class Pipeline:
             wake_word_entity=data["wake_word_entity"],
             wake_word_id=data["wake_word_id"],
             prefer_local_intents=data.get("prefer_local_intents", False),
-            acknowledge_same_area=data.get("acknowledge_same_area", True),
-            acknowledge_media_id=data.get("acknowledge_media_id", ACKNOWLEDGE_URL),
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -466,7 +461,6 @@ class Pipeline:
             "wake_word_entity": self.wake_word_entity,
             "wake_word_id": self.wake_word_id,
             "prefer_local_intents": self.prefer_local_intents,
-            "acknowledge_media_id": self.acknowledge_media_id,
         }
 
 
@@ -1312,7 +1306,7 @@ class PipelineRun:
                     # If so, the satellite can response with an acknowledge beep
                     # instead of a full response.
                     can_acknowledge = self._can_acknowledge_response(
-                        conversation_result.response, device_id
+                        conversation_result.response, self._device_id
                     )
 
         except Exception as src_error:
@@ -1410,7 +1404,7 @@ class PipelineRun:
             ) from err
 
     async def text_to_speech(
-        self, tts_input: str, override_media_id: str | None = None
+        self, tts_input: str, override_media_path: Path | None = None
     ) -> None:
         """Run text-to-speech portion of pipeline."""
         assert self.tts_stream is not None
@@ -1427,8 +1421,8 @@ class PipelineRun:
             )
         )
 
-        if override_media_id:
-            self.tts_stream.async_override_result(override_media_id)
+        if override_media_path:
+            self.tts_stream.async_override_result(override_media_path)
         elif not self._streamed_response_text:
             self.tts_stream.async_set_message(tts_input)
 
@@ -1746,11 +1740,10 @@ class PipelineInput:
                 if self.run.end_stage != PipelineStage.INTENT:
                     # text-to-speech
                     if current_stage == PipelineStage.TTS:
-                        if can_acknowledge and self.run.pipeline.acknowledge_media_id:
+                        if can_acknowledge:
                             # Use acknowledge media instead of full response
                             await self.run.text_to_speech(
-                                tts_input or "",
-                                override_media_id=self.run.pipeline.acknowledge_media_id,
+                                tts_input or "", override_media_path=ACKNOWLEDGE_PATH
                             )
                         else:
                             assert tts_input is not None

@@ -16,7 +16,7 @@ from homeassistant.components import (
     stt,
     tts,
 )
-from homeassistant.components.assist_pipeline.const import DOMAIN
+from homeassistant.components.assist_pipeline.const import ACKNOWLEDGE_PATH, DOMAIN
 from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
     STORAGE_VERSION,
@@ -31,9 +31,16 @@ from homeassistant.components.assist_pipeline.pipeline import (
     async_get_pipelines,
     async_update_pipeline,
 )
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import chat_session, intent, llm
+from homeassistant.helpers import (
+    area_registry as ar,
+    chat_session,
+    device_registry as dr,
+    entity_registry as er,
+    intent,
+    llm,
+)
 from homeassistant.setup import async_setup_component
 
 from . import MANY_LANGUAGES, process_events
@@ -46,7 +53,7 @@ from .conftest import (
     make_10ms_chunk,
 )
 
-from tests.common import flush_store
+from tests.common import MockConfigEntry, flush_store
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -1787,3 +1794,93 @@ async def test_chat_log_tts_streaming(
     assert "".join(received_tts) == chunk_text
 
     assert process_events(events) == snapshot
+
+
+async def test_acknowledge(
+    hass: HomeAssistant,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    mock_chat_session: chat_session.ChatSession,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that acknowledge sound is played when targets are in the same area."""
+    area_1 = area_registry.async_get_or_create("area_1")
+
+    light_1 = entity_registry.async_get_or_create("light", "demo", "1234")
+    hass.states.async_set(light_1.entity_id, "off", {ATTR_FRIENDLY_NAME: "light 1"})
+    light_1 = entity_registry.async_update_entity(light_1.entity_id, area_id=area_1.id)
+
+    light_2 = entity_registry.async_get_or_create("light", "demo", "5678")
+    hass.states.async_set(light_2.entity_id, "off", {ATTR_FRIENDLY_NAME: "light 2"})
+    light_2 = entity_registry.async_update_entity(light_2.entity_id, area_id=area_1.id)
+
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    satellite = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "id-1234")},
+    )
+    device_registry.async_update_device(satellite.id, area_id=area_1.id)
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    with patch(
+        "homeassistant.components.assist_pipeline.PipelineRun.text_to_speech"
+    ) as text_to_speech:
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            intent_input="turn on the lights",
+            session=mock_chat_session,
+            device_id=satellite.id,
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.INTENT,
+                end_stage=assist_pipeline.PipelineStage.TTS,
+                event_callback=events.append,
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+        # Acknowledgment sound should be played (same area)
+        text_to_speech.assert_called_once()
+        assert (
+            text_to_speech.call_args.kwargs["override_media_path"] == ACKNOWLEDGE_PATH
+        )
+
+    # Move one light to another area
+    area_2 = area_registry.async_get_or_create("area_2")
+    light_2 = entity_registry.async_update_entity(light_2.entity_id, area_id=area_2.id)
+
+    events.clear()
+
+    with patch(
+        "homeassistant.components.assist_pipeline.PipelineRun.text_to_speech"
+    ) as text_to_speech:
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            intent_input="turn on light 2",
+            session=mock_chat_session,
+            device_id=satellite.id,
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.INTENT,
+                end_stage=assist_pipeline.PipelineStage.TTS,
+                event_callback=events.append,
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+        # Acknowledgment sound should be not played (different area)
+        text_to_speech.assert_called_once()
+        assert text_to_speech.call_args.kwargs.get("override_media_path") is None
