@@ -490,9 +490,15 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             return await self._async_create_radio_entry()
 
         if user_input is not None:
-            await self._radio_mgr.async_restore_backup_step_2(
-                user_input[OVERWRITE_COORDINATOR_IEEE]
-            )
+            if not user_input[OVERWRITE_COORDINATOR_IEEE]:
+                return self.async_abort(
+                    reason="cannot_restore_backup",
+                    description_placeholders={
+                        "error": "Confirmation not given for IEEE overwrite"
+                    },
+                )
+
+            await self._radio_mgr.async_restore_backup_step_2(overwrite_ieee=True)
             return await self._async_create_radio_entry()
 
         return self.async_show_form(
