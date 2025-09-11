@@ -35,7 +35,6 @@ class OlarmOauth2FlowHandler(
     _user_id: str | None = None
     _devices: list[dict[str, Any]] | None = None
     _device_id: str | None = None
-    _load_zones_bypass_entities: bool = False
     _oauth_data: dict[str, Any] | None = None
 
     @property
@@ -102,9 +101,6 @@ class OlarmOauth2FlowHandler(
         if user_input is not None:
             _LOGGER.debug(user_input)
             self._device_id = user_input["select_device"]
-            self._load_zones_bypass_entities = user_input.get(
-                "load_zones_bypass", False
-            )
 
             # abort if oauth data is not available
             if self._oauth_data is None:
@@ -114,7 +110,6 @@ class OlarmOauth2FlowHandler(
             data = {
                 "user_id": self._user_id,
                 "device_id": self._device_id,
-                "load_zones_bypass_entities": self._load_zones_bypass_entities,
                 "auth_implementation": self._oauth_data["auth_implementation"],
                 "token": self._oauth_data["token"],
             }
@@ -142,10 +137,6 @@ class OlarmOauth2FlowHandler(
         schema = vol.Schema(
             {
                 vol.Required("select_device"): vol.In(sorted_device_options),
-                vol.Optional(
-                    "load_zones_bypass",
-                    default=False,
-                ): bool,
             },
         )
 
