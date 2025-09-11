@@ -139,6 +139,9 @@
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
+      "indexed_temperature": {
+        "name": "Temperature {index}"
+      },
       "time": {
         "name": "Time"
       },
@@ -167,7 +170,7 @@
         "name": "Far detection"
       },
       "target_dis_closest": {
-        "name": "Clostest target distance"
+        "name": "Closest target distance"
       },
       "water_level": {
         "name": "Water level"
@@ -176,10 +179,13 @@
         "name": "Powder"
       },
       "cook_temperature": {
-        "name": "Cook temperature"
+        "name": "Cooking temperature"
+      },
+      "indexed_cook_temperature": {
+        "name": "Cooking temperature {index}"
       },
       "cook_time": {
-        "name": "Cook time"
+        "name": "Cooking time"
       },
       "cloud_recipe": {
         "name": "Cloud recipe"
@@ -600,6 +606,9 @@
       "status": {
         "name": "Status"
       },
+      "depth": {
+        "name": "Depth"
+      },
       "last_amount": {
         "name": "Last amount"
       },
@@ -749,6 +758,9 @@
       },
       "water_time": {
         "name": "Water usage duration"
+      },
+      "cat_weight": {
+        "name": "Cat weight"
       },
       "odor_elimination_status": {
         "name": "Status",
