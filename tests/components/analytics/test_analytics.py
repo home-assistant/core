@@ -1343,11 +1343,23 @@ async def test_analytics_platforms(
         manufacturer="test-manufacturer",
         model_id="test-model-id",
     )
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "2")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id-2",
+    )
 
     entity_registry.async_get_or_create(
         domain="sensor",
         platform="test",
         unique_id="1",
+        capabilities={"options": ["secret1", "secret2"]},
+    )
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="test",
+        unique_id="2",
         capabilities={"options": ["secret1", "secret2"]},
     )
 
@@ -1356,11 +1368,28 @@ async def test_analytics_platforms(
         devices_analytics,
         entities_analytics,
     ) -> None:
-        for device in devices_analytics.values():
-            device.extra = {"device_test_key": "device_test_value"}
-        for entity in entities_analytics.values():
-            entity.capabilities["options"] = len(entity.capabilities["options"])
-            entity.extra = {"entity_test_key": "entity_test_value"}
+        first = True
+        devices_to_remove = []
+        for device_id, device in devices_analytics.items():
+            if first:
+                first = False
+                device.extra = {"device_test_key": "device_test_value"}
+            else:
+                devices_to_remove.append(device_id)
+        for device_id in devices_to_remove:
+            devices_analytics.pop(device_id)
+
+        first = True
+        entities_to_remove = []
+        for entity_id, entity in entities_analytics.items():
+            if first:
+                first = False
+                entity.capabilities["options"] = len(entity.capabilities["options"])
+                entity.extra = {"entity_test_key": "entity_test_value"}
+            else:
+                entities_to_remove.append(entity_id)
+        for entity_id in entities_to_remove:
+            entities_analytics.pop(entity_id)
 
     platform_mock = Mock(async_modify_analytics=async_modify_analytics)
     mock_platform(hass, "test.analytics", platform_mock)
