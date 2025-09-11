@@ -36,7 +36,7 @@ async def async_setup_entry(
 
 
 def load_zone_sensors(coordinator, config_entry, sensors):
-    """Load zone sensors and optionally bypass sensors."""
+    """Load zone sensors and bypass sensors."""
     if (
         coordinator.data
         and coordinator.data.device_profile is not None
@@ -45,6 +45,7 @@ def load_zone_sensors(coordinator, config_entry, sensors):
         for zone_index, zone_state in enumerate(
             coordinator.data.device_state.get("zones", [])
         ):
+            # load zone entities
             sensors.append(
                 OlarmBinarySensor(
                     coordinator,
@@ -56,19 +57,18 @@ def load_zone_sensors(coordinator, config_entry, sensors):
                     coordinator.data.device_profile.get("zonesTypes")[zone_index],
                 )
             )
-            # load bypass entities if enabled
-            if config_entry.data.get("load_zones_bypass_entities"):
-                sensors.append(
-                    OlarmBinarySensor(
-                        coordinator,
-                        "zone_bypass",
-                        config_entry.data["device_id"],
-                        zone_index,
-                        zone_state,
-                        coordinator.data.device_profile.get("zonesLabels")[zone_index],
-                        coordinator.data.device_profile.get("zonesTypes")[zone_index],
-                    )
+            # load bypass entities
+            sensors.append(
+                OlarmBinarySensor(
+                    coordinator,
+                    "zone_bypass",
+                    config_entry.data["device_id"],
+                    zone_index,
+                    zone_state,
+                    coordinator.data.device_profile.get("zonesLabels")[zone_index],
+                    coordinator.data.device_profile.get("zonesTypes")[zone_index],
                 )
+            )
 
 
 def load_ac_power_sensor(coordinator, config_entry, sensors):

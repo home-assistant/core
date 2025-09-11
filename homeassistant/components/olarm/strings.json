@@ -5,12 +5,10 @@
         "title": "Select device",
         "description": "Choose the Olarm device you would like to integrate. If your device is not listed, please ensure you have enabled public API access in your Olarm account for that device.",
         "data": {
-          "select_device": "Device",
-          "load_zones_bypass": "Load entities for zone bypassing"
+          "select_device": "Device"
         },
         "data_description": {
-          "select_device": "The Olarm device you would like to integrate",
-          "load_zones_bypass": "Useful if you bypass zones on your alarm system regularly"
+          "select_device": "The Olarm device you would like to integrate"
         }
       }
     },
