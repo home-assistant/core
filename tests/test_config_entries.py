@@ -4622,7 +4622,7 @@ async def test_flow_same_device_multiple_sources(
         flow3 = manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_HOMEKIT}
         )
-        result1, result2, result3 = await asyncio.gather(flow1, flow2, flow3)
+        _result1, result2, _result3 = await asyncio.gather(flow1, flow2, flow3)
 
         flows = hass.config_entries.flow.async_progress()
         assert len(flows) == 1
@@ -4776,6 +4776,68 @@ async def test_entry_state_change_calls_listener(
 
     mock_state_change_callback = Mock()
     entry.async_on_state_change(mock_state_change_callback)
+
+    transition_method = getattr(manager, transition_method_name)
+    await transition_method(entry.entry_id)
+
+    assert len(mock_state_change_callback.mock_calls) == call_count
+    assert entry.state is target_state
+
+
+@pytest.mark.parametrize(
+    ("source_state", "target_state", "transition_method_name", "call_count"),
+    [
+        (
+            config_entries.ConfigEntryState.NOT_LOADED,
+            config_entries.ConfigEntryState.LOADED,
+            "async_setup",
+            2,
+        ),
+        (
+            config_entries.ConfigEntryState.LOADED,
+            config_entries.ConfigEntryState.NOT_LOADED,
+            "async_unload",
+            1,
+        ),
+        (
+            config_entries.ConfigEntryState.LOADED,
+            config_entries.ConfigEntryState.LOADED,
+            "async_reload",
+            1,
+        ),
+    ],
+)
+async def test_entry_state_change_wrapped_in_on_unload(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source_state: config_entries.ConfigEntryState,
+    target_state: config_entries.ConfigEntryState,
+    transition_method_name: str,
+    call_count: int,
+) -> None:
+    """Test listeners get called on entry state changes.
+
+    This test wraps the listener in async_on_unload, the expectation is that
+    `async_on_unload` is called before the state changes to NOT_LOADED so the
+    listener is not called when the entry is unloaded.
+    """
+    entry = MockConfigEntry(domain="comp", state=source_state)
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    mock_state_change_callback = Mock()
+    entry.async_on_unload(entry.async_on_state_change(mock_state_change_callback))
 
     transition_method = getattr(manager, transition_method_name)
     await transition_method(entry.entry_id)
@@ -5271,6 +5333,19 @@ async def test_async_abort_entries_match(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == reason
+
+    # For a domain with no entries, there should never be a match
+    mock_integration(hass, MockModule("not_comp", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "not_comp.config_flow", None)
+
+    with mock_config_flow("not_comp", TestFlow), mock_config_flow("invalid_flow", 5):
+        result = await manager.flow.async_init(
+            "not_comp", context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_match"
 
 
 @pytest.mark.parametrize(

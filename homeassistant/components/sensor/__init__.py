@@ -365,7 +365,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         unit converter supports both the native and the suggested units of measurement.
         """
         # Make sure we can convert the units
-        if (
+        if self.native_unit_of_measurement != suggested_unit_of_measurement and (
             (unit_converter := UNIT_CONVERTERS.get(self.device_class)) is None
             or self.__native_unit_of_measurement_compat
             not in unit_converter.VALID_UNITS

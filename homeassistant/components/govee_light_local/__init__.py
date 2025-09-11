@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 from errno import EADDRINUSE
+from ipaddress import IPv4Address
 import logging
 
 from govee_local_api.controller import LISTENING_PORT
@@ -30,7 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
     _LOGGER.debug("Enabled source IPs: %s", source_ips)
 
     coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(
-        hass=hass, config_entry=entry, source_ips=source_ips
+        hass=hass,
+        config_entry=entry,
+        source_ips=[
+            source_ip for source_ip in source_ips if isinstance(source_ip, IPv4Address)
+        ],
     )
 
     async def await_cleanup():
