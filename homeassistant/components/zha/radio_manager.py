@@ -40,21 +40,16 @@ from .const import (
 )
 from .helpers import get_zha_data
 
-# Only the common radio types will be autoprobed, ordered by new device popularity.
-# XBee takes too long to probe since it scans through all possible bauds and likely has
-# very few users to begin with.
-AUTOPROBE_RADIOS = (
-    RadioType.ezsp,
-    RadioType.znp,
-    RadioType.deconz,
-    RadioType.zigate,
-)
-
 RECOMMENDED_RADIOS = (
     RadioType.ezsp,
     RadioType.znp,
     RadioType.deconz,
 )
+
+# Only the common radio types will be autoprobed, ordered by new device popularity.
+# XBee takes too long to probe since it scans through all possible bauds and likely has
+# very few users to begin with.
+AUTOPROBE_RADIOS = RECOMMENDED_RADIOS
 
 CONNECT_DELAY_S = 1.0
 RETRY_DELAY_S = 1.0
