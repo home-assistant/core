@@ -21,7 +21,7 @@ async def async_get_config_entry_diagnostics(
     command_list = await coordinator.client.get_command_list()
 
     return {
-        "command_list": command_list,
+        "remote_command_list": command_list,
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
         "device_info": async_redact_data(device_info, TO_REDACT),
     }
