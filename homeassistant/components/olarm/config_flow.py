@@ -67,40 +67,32 @@ class OlarmOauth2FlowHandler(
         """Create an entry for the flow, or update existing entry."""
         errors: dict[str, str] = {}
 
-        if data["token"].get("access_token") is not None:
-            self._oauth_data = data
-            self._access_token = data["token"].get("access_token")
-            self._refresh_token = data["token"].get("refresh_token")
-            self._expires_at = data["token"].get("expires_at")
+        # Extract oauth tokens to connect to use to connect to Olarm services
+        self._oauth_data = data
+        self._access_token = data["token"]["access_token"]
+        self._refresh_token = data["token"]["refresh_token"]
+        self._expires_at = data["token"]["expires_at"]
 
-            _LOGGER.debug("OAuth2 tokens fetched successfully, fetching devices")
-            if self._access_token is None:
-                errors["base"] = "oauth_failed"
-                return self.async_show_form(step_id="user", errors=errors)
+        _LOGGER.debug("OAuth2 tokens fetched successfully, fetching devices")
 
-            olarm_connect_client = OlarmFlowClient(self._access_token, self._expires_at)
+        olarm_connect_client = OlarmFlowClient(self._access_token, self._expires_at)
 
-            try:
-                api_result = await olarm_connect_client.get_devices()
-                _LOGGER.debug(api_result)
+        try:
+            api_result = await olarm_connect_client.get_devices()
+        except OlarmFlowClientApiError as err:
+            # If the API returned a 404 or indicates nothing found, treat it as no devices
+            err_str = str(err).lower()
+            if "404" in err_str or "not found" in err_str:
+                return self.async_abort(reason="no_devices_found")
 
-                self._devices = api_result.get("data")
-                self._user_id = api_result.get("userId")
-            except OlarmFlowClientApiError as err:
-                # If the API returned a 404 or indicates nothing found, treat it as no devices
-                err_str = str(err).lower()
-                if "404" in err_str or "not found" in err_str:
-                    return self.async_abort(reason="no_devices_found")
-
-                # Otherwise, assume it's an auth-related error
-                errors["base"] = "invalid_auth"
-                return self.async_show_form(step_id="user", errors=errors)
-            else:
-                return await self.async_step_device()
-        else:
-            # OAuth failed - no access token received
-            errors["base"] = "oauth_failed"
+            # Otherwise, assume it's an auth-related error
+            errors["base"] = "invalid_auth"
             return self.async_show_form(step_id="user", errors=errors)
+
+        _LOGGER.debug(api_result)
+        self._devices = api_result.get("data")
+        self._user_id = api_result.get("userId")
+        return await self.async_step_device()
 
     async def async_step_device(
         self, user_input: dict[str, Any] | None = None
