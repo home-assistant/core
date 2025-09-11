@@ -20,15 +20,19 @@ from tests.typing import WebSocketGenerator
 @pytest.fixture
 def mock_predict_common_control() -> Generator[Mock]:
     """Return a mock result for common control."""
-    with patch(
-        "homeassistant.components.usage_prediction.common_control.async_predict_common_control",
-        return_value=EntityUsagePredictions(
-            morning=["light.kitchen"],
-            afternoon=["climate.thermostat"],
-            evening=["light.bedroom"],
-            night=["lock.front_door"],
-        ),
-    ) as mock_predict:
+    now = datetime(2026, 8, 26, 9, 0, 0, tzinfo=dt_util.UTC)
+    with (
+        patch(
+            "homeassistant.components.usage_prediction.common_control.async_predict_common_control",
+            return_value=EntityUsagePredictions(
+                morning=["light.kitchen"],
+                afternoon=["climate.thermostat"],
+                evening=["light.bedroom"],
+                night=["lock.front_door"],
+            ),
+        ) as mock_predict,
+        patch("homeassistant.util.dt.utcnow", return_value=now),
+    ):
         yield mock_predict
 
 
@@ -51,7 +55,7 @@ async def test_common_control(
     assert msg["success"] is True
     assert msg["result"] == {
         "entities": [
-            "light.kitchen",
+            "climate.thermostat",
         ]
     }
     assert mock_predict_common_control.call_count == 1

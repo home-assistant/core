@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
@@ -27,7 +27,7 @@ CACHE_DURATION = timedelta(hours=24)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the usage prediction integration."""
     websocket_api.async_register_command(hass, ws_common_control)
-    hass.data[DOMAIN] = {}
+    hass.data[DATA_CACHE] = {}
     return True
 
 
@@ -77,16 +77,21 @@ async def get_cached_common_control(
             # Cache is still valid, return the cached predictions
             return cached_data.predictions
 
-    hass.data[DATA_CACHE][storage_key] = cast(
-        asyncio.Task[EntityUsagePredictions], asyncio.current_task()
-    )
-    predictions = await common_control.async_predict_common_control(hass, user_id)
+    # Create a task to fetch the data
+    async def _fetch_data() -> EntityUsagePredictions:
+        predictions = await common_control.async_predict_common_control(hass, user_id)
 
-    # Store the new data with timestamp
-    cached_data = EntityUsageDataCache(
-        predictions=predictions,
-    )
+        # Store the new data with timestamp
+        cached_data = EntityUsageDataCache(
+            predictions=predictions,
+        )
 
-    hass.data[DATA_CACHE][storage_key] = cached_data
+        hass.data[DATA_CACHE][storage_key] = cached_data
 
-    return predictions
+        return predictions
+
+    # Create and store the task
+    task = asyncio.create_task(_fetch_data())
+    hass.data[DATA_CACHE][storage_key] = task
+
+    return await task
