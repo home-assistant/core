@@ -11,7 +11,7 @@ import pyomie.main as pyomie
 from pyomie.model import OMIEResults, SpotData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
@@ -55,22 +55,21 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
             if date in relevant_dates
         }
 
-        # off to OMIE for anything that's still missing
-        for d in {pd for pd in published_dates if pd not in data}:
-            _LOGGER.info("Fetching OMIE data for %s", d)
-            if results := await pyomie.spot_price(self._client_session, d):
+        # fetch missing days from OMIE
+        for date in {pd for pd in published_dates if pd not in data}:
+            _LOGGER.debug("Fetching OMIE data for %s", date)
+            if results := await pyomie.spot_price(self._client_session, date):
                 _LOGGER.debug("pyomie.spot_price returned: %s", results)
-                data.update({d: results})
+                data.update({date: results})
 
-        _LOGGER.debug("_async_update_data: %s", data)
+        self._set_update_interval()
+        _LOGGER.debug("Received data: %s", data)
         return data
 
-    @callback
-    def _schedule_refresh(self) -> None:
-        """Schedules the next refresh beginning of the next hour."""
+    def _set_update_interval(self) -> None:
+        """Schedules the next refresh at the start of the next hour."""
         now = dt.datetime.now()
         refresh_at = now.replace(minute=0, second=0) + dt.timedelta(hours=1)
         self.update_interval = refresh_at - now
 
         _LOGGER.debug("Next refresh at %s", refresh_at.astimezone())
-        super()._schedule_refresh()
