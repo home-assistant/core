@@ -205,5 +205,47 @@
         }
       ]
     }
+  },
+  "AirConditioner": {
+    "data": {
+      "programs": [
+        {
+          "key": "HeatingVentilationAirConditioning.AirConditioner.Program.ActiveClean",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "HeatingVentilationAirConditioning.AirConditioner.Program.Auto",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "HeatingVentilationAirConditioning.AirConditioner.Program.Cool",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "HeatingVentilationAirConditioning.AirConditioner.Program.Dry",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "HeatingVentilationAirConditioning.AirConditioner.Program.Fan",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "HeatingVentilationAirConditioning.AirConditioner.Program.Heat",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        }
+      ]
+    }
   }
 }

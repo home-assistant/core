@@ -321,8 +321,8 @@
     },
     "fan_speed_mode": {
       "options": {
-        "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic": "Auto",
-        "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual": "Manual"
+        "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic": "[%key:common::state::auto%]",
+        "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual": "[%key:common::state::manual%]"
       }
     },
     "available_maps": {
@@ -792,6 +792,23 @@
         "name": "Stop program"
       }
     },
+    "climate": {
+      "air_conditioner": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heating_ventilation_air_conditioning_air_conditioner_program_active_clean": "[%key:component::home_connect::selector::programs::options::heating_ventilation_air_conditioning_air_conditioner_program_active_clean%]"
+            }
+          },
+          "fan_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "cooking_lighting": {
         "name": "Functional light"
@@ -1198,8 +1215,8 @@
       "fan_speed_mode": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_mode::name%]",
         "state": {
-          "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic": "[%key:component::home_connect::selector::fan_speed_mode::options::heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic%]",
-          "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual": "[%key:component::home_connect::selector::fan_speed_mode::options::heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual%]"
+          "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic": "[%key:common::state::auto%]",
+          "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual": "[%key:common::state::manual%]"
         }
       },
       "current_map": {
