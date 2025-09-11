@@ -13,7 +13,7 @@ from pyomie.model import OMIEResults, SpotData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
@@ -30,11 +30,7 @@ type OMIEConfigEntry = ConfigEntry[OMIECoordinator]
 class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotData]]]):
     """Coordinator that manages OMIE data for yesterday, today, and tomorrow."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: OMIEConfigEntry,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: OMIEConfigEntry) -> None:
         """Initialize OMIE coordinator."""
         super().__init__(
             hass,
@@ -43,7 +39,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
             config_entry=config_entry,
             update_interval=dt.timedelta(minutes=1),
         )
-        self.data: Mapping[dt.date, OMIEResults[SpotData]] = {}
+        self.data = {}
         self._client_session = async_get_clientsession(hass)
 
     async def _async_update_data(self) -> Mapping[dt.date, OMIEResults[SpotData]]:
@@ -59,15 +55,12 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
             if date in relevant_dates
         }
 
-        try:
-            # off to OMIE for anything that's still missing
-            for d in {pd for pd in published_dates if pd not in data}:
-                _LOGGER.info("Fetching OMIE data for %s", d)
-                if results := await pyomie.spot_price(self._client_session, d):
-                    _LOGGER.debug("pyomie.spot_price returned: %s", results)
-                    data.update({d: results})
-        except Exception as error:
-            raise UpdateFailed(str(error)) from error
+        # off to OMIE for anything that's still missing
+        for d in {pd for pd in published_dates if pd not in data}:
+            _LOGGER.info("Fetching OMIE data for %s", d)
+            if results := await pyomie.spot_price(self._client_session, d):
+                _LOGGER.debug("pyomie.spot_price returned: %s", results)
+                data.update({d: results})
 
         _LOGGER.debug("_async_update_data: %s", data)
         return data
