@@ -674,6 +674,7 @@ FLOWS = {
         "trafikverket_train",
         "trafikverket_weatherstation",
         "transmission",
+        "transport_nsw",
         "triggercmd",
         "tuya",
         "twentemilieu",
