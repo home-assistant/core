@@ -354,5 +354,18 @@
         "5": "Maximum"
       }
     }
+  },
+  "issues": {
+    "topic_protected": {
+      "title": "Subscription failed: Topic {topic} is protected",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Topic {topic} is protected",
+            "description": "The topic **{topic}** is protected and requires authentication to subscribe.\n\nTo resolve this issue, you have two options:\n\n1. **Reconfigure the ntfy integration**\nAdd a username and password that has permission to access this topic.\n\n2. **Deactivate the event entity**\nThis will stop Home Assistant from subscribing to the topic.\nClick **Submit** to deactivate the entity."
+          }
+        }
+      }
+    }
   }
 }
