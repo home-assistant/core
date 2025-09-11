@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
-from .util import _get_market_dates, _is_published
+from .util import get_market_dates, is_published
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,8 +49,8 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
     async def _async_update_data(self) -> Mapping[dt.date, OMIEResults[SpotData]]:
         """Update OMIE data, fetching data as needed and available."""
         now = utcnow()
-        relevant_dates = _get_market_dates(ZoneInfo(self.hass.config.time_zone), now)
-        published_dates = {date for date in relevant_dates if _is_published(date, now)}
+        relevant_dates = get_market_dates(ZoneInfo(self.hass.config.time_zone), now)
+        published_dates = {date for date in relevant_dates if is_published(date, now)}
 
         # seed new data with previously-fetched days. these are immutable once fetched.
         data = {

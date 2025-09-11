@@ -15,7 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import OMIEConfigEntry, OMIECoordinator
-from .util import _current_hour_CET, _pick_series_cet
+from .util import current_hour_CET, pick_series_cet
 
 PARALLEL_UPDATES = 0
 
@@ -73,11 +73,11 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
 
     def _get_current_hour_value(self) -> float | None:
         """Get current hour's price value from coordinator data."""
-        current_hour_cet = _current_hour_CET()
+        current_hour_cet = current_hour_CET()
         current_date_cet = current_hour_cet.date()
 
         pyomie_results = self.coordinator.data.get(current_date_cet)
-        pyomie_hours = _pick_series_cet(pyomie_results, self._pyomie_series_name)
+        pyomie_hours = pick_series_cet(pyomie_results, self._pyomie_series_name)
 
         # Convert to €/kWh
         value_mwh = pyomie_hours.get(current_hour_cet)

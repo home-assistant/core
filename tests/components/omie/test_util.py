@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.omie.util import CET, _get_market_dates, _is_published
+from homeassistant.components.omie.util import CET, get_market_dates, is_published
 
 
 class TestGetMarketDates:
@@ -17,7 +17,7 @@ class TestGetMarketDates:
         tz = ZoneInfo("Europe/Lisbon")
         local_time = datetime(2024, 6, 15, 12, 0, tzinfo=tz)  # 12:00 Lisbon = 13:00 CET
 
-        market_dates = _get_market_dates(tz, local_time)
+        market_dates = get_market_dates(tz, local_time)
 
         # A Lisbon day (00:00-23:59 Lisbon) converts to (01:00 CET day1 - 00:59 CET day2)
         # So it spans 2 CET dates: June 15 and June 16
@@ -28,7 +28,7 @@ class TestGetMarketDates:
         tz = ZoneInfo("Europe/Madrid")
         local_time = datetime(2024, 6, 15, 12, 0, tzinfo=tz)  # 12:00 Madrid = 12:00 CET
 
-        market_dates = _get_market_dates(tz, local_time)
+        market_dates = get_market_dates(tz, local_time)
 
         assert market_dates == {date(2024, 6, 15)}
 
@@ -39,7 +39,7 @@ class TestGetMarketDates:
             2024, 6, 15, 12, 0, tzinfo=tz
         )  # 12:00 Bucharest = 11:00 CET
 
-        market_dates = _get_market_dates(tz, local_time)
+        market_dates = get_market_dates(tz, local_time)
 
         # A Bucharest day (00:00-23:59 Bucharest) converts to (23:00 CET day-1 - 22:59 CET day)
         # So it spans 2 CET dates: June 14 and June 15
@@ -52,7 +52,7 @@ class TestGetMarketDates:
         tz = ZoneInfo("Europe/Lisbon")
         local_time = datetime(2024, 3, 31, 2, 30, tzinfo=tz)
 
-        market_dates = _get_market_dates(tz, local_time)
+        market_dates = get_market_dates(tz, local_time)
 
         assert market_dates == {date(2024, 3, 31), date(2024, 4, 1)}
 
@@ -63,7 +63,7 @@ class TestGetMarketDates:
         tz = ZoneInfo("Europe/Madrid")
         local_time = datetime(2024, 10, 27, 2, 30, tzinfo=tz)
 
-        market_dates = _get_market_dates(tz, local_time)
+        market_dates = get_market_dates(tz, local_time)
 
         assert market_dates == {date(2024, 10, 27)}
 
@@ -77,7 +77,7 @@ class TestIsPublished:
         # 13:29 CET on Friday (day before) - should not be published yet
         fetch_time = datetime(2024, 6, 14, 13, 29, tzinfo=CET)
 
-        assert not _is_published(market_date, fetch_time)
+        assert not is_published(market_date, fetch_time)
 
     def test_after_publish_time(self) -> None:
         """Test that data is published after 13:30 CET the day before."""
@@ -85,7 +85,7 @@ class TestIsPublished:
         # 13:31 CET on Friday (day before) - should be published
         fetch_time = datetime(2024, 6, 14, 13, 31, tzinfo=CET)
 
-        assert _is_published(market_date, fetch_time)
+        assert is_published(market_date, fetch_time)
 
     def test_next_day_published(self) -> None:
         """Test that data is published the next day."""
@@ -93,7 +93,7 @@ class TestIsPublished:
         # Any time on Saturday - should be published
         fetch_time = datetime(2024, 6, 15, 10, 0, tzinfo=CET)
 
-        assert _is_published(market_date, fetch_time)
+        assert is_published(market_date, fetch_time)
 
     @pytest.mark.parametrize(
         ("timezone_str", "local_hour"),
@@ -113,7 +113,7 @@ class TestIsPublished:
         local_fetch_time = datetime(2024, 6, 14, local_hour, 30, tzinfo=local_tz)
 
         # Should be published since it's after 13:30 CET the day before
-        assert _is_published(market_date, local_fetch_time)
+        assert is_published(market_date, local_fetch_time)
 
     def test_real_world_scenarios(self) -> None:
         """Test real-world usage scenarios."""
@@ -122,13 +122,13 @@ class TestIsPublished:
         lisbon_tz = ZoneInfo("Europe/Lisbon")
         portuguese_time = datetime(2024, 6, 14, 14, 30, tzinfo=lisbon_tz)
 
-        assert _is_published(market_date, portuguese_time)
+        assert is_published(market_date, portuguese_time)
 
         # Spanish user checking at 2:30 PM local time should see tomorrow's data
         madrid_tz = ZoneInfo("Europe/Madrid")
         spanish_time = datetime(2024, 6, 14, 14, 30, tzinfo=madrid_tz)
 
-        assert _is_published(market_date, spanish_time)
+        assert is_published(market_date, spanish_time)
 
     @freeze_time("2024-03-31 14:00:00")  # DST transition day
     def test_dst_transition_publication(self) -> None:
@@ -143,5 +143,5 @@ class TestIsPublished:
             fetch_time = datetime(2024, 3, 31, 14, 0, tzinfo=tz)
 
             # Should handle DST transition correctly
-            result = _is_published(market_date, fetch_time)
+            result = is_published(market_date, fetch_time)
             assert isinstance(result, bool)
