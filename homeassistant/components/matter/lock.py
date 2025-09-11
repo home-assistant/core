@@ -97,15 +97,14 @@ class MatterLock(MatterEntity, LockEntity):
             case (
                 clusters.DoorLock.Events.DoorLockAlarm.event_id
             ):  # Lock cluster event 0
-                match node_event_data.get("alarmCode"):
-                    case 0:  # lock is jammed
-                        # set in an uncertain state if jammed
-                        self._attr_is_locked = None
-                        self._attr_is_open = None
-                        self._attr_is_opening = None
-                        self._attr_is_locking = None
-                        self._attr_is_jammed = True
-                        self.async_write_ha_state()
+                if node_event_data.get("alarmCode") == 0:  # lock is jammed
+                    # set in an uncertain state if jammed
+                    self._attr_is_locked = None
+                    self._attr_is_open = None
+                    self._attr_is_opening = None
+                    self._attr_is_locking = None
+                    self._attr_is_jammed = True
+                    self.async_write_ha_state()
             case (
                 clusters.DoorLock.Events.LockOperation.event_id
             ):  # Lock cluster event 2
