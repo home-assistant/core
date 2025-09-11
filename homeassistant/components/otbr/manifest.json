@@ -4,7 +4,7 @@
   "after_dependencies": ["hassio", "homeassistant_yellow", "zha"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
-  "dependencies": ["homeassistant_hardware", "thread"],
+  "dependencies": ["homeassistant_hardware", "thread", "usb"],
   "documentation": "https://www.home-assistant.io/integrations/otbr",
   "integration_type": "service",
   "iot_class": "local_polling",
