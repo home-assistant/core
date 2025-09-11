@@ -74,11 +74,12 @@ def load_zone_sensors(coordinator, config_entry, sensors):
 def load_ac_power_sensor(coordinator, config_entry, sensors):
     """Load AC power sensor."""
     if coordinator.data and coordinator.data.device_state is not None:
-        ac_power_state = "off"
-        if coordinator.data.device_state.get("powerAC") == "ok":
-            ac_power_state = "on"
-        if coordinator.data.device_state.get("power", {}).get("AC") == "1":
-            ac_power_state = "on"
+        ac_power_state = (
+            "on"
+            if coordinator.data.device_state.get("powerAC") == "ok"
+            or coordinator.data.device_state.get("power", {}).get("AC") == "1"
+            else "off"
+        )
         sensors.append(
             OlarmBinarySensor(
                 coordinator,
@@ -98,13 +99,13 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator,
-        sensor_type,
-        device_id,
-        sensor_index,
-        sensor_state,
-        sensor_label,
-        sensor_class=None,
-        link_id=None,
+        sensor_type: str,
+        device_id: str,
+        sensor_index: int,
+        sensor_state: str,
+        sensor_label: str,
+        sensor_class: int | None = None,
+        link_id: int | None = None,
         link_name: str | None = "",
     ) -> None:
         """Init the class."""
@@ -176,12 +177,12 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         if (self.sensor_type in {"zone", "zone_bypass"}) and device_state is not None:
             self.sensor_state = device_state.get("zones", [])[self.sensor_index]
         elif self.sensor_type == "ac_power" and device_state is not None:
-            ac_power_state = "off"
-            if device_state.get("powerAC") == "ok":
-                ac_power_state = "on"
-            if device_state.get("power", {}).get("AC") == "1":
-                ac_power_state = "on"
-            self.sensor_state = ac_power_state
+            self.sensor_state = (
+                "on"
+                if device_state.get("powerAC") == "ok"
+                or device_state.get("power", {}).get("AC") == "1"
+                else "off"
+            )
 
         # set state if zone is active[a] or closed[c] or bypassed[b]
         self._attr_is_on = self._determine_is_on()
