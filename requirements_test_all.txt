@@ -1162,7 +1162,7 @@ lektricowifi==0.1
 letpot==0.6.1
 
 # homeassistant.components.foscam
-libpyfoscamcgi==0.0.7
+libpyfoscamcgi==0.0.6
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
