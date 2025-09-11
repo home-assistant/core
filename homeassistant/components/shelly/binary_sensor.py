@@ -73,6 +73,17 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
         return bool(self.attribute_value)
 
 
+class RpcPresenceBinarySensor(RpcBinarySensor):
+    """Represent a RPC binary sensor entity for presence component."""
+
+    @property
+    def available(self) -> bool:
+        """Available."""
+        available = super().available
+
+        return available and self.coordinator.device.config[self.key]["enable"]
+
+
 class RpcBluTrvBinarySensor(RpcBinarySensor):
     """Represent a RPC BluTrv binary sensor."""
 
@@ -132,8 +143,6 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
         device_class=BinarySensorDeviceClass.GAS,
         translation_key="gas",
         value=lambda value: value in ["mild", "heavy"],
-        # Deprecated, remove in 2025.10
-        extra_state_attributes=lambda block: {"detected": block.gas},
     ),
     ("sensor", "smoke"): BlockBinarySensorDescription(
         key="sensor|smoke", name="Smoke", device_class=BinarySensorDeviceClass.SMOKE
@@ -284,6 +293,14 @@ RPC_SENSORS: Final = {
         sub_key="mute",
         name="Mute",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "presence_num_objects": RpcBinarySensorDescription(
+        key="presence",
+        sub_key="num_objects",
+        value=lambda status, _: bool(status),
+        name="Occupancy",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        entity_class=RpcPresenceBinarySensor,
     ),
 }
 

@@ -165,7 +165,7 @@ async def test_zha_logbook_event_device_no_triggers(
 ) -> None:
     """Test ZHA logbook events with device and without triggers."""
 
-    zigpy_device, zha_device = mock_devices
+    _zigpy_device, zha_device = mock_devices
     ieee_address = str(zha_device.device.ieee)
     reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
 
