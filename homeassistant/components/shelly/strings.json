@@ -193,6 +193,13 @@
           "opened": "Opened",
           "opening": "[%key:common::state::opening%]"
         }
+      },
+      "illuminance_level": {
+        "state": {
+          "dark": "Dark",
+          "twilight": "Twilight",
+          "bright": "Bright"
+        }
       }
     }
   },

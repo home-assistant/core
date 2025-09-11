@@ -600,6 +600,9 @@
       "status": {
         "name": "Status"
       },
+      "depth": {
+        "name": "Depth"
+      },
       "last_amount": {
         "name": "Last amount"
       },
