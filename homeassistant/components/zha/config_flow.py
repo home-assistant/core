@@ -40,6 +40,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_BAUDRATE, CONF_FLOW_CONTROL, CONF_RADIO_TYPE, DOMAIN
+from .helpers import get_zha_gateway
 from .radio_manager import (
     DEVICE_SCHEMA,
     HARDWARE_DISCOVERY_SCHEMA,
@@ -738,8 +739,20 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
     ) -> ConfigFlowResult:
         """Launch the options flow."""
         if user_input is not None:
-            # OperationNotAllowed: ZHA is not running
+            # Perform a backup first
+            try:
+                zha_gateway = get_zha_gateway(self.hass)
+            except ValueError:
+                pass
+            else:
+                # The backup itself will be stored in `zigbee.db`, which the radio
+                # manager will read when the class is initialized
+                application_controller = zha_gateway.application_controller
+                await application_controller.backups.create_backup(load_devices=True)
+
+            # Then unload the integration
             with suppress(OperationNotAllowed):
+                # OperationNotAllowed: ZHA is not running
                 await self.hass.config_entries.async_unload(self.config_entry.entry_id)
 
             return await self.async_step_prompt_migrate_or_reconfigure()
