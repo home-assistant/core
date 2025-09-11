@@ -470,7 +470,7 @@ async def test_poll_all_on_startup_refreshes_stale_values(
     # Track what gets polled during setup
     polled_chars: list[tuple[int, int]] = []
 
-    # Setup the test accessories
+    # Set up the test accessories
     fake_controller = await setup_platform(hass)
 
     # Mock get_characteristics to track polling and return fresh temperature
