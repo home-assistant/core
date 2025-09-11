@@ -4,6 +4,7 @@ from collections.abc import Generator
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from fish_audio_sdk.exceptions import HttpCodeErr
 from fish_audio_sdk.schemas import APICreditEntity
 import pytest
 
@@ -62,8 +63,7 @@ def mock_async_client() -> Generator[MagicMock]:
 def mock_async_client_connect_error() -> Generator[MagicMock]:
     """Override Session client with a connection error."""
     session_mock = _get_session_mock()
-    session_mock.get_api_credit.side_effect = Exception("Connection error")
-
+    session_mock.get_api_credit.side_effect = HttpCodeErr(500, "Server Error")
     with (
         patch(
             "homeassistant.components.fish_audio.Session",
@@ -73,12 +73,40 @@ def mock_async_client_connect_error() -> Generator[MagicMock]:
             "homeassistant.components.fish_audio.config_flow.Session",
             new=mock_session,
         ),
+    ):
+        yield mock_session
+
+
+@pytest.fixture
+def mock_async_client_generic_error() -> Generator[MagicMock]:
+    """Override Session client with a generic error."""
+    session_mock = _get_session_mock()
+    session_mock.get_api_credit.side_effect = Exception("Generic Error")
+    with (
         patch(
-            "homeassistant.components.fish_audio.tts.Session",
+            "homeassistant.components.fish_audio.Session",
+            return_value=session_mock,
+        ) as mock_session,
+        patch(
+            "homeassistant.components.fish_audio.config_flow.Session",
             new=mock_session,
         ),
+    ):
+        yield mock_session
+
+
+@pytest.fixture
+def mock_async_client_auth_error() -> Generator[MagicMock]:
+    """Override Session client with an authentication error."""
+    session_mock = _get_session_mock()
+    session_mock.get_api_credit.side_effect = HttpCodeErr(401, "Auth Error")
+    with (
         patch(
-            "homeassistant.components.fish_audio.stt.Session",
+            "homeassistant.components.fish_audio.Session",
+            return_value=session_mock,
+        ) as mock_session,
+        patch(
+            "homeassistant.components.fish_audio.config_flow.Session",
             new=mock_session,
         ),
     ):
@@ -90,6 +118,7 @@ def mock_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id="test_user",
         data={CONF_API_KEY: "test-api-key"},
         options={"voice_id": "1"},
         title="Fish Audio",
