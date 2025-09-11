@@ -16,8 +16,10 @@
         'access_point': True,
         'mac': '**REDACTED**',
         'mac_interface': 'br0',
+        'mode': 'point_to_point',
         'ptmp': False,
         'ptp': True,
+        'role': 'access_point',
         'station': False,
       }),
       'firewall': dict({
@@ -28,9 +30,14 @@
       }),
       'genuine': '/images/genuine.png',
       'gps': dict({
+        'alt': None,
+        'dim': None,
+        'dop': None,
         'fix': 0,
         'lat': '**REDACTED**',
         'lon': '**REDACTED**',
+        'sats': None,
+        'time_synced': None,
       }),
       'host': dict({
         'cpuload': 10.10101,

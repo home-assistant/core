@@ -212,7 +212,14 @@ async def test_vacuum_intents(
     await vaccum_intent.async_setup_intents(hass)
 
     entity_id = f"{vacuum.DOMAIN}.rover"
-    hass.states.async_set(entity_id, STATE_CLOSED)
+    hass.states.async_set(
+        entity_id,
+        STATE_CLOSED,
+        {
+            ATTR_SUPPORTED_FEATURES: vacuum.VacuumEntityFeature.START
+            | vacuum.VacuumEntityFeature.RETURN_HOME
+        },
+    )
     async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
 
     # start
