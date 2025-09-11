@@ -4,9 +4,9 @@ import logging
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
+    FritzActionFailedError,
     FritzConnectionException,
     FritzServiceError,
-    FritzActionFailedError,
 )
 from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH
 import voluptuous as vol
@@ -93,7 +93,7 @@ async def _async_dial(service_call: ServiceCall) -> None:
         _LOGGER.debug("Executing service %s", service_call.service)
         avm_wrapper = target_entry.runtime_data
         try:
-            await avm_wrapper.async_trigger_dial(service_call.data.get("number"))
+            await avm_wrapper.async_trigger_dial(service_call.data["number"])
         except (FritzServiceError, FritzActionError) as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="service_parameter_unknown"
