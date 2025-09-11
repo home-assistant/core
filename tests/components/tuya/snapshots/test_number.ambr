@@ -465,7 +465,7 @@
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.grillhomero_cook_temperature-entry]
+# name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -483,7 +483,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.grillhomero_cook_temperature',
+    'entity_id': 'number.grillhomero_cooking_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -495,7 +495,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cook temperature',
+    'original_name': 'Cooking temperature',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -505,10 +505,10 @@
     'unit_of_measurement': '℃',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.grillhomero_cook_temperature-state]
+# name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Grillhőmérő Cook temperature',
+      'friendly_name': 'Grillhőmérő Cooking temperature',
       'max': 300.0,
       'min': -30.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -516,14 +516,14 @@
       'unit_of_measurement': '℃',
     }),
     'context': <ANY>,
-    'entity_id': 'number.grillhomero_cook_temperature',
+    'entity_id': 'number.grillhomero_cooking_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.grillhomero_cook_temperature_2-entry]
+# name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -541,7 +541,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.grillhomero_cook_temperature_2',
+    'entity_id': 'number.grillhomero_cooking_temperature_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -553,7 +553,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cook temperature 2',
+    'original_name': 'Cooking temperature 2',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -563,10 +563,10 @@
     'unit_of_measurement': '℃',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.grillhomero_cook_temperature_2-state]
+# name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Grillhőmérő Cook temperature 2',
+      'friendly_name': 'Grillhőmérő Cooking temperature 2',
       'max': 300.0,
       'min': -30.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -574,7 +574,7 @@
       'unit_of_measurement': '℃',
     }),
     'context': <ANY>,
-    'entity_id': 'number.grillhomero_cook_temperature_2',
+    'entity_id': 'number.grillhomero_cooking_temperature_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2223,7 +2223,7 @@
     'state': '-2.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.sous_vide_cook_temperature-entry]
+# name: test_platform_setup_and_discovery[number.sous_vide_cooking_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2241,7 +2241,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.sous_vide_cook_temperature',
+    'entity_id': 'number.sous_vide_cooking_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2253,7 +2253,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cook temperature',
+    'original_name': 'Cooking temperature',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2263,10 +2263,10 @@
     'unit_of_measurement': '℃',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.sous_vide_cook_temperature-state]
+# name: test_platform_setup_and_discovery[number.sous_vide_cooking_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sous Vide Cook temperature',
+      'friendly_name': 'Sous Vide Cooking temperature',
       'max': 92.5,
       'min': 25.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2274,14 +2274,14 @@
       'unit_of_measurement': '℃',
     }),
     'context': <ANY>,
-    'entity_id': 'number.sous_vide_cook_temperature',
+    'entity_id': 'number.sous_vide_cooking_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.sous_vide_cook_time-entry]
+# name: test_platform_setup_and_discovery[number.sous_vide_cooking_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2299,7 +2299,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.sous_vide_cook_time',
+    'entity_id': 'number.sous_vide_cooking_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2311,7 +2311,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cook time',
+    'original_name': 'Cooking time',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2321,10 +2321,10 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[number.sous_vide_cook_time-state]
+# name: test_platform_setup_and_discovery[number.sous_vide_cooking_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sous Vide Cook time',
+      'friendly_name': 'Sous Vide Cooking time',
       'max': 5999.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2332,7 +2332,7 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.sous_vide_cook_time',
+    'entity_id': 'number.sous_vide_cooking_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

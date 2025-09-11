@@ -179,13 +179,13 @@
         "name": "Powder"
       },
       "cook_temperature": {
-        "name": "Cook temperature"
+        "name": "Cooking temperature"
       },
       "indexed_cook_temperature": {
-        "name": "Cook temperature {index}"
+        "name": "Cooking temperature {index}"
       },
       "cook_time": {
-        "name": "Cook time"
+        "name": "Cooking time"
       },
       "cloud_recipe": {
         "name": "Cloud recipe"
