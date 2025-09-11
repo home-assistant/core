@@ -257,7 +257,7 @@ class ShellyBluTrvButton(ShellyBaseButton):
         key = f"{BLU_TRV_IDENTIFIER}:{id_}"
         config = coordinator.device.config[key]
         ble_addr: str = config["addr"]
-        fw_ver = coordinator.device.status[key]["fw_ver"]
+        fw_ver = coordinator.device.status[key].get("fw_ver")
 
         self._attr_unique_id = f"{ble_addr}_{description.key}"
         self._attr_device_info = get_blu_trv_device_info(
