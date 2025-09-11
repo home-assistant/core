@@ -41,8 +41,9 @@ class WhirlpoolEntity(Entity):
         """Unregister attribute updates callback."""
         self._appliance.unregister_attr_callback(self._async_attr_callback)
 
-    async def async_update(self) -> None:
-        """Update the entity's availability."""
+    @callback
+    def _async_attr_callback(self) -> None:
+        _LOGGER.debug("Attribute update for entity %s", self.entity_id)
         self._attr_available = self._appliance.get_online()
 
         if not self._attr_available:
@@ -53,10 +54,7 @@ class WhirlpoolEntity(Entity):
             _LOGGER.info("The entity %s is back online", self.entity_id)
             self._unavailable_logged = False
 
-    @callback
-    def _async_attr_callback(self) -> None:
-        _LOGGER.debug("Attribute update for entity %s", self.entity_id)
-        self.async_schedule_update_ha_state(force_refresh=True)
+        self.async_write_ha_state()
 
     @staticmethod
     def _check_service_request(result: bool) -> None:
