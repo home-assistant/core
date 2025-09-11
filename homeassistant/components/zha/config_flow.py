@@ -21,7 +21,6 @@ from homeassistant.components.homeassistant_hardware import silabs_multiprotocol
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
-    SOURCE_ZEROCONF,
     ConfigEntry,
     ConfigEntryBaseFlow,
     ConfigEntryState,
@@ -50,10 +49,6 @@ from .radio_manager import (
 )
 
 CONF_MANUAL_PATH = "Enter Manually"
-SUPPORTED_PORT_SETTINGS = (
-    CONF_BAUDRATE,
-    CONF_FLOW_CONTROL,
-)
 DECONZ_DOMAIN = "deconz"
 
 FORMATION_STRATEGY = "formation_strategy"
@@ -289,43 +284,41 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         if user_input is not None:
             self._title = user_input[CONF_DEVICE_PATH]
             self._radio_mgr.device_path = user_input[CONF_DEVICE_PATH]
-            self._radio_mgr.device_settings = user_input.copy()
+            self._radio_mgr.device_settings = {
+                CONF_BAUDRATE: user_input[CONF_BAUDRATE],
+                # `None` shows up as the empty string in the frontend
+                CONF_FLOW_CONTROL: (
+                    user_input[CONF_FLOW_CONTROL]
+                    if user_input[CONF_FLOW_CONTROL] != "none"
+                    else None
+                ),
+            }
 
             if await self._radio_mgr.radio_type.controller.probe(user_input):
                 return await self.async_step_verify_radio()
 
             errors["base"] = "cannot_connect"
 
-        schema = {
-            vol.Required(
-                CONF_DEVICE_PATH, default=self._radio_mgr.device_path or vol.UNDEFINED
-            ): str
-        }
-
-        source = self.context.get("source")
-        for (
-            param,
-            value,
-        ) in DEVICE_SCHEMA.schema.items():
-            if param not in SUPPORTED_PORT_SETTINGS:
-                continue
-
-            if source == SOURCE_ZEROCONF and param == CONF_BAUDRATE:
-                value = 115200
-                param = vol.Required(CONF_BAUDRATE, default=value)
-            elif (
-                self._radio_mgr.device_settings is not None
-                and param in self._radio_mgr.device_settings
-            ):
-                param = vol.Required(
-                    str(param), default=self._radio_mgr.device_settings[param]
-                )
-
-            schema[param] = value
+        device_settings = self._radio_mgr.device_settings or {}
 
         return self.async_show_form(
             step_id="manual_port_config",
-            data_schema=vol.Schema(schema),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_DEVICE_PATH,
+                        default=self._radio_mgr.device_path or vol.UNDEFINED,
+                    ): str,
+                    vol.Required(
+                        CONF_BAUDRATE,
+                        default=device_settings.get(CONF_BAUDRATE) or 115200,
+                    ): int,
+                    vol.Required(
+                        CONF_FLOW_CONTROL,
+                        default=device_settings.get(CONF_FLOW_CONTROL) or "none",
+                    ): vol.In(["hardware", "software", "none"]),
+                }
+            ),
             errors=errors,
         )
 
