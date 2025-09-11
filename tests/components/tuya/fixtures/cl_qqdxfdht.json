@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bfb9c4958fd06d141djpqa",
   "name": "bedroom blinds",
   "category": "cl",
   "product_id": "qqdxfdht",

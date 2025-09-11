@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyacn.com",
-  "terminal_id": "1753864737914eTkTk2",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "6c0887b46a2eaf56e0ui7d",
   "name": "XOCA-DAC212XC V2-S1",
   "category": "zndb",
   "product_id": "4ggkyflayu1h1ho9",
@@ -69,6 +67,16 @@
     "phase_a": {
       "type": "Json",
       "value": {}
+    },
+    "power_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": -99999999,
+        "max": 999999999,
+        "scale": 3,
+        "step": 1
+      }
     },
     "fault": {
       "type": "Bitmap",
@@ -194,6 +202,7 @@
       "power": 6.912,
       "voltage": 52.7
     },
+    "power_total": 1500,
     "fault": 0,
     "frozen_time_set": {
       "day": 158,

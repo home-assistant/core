@@ -37,10 +37,10 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 4
+  CACHE_VERSION: 7
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2025.9"
+  HA_SHORT_VERSION: "2025.10"
   DEFAULT_PYTHON: "3.13"
   ALL_PYTHON_VERSIONS: "['3.13']"
   # 10.3 is the oldest supported version
@@ -94,7 +94,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: |
@@ -246,16 +246,16 @@ jobs:
       - info
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v4.2.3
+        uses: actions/cache@v4.2.4
         with:
           path: venv
           key: >-
@@ -271,7 +271,7 @@ jobs:
           uv pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v4.2.3
+        uses: actions/cache@v4.2.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           lookup-only: true
@@ -292,16 +292,16 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -310,7 +310,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -332,16 +332,16 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -350,7 +350,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -372,16 +372,16 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -390,7 +390,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -462,7 +462,7 @@ jobs:
           - script/hassfest/docker/Dockerfile
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Register hadolint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
@@ -481,10 +481,10 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -497,7 +497,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v4.2.3
+        uses: actions/cache@v4.2.4
         with:
           path: venv
           key: >-
@@ -505,7 +505,7 @@ jobs:
             needs.info.outputs.python_cache_key }}
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v4.2.3
+        uses: actions/cache@v4.2.4
         with:
           path: ${{ env.UV_CACHE_DIR }}
           key: >-
@@ -517,6 +517,7 @@ jobs:
             env.HA_SHORT_VERSION }}-
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -578,22 +579,23 @@ jobs:
       - base
     steps:
       - name: Install additional OS dependencies
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get -y install \
             libturbojpeg
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -617,16 +619,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -651,9 +653,9 @@ jobs:
       && github.event_name == 'pull_request'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Dependency review
-        uses: actions/dependency-review-action@v4.7.1
+        uses: actions/dependency-review-action@v4.7.3
         with:
           license-check: false # We use our own license audit checks
 
@@ -674,16 +676,16 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -717,16 +719,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -764,16 +766,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -809,10 +811,10 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -825,7 +827,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -833,7 +835,7 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore mypy cache
-        uses: actions/cache@v4.2.3
+        uses: actions/cache@v4.2.4
         with:
           path: .mypy_cache
           key: >-
@@ -877,6 +879,7 @@ jobs:
     name: Split tests for full run
     steps:
       - name: Install additional OS dependencies
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -886,16 +889,16 @@ jobs:
             libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -937,6 +940,7 @@ jobs:
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     steps:
       - name: Install additional OS dependencies
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -947,16 +951,16 @@ jobs:
             libgammu-dev \
             libxml2-utils
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1070,6 +1074,7 @@ jobs:
       Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -1080,16 +1085,16 @@ jobs:
             libmariadb-dev-compat \
             libxml2-utils
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1210,6 +1215,7 @@ jobs:
       Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -1222,16 +1228,16 @@ jobs:
           sudo apt-get -y install \
             postgresql-server-dev-14
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1334,14 +1340,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v5.0.0
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v5.5.1
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1371,6 +1377,7 @@ jobs:
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     steps:
       - name: Install additional OS dependencies
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
@@ -1381,16 +1388,16 @@ jobs:
             libgammu-dev \
             libxml2-utils
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.3
+        uses: actions/cache/restore@v4.2.4
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1484,14 +1491,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v5.0.0
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v5.5.1
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}

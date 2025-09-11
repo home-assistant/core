@@ -26,6 +26,23 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "port_forwarding": {
+        "name": "Port forwarding"
+      },
+      "dhcp_client": {
+        "name": "DHCP client"
+      },
+      "dhcp_server": {
+        "name": "DHCP server"
+      },
+      "dhcp6_server": {
+        "name": "DHCPv6 server"
+      },
+      "pppoe": {
+        "name": "PPPoE link"
+      }
+    },
     "sensor": {
       "host_cpuload": {
         "name": "CPU load"
@@ -60,6 +77,26 @@
       },
       "wireless_remote_hostname": {
         "name": "Remote hostname"
+      },
+      "host_uptime": {
+        "name": "Uptime"
+      },
+      "wireless_distance": {
+        "name": "Wireless distance"
+      },
+      "wireless_role": {
+        "name": "Wireless role",
+        "state": {
+          "access_point": "Access point",
+          "station": "Station"
+        }
+      },
+      "wireless_mode": {
+        "name": "Wireless mode",
+        "state": {
+          "point_to_point": "Point-to-point",
+          "point_to_multipoint": "Point-to-multipoint"
+        }
       }
     }
   },

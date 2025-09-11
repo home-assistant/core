@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf78687ad321a3aeb8a73m",
   "name": "Human presence Office",
   "category": "hps",
   "product_id": "2aaelwxk",

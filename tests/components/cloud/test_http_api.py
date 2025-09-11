@@ -139,31 +139,34 @@ async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
 async def test_google_actions_sync(
     setup_cloud: None,
     hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
 ) -> None:
     """Test syncing Google Actions."""
     cloud_client = await hass_client()
-    with patch(
-        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=Mock(status=200),
-    ) as mock_request_sync:
-        req = await cloud_client.post("/api/cloud/google_actions/sync")
-        assert req.status == HTTPStatus.OK
-        assert mock_request_sync.call_count == 1
+
+    cloud.google_report_state.request_sync = AsyncMock(
+        return_value=Mock(status=HTTPStatus.OK)
+    )
+
+    req = await cloud_client.post("/api/cloud/google_actions/sync")
+    assert req.status == HTTPStatus.OK
+    assert len(cloud.google_report_state.request_sync.mock_calls) == 1
 
 
 async def test_google_actions_sync_fails(
     setup_cloud: None,
     hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
 ) -> None:
     """Test syncing Google Actions gone bad."""
     cloud_client = await hass_client()
-    with patch(
-        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=Mock(status=HTTPStatus.INTERNAL_SERVER_ERROR),
-    ) as mock_request_sync:
-        req = await cloud_client.post("/api/cloud/google_actions/sync")
-        assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
-        assert mock_request_sync.call_count == 1
+    cloud.google_report_state.request_sync = AsyncMock(
+        return_value=Mock(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    )
+
+    req = await cloud_client.post("/api/cloud/google_actions/sync")
+    assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert len(cloud.google_report_state.request_sync.mock_calls) == 1
 
 
 @pytest.mark.parametrize(

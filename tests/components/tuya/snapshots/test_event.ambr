@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[wxkg_l8yaz4um5b3pwyvf][event.bathroom_smart_switch_button_1-entry]
+# name: test_platform_setup_and_discovery[event.bathroom_smart_switch_button_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -39,7 +39,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[wxkg_l8yaz4um5b3pwyvf][event.bathroom_smart_switch_button_1-state]
+# name: test_platform_setup_and_discovery[event.bathroom_smart_switch_button_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -58,7 +58,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[wxkg_l8yaz4um5b3pwyvf][event.bathroom_smart_switch_button_2-entry]
+# name: test_platform_setup_and_discovery[event.bathroom_smart_switch_button_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -98,7 +98,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[wxkg_l8yaz4um5b3pwyvf][event.bathroom_smart_switch_button_2-state]
+# name: test_platform_setup_and_discovery[event.bathroom_smart_switch_button_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -111,6 +111,67 @@
     }),
     'context': <ANY>,
     'entity_id': 'event.bathroom_smart_switch_button_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.bouton_tempo_exterieur_button_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'click',
+        'double_click',
+        'press',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.bouton_tempo_exterieur_button_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button 1',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'numbered_button',
+    'unique_id': 'tuya.g5uso5ajgkxwswitch_mode1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.bouton_tempo_exterieur_button_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'click',
+        'double_click',
+        'press',
+      ]),
+      'friendly_name': 'Bouton tempo extérieur Button 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.bouton_tempo_exterieur_button_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

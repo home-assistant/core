@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][alarm_control_panel.multifunction_alarm-entry]
+# name: test_platform_setup_and_discovery[alarm_control_panel.multifunction_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][alarm_control_panel.multifunction_alarm-state]
+# name: test_platform_setup_and_discovery[alarm_control_panel.multifunction_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': None,
