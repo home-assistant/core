@@ -483,6 +483,22 @@
         }
       },
       "blanket_level": {
+        "name": "Blanket level",
+        "state": {
+          "level_1": "[%key:common::state::low%]",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9",
+          "level_10": "[%key:common::state::high%]"
+        }
+      },
+      "indexed_blanket_level": {
+        "name": "Blanket level {index}",
         "state": {
           "level_1": "[%key:common::state::low%]",
           "level_2": "Level 2",
