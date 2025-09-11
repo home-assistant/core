@@ -34,7 +34,7 @@ class FoscamDeviceInfo:
     speak_volume: int
     is_turn_off_volume: bool
     is_turn_off_light: bool
-    supports_speak_volume_adjustment: int
+    supports_speak_volume_adjustment: bool
 
     is_open_wdr: bool | None = None
     is_open_hdr: bool | None = None
@@ -122,7 +122,9 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
         ret_sw, swCapbilities_val = self.session.getSWCapabilities()
 
         supports_speak_volume_adjustment_val = (
-            int(swCapbilities_val.get("swCapabilities1")) & 32 if ret_sw == 0 else 0
+            bool(int(swCapbilities_val.get("swCapabilities1")) & 32)
+            if ret_sw == 0
+            else False
         )
 
         return FoscamDeviceInfo(

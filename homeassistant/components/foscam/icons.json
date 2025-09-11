@@ -41,10 +41,10 @@
       }
     },
     "number": {
-      "device_volume_entity": {
+      "device_volume": {
         "default": "mdi:volume-source"
       },
-      "speak_volume_entity": {
+      "speak_volume": {
         "default": "mdi:account-voice"
       }
     }

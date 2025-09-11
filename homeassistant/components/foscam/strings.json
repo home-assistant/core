@@ -64,10 +64,10 @@
       }
     },
     "number": {
-      "device_volume_entity": {
+      "device_volume": {
         "name": "Device volume"
       },
-      "speak_volume_entity": {
+      "speak_volume": {
         "name": "Speak volume"
       }
     }
