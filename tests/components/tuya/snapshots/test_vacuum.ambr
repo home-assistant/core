@@ -1,4 +1,53 @@
 # serializer version: 1
+# name: test_platform_setup_and_discovery[vacuum.hoover-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'vacuum',
+    'entity_category': None,
+    'entity_id': 'vacuum.hoover',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <VacuumEntityFeature: 13080>,
+    'translation_key': None,
+    'unique_id': 'tuya.mwsaod7fa3gjyh6ids',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[vacuum.hoover-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Hoover',
+      'supported_features': <VacuumEntityFeature: 13080>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'vacuum.hoover',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_platform_setup_and_discovery[vacuum.v20-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

@@ -578,12 +578,13 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         assert isinstance(user_message, conversation.UserContent)
         chat_request: list[PartUnionDict] = [user_message.content]
         if user_message.attachments:
-            files = await async_prepare_files_for_prompt(
-                self.hass,
-                self._genai_client,
-                [a.path for a in user_message.attachments],
+            chat_request.extend(
+                await async_prepare_files_for_prompt(
+                    self.hass,
+                    self._genai_client,
+                    [(a.path, a.mime_type) for a in user_message.attachments],
+                )
             )
-            chat_request = [*chat_request, *files]
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
@@ -656,7 +657,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
 
 
 async def async_prepare_files_for_prompt(
-    hass: HomeAssistant, client: Client, files: list[Path]
+    hass: HomeAssistant, client: Client, files: list[tuple[Path, str | None]]
 ) -> list[File]:
     """Upload files so they can be attached to a prompt.
 
@@ -665,10 +666,11 @@ async def async_prepare_files_for_prompt(
 
     def upload_files() -> list[File]:
         prompt_parts: list[File] = []
-        for filename in files:
+        for filename, mimetype in files:
             if not filename.exists():
                 raise HomeAssistantError(f"`{filename}` does not exist")
-            mimetype = mimetypes.guess_type(filename)[0]
+            if mimetype is None:
+                mimetype = mimetypes.guess_type(filename)[0]
             prompt_parts.append(
                 client.files.upload(
                     file=filename,

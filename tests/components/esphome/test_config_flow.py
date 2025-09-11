@@ -1045,8 +1045,11 @@ async def test_encryption_key_valid_psk(
     assert result["step_id"] == "encryption_key"
     assert result["description_placeholders"] == {"name": "ESPHome"}
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=False, name="test")
+    device_info = DeviceInfo(uses_password=False, name="test")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -1363,10 +1366,13 @@ async def test_reauth_confirm_invalid(
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
-        )
+    device_info = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -1404,10 +1410,13 @@ async def test_reauth_confirm_invalid_with_unique_id(
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
-        )
+    device_info = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -1460,8 +1469,11 @@ async def test_discovery_dhcp_updates_host(
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(name="test8266", mac_address="1122334455aa")
+    device_info = DeviceInfo(name="test8266", mac_address="1122334455aa")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     service_info = DhcpServiceInfo(
@@ -1496,8 +1508,11 @@ async def test_discovery_dhcp_does_not_update_host_wrong_mac(
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(name="test8266", mac_address="1122334455ff")
+    device_info = DeviceInfo(name="test8266", mac_address="1122334455ff")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     service_info = DhcpServiceInfo(
@@ -1602,7 +1617,12 @@ async def test_discovery_dhcp_no_changes(
     )
     entry.add_to_hass(hass)
 
-    mock_client.device_info = AsyncMock(return_value=DeviceInfo(name="test8266"))
+    device_info = DeviceInfo(name="test8266")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
+    )
 
     service_info = DhcpServiceInfo(
         ip="192.168.43.183",
@@ -2034,12 +2054,15 @@ async def test_user_flow_name_conflict_migrate(
         unique_id="11:22:33:44:55:cc",
     )
     existing_entry.add_to_hass(hass)
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False,
-            name="test",
-            mac_address="11:22:33:44:55:AA",
-        )
+    device_info = DeviceInfo(
+        uses_password=False,
+        name="test",
+        mac_address="11:22:33:44:55:AA",
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -2084,12 +2107,15 @@ async def test_user_flow_name_conflict_overwrite(
         unique_id="11:22:33:44:55:cc",
     )
     existing_entry.add_to_hass(hass)
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False,
-            name="test",
-            mac_address="11:22:33:44:55:AA",
-        )
+    device_info = DeviceInfo(
+        uses_password=False,
+        name="test",
+        mac_address="11:22:33:44:55:AA",
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -2503,7 +2529,7 @@ async def test_discovery_dhcp_no_probe_same_host_port_none(
     service_info = DhcpServiceInfo(
         ip="192.168.43.183",
         hostname="test8266",
-        macaddress="11:22:33:44:55:aa",  # Same MAC as configured
+        macaddress="1122334455aa",  # Same MAC as configured
     )
 
     result = await hass.config_entries.flow.async_init(

@@ -116,6 +116,7 @@ CONTENT_TYPE_TO_CHILD_TYPE: dict[
     MediaType.APPS: MediaType.APP,
     MediaType.APP: MediaType.TRACK,
     "favorite": None,
+    "track": MediaType.TRACK,
 }
 
 
@@ -157,7 +158,7 @@ class BrowseData:
 
         cmd = ["apps", 0, browse_limit]
         result = await player.async_query(*cmd)
-        if result["appss_loop"]:
+        if result and result.get("appss_loop"):
             for app in result["appss_loop"]:
                 app_cmd = "app-" + app["cmd"]
                 if app_cmd not in self.known_apps_radios:
@@ -169,7 +170,7 @@ class BrowseData:
                     )
         cmd = ["radios", 0, browse_limit]
         result = await player.async_query(*cmd)
-        if result["radioss_loop"]:
+        if result and result.get("radioss_loop"):
             for app in result["radioss_loop"]:
                 app_cmd = "app-" + app["cmd"]
                 if app_cmd not in self.known_apps_radios:

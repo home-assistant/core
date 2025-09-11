@@ -3,17 +3,8 @@ rules:
   action-setup: done
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: done
-    comment: |
-      Consider deriving a base entity.
-  config-flow-test-coverage:
-    status: done
-    comment: |
-      Consider looking into making a `mock_setup_entry` fixture that just automatically do this.
-      `test_config_flow_cannot_connect`: Needs to end in CREATE_ENTRY to test that its able to recover.
-      `test_config_flow_duplicate`: this test should be split in 2, one for testing duplicate host/port and one for duplicate serial number.
-      `test_flow_works`: Should also test unique id.
+  common-modules: done
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -52,10 +43,7 @@ rules:
     status: exempt
     comment: |
       The integration does not require authentication.
-  test-coverage:
-    status: todo
-    comment: |
-      Patch `aioapcaccess.request_status` where we use it.
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done

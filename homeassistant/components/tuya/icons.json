@@ -15,6 +15,9 @@
       },
       "tilt": {
         "default": "mdi:spirit-level"
+      },
+      "valve": {
+        "default": "mdi:pipe-valve"
       }
     },
     "button": {
