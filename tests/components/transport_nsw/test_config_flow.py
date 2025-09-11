@@ -78,10 +78,6 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == EXPECTED_CONFIG_DATA
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    ["component.transport_nsw.config.error.cannot_connect"],
-)
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
@@ -101,10 +97,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    ["component.transport_nsw.config.error.unknown"],
-)
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
