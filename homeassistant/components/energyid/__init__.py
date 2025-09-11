@@ -25,6 +25,7 @@ from .const import (
     CONF_HA_ENTITY_UUID,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,13 +40,7 @@ DEFAULT_UPLOAD_INTERVAL_SECONDS: Final = 60
 
 @dataclass
 class EnergyIDRuntimeData:
-    """Runtime data for the EnergyID integration.
-
-    Attributes:
-        client: The WebhookClient instance for EnergyID API communication.
-        listeners: Dictionary of event listeners for this config entry.
-        mappings: Dictionary mapping Home Assistant entity IDs to EnergyID keys.
-    """
+    """Runtime data for the EnergyID integration."""
 
     client: WebhookClient
     listeners: dict[str, CALLBACK_TYPE]
@@ -92,13 +87,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
 
     _LOGGER.debug("EnergyID device '%s' authenticated successfully", client.device_name)
 
-    # Register update listener
     entry.async_on_unload(entry.add_update_listener(async_config_entry_update_listener))
-
-    # Set up listeners for sensor mappings
     await async_update_listeners(hass, entry)
 
-    # Start the background auto-sync task
     upload_interval = DEFAULT_UPLOAD_INTERVAL_SECONDS
     if client.webhook_policy:
         upload_interval = client.webhook_policy.get(
@@ -129,32 +120,30 @@ async def async_update_listeners(
     runtime_data = entry.runtime_data
     client = runtime_data.client
 
-    # Remove old state listener if it exists
     if old_state_listener := runtime_data.listeners.pop(LISTENER_KEY_STATE, None):
         _LOGGER.debug("Removing old state listener for %s", entry.entry_id)
         old_state_listener()
 
     mappings: dict[str, str] = {}
     entities_to_track: list[str] = []
-
-    # Track removed mappings for debug logging
     old_mappings = set(runtime_data.mappings.keys())
     new_mappings = set()
-
-    # Get entity registry
     ent_reg = er.async_get(hass)
 
-    for subentry in entry.subentries.values():
-        subentry_data = subentry.data
+    # Correctly find sub-entries linked to the parent entry
+    subentries = [
+        e
+        for e in hass.config_entries.async_entries(DOMAIN)
+        if getattr(e, "parent_entry", None) == entry.entry_id
+    ]
 
-        # Get entity UUID and look up current entity ID
-        entity_uuid = subentry_data.get(CONF_HA_ENTITY_UUID)
-        energyid_key = subentry_data.get(CONF_ENERGYID_KEY)
+    for subentry in subentries:
+        entity_uuid = subentry.data.get(CONF_HA_ENTITY_UUID)
+        energyid_key = subentry.data.get(CONF_ENERGYID_KEY)
 
         if not (entity_uuid and energyid_key):
             continue
 
-        # Look up entity ID from UUID
         entity_entry = ent_reg.async_get(entity_uuid)
         if not entity_entry:
             _LOGGER.warning(
@@ -168,7 +157,7 @@ async def async_update_listeners(
 
         if not hass.states.get(ha_entity_id):
             _LOGGER.warning(
-                "Entity %s does not exist, skipping mapping to %s",
+                "Entity %s does not exist in state machine, skipping mapping to %s",
                 ha_entity_id,
                 energyid_key,
             )
@@ -193,12 +182,6 @@ async def async_update_listeners(
                     value = float(current_state.state)
                     timestamp = current_state.last_updated or dt.datetime.now(dt.UTC)
                     client.get_or_create_sensor(energyid_key).update(value, timestamp)
-                    _LOGGER.debug(
-                        "Queued initial state for %s -> %s: %s",
-                        ha_entity_id,
-                        energyid_key,
-                        value,
-                    )
                 except (ValueError, TypeError):
                     _LOGGER.debug(
                         "Could not convert initial state of %s to float: %s",
@@ -206,9 +189,7 @@ async def async_update_listeners(
                         current_state.state,
                     )
 
-    # Log removed mappings
-    removed_mappings = old_mappings - new_mappings
-    if removed_mappings:
+    if removed_mappings := old_mappings - new_mappings:
         _LOGGER.debug("Removed mappings: %s", ", ".join(removed_mappings))
 
     runtime_data.mappings = mappings
@@ -227,10 +208,9 @@ async def async_update_listeners(
     runtime_data.listeners[LISTENER_KEY_STATE] = unsub_state_change
 
     _LOGGER.debug(
-        "Now tracking state changes for %d entities for '%s': %s",
+        "Now tracking state changes for %d entities for '%s'",
         len(entities_to_track),
         client.device_name,
-        ", ".join(entities_to_track),
     )
 
 
@@ -238,51 +218,28 @@ async def async_update_listeners(
 def _async_handle_state_change(
     hass: HomeAssistant, entry_id: str, event: Event
 ) -> None:
-    """Handle state changes for tracked entities and queue them for the next sync."""
-    # State change events always have entity_id in their data
+    """Handle state changes for tracked entities."""
     entity_id = event.data["entity_id"]
     new_state = event.data.get("new_state")
 
-    # If new_state is None, the entity has been removed from the state machine
-    # We don't need to handle this specially as we only care about state changes
     if not new_state or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
         return
 
-    # Guard against race condition where state change events might be processed
-    # after the config entry has been unloaded or during unloading
     entry = hass.config_entries.async_get_entry(entry_id)
     if not entry or not hasattr(entry, "runtime_data"):
-        _LOGGER.debug(
-            "State change for %s ignored: entry %s not ready or unloading",
-            entity_id,
-            entry_id,
-        )
         return
 
     runtime_data = entry.runtime_data
-    # Ensure this state change is for a currently mapped entity
-    # This guard is needed in case entity mappings changed but we're still processing
-    # events from the previous tracking period
     if not (energyid_key := runtime_data.mappings.get(entity_id)):
         return
 
     try:
         value = float(new_state.state)
     except (ValueError, TypeError):
-        # Sensor base entities should guard against this, but we log at debug level
-        # for troubleshooting outdated custom integrations
-        _LOGGER.debug(
-            "Cannot convert state '%s' of %s to float", new_state.state, entity_id
-        )
         return
 
-    # Use the client's internal caching; the background sync will handle the upload
     runtime_data.client.get_or_create_sensor(energyid_key).update(
         value, new_state.last_updated
-    )
-
-    _LOGGER.debug(
-        "Queued state change for %s -> %s: %s", entity_id, energyid_key, value
     )
 
 
@@ -290,17 +247,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) ->
     """Unload a config entry."""
     _LOGGER.debug("Unloading EnergyID entry for %s", entry.title)
     try:
-        runtime_data = getattr(entry, "runtime_data", None)
-        if runtime_data:
-            # Stop listeners
+        if subentries := [
+            e.entry_id
+            for e in hass.config_entries.async_entries(DOMAIN)
+            if getattr(e, "parent_entry", None) == entry.entry_id
+        ]:
+            for subentry_id in subentries:
+                await hass.config_entries.async_unload(subentry_id)
+
+        if runtime_data := getattr(entry, "runtime_data", None):
             for unsub in runtime_data.listeners.values():
                 unsub()
-            # Close client
             try:
                 await runtime_data.client.close()
             except Exception:
                 _LOGGER.exception("Error closing EnergyID client for %s", entry.title)
-            # Clean up
             del entry.runtime_data
     except Exception:
         _LOGGER.exception("Error during async_unload_entry for %s", entry.title)

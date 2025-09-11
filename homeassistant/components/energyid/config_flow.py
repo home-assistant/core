@@ -85,13 +85,10 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_poll_for_claim(self) -> None:
         """Poll EnergyID to check if device has been claimed."""
-        attempts = 0
-
-        while attempts < MAX_POLLING_ATTEMPTS:
-            attempts += 1
+        for attempt in range(1, MAX_POLLING_ATTEMPTS + 1):
             await asyncio.sleep(POLLING_INTERVAL)
 
-            _LOGGER.debug("Polling attempt %s for claim status", attempts)
+            _LOGGER.debug("Polling attempt %s for claim status", attempt)
             auth_status = await self._perform_auth_and_get_details()
 
             if auth_status is None:

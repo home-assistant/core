@@ -1,20 +1,4 @@
 # serializer version: 1
-# name: test_config_flow_user_step_needs_claim[unclaimed][auth_and_claim_step_form]
-  FlowResultSnapshot({
-    'description_placeholders': dict({
-      'claim_code': 'ABCDEF',
-      'claim_url': 'https://example.com/claim',
-      'valid_until': '2025-12-31T23:59:59Z',
-    }),
-    'errors': None,
-    'flow_id': <ANY>,
-    'handler': 'energyid',
-    'last_step': None,
-    'preview': None,
-    'step_id': 'auth_and_claim',
-    'type': <FlowResultType.FORM: 'form'>,
-  })
-# ---
 # name: test_config_flow_user_step_success_claimed[create_entry_data]
   dict({
     'device_id': 'homeassistant_eid_test_instance_123',

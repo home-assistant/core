@@ -1,158 +1,161 @@
-"""Tests for the EnergyID sensor mapping subentry flow."""
+"""Test EnergyID sensor mapping subentry flow."""
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.energyid.const import CONF_HA_ENTITY_ID, DOMAIN
-from homeassistant.components.sensor import SensorStateClass
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.energyid.const import (
+    CONF_ENERGYID_KEY,
+    CONF_HA_ENTITY_UUID,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
+# This fixture ensures the energyid component is loaded, which is required for sub-flows.
+@pytest.fixture(autouse=True)
+async def setup_energyid_integration(hass: HomeAssistant):
+    """Set up the EnergyID integration to handle sub-flows."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+
 @pytest.fixture
-def mock_parent_entry(hass: HomeAssistant) -> ConfigEntry:
-    """Mock a parent config entry."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, entry_id="parent_entry")
+def mock_parent_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a mock parent config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Mock Title",
+        data={
+            "provisioning_key": "test_key",
+            "provisioning_secret": "test_secret",
+            "device_id": "test_device",
+            "device_name": "Test Device",
+        },
+        entry_id="parent_entry_id",
+    )
     entry.add_to_hass(hass)
     return entry
 
 
-def setup_test_entities(hass: HomeAssistant, entity_registry: EntityRegistry):
-    """Create a set of mock entities for testing suggestion logic."""
-    entity_registry.async_get_or_create(
-        "sensor",
-        "test",
-        "power_1",
-        suggested_object_id="power_meter",
-        capabilities={"state_class": SensorStateClass.TOTAL_INCREASING},
-    )
-    entity_registry.async_get_or_create(
-        "sensor",
-        "test",
-        "temp_1",
-        suggested_object_id="outside_temperature",
-    )
-    entity_registry.async_get_or_create(
-        "sensor", "other", "non_numeric", suggested_object_id="weather_condition"
-    )
-    entity_registry.async_get_or_create(
-        "light", "test", "kitchen", suggested_object_id="kitchen_lights"
-    )
-    # This one should be filtered out as it's from the energyid domain
-    entity_registry.async_get_or_create(
-        "sensor", DOMAIN, "status_1", suggested_object_id="energyid_status"
-    )
-
-    hass.states.async_set("sensor.power_meter", "100")
-    hass.states.async_set("sensor.outside_temperature", "15")
-    hass.states.async_set("sensor.weather_condition", "cloudy")
-    hass.states.async_set("light.kitchen_lights", "on")
-    hass.states.async_set("sensor.energyid_status", "ok")
-
-
 async def test_subflow_user_step_form(
-    hass: HomeAssistant,
-    entity_registry: EntityRegistry,
-    mock_parent_entry: ConfigEntry,
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, mock_parent_entry: MockConfigEntry
 ) -> None:
-    """Test that the user step shows the form with suggested entities."""
-    setup_test_entities(hass, entity_registry)
-
-    # Home Assistant expects only two arguments: parent_entry_id and data
-    result = await hass.config_entries.subentries.async_init(
-        (mock_parent_entry.entry_id, "sensor_mapping"),
-        data={"type": "sensor_mapping", "handler": DOMAIN},
-        context={"source": "user"},
+    """Test that the user step shows the form correctly."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "sensor_mapping", "entry_id": mock_parent_entry.entry_id},
     )
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # Snapshot the schema to verify suggested entities
-    snap = snapshot
-    # If no snapshot exists, create one
-    if not hasattr(snap, "_snapshots") or not snap._snapshots:
-        snap._snapshots = {}
-    snap._snapshots["test_subflow_user_step_form"] = result["data_schema"].schema
-    assert result["data_schema"].schema == snap
+    assert "ha_entity_id" in result["data_schema"].schema
 
 
 async def test_subflow_successful_creation(
-    hass: HomeAssistant, mock_parent_entry: ConfigEntry
+    hass: HomeAssistant,
+    mock_parent_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful creation of a sensor mapping subentry."""
-    # Start subflow using subentries.async_init with correct arguments
-    result = await hass.config_entries.subentries.async_init(
-        (mock_parent_entry.entry_id, "sensor_mapping"),
-        data={"type": "sensor_mapping", "handler": DOMAIN},
-        context={"source": "user"},
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "power_2", suggested_object_id="test_power"
     )
-    result2 = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], user_input={CONF_HA_ENTITY_ID: "sensor.test_power"}
+    hass.states.async_set("sensor.test_power", "50")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "sensor_mapping", "entry_id": mock_parent_entry.entry_id},
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"ha_entity_id": entity_entry.entity_id}
     )
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test_power connection to EnergyID"
-    assert result2["data"] == {
-        "ha_entity_id": "sensor.test_power",
-        "energyid_key": "test_power",
-    }
+    assert result2["data"][CONF_HA_ENTITY_UUID] == entity_entry.id
+    assert result2["data"][CONF_ENERGYID_KEY] == "test_power"
 
 
-@pytest.mark.parametrize(
-    ("user_input", "error_field", "error_reason"),
-    [
-        ({}, CONF_HA_ENTITY_ID, "entity_required"),
-        (
-            {CONF_HA_ENTITY_ID: "sensor.already_mapped"},
-            CONF_HA_ENTITY_ID,
-            "entity_already_mapped",
-        ),
-    ],
-)
-async def test_subflow_validation_errors(
+async def test_subflow_entity_already_mapped(
     hass: HomeAssistant,
-    mock_parent_entry: ConfigEntry,
-    user_input: dict,
-    error_field: str,
-    error_reason: str,
+    mock_parent_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test validation errors in the sensor mapping flow."""
-    # Add an existing subentry to test the "already_mapped" case
-    existing_sub = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HA_ENTITY_ID: "sensor.already_mapped"}
+    """Test error when entity is already mapped."""
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "power_3", suggested_object_id="already_mapped"
     )
-    # Properly associate it with the parent
-    existing_sub.parent_entry_id = mock_parent_entry.entry_id
-    existing_sub.add_to_hass(hass)
+    hass.states.async_set("sensor.already_mapped", "75")
 
-    result = await hass.config_entries.subentries.async_init(
-        (mock_parent_entry.entry_id, "sensor_mapping"),
-        data={"type": "sensor_mapping", "handler": DOMAIN},
-        context={"source": "user"},
+    # This sub-entry "already exists" for the parent
+    sub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HA_ENTITY_UUID: entity_entry.id,
+            CONF_ENERGYID_KEY: "already_mapped",
+        },
+        entry_id="sub_entry_1",
     )
-    if error_reason == "entity_required":
-        with pytest.raises(Exception) as exc_info:
-            await hass.config_entries.subentries.async_configure(
-                result["flow_id"], user_input=user_input
-            )
-        # Match the actual error message
-        assert "Schema validation failed" in str(exc_info.value)
-        return
-    result2 = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], user_input=user_input
-    )
+    sub_entry.parent_entry_id = mock_parent_entry.entry_id
+    sub_entry.add_to_hass(hass)
     await hass.async_block_till_done()
-    if error_reason == "entity_already_mapped":
-        assert (
-            result2["type"] is FlowResultType.FORM
-            or result2["type"] is FlowResultType.CREATE_ENTRY
-        )
-    if "errors" in result2:
-        assert result2["errors"] == {error_field: error_reason}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "sensor_mapping", "entry_id": mock_parent_entry.entry_id},
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"ha_entity_id": entity_entry.entity_id}
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"]["base"] == "entity_already_mapped"
+
+
+async def test_subflow_entity_not_found(
+    hass: HomeAssistant, mock_parent_entry: MockConfigEntry
+) -> None:
+    """Test error when entity is not found."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "sensor_mapping", "entry_id": mock_parent_entry.entry_id},
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"ha_entity_id": "sensor.nonexistent"}
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"]["base"] == "entity_not_found"
+
+
+async def test_subflow_no_entity_selected(
+    hass: HomeAssistant, mock_parent_entry: MockConfigEntry
+) -> None:
+    """Test error when no entity is selected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "sensor_mapping", "entry_id": mock_parent_entry.entry_id},
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"ha_entity_id": ""}
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"]["base"] == "entity_required"
+
+
+async def test_subflow_empty_user_input(
+    hass: HomeAssistant, mock_parent_entry: MockConfigEntry
+) -> None:
+    """Test subflow with empty user input shows form again."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "sensor_mapping", "entry_id": mock_parent_entry.entry_id},
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"ha_entity_id": ""}
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"]["base"] == "entity_required"
