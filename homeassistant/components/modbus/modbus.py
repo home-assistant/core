@@ -366,7 +366,6 @@ class ModbusHub:
                 self._client.close()
             except ModbusException as exception_error:
                 self._log_error(str(exception_error))
-            del self._client
             self._client = None
             _LOGGER.info(f"modbus {self.name} communication closed")
 
