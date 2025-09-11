@@ -308,12 +308,12 @@ async def async_setup_entry(
 ) -> None:
     """Add the homee platform for the sensor components."""
     ent_reg = er.async_get(hass)
-    entities: list[HomeeSensor | HomeeNodeSensor] = []
 
     def add_deprecated_entity(
         attribute: HomeeAttribute, description: HomeeSensorEntityDescription
-    ) -> None:
+    ) -> list[HomeeSensor]:
         """Add deprecated entities."""
+        deprecated_entities: list[HomeeSensor] = []
         entity_uid = f"{config_entry.runtime_data.settings.uid}-{attribute.node_id}-{attribute.id}"
         if entity_id := ent_reg.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, entity_uid):
             entity_entry = ent_reg.async_get(entity_id)
@@ -325,7 +325,9 @@ async def async_setup_entry(
                     f"deprecated_entity_{entity_uid}",
                 )
             elif entity_entry:
-                entities.append(HomeeSensor(attribute, config_entry, description))
+                deprecated_entities.append(
+                    HomeeSensor(attribute, config_entry, description)
+                )
                 if entity_used_in(hass, entity_id):
                     async_create_issue(
                         hass,
@@ -342,6 +344,7 @@ async def async_setup_entry(
                             "entity": entity_id,
                         },
                     )
+        return deprecated_entities
 
     async def add_sensor_entities(
         config_entry: HomeeConfigEntry,
@@ -349,7 +352,7 @@ async def async_setup_entry(
         nodes: list[HomeeNode],
     ) -> None:
         """Add homee sensor entities."""
-        entities.clear()
+        entities: list[HomeeSensor | HomeeNodeSensor] = []
 
         for node in nodes:
             # Node properties that are sensors.
@@ -361,8 +364,10 @@ async def async_setup_entry(
             # Node attributes that are sensors.
             for attribute in node.attributes:
                 if attribute.type == AttributeType.CURRENT_VALVE_POSITION:
-                    add_deprecated_entity(
-                        attribute, SENSOR_DESCRIPTIONS[attribute.type]
+                    entities.extend(
+                        add_deprecated_entity(
+                            attribute, SENSOR_DESCRIPTIONS[attribute.type]
+                        )
                     )
                 elif attribute.type in SENSOR_DESCRIPTIONS and not attribute.editable:
                     entities.append(
