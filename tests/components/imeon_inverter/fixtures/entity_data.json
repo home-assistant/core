@@ -1,80 +1,82 @@
 {
   "battery": {
-    "battery_power": 2500.0,
-    "battery_soc": 78.0,
-    "battery_status": "charging",
-    "battery_stored": 10200.0,
-    "battery_consumed": 500.0
+    "power": 2500.0,
+    "soc": 78.0,
+    "status": "charging",
+    "stored": 10200.0,
+    "consumed": 500.0
   },
   "grid": {
-    "grid_current_l1": 12.5,
-    "grid_current_l2": 10.8,
-    "grid_current_l3": 11.2,
-    "grid_frequency": 50.0,
-    "grid_voltage_l1": 230.0,
-    "grid_voltage_l2": 229.5,
-    "grid_voltage_l3": 230.1
+    "current_l1": 12.5,
+    "current_l2": 10.8,
+    "current_l3": 11.2,
+    "frequency": 50.0,
+    "voltage_l1": 230.0,
+    "voltage_l2": 229.5,
+    "voltage_l3": 230.1
   },
   "input": {
-    "input_power_l1": 1000.0,
-    "input_power_l2": 950.0,
-    "input_power_l3": 980.0,
-    "input_power_total": 2930.0
+    "power_l1": 1000.0,
+    "power_l2": 950.0,
+    "power_l3": 980.0,
+    "power_total": 2930.0
   },
   "inverter": {
-    "inverter_charging_current_limit": 50,
-    "inverter_injection_power_limit": 5000.0,
-    "manager_inverter_state": "grid_consumption",
-    "manager_inverter_mode": "smg"
+    "charging_current_limit": 50,
+    "injection_power_limit": 5000.0
+  },
+  "manager": {
+    "inverter_state": "grid_consumption",
+    "inverter_mode": "smg"
   },
   "meter": {
-    "meter_power": 2000.0
+    "power": 2000.0
   },
   "output": {
-    "output_current_l1": 15.0,
-    "output_current_l2": 14.5,
-    "output_current_l3": 15.2,
-    "output_frequency": 49.9,
-    "output_power_l1": 1100.0,
-    "output_power_l2": 1080.0,
-    "output_power_l3": 1120.0,
-    "output_power_total": 3300.0,
-    "output_voltage_l1": 231.0,
-    "output_voltage_l2": 229.8,
-    "output_voltage_l3": 230.2
+    "current_l1": 15.0,
+    "current_l2": 14.5,
+    "current_l3": 15.2,
+    "frequency": 49.9,
+    "power_l1": 1100.0,
+    "power_l2": 1080.0,
+    "power_l3": 1120.0,
+    "power_total": 3300.0,
+    "voltage_l1": 231.0,
+    "voltage_l2": 229.8,
+    "voltage_l3": 230.2
   },
   "pv": {
-    "pv_consumed": 1500.0,
-    "pv_injected": 800.0,
-    "pv_power_1": 1200.0,
-    "pv_power_2": 1300.0,
-    "pv_power_total": 2500.0
+    "consumed": 1500.0,
+    "injected": 800.0,
+    "power_1": 1200.0,
+    "power_2": 1300.0,
+    "power_total": 2500.0
   },
   "temp": {
-    "temp_air_temperature": 25.0,
-    "temp_component_temperature": 45.5
+    "air_temperature": 25.0,
+    "component_temperature": 45.5
   },
   "monitoring": {
-    "monitoring_self_produced": 2600.0,
-    "monitoring_self_consumption": 85.0,
-    "monitoring_self_sufficiency": 90.0
+    "self_produced": 2600.0,
+    "self_consumption": 85.0,
+    "self_sufficiency": 90.0
   },
   "monitoring_minute": {
-    "monitoring_minute_building_consumption": 50.0,
-    "monitoring_minute_grid_consumption": 8.3,
-    "monitoring_minute_grid_injection": 11.7,
-    "monitoring_minute_grid_power_flow": -3.4,
-    "monitoring_minute_solar_production": 43.3
+    "building_consumption": 50.0,
+    "grid_consumption": 8.3,
+    "grid_injection": 11.7,
+    "grid_power_flow": -3.4,
+    "solar_production": 43.3
   },
   "timeline": {
-    "timeline_type_msg": "info_bat"
+    "type_msg": "info_bat"
   },
   "energy": {
-    "energy_pv": 12000.0,
-    "energy_grid_injected": 5000.0,
-    "energy_grid_consumed": 6000.0,
-    "energy_building_consumption": 15000.0,
-    "energy_battery_stored": 8000.0,
-    "energy_battery_consumed": 2000.0
+    "pv": 12000.0,
+    "grid_injected": 5000.0,
+    "grid_consumed": 6000.0,
+    "building_consumption": 15000.0,
+    "battery_stored": 8000.0,
+    "battery_consumed": 2000.0
   }
 }
