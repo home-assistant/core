@@ -2,14 +2,13 @@
 
 DOMAIN = "fish_audio"
 
+CONF_USER_ID = "user_id"
 CONF_API_KEY = "api_key"
 CONF_VOICE_ID = "voice_id"
 CONF_BACKEND = "backend"
 CONF_SELF_ONLY = "self_only"
 CONF_LANGUAGE = "language"
 CONF_SORT_BY = "sort_by"
-WARNING_CREDIT_BALANCE = 1
-CRITICAL_CREDIT_BALANCE = 0.5
 
 DEVELOPER_ID = "1e9f9baadce144f5b16dd94cbc0314c8"
 

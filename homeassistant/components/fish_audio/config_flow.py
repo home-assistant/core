@@ -2,34 +2,44 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, cast
 
 from fish_audio_sdk import Session
-import voluptuous as vol
+from fish_audio_sdk.exceptions import HttpCodeErr
+from fish_audio_sdk.schemas import APICreditEntity
 
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.selector import SelectOptionDict
 
-from . import FishAudioConfigEntry
 from .const import (
     CONF_API_KEY,
     CONF_BACKEND,
     CONF_LANGUAGE,
     CONF_SELF_ONLY,
     CONF_SORT_BY,
+    CONF_USER_ID,
     CONF_VOICE_ID,
     DOMAIN,
 )
-from .schemas import API_KEY_SCHEMA, get_filter_schema, get_model_selection_schema
+from .error import (
+    CannotConnectError,
+    CannotGetModelsError,
+    InvalidAuthError,
+    UnexpectedError,
+)
+from .schemas import get_api_key_schema, get_filter_schema, get_model_selection_schema
+from .types import SubentryInitUserInput, SubentryModelUserInput, TTSConfigData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,10 +47,31 @@ _LOGGER = logging.getLogger(__name__)
 class FishAudioConfigFlowManager:
     """Manage the configuration flow for Fish Audio."""
 
-    def __init__(self, hass: HomeAssistant, session: Session) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize."""
         self.hass = hass
+        self.session: Session
+
+    def init_session(self, session: Session) -> None:
+        """Initialize the session."""
         self.session = session
+
+    async def validate_api_key(self, api_key: str) -> APICreditEntity:
+        """Validate the user input allows us to connect."""
+        session = Session(api_key)
+
+        try:
+            credit_info = await self.hass.async_add_executor_job(session.get_api_credit)
+        except HttpCodeErr as exc:
+            if exc.status == 401:
+                raise InvalidAuthError(exc) from exc
+            raise CannotConnectError(exc) from exc
+        except Exception as exc:
+            raise UnexpectedError(exc) from exc
+
+        self.init_session(session)
+
+        return credit_info
 
     async def async_get_models(
         self, self_only: bool, language: str | None, sort_by: str
@@ -55,212 +86,298 @@ class FishAudioConfigFlowManager:
             )
             models_response = await self.hass.async_add_executor_job(func)
             models = models_response.items
-        except Exception:
-            _LOGGER.exception("Failed to fetch Fish Audio models")
-            return []
+        except Exception as exc:
+            raise CannotGetModelsError(exc) from exc
 
         return [
             SelectOptionDict(value=model.id, label=model.title)
             for model in sorted(models, key=lambda m: m.title)
         ]
 
-    def schema(
+    def show_api_key_form(
         self,
-        options: dict[str, Any],
-        model_options: list[SelectOptionDict],
-    ) -> vol.Schema:
-        """Return the schema for the configuration flow."""
-        return get_model_selection_schema(options, model_options)
+        handler: ConfigFlow,
+        errors: dict[str, str] | None = None,
+        default: str | None = None,
+    ) -> ConfigFlowResult:
+        """Show the API key form."""
+        return handler.async_show_form(
+            step_id="user",
+            data_schema=get_api_key_schema(default=default),
+            errors=errors or {},
+        )
 
-    async def show_filter_form(
+    def show_reauth_form(
         self,
-        handler: FishAudioConfigFlow | OptionsFlow,
+        handler: ConfigFlow,
         errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
-        """Show the filter form."""
-        if isinstance(handler, FishAudioConfigFlow):
-            data = handler.config_data
-        else:
-            assert isinstance(handler, OptionsFlowHandler)
-            data = handler.options
-
+        """Show the reauth form."""
         return handler.async_show_form(
-            step_id="filter" if isinstance(handler, FishAudioConfigFlow) else "init",
-            data_schema=get_filter_schema(data),
+            step_id="reauth_confirm",
+            data_schema=get_api_key_schema(),
+            description_placeholders=None,
+            errors=errors or {},
+        )
+
+    def show_reconfigure_form(
+        self,
+        handler: ConfigFlow,
+        errors: dict[str, str] | None = None,
+        default: str | None = None,
+    ) -> ConfigFlowResult:
+        """Show the reconfigure form."""
+        return handler.async_show_form(
+            step_id="reconfigure",
+            data_schema=get_api_key_schema(default=default),
+            errors=errors or {},
+        )
+
+    def show_filter_form(
+        self,
+        handler: FishAudioSubentryFlowHandler,
+        errors: dict[str, str] | None = None,
+    ) -> SubentryFlowResult:
+        """Show the filter form."""
+        return handler.async_show_form(
+            step_id="init",
+            data_schema=get_filter_schema(handler.config_data),
             errors=errors or {},
         )
 
     async def show_model_form(
         self,
-        handler: FishAudioConfigFlow | OptionsFlow,
+        handler: FishAudioSubentryFlowHandler,
         errors: dict[str, str] | None = None,
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Show the model selection form."""
-        if isinstance(handler, FishAudioConfigFlow):
-            data = handler.config_data
-        else:
-            assert isinstance(handler, OptionsFlowHandler)
-            data = handler.options
-
-        models = await self.async_get_models(
-            self_only=data.get(CONF_SELF_ONLY, False),
-            language=data.get(CONF_LANGUAGE),
-            sort_by=data.get(CONF_SORT_BY, "score"),
-        )
+        try:
+            models = await self.async_get_models(
+                self_only=cast(bool, handler.config_data.get(CONF_SELF_ONLY, False)),
+                language=cast(str | None, handler.config_data.get(CONF_LANGUAGE)),
+                sort_by=cast(str, handler.config_data.get(CONF_SORT_BY, "score")),
+            )
+        except CannotGetModelsError:
+            models = []
 
         form_errors = errors or {}
         if not models:
             form_errors["base"] = "no_models_found"
-            return await self.show_filter_form(handler, errors=form_errors)
+
+        handler.models = models
 
         return handler.async_show_form(
             step_id="model",
-            data_schema=self.schema(data, models),
+            data_schema=get_model_selection_schema(handler.config_data, models),
             errors=form_errors,
         )
-
-
-async def validate_api_key(hass: HomeAssistant, api_key: str) -> Session:
-    """Validate the user input allows us to connect."""
-
-    session = await hass.async_add_executor_job(Session, api_key)
-
-    try:
-        await hass.async_add_executor_job(session.get_api_credit)
-    except Exception as exc:
-        raise CannotConnect from exc
-
-    return session
 
 
 class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fish Audio."""
 
     VERSION = 1
-    config_data: dict[str, Any] = {}
     manager: FishAudioConfigFlowManager
+    _reauth_entry: ConfigEntry | None
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: FishAudioConfigEntry,
-    ) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._reauth_entry = None
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+
+        errors: dict[str, str] = {}
+        self.manager = FishAudioConfigFlowManager(self.hass)
+
+        if user_input:
+            try:
+                credit_info = await self.manager.validate_api_key(
+                    user_input[CONF_API_KEY]
+                )
+                if credit_info.user_id != entry.data[CONF_USER_ID]:
+                    errors["base"] = "reconfigure_wrong_account"
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data={**entry.data, CONF_API_KEY: user_input[CONF_API_KEY]},
+                        reason="reconfigure_successful",
+                    )
+            except InvalidAuthError:
+                errors["base"] = "invalid_auth"
+            except CannotConnectError:
+                errors["base"] = "cannot_connect"
+            except UnexpectedError:
+                errors["base"] = "unknown"
+
+        return self.manager.show_reconfigure_form(
+            self, errors=errors, default=entry.data.get(CONF_API_KEY)
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        self.manager = FishAudioConfigFlowManager(self.hass)
+        if user_input is None:
+            return self.manager.show_api_key_form(self)
+
         errors: dict[str, str] = {}
-        if user_input is not None:
-            try:
-                session = await validate_api_key(self.hass, user_input[CONF_API_KEY])
-                self.manager = FishAudioConfigFlowManager(self.hass, session)
-                self.config_data = user_input
-                return await self.async_step_filter()
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=API_KEY_SCHEMA,
-            errors=errors,
-        )
+        try:
+            credit_info = await self.manager.validate_api_key(user_input[CONF_API_KEY])
+            await self.async_set_unique_id(credit_info.user_id)
+            self._abort_if_unique_id_configured()
 
-    async def async_step_filter(
-        self,
-        user_input: dict[str, Any] | None = None,
-        errors: dict[str, str] | None = None,
+            data: dict[str, Any] = {
+                CONF_API_KEY: user_input[CONF_API_KEY],
+                CONF_USER_ID: credit_info.user_id,
+            }
+
+            return self.async_create_entry(
+                title="Fish Audio",
+                data=data,
+            )
+
+        except AbortFlow:
+            raise
+        except InvalidAuthError:
+            errors["base"] = "invalid_auth"
+        except CannotConnectError:
+            errors["base"] = "cannot_connect"
+        except UnexpectedError:
+            errors["base"] = "unknown"
+
+        return self.manager.show_api_key_form(self, errors=errors)
+
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:
-        """Handle the filter selection step."""
-        if user_input is not None:
-            self.config_data.update(user_input)
-            return await self.manager.show_model_form(self)
+        """Handle re-authentication."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
 
-        return await self.manager.show_filter_form(self)
-
-    async def async_step_model(
+    async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Handle re-authentication confirmation."""
+        errors: dict[str, str] = {}
+        manager = FishAudioConfigFlowManager(self.hass)
+
+        if user_input:
+            assert self._reauth_entry
+            try:
+                credit_info = await manager.validate_api_key(user_input[CONF_API_KEY])
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry,
+                    data={
+                        **self._reauth_entry.data,
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                    },
+                )
+                if self._reauth_entry.unique_id != credit_info.user_id:
+                    await self.async_set_unique_id(credit_info.user_id)
+                    self._abort_if_unique_id_configured()
+
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+            except AbortFlow:
+                raise
+            except InvalidAuthError:
+                errors["base"] = "invalid_auth"
+            except CannotConnectError:
+                errors["base"] = "cannot_connect"
+            except UnexpectedError:
+                errors["base"] = "unknown"
+
+        return manager.show_reauth_form(self, errors=errors)
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(cls, config_entry) -> dict[str, type]:
+        """Return subentries supported by this integration."""
+        return {"tts": FishAudioSubentryFlowHandler}
+
+
+class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding and modifying a tts entity."""
+
+    config_data: TTSConfigData
+    manager: FishAudioConfigFlowManager
+    models: list[SelectOptionDict] = []
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == "user"
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle the initial step."""
+        self.config_data = {}
+        return await self.async_step_init()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of a subentry."""
+        self.config_data = cast(
+            TTSConfigData, dict(self._get_reconfigure_subentry().data)
+        )
+        return await self.async_step_init()
+
+    async def async_step_init(
+        self, user_input: SubentryInitUserInput | None = None
+    ) -> SubentryFlowResult:
+        """Manage initial options."""
+        self.manager = FishAudioConfigFlowManager(self.hass)
+        try:
+            await self.manager.validate_api_key(self._get_entry().data[CONF_API_KEY])
+        except InvalidAuthError:
+            return self.async_abort(reason="invalid_auth")
+        except CannotConnectError:
+            return self.async_abort(reason="cannot_connect")
+
+        if user_input is not None:
+            self.config_data.update(user_input)
+            return await self.async_step_model()
+
+        return self.manager.show_filter_form(self)
+
+    async def async_step_model(
+        self, user_input: SubentryModelUserInput | None = None
+    ) -> SubentryFlowResult:
         """Handle the model selection step."""
         errors: dict[str, str] = {}
+
         if user_input is not None:
             if (voice_id := user_input.get(CONF_VOICE_ID)) and (
                 backend := user_input.get(CONF_BACKEND)
             ):
-                credit_info = await self.hass.async_add_executor_job(
-                    self.manager.session.get_api_credit
-                )
-                await self.async_set_unique_id(
-                    f"{credit_info.user_id}-{voice_id}-{backend}"
-                )
-                self._abort_if_unique_id_configured()
-
                 self.config_data.update(user_input)
-                data = {CONF_API_KEY: self.config_data[CONF_API_KEY]}
-                options = {
-                    key: self.config_data[key]
-                    for key in self.config_data
-                    if key not in (CONF_API_KEY, "name")
-                }
-                return self.async_create_entry(
-                    title=self.config_data.get("name", "Fish Audio"),
-                    data=data,
-                    options=options,
+                if self._is_new:
+                    voice_name = next(
+                        (m["label"] for m in self.models if m["value"] == voice_id),
+                        "Fish Audio TTS",
+                    )
+                    unique_id = f"{voice_id}-{backend}"
+
+                    return self.async_create_entry(
+                        title=voice_name, data=self.config_data, unique_id=unique_id
+                    )
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    self._get_reconfigure_subentry(),
+                    data=self.config_data,
                 )
             errors["base"] = "no_model_selected"
 
         return await self.manager.show_model_form(self, errors=errors)
-
-
-class OptionsFlowHandler(OptionsFlow):
-    """Handle an options flow for Fish Audio."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.options = dict(config_entry.options)
-        self.manager: FishAudioConfigFlowManager | None = None
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the filter selection step."""
-        if self.manager is None:
-            try:
-                session = await validate_api_key(
-                    self.hass, self.config_entry.data[CONF_API_KEY]
-                )
-                self.manager = FishAudioConfigFlowManager(self.hass, session)
-            except CannotConnect:
-                return self.async_abort(reason="cannot_connect")
-
-        if user_input is not None:
-            self.options.update(user_input)
-            return await self.manager.show_model_form(self)
-
-        return await self.manager.show_filter_form(self)
-
-    async def async_step_model(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the model selection step."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            if user_input.get(CONF_VOICE_ID):
-                self.options.update(user_input)
-                return self.async_create_entry(title="", data=self.options)
-            errors["base"] = "no_model_selected"
-
-        if self.manager is None:
-            # This should not happen, but as a fallback.
-            return self.async_abort(reason="unknown_error")
-
-        return await self.manager.show_model_form(self, errors=errors)
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""

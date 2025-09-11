@@ -11,76 +11,85 @@
           "api_key": "Your personal API key for accessing the Fish Audio service."
         }
       },
-      "filter": {
-        "title": "Voice Selection Filters",
-        "description": "Apply filters to narrow down the voice list, then click Submit to see the results.",
+      "reconfigure": {
+        "title": "Update API Key",
+        "description": "Enter the new API key for your Fish Audio account.",
         "data": {
-          "self_only": "Show only my private voices",
-          "language": "Filter by language",
-          "sort_by": "Sort voices by"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "self_only": "When checked, this will only show the voices you have personally created or cloned.",
-          "language": "Display only voices that support the selected language.",
-          "sort_by": "Choose the order in which the voices are displayed."
+          "api_key": "Your personal API key for accessing the Fish Audio service."
         }
       },
-      "model": {
-        "title": "Choose Your Voice and Model",
-        "description": "Select your preferred voice and the AI model to use for speech synthesis.",
+      "reauth_confirm": {
+        "title": "Reauthenticate Integration",
+        "description": "The API key for Fish Audio is no longer valid. Please enter it again.",
         "data": {
-          "voice_id": "Voice",
-          "backend": "AI Voice Model"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "voice_id": "Choose from the list of available voices, or manually enter a specific voice ID.",
-          "backend": "Select the AI model that will generate the audio."
+          "api_key": "Your personal API key for accessing the Fish Audio service."
         }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect, please check your API key and network connection.",
-      "no_models_found": "No voices found matching the specified filters.",
-      "no_model_selected": "You must select a voice to continue.",
-      "payment_required": "Text-to-speech failed due to a payment issue. Please check your Fish Audio account balance.",
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Voice Selection Filters",
-        "description": "Apply filters to narrow down the voice list, then click Submit to see the results.",
-        "data": {
-          "self_only": "Show only my private voices",
-          "language": "Filter by language",
-          "sort_by": "Sort voices by"
-        },
-        "data_description": {
-          "self_only": "When checked, this will only show the voices you have personally created or cloned.",
-          "language": "Display only voices that support the selected language.",
-          "sort_by": "Choose the order in which the voices are displayed."
-        }
-      },
-      "model": {
-        "title": "Choose Your Voice and Model",
-        "description": "Select your preferred voice and the AI model to use for speech synthesis.",
-        "data": {
-          "voice_id": "Voice",
-          "backend": "AI Model"
-        },
-        "data_description": {
-          "voice_id": "Choose from the list of available voices, or manually enter a specific voice ID.",
-          "backend": "Select the AI model that will generate the audio."
-        }
-      }
-    },
-    "error": {
-      "no_model_selected": "You must select a voice to continue."
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "reconfigure_wrong_account": "The provided API key belongs to a different user. Please use an API key from the original account."
     },
     "abort": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "Your API key has been updated successfully. The integration will now reload with the new settings.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
+  "config_subentries": {
+    "tts": {
+      "initiate_flow": {
+        "user": "Add TTS voice",
+        "reconfigure": "Reconfigure TTS voice"
+      },
+      "entry_type": "TTS voice",
+      "step": {
+        "init": {
+          "title": "Voice Selection Filters",
+          "description": "Apply filters to narrow down the voice list, then click Submit to see the results.",
+          "data": {
+            "self_only": "Show only my private voices",
+            "language": "Filter by language",
+            "sort_by": "Sort voices by"
+          },
+          "data_description": {
+            "self_only": "When checked, this will only show the voices you have personally created or cloned.",
+            "language": "Display only voices that support the selected language.",
+            "sort_by": "Choose the order in which the voices are displayed."
+          }
+        },
+        "model": {
+          "title": "Choose Your Voice and Model",
+          "description": "Select your preferred voice and the AI model to use for speech synthesis.",
+          "data": {
+            "voice_id": "Voice",
+            "backend": "AI Voice Model"
+          },
+          "data_description": {
+            "voice_id": "Choose from the list of available voices, or manually enter a specific voice ID.",
+            "backend": "Select the AI model that will generate the audio."
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "no_models_found": "No voices found matching the specified filters.",
+        "no_model_selected": "You must select a voice to continue."
+      },
+      "abort": {
+        "already_configured": "This TTS voice is already configured."
+      }
     }
   },
   "issues": {

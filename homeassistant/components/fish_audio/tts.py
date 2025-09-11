@@ -10,7 +10,7 @@ from fish_audio_sdk import Session, TTSRequest
 from fish_audio_sdk.exceptions import HttpCodeErr
 
 from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -18,7 +18,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FishAudioConfigEntry
 from .const import CONF_BACKEND, CONF_VOICE_ID, DOMAIN, TTS_SUPPORTED_LANGUAGES
-from .entity import FishAudioEntity
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -31,21 +30,29 @@ async def async_setup_entry(
 ) -> None:
     """Set up Fish Audio TTS platform."""
     _LOGGER.debug("Setting up Fish Audio TTS platform")
-    session: Session = entry.runtime_data
-    async_add_entities([FishAudioTTSEntity(entry, session)])
+    session = entry.runtime_data
+
+    _LOGGER.debug("Entry: %s", entry)
+    # Iterate over values
+    for subentry in entry.subentries.values():
+        if subentry is not None:
+            async_add_entities([FishAudioTTSEntity(subentry, session)])
 
 
-class FishAudioTTSEntity(FishAudioEntity, TextToSpeechEntity):
+class FishAudioTTSEntity(TextToSpeechEntity):
     """Fish Audio TTS entity."""
 
+    _attr_has_entity_name = True
     _attr_supported_options = [CONF_VOICE_ID, CONF_BACKEND]
 
-    def __init__(self, entry: ConfigEntry, session: Session) -> None:
+    def __init__(self, entry: ConfigSubentry, session: Session) -> None:
         """Initialize the TTS entity."""
-        super().__init__(entry, session)
+        super().__init__()
+        self._session = session
 
-        self._attr_unique_id = entry.entry_id
-        self._attr_name = "Text To Speech"
+        self.entry = entry
+        self._attr_unique_id = entry.subentry_id
+        self._attr_name = entry.title
 
     @property
     def default_language(self) -> str:
@@ -67,8 +74,8 @@ class FishAudioTTSEntity(FishAudioEntity, TextToSpeechEntity):
 
         _LOGGER.debug("Getting TTS audio for %s", message)
 
-        voice_id = options.get(CONF_VOICE_ID, self.entry.options.get(CONF_VOICE_ID))
-        backend = options.get(CONF_BACKEND, self.entry.options.get(CONF_BACKEND))
+        voice_id = options.get(CONF_VOICE_ID, self.entry.data.get(CONF_VOICE_ID))
+        backend = options.get(CONF_BACKEND, self.entry.data.get(CONF_BACKEND))
 
         _LOGGER.debug("Voice ID: %s", voice_id)
         if voice_id is None:
