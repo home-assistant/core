@@ -57,6 +57,7 @@ from .const import (
     COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
+    DEVICE_UNIT_MAP,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -653,6 +654,15 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
     return ids
 
 
+def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
+    """Return the unit of a virtual component.
+
+    If the unit is not set, the device sends an empty string
+    """
+    unit = config["meta"]["ui"]["unit"]
+    return DEVICE_UNIT_MAP.get(unit, unit) if unit else None
+
+
 @callback
 def async_remove_orphaned_entities(
     hass: HomeAssistant,
@@ -801,7 +811,7 @@ def get_rpc_device_info(
 
 
 def get_blu_trv_device_info(
-    config: dict[str, Any], ble_addr: str, parent_mac: str
+    config: dict[str, Any], ble_addr: str, parent_mac: str, fw_ver: str | None
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     model_id = config.get("local_name")
@@ -813,6 +823,7 @@ def get_blu_trv_device_info(
         model=BLU_TRV_MODEL_NAME.get(model_id) if model_id else None,
         model_id=config.get("local_name"),
         name=config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}",
+        sw_version=fw_ver,
     )
 
 
