@@ -14,6 +14,7 @@ from .const import (
     CONF_API_KEY,
     CONF_BACKEND,
     CONF_LANGUAGE,
+    CONF_NAME,
     CONF_SELF_ONLY,
     CONF_SORT_BY,
     CONF_VOICE_ID,
@@ -95,3 +96,8 @@ def get_model_selection_schema(
             ),
         }
     )
+
+
+def get_name_schema(options: TTSConfigData, default: str | None = None) -> vol.Schema:
+    """Return the schema for the name input."""
+    return vol.Schema({vol.Required(CONF_NAME, default=default or vol.UNDEFINED): str})

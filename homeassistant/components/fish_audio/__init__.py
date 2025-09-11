@@ -7,10 +7,11 @@ import logging
 from fish_audio_sdk import Session
 from fish_audio_sdk.exceptions import HttpCodeErr
 
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .const import CONF_API_KEY
 from .types import FishAudioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)

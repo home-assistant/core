@@ -49,3 +49,9 @@ class SubentryModelUserInput(TypedDict):
 
     voice_id: str
     backend: str
+
+
+class SubentryNameUserInput(TypedDict):
+    """User input for the Fish Audio subentry name step."""
+
+    name: str
