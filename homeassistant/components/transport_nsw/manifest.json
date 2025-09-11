@@ -8,6 +8,7 @@
   "loggers": [
     "TransportNSW"
   ],
+  "quality_scale": "legacy",
   "requirements": [
     "PyTransportNSW==0.1.1"
   ]
