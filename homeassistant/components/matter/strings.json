@@ -566,7 +566,7 @@
       "fields": {
         "areas": {
           "name": "Areas",
-          "description": "A list of area IDs to select for cleaning."
+          "description": "A list of area IDs to clean."
         }
       }
     }
