@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import common_control
-from .const import DOMAIN
+from .const import DATA_CACHE, DOMAIN
+from .models import EntityUsageDataCache, EntityUsagePredictions
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -26,10 +27,7 @@ CACHE_DURATION = timedelta(hours=24)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the usage prediction integration."""
     websocket_api.async_register_command(hass, ws_common_control)
-
-    # Initialize domain data storage
     hass.data[DOMAIN] = {}
-
     return True
 
 
@@ -51,49 +49,44 @@ async def ws_common_control(
     connection.send_result(
         msg["id"],
         {
-            "entities": result[time_category],
+            "entities": getattr(result, time_category),
         },
     )
 
 
 async def get_cached_common_control(
     hass: HomeAssistant, user_id: str
-) -> dict[str, list[str]]:
+) -> EntityUsagePredictions:
     """Get cached common control predictions or fetch new ones.
 
     Returns cached data if it's less than 24 hours old,
     otherwise fetches new data and caches it.
     """
     # Create a unique storage key for this user
-    storage_key = f"{STORAGE_KEY_PREFIX}.{user_id}"
+    storage_key = user_id
 
-    if storage_key not in hass.data[DOMAIN]:
-        store = Store[dict[str, Any]](hass, STORAGE_VERSION, storage_key)
-        cached_data: dict[str, Any] | None = await store.async_load()
-        hass.data[DOMAIN][storage_key] = cached_data
+    cached_data = hass.data[DATA_CACHE].get(storage_key)
 
-    cached_data = hass.data[DOMAIN].get(storage_key)
+    if isinstance(cached_data, asyncio.Task):
+        # If there's an ongoing task to fetch data, await its result
+        return await cached_data
 
     # Check if cache is valid (less than 24 hours old)
-    now = dt_util.utcnow()
     if cached_data is not None:
-        cached_time = dt_util.parse_datetime(cached_data["timestamp"])
-        if cached_time and (now - cached_time) < CACHE_DURATION:
+        if (dt_util.utcnow() - cached_data.timestamp) < CACHE_DURATION:
             # Cache is still valid, return the cached predictions
-            return cached_data["predictions"]
+            return cached_data.predictions
 
-    # Cache is expired or doesn't exist, fetch new data
+    hass.data[DATA_CACHE][storage_key] = cast(
+        asyncio.Task[EntityUsagePredictions], asyncio.current_task()
+    )
     predictions = await common_control.async_predict_common_control(hass, user_id)
 
     # Store the new data with timestamp
-    cached_data = {
-        "timestamp": now.isoformat(),
-        "predictions": predictions,
-    }
+    cached_data = EntityUsageDataCache(
+        predictions=predictions,
+    )
 
-    # Save to cache
-    store = Store[dict[str, Any]](hass, STORAGE_VERSION, storage_key)
-    store.async_delay_save(lambda: cached_data)
-    hass.data[DOMAIN][storage_key] = cached_data
+    hass.data[DATA_CACHE][storage_key] = cached_data
 
     return predictions

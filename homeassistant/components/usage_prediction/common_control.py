@@ -7,7 +7,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from functools import cache
 import logging
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -20,6 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
+from .models import EntityUsagePredictions
+
 _LOGGER = logging.getLogger(__name__)
 
 # Time categories for usage patterns
@@ -29,7 +31,7 @@ RESULTS_TO_SHOW = 8
 
 
 @cache
-def time_category(hour: int) -> str:
+def time_category(hour: int) -> Literal["morning", "afternoon", "evening", "night"]:
     """Determine the time category for a given hour."""
     if 6 <= hour < 12:
         return "morning"
@@ -42,7 +44,7 @@ def time_category(hour: int) -> str:
 
 async def async_predict_common_control(
     hass: HomeAssistant, user_id: str
-) -> dict[str, list[str]]:
+) -> EntityUsagePredictions:
     """Generate a list of commonly used entities for a user.
 
     Args:
@@ -61,7 +63,7 @@ async def async_predict_common_control(
     )
 
 
-def _fetch_and_process_data(session: Session, user_id: str) -> dict[str, list[str]]:
+def _fetch_and_process_data(session: Session, user_id: str) -> EntityUsagePredictions:
     """Fetch and process service call events from the database."""
     # Prepare a dictionary to track results
     results: dict[str, Counter[str]] = {
@@ -153,16 +155,23 @@ def _fetch_and_process_data(session: Session, user_id: str) -> dict[str, list[st
             for entity_id in entity_ids:
                 results[period][entity_id] += 1
 
-    # Convert results to lists of top entities
-    return {
-        period: [ent_id for (ent_id, _) in period_results.most_common(RESULTS_TO_SHOW)]
-        for period, period_results in results.items()
-    }
+    return EntityUsagePredictions(
+        morning=[
+            ent_id for (ent_id, _) in results["morning"].most_common(RESULTS_TO_SHOW)
+        ],
+        afternoon=[
+            ent_id for (ent_id, _) in results["afternoon"].most_common(RESULTS_TO_SHOW)
+        ],
+        evening=[
+            ent_id for (ent_id, _) in results["evening"].most_common(RESULTS_TO_SHOW)
+        ],
+        night=[ent_id for (ent_id, _) in results["night"].most_common(RESULTS_TO_SHOW)],
+    )
 
 
 def _fetch_with_session(
-    hass: HomeAssistant, fetch_func: Callable[[Session], dict[str, list[str]]], *args
-) -> dict[str, list[str]]:
+    hass: HomeAssistant, fetch_func: Callable[[Session], EntityUsagePredictions], *args
+) -> EntityUsagePredictions:
     """Execute a fetch function with a database session."""
     with session_scope(hass=hass, read_only=True) as session:
         return fetch_func(session, *args)

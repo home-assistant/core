@@ -2,13 +2,13 @@ rules:
   # Bronze
   action-setup: exempt
   appropriate-polling: exempt
-  brands: todo
+  brands: done
   common-modules: done
   config-flow-test-coverage: exempt
   config-flow: exempt
   dependency-transparency: done
   docs-actions: exempt
-  docs-high-level-description: todo
+  docs-high-level-description: done
   docs-installation-instructions: exempt
   docs-removal-instructions: exempt
   entity-event-setup: exempt
