@@ -293,14 +293,6 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Electric desk
-    "sjz": (
-        NumberEntityDescription(
-            key=DPCode.HEIGHT,
-            translation_key="height",
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
     # Smart Camera
     # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
     "sp": (

@@ -184,9 +184,6 @@
       "cloud_recipe": {
         "name": "Cloud recipe"
       },
-      "height": {
-        "name": "Height"
-      },
       "volume": {
         "name": "Volume"
       },
