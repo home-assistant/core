@@ -36,7 +36,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, snapshot_whirlpool_entities, trigger_attr_callback
@@ -241,6 +241,41 @@ async def test_service_calls(
     )
     assert getattr(mock_instance, expected_call).call_count == 1
     getattr(mock_instance, expected_call).assert_called_once_with(*expected_args)
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "request_method"),
+    [
+        (SERVICE_TURN_OFF, {}, "set_power_on"),
+        (SERVICE_TURN_ON, {}, "set_power_on"),
+        (SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: HVACMode.COOL}, "set_mode"),
+        (SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: HVACMode.OFF}, "set_power_on"),
+        (SERVICE_SET_TEMPERATURE, {ATTR_TEMPERATURE: 20}, "set_temp"),
+        (SERVICE_SET_FAN_MODE, {ATTR_FAN_MODE: FAN_AUTO}, "set_fanspeed"),
+        (SERVICE_SET_SWING_MODE, {ATTR_SWING_MODE: SWING_OFF}, "set_h_louver_swing"),
+    ],
+)
+async def test_service_request_failure(
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict,
+    request_method: str,
+    multiple_climate_entities: tuple[str, str],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test controlling the entity through service calls."""
+    await init_integration(hass)
+    entity_id, mock_fixture = multiple_climate_entities
+    mock_instance = request.getfixturevalue(mock_fixture)
+    getattr(mock_instance, request_method).return_value = False
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(

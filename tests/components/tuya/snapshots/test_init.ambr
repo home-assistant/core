@@ -7181,7 +7181,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Cooking Thermometer (unsupported)',
+    'model': 'Cooking Thermometer',
     'model_id': '3rzngbyy',
     'name': 'Grillhőmérő',
     'name_by_user': None,

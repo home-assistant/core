@@ -74,7 +74,7 @@ PyMicroBot==0.0.23
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
-PyNaCl==1.5.0
+PyNaCl==1.6.0
 
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.homekit
@@ -84,7 +84,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.69.0
+PySwitchbot==0.70.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -2265,6 +2265,9 @@ pyplaato==0.0.19
 
 # homeassistant.components.point
 pypoint==3.0.0
+
+# homeassistant.components.portainer
+pyportainer==0.1.7
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.0.1

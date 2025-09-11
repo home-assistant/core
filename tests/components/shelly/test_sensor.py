@@ -1138,6 +1138,7 @@ async def test_rpc_remove_text_virtual_sensor_when_orphaned(
     ("name", "entity_id", "original_unit", "expected_unit"),
     [
         ("Virtual number sensor", "sensor.test_name_virtual_number_sensor", "W", "W"),
+        ("Unit map", "sensor.test_name_unit_map", "m3/min", "m³/min"),
         (None, "sensor.test_name_number_203", "", None),
     ],
 )

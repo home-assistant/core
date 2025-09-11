@@ -5,6 +5,7 @@ import logging
 from whirlpool.appliance import Appliance
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -32,11 +33,6 @@ class WhirlpoolEntity(Entity):
         )
         self._attr_unique_id = f"{appliance.said}{unique_id_suffix}"
 
-    @callback
-    def _async_attr_callback(self) -> None:
-        _LOGGER.debug("Attribute update for entity %s", self.entity_id)
-        self.async_schedule_update_ha_state(force_refresh=True)
-
     async def async_added_to_hass(self) -> None:
         """Register attribute updates callback."""
         self._appliance.register_attr_callback(self._async_attr_callback)
@@ -56,3 +52,17 @@ class WhirlpoolEntity(Entity):
         elif self._unavailable_logged:
             _LOGGER.info("The entity %s is back online", self.entity_id)
             self._unavailable_logged = False
+
+    @callback
+    def _async_attr_callback(self) -> None:
+        _LOGGER.debug("Attribute update for entity %s", self.entity_id)
+        self.async_schedule_update_ha_state(force_refresh=True)
+
+    @staticmethod
+    def _check_service_request(result: bool) -> None:
+        """Check result of a request and raise HomeAssistantError if it failed."""
+        if not result:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="request_failed",
+            )
