@@ -71,7 +71,7 @@ PyMicroBot==0.0.23
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
-PyNaCl==1.5.0
+PyNaCl==1.6.0
 
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.homekit
@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.69.0
+PySwitchbot==0.70.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -119,7 +119,7 @@ Tami4EdgeAPI==3.0
 WSDiscovery==2.1.2
 
 # homeassistant.components.accuweather
-accuweather==4.2.0
+accuweather==4.2.1
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -815,7 +815,7 @@ faadelays==2023.9.1
 fastdotcom==0.0.3
 
 # homeassistant.components.feedreader
-feedparser==6.0.11
+feedparser==6.0.12
 
 # homeassistant.components.file
 file-read-backwards==2.0.0
@@ -1108,7 +1108,7 @@ iometer==0.1.0
 iottycloud==0.3.0
 
 # homeassistant.components.isal
-isal==1.7.1
+isal==1.8.0
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.2
@@ -1626,6 +1626,9 @@ pydrawise==2025.9.0
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
 
+# homeassistant.components.droplet
+pydroplet==2.3.2
+
 # homeassistant.components.ecoforest
 pyecoforest==0.4.0
 
@@ -1772,7 +1775,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2024.2.3
+pylitterbot==2024.2.4
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.24.0
@@ -1886,6 +1889,9 @@ pyplaato==0.0.19
 
 # homeassistant.components.point
 pypoint==3.0.0
+
+# homeassistant.components.portainer
+pyportainer==0.1.7
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.0.1
@@ -2637,7 +2643,7 @@ youless-api==2.2.0
 youtubeaio==2.0.0
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.08.11
+yt-dlp[default]==2025.09.05
 
 # homeassistant.components.zamg
 zamg==0.3.6

@@ -339,7 +339,7 @@ async def test_remove_file(
 
         msg = await client.receive_json()
 
-        assert not msg["success"]
+        assert not msg["success"], bad_id
         assert msg["error"]["code"] == err
 
     assert extra_id_file.exists()

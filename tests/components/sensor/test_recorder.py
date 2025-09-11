@@ -1967,7 +1967,7 @@ async def test_compile_hourly_sum_statistics_total_no_reset(
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
     with freeze_time(period0) as freezer:
-        four, eight, states = await async_record_meter_states(
+        _four, eight, states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test1", attributes, seq
         )
     await async_wait_recording_done(hass)
@@ -2081,7 +2081,7 @@ async def test_compile_hourly_sum_statistics_total_increasing(
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
     with freeze_time(period0) as freezer:
-        four, eight, states = await async_record_meter_states(
+        _four, eight, states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test1", attributes, seq
         )
     await async_wait_recording_done(hass)
@@ -2195,7 +2195,7 @@ async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     }
     seq = [10, 15, 20, 19, 30, 40, 39, 60, 70]
     with freeze_time(period0) as freezer:
-        four, eight, states = await async_record_meter_states(
+        _four, eight, states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test1", attributes, seq
         )
     await async_wait_recording_done(hass)
