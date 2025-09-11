@@ -40,6 +40,7 @@ from .utils import (
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_virtual_component_ids,
+    get_virtual_component_unit,
 )
 
 PARALLEL_UPDATES = 0
@@ -189,10 +190,7 @@ RPC_NUMBERS: Final = {
             config["meta"]["ui"]["view"], NumberMode.BOX
         ),
         step_fn=lambda config: config["meta"]["ui"].get("step"),
-        # If the unit is not set, the device sends an empty string
-        unit=lambda config: config["meta"]["ui"]["unit"]
-        if config["meta"]["ui"]["unit"]
-        else None,
+        unit=get_virtual_component_unit,
         method="number_set",
     ),
     "valve_position": RpcNumberDescription(
