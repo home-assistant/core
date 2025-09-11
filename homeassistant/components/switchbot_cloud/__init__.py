@@ -29,7 +29,9 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.FAN,
+    Platform.LIGHT,
     Platform.LOCK,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -46,6 +48,7 @@ class SwitchbotDevices:
     )
     buttons: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     climates: list[tuple[Remote, SwitchBotCoordinator]] = field(default_factory=list)
+    covers: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     switches: list[tuple[Device | Remote, SwitchBotCoordinator]] = field(
         default_factory=list
     )
@@ -53,6 +56,7 @@ class SwitchbotDevices:
     vacuums: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     locks: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     fans: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
+    lights: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
 
 
 @dataclass
@@ -142,12 +146,15 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.sensors.append((device, coordinator))
-
     if isinstance(device, Device) and device.device_type in [
         "K10+",
         "K10+ Pro",
         "Robot Vacuum Cleaner S1",
         "Robot Vacuum Cleaner S1 Plus",
+        "K20+ Pro",
+        "Robot Vacuum Cleaner K10+ Pro Combo",
+        "Robot Vacuum Cleaner S10",
+        "S20",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
@@ -177,6 +184,32 @@ async def make_device_data(
                 devices_data.buttons.append((device, coordinator))
             else:
                 devices_data.switches.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type.startswith("Air Purifier"):
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.fans.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type in [
+        "Motion Sensor",
+        "Contact Sensor",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id, True
+        )
+        devices_data.sensors.append((device, coordinator))
+        devices_data.binary_sensors.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type in ["Hub 3"]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id, True
+        )
+        devices_data.sensors.append((device, coordinator))
+        devices_data.binary_sensors.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type in ["Water Detector"]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id, True
+        )
+        devices_data.binary_sensors.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in [
         "Battery Circulator Fan",
@@ -187,6 +220,40 @@ async def make_device_data(
         )
         devices_data.fans.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type in [
+        "Curtain",
+        "Curtain3",
+        "Roller Shade",
+        "Blind Tilt",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.covers.append((device, coordinator))
+        devices_data.binary_sensors.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
+
+    if isinstance(device, Device) and device.device_type in [
+        "Garage Door Opener",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.covers.append((device, coordinator))
+        devices_data.binary_sensors.append((device, coordinator))
+
+    if isinstance(device, Device) and device.device_type in [
+        "Strip Light",
+        "Strip Light 3",
+        "Floor Lamp",
+        "Color Bulb",
+        "RGBICWW Floor Lamp",
+        "RGBICWW Strip Light",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.lights.append((device, coordinator))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -333,7 +400,7 @@ def _create_handle_webhook(
         ):
             _LOGGER.debug("Received invalid data from switchbot webhook %s", repr(data))
             return
-
+        _LOGGER.debug("Received data from switchbot webhook: %s", repr(data))
         deviceMac = data["context"]["deviceMac"]
 
         if deviceMac not in coordinators_by_id:

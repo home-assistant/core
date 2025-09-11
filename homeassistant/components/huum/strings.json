@@ -24,6 +24,11 @@
       "light": {
         "name": "[%key:component::light::title%]"
       }
+    },
+    "number": {
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      }
     }
   }
 }

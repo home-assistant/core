@@ -227,40 +227,57 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Ceiling Fan Light
+    # https://developer.tuya.com/en/docs/iot/fsd?id=Kaof8eiei4c2v
+    "fsd": (
+        SwitchEntityDescription(
+            key=DPCode.FAN_BEEP,
+            translation_key="sound",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Irrigator
     # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
     "ggq": (
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
-            translation_key="switch_1",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_2,
-            translation_key="switch_2",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "2"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_3,
-            translation_key="switch_3",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "3"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_4,
-            translation_key="switch_4",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "4"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_5,
-            translation_key="switch_5",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "5"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_6,
-            translation_key="switch_6",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "6"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_7,
-            translation_key="switch_7",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "7"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_8,
-            translation_key="switch_8",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "8"},
         ),
     ),
     # Wake Up Light II
@@ -272,22 +289,26 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_2,
-            translation_key="alarm_1",
+            translation_key="indexed_alarm",
+            translation_placeholders={"index": "1"},
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_3,
-            translation_key="alarm_2",
+            translation_key="indexed_alarm",
+            translation_placeholders={"index": "2"},
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_4,
-            translation_key="alarm_3",
+            translation_key="indexed_alarm",
+            translation_placeholders={"index": "3"},
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_5,
-            translation_key="alarm_4",
+            translation_key="indexed_alarm",
+            translation_placeholders={"index": "4"},
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
@@ -324,67 +345,81 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
-            translation_key="switch_1",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_2,
-            translation_key="switch_2",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "2"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_3,
-            translation_key="switch_3",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "3"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_4,
-            translation_key="switch_4",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "4"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_5,
-            translation_key="switch_5",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "5"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_6,
-            translation_key="switch_6",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "6"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_7,
-            translation_key="switch_7",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "7"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_8,
-            translation_key="switch_8",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "8"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
-            translation_key="usb_1",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "1"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB2,
-            translation_key="usb_2",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "2"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB3,
-            translation_key="usb_3",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "3"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB4,
-            translation_key="usb_4",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "4"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB5,
-            translation_key="usb_5",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "5"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB6,
-            translation_key="usb_6",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "6"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH,
@@ -487,57 +522,69 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
-            translation_key="socket_1",
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "1"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_2,
-            translation_key="socket_2",
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "2"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_3,
-            translation_key="socket_3",
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "3"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_4,
-            translation_key="socket_4",
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "4"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_5,
-            translation_key="socket_5",
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "5"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_6,
-            translation_key="socket_6",
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "6"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
-            translation_key="usb_1",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "1"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB2,
-            translation_key="usb_2",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "2"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB3,
-            translation_key="usb_3",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "3"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB4,
-            translation_key="usb_4",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "4"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB5,
-            translation_key="usb_5",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "5"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB6,
-            translation_key="usb_6",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "6"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH,
@@ -612,6 +659,14 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.MUFFLING,
             translation_key="mute",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Electric desk
+    "sjz": (
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -698,22 +753,38 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "tdq": (
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
-            translation_key="switch_1",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_2,
-            translation_key="switch_2",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "2"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_3,
-            translation_key="switch_3",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "3"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_4,
-            translation_key="switch_4",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "4"},
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_5,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "5"},
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_6,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "6"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
@@ -731,12 +802,26 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Gateway control
+    # https://developer.tuya.com/en/docs/iot/wg?id=Kbcdadk79ejok
+    "wg2": (
+        SwitchEntityDescription(
+            key=DPCode.MUFFLING,
+            translation_key="mute",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Thermostat
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
     "wk": (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.FROST,
+            translation_key="frost_protection",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -746,12 +831,14 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "wkcz": (
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
-            translation_key="switch_1",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_2,
-            translation_key="switch_2",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "2"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
@@ -794,6 +881,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Micro Storage Inverter
+    # Energy storage and solar PV inverter system with monitoring capabilities
+    "xnyjcn": (
+        SwitchEntityDescription(
+            key=DPCode.FEEDIN_POWER_LIMIT_ENABLE,
+            translation_key="output_power_limit",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Diffuser
     # https://developer.tuya.com/en/docs/iot/categoryxxj?id=Kaiuz1f9mo6bl
     "xxj": (
@@ -808,6 +904,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.SWITCH_VOICE,
             translation_key="voice",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Smoke Detector
+    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    "ywbj": (
+        SwitchEntityDescription(
+            key=DPCode.MUFFLING,
+            translation_key="mute",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

@@ -57,7 +57,7 @@ async def test_default_setup(
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test the default setup."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -205,7 +205,7 @@ async def test_setup_only_energy(
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test the default setup."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -260,7 +260,7 @@ async def test_v4_meter(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test if v4 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -348,7 +348,7 @@ async def test_v5_meter(
     state: str,
 ) -> None:
     """Test if v5 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -421,7 +421,7 @@ async def test_luxembourg_meter(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test if v5 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -516,7 +516,7 @@ async def test_eonhu_meter(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test if v5 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -586,7 +586,7 @@ async def test_belgian_meter(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -820,7 +820,7 @@ async def test_belgian_meter_alt(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1008,7 +1008,7 @@ async def test_belgian_meter_mbus(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1158,7 +1158,7 @@ async def test_belgian_meter_low(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1207,7 +1207,7 @@ async def test_swedish_meter(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test if v5 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1282,7 +1282,7 @@ async def test_easymeter(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test if Q3D meter is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1360,7 +1360,7 @@ async def test_tcp(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """If proper config provided TCP connection should be made."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "host": "localhost",
@@ -1389,7 +1389,7 @@ async def test_rfxtrx_tcp(
     rfxtrx_dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """If proper config provided RFXtrx TCP connection should be made."""
-    (connection_factory, transport, protocol) = rfxtrx_dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = rfxtrx_dsmr_connection_fixture
 
     entry_data = {
         "host": "localhost",
@@ -1418,7 +1418,7 @@ async def test_connection_errors_retry(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Connection should be retried on error during setup."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (_connection_factory, transport, protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1457,7 +1457,7 @@ async def test_reconnect(
 ) -> None:
     """If transport disconnects, the connection should be retried."""
 
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1540,7 +1540,7 @@ async def test_gas_meter_providing_energy_reading(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test that gas providing energy readings use the correct device class."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1595,7 +1595,7 @@ async def test_heat_meter_mbus(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test if heat meter reading is correctly parsed."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",

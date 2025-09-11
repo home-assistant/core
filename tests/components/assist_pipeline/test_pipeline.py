@@ -375,7 +375,7 @@ async def test_get_pipelines(hass: HomeAssistant) -> None:
         ("en", "us", "en", "en"),
         ("en", "uk", "en", "en"),
         ("pt", "pt", "pt", "pt"),
-        ("pt", "br", "pt-br", "pt"),
+        ("pt", "br", "pt-BR", "pt"),
     ],
 )
 async def test_default_pipeline_no_stt_tts(
@@ -428,7 +428,7 @@ async def test_default_pipeline_no_stt_tts(
         ("en", "us", "en", "en", "en", "en"),
         ("en", "uk", "en", "en", "en", "en"),
         ("pt", "pt", "pt", "pt", "pt", "pt"),
-        ("pt", "br", "pt-br", "pt", "pt-br", "pt-br"),
+        ("pt", "br", "pt-BR", "pt", "pt-br", "pt-br"),
     ],
 )
 @pytest.mark.usefixtures("init_supporting_components")
@@ -1707,6 +1707,7 @@ async def test_chat_log_tts_streaming(
         language: str | None = None,
         agent_id: str | None = None,
         device_id: str | None = None,
+        satellite_id: str | None = None,
         extra_system_prompt: str | None = None,
     ):
         """Mock converse."""
@@ -1715,6 +1716,7 @@ async def test_chat_log_tts_streaming(
             context=context,
             conversation_id=conversation_id,
             device_id=device_id,
+            satellite_id=satellite_id,
             language=language,
             agent_id=agent_id,
             extra_system_prompt=extra_system_prompt,
