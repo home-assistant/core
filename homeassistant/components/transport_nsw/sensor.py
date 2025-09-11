@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, NoReturn
 
 from TransportNSW import TransportNSW
 
@@ -43,7 +43,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-def _raise_update_failed(message: str, exc: Exception | None = None) -> None:
+def _raise_update_failed(message: str, exc: Exception | None = None) -> NoReturn:
     """Raise UpdateFailed with the given message."""
     if exc:
         raise UpdateFailed(message) from exc
@@ -103,7 +103,7 @@ class TransportNSWCoordinator(DataUpdateCoordinator):
                 ATTR_DESTINATION: _get_value(data.get("destination")),
                 ATTR_MODE: _get_value(data.get("mode")),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001  # pylint: disable=broad-exception-caught
             _raise_update_failed(
                 f"Error communicating with Transport NSW API: {exc}", exc
             )

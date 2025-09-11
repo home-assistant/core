@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, NoReturn
 
 from TransportNSW import TransportNSW
 import voluptuous as vol
@@ -23,7 +23,7 @@ from .const import CONF_DESTINATION, CONF_ROUTE, CONF_STOP_ID, DEFAULT_NAME, DOM
 _LOGGER = logging.getLogger(__name__)
 
 
-def _raise_no_data() -> None:
+def _raise_no_data() -> NoReturn:
     """Raise ValueError for no data returned."""
     raise ValueError("No data returned from API")
 
