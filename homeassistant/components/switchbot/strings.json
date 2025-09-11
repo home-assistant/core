@@ -3,14 +3,14 @@
     "flow_title": "{name} ({address})",
     "step": {
       "user": {
-        "description": "Would you like to sign in to your SwitchBot account to download device model information? This improves device discovery, especially when using passive Bluetooth scanning. If your Bluetooth adapter uses active scanning, you can skip this step.",
+        "description": "One or more of your Bluetooth adapters is using passive scanning, which may not discover all SwitchBot devices. Would you like to sign in to your SwitchBot account to download device information and automate discovery? If you're not sure, we recommend signing in.",
         "menu_options": {
           "cloud_login": "Sign in to SwitchBot account",
           "select_device": "Continue without signing in"
         }
       },
       "cloud_login": {
-        "description": "Please provide your SwitchBot app username and password. This data won't be saved and is only used to retrieve device model information for better discovery. Usernames and passwords are case-sensitive.",
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and is only used to retrieve device model information to automate discovery. Usernames and passwords are case-sensitive.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
