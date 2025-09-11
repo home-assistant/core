@@ -152,7 +152,7 @@
     }
   },
   "services": {
-    "clean_area": {
+    "clean_areas": {
       "service": "mdi:robot-vacuum"
     },
     "get_areas": {

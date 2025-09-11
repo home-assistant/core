@@ -8,7 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.matter.const import (
-    SERVICE_CLEAN_AREA,
+    SERVICE_CLEAN_AREAS,
     SERVICE_GET_AREAS,
     SERVICE_SELECT_AREAS,
 )
@@ -180,13 +180,13 @@ async def test_k11_vacuum_actions(
     )
     matter_client.send_device_command.reset_mock()
 
-    # test clean_areas action
+    # test clean_areasss action
     assert state
 
     selected_areas = [1, 2, 3]
     await hass.services.async_call(
         "matter",
-        SERVICE_CLEAN_AREA,
+        SERVICE_CLEAN_AREAS,
         {
             "entity_id": entity_id,
             "areas": selected_areas,

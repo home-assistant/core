@@ -560,7 +560,7 @@
         }
       }
     },
-    "clean_area": {
+    "clean_areas": {
       "name": "Clean area",
       "description": "Instructs the Matter vacuum cleaner to clean the specified areas.",
       "fields": {

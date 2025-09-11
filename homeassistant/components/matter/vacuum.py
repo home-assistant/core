@@ -28,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SERVICE_CLEAN_AREA, SERVICE_GET_AREAS, SERVICE_SELECT_AREAS
+from .const import SERVICE_CLEAN_AREAS, SERVICE_GET_AREAS, SERVICE_SELECT_AREAS
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
@@ -78,13 +78,13 @@ async def async_setup_entry(
         func="async_handle_get_areas",
         supports_response=SupportsResponse.ONLY,
     )
-    # This will call Entity.async_handle_clean_area
+    # This will call Entity.async_handle_clean_areas
     platform.async_register_entity_service(
-        SERVICE_CLEAN_AREA,
+        SERVICE_CLEAN_AREAS,
         schema={
             vol.Required("areas"): vol.All(cv.ensure_list, [cv.positive_int]),
         },
-        func="async_handle_clean_area",
+        func="async_handle_clean_areas",
         supports_response=SupportsResponse.ONLY,
     )
     # This will call Entity.async_handle_select_areas
@@ -291,7 +291,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             ServiceResponse, {"status": "areas selected", "areas": selected_areas}
         )
 
-    async def async_handle_clean_area(
+    async def async_handle_clean_areas(
         self, areas: list[int], **kwargs: Any
     ) -> ServiceResponse:
         """Start cleaning the specified areas."""
