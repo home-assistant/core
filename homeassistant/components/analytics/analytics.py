@@ -110,7 +110,6 @@ class DeviceAnalytics:
     """
 
     extra: dict[str, Any] | None = None
-    sw_version: str | None = None
 
 
 @dataclass
@@ -508,9 +507,7 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
         if TYPE_CHECKING:
             assert modifiable_info is not None
         modifiable_devices_info = modifiable_info[0]
-        modifiable_devices_info[device_entry.id] = DeviceAnalytics(
-            sw_version=device_entry.sw_version,
-        )
+        modifiable_devices_info[device_entry.id] = DeviceAnalytics()
 
     # Get modifiable entity infos
     for entity_entry in ent_reg.entities.values():
@@ -578,7 +575,7 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
                     "manufacturer": device_entry.manufacturer,
                     "model": device_entry.model,
                     "model_id": device_entry.model_id,
-                    "sw_version": modifiable_device_info.sw_version,
+                    "sw_version": device_entry.sw_version,
                     "via_device": device_entry.via_device_id,
                 }
             )
