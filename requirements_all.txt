@@ -2952,7 +2952,7 @@ thermopro-ble==0.13.1
 thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.7
+thinqconnect==1.0.8
 
 # homeassistant.components.tikteck
 tikteck==0.4
