@@ -100,6 +100,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ness Alarm from a config entry."""
 
+    hass.data.setdefault(DOMAIN, {})
+
     host = entry.data[CONF_HOST]
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
     scan_interval = entry.options.get(
