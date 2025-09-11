@@ -759,6 +759,9 @@
       "water_time": {
         "name": "Water usage duration"
       },
+      "cat_weight": {
+        "name": "Cat weight"
+      },
       "odor_elimination_status": {
         "name": "Status",
         "state": {
