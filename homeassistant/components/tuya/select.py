@@ -248,6 +248,14 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Electric desk
+    "sjz": (
+        SelectEntityDescription(
+            key=DPCode.LEVEL,
+            translation_key="desk_level",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Smart Camera
     # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
     "sp": (
