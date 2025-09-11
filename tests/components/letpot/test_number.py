@@ -29,7 +29,7 @@ async def test_all_entities(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test switch entities."""
+    """Test number entities."""
     with patch("homeassistant.components.letpot.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, mock_config_entry)
 
