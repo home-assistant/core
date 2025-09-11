@@ -309,70 +309,21 @@ async def test_get_events_entities_filtered_away(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-    entities = [
-        {
-            "id": "light.kitchen",
-            "attributes": {ATTR_UNIT_OF_MEASUREMENT: "any", "brightness": 100},
-            "filtered": False,  # Light is not a filterable domain
-        },
-        {
-            "id": "sensor.sensor0",
-            "attributes": {ATTR_UNIT_OF_MEASUREMENT: "any"},
-            "filtered": True,  # Sensor with UoM is always filtered
-        },
-        {
-            "id": "sensor.sensor1",
-            "attributes": {ATTR_DEVICE_CLASS: SensorDeviceClass.AQI},
-            "filtered": True,  # Sensor with a numeric device class is always filtered
-        },
-        {
-            "id": "sensor.sensor2",
-            "attributes": {ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM},
-            "filtered": False,  # Sensor with a non-numeric device class is not filtered
-        },
-        {
-            "id": "sensor.sensor3",
-            "attributes": {ATTR_STATE_CLASS: "any"},
-            "filtered": True,  # Sensor with state class is always filtered
-        },
-        {
-            "id": "sensor.sensor4",
-            "filtered": False,  # Sensor with no UoM, device_class, or state_class is not filtered
-        },
-        {
-            "id": "number.number0",
-            "attributes": {ATTR_UNIT_OF_MEASUREMENT: "any"},
-            "filtered": False,  # Non-sensor domains are not filtered by presence of UoM
-        },
-        {
-            "id": "number.number1",
-            "filtered": False,  # Not a filtered domain
-        },
-        {
-            "id": "input_number.number0",
-            "attributes": {ATTR_UNIT_OF_MEASUREMENT: "any"},
-            "filtered": False,  # Non-sensor domains are not filtered by presence of UoM
-        },
-        {
-            "id": "input_number.number1",
-            "filtered": False,  # Not a filtered domain
-        },
-        {
-            "id": "counter.counter0",
-            "filtered": True,  # Counter is an always continuous domain
-        },
-        {
-            "id": "zone.home",
-            "filtered": False,  # Zone is not an always continuous domain
-        },
-    ]
-
-    for entity in entities:
-        hass.states.async_set(entity["id"], "A", entity.get("attributes"))
+    hass.states.async_set("light.kitchen", STATE_ON)
     await hass.async_block_till_done()
-    for entity in entities:
-        hass.states.async_set(entity["id"], "B", entity.get("attributes"))
+    hass.states.async_set(
+        "sensor.filtered",
+        STATE_ON,
+        {"brightness": 100, ATTR_UNIT_OF_MEASUREMENT: "any"},
+    )
     await hass.async_block_till_done()
+    hass.states.async_set("light.kitchen", STATE_OFF, {"brightness": 200})
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "sensor.filtered",
+        STATE_OFF,
+        {"brightness": 300, ATTR_UNIT_OF_MEASUREMENT: "any"},
+    )
 
     await async_wait_recording_done(hass)
     client = await hass_ws_client()
@@ -382,19 +333,31 @@ async def test_get_events_entities_filtered_away(
             "id": 1,
             "type": "logbook/get_events",
             "start_time": now.isoformat(),
-            "entity_ids": [entity["id"] for entity in entities],
+            "entity_ids": ["light.kitchen"],
         }
     )
     response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 1
 
-    unfiltered_entities = [entity for entity in entities if not entity["filtered"]]
+    results = response["result"]
+    assert results[0]["entity_id"] == "light.kitchen"
+    assert results[0]["state"] == "off"
 
-    results = zip(unfiltered_entities, response["result"], strict=True)
-    for result in results:
-        assert result[0]["id"] == result[1]["entity_id"]
-        assert result[1]["state"] == "B"
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.filtered"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 2
+
+    results = response["result"]
+    assert len(results) == 0
 
 
 async def test_get_events_future_start_time(
@@ -3082,3 +3045,160 @@ async def test_live_stream_with_changed_state_change(
     assert listeners_without_writes(
         hass.bus.async_listeners()
     ) == listeners_without_writes(init_listeners)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "attributes", "result_count"),
+    [
+        (
+            "light.kitchen",
+            {ATTR_UNIT_OF_MEASUREMENT: "any", "brightness": 100},
+            1,  # Light is not a filterable domain
+        ),
+        (
+            "sensor.sensor0",
+            {ATTR_UNIT_OF_MEASUREMENT: "any"},
+            0,  # Sensor with UoM is always filtered
+        ),
+        (
+            "sensor.sensor1",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.AQI},
+            0,  # Sensor with a numeric device class is always filtered
+        ),
+        (
+            "sensor.sensor2",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM},
+            1,  # Sensor with a non-numeric device class is not filtered
+        ),
+        (
+            "sensor.sensor3",
+            {ATTR_STATE_CLASS: "any"},
+            0,  # Sensor with state class is always filtered
+        ),
+        (
+            "sensor.sensor4",
+            {},
+            1,  # Sensor with no UoM, device_class, or state_class is not filtered
+        ),
+        (
+            "number.number0",
+            {ATTR_UNIT_OF_MEASUREMENT: "any"},
+            1,  # Non-sensor domains are not filtered by presence of UoM
+        ),
+        (
+            "number.number1",
+            {},
+            1,  # Not a filtered domain
+        ),
+        (
+            "input_number.number0",
+            {ATTR_UNIT_OF_MEASUREMENT: "any"},
+            1,  # Non-sensor domains are not filtered by presence of UoM
+        ),
+        (
+            "input_number.number1",
+            {},
+            1,  # Not a filtered domain
+        ),
+        (
+            "counter.counter0",
+            {},
+            0,  # Counter is an always continuous domain
+        ),
+        (
+            "zone.home",
+            {},
+            1,  # Zone is not an always continuous domain
+        ),
+    ],
+)
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_consistent_stream_and_recorder_filtering(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_id: str,
+    attributes: dict,
+    result_count: int,
+) -> None:
+    """Test that the logbook live stream and get_events apis use consistent filtering rules."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    hass.states.async_set(entity_id, "1.0", attributes)
+    hass.states.async_set("binary_sensor.other_entity", "off")
+
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            "entity_ids": [entity_id, "binary_sensor.other_entity"],
+        }
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 1
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
+    assert "partial" in msg["event"]
+    await async_wait_recording_done(hass)
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 1
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
+    assert "partial" not in msg["event"]
+    await async_wait_recording_done(hass)
+
+    hass.states.async_set(
+        entity_id,
+        "2.0",
+        attributes,
+    )
+    hass.states.async_set("binary_sensor.other_entity", "on")
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 1
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]
+    assert len(msg["event"]["events"]) == 1 + result_count
+
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    await websocket_client.send_json(
+        {
+            "id": 2,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "entity_ids": [entity_id],
+        }
+    )
+    response = await websocket_client.receive_json()
+    assert response["success"]
+    assert response["id"] == 2
+
+    results = response["result"]
+    assert len(results) == result_count
