@@ -1,7 +1,5 @@
 """Schemas for the Fish Audio integration."""
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.helpers.selector import (
@@ -22,11 +20,21 @@ from .const import (
     LANGUAGE_OPTIONS,
     SORT_BY_OPTIONS,
 )
+from .types import TTSConfigData
 
-API_KEY_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+
+def get_api_key_schema(default: str | None = None) -> vol.Schema:
+    """Return the schema for API key input."""
+    return vol.Schema(
+        {vol.Required(CONF_API_KEY, default=default or vol.UNDEFINED): str}
+    )
 
 
-def get_filter_schema(options: dict[str, Any]) -> vol.Schema:
+# Backward compatibility
+API_KEY_SCHEMA = get_api_key_schema()
+
+
+def get_filter_schema(options: TTSConfigData) -> vol.Schema:
     """Return the schema for the filter step."""
     return vol.Schema(
         {
@@ -59,7 +67,7 @@ def get_filter_schema(options: dict[str, Any]) -> vol.Schema:
 
 
 def get_model_selection_schema(
-    options: dict[str, Any], model_options: list[SelectOptionDict]
+    options: TTSConfigData, model_options: list[SelectOptionDict]
 ) -> vol.Schema:
     """Return the schema for the model selection step."""
     return vol.Schema(
