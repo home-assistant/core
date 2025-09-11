@@ -1871,7 +1871,7 @@ async def test_create_entry_next_flow(
             )
             return self.async_create_entry(
                 title="import",
-                data={"flow": "import", "next_flow_id": result["flow_id"]},
+                data={"flow": "import"},
                 next_flow=(config_entries.FlowType.CONFIG_FLOW, result["flow_id"]),
             )
 
@@ -1892,33 +1892,54 @@ async def test_create_entry_next_flow(
         )
         await hass.async_block_till_done()
 
-        assert async_setup_entry.call_count == 1
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "import"
-        assert result["data"]["flow"] == "import"
-        next_flow = result.get("next_flow")
-        assert next_flow is not None
-        assert next_flow[0] == config_entries.FlowType.CONFIG_FLOW
-        assert isinstance(next_flow[1], str)
-        assert next_flow[1] == result["data"]["next_flow_id"]
-
-        entries = hass.config_entries.async_entries("comp")
-        assert len(entries) == 1
-
         flows = hass.config_entries.flow.async_progress()
         assert len(flows) == 1
         user_flow = flows[0]
-        assert user_flow["flow_id"] == next_flow[1]
+        assert async_setup_entry.call_count == 1
+
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        entry = entries[0]
+        assert result == {
+            "context": {"source": "import"},
+            "data": {"flow": "import"},
+            "description_placeholders": None,
+            "description": None,
+            "flow_id": ANY,
+            "handler": "comp",
+            "minor_version": 1,
+            "next_flow": (config_entries.FlowType.CONFIG_FLOW, user_flow["flow_id"]),
+            "options": {},
+            "result": entry,
+            "subentries": (),
+            "title": "import",
+            "type": FlowResultType.CREATE_ENTRY,
+            "version": 1,
+        }
 
         result = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"], {}
         )
-
         await hass.async_block_till_done()
+
         assert async_setup_entry.call_count == 2
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "user"
-        assert result["data"]["flow"] == "user"
+        entries = hass.config_entries.async_entries("comp")
+        entry = next(entry for entry in entries if entry.data.get("flow") == "user")
+        assert result == {
+            "context": {"source": "user"},
+            "data": {"flow": "user"},
+            "description_placeholders": None,
+            "description": None,
+            "flow_id": user_flow["flow_id"],
+            "handler": "comp",
+            "minor_version": 1,
+            "options": {},
+            "result": entry,
+            "subentries": (),
+            "title": "user",
+            "type": FlowResultType.CREATE_ENTRY,
+            "version": 1,
+        }
 
 
 async def test_create_entry_options(
