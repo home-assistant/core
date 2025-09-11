@@ -1301,6 +1301,7 @@ class PipelineRun:
                     if tts_input_stream and self._streamed_response_text:
                         tts_input_stream.put_nowait(None)
 
+                if agent_id == conversation.HOME_ASSISTANT_AGENT:
                     # Check if all targeted entities were in the same area as
                     # the satellite device.
                     # If so, the satellite can response with an acknowledge beep
@@ -1354,15 +1355,19 @@ class PipelineRun:
         entity_registry = er.async_get(self.hass)
         for state in intent_response.matched_states:
             entity = entity_registry.async_get(state.entity_id)
-            if (
-                (not entity)
-                or (entity.area_id and (entity.area_id != device.area_id))
-                or (
-                    entity.device_id
-                    and (entity_device := device_registry.async_get(entity.device_id))
-                    and entity_device.area_id != device.area_id
-                )
-            ):
+            if not entity:
+                return False
+
+            if (entity_area_id := entity.area_id) is None:
+                if (entity.device_id is None) or (
+                    (entity_device := device_registry.async_get(entity.device_id))
+                    is None
+                ):
+                    return False
+
+                entity_area_id = entity_device.area_id
+
+            if entity_area_id != device.area_id:
                 return False
 
         return True
