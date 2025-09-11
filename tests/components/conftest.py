@@ -43,6 +43,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import yaml as yaml_util
 
 from tests.common import QualityScaleStatus, get_quality_scale
@@ -921,6 +922,7 @@ async def check_translations(
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
     _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
     _original_service_registry_async_call = ServiceRegistry.async_call
+    _original_entity_name_internal = Entity._name_internal
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -978,32 +980,28 @@ async def check_translations(
             )
             raise
 
-    @property
-    def _entity_name_translation_key(self: Entity) -> str | None:
-        if self.translation_key is None:
-            return None
-        platform_data = self.platform_data
-        translation_key = (
-            f"component.{platform_data.platform_name}.entity.{platform_data.domain}"
-            f".{self.translation_key}.name"
+    def _entity_name_internal(
+        self: Entity,
+        device_class_name: str | None,
+        platform_translations: dict[str, str],
+    ) -> str | UndefinedType | None:
+        result = _original_entity_name_internal(
+            self, device_class_name, platform_translations
         )
-
-        if self.hass and translation_key is not None:
-            key = f"{platform_data.domain}.{self.translation_key}.name"
-
-            translation_coros.add(
-                _validate_translation(
-                    self.hass,
-                    translation_errors,
-                    ignored_domains,
-                    "entity",
-                    platform_data.platform_name,
-                    key,
-                    self.translation_placeholders,
-                    translation_required=True,
-                )
+        if (
+            self.has_entity_name
+            and result is UNDEFINED
+            and (translation_key := self._name_translation_key)
+        ):
+            # We want to avoid "device_name_none"
+            platform_data = self.platform_data
+            translation_errors[translation_key] = (
+                f"Translation not found for {platform_data.platform_name}: "
+                f"`entity.{platform_data.domain}.{self.translation_key}.name`. "
+                f"Please add to homeassistant/components/{platform_data.platform_name}/strings.json"
             )
-        return translation_key
+
+        return result
 
     # Use override functions
     with (
@@ -1020,8 +1018,8 @@ async def check_translations(
             _service_registry_async_call,
         ),
         patch(
-            "homeassistant.helpers.entity.Entity._name_translation_key",
-            _entity_name_translation_key,
+            "homeassistant.helpers.entity.Entity._name_internal",
+            _entity_name_internal,
         ),
     ):
         yield
