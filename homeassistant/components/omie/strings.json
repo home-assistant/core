@@ -12,10 +12,10 @@
   "entity": {
     "sensor": {
       "spot_price_pt": {
-        "name": "Portugal Spot Price"
+        "name": "Portugal spot price"
       },
       "spot_price_es": {
-        "name": "Spain Spot Price"
+        "name": "Spain spot price"
       }
     }
   }
