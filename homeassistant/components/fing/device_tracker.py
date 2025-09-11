@@ -89,7 +89,7 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         if self._device.type:
             attrs["type"] = self._device.type
         if self._device.make:
-            attrs["make"] = self._device.make
+            attrs["manufacturer"] = self._device.make
         if self._device.model:
             attrs["model"] = self._device.model
         return attrs

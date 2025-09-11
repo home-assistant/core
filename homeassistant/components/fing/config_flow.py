@@ -16,23 +16,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_data_schema(user_input: dict[str, Any] | None = None) -> vol.Schema:
+def _get_base_schema() -> vol.Schema:
     """Get a schema with default values."""
-
-    if user_input is None:
-        return vol.Schema(
-            {
-                vol.Required(CONF_IP_ADDRESS): str,
-                vol.Required(CONF_PORT, default="49090"): str,
-                vol.Required(CONF_API_KEY): str,
-            }
-        )
-
     return vol.Schema(
         {
-            vol.Required(CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS)): str,
-            vol.Required(CONF_PORT, default=user_input.get(CONF_PORT)): str,
-            vol.Required(CONF_API_KEY, default=user_input.get(CONF_API_KEY)): str,
+            vol.Required(CONF_IP_ADDRESS): str,
+            vol.Required(CONF_PORT, default="49090"): str,
+            vol.Required(CONF_API_KEY): str,
         }
     )
 
@@ -112,7 +102,9 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_get_data_schema(user_input),
+            data_schema=self.add_suggested_values_to_schema(
+                _get_base_schema(), user_input
+            ),
             errors=errors,
             description_placeholders=description_placeholders,
         )
