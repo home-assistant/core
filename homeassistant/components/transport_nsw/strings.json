@@ -6,7 +6,7 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "stop_id": "Stop ID",
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "route": "Route Filter (optional)",
           "destination": "Destination Filter (optional)"
         }
