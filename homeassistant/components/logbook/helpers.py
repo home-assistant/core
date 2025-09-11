@@ -224,9 +224,7 @@ def async_subscribe_events(
 
 
 def _device_class_is_numeric(device_class: str | None) -> bool:
-    if device_class is None or device_class in NON_NUMERIC_DEVICE_CLASSES:
-        return False
-    return True
+    return device_class is not None and device_class not in NON_NUMERIC_DEVICE_CLASSES
 
 
 def is_sensor_continuous(
