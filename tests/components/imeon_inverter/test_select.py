@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.imeon_inverter.const import DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -41,16 +40,11 @@ async def test_select_mode(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test select mode updates entity state."""
-    entity_registry = er.async_get(hass)
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(
-        SELECT_DOMAIN,
-        DOMAIN,
-        "111111111111111_manager_inverter_mode",
-    )
+    entity_id = "sensor.imeon_inverter_inverter_mode"
     assert entity_id
 
     await hass.services.async_call(
