@@ -489,6 +489,7 @@
         }
       },
       "blanket_level": {
+        "name": "Level",
         "state": {
           "level_1": "[%key:common::state::low%]",
           "level_2": "Level 2",
@@ -499,6 +500,21 @@
           "level_7": "Level 7",
           "level_8": "Level 8",
           "level_9": "Level 9",
+          "level_10": "[%key:common::state::high%]"
+        }
+      },
+      "indexed_blanket_level": {
+        "name": "Level {index}",
+        "state": {
+          "level_1": "[%key:common::state::low%]",
+          "level_2": "[%key:component::tuya::entity::select::blanket_level::state::level_2%]",
+          "level_3": "[%key:component::tuya::entity::select::blanket_level::state::level_3%]",
+          "level_4": "[%key:component::tuya::entity::select::blanket_level::state::level_4%]",
+          "level_5": "[%key:component::tuya::entity::select::blanket_level::state::level_5%]",
+          "level_6": "[%key:component::tuya::entity::select::blanket_level::state::level_6%]",
+          "level_7": "[%key:component::tuya::entity::select::blanket_level::state::level_7%]",
+          "level_8": "[%key:component::tuya::entity::select::blanket_level::state::level_8%]",
+          "level_9": "[%key:component::tuya::entity::select::blanket_level::state::level_9%]",
           "level_10": "[%key:common::state::high%]"
         }
       },

@@ -4333,7 +4333,7 @@
     'state': 'level_5',
   })
 # ---
-# name: test_platform_setup_and_discovery[select.sunbeam_bedding_side_a_level-entry]
+# name: test_platform_setup_and_discovery[select.sunbeam_bedding_level_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4359,7 +4359,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.sunbeam_bedding_side_a_level',
+    'entity_id': 'select.sunbeam_bedding_level_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4371,20 +4371,20 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:thermometer-lines',
-    'original_name': 'Side A Level',
+    'original_name': 'Level 1',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'blanket_level',
+    'translation_key': 'indexed_blanket_level',
     'unique_id': 'tuya.fasvixqysw1lxvjprdlevel_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[select.sunbeam_bedding_side_a_level-state]
+# name: test_platform_setup_and_discovery[select.sunbeam_bedding_level_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sunbeam Bedding Side A Level',
+      'friendly_name': 'Sunbeam Bedding Level 1',
       'icon': 'mdi:thermometer-lines',
       'options': list([
         'level_1',
@@ -4400,14 +4400,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.sunbeam_bedding_side_a_level',
+    'entity_id': 'select.sunbeam_bedding_level_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'level_5',
   })
 # ---
-# name: test_platform_setup_and_discovery[select.sunbeam_bedding_side_b_level-entry]
+# name: test_platform_setup_and_discovery[select.sunbeam_bedding_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4433,7 +4433,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.sunbeam_bedding_side_b_level',
+    'entity_id': 'select.sunbeam_bedding_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4445,20 +4445,20 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:thermometer-lines',
-    'original_name': 'Side B Level',
+    'original_name': 'Level 2',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'blanket_level',
+    'translation_key': 'indexed_blanket_level',
     'unique_id': 'tuya.fasvixqysw1lxvjprdlevel_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[select.sunbeam_bedding_side_b_level-state]
+# name: test_platform_setup_and_discovery[select.sunbeam_bedding_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sunbeam Bedding Side B Level',
+      'friendly_name': 'Sunbeam Bedding Level 2',
       'icon': 'mdi:thermometer-lines',
       'options': list([
         'level_1',
@@ -4474,7 +4474,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.sunbeam_bedding_side_b_level',
+    'entity_id': 'select.sunbeam_bedding_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
