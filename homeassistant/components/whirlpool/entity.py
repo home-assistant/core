@@ -4,6 +4,7 @@ import logging
 
 from whirlpool.appliance import Appliance
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -31,25 +32,27 @@ class WhirlpoolEntity(Entity):
         )
         self._attr_unique_id = f"{appliance.said}{unique_id_suffix}"
 
+    @callback
+    def _async_attr_callback(self) -> None:
+        _LOGGER.debug("Attribute update for entity %s", self.entity_id)
+        self.async_schedule_update_ha_state(force_refresh=True)
+
     async def async_added_to_hass(self) -> None:
         """Register attribute updates callback."""
-        self._appliance.register_attr_callback(self.async_write_ha_state)
+        self._appliance.register_attr_callback(self._async_attr_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister attribute updates callback."""
-        self._appliance.unregister_attr_callback(self.async_write_ha_state)
+        self._appliance.unregister_attr_callback(self._async_attr_callback)
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        is_online = self._appliance.get_online()
+    async def async_update(self) -> None:
+        """Update the entity's availability."""
+        self._attr_available = self._appliance.get_online()
 
-        if not is_online:
+        if not self._attr_available:
             if not self._unavailable_logged:
                 _LOGGER.info("The entity %s is unavailable", self.entity_id)
                 self._unavailable_logged = True
         elif self._unavailable_logged:
             _LOGGER.info("The entity %s is back online", self.entity_id)
             self._unavailable_logged = False
-
-        return is_online
