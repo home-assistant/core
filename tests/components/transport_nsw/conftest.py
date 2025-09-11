@@ -7,9 +7,9 @@ import pytest
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.transport_nsw.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+def mock_transport_nsw_api() -> Generator[AsyncMock]:
+    """Mock the TransportNSW API."""
+    with patch("TransportNSW.TransportNSW") as mock_api:
+        mock_instance = AsyncMock()
+        mock_api.return_value = mock_instance
+        yield mock_instance

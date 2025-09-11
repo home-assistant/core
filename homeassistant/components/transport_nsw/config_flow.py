@@ -107,10 +107,6 @@ class TransportNSWConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def is_matching(self, other_flow: ConfigFlow) -> bool:
-        """Return True if other_flow is matching this flow."""
-        return False
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> TransportNSWOptionsFlow:
