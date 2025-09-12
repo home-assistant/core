@@ -277,7 +277,7 @@ class ReolinkHostChimeCoordinatorEntity(ReolinkHostCoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._chime.online and super().available
+        return super().available and self._chime.online
 
 
 class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
