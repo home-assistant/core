@@ -68,6 +68,9 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         # The fallback name takes priority over the device class name.
         if (
             (translation_key := self._name_translation_key)
+            # The check for self.platform_data guards against integrations not using an
+            # EntityComponent and can be removed in HA Core 2026.8
+            and self.platform_data is not None
             and translation_key not in self.platform_data.platform_translations
             and meta.fallback_name
         ):
