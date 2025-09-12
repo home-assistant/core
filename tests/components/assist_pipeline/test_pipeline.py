@@ -53,7 +53,7 @@ from .conftest import (
     make_10ms_chunk,
 )
 
-from tests.common import MockConfigEntry, flush_store
+from tests.common import MockConfigEntry, async_mock_service, flush_store
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -1826,6 +1826,7 @@ async def test_acknowledge(
     device_registry.async_update_device(satellite.id, area_id=area_1.id)
 
     events: list[assist_pipeline.PipelineEvent] = []
+    turn_on = async_mock_service(hass, "light", "turn_on")
 
     pipeline_store = pipeline_data.pipeline_store
     pipeline_id = pipeline_store.async_get_preferred_item()
@@ -1834,6 +1835,13 @@ async def test_acknowledge(
     with patch(
         "homeassistant.components.assist_pipeline.PipelineRun.text_to_speech"
     ) as text_to_speech:
+
+        def _reset() -> None:
+            events.clear()
+            text_to_speech.reset_mock()
+            turn_on.clear()
+
+        # 1. All targets in same area
         pipeline_input = assist_pipeline.pipeline.PipelineInput(
             intent_input="turn on the lights",
             session=mock_chat_session,
@@ -1855,16 +1863,15 @@ async def test_acknowledge(
         assert (
             text_to_speech.call_args.kwargs["override_media_path"] == ACKNOWLEDGE_PATH
         )
+        assert len(turn_on) == 2
 
-    # Move one light to another area
-    area_2 = area_registry.async_get_or_create("area_2")
-    light_2 = entity_registry.async_update_entity(light_2.entity_id, area_id=area_2.id)
+        # 2. One light in a different area
+        area_2 = area_registry.async_get_or_create("area_2")
+        light_2 = entity_registry.async_update_entity(
+            light_2.entity_id, area_id=area_2.id
+        )
 
-    events.clear()
-
-    with patch(
-        "homeassistant.components.assist_pipeline.PipelineRun.text_to_speech"
-    ) as text_to_speech:
+        _reset()
         pipeline_input = assist_pipeline.pipeline.PipelineInput(
             intent_input="turn on light 2",
             session=mock_chat_session,
@@ -1884,6 +1891,152 @@ async def test_acknowledge(
         # Acknowledgment sound should be not played (different area)
         text_to_speech.assert_called_once()
         assert text_to_speech.call_args.kwargs.get("override_media_path") is None
+        assert len(turn_on) == 1
+
+        # Restore
+        light_2 = entity_registry.async_update_entity(
+            light_2.entity_id, area_id=area_1.id
+        )
+
+        # 3. Remove satellite device area
+        device_registry.async_update_device(satellite.id, area_id=None)
+
+        _reset()
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            intent_input="turn on light 1",
+            session=mock_chat_session,
+            device_id=satellite.id,
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.INTENT,
+                end_stage=assist_pipeline.PipelineStage.TTS,
+                event_callback=events.append,
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+        # Acknowledgment sound should be not played (no satellite area)
+        text_to_speech.assert_called_once()
+        assert text_to_speech.call_args.kwargs.get("override_media_path") is None
+        assert len(turn_on) == 1
+
+        # Restore
+        device_registry.async_update_device(satellite.id, area_id=area_1.id)
+
+        # 4. Check device area instead of entity area
+        light_device = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections=set(),
+            identifiers={("demo", "id-5678")},
+        )
+        device_registry.async_update_device(light_device.id, area_id=area_1.id)
+        light_2 = entity_registry.async_update_entity(
+            light_2.entity_id, area_id=None, device_id=light_device.id
+        )
+
+        _reset()
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            intent_input="turn on the lights",
+            session=mock_chat_session,
+            device_id=satellite.id,
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.INTENT,
+                end_stage=assist_pipeline.PipelineStage.TTS,
+                event_callback=events.append,
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+        # Acknowledgment sound should be played (same area)
+        text_to_speech.assert_called_once()
+        assert (
+            text_to_speech.call_args.kwargs["override_media_path"] == ACKNOWLEDGE_PATH
+        )
+        assert len(turn_on) == 2
+
+        # 5. Move device to different area
+        device_registry.async_update_device(light_device.id, area_id=area_2.id)
+
+        _reset()
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            intent_input="turn on light 2",
+            session=mock_chat_session,
+            device_id=satellite.id,
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.INTENT,
+                end_stage=assist_pipeline.PipelineStage.TTS,
+                event_callback=events.append,
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+        # Acknowledgment sound should be not played (different device area)
+        text_to_speech.assert_called_once()
+        assert text_to_speech.call_args.kwargs.get("override_media_path") is None
+        assert len(turn_on) == 1
+
+        # 6. No device or area
+        light_2 = entity_registry.async_update_entity(
+            light_2.entity_id, area_id=None, device_id=None
+        )
+
+        _reset()
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            intent_input="turn on light 2",
+            session=mock_chat_session,
+            device_id=satellite.id,
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.INTENT,
+                end_stage=assist_pipeline.PipelineStage.TTS,
+                event_callback=events.append,
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+        # Acknowledgment sound should be not played (no area)
+        text_to_speech.assert_called_once()
+        assert text_to_speech.call_args.kwargs.get("override_media_path") is None
+        assert len(turn_on) == 1
+
+        # 7. Not in entity registry
+        hass.states.async_set("light.light_3", "off", {ATTR_FRIENDLY_NAME: "light 3"})
+
+        _reset()
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            intent_input="turn on light 3",
+            session=mock_chat_session,
+            device_id=satellite.id,
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.INTENT,
+                end_stage=assist_pipeline.PipelineStage.TTS,
+                event_callback=events.append,
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+        # Acknowledgment sound should be not played (not in entity registry)
+        text_to_speech.assert_called_once()
+        assert text_to_speech.call_args.kwargs.get("override_media_path") is None
+        assert len(turn_on) == 1
 
 
 async def test_acknowledge_other_agents(
@@ -1916,6 +2069,7 @@ async def test_acknowledge_other_agents(
     device_registry.async_update_device(satellite.id, area_id=area_1.id)
 
     events: list[assist_pipeline.PipelineEvent] = []
+    async_mock_service(hass, "light", "turn_on")
 
     pipeline_store = pipeline_data.pipeline_store
     pipeline = await pipeline_store.async_create_item(
@@ -1954,8 +2108,8 @@ async def test_acknowledge_other_agents(
             "homeassistant.components.conversation.async_converse", return_value=None
         ) as async_converse,
         patch(
-            "homeassistant.components.assist_pipeline.PipelineRun._can_acknowledge_response"
-        ) as can_acknowledge_response,
+            "homeassistant.components.assist_pipeline.PipelineRun._get_all_targets_in_device_area"
+        ) as get_all_targets_in_device_area,
     ):
         pipeline_input = assist_pipeline.pipeline.PipelineInput(
             intent_input="turn on the lights",
@@ -1977,7 +2131,7 @@ async def test_acknowledge_other_agents(
         async_converse.assert_not_called()
 
         # Acknowledgment sound should be played (same area)
-        can_acknowledge_response.assert_called_once()
+        get_all_targets_in_device_area.assert_called_once()
         text_to_speech.assert_called_once()
         assert (
             text_to_speech.call_args.kwargs["override_media_path"] == ACKNOWLEDGE_PATH
@@ -1985,7 +2139,7 @@ async def test_acknowledge_other_agents(
 
         # Not processed locally
         text_to_speech.reset_mock()
-        can_acknowledge_response.reset_mock()
+        get_all_targets_in_device_area.reset_mock()
 
         pipeline_input = assist_pipeline.pipeline.PipelineInput(
             intent_input="not processed locally",
@@ -2007,4 +2161,4 @@ async def test_acknowledge_other_agents(
         # default agent didn't handle the intent.
         text_to_speech.assert_not_called()
         async_converse.assert_called_once()
-        can_acknowledge_response.assert_not_called()
+        get_all_targets_in_device_area.assert_not_called()
