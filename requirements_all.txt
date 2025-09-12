@@ -74,7 +74,7 @@ PyMicroBot==0.0.23
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
-PyNaCl==1.5.0
+PyNaCl==1.6.0
 
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.homekit
@@ -2952,7 +2952,7 @@ thermopro-ble==0.13.1
 thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.7
+thinqconnect==1.0.8
 
 # homeassistant.components.tikteck
 tikteck==0.4
@@ -3205,7 +3205,7 @@ zabbix-utils==2.0.3
 zamg==0.3.6
 
 # homeassistant.components.zimi
-zcc-helper==3.6
+zcc-helper==3.7
 
 # homeassistant.components.zeroconf
 zeroconf==0.147.2
