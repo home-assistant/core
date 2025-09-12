@@ -13,7 +13,7 @@ _PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(
     hass: HomeAssistant, entry: VRMForecastsConfigEntry
 ) -> bool:
-    """Set up Forecast.Solar from a config entry."""
+    """Set up VRM Forecasts from a config entry."""
     coordinator = VRMForecastsDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 

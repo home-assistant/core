@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
-import re
 
 from victron_vrm import VictronVRMClient
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
@@ -20,7 +19,9 @@ from .const import CONF_API_KEY, CONF_SITE_ID, DOMAIN, LOGGER
 type VRMForecastsConfigEntry = ConfigEntry[VRMForecastsDataUpdateCoordinator]
 
 
-jwt_regex = re.compile(r"^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$")
+def is_jwt(token: str) -> bool:
+    """Return True if token looks like a JWT."""
+    return token.count(".") == 2
 
 
 @dataclass
@@ -31,17 +32,21 @@ class ForecastEstimates:
     end: int
     site_id: int
     records: list[tuple[int, float]]
-    custom_dt_now: Callable | None = None
+    custom_dt_now: Callable[[], datetime.datetime] | None = None
 
     def __post_init__(self) -> None:
         """Post-initialize the ForecastEstimates class."""
         if self.start != min(x[0] for x in self.records):
-            LOGGER.warning(f"Start time {self.start} does not match records start time")
+            LOGGER.warning(
+                "Start time %s does not match records start time", self.start
+            )
             self.start = min(x[0] for x in self.records)
         if self.end != max(x[0] for x in self.records):
-            LOGGER.warning(f"End time {self.end} does not match records end time")
+            LOGGER.warning("End time %s does not match records end time", self.end)
             self.end = max(x[0] for x in self.records)
-        LOGGER.warning(f"POST_INIT dt_now: {self.dt_now.isoformat()}")
+        LOGGER.debug(
+            "ForecastEstimates initialized; dt_now=%s", self.dt_now.isoformat()
+        )
 
     @property
     def dt_now(self) -> datetime.datetime:
@@ -50,9 +55,9 @@ class ForecastEstimates:
             dt = self.custom_dt_now()
             if not is_dt_timezone_aware(dt):
                 raise ValueError("custom_dt_now must return a timezone-aware datetime")
-            LOGGER.warning(f"Using custom dt_now: {dt.isoformat()}")
+            LOGGER.debug("Using custom dt_now: %s", dt.isoformat())
             return dt
-        LOGGER.warning("Using default dt_now")
+        LOGGER.debug("Using default dt_now")
         return datetime.datetime.now(tz=datetime.UTC)
 
     @property
@@ -312,9 +317,7 @@ class VRMForecastsDataUpdateCoordinator(DataUpdateCoordinator[VRMForecastStore])
         self.config_entry = config_entry
         self.client = VictronVRMClient(
             token=config_entry.data[CONF_API_KEY],
-            token_type="Bearer"
-            if jwt_regex.match(config_entry.data[CONF_API_KEY])
-            else "Token",
+            token_type="Bearer" if is_jwt(config_entry.data[CONF_API_KEY]) else "Token",
             client_session=get_async_client(hass),
         )
         self.site_id = config_entry.data[CONF_SITE_ID]

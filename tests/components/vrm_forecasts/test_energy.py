@@ -26,17 +26,19 @@ async def test_energy_solar_forecast(
     solar_energy = await energy.async_get_solar_forecast(
         hass, mock_config_entry.entry_id
     )
-    assert (
-        solar_energy
-        == {
-            "wh_hours": {
-                "2025-04-23T10:00:00+00:00": 5050.1,
-                "2025-04-23T11:00:00+00:00": 5000.2,
-                "2025-04-24T10:00:00+00:00": 2250.3,
-                "2025-04-24T11:00:00+00:00": 2000.4,
-                "2025-04-25T10:00:00+00:00": 1000.5,
-                "2025-04-25T11:00:00+00:00": 500.6,
-            }
+    assert solar_energy == {
+        "wh_hours": {
+            "2025-04-23T10:00:00+00:00": 5050.1,
+            "2025-04-23T11:00:00+00:00": 5000.2,
+            "2025-04-24T10:00:00+00:00": 2250.3,
+            "2025-04-24T11:00:00+00:00": 2000.4,
+            "2025-04-25T10:00:00+00:00": 1000.5,
+            "2025-04-25T11:00:00+00:00": 500.6,
         }
-        or solar_energy is None
-    )
+    }
+
+
+async def test_energy_solar_forecast_missing_entry(hass: HomeAssistant) -> None:
+    """Return None when config entry or runtime data is missing."""
+    # No entry with this id
+    assert await energy.async_get_solar_forecast(hass, "does-not-exist") is None

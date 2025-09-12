@@ -7,5 +7,3 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_SITE_ID = "site_id"
 CONF_API_KEY = "api_key"
-
-BASE_URL = "https://vrmapi.victronenergy.com/v2"

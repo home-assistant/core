@@ -2,20 +2,28 @@
   "config": {
     "step": {
       "user": {
-        "description": "Fill in the details to connect to your VRM account and installation/site. Please refer to the documentation for more information.",
+        "description": "Enter your VRM API token. We will then fetch your available sites.",
         "data": {
-          "api_key": "VRM API Key",
-          "site_id": "VRM Site ID"
+          "api_key": "VRM API Key"
         },
         "data_description": {
-          "api_key": "The API key for your VRM account",
-          "site_id": "The Site ID of your installation"
+          "api_key": "The API key for your VRM account"
+        }
+      },
+      "select_site": {
+        "description": "Select the VRM site to use for forecasts",
+        "data": {
+          "site_id": "VRM Site"
+        },
+        "data_description": {
+          "site_id": "Select one of your VRM sites"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_sites": "No sites found for this account",
       "site_not_found": "Site ID not found. Please check the ID and try again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
