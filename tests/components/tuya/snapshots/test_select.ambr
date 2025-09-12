@@ -3197,6 +3197,65 @@
     'state': 'level_1',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.mesa_up_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'up',
+        'down',
+        'stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mesa_up_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Level',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'desk_up_down',
+    'unique_id': 'tuya.vpfdskpi8pr8cbtfzjslevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.mesa_up_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'mesa Up/Down',
+      'options': list([
+        'up',
+        'down',
+        'stop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mesa_up_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'up',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.mirilla_puerta_anti_flicker-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
