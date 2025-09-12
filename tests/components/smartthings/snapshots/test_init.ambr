@@ -454,7 +454,6 @@
         '13549124-3320-4fda-8e5c-3f363e043034',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
@@ -464,7 +463,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })

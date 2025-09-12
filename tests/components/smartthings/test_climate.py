@@ -441,34 +441,14 @@ async def test_ac_set_swing_mode(
     )
 
 
-@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000002"])
+@pytest.mark.parametrize(
+    "mode", ["off", "sleep", "quiet", "speed", "windFree", "windFreeSleep"]
+)
 async def test_ac_set_preset_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test climate set preset mode."""
-    await setup_integration(hass, mock_config_entry)
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_PRESET_MODE: "windFree"},
-        blocking=True,
-    )
-    devices.execute_device_command.assert_called_once_with(
-        "96a5ef74-5832-a84b-f1f7-ca799957065d",
-        Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
-        Command.SET_AC_OPTIONAL_MODE,
-        MAIN,
-        argument="windFree",
-    )
-
-
-@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000002"])
-async def test_ac_set_and_get_preset_mode(
-    hass: HomeAssistant,
-    devices: AsyncMock,
+    mode: str,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting and retrieving AC preset modes."""
@@ -482,43 +462,63 @@ async def test_ac_set_and_get_preset_mode(
         ["off", "sleep", "quiet", "speed", "windFree", "windFreeSleep"],
     )
 
-    # Test setting each preset mode
-    for mode in ("off", "sleep", "quiet", "speed", "windFree", "windFreeSleep"):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_PRESET_MODE: mode},
-            blocking=True,
-        )
-        devices.execute_device_command.assert_called_with(
-            "13549124-3320-4fda-8e5c-3f363e043034",
-            Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
-            Command.SET_AC_OPTIONAL_MODE,
-            MAIN,
-            argument=mode,
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_PRESET_MODE: mode},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_with(
+        "13549124-3320-4fda-8e5c-3f363e043034",
+        Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+        Command.SET_AC_OPTIONAL_MODE,
+        MAIN,
+        argument=mode,
+    )
 
-        # Mock the current preset mode to simulate the device state
-        set_attribute_value(
-            devices,
-            Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
-            Attribute.AC_OPTIONAL_MODE,
-            mode,
-        )
 
-        # Trigger an update to refresh the state
-        await trigger_update(
-            hass,
-            devices,
-            "13549124-3320-4fda-8e5c-3f363e043034",
-            Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
-            Attribute.AC_OPTIONAL_MODE,
-            mode,
-        )
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000002"])
+@pytest.mark.parametrize(
+    "mode", ["off", "sleep", "quiet", "speed", "windFree", "windFreeSleep"]
+)
+async def test_ac_get_preset_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mode: str,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting and retrieving AC preset modes."""
+    await setup_integration(hass, mock_config_entry)
 
-        # Verify the preset mode is correctly reflected in the entity state
-        state = hass.states.get("climate.ac_office_granit")
-        assert state.attributes[ATTR_PRESET_MODE] == mode
+    # Mock supported preset modes
+    set_attribute_value(
+        devices,
+        Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+        Attribute.SUPPORTED_AC_OPTIONAL_MODE,
+        ["off", "sleep", "quiet", "speed", "windFree", "windFreeSleep"],
+    )
+
+    # Mock the current preset mode to simulate the device state
+    set_attribute_value(
+        devices,
+        Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+        Attribute.AC_OPTIONAL_MODE,
+        mode,
+    )
+
+    # Trigger an update to refresh the state
+    await trigger_update(
+        hass,
+        devices,
+        "13549124-3320-4fda-8e5c-3f363e043034",
+        Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+        Attribute.AC_OPTIONAL_MODE,
+        mode,
+    )
+
+    # Verify the preset mode is correctly reflected in the entity state
+    state = hass.states.get("climate.ac_office_granit")
+    assert state.attributes[ATTR_PRESET_MODE] == mode
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])

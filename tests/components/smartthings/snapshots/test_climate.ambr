@@ -153,7 +153,12 @@
       'max_temp': 35,
       'min_temp': 7,
       'preset_modes': list([
+        'off',
         'windFree',
+        'longWind',
+        'speed',
+        'quiet',
+        'sleep',
       ]),
       'swing_modes': list([
         'vertical',
@@ -217,9 +222,14 @@
       ]),
       'max_temp': 35,
       'min_temp': 7,
-      'preset_mode': None,
+      'preset_mode': 'off',
       'preset_modes': list([
+        'off',
         'windFree',
+        'longWind',
+        'speed',
+        'quiet',
+        'sleep',
       ]),
       'supported_features': <ClimateEntityFeature: 441>,
       'swing_mode': 'off',
