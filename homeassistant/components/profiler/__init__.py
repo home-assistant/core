@@ -695,7 +695,8 @@ def _make_audit_hook(audited_events: dict[str, AuditConfig]) -> Callable:
     def _audit_hook(event, args):
         if event in audited_events:
             filter_ = audited_events[event].filter
-            if filter_ and filter_ not in repr(args):
+            args_repr = repr(args)
+            if filter_ and filter_ not in args_repr:
                 return
             if audited_events[event].verbose:
                 stack = reversed(
@@ -705,10 +706,10 @@ def _make_audit_hook(audited_events: dict[str, AuditConfig]) -> Callable:
                 _LOGGER.debug(
                     "Audited event: %s %s, traceback (most recent call first):\n%s",
                     event,
-                    args,
+                    args_repr,
                     tb,
                 )
             else:
-                _LOGGER.debug("Audited event: %s %s", event, args)
+                _LOGGER.debug("Audited event: %s %s", event, args_repr)
 
     return _audit_hook
