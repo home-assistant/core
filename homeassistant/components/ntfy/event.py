@@ -17,9 +17,17 @@ from aiontfy.exceptions import (
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_MESSAGE, CONF_PRIORITY, CONF_TAGS, CONF_TITLE
+from .const import (
+    CONF_MESSAGE,
+    CONF_PRIORITY,
+    CONF_TAGS,
+    CONF_TITLE,
+    CONF_TOPIC,
+    DOMAIN,
+)
 from .coordinator import NtfyConfigEntry
 from .entity import NtfyBaseEntity
 
@@ -100,6 +108,16 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
                 if self._attr_available:
                     _LOGGER.error("Failed to subscribe to topic. Topic is protected")
                 self._attr_available = False
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"topic_protected_{self.topic}",
+                    is_fixable=True,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="topic_protected",
+                    translation_placeholders={CONF_TOPIC: self.topic},
+                    data={"entity_id": self.entity_id, "topic": self.topic},
+                )
                 return
             except NtfyHTTPError as e:
                 if self._attr_available:

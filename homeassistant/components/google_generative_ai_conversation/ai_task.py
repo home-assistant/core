@@ -122,7 +122,7 @@ class GoogleGenerativeAITaskEntity(
                 await async_prepare_files_for_prompt(
                     self.hass,
                     self._genai_client,
-                    [a.path for a in user_message.attachments],
+                    [(a.path, a.mime_type) for a in user_message.attachments],
                 )
             )
 

@@ -78,21 +78,20 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "dr": (
         SelectEntityDescription(
             key=DPCode.LEVEL,
-            name="Level",
             icon="mdi:thermometer-lines",
             translation_key="blanket_level",
         ),
         SelectEntityDescription(
             key=DPCode.LEVEL_1,
-            name="Side A Level",
             icon="mdi:thermometer-lines",
-            translation_key="blanket_level",
+            translation_key="indexed_blanket_level",
+            translation_placeholders={"index": "1"},
         ),
         SelectEntityDescription(
             key=DPCode.LEVEL_2,
-            name="Side B Level",
             icon="mdi:thermometer-lines",
-            translation_key="blanket_level",
+            translation_key="indexed_blanket_level",
+            translation_placeholders={"index": "2"},
         ),
     ),
     # Fan
@@ -245,6 +244,14 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.BRIGHT_STATE,
             translation_key="brightness",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Electric desk
+    "sjz": (
+        SelectEntityDescription(
+            key=DPCode.LEVEL,
+            translation_key="desk_level",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
