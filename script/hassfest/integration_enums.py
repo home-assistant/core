@@ -46,4 +46,4 @@ def generate(integrations: dict[str, Integration], config: Config) -> None:
         "helper": "platform_helper",
     }.items():
         platform_path = config.root / f"homeassistant/generated/{filename}.py"
-        platform_path.write_text(f"{config.cache[f'integrations_{int_type}']}")
+        platform_path.write_text(config.cache[f'integrations_{int_type}'])
