@@ -1027,7 +1027,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250903.3
+home-assistant-frontend==20250903.5
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.9.3
