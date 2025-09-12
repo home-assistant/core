@@ -9,10 +9,10 @@ from fing_agent_api import FingAgent
 from fing_agent_api.models import AgentInfoResponse, Device
 import httpx
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from . import FingConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,11 +30,17 @@ class FingDataObject:
 class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
     """Class to manage fetching data from Fing Agent."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: FingConfigEntry) -> None:
         """Initialize global Fing updater."""
         self._fing = FingAgent(config_entry.data)
         update_interval = timedelta(seconds=30)
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=update_interval,
+            config_entry=config_entry,
+        )
 
     async def _async_update_data(self) -> FingDataObject:
         """Fetch data from Fing Agent."""
@@ -66,14 +72,8 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
         ) as err:
             raise UpdateFailed("Unexpected error from HTTP request") from err
         else:
-            if (
-                device_response.network_id is not None
-                and len(device_response.network_id) > 0
-            ):
-                return FingDataObject(
-                    device_response.network_id,
-                    agent_info_response,
-                    {device.mac: device for device in device_response.devices},
-                )
-
-            raise UpdateFailed("No network ID received from Fing Agent")
+            return FingDataObject(
+                device_response.network_id,
+                agent_info_response,
+                {device.mac: device for device in device_response.devices},
+            )

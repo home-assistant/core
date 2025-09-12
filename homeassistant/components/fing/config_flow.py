@@ -16,17 +16,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_base_schema() -> vol.Schema:
-    """Get a schema with default values."""
-    return vol.Schema(
-        {
-            vol.Required(CONF_IP_ADDRESS): str,
-            vol.Required(CONF_PORT, default="49090"): str,
-            vol.Required(CONF_API_KEY): str,
-        }
-    )
-
-
 class FingConfigFlow(ConfigFlow, domain=DOMAIN):
     """Fing config flow."""
 
@@ -83,9 +72,9 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                     devices_response.network_id is not None
                     and len(devices_response.network_id) > 0
                 ):
-                    agent_id = user_input.get(CONF_IP_ADDRESS)
+                    agent_name = user_input.get(CONF_IP_ADDRESS)
                     if agent_info_response is not None:
-                        agent_id = agent_info_response.agent_id
+                        agent_name = agent_info_response.agent_id
                         await self.async_set_unique_id(agent_info_response.agent_id)
                         self._abort_if_unique_id_configured()
 
@@ -94,7 +83,7 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                         and len(devices_response.network_id) > 0
                     ):
                         return self.async_create_entry(
-                            title=f"Fing Agent {agent_id}",
+                            title=f"Fing Agent {agent_name}",
                             data=user_input,
                         )
 
@@ -103,7 +92,14 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                _get_base_schema(), user_input
+                vol.Schema(
+                    {
+                        vol.Required(CONF_IP_ADDRESS): str,
+                        vol.Required(CONF_PORT, default="49090"): str,
+                        vol.Required(CONF_API_KEY): str,
+                    }
+                ),
+                user_input,
             ),
             errors=errors,
             description_placeholders=description_placeholders,
