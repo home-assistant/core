@@ -328,6 +328,7 @@ class NumberDeviceClass(StrEnum):
     - `Pa`, `hPa`, `kPa`
     - `inHg`
     - `psi`
+    - `inH₂O`
     """
 
     REACTIVE_ENERGY = "reactive_energy"
