@@ -704,7 +704,7 @@ def _make_audit_hook(audited_events: dict[str, AuditConfig]) -> Callable:
                 )  # exclude this function call
                 tb = "".join(stack).strip()
                 _LOGGER.debug(
-                    "Audited event: %s %s, traceback (most recent call first):\n%s",
+                    "Audited event: %s %s, traceback (most recent call first):\n  %s",
                     event,
                     args_repr,
                     tb,
