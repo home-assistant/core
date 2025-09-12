@@ -31,6 +31,7 @@ PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.FAN,
+    Platform.HUMIDIFIER,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SENSOR,
@@ -57,6 +58,7 @@ class SwitchbotDevices:
     locks: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     fans: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     lights: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
+    humidifiers: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
 
 
 @dataclass
@@ -254,6 +256,19 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.lights.append((device, coordinator))
+
+    if isinstance(device, Device) and device.device_type == "Humidifier2":
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.humidifiers.append((device, coordinator))
+
+    if isinstance(device, Device) and device.device_type == "Humidifier":
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.humidifiers.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
