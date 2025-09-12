@@ -4484,3 +4484,33 @@ async def test_record_entity_ws(
             "test2.recorder": {"recording_disabled_by": "user"},
         },
     }
+
+    # Test getting a single entity's settings
+    await client.send_json_auto_id(
+        {
+            "type": "homeassistant/record_entity/get",
+            "entity_id": "test.recorder",
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] == {"recording_disabled_by": None}
+
+    await client.send_json_auto_id(
+        {
+            "type": "homeassistant/record_entity/get",
+            "entity_id": "test2.recorder",
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] == {"recording_disabled_by": "user"}
+
+    # Test getting settings for an unknown entity
+    await client.send_json_auto_id(
+        {
+            "type": "homeassistant/record_entity/get",
+            "entity_id": "unknown.entity",
+        }
+    )
+    response = await client.receive_json()
+    assert response["error"]["code"] == "not_found"
+    assert response["error"]["message"] == "Entity not found"

@@ -101,6 +101,7 @@ class RecordedEntities:
         """Finish initializing."""
         websocket_api.async_register_command(self._hass, ws_record_entity)
         websocket_api.async_register_command(self._hass, ws_list_recorded_entities)
+        websocket_api.async_register_command(self._hass, ws_get_recorded_entity)
         await self._async_load_data()
 
     @callback
@@ -317,6 +318,29 @@ def ws_list_recorded_entities(
     for entity_id in chain(recorded_entities.entities, entity_registry.entities):
         result[entity_id] = async_get_entity_options(hass, entity_id)
     connection.send_result(msg["id"], {"recorded_entities": result})
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "homeassistant/record_entity/get",
+        vol.Required("entity_id"): str,
+    }
+)
+def ws_get_recorded_entity(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get recorder settings for a single entity."""
+    entity_id: str = msg["entity_id"]
+
+    try:
+        options = async_get_entity_options(hass, entity_id)
+        connection.send_result(msg["id"], options.to_json())
+    except HomeAssistantError:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
+        )
 
 
 @callback
