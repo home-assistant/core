@@ -1,7 +1,7 @@
 """The profiler integration."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 import contextlib
 from contextlib import suppress
 from datetime import timedelta
@@ -12,7 +12,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, cast
+from typing import Any, NamedTuple, cast
 
 from lru import LRU
 import voluptuous as vol
@@ -40,6 +40,8 @@ SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
 SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
 SERVICE_SET_ASYNCIO_DEBUG = "set_asyncio_debug"
 SERVICE_LOG_CURRENT_TASKS = "log_current_tasks"
+SERVICE_START_AUDITING_EVENTS = "start_auditing_events"
+SERVICE_STOP_AUDITING_EVENTS = "stop_auditing_events"
 
 _LRU_CACHE_WRAPPER_OBJECT = _lru_cache_wrapper.__name__
 _SQLALCHEMY_LRU_OBJECT = "LRUCache"
@@ -72,8 +74,20 @@ DEFAULT_MAX_OBJECTS = 5
 CONF_ENABLED = "enabled"
 CONF_SECONDS = "seconds"
 CONF_MAX_OBJECTS = "max_objects"
+CONF_EVENTS = "events"
+CONF_FILTER = "filter"
+CONF_VERBOSE = "verbose"
 
 LOG_INTERVAL_SUB = "log_interval_subscription"
+AUDITING_HOOK_ADDED = "auditing_hook_added"
+AUDITED_EVENTS = "audited_events"
+
+
+class AuditConfig(NamedTuple):
+    """Auditing configuration of a single audit event type."""
+
+    verbose: bool
+    filter: str | None = None
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +98,11 @@ async def async_setup_entry(  # noqa: C901
 ) -> bool:
     """Set up Profiler from a config entry."""
     lock = asyncio.Lock()
-    domain_data = hass.data[DOMAIN] = {}
+
+    domain_data = hass.data[DOMAIN] = {
+        AUDITING_HOOK_ADDED: False,
+        AUDITED_EVENTS: {},
+    }
 
     async def _async_run_profile(call: ServiceCall) -> None:
         async with lock:
@@ -273,6 +291,46 @@ async def async_setup_entry(  # noqa: C901
             base_logger.setLevel(logging.INFO)
         hass.loop.set_debug(enabled)
 
+    async def _async_start_auditing_events(call: ServiceCall) -> None:
+        """Configure auditing of Python events."""
+        events = call.data[CONF_EVENTS]
+        verbose = call.data.get(CONF_VERBOSE, False)
+        filter_ = call.data.get(CONF_FILTER)
+        audited_events: dict[str, AuditConfig] = domain_data[AUDITED_EVENTS]
+
+        for event in events:
+            # Always log this at critical level so we know when
+            # it's been changed when reviewing logs
+            _LOGGER.critical(
+                "Enabling %sauditing for event %s%s",
+                "verbose " if verbose else "",
+                event,
+                f" with filter '{filter_}'" if filter_ else "",
+            )
+            audited_events[event] = AuditConfig(verbose=verbose, filter=filter_)
+
+        if not domain_data[AUDITING_HOOK_ADDED]:
+            _LOGGER.info("Adding Python audit hook function")
+            sys.addaudithook(_make_audit_hook(audited_events))
+            domain_data[AUDITING_HOOK_ADDED] = True
+
+        # Force this module's logger at least to DEBUG to see the events
+        if _LOGGER.getEffectiveLevel() > logging.DEBUG:
+            _LOGGER.setLevel(logging.DEBUG)
+
+    async def _async_stop_auditing_events(call: ServiceCall) -> None:
+        """Stop auditing certain Python events."""
+        events = call.data[CONF_EVENTS]
+        audited_events = domain_data[AUDITED_EVENTS]
+        for event in events:
+            if event not in audited_events:
+                _LOGGER.warning("Event %s is not being audited", event)
+            else:
+                # Always log this at critical level so we know when
+                # it's been changed when reviewing logs
+                _LOGGER.critical("Disabling auditing for event %s", event)
+                audited_events.pop(event)
+
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -382,6 +440,32 @@ async def async_setup_entry(  # noqa: C901
         _async_dump_current_tasks,
     )
 
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_START_AUDITING_EVENTS,
+        _async_start_auditing_events,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_EVENTS): vol.All(cv.ensure_list, [cv.string]),
+                vol.Optional(CONF_VERBOSE, default=False): cv.boolean,
+                vol.Optional(CONF_FILTER): cv.string,
+            }
+        ),
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_STOP_AUDITING_EVENTS,
+        _async_stop_auditing_events,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_EVENTS): vol.All(cv.ensure_list, [cv.string]),
+            }
+        ),
+    )
+
     return True
 
 
@@ -391,6 +475,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_remove(domain=DOMAIN, service=service)
     if LOG_INTERVAL_SUB in hass.data[DOMAIN]:
         hass.data[DOMAIN][LOG_INTERVAL_SUB]()
+    if AUDITING_HOOK_ADDED in hass.data[DOMAIN]:
+        _LOGGER.warning(
+            "Python auditing hook cannot be removed, only suppressing logging"
+        )
+        hass.data[DOMAIN][AUDITED_EVENTS].clear()
     hass.data.pop(DOMAIN)
     return True
 
@@ -598,3 +687,28 @@ def _increase_repr_limit() -> Generator[None]:
     finally:
         arepr.maxstring = original_maxstring
         arepr.maxother = original_maxother
+
+
+def _make_audit_hook(audited_events: dict[str, AuditConfig]) -> Callable:
+    """Create an audit hook function that logs events in audited_events."""
+
+    def _audit_hook(event, args):
+        if event in audited_events:
+            filter_ = audited_events[event].filter
+            if filter_ and filter_ not in repr(args):
+                return
+            if audited_events[event].verbose:
+                stack = reversed(
+                    traceback.format_stack()[:-1]
+                )  # exclude this function call
+                tb = "".join(stack).strip()
+                _LOGGER.debug(
+                    "Audited event: %s %s, traceback (most recent call first):\n%s",
+                    event,
+                    args,
+                    tb,
+                )
+            else:
+                _LOGGER.debug("Audited event: %s %s", event, args)
+
+    return _audit_hook
