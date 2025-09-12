@@ -1260,9 +1260,11 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             selector=IMAGE_PROCESSING_MODE_SELECTOR,
             required=True,
             exclude_from_config=True,
-            default=lambda config: "image_url"
-            if config.get(CONF_IMAGE_TOPIC) is None
-            else "image_data",
+            default=(
+                lambda config: "image_url"
+                if config.get(CONF_IMAGE_TOPIC) is None
+                else "image_data"
+            ),
         )
     },
     Platform.LIGHT.value: {
