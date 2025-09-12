@@ -1712,6 +1712,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "nanoleaf",
     "nasweb",
     "neato",
+    "nederlandse_spoorwegen",
     "nest",
     "ness_alarm",
     "netatmo",
