@@ -13,6 +13,7 @@ from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExcee
 from aiohttp.client_exceptions import ClientConnectorError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -21,7 +22,13 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN, MANUFACTURER
+from .const import (
+    DOMAIN,
+    MANUFACTURER,
+    UPDATE_INTERVAL_DAILY_FORECAST,
+    UPDATE_INTERVAL_HOURLY_FORECAST,
+    UPDATE_INTERVAL_OBSERVATION,
+)
 
 EXCEPTIONS = (ApiError, ClientConnectorError, InvalidApiKeyError, RequestsExceededError)
 
@@ -50,13 +57,11 @@ class AccuWeatherObservationDataUpdateCoordinator(
         hass: HomeAssistant,
         config_entry: AccuWeatherConfigEntry,
         accuweather: AccuWeather,
-        name: str,
-        coordinator_type: str,
-        update_interval: timedelta,
     ) -> None:
         """Initialize."""
         self.accuweather = accuweather
         self.location_key = accuweather.location_key
+        name = config_entry.data[CONF_NAME]
 
         if TYPE_CHECKING:
             assert self.location_key is not None
@@ -67,8 +72,8 @@ class AccuWeatherObservationDataUpdateCoordinator(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=f"{name} ({coordinator_type})",
-            update_interval=update_interval,
+            name=f"{name} (observation)",
+            update_interval=UPDATE_INTERVAL_OBSERVATION,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -98,7 +103,6 @@ class AccuWeatherForecastDataUpdateCoordinator(
         hass: HomeAssistant,
         config_entry: AccuWeatherConfigEntry,
         accuweather: AccuWeather,
-        name: str,
         coordinator_type: str,
         update_interval: timedelta,
         fetch_method: Callable[..., Awaitable[list[dict[str, Any]]]],
@@ -107,6 +111,7 @@ class AccuWeatherForecastDataUpdateCoordinator(
         self.accuweather = accuweather
         self.location_key = accuweather.location_key
         self._fetch_method = fetch_method
+        name = config_entry.data[CONF_NAME]
 
         if TYPE_CHECKING:
             assert self.location_key is not None
@@ -147,18 +152,14 @@ class AccuWeatherDailyForecastDataUpdateCoordinator(
         hass: HomeAssistant,
         config_entry: AccuWeatherConfigEntry,
         accuweather: AccuWeather,
-        name: str,
-        coordinator_type: str,
-        update_interval: timedelta,
     ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             config_entry,
             accuweather,
-            name,
-            coordinator_type,
-            update_interval,
+            "daily forecast",
+            UPDATE_INTERVAL_DAILY_FORECAST,
             fetch_method=accuweather.async_get_daily_forecast,
         )
 
@@ -173,18 +174,14 @@ class AccuWeatherHourlyForecastDataUpdateCoordinator(
         hass: HomeAssistant,
         config_entry: AccuWeatherConfigEntry,
         accuweather: AccuWeather,
-        name: str,
-        coordinator_type: str,
-        update_interval: timedelta,
     ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             config_entry,
             accuweather,
-            name,
-            coordinator_type,
-            update_interval,
+            "hourly forecast",
+            UPDATE_INTERVAL_HOURLY_FORECAST,
             fetch_method=accuweather.async_get_hourly_forecast,
         )
 
