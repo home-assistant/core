@@ -2108,8 +2108,8 @@ async def test_acknowledge_other_agents(
             "homeassistant.components.conversation.async_converse", return_value=None
         ) as async_converse,
         patch(
-            "homeassistant.components.assist_pipeline.PipelineRun._get_all_targets_in_device_area"
-        ) as get_all_targets_in_device_area,
+            "homeassistant.components.assist_pipeline.PipelineRun._get_all_targets_in_satellite_area"
+        ) as get_all_targets_in_satellite_area,
     ):
         pipeline_input = assist_pipeline.pipeline.PipelineInput(
             intent_input="turn on the lights",
@@ -2131,7 +2131,7 @@ async def test_acknowledge_other_agents(
         async_converse.assert_not_called()
 
         # Acknowledgment sound should be played (same area)
-        get_all_targets_in_device_area.assert_called_once()
+        get_all_targets_in_satellite_area.assert_called_once()
         text_to_speech.assert_called_once()
         assert (
             text_to_speech.call_args.kwargs["override_media_path"] == ACKNOWLEDGE_PATH
@@ -2139,7 +2139,7 @@ async def test_acknowledge_other_agents(
 
         # Not processed locally
         text_to_speech.reset_mock()
-        get_all_targets_in_device_area.reset_mock()
+        get_all_targets_in_satellite_area.reset_mock()
 
         pipeline_input = assist_pipeline.pipeline.PipelineInput(
             intent_input="not processed locally",
@@ -2161,4 +2161,4 @@ async def test_acknowledge_other_agents(
         # default agent didn't handle the intent.
         text_to_speech.assert_not_called()
         async_converse.assert_called_once()
-        get_all_targets_in_device_area.assert_not_called()
+        get_all_targets_in_satellite_area.assert_not_called()

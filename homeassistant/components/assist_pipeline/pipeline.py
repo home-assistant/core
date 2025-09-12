@@ -1076,7 +1076,7 @@ class PipelineRun:
     ) -> tuple[str, bool]:
         """Run intent recognition portion of pipeline.
 
-        Returns (speech, all_targets_in_device_area).
+        Returns (speech, all_targets_in_satellite_area).
         """
         if self.intent_agent is None or self._conversation_data is None:
             raise RuntimeError("Recognize intent was not prepared")
@@ -1126,7 +1126,7 @@ class PipelineRun:
 
             agent_id = self.intent_agent.id
             processed_locally = agent_id == conversation.HOME_ASSISTANT_AGENT
-            all_targets_in_device_area = False
+            all_targets_in_satellite_area = False
             intent_response: intent.IntentResponse | None = None
             if not processed_locally and not self._intent_agent_only:
                 # Sentence triggers override conversation agent
@@ -1306,8 +1306,10 @@ class PipelineRun:
                     # the satellite device.
                     # If so, the satellite should respond with an acknowledge beep
                     # instead of a full response.
-                    all_targets_in_device_area = self._get_all_targets_in_device_area(
-                        conversation_result.response, self._device_id
+                    all_targets_in_satellite_area = (
+                        self._get_all_targets_in_satellite_area(
+                            conversation_result.response, self._device_id
+                        )
                     )
 
         except Exception as src_error:
@@ -1332,9 +1334,9 @@ class PipelineRun:
         if conversation_result.continue_conversation:
             self._conversation_data.continue_conversation_agent = agent_id
 
-        return (speech, all_targets_in_device_area)
+        return (speech, all_targets_in_satellite_area)
 
-    def _get_all_targets_in_device_area(
+    def _get_all_targets_in_satellite_area(
         self, intent_response: intent.IntentResponse, device_id: str | None
     ) -> bool:
         """Return true if all targeted entities were in the same area as the device."""
@@ -1726,20 +1728,20 @@ class PipelineInput:
 
             if self.run.end_stage != PipelineStage.STT:
                 tts_input = self.tts_input
-                all_targets_in_device_area = False
+                all_targets_in_satellite_area = False
 
                 if current_stage == PipelineStage.INTENT:
                     # intent-recognition
                     assert intent_input is not None
                     (
                         tts_input,
-                        all_targets_in_device_area,
+                        all_targets_in_satellite_area,
                     ) = await self.run.recognize_intent(
                         intent_input,
                         self.session.conversation_id,
                         self.conversation_extra_system_prompt,
                     )
-                    if all_targets_in_device_area or tts_input.strip():
+                    if all_targets_in_satellite_area or tts_input.strip():
                         current_stage = PipelineStage.TTS
                     else:
                         # Skip TTS
@@ -1748,7 +1750,7 @@ class PipelineInput:
                 if self.run.end_stage != PipelineStage.INTENT:
                     # text-to-speech
                     if current_stage == PipelineStage.TTS:
-                        if all_targets_in_device_area:
+                        if all_targets_in_satellite_area:
                             # Use acknowledge media instead of full response
                             await self.run.text_to_speech(
                                 tts_input or "", override_media_path=ACKNOWLEDGE_PATH
