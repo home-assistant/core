@@ -1,0 +1,385 @@
+name: Auto-detect duplicate issues
+
+# yamllint disable-line rule:truthy
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+  models: read
+
+jobs:
+  detect-duplicates:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if integration label was added and extract details
+        id: extract
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // Debug: Log the event payload
+            console.log('Event name:', context.eventName);
+            console.log('Event action:', context.payload.action);
+            console.log('Event payload keys:', Object.keys(context.payload));
+
+            // Check the specific label that was added
+            const addedLabel = context.payload.label;
+            if (!addedLabel) {
+              console.log('No label found in labeled event payload');
+              core.setOutput('should_continue', 'false');
+              return;
+            }
+
+            console.log(`Label added: ${addedLabel.name}`);
+
+            if (!addedLabel.name.startsWith('integration:')) {
+              console.log('Added label is not an integration label, skipping duplicate detection');
+              core.setOutput('should_continue', 'false');
+              return;
+            }
+
+            console.log(`Integration label added: ${addedLabel.name}`);
+
+            let currentIssue;
+            let integrationLabels = [];
+
+            try {
+              const issue = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number
+              });
+
+              currentIssue = issue.data;
+
+              // Check if potential-duplicate label already exists
+              const hasPotentialDuplicateLabel = currentIssue.labels
+                .some(label => label.name === 'potential-duplicate');
+
+              if (hasPotentialDuplicateLabel) {
+                console.log('Issue already has potential-duplicate label, skipping duplicate detection');
+                core.setOutput('should_continue', 'false');
+                return;
+              }
+
+              integrationLabels = currentIssue.labels
+                .filter(label => label.name.startsWith('integration:'))
+                .map(label => label.name);
+            } catch (error) {
+              core.error(`Failed to fetch issue #${context.payload.issue.number}:`, error.message);
+              core.setOutput('should_continue', 'false');
+              return;
+            }
+
+            // Check if we've already posted a duplicate detection comment recently
+            let comments;
+            try {
+              comments = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                per_page: 10
+              });
+            } catch (error) {
+              core.error('Failed to fetch comments:', error.message);
+              // Continue anyway, worst case we might post a duplicate comment
+              comments = { data: [] };
+            }
+
+            // Check if we've already posted a duplicate detection comment
+            const recentDuplicateComment = comments.data.find(comment =>
+              comment.user && comment.user.login === 'github-actions[bot]' &&
+              comment.body.includes('<!-- workflow: detect-duplicate-issues -->')
+            );
+
+            if (recentDuplicateComment) {
+              console.log('Already posted duplicate detection comment, skipping');
+              core.setOutput('should_continue', 'false');
+              return;
+            }
+
+            core.setOutput('should_continue', 'true');
+            core.setOutput('current_number', currentIssue.number);
+            core.setOutput('current_title', currentIssue.title);
+            core.setOutput('current_body', currentIssue.body);
+            core.setOutput('current_url', currentIssue.html_url);
+            core.setOutput('integration_labels', JSON.stringify(integrationLabels));
+
+            console.log(`Current issue: #${currentIssue.number}`);
+            console.log(`Integration labels: ${integrationLabels.join(', ')}`);
+
+      - name: Fetch similar issues
+        id: fetch_similar
+        if: steps.extract.outputs.should_continue == 'true'
+        uses: actions/github-script@v8
+        env:
+          INTEGRATION_LABELS: ${{ steps.extract.outputs.integration_labels }}
+          CURRENT_NUMBER: ${{ steps.extract.outputs.current_number }}
+        with:
+          script: |
+            const integrationLabels = JSON.parse(process.env.INTEGRATION_LABELS);
+            const currentNumber = parseInt(process.env.CURRENT_NUMBER);
+
+            if (integrationLabels.length === 0) {
+              console.log('No integration labels found, skipping duplicate detection');
+              core.setOutput('has_similar', 'false');
+              return;
+            }
+
+            // Use GitHub search API to find issues with matching integration labels
+            console.log(`Searching for issues with integration labels: ${integrationLabels.join(', ')}`);
+
+            // Build search query for issues with any of the current integration labels
+            const labelQueries = integrationLabels.map(label => `label:"${label}"`);
+
+            // Calculate date 6 months ago
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+            const dateFilter = `created:>=${sixMonthsAgo.toISOString().split('T')[0]}`;
+
+            let searchQuery;
+
+            if (labelQueries.length === 1) {
+              searchQuery = `repo:${context.repo.owner}/${context.repo.repo} is:issue ${labelQueries[0]} ${dateFilter}`;
+            } else {
+              searchQuery = `repo:${context.repo.owner}/${context.repo.repo} is:issue (${labelQueries.join(' OR ')}) ${dateFilter}`;
+            }
+
+            console.log(`Search query: ${searchQuery}`);
+
+            let result;
+            try {
+              result = await github.rest.search.issuesAndPullRequests({
+                q: searchQuery,
+                per_page: 15,
+                sort: 'updated',
+                order: 'desc'
+              });
+            } catch (error) {
+              core.error('Failed to search for similar issues:', error.message);
+              if (error.status === 403 && error.message.includes('rate limit')) {
+                core.error('GitHub API rate limit exceeded');
+              }
+              core.setOutput('has_similar', 'false');
+              return;
+            }
+
+            // Filter out the current issue, pull requests, and newer issues (higher numbers)
+            const similarIssues = result.data.items
+              .filter(item =>
+                item.number !== currentNumber &&
+                !item.pull_request &&
+                item.number < currentNumber // Only include older issues (lower numbers)
+              )
+              .map(item => ({
+                number: item.number,
+                title: item.title,
+                body: item.body,
+                url: item.html_url,
+                state: item.state,
+                createdAt: item.created_at,
+                updatedAt: item.updated_at,
+                comments: item.comments,
+                labels: item.labels.map(l => l.name)
+              }));
+
+            console.log(`Found ${similarIssues.length} issues with matching integration labels`);
+            console.log('Raw similar issues:', JSON.stringify(similarIssues.slice(0, 3), null, 2));
+
+            if (similarIssues.length === 0) {
+              console.log('No similar issues found, setting has_similar to false');
+              core.setOutput('has_similar', 'false');
+              return;
+            }
+
+            console.log('Similar issues found, setting has_similar to true');
+            core.setOutput('has_similar', 'true');
+
+            // Clean the issue data to prevent JSON parsing issues
+            const cleanedIssues = similarIssues.slice(0, 15).map(item => {
+              // Handle body with improved truncation and null handling
+              let cleanBody = '';
+              if (item.body && typeof item.body === 'string') {
+                // Remove control characters
+                const cleaned = item.body.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+                // Truncate to 1000 characters and add ellipsis if needed
+                cleanBody = cleaned.length > 1000
+                  ? cleaned.substring(0, 1000) + '...'
+                  : cleaned;
+              }
+
+              return {
+                number: item.number,
+                title: item.title.replace(/[\u0000-\u001F\u007F-\u009F]/g, ''), // Remove control characters
+                body: cleanBody,
+                url: item.url,
+                state: item.state,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt,
+                comments: item.comments,
+                labels: item.labels
+              };
+            });
+
+            console.log(`Cleaned issues count: ${cleanedIssues.length}`);
+            console.log('First cleaned issue:', JSON.stringify(cleanedIssues[0], null, 2));
+
+            core.setOutput('similar_issues', JSON.stringify(cleanedIssues));
+
+      - name: Detect duplicates using AI
+        id: ai_detection
+        if: steps.extract.outputs.should_continue == 'true' && steps.fetch_similar.outputs.has_similar == 'true'
+        uses: actions/ai-inference@v2.0.1
+        with:
+          model: openai/gpt-4o
+          system-prompt: |
+            You are a Home Assistant issue duplicate detector. Your task is to identify TRUE DUPLICATES - issues that report the EXACT SAME problem, not just similar or related issues.
+
+            CRITICAL: An issue is ONLY a duplicate if:
+            - It describes the SAME problem with the SAME root cause
+            - Issues about the same integration but different problems are NOT duplicates
+            - Issues with similar symptoms but different causes are NOT duplicates
+
+            Important considerations:
+            - Open issues are more relevant than closed ones for duplicate detection
+            - Recently updated issues may indicate ongoing work or discussion
+            - Issues with more comments are generally more relevant and active
+            - Older closed issues might be resolved differently than newer approaches
+            - Consider the time between issues - very old issues may have different contexts
+
+            Rules:
+            1. ONLY mark as duplicate if the issues describe IDENTICAL problems
+            2. Look for issues that report the same problem or request the same functionality
+            3. Different error messages = NOT a duplicate (even if same integration)
+            4. For CLOSED issues, only mark as duplicate if they describe the EXACT same problem
+            5. For OPEN issues, use a lower threshold (90%+ similarity)
+            6. Prioritize issues with higher comment counts as they indicate more activity/relevance
+            7. When in doubt, do NOT mark as duplicate
+            8. Return ONLY a JSON array of issue numbers that are duplicates
+            9. If no duplicates are found, return an empty array: []
+            10. Maximum 5 potential duplicates, prioritize open issues with comments
+            11. Consider the age of issues - prefer recent duplicates over very old ones
+
+            Example response format:
+            [1234, 5678, 9012]
+
+          prompt: |
+            Current issue (just created):
+            Title: ${{ steps.extract.outputs.current_title }}
+            Body: ${{ steps.extract.outputs.current_body }}
+
+            Other issues to compare against (each includes state, creation date, last update, and comment count):
+            ${{ steps.fetch_similar.outputs.similar_issues }}
+
+            Analyze these issues and identify which ones describe IDENTICAL problems and thus are duplicates of the current issue. When sorting them, consider their state (open/closed), how recently they were updated, and their comment count (higher = more relevant).
+
+          max-tokens: 100
+
+      - name: Post duplicate detection results
+        id: post_results
+        if: steps.extract.outputs.should_continue == 'true' && steps.fetch_similar.outputs.has_similar == 'true'
+        uses: actions/github-script@v8
+        env:
+          AI_RESPONSE: ${{ steps.ai_detection.outputs.response }}
+          SIMILAR_ISSUES: ${{ steps.fetch_similar.outputs.similar_issues }}
+        with:
+          script: |
+            const aiResponse = process.env.AI_RESPONSE;
+
+            console.log('Raw AI response:', JSON.stringify(aiResponse));
+
+            let duplicateNumbers = [];
+            try {
+              // Clean the response of any potential control characters
+              const cleanResponse = aiResponse.trim().replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+              console.log('Cleaned AI response:', cleanResponse);
+
+              duplicateNumbers = JSON.parse(cleanResponse);
+
+              // Ensure it's an array and contains only numbers
+              if (!Array.isArray(duplicateNumbers)) {
+                console.log('AI response is not an array, trying to extract numbers');
+                const numberMatches = cleanResponse.match(/\d+/g);
+                duplicateNumbers = numberMatches ? numberMatches.map(n => parseInt(n)) : [];
+              }
+
+              // Filter to only valid numbers
+              duplicateNumbers = duplicateNumbers.filter(n => typeof n === 'number' && !isNaN(n));
+
+            } catch (error) {
+              console.log('Failed to parse AI response as JSON:', error.message);
+              console.log('Raw response:', aiResponse);
+
+              // Fallback: try to extract numbers from the response
+              const numberMatches = aiResponse.match(/\d+/g);
+              duplicateNumbers = numberMatches ? numberMatches.map(n => parseInt(n)) : [];
+              console.log('Extracted numbers as fallback:', duplicateNumbers);
+            }
+
+            if (!Array.isArray(duplicateNumbers) || duplicateNumbers.length === 0) {
+              console.log('No duplicates detected by AI');
+              return;
+            }
+
+            console.log(`AI detected ${duplicateNumbers.length} potential duplicates: ${duplicateNumbers.join(', ')}`);
+
+            // Get details of detected duplicates
+            const similarIssues = JSON.parse(process.env.SIMILAR_ISSUES);
+            const duplicates = similarIssues.filter(issue => duplicateNumbers.includes(issue.number));
+
+            if (duplicates.length === 0) {
+              console.log('No matching issues found for detected numbers');
+              return;
+            }
+
+            // Create comment with duplicate detection results
+            const duplicateLinks = duplicates.map(issue => `- [#${issue.number}: ${issue.title}](${issue.url})`).join('\n');
+
+            const commentBody = [
+              '<!-- workflow: detect-duplicate-issues -->',
+              '### 🔍 **Potential duplicate detection**',
+              '',
+              'I\'ve analyzed similar issues and found the following potential duplicates:',
+              '',
+              duplicateLinks,
+              '',
+              '**What to do next:**',
+              '1. Please review these issues to see if they match your issue',
+              '2. If you find an existing issue that covers your problem:',
+              '   - Consider closing this issue',
+              '   - Add your findings or 👍 on the existing issue instead',
+              '3. If your issue is different or adds new aspects, please clarify how it differs',
+              '',
+              'This helps keep our issues organized and ensures similar issues are consolidated for better visibility.',
+              '',
+              '*This message was generated automatically by our duplicate detection system.*'
+            ].join('\n');
+
+            try {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                body: commentBody
+              });
+
+              console.log(`Posted duplicate detection comment with ${duplicates.length} potential duplicates`);
+
+              // Add the potential-duplicate label
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                labels: ['potential-duplicate']
+              });
+
+              console.log('Added potential-duplicate label to the issue');
+            } catch (error) {
+              core.error('Failed to post duplicate detection comment or add label:', error.message);
+              if (error.status === 403) {
+                core.error('Permission denied or rate limit exceeded');
+              }
+              // Don't throw - we've done the analysis, just couldn't post the result
+            }

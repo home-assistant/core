@@ -59,6 +59,10 @@
       }
     },
     "sensor": {
+      "food_dispensed_today": {
+        "name": "Food dispensed today",
+        "unit_of_measurement": "cups"
+      },
       "food_level": {
         "name": "Food level"
       },
@@ -70,14 +74,20 @@
           "motor_fault_short": "Motor shorted",
           "motor_ot_amps": "Motor overtorqued",
           "motor_disconnected": "Motor disconnected",
-          "empty": "Empty"
+          "empty": "[%key:common::state::empty%]"
         }
+      },
+      "last_feeding": {
+        "name": "Last feeding"
       },
       "last_seen": {
         "name": "Last seen"
       },
       "litter_level": {
         "name": "Litter level"
+      },
+      "next_feeding": {
+        "name": "Next feeding"
       },
       "pet_weight": {
         "name": "Pet weight"
@@ -117,6 +127,14 @@
           "sdf": "Drawer full at startup",
           "spf": "Pinch detect at startup"
         }
+      },
+      "total_cycles": {
+        "name": "Total cycles",
+        "unit_of_measurement": "cycles"
+      },
+      "visits_today": {
+        "name": "Visits today",
+        "unit_of_measurement": "visits"
       },
       "waste_drawer": {
         "name": "Waste drawer"

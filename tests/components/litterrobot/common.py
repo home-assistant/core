@@ -128,6 +128,25 @@ FEEDER_ROBOT_DATA = {
             "mealInsertSize": 1,
         },
         "updated_at": "2022-09-08T15:07:00.000000+00:00",
+        "active_schedule": {
+            "id": "1",
+            "name": "Feeding",
+            "meals": [
+                {
+                    "id": "1",
+                    "days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                    "hour": 6,
+                    "name": "Breakfast",
+                    "skip": None,
+                    "minute": 30,
+                    "paused": False,
+                    "portions": 3,
+                    "mealNumber": 1,
+                    "scheduleId": None,
+                }
+            ],
+            "created_at": "2021-12-17T07:07:31.047747+00:00",
+        },
     },
     "feeding_snack": [
         {"timestamp": "2022-09-04T03:03:00.000000+00:00", "amount": 0.125},
@@ -159,6 +178,15 @@ PET_DATA = {
     "gender": "FEMALE",
     "lastWeightReading": 9.1,
     "breeds": ["sphynx"],
+    "weightHistory": [
+        {"weight": 6.48, "timestamp": "2025-06-13T16:12:36"},
+        {"weight": 6.6, "timestamp": "2025-06-14T03:52:00"},
+        {"weight": 6.59, "timestamp": "2025-06-14T17:20:32"},
+        {"weight": 6.5, "timestamp": "2025-06-14T19:22:48"},
+        {"weight": 6.35, "timestamp": "2025-06-15T03:12:15"},
+        {"weight": 6.45, "timestamp": "2025-06-15T15:27:21"},
+        {"weight": 6.25, "timestamp": "2025-06-15T15:29:26"},
+    ],
 }
 
 VACUUM_ENTITY_ID = "vacuum.test_litter_box"

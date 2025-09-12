@@ -12,6 +12,7 @@ from . import (
     application_credentials,
     bluetooth,
     codeowners,
+    conditions,
     config_flow,
     config_schema,
     dependencies,
@@ -28,6 +29,7 @@ from . import (
     services,
     ssdp,
     translations,
+    triggers,
     usb,
     zeroconf,
 )
@@ -37,6 +39,7 @@ INTEGRATION_PLUGINS = [
     application_credentials,
     bluetooth,
     codeowners,
+    conditions,
     config_schema,
     dependencies,
     dhcp,
@@ -49,6 +52,7 @@ INTEGRATION_PLUGINS = [
     services,
     ssdp,
     translations,
+    triggers,
     usb,
     zeroconf,
     config_flow,  # This needs to run last, after translations are processed

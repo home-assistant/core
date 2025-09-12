@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
-    await async_setup_services(hass, modem)
+    async_setup_services(hass)
 
     await discovery.async_load_platform(
         hass,

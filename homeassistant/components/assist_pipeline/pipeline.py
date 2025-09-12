@@ -13,7 +13,7 @@ from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 import time
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, cast
 import wave
 
 import hass_nabucasa
@@ -49,7 +49,6 @@ from .const import (
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
     DATA_LAST_WAKE_UP,
-    DATA_MIGRATIONS,
     DOMAIN,
     MS_PER_CHUNK,
     SAMPLE_CHANNELS,
@@ -584,6 +583,9 @@ class PipelineRun:
     _device_id: str | None = None
     """Optional device id set during run start."""
 
+    _satellite_id: str | None = None
+    """Optional satellite id set during run start."""
+
     _conversation_data: PipelineConversationData | None = None
     """Data tied to the conversation ID."""
 
@@ -637,9 +639,12 @@ class PipelineRun:
             return
         pipeline_data.pipeline_debug[self.pipeline.id][self.id].events.append(event)
 
-    def start(self, conversation_id: str, device_id: str | None) -> None:
+    def start(
+        self, conversation_id: str, device_id: str | None, satellite_id: str | None
+    ) -> None:
         """Emit run start event."""
         self._device_id = device_id
+        self._satellite_id = satellite_id
         self._start_debug_recording_thread()
 
         data: dict[str, Any] = {
@@ -647,6 +652,8 @@ class PipelineRun:
             "language": self.language,
             "conversation_id": conversation_id,
         }
+        if satellite_id is not None:
+            data["satellite_id"] = satellite_id
         if self.runner_data is not None:
             data["runner_data"] = self.runner_data
         if self.tts_stream:
@@ -1058,7 +1065,6 @@ class PipelineRun:
         self,
         intent_input: str,
         conversation_id: str,
-        device_id: str | None,
         conversation_extra_system_prompt: str | None,
     ) -> str:
         """Run intent recognition portion of pipeline. Returns text to speak."""
@@ -1089,7 +1095,8 @@ class PipelineRun:
                     "language": input_language,
                     "intent_input": intent_input,
                     "conversation_id": conversation_id,
-                    "device_id": device_id,
+                    "device_id": self._device_id,
+                    "satellite_id": self._satellite_id,
                     "prefer_local_intents": self.pipeline.prefer_local_intents,
                 },
             )
@@ -1100,7 +1107,8 @@ class PipelineRun:
                 text=intent_input,
                 context=self.context,
                 conversation_id=conversation_id,
-                device_id=device_id,
+                device_id=self._device_id,
+                satellite_id=self._satellite_id,
                 language=input_language,
                 agent_id=self.intent_agent.id,
                 extra_system_prompt=conversation_extra_system_prompt,
@@ -1119,6 +1127,7 @@ class PipelineRun:
                 ) is not None:
                     # Sentence trigger matched
                     agent_id = "sentence_trigger"
+                    processed_locally = True
                     intent_response = intent.IntentResponse(
                         self.pipeline.conversation_language
                     )
@@ -1207,6 +1216,15 @@ class PipelineRun:
 
                 self._streamed_response_text = True
 
+                self.process_event(
+                    PipelineEvent(
+                        PipelineEventType.INTENT_PROGRESS,
+                        {
+                            "tts_start_streaming": True,
+                        },
+                    )
+                )
+
                 async def tts_input_stream_generator() -> AsyncGenerator[str]:
                     """Yield TTS input stream."""
                     while (tts_input := await tts_input_stream.get()) is not None:
@@ -1260,6 +1278,7 @@ class PipelineRun:
                         text=user_input.text,
                         conversation_id=user_input.conversation_id,
                         device_id=user_input.device_id,
+                        satellite_id=user_input.satellite_id,
                         context=user_input.context,
                         language=user_input.language,
                         agent_id=user_input.agent_id,
@@ -1558,10 +1577,15 @@ class PipelineInput:
     device_id: str | None = None
     """Identifier of the device that is processing the input/output of the pipeline."""
 
+    satellite_id: str | None = None
+    """Identifier of the satellite that is processing the input/output of the pipeline."""
+
     async def execute(self) -> None:
         """Run pipeline."""
         self.run.start(
-            conversation_id=self.session.conversation_id, device_id=self.device_id
+            conversation_id=self.session.conversation_id,
+            device_id=self.device_id,
+            satellite_id=self.satellite_id,
         )
         current_stage: PipelineStage | None = self.run.start_stage
         stt_audio_buffer: list[EnhancedAudioChunk] = []
@@ -1647,7 +1671,6 @@ class PipelineInput:
                     tts_input = await self.run.recognize_intent(
                         intent_input,
                         self.session.conversation_id,
-                        self.device_id,
                         self.conversation_extra_system_prompt,
                     )
                     if tts_input.strip():
@@ -2047,50 +2070,6 @@ async def async_setup_pipeline_store(hass: HomeAssistant) -> PipelineData:
         PIPELINE_FIELDS,
     ).async_setup(hass)
     return PipelineData(pipeline_store)
-
-
-@callback
-def async_migrate_engine(
-    hass: HomeAssistant,
-    engine_type: Literal["conversation", "stt", "tts", "wake_word"],
-    old_value: str,
-    new_value: str,
-) -> None:
-    """Register a migration of an engine used in pipelines."""
-    hass.data.setdefault(DATA_MIGRATIONS, {})[engine_type] = (old_value, new_value)
-
-    # Run migrations when config is already loaded
-    if DATA_CONFIG in hass.data:
-        hass.async_create_background_task(
-            async_run_migrations(hass), "assist_pipeline_migration", eager_start=True
-        )
-
-
-async def async_run_migrations(hass: HomeAssistant) -> None:
-    """Run pipeline migrations."""
-    if not (migrations := hass.data.get(DATA_MIGRATIONS)):
-        return
-
-    engine_attr = {
-        "conversation": "conversation_engine",
-        "stt": "stt_engine",
-        "tts": "tts_engine",
-        "wake_word": "wake_word_entity",
-    }
-
-    updates = []
-
-    for pipeline in async_get_pipelines(hass):
-        attr_updates = {}
-        for engine_type, (old_value, new_value) in migrations.items():
-            if getattr(pipeline, engine_attr[engine_type]) == old_value:
-                attr_updates[engine_attr[engine_type]] = new_value
-
-        if attr_updates:
-            updates.append((pipeline, attr_updates))
-
-    for pipeline, attr_updates in updates:
-        await async_update_pipeline(hass, pipeline, **attr_updates)
 
 
 @dataclass

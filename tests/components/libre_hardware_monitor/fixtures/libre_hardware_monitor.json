@@ -1,0 +1,465 @@
+{
+  "id": 0,
+  "Text": "Sensor",
+  "Min": "Min",
+  "Value": "Value",
+  "Max": "Max",
+  "ImageURL": "",
+  "Children": [
+    {
+      "id": 1,
+      "Text": "GAMING",
+      "Min": "",
+      "Value": "",
+      "Max": "",
+      "ImageURL": "images_icon/computer.png",
+      "Children": [
+        {
+          "id": 2,
+          "Text": "MSI MAG B650M MORTAR WIFI (MS-7D76)",
+          "Min": "",
+          "Value": "",
+          "Max": "",
+          "ImageURL": "images_icon/mainboard.png",
+          "Children": [
+            {
+              "id": 3,
+              "Text": "Nuvoton NCT6687D",
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/chip.png",
+              "Children": [
+                {
+                  "id": 4,
+                  "Text": "Voltages",
+                  "Min": "",
+                  "Value": "",
+                  "Max": "",
+                  "ImageURL": "images_icon/voltage.png",
+                  "Children": [
+                    {
+                      "id": 5,
+                      "Text": "+12V",
+                      "Min": "12,048 V",
+                      "Value": "12,072 V",
+                      "Max": "12,096 V",
+                      "SensorId": "/lpc/nct6687d/0/voltage/0",
+                      "Type": "Voltage",
+                      "ImageURL": "images/transparent.png",
+                      "Children": []
+                    },
+                    {
+                      "id": 6,
+                      "Text": "+5V",
+                      "Min": "5,020 V",
+                      "Value": "5,030 V",
+                      "Max": "5,050 V",
+                      "SensorId": "/lpc/nct6687d/0/voltage/1",
+                      "Type": "Voltage",
+                      "ImageURL": "images/transparent.png",
+                      "Children": []
+                    },
+                    {
+                      "id": 7,
+                      "Text": "Vcore",
+                      "Min": "1,310 V",
+                      "Value": "1,312 V",
+                      "Max": "1,318 V",
+                      "SensorId": "/lpc/nct6687d/0/voltage/2",
+                      "Type": "Voltage",
+                      "ImageURL": "images/transparent.png",
+                      "Children": []
+                    }
+                  ]
+                },
+                {
+                  "id": 8,
+                  "Text": "Temperatures",
+                  "Min": "",
+                  "Value": "",
+                  "Max": "",
+                  "ImageURL": "images_icon/temperature.png",
+                  "Children": [
+                    {
+                      "id": 9,
+                      "Text": "CPU",
+                      "Min": "39,0 °C",
+                      "Value": "55,0 °C",
+                      "Max": "68,0 °C",
+                      "SensorId": "/lpc/nct6687d/0/temperature/0",
+                      "Type": "Temperature",
+                      "ImageURL": "images/transparent.png",
+                      "Children": []
+                    },
+                    {
+                      "id": 10,
+                      "Text": "System",
+                      "Min": "32,5 °C",
+                      "Value": "45,5 °C",
+                      "Max": "46,5 °C",
+                      "SensorId": "/lpc/nct6687d/0/temperature/1",
+                      "Type": "Temperature",
+                      "ImageURL": "images/transparent.png",
+                      "Children": []
+                    }
+                  ]
+                },
+                {
+                  "id": 11,
+                  "Text": "Fans",
+                  "Min": "",
+                  "Value": "",
+                  "Max": "",
+                  "ImageURL": "images_icon/fan.png",
+                  "Children": [
+                    {
+                      "id": 12,
+                      "Text": "CPU Fan",
+                      "Min": "0 RPM",
+                      "Value": "0 RPM",
+                      "Max": "0 RPM",
+                      "SensorId": "/lpc/nct6687d/0/fan/0",
+                      "Type": "Fan",
+                      "ImageURL": "images/transparent.png",
+                      "Children": []
+                    },
+                    {
+                      "id": 13,
+                      "Text": "Pump Fan",
+                      "Min": "0 RPM",
+                      "Value": "0 RPM",
+                      "Max": "0 RPM",
+                      "SensorId": "/lpc/nct6687d/0/fan/1",
+                      "Type": "Fan",
+                      "ImageURL": "images/transparent.png",
+                      "Children": []
+                    },
+                    {
+                      "id": 14,
+                      "Text": "System Fan #1",
+                      "Min": "-",
+                      "Value": "-",
+                      "Max": "-",
+                      "SensorId": "/lpc/nct6687d/0/fan/2",
+                      "Type": "Fan",
+                      "ImageURL": "images/transparent.png",
+                      "Children": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": 15,
+          "Text": "AMD Ryzen 7 7800X3D",
+          "Min": "",
+          "Value": "",
+          "Max": "",
+          "ImageURL": "images_icon/cpu.png",
+          "Children": [
+            {
+              "id": 16,
+              "Text": "Voltages",
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/voltage.png",
+              "Children": [
+                {
+                  "id": 17,
+                  "Text": "VDDCR",
+                  "Min": "0,452 V",
+                  "Value": "1,083 V",
+                  "Max": "1,173 V",
+                  "SensorId": "/amdcpu/0/voltage/2",
+                  "Type": "Voltage",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                },
+                {
+                  "id": 18,
+                  "Text": "VDDCR SoC",
+                  "Min": "1,305 V",
+                  "Value": "1,305 V",
+                  "Max": "1,306 V",
+                  "SensorId": "/amdcpu/0/voltage/3",
+                  "Type": "Voltage",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                }
+              ]
+            },
+            {
+              "id": 19,
+              "Text": "Powers",
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/power.png",
+              "Children": [
+                {
+                  "id": 20,
+                  "Text": "Package",
+                  "Min": "25,1 W",
+                  "Value": "39,6 W",
+                  "Max": "70,1 W",
+                  "SensorId": "/amdcpu/0/power/0",
+                  "Type": "Power",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                }
+              ]
+            },
+            {
+              "id": 21,
+              "Text": "Temperatures",
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/temperature.png",
+              "Children": [
+                {
+                  "id": 22,
+                  "Text": "Core (Tctl/Tdie)",
+                  "Min": "39,4 °C",
+                  "Value": "55,5 °C",
+                  "Max": "69,1 °C",
+                  "SensorId": "/amdcpu/0/temperature/2",
+                  "Type": "Temperature",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                },
+                {
+                  "id": 23,
+                  "Text": "Package",
+                  "Min": "38,4 °C",
+                  "Value": "52,8 °C",
+                  "Max": "74,0 °C",
+                  "SensorId": "/amdcpu/0/temperature/3",
+                  "Type": "Temperature",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                }
+              ]
+            },
+            {
+              "id": 24,
+              "Text": "Load",
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/load.png",
+              "Children": [
+                {
+                  "id": 25,
+                  "Text": "CPU Total",
+                  "Min": "0,0 %",
+                  "Value": "9,1 %",
+                  "Max": "55,8 %",
+                  "SensorId": "/amdcpu/0/load/0",
+                  "Type": "Load",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": 26,
+          "Text": "NVIDIA GeForce RTX 4080 SUPER",
+          "Min": "",
+          "Value": "",
+          "Max": "",
+          "ImageURL": "images_icon/nvidia.png",
+          "Children": [
+            {
+              "id": 27,
+              "Text": "Powers",
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/power.png",
+              "Children": [
+                {
+                  "id": 28,
+                  "Text": "GPU Package",
+                  "Min": "4,1 W",
+                  "Value": "59,6 W",
+                  "Max": "66,6 W",
+                  "SensorId": "/gpu-nvidia/0/power/0",
+                  "Type": "Power",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                }
+              ]
+            },
+            {
+              "id": 29,
+              "Text": "Clocks",
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/clock.png",
+              "Children": [
+                {
+                  "id": 30,
+                  "Text": "GPU Core",
+                  "Min": "210,0 MHz",
+                  "Value": "2805,0 MHz",
+                  "Max": "2805,0 MHz",
+                  "SensorId": "/gpu-nvidia/0/clock/0",
+                  "Type": "Clock",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                },
+                {
+                  "id": 31,
+                  "Text": "GPU Memory",
+                  "Min": "405,0 MHz",
+                  "Value": "11252,0 MHz",
+                  "Max": "11502,0 MHz",
+                  "SensorId": "/gpu-nvidia/0/clock/4",
+                  "Type": "Clock",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                }
+              ]
+            },
+            {
+              "id": 32,
+              "Text": "Temperatures",
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/temperature.png",
+              "Children": [
+                {
+                  "id": 33,
+                  "Text": "GPU Core",
+                  "Min": "25,0 °C",
+                  "Value": "36,0 °C",
+                  "Max": "37,0 °C",
+                  "SensorId": "/gpu-nvidia/0/temperature/0",
+                  "Type": "Temperature",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                },
+                {
+                  "id": 34,
+                  "Text": "GPU Hot Spot",
+                  "Min": "32,5 °C",
+                  "Value": "43,0 °C",
+                  "Max": "43,3 °C",
+                  "SensorId": "/gpu-nvidia/0/temperature/2",
+                  "Type": "Temperature",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                }
+              ]
+            },
+            {
+              "id": 35,
+              "Text": "Load",
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/load.png",
+              "Children": [
+                {
+                  "id": 36,
+                  "Text": "GPU Core",
+                  "Min": "0,0 %",
+                  "Value": "5,0 %",
+                  "Max": "19,0 %",
+                  "SensorId": "/gpu-nvidia/0/load/0",
+                  "Type": "Load",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                },
+                {
+                  "id": 37,
+                  "Text": "GPU Memory Controller",
+                  "Min": "0,0 %",
+                  "Value": "0,0 %",
+                  "Max": "49,0 %",
+                  "SensorId": "/gpu-nvidia/0/load/1",
+                  "Type": "Load",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                },
+                {
+                  "id": 38,
+                  "Text": "GPU Video Engine",
+                  "Min": "0,0 %",
+                  "Value": "97,0 %",
+                  "Max": "99,0 %",
+                  "SensorId": "/gpu-nvidia/0/load/2",
+                  "Type": "Load",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                }
+              ]
+            },
+            {
+              "id": 39,
+              "Text": "Fans",
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/fan.png",
+              "Children": [
+                {
+                  "id": 40,
+                  "Text": "GPU Fan 1",
+                  "Min": "0 RPM",
+                  "Value": "0 RPM",
+                  "Max": "0 RPM",
+                  "SensorId": "/gpu-nvidia/0/fan/1",
+                  "Type": "Fan",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                },
+                {
+                  "id": 41,
+                  "Text": "GPU Fan 2",
+                  "Min": "0 RPM",
+                  "Value": "0 RPM",
+                  "Max": "0 RPM",
+                  "SensorId": "/gpu-nvidia/0/fan/2",
+                  "Type": "Fan",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                }
+              ]
+            },
+            {
+              "id": 42,
+              "Text": "Throughput",
+              "Min": "",
+              "Value": "",
+              "Max": "",
+              "ImageURL": "images_icon/throughput.png",
+              "Children": [
+                {
+                  "id": 43,
+                  "Text": "GPU PCIe Tx",
+                  "Min": "0,0 KB/s",
+                  "Value": "166,1 MB/s",
+                  "Max": "2422,8 MB/s",
+                  "SensorId": "/gpu-nvidia/0/throughput/1",
+                  "Type": "Throughput",
+                  "ImageURL": "images/transparent.png",
+                  "Children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

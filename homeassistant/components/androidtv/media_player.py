@@ -56,7 +56,7 @@ SERVICE_UPLOAD = "upload"
 ANDROIDTV_STATES = {
     "off": MediaPlayerState.OFF,
     "idle": MediaPlayerState.IDLE,
-    "standby": MediaPlayerState.STANDBY,
+    "standby": MediaPlayerState.IDLE,
     "playing": MediaPlayerState.PLAYING,
     "paused": MediaPlayerState.PAUSED,
 }

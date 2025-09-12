@@ -55,7 +55,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '136.34839630127',
+    'state': '136.34842300415',
   })
 # ---
 # name: test_sensors[sensor.someone_disk_size-entry]
@@ -225,7 +225,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '142.865287780762',
+    'state': '142.865261077881',
   })
 # ---
 # name: test_sensors[sensor.someone_disk_used_by_photos-entry]

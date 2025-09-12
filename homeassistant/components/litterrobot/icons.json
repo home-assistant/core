@@ -36,6 +36,9 @@
       }
     },
     "sensor": {
+      "food_dispensed_today": {
+        "default": "mdi:counter"
+      },
       "hopper_status": {
         "default": "mdi:filter",
         "state": {
@@ -46,6 +49,12 @@
           "motor_fault_short": "mdi:flash-off",
           "motor_ot_amps": "mdi:flash-alert"
         }
+      },
+      "total_cycles": {
+        "default": "mdi:counter"
+      },
+      "visits_today": {
+        "default": "mdi:counter"
       }
     },
     "switch": {

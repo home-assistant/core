@@ -106,6 +106,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=1,
     ),
     EcoWittSensorTypes.CO2_PPM: SensorEntityDescription(
         key="CO2_PPM",
@@ -191,12 +192,14 @@ ECOWITT_SENSORS_MAPPING: Final = {
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     EcoWittSensorTypes.SPEED_MPH: SensorEntityDescription(
         key="SPEED_MPH",
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     EcoWittSensorTypes.PRESSURE_HPA: SensorEntityDescription(
         key="PRESSURE_HPA",
@@ -210,9 +213,32 @@ ECOWITT_SENSORS_MAPPING: Final = {
         native_unit_of_measurement=UnitOfPressure.INHG,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    EcoWittSensorTypes.VPD_INHG: SensorEntityDescription(
+        key="VPD_INHG",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.INHG,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     EcoWittSensorTypes.PERCENTAGE: SensorEntityDescription(
         key="PERCENTAGE",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.SOIL_MOISTURE: SensorEntityDescription(
+        key="SOIL_MOISTURE",
+        device_class=SensorDeviceClass.MOISTURE,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.PM1: SensorEntityDescription(
+        key="PM1",
+        device_class=SensorDeviceClass.PM1,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.PM4: SensorEntityDescription(
+        key="PM4",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }

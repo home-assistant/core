@@ -129,12 +129,21 @@
               "version": 1
             },
             {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
               "id": "sec.diagnosticsInformation",
               "version": 1
             },
             {
               "id": "sec.wifiConfiguration",
               "version": 1
+            },
+            {
+              "id": "sec.smartthingsHub",
+              "version": 1,
+              "ephemeral": true
             }
           ],
           "categories": [
@@ -142,7 +151,8 @@
               "name": "Refrigerator",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "freezer",
@@ -190,7 +200,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "cooler",
@@ -234,7 +245,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "cvroom",
@@ -266,7 +278,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "onedoor",
@@ -314,7 +327,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "icemaker",
@@ -334,7 +348,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "icemaker-02",
@@ -354,7 +369,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "icemaker-03",
@@ -374,7 +390,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "scale-10",
@@ -402,7 +419,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "scale-11",
@@ -422,7 +440,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "pantry-01",
@@ -454,7 +473,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "pantry-02",
@@ -486,7 +506,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         }
       ],
       "createTime": "2024-12-01T18:22:14.880Z",

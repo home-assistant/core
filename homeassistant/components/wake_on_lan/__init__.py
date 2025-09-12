@@ -52,7 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         await hass.async_add_executor_job(
-            partial(wakeonlan.send_magic_packet, mac_address, **service_kwargs)
+            partial(wakeonlan.send_magic_packet, mac_address, **service_kwargs)  # type: ignore[arg-type]
         )
 
     hass.services.async_register(

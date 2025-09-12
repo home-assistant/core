@@ -9,7 +9,7 @@ ASSETS_URL = "https://habitica-assets.s3.amazonaws.com/mobileApp/images/"
 SITE_DATA_URL = "https://habitica.com/user/settings/siteData"
 FORGOT_PASSWORD_URL = "https://habitica.com/forgot-password"
 SIGN_UP_URL = "https://habitica.com/register"
-HABITICANS_URL = "https://habitica.com/static/img/home-main@3x.ffc32b12.png"
+HABITICANS_URL = "https://cdn.habitica.com/assets/home-main@3x-Dwnue45Z.png"
 
 DOMAIN = "habitica"
 

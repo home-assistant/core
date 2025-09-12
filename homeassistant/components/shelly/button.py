@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any, Final
 
-from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_BLU_GATEWAY, RPC_GENERATIONS
+from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_BLU_GATEWAY_G3, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.button import (
@@ -19,20 +19,14 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import DOMAIN, LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .utils import (
-    get_block_device_info,
-    get_blu_trv_device_info,
-    get_device_entry_gen,
-    get_rpc_device_info,
-    get_rpc_key_ids,
-)
+from .entity import get_entity_block_device_info, get_entity_rpc_device_info
+from .utils import get_blu_trv_device_info, get_device_entry_gen, get_rpc_key_ids
 
 PARALLEL_UPDATES = 0
 
@@ -62,7 +56,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         translation_key="self_test",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action="trigger_shelly_gas_self_test",
-        supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
+        supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="mute",
@@ -70,7 +64,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         translation_key="mute",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_mute",
-        supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
+        supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="unmute",
@@ -78,7 +72,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         translation_key="unmute",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_unmute",
-        supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
+        supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
 ]
 
@@ -89,7 +83,7 @@ BLU_TRV_BUTTONS: Final[list[ShellyButtonDescription]] = [
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_blu_trv_calibration",
-        supported=lambda coordinator: coordinator.device.model == MODEL_BLU_GATEWAY,
+        supported=lambda coordinator: coordinator.model == MODEL_BLU_GATEWAY_G3,
     ),
 ]
 
@@ -160,6 +154,7 @@ async def async_setup_entry(
             ShellyBluTrvButton(coordinator, button, id_)
             for id_ in blutrv_key_ids
             for button in BLU_TRV_BUTTONS
+            if button.supported(coordinator)
         )
 
     async_add_entities(entities)
@@ -233,16 +228,9 @@ class ShellyButton(ShellyBaseButton):
 
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
         if isinstance(coordinator, ShellyBlockCoordinator):
-            self._attr_device_info = get_block_device_info(
-                coordinator.device, coordinator.mac
-            )
+            self._attr_device_info = get_entity_block_device_info(coordinator)
         else:
-            self._attr_device_info = get_rpc_device_info(
-                coordinator.device, coordinator.mac
-            )
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
-        )
+            self._attr_device_info = get_entity_rpc_device_info(coordinator)
 
     async def _press_method(self) -> None:
         """Press method."""
@@ -266,11 +254,14 @@ class ShellyBluTrvButton(ShellyBaseButton):
         """Initialize."""
         super().__init__(coordinator, description)
 
-        config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
+        key = f"{BLU_TRV_IDENTIFIER}:{id_}"
+        config = coordinator.device.config[key]
         ble_addr: str = config["addr"]
+        fw_ver = coordinator.device.status[key].get("fw_ver")
+
         self._attr_unique_id = f"{ble_addr}_{description.key}"
         self._attr_device_info = get_blu_trv_device_info(
-            config, ble_addr, coordinator.mac
+            config, ble_addr, coordinator.mac, fw_ver
         )
         self._id = id_
 

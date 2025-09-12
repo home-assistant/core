@@ -34,7 +34,7 @@ def mock_config_entry(
         version=3,
         data=USER_INPUT
         | {
-            CONF_ADDRESS: "00:00:00:00:00:00",
+            CONF_ADDRESS: "000000000000",
             CONF_TOKEN: "token",
         },
         unique_id=mock_lamarzocco.serial_number,

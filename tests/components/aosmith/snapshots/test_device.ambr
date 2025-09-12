@@ -17,7 +17,6 @@
         'junctionId',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'A. O. Smith',
@@ -27,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'serial',
-    'suggested_area': 'Basement',
     'sw_version': '2.14',
     'via_device_id': None,
   })

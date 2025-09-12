@@ -9,10 +9,10 @@ import logging
 from typing import Any
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.devices import Devices
-from aiounifi.models.api import ApiItemT
+from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
@@ -31,12 +31,7 @@ from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
 from .const import DOMAIN
-from .entity import (
-    HandlerT,
-    UnifiEntity,
-    UnifiEntityDescription,
-    async_device_available_fn,
-)
+from .entity import UnifiEntity, UnifiEntityDescription, async_device_available_fn
 from .hub import UnifiHub
 
 LOGGER = logging.getLogger(__name__)
@@ -142,7 +137,7 @@ def async_device_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiTrackerEntityDescription(
+class UnifiTrackerEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     UnifiEntityDescription[HandlerT, ApiItemT], ScannerEntityDescription
 ):
     """Class describing UniFi device tracker entity."""
@@ -229,7 +224,9 @@ async def async_setup_entry(
     )
 
 
-class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
+class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+    UnifiEntity[HandlerT, ApiItemT], ScannerEntity
+):
     """Representation of a UniFi scanner."""
 
     entity_description: UnifiTrackerEntityDescription

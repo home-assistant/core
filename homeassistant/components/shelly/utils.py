@@ -16,6 +16,7 @@ from aioshelly.const import (
     DEFAULT_COAP_PORT,
     DEFAULT_HTTP_PORT,
     MODEL_1L,
+    MODEL_BLU_GATEWAY_G3,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_EM3,
@@ -56,6 +57,7 @@ from .const import (
     COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
+    DEVICE_UNIT_MAP,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -450,7 +452,7 @@ def get_rpc_entity_name(
 
 def get_device_entry_gen(entry: ConfigEntry) -> int:
     """Return the device generation from config entry."""
-    return entry.data.get(CONF_GEN, 1)
+    return entry.data.get(CONF_GEN, 1)  # type: ignore[no-any-return]
 
 
 def get_rpc_key_instances(
@@ -652,6 +654,15 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
     return ids
 
 
+def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
+    """Return the unit of a virtual component.
+
+    If the unit is not set, the device sends an empty string
+    """
+    unit = config["meta"]["ui"]["unit"]
+    return DEVICE_UNIT_MAP.get(unit, unit) if unit else None
+
+
 @callback
 def async_remove_orphaned_entities(
     hass: HomeAssistant,
@@ -748,8 +759,12 @@ async def get_rpc_scripts_event_types(
 def get_rpc_device_info(
     device: RpcDevice,
     mac: str,
+    configuration_url: str,
+    model: str,
+    model_name: str | None = None,
     key: str | None = None,
     emeter_phase: str | None = None,
+    suggested_area: str | None = None,
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     if key is None:
@@ -769,7 +784,11 @@ def get_rpc_device_info(
             identifiers={(DOMAIN, f"{mac}-{key}-{emeter_phase.lower()}")},
             name=get_rpc_sub_device_name(device, key, emeter_phase),
             manufacturer="Shelly",
+            model=model_name,
+            model_id=model,
+            suggested_area=suggested_area,
             via_device=(DOMAIN, mac),
+            configuration_url=configuration_url,
         )
 
     if (
@@ -783,12 +802,16 @@ def get_rpc_device_info(
         identifiers={(DOMAIN, f"{mac}-{key}")},
         name=get_rpc_sub_device_name(device, key),
         manufacturer="Shelly",
+        model=model_name,
+        model_id=model,
+        suggested_area=suggested_area,
         via_device=(DOMAIN, mac),
+        configuration_url=configuration_url,
     )
 
 
 def get_blu_trv_device_info(
-    config: dict[str, Any], ble_addr: str, parent_mac: str
+    config: dict[str, Any], ble_addr: str, parent_mac: str, fw_ver: str | None
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     model_id = config.get("local_name")
@@ -800,11 +823,18 @@ def get_blu_trv_device_info(
         model=BLU_TRV_MODEL_NAME.get(model_id) if model_id else None,
         model_id=config.get("local_name"),
         name=config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}",
+        sw_version=fw_ver,
     )
 
 
 def get_block_device_info(
-    device: BlockDevice, mac: str, block: Block | None = None
+    device: BlockDevice,
+    mac: str,
+    configuration_url: str,
+    model: str,
+    model_name: str | None = None,
+    block: Block | None = None,
+    suggested_area: str | None = None,
 ) -> DeviceInfo:
     """Return device info for Block device."""
     if (
@@ -819,5 +849,38 @@ def get_block_device_info(
         identifiers={(DOMAIN, f"{mac}-{block.description}")},
         name=get_block_sub_device_name(device, block),
         manufacturer="Shelly",
+        model=model_name,
+        model_id=model,
+        suggested_area=suggested_area,
         via_device=(DOMAIN, mac),
+        configuration_url=configuration_url,
     )
+
+
+@callback
+def remove_stale_blu_trv_devices(
+    hass: HomeAssistant, rpc_device: RpcDevice, entry: ConfigEntry
+) -> None:
+    """Remove stale BLU TRV devices."""
+    if rpc_device.model != MODEL_BLU_GATEWAY_G3:
+        return
+
+    dev_reg = dr.async_get(hass)
+    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+    config = rpc_device.config
+    blutrv_keys = get_rpc_key_ids(config, BLU_TRV_IDENTIFIER)
+    trv_addrs = [config[f"{BLU_TRV_IDENTIFIER}:{key}"]["addr"] for key in blutrv_keys]
+
+    for device in devices:
+        if not device.via_device_id:
+            # Device is not a sub-device, skip
+            continue
+
+        if any(
+            identifier[0] == DOMAIN and identifier[1] in trv_addrs
+            for identifier in device.identifiers
+        ):
+            continue
+
+        LOGGER.debug("Removing stale BLU TRV device %s", device.name)
+        dev_reg.async_update_device(device.id, remove_config_entry_id=entry.entry_id)

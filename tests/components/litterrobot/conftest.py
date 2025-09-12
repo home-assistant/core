@@ -52,6 +52,20 @@ def create_mock_robot(
     return robot
 
 
+def create_mock_pet(
+    pet_data: dict | None,
+    account: Account,
+    side_effect: Any | None = None,
+) -> Pet:
+    """Create a mock Pet."""
+    if not pet_data:
+        pet_data = {}
+
+    pet = Pet(data={**PET_DATA, **pet_data}, session=account.session)
+    pet.fetch_weight_history = AsyncMock(side_effect=side_effect)
+    return pet
+
+
 def create_mock_account(
     robot_data: dict | None = None,
     side_effect: Any | None = None,
@@ -69,7 +83,7 @@ def create_mock_account(
         if skip_robots
         else [create_mock_robot(robot_data, account, v4, feeder, side_effect)]
     )
-    account.pets = [Pet(PET_DATA, account.session)] if pet else []
+    account.pets = [create_mock_pet(PET_DATA, account, side_effect)] if pet else []
     return account
 
 

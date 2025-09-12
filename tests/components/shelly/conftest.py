@@ -260,6 +260,33 @@ MOCK_BLU_TRV_REMOTE_CONFIG = {
                 "meta": {},
             },
         },
+        {
+            "key": "blutrv:201",
+            "status": {
+                "id": 201,
+                "target_C": 17.1,
+                "current_C": 17.1,
+                "pos": 0,
+                "rssi": -60,
+                "battery": 100,
+                "packet_id": 58,
+                "last_updated_ts": 1734967725,
+                "paired": True,
+                "rpc": True,
+                "rsv": 61,
+            },
+            "config": {
+                "id": 201,
+                "addr": "f8:44:77:25:f0:de",
+                "name": "TRV-201",
+                "key": None,
+                "trv": "bthomedevice:201",
+                "temp_sensors": [],
+                "dw_sensors": [],
+                "override_delay": 30,
+                "meta": {},
+            },
+        },
     ],
     "blutrv:200": {
         "id": 0,
@@ -272,11 +299,34 @@ MOCK_BLU_TRV_REMOTE_CONFIG = {
         "name": "TRV-Name",
         "local_name": "SBTR-001AEU",
     },
+    "blutrv:201": {
+        "id": 1,
+        "enable": True,
+        "min_valve_position": 0,
+        "default_boost_duration": 1800,
+        "default_override_duration": 2147483647,
+        "default_override_target_C": 8,
+        "addr": "f8:44:77:25:f0:de",
+        "name": "TRV-201",
+        "local_name": "SBTR-001AEU",
+    },
 }
 
 
 MOCK_BLU_TRV_REMOTE_STATUS = {
     "blutrv:200": {
+        "id": 0,
+        "pos": 0,
+        "steps": 0,
+        "current_C": 15.2,
+        "target_C": 17.1,
+        "schedule_rev": 0,
+        "rssi": -60,
+        "battery": 100,
+        "errors": [],
+        "fw_ver": "v1.2.10",
+    },
+    "blutrv:201": {
         "id": 0,
         "pos": 0,
         "steps": 0,
@@ -499,6 +549,7 @@ def _mock_rpc_device(version: str | None = None):
         ),
         xmod_info={},
         zigbee_enabled=False,
+        zigbee_firmware=False,
         ip_address="10.10.10.10",
     )
     type(device).name = PropertyMock(return_value="Test name")
