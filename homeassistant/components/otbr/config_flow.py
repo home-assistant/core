@@ -108,9 +108,9 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device: str | None = None
         self._url: str | None = None  # used only in recommended setup
 
-        self.addon_install_task: asyncio.Task | None = None
-        self.addon_start_task: asyncio.Task | None = None
-        self.addon_connect_task: asyncio.Task | None = None
+        self._addon_install_task: asyncio.Task | None = None
+        self._addon_start_task: asyncio.Task | None = None
+        self._addon_connect_task: asyncio.Task[bytes] | None = None
 
     async def _set_dataset(self, api: python_otbr_api.OTBR, otbr_url: str) -> None:
         """Connect to the OTBR and create or apply a dataset if it doesn't have one."""
@@ -190,11 +190,6 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             elapsed_time = asyncio.get_event_loop().time() - start_time
 
             if elapsed_time >= OTBR_CONNECTION_TIMEOUT:
-                _LOGGER.warning(
-                    "Failed to connect to OTBR@%s after %.1f seconds",
-                    url,
-                    OTBR_CONNECTION_TIMEOUT,
-                )
                 raise HomeAssistantError(
                     f"Failed to connect to OTBR after {OTBR_CONNECTION_TIMEOUT} seconds"
                 )
@@ -224,6 +219,33 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             ) from err
 
         return addon_info
+
+    async def _async_configure_start_addon(self) -> None:
+        """Configure the start addon."""
+        otbr_manager = get_otbr_addon_manager(self.hass)
+        addon_info = await self._async_get_addon_info(otbr_manager)
+
+        assert self._device is not None
+        new_addon_config = {
+            **addon_info.options,
+            "device": self._device,
+            "autoflash_firmware": False,
+        }
+
+        _LOGGER.debug("Reconfiguring OTBR addon with %s", new_addon_config)
+
+        try:
+            await otbr_manager.async_set_addon_options(new_addon_config)
+        except AddonError as err:
+            _LOGGER.error(err)
+            raise AbortFlow(
+                "addon_set_config_failed",
+                description_placeholders={
+                    "addon_name": otbr_manager.addon_name,
+                },
+            ) from err
+
+        await otbr_manager.async_start_addon_waiting()
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -273,14 +295,14 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         addon_info = await self._async_get_addon_info(otbr_manager)
 
         if addon_info.state == AddonState.NOT_INSTALLED:
-            return await self.async_step_install_otbr_addon()
+            return await self.async_step_install_addon()
 
         if addon_info.state == AddonState.RUNNING:
             await otbr_manager.async_stop_addon()
 
-        return await self.async_step_start_otbr_addon()
+        return await self.async_step_start_addon()
 
-    async def async_step_install_otbr_addon(
+    async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show progress dialog for installing the OTBR addon."""
@@ -289,24 +311,24 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("OTBR addon info: %s", addon_info)
 
-        if not self.addon_install_task:
-            self.addon_install_task = self.hass.async_create_task(
+        if not self._addon_install_task:
+            self._addon_install_task = self.hass.async_create_task(
                 addon_manager.async_install_addon_waiting(),
                 "OTBR addon install",
             )
 
-        if not self.addon_install_task.done():
+        if not self._addon_install_task.done():
             return self.async_show_progress(
-                step_id="install_otbr_addon",
-                progress_action="install_otbr_addon",
+                step_id="install_addon",
+                progress_action="install_addon",
                 description_placeholders={
                     "addon_name": addon_manager.addon_name,
                 },
-                progress_task=self.addon_install_task,
+                progress_task=self._addon_install_task,
             )
 
         try:
-            await self.addon_install_task
+            await self._addon_install_task
         except AddonError as err:
             _LOGGER.error(err)
             return self.async_abort(
@@ -316,55 +338,33 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
         finally:
-            self.addon_install_task = None
+            self._addon_install_task = None
 
         return self.async_show_progress_done(next_step_id="addon")
 
-    async def async_step_start_otbr_addon(
+    async def async_step_start_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure OTBR to point to the SkyConnect and run the addon."""
         otbr_manager = get_otbr_addon_manager(self.hass)
 
-        if not self.addon_start_task:
-            addon_info = await self._async_get_addon_info(otbr_manager)
-
-            assert self._device is not None
-            new_addon_config = {
-                **addon_info.options,
-                "device": self._device,
-                "autoflash_firmware": False,
-            }
-
-            _LOGGER.debug("Reconfiguring OTBR addon with %s", new_addon_config)
-
-            try:
-                await otbr_manager.async_set_addon_options(new_addon_config)
-            except AddonError as err:
-                _LOGGER.error(err)
-                raise AbortFlow(
-                    "addon_set_config_failed",
-                    description_placeholders={
-                        "addon_name": otbr_manager.addon_name,
-                    },
-                ) from err
-
-            self.addon_start_task = self.hass.async_create_task(
-                otbr_manager.async_start_addon_waiting()
+        if not self._addon_start_task:
+            self._addon_start_task = self.hass.async_create_task(
+                self._async_configure_start_addon()
             )
 
-        if not self.addon_start_task.done():
+        if not self._addon_start_task.done():
             return self.async_show_progress(
-                step_id="start_otbr_addon",
-                progress_action="start_otbr_addon",
+                step_id="start_addon",
+                progress_action="start_addon",
                 description_placeholders={
                     "addon_name": otbr_manager.addon_name,
                 },
-                progress_task=self.addon_start_task,
+                progress_task=self._addon_start_task,
             )
 
         try:
-            await self.addon_start_task
+            await self._addon_start_task
         except (AddonError, AbortFlow) as err:
             _LOGGER.error(err)
             return self.async_abort(
@@ -374,7 +374,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
         finally:
-            self.addon_start_task = None
+            self._addon_start_task = None
 
         return self.async_show_progress_done(next_step_id="connect_otbr")
 
@@ -386,23 +386,23 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         addon_info = await self._async_get_addon_info(otbr_manager)
         self._url = f"http://{addon_info.hostname}:8081"
 
-        if not self.addon_connect_task:
-            self.addon_connect_task = self.hass.async_create_task(
+        if not self._addon_connect_task:
+            self._addon_connect_task = self.hass.async_create_task(
                 self._connect_with_retry(self._url)
             )
 
-        if not self.addon_connect_task.done():
+        if not self._addon_connect_task.done():
             return self.async_show_progress(
                 step_id="connect_otbr",
                 progress_action="connect_otbr",
                 description_placeholders={
                     "addon_name": otbr_manager.addon_name,
                 },
-                progress_task=self.addon_connect_task,
+                progress_task=self._addon_connect_task,
             )
 
         try:
-            border_agent_id = await self.addon_connect_task
+            border_agent_id = await self._addon_connect_task
         except AlreadyConfigured:
             return self.async_abort(reason="already_configured")
         except (
@@ -414,7 +414,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Failed to communicate with OTBR@%s: %s", self._url, exc)
             return self.async_abort(reason="unknown")
         finally:
-            self.addon_connect_task = None
+            self._addon_connect_task = None
 
         await self.async_set_unique_id(border_agent_id.hex())
         return self.async_show_progress_done(next_step_id="addon_done")

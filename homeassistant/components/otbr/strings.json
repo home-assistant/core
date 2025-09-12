@@ -20,8 +20,8 @@
       }
     },
     "progress": {
-      "start_otbr_addon": "Starting OTBR add-on",
-      "install_otbr_addon": "Installing OTBR add-on",
+      "start_addon": "Starting OTBR add-on",
+      "install_addon": "Installing OTBR add-on",
       "connect_otbr": "Connecting to OTBR add-on"
     },
     "error": {

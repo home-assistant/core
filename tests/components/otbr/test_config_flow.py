@@ -1544,7 +1544,7 @@ async def test_start_otbr_addon_set_config_failure(
 
     # Should abort due to config failure
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "addon_set_config_failed"
+    assert result["reason"] == "addon_start_failed"
 
 
 @pytest.mark.usefixtures("mock_is_hassio", "mock_async_get_usb_ports")
