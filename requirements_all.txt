@@ -131,7 +131,7 @@ TwitterAPI==2.7.12
 WSDiscovery==2.1.2
 
 # homeassistant.components.accuweather
-accuweather==4.2.0
+accuweather==4.2.1
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -238,7 +238,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2025.9.0
+aioecowitt==2025.9.1
 
 # homeassistant.components.co2signal
 aioelectricitymaps==1.1.1
@@ -262,7 +262,7 @@ aiogithubapi==24.6.0
 aioguardian==2022.07.0
 
 # homeassistant.components.harmony
-aioharmony==0.5.2
+aioharmony==0.5.3
 
 # homeassistant.components.hassio
 aiohasupervisor==0.3.2
@@ -298,7 +298,7 @@ aiokem==1.0.1
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.6.4
+aiolifx-themes==1.0.2
 
 # homeassistant.components.lifx
 aiolifx==1.2.1
@@ -325,7 +325,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.5.4
+aiontfy==0.5.5
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -426,7 +426,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.10.0
+aiovodafone==1.2.1
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -625,7 +625,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==3.2.0
+bleak-esphome==3.3.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.4.3
@@ -1002,7 +1002,7 @@ gassist-text==0.0.14
 gcal-sync==8.0.0
 
 # homeassistant.components.aladdin_connect
-genie-partner-sdk==1.0.10
+genie-partner-sdk==1.0.11
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1134,10 +1134,10 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.3
 
 # homeassistant.components.bluetooth
-habluetooth==5.3.0
+habluetooth==5.6.2
 
 # homeassistant.components.cloud
-hass-nabucasa==1.1.0
+hass-nabucasa==1.1.1
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1178,7 +1178,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250903.3
+home-assistant-frontend==20250903.5
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.9.3
@@ -1934,7 +1934,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2025.7.0
+pydrawise==2025.9.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -2354,7 +2354,7 @@ pysmarlaapi==0.9.2
 pysmartthings==3.2.9
 
 # homeassistant.components.smarty
-pysmarty2==0.10.2
+pysmarty2==0.10.3
 
 # homeassistant.components.smhi
 pysmhi==1.0.2
@@ -2768,7 +2768,7 @@ sentry-sdk==1.45.1
 sfrbox-api==0.0.12
 
 # homeassistant.components.sharkiq
-sharkiq==1.1.1
+sharkiq==1.4.0
 
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
@@ -3184,7 +3184,7 @@ youless-api==2.2.0
 youtubeaio==2.0.0
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.08.11
+yt-dlp[default]==2025.09.05
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.2
