@@ -83,8 +83,8 @@
       "evse_plug": {
         "name": "Plug state"
       },
-      "evse_supply_charging_state": {
-        "name": "Supply charging state"
+      "evse_supply_state": {
+        "name": "Charger supply state"
       },
       "boost_state": {
         "name": "Boost state"
@@ -92,8 +92,17 @@
       "dishwasher_alarm_inflow": {
         "name": "Inflow alarm"
       },
-      "dishwasher_alarm_door": {
+      "alarm_door": {
         "name": "Door alarm"
+      },
+      "valve_fault_blocked": {
+        "name": "Valve blocked"
+      },
+      "valve_fault_general_fault": {
+        "name": "General fault"
+      },
+      "valve_fault_leaking": {
+        "name": "Valve leaking"
       }
     },
     "button": {
@@ -111,6 +120,9 @@
       },
       "reset_filter_condition": {
         "name": "Reset filter condition"
+      },
+      "self_test_request": {
+        "name": "Self-test"
       }
     },
     "climate": {
@@ -180,6 +192,9 @@
       "altitude": {
         "name": "Altitude above sea level"
       },
+      "cook_time": {
+        "name": "Cooking time"
+      },
       "pump_setpoint": {
         "name": "Setpoint"
       },
@@ -189,11 +204,20 @@
       "temperature_setpoint": {
         "name": "Temperature setpoint"
       },
-      "pir_occupied_to_unoccupied_delay": {
-        "name": "Occupied to unoccupied delay"
+      "hold_time": {
+        "name": "Hold time"
       },
       "auto_relock_timer": {
-        "name": "Automatic relock timer"
+        "name": "Autorelock time"
+      },
+      "led_indicator_intensity_off": {
+        "name": "LED off intensity"
+      },
+      "led_indicator_intensity_on": {
+        "name": "LED on intensity"
+      },
+      "valve_configuration_and_control_default_open_duration": {
+        "name": "Default open duration"
       }
     },
     "light": {
@@ -215,6 +239,9 @@
       },
       "device_energy_management_mode": {
         "name": "Energy management mode"
+      },
+      "power_level": {
+        "name": "Power level (W)"
       },
       "sensitivity_level": {
         "name": "Sensitivity",
@@ -277,6 +304,9 @@
       "activated_carbon_filter_condition": {
         "name": "Activated carbon filter condition"
       },
+      "auto_close_time": {
+        "name": "Auto-close time"
+      },
       "contamination_state": {
         "name": "Contamination state",
         "state": {
@@ -304,7 +334,7 @@
         "name": "Flow"
       },
       "hepa_filter_condition": {
-        "name": "Hepa filter condition"
+        "name": "HEPA filter condition"
       },
       "operational_state": {
         "name": "Operational state",
@@ -317,6 +347,9 @@
           "charging": "[%key:common::state::charging%]",
           "docked": "Docked"
         }
+      },
+      "estimated_end_time": {
+        "name": "Estimated end time"
       },
       "switch_current_position": {
         "name": "Current switch position"
@@ -399,6 +432,12 @@
           "other": "Other fault"
         }
       },
+      "evse_soc": {
+        "name": "State of charge"
+      },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
       "pump_control_mode": {
         "name": "Control mode",
         "state": {
@@ -412,6 +451,15 @@
       },
       "pump_speed": {
         "name": "Rotation speed"
+      },
+      "eve_weather_trend": {
+        "name": "Weather trend",
+        "state": {
+          "cloudy": "Cloudy",
+          "rainy": "Rainy",
+          "sunny": "Sunny",
+          "stormy": "Stormy"
+        }
       },
       "evse_circuit_capacity": {
         "name": "Circuit capacity"
@@ -430,6 +478,24 @@
       },
       "window_covering_target_position": {
         "name": "Target opening position"
+      },
+      "active_current": {
+        "name": "Active current"
+      },
+      "apparent_current": {
+        "name": "Apparent current"
+      },
+      "reactive_current": {
+        "name": "Reactive current"
+      },
+      "rms_current": {
+        "name": "Effective current"
+      },
+      "rms_voltage": {
+        "name": "Effective voltage"
+      },
+      "voltage": {
+        "name": "Voltage"
       }
     },
     "switch": {

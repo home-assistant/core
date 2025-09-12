@@ -13,7 +13,11 @@ import requests_mock
 from requests_mock import ANY
 
 from homeassistant import config_entries
-from homeassistant.components.huawei_lte.const import CONF_UNAUTHENTICATED_MODE, DOMAIN
+from homeassistant.components.huawei_lte.const import (
+    CONF_UNAUTHENTICATED_MODE,
+    CONF_UPNP_UDN,
+    DOMAIN,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -373,6 +377,7 @@ async def test_ssdp(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == service_info.upnp[ATTR_UPNP_MODEL_NAME]
+    assert result["result"].data[CONF_UPNP_UDN] == service_info.upnp[ATTR_UPNP_UDN]
 
 
 @pytest.mark.parametrize(

@@ -116,6 +116,25 @@ async def test_expired_token_refresh_failure(
     assert entries[0].state is expected_state
 
 
+@pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
+async def test_setup_client_error(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test setup handling aiohttp.ClientError."""
+    aioclient_mock.post(
+        "https://oauth2.googleapis.com/token",
+        exc=aiohttp.ClientError,
+    )
+
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY
+
+
 @pytest.mark.parametrize(
     ("configured_language_code", "expected_language_code"),
     [("", "en-US"), ("en-US", "en-US"), ("es-ES", "es-ES")],

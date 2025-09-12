@@ -436,7 +436,6 @@ async def test_generic_device_update_entity(
             object_id="myupdate",
             key=1,
             name="my update",
-            unique_id="my_update",
         )
     ]
     states = [
@@ -470,7 +469,6 @@ async def test_generic_device_update_entity_has_update(
             object_id="myupdate",
             key=1,
             name="my update",
-            unique_id="my_update",
         )
     ]
     states = [
@@ -544,7 +542,9 @@ async def test_generic_device_update_entity_has_update(
     assert state.attributes[ATTR_IN_PROGRESS] is True
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
-    mock_client.update_command.assert_called_with(key=1, command=UpdateCommand.CHECK)
+    mock_client.update_command.assert_called_with(
+        key=1, command=UpdateCommand.CHECK, device_id=0
+    )
 
 
 async def test_update_entity_release_notes(
@@ -559,7 +559,6 @@ async def test_update_entity_release_notes(
             object_id="myupdate",
             key=1,
             name="my update",
-            unique_id="my_update",
         )
     ]
 

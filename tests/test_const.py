@@ -118,7 +118,7 @@ def test_deprecated_unit_of_conductivity_alias() -> None:
     """Test UnitOfConductivity deprecation."""
 
     # Test the deprecated members are aliases
-    assert set(const.UnitOfConductivity) == {"S/cm", "µS/cm", "mS/cm"}
+    assert set(const.UnitOfConductivity) == {"S/cm", "μS/cm", "mS/cm"}
 
 
 def test_deprecated_unit_of_conductivity_members(
@@ -166,8 +166,8 @@ def test_deprecated_unit_of_conductivity_members(
 
     def deprecation_message(member: str, replacement: str) -> str:
         return (
-            f"UnitOfConductivity.{member} was used from hue, this is a deprecated enum "
-            "member which will be removed in HA Core 2025.11.0. Use UnitOfConductivity."
+            f"The deprecated enum member UnitOfConductivity.{member} was used from hue. "
+            "It will be removed in HA Core 2025.11.0. Use UnitOfConductivity."
             f"{replacement} instead, please report it to the author of the 'hue' custom"
             " integration"
         )

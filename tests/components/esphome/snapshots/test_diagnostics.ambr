@@ -82,6 +82,7 @@
         'minor': 99,
       }),
       'device_info': dict({
+        'api_encryption_supported': False,
         'area': dict({
           'area_id': 0,
           'name': '',

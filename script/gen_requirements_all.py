@@ -135,7 +135,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.9.0
+anyio==4.10.0
 h11==0.16.0
 httpcore==1.0.9
 
@@ -144,7 +144,7 @@ httpcore==1.0.9
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.3.0
+numpy==2.3.2
 pandas==2.3.0
 
 # Constrain multidict to avoid typing issues
@@ -170,18 +170,14 @@ iso4217!=1.10.20220401
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==6.31.1
+protobuf==6.32.0
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
 faust-cchardet>=2.1.18
 
-# websockets 13.1 is the first version to fully support the new
-# asyncio implementation. The legacy implementation is now
-# deprecated as of websockets 14.0.
-# https://websockets.readthedocs.io/en/13.0.1/howto/upgrade.html#missing-features
-# https://websockets.readthedocs.io/en/stable/howto/upgrade.html
-websockets>=13.1
+# Prevent accidental fallbacks
+websockets>=15.0.1
 
 # pysnmplib is no longer maintained and does not work with newer
 # python
@@ -198,7 +194,7 @@ poetry==1000000000.0.0
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
-charset-normalizer==3.4.0
+charset-normalizer==3.4.3
 
 # dacite: Ensure we have a version that is able to handle type unions for
 # NAM, Brother, and GIOS.
@@ -239,10 +235,23 @@ aiofiles>=24.1.0
 # https://github.com/aio-libs/multidict/issues/1131
 multidict>=6.4.2
 
-# rpds-py > 0.25.0 requires cargo 1.84.0
-# Stable Alpine current only ships cargo 1.83.0
+# rpds-py frequently updates cargo causing build failures
 # No wheels upstream available for armhf & armv7
-rpds-py==0.24.0
+rpds-py==0.26.0
+
+# Constraint num2words to 0.5.14 as 0.5.15 and 0.5.16 were removed from PyPI
+num2words==0.5.14
+
+# pymodbus does not follow SemVer, and it keeps getting
+# downgraded or upgraded by custom components
+# This ensures all use the same version
+pymodbus==3.11.2
+
+# Some packages don't support gql 4.0.0 yet
+gql<4.0.0
+
+# Pin pytest-rerunfailures to prevent accidental breaks
+pytest-rerunfailures==16.0.1
 """
 
 GENERATED_MESSAGE = (
