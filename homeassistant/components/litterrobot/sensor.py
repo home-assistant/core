@@ -216,64 +216,6 @@ async def async_setup_entry(
         for pet in coordinator.account.pets
         for description in PET_SENSORS
     )
-    # Add LR4 hopper daily sum and event count sensors
-    for robot in coordinator.account.robots:
-        if isinstance(robot, LitterRobot4):
-            entities.append(
-                LitterHopperMetricSensor(
-                    robot,
-                    coordinator,
-                    RobotSensorEntityDescription[LitterRobot4](
-                        key="hopper_dispensed_today",
-                        translation_key="hopper_dispensed_today",
-                        state_class=SensorStateClass.TOTAL,
-                        last_reset_fn=dt_util.start_of_local_day,
-                        value_fn=lambda r: None,  # unused in custom entity
-                    ),
-                    metric_key="sum_today",
-                )
-            )
-            entities.append(
-                LitterHopperMetricSensor(
-                    robot,
-                    coordinator,
-                    RobotSensorEntityDescription[LitterRobot4](
-                        key="hopper_dispense_events_today",
-                        translation_key="hopper_dispense_events_today",
-                        state_class=SensorStateClass.TOTAL,
-                        last_reset_fn=dt_util.start_of_local_day,
-                        value_fn=lambda r: None,  # unused in custom entity
-                    ),
-                    metric_key="count_today",
-                )
-            )
-            entities.append(
-                LitterHopperMetricSensor(
-                    robot,
-                    coordinator,
-                    RobotSensorEntityDescription[LitterRobot4](
-                        key="hopper_dispensed_last",
-                        translation_key="hopper_dispensed_last",
-                        state_class=SensorStateClass.MEASUREMENT,
-                        value_fn=lambda r: None,  # unused in custom entity
-                    ),
-                    metric_key="last_value",
-                )
-            )
-            entities.append(
-                LitterHopperMetricSensor(
-                    robot,
-                    coordinator,
-                    RobotSensorEntityDescription[LitterRobot4](
-                        key="hopper_dispensed_total",
-                        translation_key="hopper_dispensed_total",
-                        state_class=SensorStateClass.TOTAL_INCREASING,
-                        value_fn=lambda r: None,  # unused in custom entity
-                    ),
-                    metric_key="total",
-                )
-            )
-
     async_add_entities(entities)
 
 
@@ -300,15 +242,4 @@ class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
         return self.entity_description.last_reset_fn() or super().last_reset
 
 
-class LitterHopperMetricSensor(LitterRobotSensorEntity):
-    """Custom sensor reading LR4 hopper metrics computed by the coordinator."""
-
-    def __init__(self, robot: LitterRobot4, coordinator, description: RobotSensorEntityDescription, metric_key: str) -> None:  # type: ignore[no-untyped-def]
-        super().__init__(robot=robot, coordinator=coordinator, description=description)
-        self._metric_key = metric_key
-
-    @property
-    def native_value(self) -> float | int | None:
-        metrics = self.coordinator.hopper_metrics.get(self.robot.serial, {})  # type: ignore[attr-defined]
-        value = metrics.get(self._metric_key)
-        return value  # type: ignore[return-value]
+    
