@@ -3253,7 +3253,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'up',
+    'state': 'stop',
   })
 # ---
 # name: test_platform_setup_and_discovery[select.mirilla_puerta_anti_flicker-entry]
