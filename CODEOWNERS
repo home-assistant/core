@@ -970,6 +970,8 @@ build.json @home-assistant/supervisor
 /tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core
 /tests/components/mobile_app/ @home-assistant/core
+/homeassistant/components/modbus/ @janiversen
+/tests/components/modbus/ @janiversen
 /homeassistant/components/modem_callerid/ @tkdrob
 /tests/components/modem_callerid/ @tkdrob
 /homeassistant/components/modern_forms/ @wonderslug
