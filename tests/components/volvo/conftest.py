@@ -129,7 +129,7 @@ async def mock_api(
         api.async_get_command_accessibility = AsyncMock(
             return_value=mock_api_data.availability
         )
-        api.async_get_commands = AsyncMock(return_value=mock_api_data.commands)
+        api.async_get_commands.return_value = mock_api_data.commands
         api.async_get_diagnostics = AsyncMock(return_value=mock_api_data.diagnostics)
         api.async_get_doors_status = AsyncMock(return_value=mock_api_data.doors)
         api.async_get_energy_capabilities = AsyncMock(
