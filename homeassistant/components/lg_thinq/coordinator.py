@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import time
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -70,6 +71,8 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 event_filter=self.async_config_update_filter,
             )
         )
+        # Time for fetch device's energy usage
+        self.update_energy_in_time: time | None = None
 
     async def _handle_update_config(self, _: Event) -> None:
         """Handle update core config."""
