@@ -1858,9 +1858,10 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
     # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
 
-    # Mock BlueZ management controller
+    # Mock BlueZ management controller to successfully setup
+    # This prevents the manager from operating in degraded mode
     mock_mgmt_bluetooth_ctl = Mock()
-    mock_mgmt_bluetooth_ctl.setup = AsyncMock(side_effect=OSError("Mocked error"))
+    mock_mgmt_bluetooth_ctl.setup = AsyncMock(return_value=None)
 
     with (
         patch.object(

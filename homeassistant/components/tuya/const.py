@@ -140,10 +140,12 @@ class DPCode(StrEnum):
     BRIGHTNESS_MIN_2 = "brightness_min_2"
     BRIGHTNESS_MIN_3 = "brightness_min_3"
     C_F = "c_f"  # Temperature unit switching
+    CAT_WEIGHT = "cat_weight"
     CH2O_STATE = "ch2o_state"
     CH2O_VALUE = "ch2o_value"
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
+    CHARGE_STATE = "charge_state"
     CHILD_LOCK = "child_lock"  # Child lock
     CISTERN = "cistern"
     CLEAN_AREA = "clean_area"
@@ -168,6 +170,7 @@ class DPCode(StrEnum):
     CONTROL_BACK = "control_back"
     CONTROL_BACK_MODE = "control_back_mode"
     COOK_TEMPERATURE = "cook_temperature"
+    COOK_TEMPERATURE_2 = "cook_temperature_2"
     COOK_TIME = "cook_time"
     COUNTDOWN = "countdown"  # Countdown
     COUNTDOWN_1 = "countdown_1"
@@ -387,6 +390,7 @@ class DPCode(StrEnum):
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CORRECTION = "temp_correction"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
+    TEMP_CURRENT_2 = "temp_current_2"
     TEMP_CURRENT_EXTERNAL = (
         "temp_current_external"  # Current external temperature in Celsius
     )

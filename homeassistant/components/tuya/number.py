@@ -215,6 +215,20 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Cooking thermometer
+    "swtz": (
+        NumberEntityDescription(
+            key=DPCode.COOK_TEMPERATURE,
+            translation_key="cook_temperature",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COOK_TEMPERATURE_2,
+            translation_key="indexed_cook_temperature",
+            translation_placeholders={"index": "2"},
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Robot Vacuum
     # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
     "sd": (
