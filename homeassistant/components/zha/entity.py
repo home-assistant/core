@@ -66,13 +66,9 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         # This is to allow local development and to register niche devices, since
         # their translation_key will probably never be added to `zha/strings.json`.
         # The fallback name takes priority over the device class name.
-        if (
-            (translation_key := self._name_translation_key)
-            # The check for self.platform_data guards against integrations not using an
-            # EntityComponent and can be removed in HA Core 2026.8
-            and self.platform_data is not None
-            and translation_key not in self.platform_data.platform_translations
-            and meta.fallback_name
+        if meta.fallback_name is not None and (
+            (translation_key := self._name_translation_key) is None
+            or translation_key not in self.platform_data.platform_translations
         ):
             self._attr_name = meta.fallback_name
 
