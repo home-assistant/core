@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from datetime import datetime
 import re
-from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -101,15 +100,6 @@ class HueActiveSceneSensor(SceneActivityBaseEntity, SensorEntity):
         """Return the current active (regular) scene entity ID."""
         return self._group_state.active_scene_entity_id
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra attributes for the active scene."""
-        return {
-            "name": self._group_state.active_scene_name,
-            "mode": self._group_state.active_scene_mode,
-            "last_recall": self._group_state.active_scene_last_recall,
-        }
-
 
 # pylint: disable-next=hass-enforce-class-module
 class HueActiveSceneNameSensor(SceneActivityBaseEntity, SensorEntity):
@@ -132,15 +122,6 @@ class HueActiveSceneNameSensor(SceneActivityBaseEntity, SensorEntity):
     def native_value(self) -> str | None:
         """Return the current active (regular) scene name, if any."""
         return self._group_state.active_scene_name
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra attributes for the active scene."""
-        return {
-            "entity_id": self._group_state.active_scene_entity_id,
-            "mode": self._group_state.active_scene_mode,
-            "last_recall": self._group_state.active_scene_last_recall,
-        }
 
 
 # pylint: disable-next=hass-enforce-class-module
@@ -216,11 +197,6 @@ class HueActiveSmartSceneSensor(SceneActivityBaseEntity, SensorEntity):
         """Return the active smart scene entity ID."""
         return self._group_state.active_smart_scene_entity_id
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra attributes for the active scene."""
-        return {"name": self._group_state.active_smart_scene_name}
-
 
 # pylint: disable-next=hass-enforce-class-module
 class HueActiveSmartSceneNameSensor(SceneActivityBaseEntity, SensorEntity):
@@ -243,8 +219,3 @@ class HueActiveSmartSceneNameSensor(SceneActivityBaseEntity, SensorEntity):
     def native_value(self) -> str | None:
         """Return the active smart scene name, if any."""
         return self._group_state.active_smart_scene_name
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return smart scene specific attributes."""
-        return {"entity_id": self._group_state.active_smart_scene_entity_id}
