@@ -8,7 +8,7 @@
         },
         "menu_option_descriptions": {
           "recommended": "Set up the OTBR add-on",
-          "url": "Manually set OTBR URL"
+          "url": "Manually set the OTBR URL"
         },
         "description": "Please choose a setup process"
       },
@@ -16,7 +16,7 @@
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
         },
-        "description": "Provide URL for the OpenThread Border Router's REST API"
+        "description": "Provide the URL for the OpenThread Border Router's REST API"
       }
     },
     "progress": {
