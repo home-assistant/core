@@ -35,10 +35,6 @@ from .helpers import (
     normalize_hue_colortemp,
     normalize_hue_transition,
 )
-from .scene_activity import (
-    HueSceneActivityManager,
-    get_or_create_scene_activity_manager,
-)
 
 
 async def async_setup_entry(
@@ -49,7 +45,6 @@ async def async_setup_entry(
     """Set up Hue groups on light platform."""
     bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
-    scene_activity_manager = get_or_create_scene_activity_manager(hass, api)
 
     async def async_add_light(event_type: EventType, resource: GroupedLight) -> None:
         """Add Grouped Light for Hue Room/Zone."""
@@ -65,7 +60,7 @@ async def async_setup_entry(
         if group is None:
             # guard, just in case
             return
-        light = GroupedHueLight(bridge, resource, group, scene_activity_manager)
+        light = GroupedHueLight(bridge, resource, group)
         async_add_entities([light])
 
     # add current items
@@ -96,11 +91,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     )
 
     def __init__(
-        self,
-        bridge: HueBridge,
-        resource: GroupedLight,
-        group: Room | Zone,
-        scene_activity_manager: HueSceneActivityManager,
+        self, bridge: HueBridge, resource: GroupedLight, group: Room | Zone
     ) -> None:
         """Initialize the light."""
         controller = bridge.api.groups.grouped_light
@@ -109,7 +100,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         self.hue_group = group
         self.controller = controller
         self.api: HueBridgeV2 = bridge.api
-        self.scene_activity_manager = scene_activity_manager
         self._attr_supported_features |= LightEntityFeature.FLASH
         self._attr_supported_features |= LightEntityFeature.TRANSITION
         self._restore_brightness: float | None = None
@@ -160,7 +150,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         light_names, light_entities = self._get_names_and_entity_ids_for_resource_ids(
             light_resource_ids
         )
-        scene_activity = self.scene_activity_manager.get_group_state(self.group.id)
         return {
             "is_hue_group": True,
             "hue_scenes": scenes,
@@ -168,10 +157,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             "lights": light_names,
             "entity_id": light_entities,
             "dynamics": self._dynamic_mode_active,
-            "active_hue_smart_scene": scene_activity.active_smart_scene_name,
-            "active_hue_scene": scene_activity.active_scene_name,
-            "active_hue_scene_mode": scene_activity.active_scene_mode,
-            "active_hue_scene_last_recall": scene_activity.active_scene_last_recall,
         }
 
     @override
