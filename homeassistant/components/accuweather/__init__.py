@@ -61,7 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
     )
 
     entry.runtime_data = AccuWeatherData(
-        coordinator_observation, coordinator_daily_forecast, coordinator_hourly_forecast
+        coordinator_observation=coordinator_observation,
+        coordinator_daily_forecast=coordinator_daily_forecast,
+        coordinator_hourly_forecast=coordinator_hourly_forecast,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
