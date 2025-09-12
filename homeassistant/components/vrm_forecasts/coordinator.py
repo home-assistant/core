@@ -55,9 +55,7 @@ class ForecastEstimates:
             dt = self.custom_dt_now()
             if not is_dt_timezone_aware(dt):
                 raise ValueError("custom_dt_now must return a timezone-aware datetime")
-            LOGGER.debug("Using custom dt_now: %s", dt.isoformat())
             return dt
-        LOGGER.debug("Using default dt_now")
         return datetime.datetime.now(tz=datetime.UTC)
 
     @property
