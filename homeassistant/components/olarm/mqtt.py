@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import ssl
+from typing import Any
 
 from aiohttp import ClientResponseError
 from olarmflowclient import OlarmFlowClient
@@ -37,16 +38,16 @@ class OlarmFlowClientMQTT:
     ) -> None:
         """Initialize the Olarm MQTT client wrapper."""
 
-        self._hass = hass
-        self._oauth_session = oauth_session
-        self._coordinator = coordinator
+        self._hass: HomeAssistant = hass
+        self._oauth_session: config_entry_oauth2_flow.OAuth2Session = oauth_session
+        self._coordinator: OlarmDataUpdateCoordinator = coordinator
 
         # user and device ref
-        self._user_id = entry.data["user_id"]
-        self.device_id = entry.data["device_id"]
+        self._user_id: str = entry.data["user_id"]
+        self.device_id: str = entry.data["device_id"]
 
         # olarm connect client
-        self._olarm_flow_client = olarm_client
+        self._olarm_flow_client: OlarmFlowClient = olarm_client
 
     async def _ensure_valid_token(self) -> None:
         """Ensure the OAuth2 access token is valid and refresh if needed.
@@ -55,13 +56,13 @@ class OlarmFlowClientMQTT:
         """
         try:
             # Check if token needs refresh
-            token_valid = self._oauth_session.valid_token
+            token_valid: bool = self._oauth_session.valid_token
             if not token_valid:
                 _LOGGER.debug("Access token expired, refreshing")
 
             await self._oauth_session.async_ensure_token_valid()
-            new_token = self._oauth_session.token["access_token"]
-            expires_at = self._oauth_session.token["expires_at"]
+            new_token: str = self._oauth_session.token["access_token"]
+            expires_at: float = self._oauth_session.token["expires_at"]
 
             # Log token info (without exposing the actual token)
             _LOGGER.debug("Access token expires at: %s ", expires_at)
@@ -121,11 +122,11 @@ class OlarmFlowClientMQTT:
             )
 
             # Olarm limits the MQTT connections per user and each needs a unique client_id
-            sorted_olarm_entries = sorted(
+            sorted_olarm_entries: list[ConfigEntry] = sorted(
                 self._hass.config_entries.async_entries(DOMAIN),
                 key=lambda x: x.entry_id,
             )
-            client_id_suffix = "1"  # default fallback
+            client_id_suffix: str = "1"  # default fallback
             for i, entry in enumerate(sorted_olarm_entries):
                 if entry.data.get("device_id") == self.device_id:
                     client_id_suffix = str(i + 1)
@@ -138,8 +139,8 @@ class OlarmFlowClientMQTT:
             )
 
             # Create a wrapper function that creates the SSL context inside the executor
-            def start_mqtt_with_ssl():
-                ssl_context = ssl.create_default_context()
+            def start_mqtt_with_ssl() -> Any:
+                ssl_context: ssl.SSLContext = ssl.create_default_context()
                 return self._olarm_flow_client.start_mqtt(
                     self._user_id, ssl_context, client_id_suffix
                 )
@@ -177,7 +178,6 @@ class OlarmFlowClientMQTT:
 
     async def async_stop(self) -> None:
         """Stop the MQTT client and clean up connections."""
-
         if self._olarm_flow_client:
             # stop_mqtt is synchronous, so run it in an executor
             await self._hass.async_add_executor_job(self._olarm_flow_client.stop_mqtt)
