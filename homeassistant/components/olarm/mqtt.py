@@ -1,4 +1,4 @@
-"""The coordinator for the olarm integration to handle API and MQTT connections."""
+"""MQTT client wrapper for the Olarm integration."""
 
 from __future__ import annotations
 
@@ -21,7 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class OlarmFlowClientMQTT:
-    """Manages an individual olarms config entry."""
+    """MQTT client wrapper for Olarm devices.
+
+    This class manages the MQTT connection to Olarm's MQTT Brokers, handles OAuth2 token refresh
+    when the access token expires and routes incoming device messages to the data coordinator.
+    """
 
     def __init__(
         self,
@@ -31,7 +35,7 @@ class OlarmFlowClientMQTT:
         olarm_client: OlarmFlowClient,
         coordinator: OlarmDataUpdateCoordinator,
     ) -> None:
-        """Create a new instance of the OlarmBroker."""
+        """Initialize the Olarm MQTT client wrapper."""
 
         self._hass = hass
         self._oauth_session = oauth_session
@@ -44,8 +48,11 @@ class OlarmFlowClientMQTT:
         # olarm connect client
         self._olarm_flow_client = olarm_client
 
-    async def _ensure_valid_token(self):
-        """Ensure the access token is valid and refresh if needed."""
+    async def _ensure_valid_token(self) -> None:
+        """Ensure the OAuth2 access token is valid and refresh if needed.
+
+        Checks if access token has expired and if not uses refresh token to fetch new.
+        """
         try:
             # Check if token needs refresh
             token_valid = self._oauth_session.valid_token
@@ -79,15 +86,18 @@ class OlarmFlowClientMQTT:
             _LOGGER.error("Failed to refresh OAuth2 token: %s", e)
             raise ConfigEntryNotReady("Failed to refresh OAuth2 token") from e
 
-    def _mqtt_reconnection_callback(self):
-        """Thread-safe callback for MQTT reconnection - called from MQTT thread."""
+    def _mqtt_reconnection_callback(self) -> None:
+        """Thread-safe callback for MQTT reconnection events."""
         # Schedule the token refresh in the main event loop
         asyncio.run_coroutine_threadsafe(
             self._handle_mqtt_reconnection(), self._hass.loop
         )
 
-    async def _handle_mqtt_reconnection(self):
-        """Handle MQTT reconnection with token refresh."""
+    async def _handle_mqtt_reconnection(self) -> None:
+        """Handle MQTT reconnection by refreshing the OAuth2 token.
+
+        Handles MQTT reconnection when connection is lost, also checks access token hasnt expired and gets a new one if required.
+        """
         _LOGGER.debug("Handling MQTT reconnection - refreshing token")
         try:
             # Ensure we have a valid token before reconnecting
@@ -96,8 +106,9 @@ class OlarmFlowClientMQTT:
         except (ConfigEntryNotReady, OSError, TimeoutError) as e:
             _LOGGER.error("Failed to refresh token for MQTT reconnection: %s", e)
 
-    async def init_mqtt(self):
-        """Connect to the Olarm MQTT service and subscribe to device events."""
+    async def init_mqtt(self) -> None:
+        """Initialize and connect to the Olarm MQTT service."""
+
         _LOGGER.debug("Attempting to connect to Olarm MQTT Service")
 
         try:
@@ -156,16 +167,17 @@ class OlarmFlowClientMQTT:
                 f"Failed to connect to Olarm MQTT Service: {e}"
             ) from e
 
-    # Define callback function for MQTT messages
-    def mqtt_message_callback(self, topic, payload):
-        """Handle incoming MQTT messages."""
+    def mqtt_message_callback(self, topic: str, payload: str) -> None:
+        """Handle incoming MQTT messages from the Olarm device."""
+
         _LOGGER.debug("MQTT message received: topic = %s, payload = %s", topic, payload)
         self._hass.loop.call_soon_threadsafe(
             self._coordinator.async_update_from_mqtt, payload
         )
 
-    async def async_stop(self):
-        """Stop and clean up MQTT and API client connections."""
+    async def async_stop(self) -> None:
+        """Stop the MQTT client and clean up connections."""
+
         if self._olarm_flow_client:
             # stop_mqtt is synchronous, so run it in an executor
             await self._hass.async_add_executor_job(self._olarm_flow_client.stop_mqtt)
