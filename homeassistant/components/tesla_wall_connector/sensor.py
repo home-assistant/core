@@ -42,20 +42,6 @@ EVSE_STATE = {
 }
 
 
-def _get_total_power(data: dict[str, Any]) -> float | None:
-    """Calculate total active power from three phases."""
-    vitals = data[WALLCONNECTOR_DATA_VITALS]
-    if not vitals:
-        return None
-
-    return round(
-        (vitals.voltageA_v * vitals.currentA_a)
-        + (vitals.voltageB_v * vitals.currentB_a)
-        + (vitals.voltageC_v * vitals.currentC_a),
-        1,
-    )
-
-
 @dataclass(frozen=True)
 class WallConnectorSensorDescription(
     SensorEntityDescription, WallConnectorLambdaValueGetterMixin
@@ -184,7 +170,7 @@ WALL_CONNECTOR_SENSORS = [
         translation_key="total_power_w",
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
-        value_fn=_get_total_power,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].total_power_w,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
