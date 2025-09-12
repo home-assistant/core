@@ -16,6 +16,7 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.db_schema import EventData, Events, EventTypes
 from homeassistant.components.recorder.models import uuid_hex_to_bytes_or_none
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
@@ -27,7 +28,42 @@ _LOGGER = logging.getLogger(__name__)
 # Time categories for usage patterns
 TIME_CATEGORIES = ["morning", "afternoon", "evening", "night"]
 
-RESULTS_TO_SHOW = 8
+RESULTS_TO_INCLUDE = 8
+
+ALLOWED_DOMAINS = {
+    Platform.AIR_QUALITY,
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CALENDAR,
+    Platform.CAMERA,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.DATE,
+    Platform.DATETIME,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.IMAGE,
+    Platform.LAWN_MOWER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SCENE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.TEXT,
+    Platform.TIME,
+    Platform.TODO,
+    Platform.UPDATE,
+    Platform.VACUUM,
+    Platform.VALVE,
+    Platform.WAKE_WORD,
+    Platform.WATER_HEATER,
+    Platform.WEATHER,
+}
 
 
 @cache
@@ -106,6 +142,9 @@ def _fetch_and_process_data(session: Session, user_id: str) -> EntityUsagePredic
         if context_id in context_processed:
             continue
 
+        # Mark this context as processed
+        context_processed.add(context_id)
+
         # Parse the event data
         if not shared_data:
             continue
@@ -141,8 +180,15 @@ def _fetch_and_process_data(session: Session, user_id: str) -> EntityUsagePredic
         if not isinstance(entity_ids, list):
             entity_ids = [entity_ids]
 
-        # Mark this context as processed
-        context_processed.add(context_id)
+        # Filter out entity IDs that are not in allowed domains
+        entity_ids = [
+            entity_id
+            for entity_id in entity_ids
+            if entity_id.split(".")[0] in ALLOWED_DOMAINS
+        ]
+
+        if not entity_ids:
+            continue
 
         # Convert timestamp to datetime and determine time category
         if time_fired_ts:
@@ -157,15 +203,18 @@ def _fetch_and_process_data(session: Session, user_id: str) -> EntityUsagePredic
 
     return EntityUsagePredictions(
         morning=[
-            ent_id for (ent_id, _) in results["morning"].most_common(RESULTS_TO_SHOW)
+            ent_id for (ent_id, _) in results["morning"].most_common(RESULTS_TO_INCLUDE)
         ],
         afternoon=[
-            ent_id for (ent_id, _) in results["afternoon"].most_common(RESULTS_TO_SHOW)
+            ent_id
+            for (ent_id, _) in results["afternoon"].most_common(RESULTS_TO_INCLUDE)
         ],
         evening=[
-            ent_id for (ent_id, _) in results["evening"].most_common(RESULTS_TO_SHOW)
+            ent_id for (ent_id, _) in results["evening"].most_common(RESULTS_TO_INCLUDE)
         ],
-        night=[ent_id for (ent_id, _) in results["night"].most_common(RESULTS_TO_SHOW)],
+        night=[
+            ent_id for (ent_id, _) in results["night"].most_common(RESULTS_TO_INCLUDE)
+        ],
     )
 
 
