@@ -59,6 +59,10 @@
       }
     },
     "sensor": {
+      "food_dispensed_today": {
+        "name": "Food dispensed today",
+        "unit_of_measurement": "cups"
+      },
       "food_level": {
         "name": "Food level"
       },
@@ -81,6 +85,9 @@
       },
       "litter_level": {
         "name": "Litter level"
+      },
+      "next_feeding": {
+        "name": "Next feeding"
       },
       "pet_weight": {
         "name": "Pet weight"
