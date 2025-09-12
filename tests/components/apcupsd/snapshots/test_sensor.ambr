@@ -1,4 +1,208 @@
 # serializer version: 1
+# name: test_deprecated_sensor_issue[apc-apc_deprecated]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.4.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'apc_deprecated_sensor.myups_status_data',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'apc_deprecated',
+    'translation_placeholders': dict({
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_status_data',
+      'entity_name': 'Status data',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[apcmodel-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.4.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_model_2',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'model',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_model_2',
+      'entity_name': 'Model',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[date-date_deprecated]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.4.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'date_deprecated_sensor.myups_status_date',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'date_deprecated',
+    'translation_placeholders': dict({
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_status_date',
+      'entity_name': 'Status date',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[end apc-date_deprecated]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.4.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'date_deprecated_sensor.myups_date_and_time',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'date_deprecated',
+    'translation_placeholders': dict({
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_date_and_time',
+      'entity_name': 'Date and time',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[firmware-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.4.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_firmware_version',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'hw_version',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_firmware_version',
+      'entity_name': 'Firmware version',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[model-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.4.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_model',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'model',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_model',
+      'entity_name': 'Model',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[serialno-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.4.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_serial_number',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'serial_number',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_serial_number',
+      'entity_name': 'Serial number',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[upsname-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.4.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_name',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'name',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_name',
+      'entity_name': 'Name',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[version-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.4.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_daemon_version',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'sw_version',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_daemon_version',
+      'entity_name': 'Daemon version',
+    }),
+  })
+# ---
 # name: test_sensor[sensor.myups_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -946,6 +1150,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.myups_model',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Back-UPS ES 600',
+  })
+# ---
+# name: test_sensor[sensor.myups_model_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.myups_model_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Model',
+    'platform': 'apcupsd',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'apc_model',
+    'unique_id': 'XXXXXXXXXXXX_apcmodel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.myups_model_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'MyUPS Model',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.myups_model_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
