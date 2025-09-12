@@ -6,53 +6,33 @@ from contextlib import suppress
 import io
 import re
 import wave
+import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import LOGGER
 
 
-def is_valid_multispeakers_string(s: str) -> bool:
-    """Checks if a string has a "key: value;" structure using a regex.
+def is_valid_voices(voices: dict[str, str] | None = None):
+    """Validate the voices option.
 
     Args:
-        s: The string to validate.
+        voices: A dictionary mapping voice names to language codes.
 
     Returns:
-        True if the string matches the expected format, otherwise False.
+        True if voices is a valid dictionary of string keys and string values,
+        False otherwise.
     """
-    validation_pattern = r"^\s*([^:]+:\s*[^;]+;?\s*)+$"
-    return bool(re.fullmatch(validation_pattern, s))
+    if not voices:
+        return False
+    
+    DICT_STR_STR_SCHEMA = vol.Schema({str: str})
+    try:
+        DICT_STR_STR_SCHEMA(voices)
+    except vol.Invalid:
+        return False
 
-
-def parse_multispeakers_string(s: str) -> dict[str, str]:
-    """Parses a valid "key: value;" string into a dictionary.
-
-    Args:
-        s: The string to parse.
-
-    Returns:
-        A dictionary of the parsed data.
-    """
-    data = {}
-    pairs = s.split(";")
-
-    for pair in pairs:
-        if not pair.strip():
-            continue
-
-        try:
-            key, value = pair.split(":", 1)
-        except ValueError:
-            continue
-
-        trimmed_key = key.strip()
-        trimmed_value = value.strip()
-
-        data[trimmed_key] = trimmed_value
-
-    return data
-
+    return True
 
 def convert_to_wav(audio_data: bytes, mime_type: str) -> bytes:
     """Generate a WAV file header for the given audio data and parameters.

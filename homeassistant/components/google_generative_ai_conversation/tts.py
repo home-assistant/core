@@ -24,8 +24,7 @@ from .const import CONF_CHAT_MODEL, LOGGER, RECOMMENDED_TTS_MODEL
 from .entity import GoogleGenerativeAILLMBaseEntity
 from .helpers import (
     convert_to_wav,
-    is_valid_multispeakers_string,
-    parse_multispeakers_string,
+    is_valid_voices,
 )
 
 ATTR_VOICES = "voices"
@@ -137,7 +136,7 @@ class GoogleGenerativeAITextToSpeechEntity(
         """Return a mapping with the default options."""
         return {
             ATTR_VOICE: self._supported_voices[0].voice_id,
-            ATTR_VOICES: "",
+            ATTR_VOICES: None,
         }
 
     async def async_get_tts_audio(
@@ -147,13 +146,9 @@ class GoogleGenerativeAITextToSpeechEntity(
         config = self.create_generate_content_config()
         config.response_modalities = ["AUDIO"]
 
-        voices = options.get(ATTR_VOICES, "")
-        speakers_data = None
+        voices = options.get(ATTR_VOICES, None)
 
-        if is_valid_multispeakers_string(voices):
-            speakers_data = parse_multispeakers_string(voices)
-
-        if speakers_data:
+        if is_valid_voices(voices):
             config.speech_config = types.SpeechConfig(
                 multi_speaker_voice_config=types.MultiSpeakerVoiceConfig(
                     speaker_voice_configs=[
@@ -165,7 +160,7 @@ class GoogleGenerativeAITextToSpeechEntity(
                                 )
                             ),
                         )
-                        for speaker, voice in speakers_data.items()
+                        for speaker, voice in voices.items()
                     ]
                 )
             )

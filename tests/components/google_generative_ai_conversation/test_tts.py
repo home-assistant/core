@@ -227,14 +227,8 @@ async def test_tts_service_speak(
             ATTR_ENTITY_ID: "tts.google_ai_tts",
             tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
             tts.ATTR_MESSAGE: "Read aloud: Speaker 1: There is a person at the front door. Speaker 2: Delivery!",
-            tts.ATTR_OPTIONS: {ATTR_VOICES: "Speaker 1: voice1; Speaker 2: voice2"},
-        },
-        {
-            ATTR_ENTITY_ID: "tts.google_ai_tts",
-            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-            tts.ATTR_MESSAGE: "Read aloud: Speaker 1: There is a person at the front door. Speaker 2: Delivery!",
             tts.ATTR_OPTIONS: {
-                ATTR_VOICES: " Speaker 1: voice1 ; Speaker 2 : voice2 ; "
+                ATTR_VOICES: {"Speaker 1": "voice1", "Speaker 2": "voice2"}
             },
         },
     ],
