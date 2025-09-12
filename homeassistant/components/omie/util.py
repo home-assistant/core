@@ -40,25 +40,31 @@ def pick_series_cet(
     }
 
 
-def is_published(market_date: dt.date, now: dt.datetime) -> bool:
+def _is_published(market_date: dt.date, time: dt.datetime) -> bool:
     """Returns whether OMIE data for a given date is expected to have been published at any point in time."""
     publish_date = market_date - dt.timedelta(days=1)
     publish_hour = _OMIE_PUBLISH_TIME_CET
     publish_time = dt.datetime.combine(publish_date, publish_hour, tzinfo=CET)
 
-    return now >= publish_time
+    return time >= publish_time
 
 
-def get_market_dates(local_tz: ZoneInfo, date: dt.date) -> set[dt.date]:
-    """Returns the intraday market date(s) for a date in a reference time zone.
+def get_market_dates(local_time: dt.datetime) -> set[dt.date]:
+    """Returns the intraday market date(s) for a given local time.
 
     This will either return 1 or 2 dates, depending on whether the reference
-    timezone aligns with CET day boundaries or not.
+    timezone aligns with CET day boundaries or not. This function only returns
+    dates whose data is expected to be published by `time` (i.e. those for which
+    the day-ahead market run for that date has already concluded before `time`).
 
-    :param local_tz the reference timezone to use when working out what "today" is
-    :param date the date to consider
+    :param local_time the datetime at which the calculation is made
     """
-    date_00_00 = dt.datetime.combine(date, dt.time.min, tzinfo=local_tz)
-    date_23_59 = dt.datetime.combine(date, dt.time.max, tzinfo=local_tz)
+    date_00_00 = dt.datetime.combine(local_time, dt.time.min, tzinfo=local_time.tzinfo)
+    date_23_59 = dt.datetime.combine(local_time, dt.time.max, tzinfo=local_time.tzinfo)
 
-    return {time.astimezone(CET).date() for time in (date_00_00, date_23_59)}
+    return {
+        cet_date
+        for day_boundary in (date_00_00, date_23_59)
+        if (cet_date := day_boundary.astimezone(CET).date())
+        if _is_published(cet_date, local_time)
+    }
