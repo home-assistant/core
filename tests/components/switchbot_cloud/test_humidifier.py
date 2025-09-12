@@ -22,8 +22,8 @@ from tests.common import async_load_json_array_fixture, snapshot_platform
 @pytest.mark.parametrize(
     ("device_info", "index"),
     [
-        (HUMIDIFIER_INFO, 0),
-        (HUMIDIFIER2_INFO, 1),
+        (HUMIDIFIER_INFO, 6),
+        (HUMIDIFIER2_INFO, 7),
     ],
 )
 async def test_humidifier(
