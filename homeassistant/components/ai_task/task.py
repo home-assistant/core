@@ -19,7 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession, async_get_chat_session
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.network import get_url
 from homeassistant.util import RE_SANITIZE_FILENAME, slugify
 
 from .const import (
@@ -249,7 +248,7 @@ async def async_generate_image(
     if IMAGE_EXPIRY_TIME > 0:
         async_call_later(hass, IMAGE_EXPIRY_TIME, partial(_purge_image, filename))
 
-    service_result["url"] = get_url(hass) + async_sign_path(
+    service_result["url"] = async_sign_path(
         hass,
         f"/api/{DOMAIN}/images/{filename}",
         timedelta(seconds=IMAGE_EXPIRY_TIME or 1800),
