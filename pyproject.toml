@@ -47,7 +47,7 @@ dependencies = [
   "fnv-hash-fast==1.5.0",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==1.1.0",
+  "hass-nabucasa==1.1.1",
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",
