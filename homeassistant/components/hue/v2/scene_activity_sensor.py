@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -131,8 +130,6 @@ class HueActiveSceneLastRecallSensor(SceneActivityBaseEntity, SensorEntity):
     entity_description = SensorEntityDescription(
         key="active_scene_last_recall",
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
-        entity_category=EntityCategory.DIAGNOSTIC,
     )
 
     def __init__(
@@ -154,9 +151,7 @@ class HueActiveSceneDynamicBinarySensor(SceneActivityBaseEntity, BinarySensorEnt
     """Binary sensor indicating if the active scene uses a dynamic palette."""
 
     entity_description = BinarySensorEntityDescription(
-        key="active_scene_is_dynamic",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        entity_registry_enabled_default=True,
+        key="active_scene_is_dynamic", device_class=BinarySensorDeviceClass.RUNNING
     )
 
     def __init__(
@@ -202,10 +197,7 @@ class HueActiveSmartSceneSensor(SceneActivityBaseEntity, SensorEntity):
 class HueActiveSmartSceneNameSensor(SceneActivityBaseEntity, SensorEntity):
     """Active smart scene name for a Hue group."""
 
-    entity_description = SensorEntityDescription(
-        key="active_smart_scene_sensor",
-        entity_registry_enabled_default=True,
-    )
+    entity_description = SensorEntityDescription(key="active_smart_scene_sensor")
 
     def __init__(
         self, bridge: HueBridge, manager: HueSceneActivityManager, group_id: str
