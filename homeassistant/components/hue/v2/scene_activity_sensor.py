@@ -81,7 +81,7 @@ class SceneActivityBaseEntity(HueBaseEntity):
 
 # pylint: disable-next=hass-enforce-class-module
 class HueActiveSceneSensor(SceneActivityBaseEntity, SensorEntity):
-    """Active regular scene name for a Hue group."""
+    """Active regular scene for a Hue group."""
 
     entity_description = SensorEntityDescription(key="active_scene_sensor")
 
@@ -98,6 +98,38 @@ class HueActiveSceneSensor(SceneActivityBaseEntity, SensorEntity):
 
     @property
     def native_value(self) -> str | None:
+        """Return the current active (regular) scene entity ID."""
+        return self._group_state.active_scene_entity_id
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra attributes for the active scene."""
+        return {
+            "name": self._group_state.active_scene_name,
+            "mode": self._group_state.active_scene_mode,
+            "last_recall": self._group_state.active_scene_last_recall,
+        }
+
+
+# pylint: disable-next=hass-enforce-class-module
+class HueActiveSceneNameSensor(SceneActivityBaseEntity, SensorEntity):
+    """Active regular scene name for a Hue group."""
+
+    entity_description = SensorEntityDescription(key="active_scene_name_sensor")
+
+    def __init__(
+        self,
+        bridge: HueBridge,
+        manager: HueSceneActivityManager,
+        group_id: str,
+    ) -> None:
+        """Initialize the active scene sensor."""
+        super().__init__(bridge, manager, group_id)
+        self._attr_unique_id = f"{group_id}_active_scene_name"
+        self._attr_name = "Scene name"
+
+    @property
+    def native_value(self) -> str | None:
         """Return the current active (regular) scene name, if any."""
         return self._group_state.active_scene_name
 
@@ -105,39 +137,9 @@ class HueActiveSceneSensor(SceneActivityBaseEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra attributes for the active scene."""
         return {
-            "hue_scene_id": self._group_state.active_scene_id,
+            "entity_id": self._group_state.active_scene_entity_id,
             "mode": self._group_state.active_scene_mode,
             "last_recall": self._group_state.active_scene_last_recall,
-        }
-
-
-# pylint: disable-next=hass-enforce-class-module
-class HueActiveSmartSceneSensor(SceneActivityBaseEntity, SensorEntity):
-    """Active smart scene name for a Hue group."""
-
-    entity_description = SensorEntityDescription(
-        key="active_smart_scene_sensor",
-        entity_registry_enabled_default=True,
-    )
-
-    def __init__(
-        self, bridge: HueBridge, manager: HueSceneActivityManager, group_id: str
-    ) -> None:
-        """Initialize the active smart scene sensor."""
-        super().__init__(bridge, manager, group_id)
-        self._attr_unique_id = f"{group_id}_active_smart_scene"
-        self._attr_name = "Smart scene"
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the active smart scene name, if any."""
-        return self._group_state.active_smart_scene_name
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return smart scene specific attributes."""
-        return {
-            "hue_smart_scene_id": self._group_state.active_smart_scene_id,
         }
 
 
@@ -190,3 +192,59 @@ class HueActiveSceneDynamicBinarySensor(SceneActivityBaseEntity, BinarySensorEnt
         if self._group_state.active_scene_mode is None:
             return None
         return self._group_state.active_scene_mode == "dynamic_palette"
+
+
+# pylint: disable-next=hass-enforce-class-module
+class HueActiveSmartSceneSensor(SceneActivityBaseEntity, SensorEntity):
+    """Active smart scene for a Hue group."""
+
+    entity_description = SensorEntityDescription(key="active_scene_sensor")
+
+    def __init__(
+        self,
+        bridge: HueBridge,
+        manager: HueSceneActivityManager,
+        group_id: str,
+    ) -> None:
+        """Initialize the active scene sensor."""
+        super().__init__(bridge, manager, group_id)
+        self._attr_unique_id = f"{group_id}_active_smart_scene"
+        self._attr_name = "Smart scene"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the active smart scene entity ID."""
+        return self._group_state.active_smart_scene_entity_id
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra attributes for the active scene."""
+        return {"name": self._group_state.active_smart_scene_name}
+
+
+# pylint: disable-next=hass-enforce-class-module
+class HueActiveSmartSceneNameSensor(SceneActivityBaseEntity, SensorEntity):
+    """Active smart scene name for a Hue group."""
+
+    entity_description = SensorEntityDescription(
+        key="active_smart_scene_sensor",
+        entity_registry_enabled_default=True,
+    )
+
+    def __init__(
+        self, bridge: HueBridge, manager: HueSceneActivityManager, group_id: str
+    ) -> None:
+        """Initialize the active smart scene sensor."""
+        super().__init__(bridge, manager, group_id)
+        self._attr_unique_id = f"{group_id}_active_smart_scene_name"
+        self._attr_name = "Smart scene name"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the active smart scene name, if any."""
+        return self._group_state.active_smart_scene_name
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return smart scene specific attributes."""
+        return {"entity_id": self._group_state.active_smart_scene_entity_id}
