@@ -22,7 +22,16 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add binary sensors for a config entry."""
+    """Add binary sensors for a config entry.
+
+    An Olarm device connected to an alarm system can have up to 192 zones, these are usually
+    door/window contacts and motion sensors. They can be either active or closed depending
+    if motion is detected or door/window is open.
+
+    The zones can also be bypassed so they are ignored if the alarm system is armed so
+    additional binary sensors are added for this. Alarm systems also monitor AC power
+    as they have battery backup so this is added as a binary sensor as well.
+    """
 
     # get coordinator
     coordinator = config_entry.runtime_data.coordinator
