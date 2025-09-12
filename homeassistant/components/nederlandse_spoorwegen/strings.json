@@ -42,7 +42,10 @@
         }
       },
       "error": {
-        "cannot_connect": "[%key:component::nederlandse_spoorwegen::config::error::cannot_connect%]"
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      },
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
       },
       "initiate_flow": {
         "user": "Add route"
