@@ -1725,6 +1725,43 @@ async def test_rediscover(
     assert state is not None
 
 
+async def test_rapid_discovery(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test immediate rediscover of removed component."""
+    entity_count = 2
+    await mqtt_mock_entry()
+    for n in range(entity_count):
+        async_fire_mqtt_message(
+            hass,
+            f"homeassistant/binary_sensor/beer_{n}/config",
+            "{"
+            f'"name": "Beer", "state_topic": "test-topic_{n}", '
+            f'"unique_id": "very_unique_{n}", '
+            f'"default_entity_id": "binary_sensor.test_{n}"'
+            "}",
+        )
+    await hass.async_block_till_done()
+    for n in range(entity_count):
+        state = hass.states.get(f"binary_sensor.test_{n}")
+        assert state and state.state == STATE_UNKNOWN
+
+    for n in range(entity_count):
+        async_fire_mqtt_message(
+            hass,
+            f"homeassistant/binary_sensor/milk_{n}/config",
+            "{"
+            f'"name": "Beer", "state_topic": "test-topic_{n}", '
+            f'"unique_id": "also_very_unique_{n}", '
+            f'"default_entity_id": "binary_sensor.test_part2_{n}"'
+            "}",
+        )
+    await hass.async_block_till_done()
+    for n in range(entity_count):
+        state = hass.states.get(f"binary_sensor.test_part2_{n}")
+        assert state and state.state == STATE_UNKNOWN
+
+
 async def test_rapid_rediscover(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
