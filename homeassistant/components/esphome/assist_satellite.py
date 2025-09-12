@@ -127,7 +127,7 @@ class EsphomeAssistSatellite(
             available_wake_words=[], active_wake_words=[], max_active_wake_words=1
         )
 
-        self._secondary_pipeline_active = False
+        self._active_pipeline_index = 0
 
     def _get_entity_id(self, suffix: str) -> str | None:
         """Return the entity id for pipeline select, etc."""
@@ -144,25 +144,17 @@ class EsphomeAssistSatellite(
     @property
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the primary pipeline to use for the next conversation."""
-        if self._secondary_pipeline_active:
-            return self.secondary_pipeline_entity_id
+        return self.get_pipeline_entity(self._active_pipeline_index)
 
-        return self._get_entity_id("pipeline")
+    def get_pipeline_entity(self, index: int) -> str | None:
+        """Return the entity ID of a pipeline by index."""
+        id_suffix = "" if index < 1 else f"_{index + 1}"
+        return self._get_entity_id(f"pipeline{id_suffix}")
 
-    @property
-    def secondary_pipeline_entity_id(self) -> str | None:
-        """Return the entity ID of the secondary pipeline to use for the next conversation."""
-        return self._get_entity_id("pipeline_2")
-
-    @property
-    def wake_word_entity_id(self) -> str | None:
-        """Return the entity ID of the primary wake word select."""
-        return self._get_entity_id("wake_word")
-
-    @property
-    def secondary_wake_word_entity_id(self) -> str | None:
-        """Return the entity ID of the secondary wake word select."""
-        return self._get_entity_id("wake_word_2")
+    def get_wake_word_entity(self, index: int) -> str | None:
+        """Return the entity ID of a wake word by index."""
+        id_suffix = "" if index < 1 else f"_{index + 1}"
+        return self._get_entity_id(f"wake_word{id_suffix}")
 
     @property
     def vad_sensitivity_entity_id(self) -> str | None:
@@ -504,26 +496,27 @@ class EsphomeAssistSatellite(
             self._update_tts_format()
 
         # Run the appropriate pipeline.
-        #
-        # If the wake word phrase matches the secondary wake word, use the
-        # secondary pipeline.
-        self._secondary_pipeline_active = False
+        self._active_pipeline_index = 0
 
-        if (
-            (primary_ww_id := self.wake_word_entity_id)
-            and (primary_ww_state := self.hass.states.get(primary_ww_id))
-            and (secondary_ww_id := self.secondary_wake_word_entity_id)
-        ) and (secondary_ww_state := self.hass.states.get(secondary_ww_id)):
-            # Check that the wake word phrase doesn't match the primary in case
-            # primary and secondary are the same.
-            if (wake_word_phrase != primary_ww_state.state) and (
-                wake_word_phrase == secondary_ww_state.state
-            ):
-                self._secondary_pipeline_active = True
+        maybe_pipeline_index = 0
+        while True:
+            if not (ww_entity_id := self.get_wake_word_entity(maybe_pipeline_index)):
+                break
+
+            if not (ww_state := self.hass.states.get(ww_entity_id)):
+                continue
+
+            if ww_state.state == wake_word_phrase:
+                # First match
+                self._active_pipeline_index = maybe_pipeline_index
+                break
+
+            # Try next wake word select
+            maybe_pipeline_index += 1
 
         _LOGGER.debug(
-            "Running %spipeline from %s to %s",
-            "secondary " if self._secondary_pipeline_active else "",
+            "Running pipeline %s from %s to %s",
+            self._active_pipeline_index + 1,
             start_stage,
             end_stage,
         )
@@ -557,7 +550,7 @@ class EsphomeAssistSatellite(
     def handle_pipeline_finished(self) -> None:
         """Handle when pipeline has finished running."""
         self._stop_udp_server()
-        self._secondary_pipeline_active = False
+        self._active_pipeline_index = 0
         _LOGGER.debug("Pipeline finished")
 
     def handle_timer_event(

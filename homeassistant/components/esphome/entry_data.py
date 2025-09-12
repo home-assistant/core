@@ -180,7 +180,7 @@ class RuntimeEntryData:
     assist_satellite_set_wake_words_callbacks: list[Callable[[list[str]], None]] = (
         field(default_factory=list)
     )
-    assist_satellite_active_wake_words: dict[int, str] = field(default_factory=dict)
+    assist_satellite_wake_words: dict[int, str] = field(default_factory=dict)
     device_id_to_name: dict[int, str] = field(default_factory=dict)
     entity_removal_callbacks: dict[EntityInfoKey, list[CALLBACK_TYPE]] = field(
         default_factory=dict
@@ -516,11 +516,11 @@ class RuntimeEntryData:
     ) -> None:
         """Notify listeners that the Assist satellite wake words have been set."""
         if wake_word_id:
-            self.assist_satellite_active_wake_words[wake_word_index] = wake_word_id
+            self.assist_satellite_wake_words[wake_word_index] = wake_word_id
         else:
-            self.assist_satellite_active_wake_words.pop(wake_word_index, None)
+            self.assist_satellite_wake_words.pop(wake_word_index, None)
 
-        wake_word_ids = list(self.assist_satellite_active_wake_words.values())
+        wake_word_ids = list(self.assist_satellite_wake_words.values())
 
         for callback_ in self.assist_satellite_set_wake_words_callbacks.copy():
             callback_(wake_word_ids)
