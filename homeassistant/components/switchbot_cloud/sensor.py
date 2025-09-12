@@ -40,14 +40,14 @@ SENSOR_TYPE_CURRENT = "electricCurrent"
 SENSOR_TYPE_USED_ELECTRICITY = "usedElectricity"
 
 
-@dataclass(frozen=True)
-class PlugMiniEuUsedElectricitySensorEntityDescription(SensorEntityDescription):
+@dataclass(frozen=True, kw_only=True)
+class SwitchbotCloudSensorEntityDescription(SensorEntityDescription):
     """Plug Mini Eu UsedElectricity Sensor EntityDescription."""
 
-    value_fn: Callable[[dict[str, Any]], float] | None = None
+    value_fn: Callable[[Any], Any] = lambda value: value
 
 
-USED_ELECTRICITY_DESCRIPTION = PlugMiniEuUsedElectricitySensorEntityDescription(
+USED_ELECTRICITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_USED_ELECTRICITY,
     device_class=SensorDeviceClass.ENERGY,
     state_class=SensorStateClass.TOTAL_INCREASING,
@@ -212,12 +212,9 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         if not self.coordinator.data:
             return
 
-        if (
-            isinstance(
-                self.entity_description,
-                PlugMiniEuUsedElectricitySensorEntityDescription,
-            )
-            and self.entity_description.value_fn is not None
+        if isinstance(
+            self.entity_description,
+            SwitchbotCloudSensorEntityDescription,
         ):
             self._attr_native_value = self.entity_description.value_fn(
                 self.coordinator.data
