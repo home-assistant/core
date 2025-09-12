@@ -19,8 +19,7 @@ def current_hour_CET() -> dt.datetime:
     """Returns the current hour in CET with minutes, seconds and microseconds equal to 0."""
     # to work out the start of the current hour we truncate from minutes downwards
     # rather than create a new datetime to ensure correctness across DST boundaries
-    hour_start = utcnow().replace(minute=0, second=0, microsecond=0)
-    return hour_start.astimezone(CET)
+    return dt.datetime.now(CET).replace(minute=0, second=0, microsecond=0)
 
 
 def pick_series_cet(
