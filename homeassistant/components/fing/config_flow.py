@@ -78,10 +78,6 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                         await self.async_set_unique_id(agent_info_response.agent_id)
                         self._abort_if_unique_id_configured()
 
-                    if (
-                        devices_response.network_id is not None
-                        and len(devices_response.network_id) > 0
-                    ):
                         return self.async_create_entry(
                             title=f"Fing Agent {agent_name}",
                             data=user_input,
