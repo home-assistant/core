@@ -41,7 +41,7 @@ from ..bridge import HueBridge, HueConfigEntry
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 from .scene_activity import get_or_create_scene_activity_manager
-from .scene_sensor import HueActiveSceneDynamicBinarySensor
+from .scene_activity_sensor import HueActiveSceneDynamicBinarySensor
 
 type SensorType = (
     CameraMotion
