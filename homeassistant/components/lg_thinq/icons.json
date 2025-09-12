@@ -282,7 +282,19 @@
       "filter_lifetime": {
         "default": "mdi:air-filter"
       },
+      "top_filter_remain_percent": {
+        "default": "mdi:air-filter"
+      },
       "used_time": {
+        "default": "mdi:air-filter"
+      },
+      "water_filter_state": {
+        "default": "mdi:air-filter"
+      },
+      "water_filter_2_remain_percent": {
+        "default": "mdi:air-filter"
+      },
+      "water_filter_3_remain_percent": {
         "default": "mdi:air-filter"
       },
       "current_job_mode": {
