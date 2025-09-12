@@ -20,7 +20,7 @@ from homeassistant.components.conversation import async_get_chat_log
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session
+from homeassistant.helpers import chat_session, llm
 from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
@@ -78,10 +78,12 @@ async def test_generate_data_preferred_entity(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
+    llm_api = llm.AssistAPI(hass)
     result = await async_generate_data(
         hass,
         task_name="Test Task",
         instructions="Test prompt",
+        llm_api=llm_api,
     )
     assert result.data == "Mock result"
     as_dict = result.as_dict()
@@ -90,6 +92,12 @@ async def test_generate_data_preferred_entity(
     state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNKNOWN
+
+    with (
+        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert chat_log.llm_api.api is llm_api
 
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(
@@ -237,9 +245,7 @@ async def test_generate_data_mixed_attachments(
         hass,
         dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT + timedelta(seconds=1),
     )
-    await hass.async_block_till_done()  # Need several iterations
-    await hass.async_block_till_done()  # because one iteration of the loop
-    await hass.async_block_till_done()  # simply schedules the cleanup
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify the temporary file cleaned up
     assert not camera_attachment.path.exists()
@@ -280,8 +286,8 @@ async def test_generate_image(
     assert "image_data" not in result
     assert result["media_source_id"].startswith("media-source://ai_task/images/")
     assert result["media_source_id"].endswith("_test_task.png")
-    assert result["url"].startswith("http://10.10.10.10:8123/api/ai_task/images/")
-    assert result["url"].endswith("_test_task.png")
+    assert result["url"].startswith("/api/ai_task/images/")
+    assert result["url"].count("_test_task.png?authSig=") == 1
     assert result["mime_type"] == "image/png"
     assert result["model"] == "mock_model"
     assert result["revised_prompt"] == "mock_revised_prompt"
@@ -333,7 +339,7 @@ async def test_image_cleanup(
         instructions="Test prompt",
     )
 
-    assert result["url"].split("/")[-1] in image_storage
+    assert result["url"].split("?authSig=")[0].split("/")[-1] in image_storage
     assert len(image_storage) == 20
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))

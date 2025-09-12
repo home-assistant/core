@@ -36,6 +36,9 @@
       }
     },
     "sensor": {
+      "food_dispensed_today": {
+        "default": "mdi:counter"
+      },
       "hopper_status": {
         "default": "mdi:filter",
         "state": {

@@ -254,11 +254,14 @@ class ShellyBluTrvButton(ShellyBaseButton):
         """Initialize."""
         super().__init__(coordinator, description)
 
-        config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
+        key = f"{BLU_TRV_IDENTIFIER}:{id_}"
+        config = coordinator.device.config[key]
         ble_addr: str = config["addr"]
+        fw_ver = coordinator.device.status[key].get("fw_ver")
+
         self._attr_unique_id = f"{ble_addr}_{description.key}"
         self._attr_device_info = get_blu_trv_device_info(
-            config, ble_addr, coordinator.mac
+            config, ble_addr, coordinator.mac, fw_ver
         )
         self._id = id_
 

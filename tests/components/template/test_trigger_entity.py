@@ -137,8 +137,15 @@ async def test_script_variables_from_coordinator(hass: HomeAssistant) -> None:
     assert entity._render_script_variables() == {"value": STATE_ON}
 
 
-async def test_object_id(hass: HomeAssistant) -> None:
-    """Test template entity creates suggested entity_id from the object_id."""
+async def test_default_entity_id(hass: HomeAssistant) -> None:
+    """Test template entity creates suggested entity_id from the default_entity_id."""
     coordinator = TriggerUpdateCoordinator(hass, {})
-    entity = TestEntity(hass, coordinator, {"object_id": "test"})
+    entity = TestEntity(hass, coordinator, {"default_entity_id": "test.test"})
+    assert entity.entity_id == "test.test"
+
+
+async def test_bad_default_entity_id(hass: HomeAssistant) -> None:
+    """Test template entity creates suggested entity_id from the default_entity_id."""
+    coordinator = TriggerUpdateCoordinator(hass, {})
+    entity = TestEntity(hass, coordinator, {"default_entity_id": "bad.test"})
     assert entity.entity_id == "test.test"

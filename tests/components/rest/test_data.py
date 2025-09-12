@@ -541,7 +541,7 @@ async def test_rest_data_boolean_params_converted_to_strings(
 
     # Check that the request was made with boolean values converted to strings
     assert len(aioclient_mock.mock_calls) == 1
-    method, url, data, headers = aioclient_mock.mock_calls[0]
+    _method, url, _data, _headers = aioclient_mock.mock_calls[0]
 
     # Check that the URL query parameters have boolean values converted to strings
     assert url.query["boolTrue"] == "true"

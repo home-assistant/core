@@ -201,6 +201,7 @@ async def websocket_hass_agent_debug(
             context=connection.context(msg),
             conversation_id=None,
             device_id=msg.get("device_id"),
+            satellite_id=None,
             language=msg.get("language", hass.config.language),
             agent_id=agent.entity_id,
         )
