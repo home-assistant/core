@@ -113,7 +113,7 @@
       "pipeline_2": {
         "name": "[%key:component::assist_pipeline::entity::select::pipeline_2::name%]",
         "state": {
-          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline_2::state::preferred%]"
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
         }
       },
       "vad_sensitivity": {
@@ -134,7 +134,7 @@
       "wake_word_2": {
         "name": "Secondary wake word",
         "state": {
-          "no_wake_word": "No wake word"
+          "no_wake_word": "[%key:component::esphome::entity::select::wake_word::state::no_wake_word%]"
         }
       }
     },
