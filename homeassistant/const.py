@@ -6,7 +6,7 @@ from enum import StrEnum
 from functools import partial
 from typing import TYPE_CHECKING, Final
 
-from .generated.platform_entity import EntityPlatform as Platform
+from .generated.platform_entity import EntityPlatform
 from .helpers.deprecation import (
     DeprecatedConstant,
     DeprecatedConstantEnum,
@@ -37,6 +37,8 @@ REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
 
+# Type alias to avoid 1000 MyPy errors
+Platform = EntityPlatform
 
 BASE_PLATFORMS: Final = {platform.value for platform in Platform}
 
