@@ -51,7 +51,8 @@ class SupportedModels(StrEnum):
     EVAPORATIVE_HUMIDIFIER = "evaporative_humidifier"
     FLOOR_LAMP = "floor_lamp"
     STRIP_LIGHT_3 = "strip_light_3"
-    GARAGE_DOOR_OPENER = "garage_door_opener"
+    RGBICWW_STRIP_LIGHT = "rgbicww_strip_light"
+    RGBICWW_FLOOR_LAMP = "rgbicww_floor_lamp"
     RELAY_SWITCH_2PM = "relay_switch_2pm"
 
 
