@@ -60,12 +60,11 @@ class AOSmithHotWaterPlusSelectEntity(AOSmithStatusEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set the Hot Water+ mode."""
-        aosmith_hwp_level = HWP_LEVEL_HA_TO_AOSMITH.get(option)
-        if aosmith_hwp_level is not None:
-            await self.client.update_mode(
-                junction_id=self.junction_id,
-                mode=self.device.status.current_mode,
-                hot_water_plus_level=aosmith_hwp_level,
-            )
+        aosmith_hwp_level = HWP_LEVEL_HA_TO_AOSMITH[option]
+        await self.client.update_mode(
+            junction_id=self.junction_id,
+            mode=self.device.status.current_mode,
+            hot_water_plus_level=aosmith_hwp_level,
+        )
 
-            await self.coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
