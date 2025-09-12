@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentryData,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
@@ -30,7 +31,15 @@ from homeassistant.helpers.selector import (
 )
 
 from .api import NSAPIAuthError, NSAPIConnectionError
-from .const import CONF_FROM, CONF_NAME, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN
+from .const import (
+    CONF_FROM,
+    CONF_NAME,
+    CONF_ROUTES,
+    CONF_TIME,
+    CONF_TO,
+    CONF_VIA,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +56,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step of the config flow (API key)."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(user_input)
             client = NSAPI(user_input[CONF_API_KEY])
             try:
                 await self.hass.async_add_executor_job(client.get_stations)
@@ -68,66 +78,42 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    # async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-    #     """Handle import from YAML configuration."""
-    #     _LOGGER.debug("Importing YAML configuration: %s", import_data)
-    #
-    #     # Check if we already have an entry for this integration
-    #     existing_entries = self._async_current_entries()
-    #     if existing_entries:
-    #         _LOGGER.warning("Integration already configured, skipping YAML import")
-    #         return self.async_abort(reason="already_configured")
-    #
-    #     # The sensor platform should pass the platform config directly
-    #     # This contains: api_key, routes (list)
-    #     if CONF_API_KEY not in import_data:
-    #         _LOGGER.error(
-    #             "No API key found in YAML import data "
-    #             "Expected sensor platform configuration with api_key"
-    #         )
-    #         return self.async_abort(reason="unknown")
-    #
-    #     # Validate API key
-    #     api_key = import_data[CONF_API_KEY]
-    #     api_wrapper = NSAPIWrapper(self.hass, api_key)
-    #
-    #     try:
-    #         if not await api_wrapper.validate_api_key():
-    #             _LOGGER.error("Invalid API key in YAML configuration")
-    #             return self.async_abort(reason="invalid_api_key")
-    #     except (NSAPIAuthError, NSAPIConnectionError, NSAPIError) as err:
-    #         _LOGGER.error("Failed to validate API key during import: %s", err)
-    #         return self.async_abort(reason="cannot_connect")
-    #
-    #     # Create the main config entry
-    #     await self.async_set_unique_id(f"{DOMAIN}")
-    #     self._abort_if_unique_id_configured()
-    #
-    #     # Extract routes from sensor platform config
-    #     routes = import_data.get(CONF_ROUTES, [])
-    #     if routes:
-    #         _LOGGER.info(
-    #             "Importing %d routes from sensor platform YAML configuration",
-    #             len(routes),
-    #         )
-    #         # Store routes in the entry data for migration
-    #         config_entry = self.async_create_entry(
-    #             title="Nederlandse Spoorwegen",
-    #             data={
-    #                 CONF_API_KEY: api_key,
-    #                 CONF_ROUTES: routes,  # Will be migrated to subentries in async_setup_entry
-    #             },
-    #         )
-    #     else:
-    #         _LOGGER.info(
-    #             "No routes found in YAML configuration, creating entry with API key only"
-    #         )
-    #         config_entry = self.async_create_entry(
-    #             title="Nederlandse Spoorwegen",
-    #             data={CONF_API_KEY: api_key},
-    #         )
-    #
-    #     return config_entry
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from YAML configuration."""
+        self._async_abort_entries_match({CONF_API_KEY: import_data[CONF_API_KEY]})
+
+        client = NSAPI(import_data[CONF_API_KEY])
+        try:
+            stations = await self.hass.async_add_executor_job(client.get_stations)
+        except NSAPIAuthError:
+            return self.async_abort(reason="invalid_auth")
+        except NSAPIConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception validating API key")
+            return self.async_abort(reason="unknown")
+
+        station_codes = {station.code for station in stations}
+
+        subentries: list[ConfigSubentryData] = []
+        for route in import_data.get(CONF_ROUTES, []):
+            for key in (CONF_FROM, CONF_TO, CONF_VIA):
+                if key in route and route[key] not in station_codes:
+                    return self.async_abort(reason="invalid_station")
+            subentries.append(
+                ConfigSubentryData(
+                    title=route[CONF_NAME],
+                    subentry_type="route",
+                    data=route,
+                    unique_id=None,
+                )
+            )
+
+        return self.async_create_entry(
+            title="Nederlandse Spoorwegen",
+            data={CONF_API_KEY: import_data[CONF_API_KEY]},
+            subentries=subentries,
+        )
 
     @classmethod
     @callback
