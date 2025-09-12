@@ -3234,7 +3234,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'desk_up_down',
-    'unique_id': 'tuya.vpfdskpi8pr8cbtfzjslevel',
+    'unique_id': 'tuya.vpfdskpi8pr8cbtfzjsupdown',
     'unit_of_measurement': None,
   })
 # ---
