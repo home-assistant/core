@@ -14,6 +14,7 @@ import sys
 from typing import Any, overload
 
 from aiousbwatcher import AIOUSBWatcher, InotifyNotAvailableError
+from serial.tools import list_ports
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -41,10 +42,7 @@ from homeassistant.loader import USBMatcher, async_get_usb
 
 from .const import DOMAIN
 from .models import USBDevice
-from .utils import (
-    scan_serial_ports,
-    usb_device_from_port,  # noqa: F401
-)
+from .utils import scan_serial_ports, usb_device_from_port
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -527,6 +525,50 @@ async def websocket_usb_scan(
     """Scan for new usb devices."""
     await async_request_scan(hass)
     connection.send_result(msg["id"])
+
+
+def get_usb_ports() -> dict[str, str]:
+    """Return a dict of USB ports and their friendly names."""
+
+    ports = list_ports.comports()
+    port_descriptions = {}
+    for port in ports:
+        vid: str | None = None
+        pid: str | None = None
+        if port.vid is not None and port.pid is not None:
+            usb_device = usb_device_from_port(port)
+            vid = usb_device.vid
+            pid = usb_device.pid
+
+        dev_path = get_serial_by_id(port.device)
+        human_name = human_readable_device_name(
+            dev_path,
+            port.serial_number,
+            port.manufacturer,
+            port.description,
+            vid,
+            pid,
+        )
+        port_descriptions[dev_path] = human_name
+
+    # Filter out "n/a" descriptions only if there are other ports available
+    non_na_ports = {
+        path: desc
+        for path, desc in port_descriptions.items()
+        if not desc.lower().startswith("n/a")
+    }
+
+    # If we have non-"n/a" ports, return only those; otherwise return all ports as-is
+    return non_na_ports if non_na_ports else port_descriptions
+
+
+async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
+    """Return a dict of USB ports and their friendly names."""
+    try:
+        return await hass.async_add_executor_job(get_usb_ports)
+    except OSError:
+        _LOGGER.warning("Failed to scan USB ports", exc_info=True)
+        return {}
 
 
 # These can be removed if no deprecated constant are in this module anymore

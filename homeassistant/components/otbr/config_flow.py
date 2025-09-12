@@ -12,11 +12,9 @@ from aiohttp.client_exceptions import ClientConnectorError
 import python_otbr_api
 from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
-from serial.tools import list_ports
 import voluptuous as vol
 import yarl
 
-from homeassistant.components import usb
 from homeassistant.components.hassio import (
     AddonError,
     AddonInfo,
@@ -26,6 +24,7 @@ from homeassistant.components.hassio import (
 from homeassistant.components.homeassistant_hardware.util import get_otbr_addon_manager
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.components.thread import async_get_preferred_dataset
+from homeassistant.components.usb import async_get_usb_ports
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
     ConfigEntryState,
@@ -95,44 +94,6 @@ async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
         return f"Home Assistant Connect ZBT-1 ({discovery_info.name})"
 
     return discovery_info.name
-
-
-def get_usb_ports() -> dict[str, str]:
-    """Return a dict of USB ports and their friendly names."""
-    ports = list_ports.comports()
-    port_descriptions = {}
-    for port in ports:
-        vid: str | None = None
-        pid: str | None = None
-        if port.vid is not None and port.pid is not None:
-            usb_device = usb.usb_device_from_port(port)
-            vid = usb_device.vid
-            pid = usb_device.pid
-        dev_path = usb.get_serial_by_id(port.device)
-        human_name = usb.human_readable_device_name(
-            dev_path,
-            port.serial_number,
-            port.manufacturer,
-            port.description,
-            vid,
-            pid,
-        )
-        port_descriptions[dev_path] = human_name
-
-    # Filter out "n/a" descriptions only if there are other ports available
-    non_na_ports = {
-        path: desc
-        for path, desc in port_descriptions.items()
-        if not desc.lower().startswith("n/a")
-    }
-
-    # If we have non-"n/a" ports, return only those; otherwise return all ports as-is
-    return non_na_ports if non_na_ports else port_descriptions
-
-
-async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
-    """Return a dict of USB ports and their friendly names."""
-    return await hass.async_add_executor_job(get_usb_ports)
 
 
 class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -211,7 +172,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         Returns the router's border agent id.
         """
         api = python_otbr_api.OTBR(otbr_url, async_get_clientsession(self.hass), 10)
-        border_agent_id = await api.get_border_agent_id()
+        border_agent_id: bytes = await api.get_border_agent_id()
         _LOGGER.debug("border agent id for url %s: %s", otbr_url, border_agent_id.hex())
 
         if await self._is_border_agent_id_configured(border_agent_id):
