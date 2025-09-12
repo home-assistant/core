@@ -590,6 +590,7 @@ class UnitOfApparentPower(StrEnum):
 
     MILLIVOLT_AMPERE = "mVA"
     VOLT_AMPERE = "VA"
+    KILO_VOLT_AMPERE = "kVA"
 
 
 # Power units
@@ -765,6 +766,7 @@ class UnitOfVolume(StrEnum):
 
     CUBIC_FEET = "ft³"
     CENTUM_CUBIC_FEET = "CCF"
+    MILLE_CUBIC_FEET = "MCF"
     CUBIC_METERS = "m³"
     LITERS = "L"
     MILLILITERS = "mL"

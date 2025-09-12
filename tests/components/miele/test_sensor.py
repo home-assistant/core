@@ -311,7 +311,8 @@ async def test_laundry_wash_scenario(
         hass, "sensor.washing_machine_target_temperature", "unknown", step
     )
     check_sensor_state(hass, "sensor.washing_machine_spin_speed", "unknown", step)
-    check_sensor_state(hass, "sensor.washing_machine_remaining_time", "0", step)
+    # OFF -> remaining forced to unknown
+    check_sensor_state(hass, "sensor.washing_machine_remaining_time", "unknown", step)
     # OFF -> elapsed forced to unknown (some devices continue reporting last value of last cycle)
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "unknown", step)
 
@@ -347,8 +348,8 @@ async def test_laundry_wash_scenario(
     check_sensor_state(hass, "sensor.washing_machine_program_phase", "main_wash", step)
     check_sensor_state(hass, "sensor.washing_machine_target_temperature", "30.0", step)
     check_sensor_state(hass, "sensor.washing_machine_spin_speed", "1200", step)
+    # IN_USE -> elapsed, remaining time from API (normal case)
     check_sensor_state(hass, "sensor.washing_machine_remaining_time", "105", step)
-    # IN_USE -> elapsed time from API (normal case)
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "12", step)
 
     # Simulate rinse hold phase
@@ -373,8 +374,8 @@ async def test_laundry_wash_scenario(
     check_sensor_state(hass, "sensor.washing_machine_program_phase", "rinse_hold", step)
     check_sensor_state(hass, "sensor.washing_machine_target_temperature", "30.0", step)
     check_sensor_state(hass, "sensor.washing_machine_spin_speed", "1200", step)
+    # RINSE HOLD -> elapsed, remaining time from API (normal case)
     check_sensor_state(hass, "sensor.washing_machine_remaining_time", "8", step)
-    # RINSE HOLD -> elapsed time from API (normal case)
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "109", step)
 
     # Simulate program ended
@@ -401,6 +402,7 @@ async def test_laundry_wash_scenario(
     )
     check_sensor_state(hass, "sensor.washing_machine_target_temperature", "30.0", step)
     check_sensor_state(hass, "sensor.washing_machine_spin_speed", "1200", step)
+    # PROGRAM_ENDED -> remaining time forced to 0
     check_sensor_state(hass, "sensor.washing_machine_remaining_time", "0", step)
     # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "109", step)
@@ -433,8 +435,8 @@ async def test_laundry_wash_scenario(
     )
     check_sensor_state(hass, "sensor.washing_machine_target_temperature", "40.0", step)
     check_sensor_state(hass, "sensor.washing_machine_spin_speed", "1200", step)
+    # PROGRAMMED -> elapsed, remaining time from API (normal case)
     check_sensor_state(hass, "sensor.washing_machine_remaining_time", "119", step)
-    # PROGRAMMED -> elapsed time from API (normal case)
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "0", step)
 
 
@@ -457,8 +459,8 @@ async def test_laundry_dry_scenario(
     check_sensor_state(hass, "sensor.tumble_dryer_program", "no_program", step)
     check_sensor_state(hass, "sensor.tumble_dryer_program_phase", "not_running", step)
     check_sensor_state(hass, "sensor.tumble_dryer_drying_step", "unknown", step)
-    check_sensor_state(hass, "sensor.tumble_dryer_remaining_time", "0", step)
-    # OFF -> elapsed forced to unknown (some devices continue reporting last value of last cycle)
+    # OFF -> elapsed, remaining forced to unknown (some devices continue reporting last value of last cycle)
+    check_sensor_state(hass, "sensor.tumble_dryer_remaining_time", "unknown", step)
     check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "unknown", step)
 
     # Simulate program started
@@ -486,8 +488,8 @@ async def test_laundry_dry_scenario(
     check_sensor_state(hass, "sensor.tumble_dryer_program", "minimum_iron", step)
     check_sensor_state(hass, "sensor.tumble_dryer_program_phase", "drying", step)
     check_sensor_state(hass, "sensor.tumble_dryer_drying_step", "normal", step)
+    # IN_USE -> elapsed, remaining time from API (normal case)
     check_sensor_state(hass, "sensor.tumble_dryer_remaining_time", "49", step)
-    # IN_USE -> elapsed time from API (normal case)
     check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "20", step)
 
     # Simulate program end
@@ -511,6 +513,7 @@ async def test_laundry_dry_scenario(
     check_sensor_state(hass, "sensor.tumble_dryer_program", "minimum_iron", step)
     check_sensor_state(hass, "sensor.tumble_dryer_program_phase", "finished", step)
     check_sensor_state(hass, "sensor.tumble_dryer_drying_step", "normal", step)
+    # PROGRAM_ENDED -> remaining time forced to 0
     check_sensor_state(hass, "sensor.tumble_dryer_remaining_time", "0", step)
     # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
     check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "20", step)

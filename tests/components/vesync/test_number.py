@@ -25,7 +25,7 @@ async def test_set_mist_level_bad_range(
     with (
         pytest.raises(ServiceValidationError),
         patch(
-            "pyvesync.vesyncfan.VeSyncHumid200300S.set_mist_level",
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200300S.set_mist_level",
             return_value=True,
         ) as method_mock,
     ):
@@ -45,7 +45,7 @@ async def test_set_mist_level(
     """Test set_mist_level usage."""
 
     with patch(
-        "pyvesync.vesyncfan.VeSyncHumid200300S.set_mist_level",
+        "pyvesync.devices.vesynchumidifier.VeSyncHumid200300S.set_mist_level",
         return_value=True,
     ) as method_mock:
         await hass.services.async_call(

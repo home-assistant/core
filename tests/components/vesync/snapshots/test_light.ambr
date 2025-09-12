@@ -560,29 +560,39 @@
 # name: test_light_state[Temperature Light][light.temperature_light]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'color_temp': None,
-      'color_temp_kelvin': None,
+      'brightness': 128,
+      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
+      'color_temp': 262,
+      'color_temp_kelvin': 3816,
       'friendly_name': 'Temperature Light',
-      'hs_color': None,
+      'hs_color': tuple(
+        26.914,
+        38.308,
+      ),
       'max_color_temp_kelvin': 6500,
       'max_mireds': 370,
       'min_color_temp_kelvin': 2700,
       'min_mireds': 153,
-      'rgb_color': None,
+      'rgb_color': tuple(
+        255,
+        201,
+        157,
+      ),
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
-      'xy_color': None,
+      'xy_color': tuple(
+        0.432,
+        0.368,
+      ),
     }),
     'context': <ANY>,
     'entity_id': 'light.temperature_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_light_state[Wall Switch][devices]
