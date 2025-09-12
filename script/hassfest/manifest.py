@@ -342,6 +342,15 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
             "manifest", "Domain collides with built-in core integration"
         )
 
+    if (
+        integration.manifest.get("integration_type") == "entity"
+        and integration.domain not in Platform
+    ):
+        integration.add_error(
+            "manifest",
+            "Integration should be added to Platform constant in homeassistant/const.py",
+        )
+
     if domain in NO_IOT_CLASS and "iot_class" in integration.manifest:
         integration.add_error("manifest", "Domain should not have an IoT Class")
 
