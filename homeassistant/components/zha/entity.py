@@ -17,7 +17,7 @@ from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import UndefinedType
 
 from .const import DOMAIN
 from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData, convert_zha_error_to_ha_error
@@ -63,14 +63,16 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             self._attr_name = None
             return super().name
 
-        original_name = super().name
-
-        if original_name not in (UNDEFINED, None) or meta.fallback_name is None:
-            return original_name
-
         # This is to allow local development and to register niche devices, since
         # their translation_key will probably never be added to `zha/strings.json`.
-        self._attr_name = meta.fallback_name
+        # The fallback name takes priority over the device class name.
+        if (
+            (translation_key := self._name_translation_key)
+            and translation_key not in self.platform_data.platform_translations
+            and meta.fallback_name
+        ):
+            self._attr_name = meta.fallback_name
+
         return super().name
 
     @property
