@@ -16,23 +16,21 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockUser
 from tests.typing import WebSocketGenerator
 
+NOW = datetime(2026, 8, 26, 15, 0, 0, tzinfo=dt_util.UTC)
+
 
 @pytest.fixture
 def mock_predict_common_control() -> Generator[Mock]:
     """Return a mock result for common control."""
-    now = datetime(2026, 8, 26, 9, 0, 0, tzinfo=dt_util.UTC)
-    with (
-        patch(
-            "homeassistant.components.usage_prediction.common_control.async_predict_common_control",
-            return_value=EntityUsagePredictions(
-                morning=["light.kitchen"],
-                afternoon=["climate.thermostat"],
-                evening=["light.bedroom"],
-                night=["lock.front_door"],
-            ),
-        ) as mock_predict,
-        patch("homeassistant.util.dt.utcnow", return_value=now),
-    ):
+    with patch(
+        "homeassistant.components.usage_prediction.common_control.async_predict_common_control",
+        return_value=EntityUsagePredictions(
+            morning=["light.kitchen"],
+            afternoon=["climate.thermostat"],
+            evening=["light.bedroom"],
+            night=["lock.front_door"],
+        ),
+    ) as mock_predict:
         yield mock_predict
 
 
@@ -47,7 +45,9 @@ async def test_common_control(
     assert await async_setup_component(hass, "usage_prediction", {})
 
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 1, "type": "usage_prediction/common_control"})
+
+    with freeze_time(NOW):
+        await client.send_json({"id": 1, "type": "usage_prediction/common_control"})
 
     msg = await client.receive_json()
     assert msg["id"] == 1
@@ -55,7 +55,7 @@ async def test_common_control(
     assert msg["success"] is True
     assert msg["result"] == {
         "entities": [
-            "climate.thermostat",
+            "light.kitchen",
         ]
     }
     assert mock_predict_common_control.call_count == 1
@@ -72,10 +72,9 @@ async def test_caching_behavior(
     assert await async_setup_component(hass, "usage_prediction", {})
 
     client = await hass_ws_client(hass)
-    now = datetime(2026, 8, 26, 9, 0, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
 
     # First call should fetch from database
-    with freeze_time(now):
+    with freeze_time(NOW):
         await client.send_json({"id": 1, "type": "usage_prediction/common_control"})
         msg = await client.receive_json()
 
@@ -92,7 +91,7 @@ async def test_caching_behavior(
     mock_predict_common_control.return_value = new_result
 
     # Second call within 24 hours should use cache
-    with freeze_time(now + timedelta(hours=23)):
+    with freeze_time(NOW + timedelta(hours=23)):
         await client.send_json({"id": 2, "type": "usage_prediction/common_control"})
         msg = await client.receive_json()
 
@@ -106,7 +105,7 @@ async def test_caching_behavior(
     assert mock_predict_common_control.call_count == 1
 
     # Third call after 24 hours should fetch from database again
-    with freeze_time(now + timedelta(hours=25)):
+    with freeze_time(NOW + timedelta(hours=25)):
         await client.send_json({"id": 3, "type": "usage_prediction/common_control"})
         msg = await client.receive_json()
 
