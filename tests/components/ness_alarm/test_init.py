@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.ness_alarm import config_flow
 from homeassistant.components.ness_alarm.const import (
     ATTR_OUTPUT_ID,
     CONF_DEVICE_PORT,
@@ -40,6 +41,21 @@ VALID_CONFIG = {
         ],
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def mock_validate_input(monkeypatch: pytest.MonkeyPatch):
+    """Patch validate_input to avoid real network calls."""
+
+    async def _mock_validate_input(hass: HomeAssistant | None, data: dict) -> dict:
+        return {
+            "model": "D8X",
+            "version": "8.7",
+            "title": "Ness Alarm (mock)",
+            "address": "01",
+        }
+
+    monkeypatch.setattr(config_flow, "validate_input", _mock_validate_input)
 
 
 async def test_setup_platform(hass: HomeAssistant, mock_nessclient) -> None:
@@ -76,7 +92,7 @@ async def test_aux_service(hass: HomeAssistant, mock_nessclient) -> None:
 
 
 async def test_dispatch_state_change(hass: HomeAssistant, mock_nessclient) -> None:
-    """Test calling aux service."""
+    """Test state change callback dispatch."""
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
 
@@ -90,7 +106,7 @@ async def test_dispatch_state_change(hass: HomeAssistant, mock_nessclient) -> No
 
 
 async def test_alarm_disarm(hass: HomeAssistant, mock_nessclient) -> None:
-    """Test disarm."""
+    """Test disarm service call."""
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
 
@@ -107,7 +123,7 @@ async def test_alarm_disarm(hass: HomeAssistant, mock_nessclient) -> None:
 
 
 async def test_alarm_arm_away(hass: HomeAssistant, mock_nessclient) -> None:
-    """Test disarm."""
+    """Test arm_away service call."""
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
 
@@ -124,7 +140,7 @@ async def test_alarm_arm_away(hass: HomeAssistant, mock_nessclient) -> None:
 
 
 async def test_alarm_arm_home(hass: HomeAssistant, mock_nessclient) -> None:
-    """Test disarm."""
+    """Test arm_home service call."""
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
 
@@ -141,7 +157,7 @@ async def test_alarm_arm_home(hass: HomeAssistant, mock_nessclient) -> None:
 
 
 async def test_alarm_trigger(hass: HomeAssistant, mock_nessclient) -> None:
-    """Test disarm."""
+    """Test alarm_trigger service call (maps to panic)."""
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
 
@@ -158,7 +174,7 @@ async def test_alarm_trigger(hass: HomeAssistant, mock_nessclient) -> None:
 
 
 async def test_dispatch_zone_change(hass: HomeAssistant, mock_nessclient) -> None:
-    """Test zone change events dispatch a signal to subscribers."""
+    """Test zone change callback dispatch."""
     await async_setup_component(hass, DOMAIN, VALID_CONFIG)
     await hass.async_block_till_done()
 
@@ -171,7 +187,7 @@ async def test_dispatch_zone_change(hass: HomeAssistant, mock_nessclient) -> Non
 
 
 async def test_arming_state_change(hass: HomeAssistant, mock_nessclient) -> None:
-    """Test arming state change handing."""
+    """Test arming state change handling."""
     states = [
         (ArmingState.UNKNOWN, None, STATE_UNKNOWN),
         (ArmingState.DISARMED, None, AlarmControlPanelState.DISARMED),

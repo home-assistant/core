@@ -44,7 +44,7 @@ async def async_setup_entry(
 
     entities = []
 
-    support_home_arm = config.get(CONF_SUPPORT_HOME_ARM, False)
+    support_home_arm = config.get(CONF_SUPPORT_HOME_ARM, True)
     entities.append(
         NessAlarmPanel(
             client,
