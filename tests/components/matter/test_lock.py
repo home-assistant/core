@@ -54,6 +54,10 @@ async def test_lock(
         command=clusters.DoorLock.Commands.UnlockDoor(),
         timed_request_timeout_ms=1000,
     )
+
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == LockState.UNLOCKING
     matter_client.send_device_command.reset_mock()
 
     await hass.services.async_call(
@@ -72,6 +76,10 @@ async def test_lock(
         command=clusters.DoorLock.Commands.LockDoor(),
         timed_request_timeout_ms=1000,
     )
+
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == LockState.LOCKING
     matter_client.send_device_command.reset_mock()
 
     set_node_attribute(matter_node, 1, 257, 0, 1)

@@ -153,12 +153,11 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock with pin if needed."""
-        if self._attr_is_locked:
-            # optimistically signal unlocking to state machine
-            self._attr_is_unlocking = True
-            self.async_write_ha_state()
-            # the lock should acknowledge the command with an attribute update
-            # but if it fails, then change from optimistic state with the lockOperationError event.
+        # optimistically signal unlocking to state machine
+        self._attr_is_unlocking = True
+        self.async_write_ha_state()
+        # the lock should acknowledge the command with an attribute update
+        # but if it fails, then change from optimistic state with the lockOperationError event.
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         if self._attr_supported_features & LockEntityFeature.OPEN:
