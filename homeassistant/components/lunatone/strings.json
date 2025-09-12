@@ -13,17 +13,6 @@
           "url": "The URL to the Lunatone gateway device."
         }
       },
-      "dali": {
-        "data": {
-          "device_scan_method": "Select a DALI device scan method:"
-        },
-        "data_description": {
-          "device_scan_method": "Available scan methods"
-        }
-      },
-      "finish": {
-        "description": "DALI device scan completed successfully"
-      },
       "reconfigure": {
         "description": "Update the URL.",
         "data": {
@@ -43,20 +32,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "dali_device_scan_timeout": "DALI device scan timeout"
-    },
-    "progress": {
-      "device_scan": "Scanning for DALI devices..."
-    }
-  },
-  "selector": {
-    "device_scan_method": {
-      "options": {
-        "current_device_list": "Refresh current device list",
-        "system_extension": "Find new devices",
-        "new_installation": "New installation"
-      }
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   }
 }
