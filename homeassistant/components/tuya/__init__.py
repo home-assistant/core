@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple
-from urllib.parse import urlsplit
+from typing import Any, NamedTuple
 
 from tuya_sharing import (
     CustomerDevice,
@@ -12,7 +11,6 @@ from tuya_sharing import (
     SharingDeviceListener,
     SharingTokenListener,
 )
-from tuya_sharing.mq import SharingMQ, SharingMQConfig
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -47,81 +45,13 @@ class HomeAssistantTuyaData(NamedTuple):
     listener: SharingDeviceListener
 
 
-if TYPE_CHECKING:
-    import paho.mqtt.client as mqtt
-
-
-class ManagerCompat(Manager):
-    """Extended Manager class from the Tuya device sharing SDK.
-
-    The extension ensures compatibility a paho-mqtt client version >= 2.1.0.
-    It overrides extend refresh_mq method to ensure correct paho.mqtt client calls.
-
-    This code can be removed when a version of tuya-device-sharing with
-    https://github.com/tuya/tuya-device-sharing-sdk/pull/25 is available.
-    """
-
-    def refresh_mq(self):
-        """Refresh the MQTT connection."""
-        if self.mq is not None:
-            self.mq.stop()
-            self.mq = None
-
-        home_ids = [home.id for home in self.user_homes]
-        device = [
-            device
-            for device in self.device_map.values()
-            if hasattr(device, "id") and getattr(device, "set_up", False)
-        ]
-
-        sharing_mq = SharingMQCompat(self.customer_api, home_ids, device)
-        sharing_mq.start()
-        sharing_mq.add_message_listener(self.on_message)
-        self.mq = sharing_mq
-
-
-class SharingMQCompat(SharingMQ):
-    """Extended SharingMQ class from the Tuya device sharing SDK.
-
-    The extension ensures compatibility a paho-mqtt client version >= 2.1.0.
-    It overrides _start method to ensure correct paho.mqtt client calls.
-
-    This code can be removed when a version of tuya-device-sharing with
-    https://github.com/tuya/tuya-device-sharing-sdk/pull/25 is available.
-    """
-
-    def _start(self, mq_config: SharingMQConfig) -> mqtt.Client:
-        """Start the MQTT client."""
-        # We don't import on the top because some integrations
-        # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # noqa: PLC0415
-
-        mqttc = mqtt.Client(client_id=mq_config.client_id)
-        mqttc.username_pw_set(mq_config.username, mq_config.password)
-        mqttc.user_data_set({"mqConfig": mq_config})
-        mqttc.on_connect = self._on_connect
-        mqttc.on_message = self._on_message
-        mqttc.on_subscribe = self._on_subscribe
-        mqttc.on_log = self._on_log
-        mqttc.on_disconnect = self._on_disconnect
-
-        url = urlsplit(mq_config.url)
-        if url.scheme == "ssl":
-            mqttc.tls_set()
-
-        mqttc.connect(url.hostname, url.port)
-
-        mqttc.loop_start()
-        return mqttc
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
     """Async setup hass config entry."""
     if CONF_APP_TYPE in entry.data:
         raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
 
     token_listener = TokenListener(hass, entry)
-    manager = ManagerCompat(
+    manager = Manager(
         TUYA_CLIENT_ID,
         entry.data[CONF_USER_CODE],
         entry.data[CONF_TERMINAL_ID],
@@ -228,20 +158,26 @@ class DeviceListener(SharingDeviceListener):
         self.manager = manager
 
     def update_device(
-        self, device: CustomerDevice, updated_status_properties: list[str] | None
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None = None,
+        dp_timestamps: dict | None = None,
     ) -> None:
-        """Update device status."""
+        """Update device status with optional DP timestamps."""
         LOGGER.debug(
-            "Received update for device %s (online: %s): %s (updated properties: %s)",
+            "Received update for device %s (online: %s): %s"
+            " (updated properties: %s, dp_timestamps: %s)",
             device.id,
             device.online,
             device.status,
             updated_status_properties,
+            dp_timestamps,
         )
         dispatcher_send(
             self.hass,
             f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
             updated_status_properties,
+            dp_timestamps,
         )
 
     def add_device(self, device: CustomerDevice) -> None:

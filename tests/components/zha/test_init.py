@@ -193,9 +193,9 @@ async def test_setup_with_v3_cleaning_uri(
 async def test_migration_baudrate_and_flow_control(
     radio_type: str,
     old_baudrate: int,
-    old_flow_control: typing.Literal["hardware", "software", None],
+    old_flow_control: typing.Literal["hardware", "software"] | None,
     new_baudrate: int,
-    new_flow_control: typing.Literal["hardware", "software", None],
+    new_flow_control: typing.Literal["hardware", "software"] | None,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:

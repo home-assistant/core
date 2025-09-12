@@ -7,6 +7,9 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "Aladdin Connect needs to re-authenticate your account"
+      },
+      "oauth_discovery": {
+        "description": "Home Assistant has found an Aladdin Connect device on your network. Press **Submit** to continue setting up Aladdin Connect."
       }
     },
     "abort": {

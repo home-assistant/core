@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -53,26 +53,24 @@ async def test_block_binary_sensor(
     assert entry.unique_id == "123456789ABC-relay_0-overpower"
 
 
-async def test_block_binary_sensor_extra_state_attr(
+async def test_block_binary_gas_sensor_creation(
     hass: HomeAssistant,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     entity_registry: EntityRegistry,
 ) -> None:
-    """Test block binary sensor extra state attributes."""
+    """Test block binary gas sensor creation."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_gas"
     await init_integration(hass, 1)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
-    assert state.attributes.get("detected") == "mild"
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "gas", "none")
     mock_block_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
-    assert state.attributes.get("detected") == "none"
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sensor_0-gas"
@@ -529,3 +527,44 @@ async def test_rpc_flood_entities(
 
         entry = entity_registry.async_get(entity_id)
         assert entry == snapshot(name=f"{entity_id}-entry")
+
+
+async def test_rpc_presence_component(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test RPC binary sensor entity for presence component."""
+    config = deepcopy(mock_rpc_device.config)
+    config["presence"] = {"enable": True}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["presence"] = {"num_objects": 2}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    mock_config_entry = await init_integration(hass, 4)
+
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_occupancy"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-presence-presence_num_objects"
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "presence", "num_objects", 0)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    config = deepcopy(mock_rpc_device.config)
+    config["presence"] = {"enable": False}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
