@@ -23,7 +23,7 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VitreaConfigEntry,
     async_add_entities: AddEntitiesCallback,  # pylint: disable=hass-argument-type
 ) -> None:
     """Set up cover entities from a config entry."""
