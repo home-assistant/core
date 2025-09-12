@@ -103,7 +103,7 @@
         },
         "date": {
           "name": "Date",
-          "description": "Only dates two months in the past and one day in the future is allowed."
+          "description": "Only dates in the range from two months in the past to one day in the future are allowed."
         },
         "areas": {
           "name": "Areas",
@@ -120,20 +120,20 @@
       "description": "Retrieves the price indices for a specific date.",
       "fields": {
         "config_entry": {
-          "name": "Config entry",
-          "description": "The Nord Pool configuration entry for this action."
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::config_entry::name%]",
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::config_entry::description%]"
         },
         "date": {
-          "name": "Date",
-          "description": "Only dates two months in the past and one day in the future is allowed."
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::date::name%]",
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::date::description%]"
         },
         "areas": {
-          "name": "Areas",
-          "description": "One or multiple areas to get prices for. If left empty it will use the areas already configured."
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::areas::name%]",
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::areas::description%]"
         },
         "currency": {
-          "name": "Currency",
-          "description": "Currency to get prices in. If left empty it will use the currency already configured."
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::currency::name%]",
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::currency::description%]"
         },
         "resolution": {
           "name": "Resolution",

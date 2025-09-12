@@ -13,23 +13,21 @@ from homeassistant.components.wallbox.const import EcoSmartMode
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, HomeAssistantError
 
-from .conftest import (
-    http_404_error,
-    http_429_error,
-    setup_integration,
-    test_response,
-    test_response_eco_mode,
-    test_response_full_solar,
-    test_response_no_power_boost,
+from .conftest import http_404_error, http_429_error, setup_integration
+from .const import (
+    MOCK_SELECT_ENTITY_ID,
+    WALLBOX_STATUS_RESPONSE,
+    WALLBOX_STATUS_RESPONSE_ECO_MODE,
+    WALLBOX_STATUS_RESPONSE_FULL_SOLAR,
+    WALLBOX_STATUS_RESPONSE_NO_POWER_BOOST,
 )
-from .const import MOCK_SELECT_ENTITY_ID
 
 from tests.common import MockConfigEntry
 
 TEST_OPTIONS = [
-    (EcoSmartMode.OFF, test_response),
-    (EcoSmartMode.ECO_MODE, test_response_eco_mode),
-    (EcoSmartMode.FULL_SOLAR, test_response_full_solar),
+    (EcoSmartMode.OFF, WALLBOX_STATUS_RESPONSE),
+    (EcoSmartMode.ECO_MODE, WALLBOX_STATUS_RESPONSE_ECO_MODE),
+    (EcoSmartMode.FULL_SOLAR, WALLBOX_STATUS_RESPONSE_FULL_SOLAR),
 ]
 
 
@@ -61,7 +59,9 @@ async def test_wallbox_select_no_power_boost_class(
     """Test wallbox select class."""
 
     with patch.object(
-        mock_wallbox, "getChargerStatus", return_value=test_response_no_power_boost
+        mock_wallbox,
+        "getChargerStatus",
+        return_value=WALLBOX_STATUS_RESPONSE_NO_POWER_BOOST,
     ):
         await setup_integration(hass, entry)
 

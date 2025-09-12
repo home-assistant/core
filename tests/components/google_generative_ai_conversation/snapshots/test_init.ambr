@@ -18,7 +18,6 @@
           'ulid-conversation',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Google',
@@ -28,7 +27,35 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'google_generative_ai_conversation',
+          'ulid-stt',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Google',
+      'model': 'gemini-2.5-flash',
+      'model_id': None,
+      'name': 'Google AI STT',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -49,7 +76,6 @@
           'ulid-ai-task',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Google',
@@ -59,7 +85,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -80,7 +105,6 @@
           'ulid-tts',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Google',
@@ -90,7 +114,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -105,8 +128,14 @@
       dict({
         'contents': list([
           'Describe this image from my doorbell camera',
-          File(name='doorbell_snapshot.jpg', display_name=None, mime_type=None, size_bytes=None, create_time=None, expiration_time=None, update_time=None, sha256_hash=None, uri=None, download_uri=None, state=<FileState.ACTIVE: 'ACTIVE'>, source=None, video_metadata=None, error=None),
-          File(name='context.txt', display_name=None, mime_type=None, size_bytes=None, create_time=None, expiration_time=None, update_time=None, sha256_hash=None, uri=None, download_uri=None, state=<FileState.PROCESSING: 'PROCESSING'>, source=None, video_metadata=None, error=None),
+          File(
+    name='doorbell_snapshot.jpg',
+    state=<FileState.ACTIVE: 'ACTIVE'>
+  ),
+          File(
+    name='context.txt',
+    state=<FileState.PROCESSING: 'PROCESSING'>
+  ),
         ]),
         'model': 'models/gemini-2.5-flash',
       }),
@@ -122,8 +151,14 @@
       dict({
         'contents': list([
           'Describe this image from my doorbell camera',
-          b'some file',
-          b'some file',
+          File(
+    name='doorbell_snapshot.jpg',
+    state=<FileState.ACTIVE: 'ACTIVE'>
+  ),
+          File(
+    name='context.txt',
+    state=<FileState.ACTIVE: 'ACTIVE'>
+  ),
         ]),
         'model': 'models/gemini-2.5-flash',
       }),

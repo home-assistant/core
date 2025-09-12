@@ -19,20 +19,14 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import DOMAIN, LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .utils import (
-    get_block_device_info,
-    get_blu_trv_device_info,
-    get_device_entry_gen,
-    get_rpc_device_info,
-    get_rpc_key_ids,
-)
+from .entity import get_entity_block_device_info, get_entity_rpc_device_info
+from .utils import get_blu_trv_device_info, get_device_entry_gen, get_rpc_key_ids
 
 PARALLEL_UPDATES = 0
 
@@ -234,20 +228,9 @@ class ShellyButton(ShellyBaseButton):
 
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
         if isinstance(coordinator, ShellyBlockCoordinator):
-            self._attr_device_info = get_block_device_info(
-                coordinator.device,
-                coordinator.mac,
-                suggested_area=coordinator.suggested_area,
-            )
+            self._attr_device_info = get_entity_block_device_info(coordinator)
         else:
-            self._attr_device_info = get_rpc_device_info(
-                coordinator.device,
-                coordinator.mac,
-                suggested_area=coordinator.suggested_area,
-            )
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
-        )
+            self._attr_device_info = get_entity_rpc_device_info(coordinator)
 
     async def _press_method(self) -> None:
         """Press method."""
@@ -271,11 +254,14 @@ class ShellyBluTrvButton(ShellyBaseButton):
         """Initialize."""
         super().__init__(coordinator, description)
 
-        config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
+        key = f"{BLU_TRV_IDENTIFIER}:{id_}"
+        config = coordinator.device.config[key]
         ble_addr: str = config["addr"]
+        fw_ver = coordinator.device.status[key].get("fw_ver")
+
         self._attr_unique_id = f"{ble_addr}_{description.key}"
         self._attr_device_info = get_blu_trv_device_info(
-            config, ble_addr, coordinator.mac
+            config, ble_addr, coordinator.mac, fw_ver
         )
         self._id = id_
 

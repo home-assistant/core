@@ -30,9 +30,9 @@ async def validate_input(hass: HomeAssistant, data):
 
     return {
         "title": is_valid["title"],
-        "relay_count": is_valid["relay_count"],
-        "input_count": is_valid["input_count"],
-        "is_old": is_valid["is_old"],
+        "relay_count": is_valid["relays"],
+        "input_count": is_valid["inputs"],
+        "is_old": is_valid["temps"],
     }
 
 

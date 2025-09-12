@@ -373,6 +373,17 @@ def entity_id(value: Any) -> str:
     raise vol.Invalid(f"Entity ID {value} is an invalid entity ID")
 
 
+def strict_entity_id(value: Any) -> str:
+    """Validate Entity ID, strictly."""
+    if not isinstance(value, str):
+        raise vol.Invalid(f"Entity ID {value} is not a string")
+
+    if valid_entity_id(value):
+        return value
+
+    raise vol.Invalid(f"Entity ID {value} is not a valid entity ID")
+
+
 def entity_id_or_uuid(value: Any) -> str:
     """Validate Entity specified by entity_id or uuid."""
     with contextlib.suppress(vol.Invalid):
@@ -642,6 +653,13 @@ def slug(value: Any) -> str:
     if str_value == slg:
         return str_value
     raise vol.Invalid(f"invalid slug {value} (try {slg})")
+
+
+def underscore_slug(value: Any) -> str:
+    """Validate value is a valid slug, possibly starting with an underscore."""
+    if value.startswith("_"):
+        return f"_{slug(value[1:])}"
+    return slug(value)
 
 
 def schema_with_slug_keys(
@@ -1285,6 +1303,15 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
+
+TARGET_FIELDS: VolDictType = {
+    vol.Optional(ATTR_ENTITY_ID): vol.All(ensure_list, [strict_entity_id]),
+    vol.Optional(ATTR_DEVICE_ID): vol.All(ensure_list, [str]),
+    vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
+    vol.Optional(ATTR_FLOOR_ID): vol.All(ensure_list, [str]),
+    vol.Optional(ATTR_LABEL_ID): vol.All(ensure_list, [str]),
+}
+
 ENTITY_SERVICE_FIELDS: VolDictType = {
     # Either accept static entity IDs, a single dynamic template or a mixed list
     # of static and dynamic templates. While this could be solved with a single
@@ -1570,18 +1597,6 @@ TRIGGER_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
-ZONE_CONDITION_SCHEMA = vol.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "zone",
-        vol.Required(CONF_ENTITY_ID): entity_ids,
-        vol.Required("zone"): entity_ids,
-        # To support use_trigger_value in automation
-        # Deprecated 2016/04/25
-        vol.Optional("event"): vol.Any("enter", "leave"),
-    }
-)
-
 AND_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
@@ -1729,7 +1744,6 @@ BUILT_IN_CONDITIONS: ValueSchemas = {
     "template": TEMPLATE_CONDITION_SCHEMA,
     "time": TIME_CONDITION_SCHEMA,
     "trigger": TRIGGER_CONDITION_SCHEMA,
-    "zone": ZONE_CONDITION_SCHEMA,
 }
 
 

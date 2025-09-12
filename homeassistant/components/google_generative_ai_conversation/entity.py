@@ -2,30 +2,40 @@
 
 from __future__ import annotations
 
+import asyncio
 import codecs
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, AsyncIterator, Callable
 from dataclasses import replace
-from typing import Any, cast
+import mimetypes
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, cast
 
+from google.genai import Client
 from google.genai.errors import APIError, ClientError
 from google.genai.types import (
     AutomaticFunctionCallingConfig,
     Content,
+    ContentDict,
+    File,
+    FileState,
     FunctionDeclaration,
     GenerateContentConfig,
     GenerateContentResponse,
     GoogleSearch,
     HarmCategory,
     Part,
+    PartUnionDict,
     SafetySetting,
     Schema,
     Tool,
+    ToolListUnion,
 )
 import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
@@ -42,6 +52,7 @@ from .const import (
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
+    FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -49,7 +60,11 @@ from .const import (
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
+    TIMEOUT_MILLIS,
 )
+
+if TYPE_CHECKING:
+    from . import GoogleGenerativeAIConfigEntry
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -225,7 +240,7 @@ def _convert_content(
 
 
 async def _transform_stream(
-    result: AsyncGenerator[GenerateContentResponse],
+    result: AsyncIterator[GenerateContentResponse],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     new_message = True
     try:
@@ -304,7 +319,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: GoogleGenerativeAIConfigEntry,
         subentry: ConfigSubentry,
         default_model: str = RECOMMENDED_CHAT_MODEL,
     ) -> None:
@@ -330,7 +345,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         """Generate an answer for the chat log."""
         options = self.subentry.data
 
-        tools: list[Tool | Callable[..., Any]] | None = None
+        tools: ToolListUnion | None = None
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
@@ -361,7 +376,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         else:
             raise HomeAssistantError("Invalid prompt content")
 
-        messages: list[Content] = []
+        messages: list[Content | ContentDict] = []
 
         # Google groups tool results, we do not. Group them before sending.
         tool_results: list[conversation.ToolResultContent] = []
@@ -388,7 +403,10 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         # The SDK requires the first message to be a user message
         # This is not the case if user used `start_conversation`
         # Workaround from https://github.com/googleapis/python-genai/issues/529#issuecomment-2740964537
-        if messages and messages[0].role != "user":
+        if messages and (
+            (isinstance(messages[0], Content) and messages[0].role != "user")
+            or (isinstance(messages[0], dict) and messages[0]["role"] != "user")
+        ):
             messages.insert(
                 0,
                 Content(role="user", parts=[Part.from_text(text=" ")]),
@@ -428,7 +446,16 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         )
         user_message = chat_log.content[-1]
         assert isinstance(user_message, conversation.UserContent)
-        chat_request: str | list[Part] = user_message.content
+        chat_request: list[PartUnionDict] = [user_message.content]
+        if user_message.attachments:
+            chat_request.extend(
+                await async_prepare_files_for_prompt(
+                    self.hass,
+                    self._genai_client,
+                    [(a.path, a.mime_type) for a in user_message.attachments],
+                )
+            )
+
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
@@ -444,15 +471,17 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 error = ERROR_GETTING_RESPONSE
                 raise HomeAssistantError(error) from err
 
-            chat_request = _create_google_tool_response_parts(
-                [
-                    content
-                    async for content in chat_log.async_add_delta_content_stream(
-                        self.entity_id,
-                        _transform_stream(chat_response_generator),
-                    )
-                    if isinstance(content, conversation.ToolResultContent)
-                ]
+            chat_request = list(
+                _create_google_tool_response_parts(
+                    [
+                        content
+                        async for content in chat_log.async_add_delta_content_stream(
+                            self.entity_id,
+                            _transform_stream(chat_response_generator),
+                        )
+                        if isinstance(content, conversation.ToolResultContent)
+                    ]
+                )
             )
 
             if not chat_log.unresponded_tool_results:
@@ -494,3 +523,69 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 ),
             ],
         )
+
+
+async def async_prepare_files_for_prompt(
+    hass: HomeAssistant, client: Client, files: list[tuple[Path, str | None]]
+) -> list[File]:
+    """Upload files so they can be attached to a prompt.
+
+    Caller needs to ensure that the files are allowed.
+    """
+
+    def upload_files() -> list[File]:
+        prompt_parts: list[File] = []
+        for filename, mimetype in files:
+            if not filename.exists():
+                raise HomeAssistantError(f"`{filename}` does not exist")
+            if mimetype is None:
+                mimetype = mimetypes.guess_type(filename)[0]
+            prompt_parts.append(
+                client.files.upload(
+                    file=filename,
+                    config={
+                        "mime_type": mimetype,
+                        "display_name": filename.name,
+                    },
+                )
+            )
+        return prompt_parts
+
+    async def wait_for_file_processing(uploaded_file: File) -> None:
+        """Wait for file processing to complete."""
+        first = True
+        while uploaded_file.state in (
+            FileState.STATE_UNSPECIFIED,
+            FileState.PROCESSING,
+        ):
+            if first:
+                first = False
+            else:
+                LOGGER.debug(
+                    "Waiting for file `%s` to be processed, current state: %s",
+                    uploaded_file.name,
+                    uploaded_file.state,
+                )
+                await asyncio.sleep(FILE_POLLING_INTERVAL_SECONDS)
+
+            uploaded_file = await client.aio.files.get(
+                name=uploaded_file.name or "",
+                config={"http_options": {"timeout": TIMEOUT_MILLIS}},
+            )
+
+        if uploaded_file.state == FileState.FAILED:
+            raise HomeAssistantError(
+                f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message if uploaded_file.error else 'unknown'}"
+            )
+
+    prompt_parts = await hass.async_add_executor_job(upload_files)
+
+    tasks = [
+        asyncio.create_task(wait_for_file_processing(part))
+        for part in prompt_parts
+        if part.state != FileState.ACTIVE
+    ]
+    async with asyncio.timeout(TIMEOUT_MILLIS / 1000):
+        await asyncio.gather(*tasks)
+
+    return prompt_parts

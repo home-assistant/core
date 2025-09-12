@@ -324,6 +324,7 @@ MOCK_BLU_TRV_REMOTE_STATUS = {
         "rssi": -60,
         "battery": 100,
         "errors": [],
+        "fw_ver": "v1.2.10",
     },
     "blutrv:201": {
         "id": 0,
@@ -548,6 +549,7 @@ def _mock_rpc_device(version: str | None = None):
         ),
         xmod_info={},
         zigbee_enabled=False,
+        zigbee_firmware=False,
         ip_address="10.10.10.10",
     )
     type(device).name = PropertyMock(return_value="Test name")

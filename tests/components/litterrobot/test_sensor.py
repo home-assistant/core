@@ -113,6 +113,10 @@ async def test_feeder_robot_sensor(
     assert sensor.state == "10"
     assert sensor.attributes["unit_of_measurement"] == PERCENTAGE
 
+    sensor = hass.states.get("sensor.test_last_feeding")
+    assert sensor.state == "2022-09-08T18:00:00+00:00"
+    assert sensor.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
+
 
 async def test_pet_weight_sensor(
     hass: HomeAssistant, mock_account_with_pet: MagicMock
@@ -122,6 +126,16 @@ async def test_pet_weight_sensor(
     sensor = hass.states.get("sensor.kitty_weight")
     assert sensor.state == "9.1"
     assert sensor.attributes["unit_of_measurement"] == UnitOfMass.POUNDS
+
+
+@pytest.mark.freeze_time("2025-06-15 12:00:00+00:00")
+async def test_pet_visits_today_sensor(
+    hass: HomeAssistant, mock_account_with_pet: MagicMock
+) -> None:
+    """Tests pet visits today sensors."""
+    await setup_integration(hass, mock_account_with_pet, PLATFORM_DOMAIN)
+    sensor = hass.states.get("sensor.kitty_visits_today")
+    assert sensor.state == "2"
 
 
 async def test_litterhopper_sensor(

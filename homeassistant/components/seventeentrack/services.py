@@ -6,7 +6,7 @@ from pyseventeentrack.package import PACKAGE_STATUS_MAP, Package
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_LOCATION
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_FRIENDLY_NAME, ATTR_LOCATION
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -20,7 +20,6 @@ from homeassistant.util import slugify
 
 from . import SeventeenTrackCoordinator
 from .const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_DESTINATION_COUNTRY,
     ATTR_INFO_TEXT,
     ATTR_ORIGIN_COUNTRY,

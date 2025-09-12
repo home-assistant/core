@@ -106,6 +106,13 @@
           "on": "mdi:water"
         }
       },
+      "display_lighting": {
+        "default": "mdi:lightbulb",
+        "state": {
+          "on": "mdi:lightbulb-on",
+          "off": "mdi:lightbulb-off"
+        }
+      },
       "wrinkle_prevent": {
         "default": "mdi:tumble-dryer",
         "state": {

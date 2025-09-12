@@ -5,7 +5,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "wrong_hub": "IP-Address belongs to a different homee than the configured one."
+      "wrong_hub": "IP address belongs to a different homee than the configured one."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -45,6 +45,17 @@
         },
         "data_description": {
           "host": "[%key:component::homee::config::step::user::data_description::host%]"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Configure discovered homee {host}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::homee::config::step::user::data_description::username%]",
+          "password": "[%key:component::homee::config::step::user::data_description::password%]"
         }
       }
     }

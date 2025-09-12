@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_chat_log_tts_streaming[to_stream_deltas0-0-]
+# name: test_chat_log_tts_streaming[to_stream_deltas0-1-hello, how are you?]
   list([
     dict({
       'data': dict({
@@ -23,6 +23,7 @@
         'intent_input': 'Set a timer',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -178,6 +179,7 @@
         'intent_input': 'Set a timer',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -411,6 +413,7 @@
         'intent_input': 'Set a timer',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -467,6 +470,7 @@
         'chat_log_delta': dict({
           'tool_calls': list([
             dict({
+              'external': False,
               'id': 'test_tool_id',
               'tool_args': dict({
               }),
@@ -633,6 +637,7 @@
         'intent_input': 'test input',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -686,6 +691,7 @@
         'intent_input': 'test input',
         'language': 'en-US',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -739,6 +745,7 @@
         'intent_input': 'test input',
         'language': 'en-us',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),

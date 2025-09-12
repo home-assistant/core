@@ -73,6 +73,9 @@
           "empty": "[%key:common::state::empty%]"
         }
       },
+      "last_feeding": {
+        "name": "Last feeding"
+      },
       "last_seen": {
         "name": "Last seen"
       },
@@ -121,6 +124,10 @@
       "total_cycles": {
         "name": "Total cycles",
         "unit_of_measurement": "cycles"
+      },
+      "visits_today": {
+        "name": "Visits today",
+        "unit_of_measurement": "visits"
       },
       "waste_drawer": {
         "name": "Waste drawer"
