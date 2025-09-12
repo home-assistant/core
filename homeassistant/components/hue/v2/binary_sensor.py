@@ -34,7 +34,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from ..bridge import HueConfigEntry
 from .entity import HueBaseEntity
 from .scene_activity import get_or_create_scene_activity_manager
-from .scene_sensor import HueActiveSceneDynamicBinarySensor
+from .scene_activity_sensor import HueActiveSceneDynamicBinarySensor
 
 type SensorType = CameraMotion | Contact | Motion | EntertainmentConfiguration | Tamper
 type ControllerType = (

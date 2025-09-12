@@ -32,9 +32,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from ..bridge import HueBridge, HueConfigEntry
 from .entity import HueBaseEntity
 from .scene_activity import get_or_create_scene_activity_manager
-from .scene_sensor import (
+from .scene_activity_sensor import (
     HueActiveSceneLastRecallSensor,
+    HueActiveSceneNameSensor,
     HueActiveSceneSensor,
+    HueActiveSmartSceneNameSensor,
     HueActiveSmartSceneSensor,
     SceneActivityBaseEntity,
 )
@@ -101,13 +103,15 @@ async def async_setup_entry(
             group_controller.subscribe(_added, event_filter=EventType.RESOURCE_ADDED)
         )
 
-    for scene_sensor_cls in (
+    for active_scene_sensor_cls in (
         HueActiveSceneSensor,
-        HueActiveSmartSceneSensor,
+        HueActiveSceneNameSensor,
         HueActiveSceneLastRecallSensor,
+        HueActiveSmartSceneSensor,
+        HueActiveSmartSceneNameSensor,
     ):
-        _add_group_scene_activity_entities(api.groups.room, scene_sensor_cls)
-        _add_group_scene_activity_entities(api.groups.zone, scene_sensor_cls)
+        _add_group_scene_activity_entities(api.groups.room, active_scene_sensor_cls)
+        _add_group_scene_activity_entities(api.groups.zone, active_scene_sensor_cls)
 
 
 # pylint: disable-next=hass-enforce-class-module
