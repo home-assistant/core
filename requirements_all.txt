@@ -2067,7 +2067,7 @@ pyiqvia==2022.04.0
 pyirishrail==0.0.2
 
 # homeassistant.components.iskra
-pyiskra==0.1.26
+pyiskra==0.1.27
 
 # homeassistant.components.iss
 pyiss==1.0.1
