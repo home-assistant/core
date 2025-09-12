@@ -240,18 +240,18 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
                             write_required=True, valid_dpt="5.001"
                         ),
                         "section_blue": KNXSectionFlat(),
-                        vol.Required(CONF_GA_BLUE_BRIGHTNESS): GASelector(
-                            write_required=True, valid_dpt="5.001"
-                        ),
                         vol.Optional(CONF_GA_BLUE_SWITCH): GASelector(
                             write_required=False, valid_dpt="1"
                         ),
-                        "section_white": KNXSectionFlat(),
-                        vol.Optional(CONF_GA_WHITE_BRIGHTNESS): GASelector(
+                        vol.Required(CONF_GA_BLUE_BRIGHTNESS): GASelector(
                             write_required=True, valid_dpt="5.001"
                         ),
+                        "section_white": KNXSectionFlat(),
                         vol.Optional(CONF_GA_WHITE_SWITCH): GASelector(
                             write_required=False, valid_dpt="1"
+                        ),
+                        vol.Optional(CONF_GA_WHITE_BRIGHTNESS): GASelector(
+                            write_required=True, valid_dpt="5.001"
                         ),
                     },
                 ),

@@ -116,6 +116,7 @@ CONTENT_TYPE_TO_CHILD_TYPE: dict[
     MediaType.APPS: MediaType.APP,
     MediaType.APP: MediaType.TRACK,
     "favorite": None,
+    "track": MediaType.TRACK,
 }
 
 

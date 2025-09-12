@@ -1690,8 +1690,8 @@ build.json @home-assistant/supervisor
 /tests/components/vegehub/ @ghowevege
 /homeassistant/components/velbus/ @Cereal2nd @brefra
 /tests/components/velbus/ @Cereal2nd @brefra
-/homeassistant/components/velux/ @Julius2342 @DeerMaximum @pawlizio
-/tests/components/velux/ @Julius2342 @DeerMaximum @pawlizio
+/homeassistant/components/velux/ @Julius2342 @DeerMaximum @pawlizio @wollew
+/tests/components/velux/ @Julius2342 @DeerMaximum @pawlizio @wollew
 /homeassistant/components/venstar/ @garbled1 @jhollowe
 /tests/components/venstar/ @garbled1 @jhollowe
 /homeassistant/components/versasense/ @imstevenxyz

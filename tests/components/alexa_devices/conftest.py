@@ -7,7 +7,11 @@ from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor
 from aioamazondevices.const import DEVICE_TYPE_TO_MODEL
 import pytest
 
-from homeassistant.components.alexa_devices.const import CONF_LOGIN_DATA, DOMAIN
+from homeassistant.components.alexa_devices.const import (
+    CONF_LOGIN_DATA,
+    CONF_SITE,
+    DOMAIN,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import TEST_PASSWORD, TEST_SERIAL_NUMBER, TEST_USERNAME
@@ -41,6 +45,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.login_mode_interactive.return_value = {
             "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
         }
         client.get_devices_data.return_value = {
             TEST_SERIAL_NUMBER: AmazonDevice(
@@ -81,9 +86,12 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_LOGIN_DATA: {"session": "test-session"},
+            CONF_LOGIN_DATA: {
+                "session": "test-session",
+                CONF_SITE: "https://www.amazon.com",
+            },
         },
         unique_id=TEST_USERNAME,
         version=1,
-        minor_version=2,
+        minor_version=3,
     )

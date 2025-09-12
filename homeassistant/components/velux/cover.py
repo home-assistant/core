@@ -4,8 +4,15 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pyvlx import OpeningDevice, Position
-from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter
+from pyvlx import (
+    Awning,
+    Blind,
+    GarageDoor,
+    Gate,
+    OpeningDevice,
+    Position,
+    RollerShutter,
+)
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -97,7 +104,10 @@ class VeluxCover(VeluxEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
-        return self.node.position.closed
+        # do not use the node's closed state but rely on cover position
+        # until https://github.com/Julius2342/pyvlx/pull/543 is merged.
+        # once merged this can again return self.node.position.closed
+        return self.current_cover_position == 0
 
     @property
     def is_opening(self) -> bool:
