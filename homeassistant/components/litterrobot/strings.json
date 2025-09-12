@@ -144,6 +144,22 @@
       "cycle_delay": {
         "name": "Clean cycle wait time minutes"
       },
+      "globe_brightness": {
+        "name": "Globe brightness",
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
+      },
+      "globe_light": {
+        "name": "Globe light",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
       "meal_insert_size": {
         "name": "Meal insert size"
       },
