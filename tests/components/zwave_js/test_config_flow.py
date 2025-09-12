@@ -161,9 +161,7 @@ def serial_port_fixture() -> ListPortInfo:
 @pytest.fixture(name="mock_list_ports", autouse=True)
 def mock_list_ports_fixture(serial_port) -> Generator[MagicMock]:
     """Mock list ports."""
-    with patch(
-        "homeassistant.components.zwave_js.config_flow.list_ports.comports"
-    ) as mock_list_ports:
+    with patch("serial.tools.list_ports.comports") as mock_list_ports:
         another_port = copy(serial_port)
         another_port.device = "/new"
         another_port.description = "New serial port"
