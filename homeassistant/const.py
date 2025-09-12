@@ -1,5 +1,6 @@
 """Constants used by Home Assistant components."""
 
+# This is my test modification for the assignment
 from __future__ import annotations
 
 from enum import StrEnum
