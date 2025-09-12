@@ -78,11 +78,18 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         index: int = 0,
     ) -> None:
         """Initialize a pipeline selector."""
-        key_suffix = "" if index < 1 else f"_{index + 1}"
+        if index < 1:
+            # Keep compatibility
+            key_suffix = ""
+            placeholder = ""
+        else:
+            key_suffix = f"_{index + 1}"
+            placeholder = f" {index + 1}"
+
         self.entity_description = replace(
             self.entity_description,
             key=f"pipeline{key_suffix}",
-            translation_placeholders={"index": str(index + 1)},
+            translation_placeholders={"index": placeholder},
         )
 
         self._domain = domain

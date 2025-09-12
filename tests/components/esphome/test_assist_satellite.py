@@ -1913,7 +1913,7 @@ async def test_wake_word_select(
     assert satellite.async_get_configuration().active_wake_words == ["okay_nabu"]
 
     # No secondary wake word should be selected by default
-    state = hass.states.get("select.test_secondary_wake_word")
+    state = hass.states.get("select.test_wake_word_2")
     assert state is not None
     assert state.state == NO_WAKE_WORD
 
@@ -1921,12 +1921,12 @@ async def test_wake_word_select(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_secondary_wake_word", "option": "Hey Jarvis"},
+        {ATTR_ENTITY_ID: "select.test_wake_word_2", "option": "Hey Jarvis"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.test_secondary_wake_word")
+    state = hass.states.get("select.test_wake_word_2")
     assert state is not None
     assert state.state == "Hey Jarvis"
 
@@ -1944,7 +1944,7 @@ async def test_wake_word_select(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_secondary_wake_word", "option": NO_WAKE_WORD},
+        {ATTR_ENTITY_ID: "select.test_wake_word_2", "option": NO_WAKE_WORD},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -2032,14 +2032,14 @@ async def test_secondary_pipeline(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_secondary_wake_word", "option": "Hey Jarvis"},
+        {ATTR_ENTITY_ID: "select.test_wake_word_2", "option": "Hey Jarvis"},
         blocking=True,
     )
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.test_secondary_assistant",
+            ATTR_ENTITY_ID: "select.test_assistant_2",
             "option": "Secondary Pipeline",
         },
         blocking=True,

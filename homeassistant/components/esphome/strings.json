@@ -119,7 +119,7 @@
         }
       },
       "wake_word": {
-        "name": "Wake word {index}",
+        "name": "Wake word{index}",
         "state": {
           "no_wake_word": "No wake word",
           "okay_nabu": "Okay Nabu"
