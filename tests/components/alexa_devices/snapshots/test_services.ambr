@@ -30,7 +30,7 @@
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
       }),
-      'chimes_bells_01',
+      'bell_02',
     ),
     dict({
     }),

@@ -128,6 +128,25 @@ FEEDER_ROBOT_DATA = {
             "mealInsertSize": 1,
         },
         "updated_at": "2022-09-08T15:07:00.000000+00:00",
+        "active_schedule": {
+            "id": "1",
+            "name": "Feeding",
+            "meals": [
+                {
+                    "id": "1",
+                    "days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                    "hour": 6,
+                    "name": "Breakfast",
+                    "skip": None,
+                    "minute": 30,
+                    "paused": False,
+                    "portions": 3,
+                    "mealNumber": 1,
+                    "scheduleId": None,
+                }
+            ],
+            "created_at": "2021-12-17T07:07:31.047747+00:00",
+        },
     },
     "feeding_snack": [
         {"timestamp": "2022-09-04T03:03:00.000000+00:00", "amount": 0.125},

@@ -82,6 +82,7 @@ _STONE_TO_G = _POUND_TO_G * 14  # 14 pounds to a stone
 # Pressure conversion constants
 _STANDARD_GRAVITY = 9.80665
 _MERCURY_DENSITY = 13.5951
+_INH2O_TO_PA = 249.0889083333348  # 1 inH₂O = 249.0889083333348 Pa at 4°C
 
 # Volume conversion constants
 _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
@@ -391,10 +392,12 @@ class ApparentPowerConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfApparentPower.MILLIVOLT_AMPERE: 1 * 1000,
         UnitOfApparentPower.VOLT_AMPERE: 1,
+        UnitOfApparentPower.KILO_VOLT_AMPERE: 1 / 1000,
     }
     VALID_UNITS = {
         UnitOfApparentPower.MILLIVOLT_AMPERE,
         UnitOfApparentPower.VOLT_AMPERE,
+        UnitOfApparentPower.KILO_VOLT_AMPERE,
     }
 
 
@@ -433,6 +436,7 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.MBAR: 1 / 100,
         UnitOfPressure.INHG: 1
         / (_IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
+        UnitOfPressure.INH2O: 1 / _INH2O_TO_PA,
         UnitOfPressure.PSI: 1 / 6894.757,
         UnitOfPressure.MMHG: 1
         / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
@@ -445,6 +449,7 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.CBAR,
         UnitOfPressure.MBAR,
         UnitOfPressure.INHG,
+        UnitOfPressure.INH2O,
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
     }
@@ -750,6 +755,7 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.CUBIC_METERS: 1,
         UnitOfVolume.CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
         UnitOfVolume.CENTUM_CUBIC_FEET: 1 / (100 * _CUBIC_FOOT_TO_CUBIC_METER),
+        UnitOfVolume.MILLE_CUBIC_FEET: 1 / (1000 * _CUBIC_FOOT_TO_CUBIC_METER),
     }
     VALID_UNITS = {
         UnitOfVolume.LITERS,
@@ -759,6 +765,7 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.MILLE_CUBIC_FEET,
     }
 
 

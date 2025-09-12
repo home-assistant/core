@@ -37,6 +37,7 @@ def build_device_fixture(
             mode=OperationMode.ELECTRIC,
             original_name="ELECTRIC",
             has_day_selection=True,
+            supports_hot_water_plus=False,
         ),
     ]
 
@@ -46,6 +47,7 @@ def build_device_fixture(
                 mode=OperationMode.HYBRID,
                 original_name="HYBRID",
                 has_day_selection=False,
+                supports_hot_water_plus=False,
             )
         )
         supported_modes.append(
@@ -53,6 +55,7 @@ def build_device_fixture(
                 mode=OperationMode.HEAT_PUMP,
                 original_name="HEAT_PUMP",
                 has_day_selection=False,
+                supports_hot_water_plus=False,
             )
         )
 
@@ -62,6 +65,7 @@ def build_device_fixture(
                 mode=OperationMode.VACATION,
                 original_name="VACATION",
                 has_day_selection=True,
+                supports_hot_water_plus=False,
             )
         )
 
@@ -83,6 +87,7 @@ def build_device_fixture(
         serial="serial",
         install_location="Basement",
         supported_modes=supported_modes,
+        supports_hot_water_plus=False,
         status=DeviceStatus(
             firmware_version="2.14",
             is_online=True,
@@ -93,6 +98,7 @@ def build_device_fixture(
             temperature_setpoint_previous=130,
             temperature_setpoint_maximum=130,
             hot_water_status=90,
+            hot_water_plus_level=None,
         ),
     )
 
