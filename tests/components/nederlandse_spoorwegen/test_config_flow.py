@@ -4,11 +4,8 @@ from datetime import time
 from unittest.mock import AsyncMock
 
 import pytest
+from requests import ConnectionError as RequestsConnectionError, HTTPError, Timeout
 
-from homeassistant.components.nederlandse_spoorwegen.api import (
-    NSAPIAuthError,
-    NSAPIConnectionError,
-)
 from homeassistant.components.nederlandse_spoorwegen.const import (
     CONF_FROM,
     CONF_ROUTES,
@@ -50,8 +47,9 @@ async def test_full_flow(
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
-        (NSAPIAuthError("Invalid API key"), "invalid_auth"),
-        (NSAPIConnectionError("Cannot connect"), "cannot_connect"),
+        (HTTPError("Invalid API key"), "invalid_auth"),
+        (Timeout("Cannot connect"), "cannot_connect"),
+        (RequestsConnectionError("Cannot connect"), "cannot_connect"),
         (Exception("Unexpected error"), "unknown"),
     ],
 )
@@ -207,8 +205,9 @@ async def test_config_flow_import_already_configured(
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
-        (NSAPIAuthError("Invalid API key"), "invalid_auth"),
-        (NSAPIConnectionError("Cannot connect"), "cannot_connect"),
+        (HTTPError("Invalid API key"), "invalid_auth"),
+        (Timeout("Cannot connect"), "cannot_connect"),
+        (RequestsConnectionError("Cannot connect"), "cannot_connect"),
         (Exception("Unexpected error"), "unknown"),
     ],
 )

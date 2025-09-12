@@ -30,7 +30,6 @@ from homeassistant.helpers.selector import (
     TimeSelector,
 )
 
-from .api import NSAPIAuthError, NSAPIConnectionError
 from .const import (
     CONF_FROM,
     CONF_NAME,
@@ -60,9 +59,9 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             client = NSAPI(user_input[CONF_API_KEY])
             try:
                 await self.hass.async_add_executor_job(client.get_stations)
-            except NSAPIAuthError:
+            except HTTPError:
                 errors["base"] = "invalid_auth"
-            except NSAPIConnectionError:
+            except (RequestsConnectionError, Timeout):
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception validating API key")
@@ -85,9 +84,9 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
         client = NSAPI(import_data[CONF_API_KEY])
         try:
             stations = await self.hass.async_add_executor_job(client.get_stations)
-        except NSAPIAuthError:
+        except HTTPError:
             return self.async_abort(reason="invalid_auth")
-        except NSAPIConnectionError:
+        except (RequestsConnectionError, Timeout):
             return self.async_abort(reason="cannot_connect")
         except Exception:
             _LOGGER.exception("Unexpected exception validating API key")
