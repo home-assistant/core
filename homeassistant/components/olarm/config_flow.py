@@ -95,15 +95,14 @@ class OlarmOauth2FlowHandler(
     async def async_step_device(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the device selection step."""
+        """Handle the device selection step.
+
+        A user can have many Olarms / devices so we need to ask them to select one for this home assistant instance
+        """
         errors: dict[str, str] = {}
         if user_input is not None:
             _LOGGER.debug(user_input)
             self._device_id = user_input["select_device"]
-
-            # abort if oauth data is not available
-            if self._oauth_data is None:
-                return self.async_abort(reason="oauth_data_missing")
 
             # load device details into config
             data = {
@@ -113,19 +112,14 @@ class OlarmOauth2FlowHandler(
                 "token": self._oauth_data["token"],
             }
 
-            # Create a unique ID using the device identifier
+            # Create a unique ID using the device identifier and abort if it already exists
             unique_id = self._device_id
             await self.async_set_unique_id(unique_id)
-
-            # Check if this exact configuration already exists
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(title="Olarm Integration", data=data)
 
-        # abort if no devices are found
-        if self._devices is None:
-            return self.async_abort(reason="no_devices_found")
-
+        # setup device selection dropdown and sort by device name
         device_options: dict[str, str] = {
             device["deviceId"]: f"{device['deviceName']} - {device['deviceSerial']}"
             for device in self._devices

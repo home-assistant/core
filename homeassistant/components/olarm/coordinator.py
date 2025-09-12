@@ -32,7 +32,11 @@ class OlarmDeviceData:
 
 
 class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
-    """Manages an individual olarms config entry."""
+    """Manages data updates for an Olarm device.
+
+    The inital state is fetched from the Olarm HTTP API and then subsequent updates
+    are received via MQTT.
+    """
 
     def __init__(
         self,
@@ -64,7 +68,7 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         )
 
     async def _async_update_data(self) -> OlarmDeviceData:
-        """Fetch device information from the Olarm API."""
+        """Fetch initial device information from the Olarm HTTP API."""
         try:
             device = await self._olarm_connect_client.get_device(self.device_id)
             device_data = OlarmDeviceData(
@@ -91,7 +95,11 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
             return device_data
 
     def async_update_from_mqtt(self, payload):
-        """Update coordinator data from an MQTT payload."""
+        """Handle subsequent updates from the Olarm MQTT Brokers.
+
+        There are different MQTT payloads containing different state about the Olarm device
+        so need to handle them appropriately.
+        """
         if not self.data:
             return
 
