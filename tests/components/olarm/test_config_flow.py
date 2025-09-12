@@ -78,10 +78,7 @@ async def test_full_flow(
             # Complete the device selection
             result3 = await hass.config_entries.flow.async_configure(
                 result2["flow_id"],
-                {
-                    "select_device": "123cf304-1dcf-48c6-b79b-4ce4640e3def",
-                    "load_zones_bypass": False,
-                },
+                {"select_device": "123cf304-1dcf-48c6-b79b-4ce4640e3def"},
             )
 
             assert result3.get("type") is FlowResultType.CREATE_ENTRY
@@ -94,7 +91,6 @@ async def test_full_flow(
                 result3.get("data", {}).get("user_id")
                 == "abcd4ffb-8131-4de0-9416-a89abde63def"
             )
-            assert result3.get("data", {}).get("load_zones_bypass_entities") is False
 
             # Check that a config entry was created
             assert len(hass.config_entries.async_entries(DOMAIN)) == 1
