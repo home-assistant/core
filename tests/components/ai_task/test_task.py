@@ -286,7 +286,7 @@ async def test_generate_image(
     assert "image_data" not in result
     assert result["media_source_id"].startswith("media-source://ai_task/images/")
     assert result["media_source_id"].endswith("_test_task.png")
-    assert result["url"].startswith("http://10.10.10.10:8123/api/ai_task/images/")
+    assert result["url"].startswith("/api/ai_task/images/")
     assert result["url"].count("_test_task.png?authSig=") == 1
     assert result["mime_type"] == "image/png"
     assert result["model"] == "mock_model"
