@@ -6,7 +6,6 @@ import pytest
 from switchbot_api import Device
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switchbot_cloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -21,7 +20,7 @@ from . import (
     configure_integration,
 )
 
-from tests.common import async_load_json_array_fixture, snapshot_platform
+from tests.common import snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -45,6 +44,7 @@ async def test_meter(
     index: int,
 ) -> None:
     """Test all sensors."""
+
 
 async def test_plug_mini_eu(
     hass: HomeAssistant,
@@ -103,8 +103,7 @@ async def test_no_coordinator_data(
         ),
     ]
 
-    json_data = await async_load_json_array_fixture(hass, "status.json", DOMAIN)
-    mock_get_status.return_value = json_data[index]
+    mock_get_status.return_value = None
 
     with patch("homeassistant.components.switchbot_cloud.PLATFORMS", [Platform.SENSOR]):
         entry = await configure_integration(hass)
