@@ -9,13 +9,15 @@ from fing_agent_api import FingAgent
 from fing_agent_api.models import AgentInfoResponse, Device
 import httpx
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import FingConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+type FingConfigEntry = ConfigEntry[FingDataUpdateCoordinator]
 
 
 @dataclass

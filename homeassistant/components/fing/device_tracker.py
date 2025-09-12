@@ -68,11 +68,6 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         self._attr_icon = get_icon_from_type(self._device.type)
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if entity is enabled by default."""
-        return True
-
-    @property
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._device.active

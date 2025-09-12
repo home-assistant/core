@@ -4,18 +4,15 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
-from .coordinator import FingDataUpdateCoordinator
+from .coordinator import FingConfigEntry, FingDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
-
-type FingConfigEntry = ConfigEntry[FingDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: FingConfigEntry) -> bool:
