@@ -820,6 +820,9 @@
       },
       "supply_frequency": {
         "name": "Supply frequency"
+      },
+      "total_dissolved_solids": {
+        "name": "Total dissolved solids"
       }
     },
     "switch": {
