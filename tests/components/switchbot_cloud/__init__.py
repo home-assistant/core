@@ -41,7 +41,6 @@ CIRCULATOR_FAN_INFO = Device(
     hubDeviceId="test-hub-id",
 )
 
-
 METER_INFO = Device(
     version="V1.0",
     deviceId="meter-id-1",
@@ -82,7 +81,6 @@ WATER_DETECTOR_INFO = Device(
     hubDeviceId="test-hub-id",
 )
 
-
 HUMIDIFIER_INFO = Device(
     version="V1.0",
     deviceId="humidifier-id-1",
@@ -90,6 +88,7 @@ HUMIDIFIER_INFO = Device(
     deviceType="Humidifier",
     hubDeviceId="test-hub-id",
 )
+
 HUMIDIFIER2_INFO = Device(
     version="V1.0",
     deviceId="humidifier2-id-1",
