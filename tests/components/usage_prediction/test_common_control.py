@@ -129,7 +129,12 @@ async def test_multiple_entities_in_one_call(hass: HomeAssistant) -> None:
                 "domain": "light",
                 "service": "turn_on",
                 "service_data": {
-                    "entity_id": ["light.living_room", "light.kitchen", "light.hallway"]
+                    "entity_id": [
+                        "light.living_room",
+                        "light.kitchen",
+                        "light.hallway",
+                        "not_allowed.domain",
+                    ]
                 },
             },
             context=Context(user_id=user_id),
