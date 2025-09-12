@@ -31,12 +31,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@websocket_api.websocket_command(
-    {
-        "type": f"{DOMAIN}/common_control",
-        "user_id": cv.string,
-    }
-)
+@websocket_api.websocket_command({"type": f"{DOMAIN}/common_control"})
 @websocket_api.async_response
 async def ws_common_control(
     hass: HomeAssistant,
