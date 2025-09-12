@@ -1,0 +1,113 @@
+# serializer version: 1
+# name: test_platform_setup_and_discovery[humidifier.dehumidifer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_humidity': 80,
+      'min_humidity': 25,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.dehumidifer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.ifzgvpgoodrfw2akscswitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[humidifier.dehumidifer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'dehumidifier',
+      'friendly_name': 'Dehumidifer',
+      'max_humidity': 80,
+      'min_humidity': 25,
+      'supported_features': <HumidifierEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.dehumidifer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[humidifier.dehumidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_humidity': 70,
+      'min_humidity': 35,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.dehumidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.2myxayqtud9aqbizscswitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[humidifier.dehumidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 47,
+      'device_class': 'dehumidifier',
+      'friendly_name': 'Dehumidifier',
+      'humidity': 50,
+      'max_humidity': 70,
+      'min_humidity': 35,
+      'supported_features': <HumidifierEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.dehumidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

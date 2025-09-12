@@ -7,7 +7,7 @@ from types import MappingProxyType
 from typing import Any
 
 from telegram import Bot, ChatFullInfo
-from telegram.error import BadRequest, InvalidToken, NetworkError
+from telegram.error import BadRequest, InvalidToken, TelegramError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -159,8 +159,6 @@ class OptionsFlowHandler(OptionsFlow):
         """Manage the options."""
 
         if user_input is not None:
-            if user_input[ATTR_PARSER] == PARSER_PLAIN_TEXT:
-                user_input[ATTR_PARSER] = None
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
@@ -237,12 +235,13 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
             subentries: list[ConfigSubentryData] = []
             allowed_chat_ids: list[int] = import_data[CONF_ALLOWED_CHAT_IDS]
+            assert self._bot is not None, "Bot should be initialized during import"
             for chat_id in allowed_chat_ids:
                 chat_name: str = await _async_get_chat_name(self._bot, chat_id)
                 subentry: ConfigSubentryData = ConfigSubentryData(
                     data={CONF_CHAT_ID: chat_id},
                     subentry_type=CONF_ALLOWED_CHAT_IDS,
-                    title=chat_name,
+                    title=f"{chat_name} ({chat_id})",
                     unique_id=str(chat_id),
                 )
                 subentries.append(subentry)
@@ -380,7 +379,6 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Shutdown the bot if it exists."""
         if self._bot:
             await self._bot.shutdown()
-            self._bot = None
 
     async def _validate_bot(
         self,
@@ -401,11 +399,15 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             placeholders[ERROR_FIELD] = "API key"
             placeholders[ERROR_MESSAGE] = str(err)
             return "Unknown bot"
-        except (ValueError, NetworkError) as err:
+        except ValueError as err:
             _LOGGER.warning("Invalid proxy")
             errors["base"] = "invalid_proxy_url"
             placeholders["proxy_url_error"] = str(err)
             placeholders[ERROR_FIELD] = "proxy url"
+            placeholders[ERROR_MESSAGE] = str(err)
+            return "Unknown bot"
+        except TelegramError as err:
+            errors["base"] = "telegram_error"
             placeholders[ERROR_MESSAGE] = str(err)
             return "Unknown bot"
         else:
@@ -649,7 +651,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             chat_name = await _async_get_chat_name(bot, chat_id)
             if chat_name:
                 return self.async_create_entry(
-                    title=chat_name,
+                    title=f"{chat_name} ({chat_id})",
                     data={CONF_CHAT_ID: chat_id},
                     unique_id=str(chat_id),
                 )
@@ -663,10 +665,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         )
 
 
-async def _async_get_chat_name(bot: Bot | None, chat_id: int) -> str:
-    if not bot:
-        return str(chat_id)
-
+async def _async_get_chat_name(bot: Bot, chat_id: int) -> str:
     try:
         chat_info: ChatFullInfo = await bot.get_chat(chat_id)
         return chat_info.effective_name or str(chat_id)

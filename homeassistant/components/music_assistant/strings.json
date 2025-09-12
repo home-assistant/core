@@ -102,7 +102,7 @@
           "description": "The source media player which has the queue you want to transfer. When omitted, the first playing player will be used."
         },
         "auto_play": {
-          "name": "Auto play",
+          "name": "Autoplay",
           "description": "Start playing the queue on the target player. Omit to use the default behavior."
         }
       }

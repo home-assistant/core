@@ -14,7 +14,6 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.storage import STORAGE_DIR
 
 if TYPE_CHECKING:
@@ -22,7 +21,6 @@ if TYPE_CHECKING:
 
 from .const import (
     CONF_CONFIG_ENTRY,
-    CONF_INTERFACE,
     CONF_MEMO_TEXT,
     DOMAIN,
     SERVICE_CLEAR_CACHE,
@@ -49,18 +47,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         """Get the config entry for this service call."""
         if CONF_CONFIG_ENTRY in call.data:
             entry_id = call.data[CONF_CONFIG_ENTRY]
-        elif CONF_INTERFACE in call.data:
-            # Deprecated in 2025.2, to remove in 2025.8
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_interface_parameter",
-                breaks_in_ha_version="2025.8.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_interface_parameter",
-            )
-            entry_id = call.data[CONF_INTERFACE]
         if not (entry := hass.config_entries.async_get_entry(entry_id)):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -118,21 +104,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SCAN,
         scan,
-        vol.Any(
-            vol.Schema(
-                {
-                    vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
-                }
-            ),
-            vol.Schema(
-                {
-                    vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
-                        {
-                            "integration": DOMAIN,
-                        }
-                    )
-                }
-            ),
+        vol.Schema(
+            {
+                vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                )
+            }
         ),
     )
 
@@ -140,21 +119,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SYNC,
         syn_clock,
-        vol.Any(
-            vol.Schema(
-                {
-                    vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
-                }
-            ),
-            vol.Schema(
-                {
-                    vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
-                        {
-                            "integration": DOMAIN,
-                        }
-                    )
-                }
-            ),
+        vol.Schema(
+            {
+                vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                )
+            }
         ),
     )
 
@@ -162,29 +134,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_MEMO_TEXT,
         set_memo_text,
-        vol.Any(
-            vol.Schema(
-                {
-                    vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
-                    vol.Required(CONF_ADDRESS): vol.All(
-                        vol.Coerce(int), vol.Range(min=0, max=255)
-                    ),
-                    vol.Optional(CONF_MEMO_TEXT, default=""): cv.template,
-                }
-            ),
-            vol.Schema(
-                {
-                    vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
-                        {
-                            "integration": DOMAIN,
-                        }
-                    ),
-                    vol.Required(CONF_ADDRESS): vol.All(
-                        vol.Coerce(int), vol.Range(min=0, max=255)
-                    ),
-                    vol.Optional(CONF_MEMO_TEXT, default=""): cv.template,
-                }
-            ),
+        vol.Schema(
+            {
+                vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                ),
+                vol.Required(CONF_ADDRESS): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=255)
+                ),
+                vol.Optional(CONF_MEMO_TEXT, default=""): cv.template,
+            }
         ),
     )
 
@@ -192,26 +153,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_CLEAR_CACHE,
         clear_cache,
-        vol.Any(
-            vol.Schema(
-                {
-                    vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
-                    vol.Optional(CONF_ADDRESS): vol.All(
-                        vol.Coerce(int), vol.Range(min=0, max=255)
-                    ),
-                }
-            ),
-            vol.Schema(
-                {
-                    vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
-                        {
-                            "integration": DOMAIN,
-                        }
-                    ),
-                    vol.Optional(CONF_ADDRESS): vol.All(
-                        vol.Coerce(int), vol.Range(min=0, max=255)
-                    ),
-                }
-            ),
+        vol.Schema(
+            {
+                vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                ),
+                vol.Optional(CONF_ADDRESS): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=255)
+                ),
+            }
         ),
     )

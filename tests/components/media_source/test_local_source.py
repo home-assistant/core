@@ -167,13 +167,23 @@ async def test_upload_view(
     res = await client.post(
         "/api/media_source/local_source/upload",
         data={
-            "media_content_id": "media-source://media_source/test_dir/.",
+            "media_content_id": "media-source://media_source/test_dir",
             "file": get_file("logo.png"),
         },
     )
 
     assert res.status == 200
-    assert (Path(temp_dir) / "logo.png").is_file()
+    data = await res.json()
+    assert data["media_content_id"] == "media-source://media_source/test_dir/logo.png"
+    uploaded_path = Path(temp_dir) / "logo.png"
+    assert uploaded_path.is_file()
+
+    resolved = await media_source.async_resolve_media(
+        hass, data["media_content_id"], target_media_player=None
+    )
+    assert resolved.url == "/media/test_dir/logo.png"
+    assert resolved.mime_type == "image/png"
+    assert resolved.path == uploaded_path
 
     # Test with bad media source ID
     for bad_id in (
@@ -329,7 +339,7 @@ async def test_remove_file(
 
         msg = await client.receive_json()
 
-        assert not msg["success"]
+        assert not msg["success"], bad_id
         assert msg["error"]["code"] == err
 
     assert extra_id_file.exists()

@@ -5,6 +5,11 @@
         "default": "mdi:sony-playstation"
       }
     },
+    "binary_sensor": {
+      "ps_plus_status": {
+        "default": "mdi:shape-plus-outline"
+      }
+    },
     "sensor": {
       "trophy_level": {
         "default": "mdi:trophy-award"
@@ -29,6 +34,34 @@
       },
       "last_online": {
         "default": "mdi:account-clock"
+      },
+      "online_status": {
+        "default": "mdi:account-badge",
+        "state": {
+          "busy": "mdi:account-cancel",
+          "availabletocommunicate": "mdi:cellphone",
+          "offline": "mdi:account-off-outline"
+        }
+      },
+      "now_playing": {
+        "default": "mdi:controller",
+        "state": {
+          "unknown": "mdi:controller-off",
+          "unavailable": "mdi:controller-off"
+        }
+      }
+    },
+    "image": {
+      "share_profile": {
+        "default": "mdi:share-variant"
+      },
+      "avatar": {
+        "default": "mdi:account-circle"
+      }
+    },
+    "notify": {
+      "group_message": {
+        "default": "mdi:forum"
       }
     }
   }

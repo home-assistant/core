@@ -1,9 +1,10 @@
 {
   "domain": "ai_task",
   "name": "AI Task",
+  "after_dependencies": ["camera", "http"],
   "codeowners": ["@home-assistant/core"],
-  "dependencies": ["conversation"],
+  "dependencies": ["conversation", "media_source"],
   "documentation": "https://www.home-assistant.io/integrations/ai_task",
-  "integration_type": "system",
+  "integration_type": "entity",
   "quality_scale": "internal"
 }

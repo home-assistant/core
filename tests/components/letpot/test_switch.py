@@ -58,6 +58,7 @@ async def test_set_switch(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
     mock_device_client: MagicMock,
+    device_type: str,
     service: str,
     parameter_value: bool,
 ) -> None:
@@ -71,7 +72,9 @@ async def test_set_switch(
         target={"entity_id": "switch.garden_power"},
     )
 
-    mock_device_client.set_power.assert_awaited_once_with(parameter_value)
+    mock_device_client.set_power.assert_awaited_once_with(
+        f"{device_type}ABCD", parameter_value
+    )
 
 
 @pytest.mark.parametrize(
