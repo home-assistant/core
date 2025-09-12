@@ -77,21 +77,21 @@ async def get_cached_common_control(
             # Cache is still valid, return the cached predictions
             return cached_data.predictions
 
-    # Create a task to fetch the data
-    async def _fetch_data() -> EntityUsagePredictions:
-        predictions = await common_control.async_predict_common_control(hass, user_id)
-
-        # Store the new data with timestamp
-        cached_data = EntityUsageDataCache(
-            predictions=predictions,
-        )
-
-        hass.data[DATA_CACHE][storage_key] = cached_data
-
-        return predictions
-
-    # Create and store the task
-    task = asyncio.create_task(_fetch_data())
+    # Create task fetching data
+    task = asyncio.create_task(
+        common_control.async_predict_common_control(hass, user_id)
+    )
     hass.data[DATA_CACHE][storage_key] = task
 
-    return await task
+    try:
+        predictions = await task
+    except Exception:
+        # If the task fails, remove it from cache to allow retries
+        hass.data[DATA_CACHE].pop(storage_key)
+        raise
+
+    hass.data[DATA_CACHE][storage_key] = EntityUsageDataCache(
+        predictions=predictions,
+    )
+
+    return predictions
