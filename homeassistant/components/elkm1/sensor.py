@@ -36,6 +36,16 @@ SERVICE_SENSOR_ZONE_BYPASS = "sensor_zone_bypass"
 SERVICE_SENSOR_ZONE_TRIGGER = "sensor_zone_trigger"
 UNDEFINED_TEMPERATURE = -40
 
+_DEVICE_CLASS_MAP: dict[ZoneType, SensorDeviceClass] = {
+    ZoneType.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
+    ZoneType.ANALOG_ZONE: SensorDeviceClass.VOLTAGE,
+}
+
+_STATE_CLASS_MAP: dict[ZoneType, SensorStateClass] = {
+    ZoneType.TEMPERATURE: SensorStateClass.MEASUREMENT,
+    ZoneType.ANALOG_ZONE: SensorStateClass.MEASUREMENT,
+}
+
 ELK_SET_COUNTER_SERVICE_SCHEMA: VolDictType = {
     vol.Required(ATTR_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 65535))
 }
@@ -255,20 +265,12 @@ class ElkZone(ElkSensor):
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
-        if self._element.definition == ZoneType.TEMPERATURE:
-            return SensorDeviceClass.TEMPERATURE
-        if self._element.definition == ZoneType.ANALOG_ZONE:
-            return SensorDeviceClass.VOLTAGE
-        return None
+        return _DEVICE_CLASS_MAP.get(self._element.definition)
 
     @property
     def state_class(self) -> SensorStateClass | None:
         """Return the state class of the sensor."""
-        if self._element.definition == ZoneType.TEMPERATURE:
-            return SensorStateClass.MEASUREMENT
-        if self._element.definition == ZoneType.ANALOG_ZONE:
-            return SensorStateClass.MEASUREMENT
-        return None
+        return _STATE_CLASS_MAP.get(self._element.definition)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
