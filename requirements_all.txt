@@ -1181,7 +1181,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250903.3
+home-assistant-frontend==20250903.5
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.9.3
@@ -2067,7 +2067,7 @@ pyiqvia==2022.04.0
 pyirishrail==0.0.2
 
 # homeassistant.components.iskra
-pyiskra==0.1.26
+pyiskra==0.1.27
 
 # homeassistant.components.iss
 pyiss==1.0.1

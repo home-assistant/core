@@ -157,6 +157,9 @@
       }
     },
     "switch": {
+      "gravity_mode": {
+        "name": "Gravity mode"
+      },
       "night_light_mode": {
         "name": "Night light mode"
       },
