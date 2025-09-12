@@ -67,45 +67,23 @@ class HueSceneActivityManager:
         def _handle_scene_event(
             event_type: EventType, scene: HueScene | HueSmartScene
         ) -> None:
-            if not scene.id:
-                return
-            entity_id = self.er.async_get_entity_id("scene", "hue", scene.id)
-            group_id = scene.group.rid
-            group_state = self._group_states[group_id]
-
-            updated = False
-            if isinstance(scene, HueScene):
-                active_mode = getattr(scene, "_ha_active_mode", "inactive")
-                if active_mode != "inactive":
-                    group_state.active_scene_entity_id = entity_id
-                    group_state.active_scene_name = scene.metadata.name
-                    group_state.active_scene_mode = active_mode
-                    group_state.active_scene_last_recall = getattr(
-                        scene, "_ha_last_recall", None
-                    )
-                    updated = True
-
-                elif group_state.active_scene_entity_id == entity_id:
-                    group_state.active_scene_entity_id = None
-                    group_state.active_scene_name = None
-                    group_state.active_scene_mode = None
-                    group_state.active_scene_last_recall = None
-                    updated = True
-            elif isinstance(scene, HueSmartScene):
-                if scene.state == SmartSceneState.ACTIVE:
-                    group_state.active_smart_scene_entity_id = entity_id
-                    group_state.active_smart_scene_name = scene.metadata.name
-                    updated = True
-                elif group_state.active_smart_scene_entity_id == entity_id:
-                    group_state.active_smart_scene_entity_id = None
-                    group_state.active_smart_scene_name = None
-                    updated = True
-
-            if updated:
+            if self._apply_scene_update(scene):
+                group_id = scene.group.rid
                 for listener in list(self._listeners[group_id]):
                     listener(group_id)
 
         self._unsub = self.api.scenes.subscribe(_handle_scene_event)
+
+        updated_group_ids: set[str] = set()
+        for smart_scene in self.api.scenes.smart_scene:
+            if self._apply_scene_update(smart_scene):
+                updated_group_ids.add(smart_scene.group.rid)
+        for reg_scene in self.api.scenes.scene:
+            if self._apply_scene_update(reg_scene):
+                updated_group_ids.add(reg_scene.group.rid)
+        for group_id in updated_group_ids:
+            for listener in list(self._listeners.get(group_id, [])):
+                listener(group_id)
 
     def stop(self) -> None:
         """Stop listening to events."""
@@ -131,6 +109,48 @@ class HueSceneActivityManager:
                 return
 
         return _remove
+
+    def _apply_scene_update(self, scene: HueScene | HueSmartScene) -> bool:
+        """Apply scene/smart_scene state to group tracking.
+
+        Returns True if group state changed.
+        """
+        if not scene.id:
+            return False
+        entity_id = self.er.async_get_entity_id("scene", "hue", scene.id)
+        group_id = scene.group.rid
+        group_state = self._group_states[group_id]
+
+        if isinstance(scene, HueScene):
+            # Workaround for missing 'status.active' + 'status.last_recall' in aiohue
+            # https://github.com/home-assistant-libs/aiohue/pull/538
+            active_mode = getattr(scene, "_ha_active_mode", "inactive")
+            if active_mode != "inactive":
+                group_state.active_scene_entity_id = entity_id
+                group_state.active_scene_name = scene.metadata.name
+                group_state.active_scene_mode = active_mode
+                group_state.active_scene_last_recall = getattr(
+                    scene, "_ha_last_recall", None
+                )
+                return True
+            if group_state.active_scene_entity_id == entity_id:
+                group_state.active_scene_entity_id = None
+                group_state.active_scene_name = None
+                group_state.active_scene_mode = None
+                group_state.active_scene_last_recall = None
+                return True
+            return False
+
+        if isinstance(scene, HueSmartScene):
+            if scene.state == SmartSceneState.ACTIVE:
+                group_state.active_smart_scene_entity_id = entity_id
+                group_state.active_smart_scene_name = scene.metadata.name
+                return True
+            if group_state.active_smart_scene_entity_id == entity_id:
+                group_state.active_smart_scene_entity_id = None
+                group_state.active_smart_scene_name = None
+                return True
+        return False
 
 
 def get_or_create_scene_activity_manager(
