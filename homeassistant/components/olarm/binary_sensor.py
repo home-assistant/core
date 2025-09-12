@@ -24,6 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .coordinator import OlarmDataUpdateCoordinator
 from .entity import OlarmEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 class OlarmBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes an Olarm binary sensor entity."""
 
-    value_fn: Callable[[object, int | None], bool]
+    value_fn: Callable[[OlarmDataUpdateCoordinator, int | None], bool]
     name_fn: Callable[[int, str], str]
     unique_id_fn: Callable[[str, int], str]
 
@@ -43,7 +44,8 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
     "zone": OlarmBinarySensorEntityDescription(
         key="zone",
         value_fn=lambda coord, index: (
-            bool(coord and coord.data and coord.data.device_state)
+            coord.data is not None
+            and coord.data.device_state is not None
             and coord.data.device_state.get("zones", [])[index] == "a"
         ),
         name_fn=lambda index, label: f"Zone {index + 1:03} - {label}",
@@ -52,7 +54,8 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
     "zone_bypass": OlarmBinarySensorEntityDescription(
         key="zone_bypass",
         value_fn=lambda coord, index: (
-            bool(coord and coord.data and coord.data.device_state)
+            coord.data is not None
+            and coord.data.device_state is not None
             and coord.data.device_state.get("zones", [])[index] == "b"
         ),
         name_fn=lambda index, label: f"Zone {index + 1:03} Bypass - {label}",
@@ -61,7 +64,8 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
     "ac_power": OlarmBinarySensorEntityDescription(
         key="ac_power",
         value_fn=lambda coord, _: (
-            bool(coord and coord.data and coord.data.device_state)
+            coord.data is not None
+            and coord.data.device_state is not None
             and (
                 coord.data.device_state.get("powerAC") == "ok"
                 or coord.data.device_state.get("power", {}).get("AC") == "1"
