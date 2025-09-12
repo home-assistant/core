@@ -78,7 +78,7 @@ async def get_cached_common_control(
             return cached_data.predictions
 
     # Create task fetching data
-    task = asyncio.create_task(
+    task = hass.async_create_task(
         common_control.async_predict_common_control(hass, user_id)
     )
     hass.data[DATA_CACHE][storage_key] = task
