@@ -83,6 +83,8 @@ async def async_setup_entry(
         "_async_activate",
     )
 
+    # Workaround for missing 'status.active' + 'status.last_recall' in aiohue
+    # https://github.com/home-assistant-libs/aiohue/pull/538
     @callback
     def handle_scene_event(event_type: EventType, data: dict[str, Any]) -> None:
         """Handle raw scene event from the Hue event stream."""
