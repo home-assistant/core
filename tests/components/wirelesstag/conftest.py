@@ -139,7 +139,7 @@ async def init_integration(
     ) as mock_api_class:
         mock_api_class.return_value.async_authenticate = AsyncMock(return_value=True)
         mock_api_class.return_value.async_get_tags = AsyncMock(
-            side_effect=lambda: load_json_object_fixture.async_load(
+            return_value=load_json_object_fixture(
                 "tags_data.json", DOMAIN
             )
         )
