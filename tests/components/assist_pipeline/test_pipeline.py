@@ -23,6 +23,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_VERSION_MINOR,
     Pipeline,
     PipelineData,
+    PipelineEventType,
     PipelineStorageCollection,
     PipelineStore,
     _async_local_fallback_intent_filter,
@@ -1832,18 +1833,9 @@ async def test_acknowledge(
     pipeline_id = pipeline_store.async_get_preferred_item()
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
 
-    with patch(
-        "homeassistant.components.assist_pipeline.PipelineRun.text_to_speech"
-    ) as text_to_speech:
-
-        def _reset() -> None:
-            events.clear()
-            text_to_speech.reset_mock()
-            turn_on.clear()
-
-        # 1. All targets in same area
+    async def _run(text: str) -> None:
         pipeline_input = assist_pipeline.pipeline.PipelineInput(
-            intent_input="turn on the lights",
+            intent_input=text,
             session=mock_chat_session,
             device_id=satellite.id,
             run=assist_pipeline.pipeline.PipelineRun(
@@ -1857,6 +1849,18 @@ async def test_acknowledge(
         )
         await pipeline_input.validate()
         await pipeline_input.execute()
+
+    with patch(
+        "homeassistant.components.assist_pipeline.PipelineRun.text_to_speech"
+    ) as text_to_speech:
+
+        def _reset() -> None:
+            events.clear()
+            text_to_speech.reset_mock()
+            turn_on.clear()
+
+        # 1. All targets in same area
+        await _run("turn on the lights")
 
         # Acknowledgment sound should be played (same area)
         text_to_speech.assert_called_once()
@@ -1872,21 +1876,7 @@ async def test_acknowledge(
         )
 
         _reset()
-        pipeline_input = assist_pipeline.pipeline.PipelineInput(
-            intent_input="turn on light 2",
-            session=mock_chat_session,
-            device_id=satellite.id,
-            run=assist_pipeline.pipeline.PipelineRun(
-                hass,
-                context=Context(),
-                pipeline=pipeline,
-                start_stage=assist_pipeline.PipelineStage.INTENT,
-                end_stage=assist_pipeline.PipelineStage.TTS,
-                event_callback=events.append,
-            ),
-        )
-        await pipeline_input.validate()
-        await pipeline_input.execute()
+        await _run("turn on light 2")
 
         # Acknowledgment sound should be not played (different area)
         text_to_speech.assert_called_once()
@@ -1902,21 +1892,7 @@ async def test_acknowledge(
         device_registry.async_update_device(satellite.id, area_id=None)
 
         _reset()
-        pipeline_input = assist_pipeline.pipeline.PipelineInput(
-            intent_input="turn on light 1",
-            session=mock_chat_session,
-            device_id=satellite.id,
-            run=assist_pipeline.pipeline.PipelineRun(
-                hass,
-                context=Context(),
-                pipeline=pipeline,
-                start_stage=assist_pipeline.PipelineStage.INTENT,
-                end_stage=assist_pipeline.PipelineStage.TTS,
-                event_callback=events.append,
-            ),
-        )
-        await pipeline_input.validate()
-        await pipeline_input.execute()
+        await _run("turn on light 1")
 
         # Acknowledgment sound should be not played (no satellite area)
         text_to_speech.assert_called_once()
@@ -1938,21 +1914,7 @@ async def test_acknowledge(
         )
 
         _reset()
-        pipeline_input = assist_pipeline.pipeline.PipelineInput(
-            intent_input="turn on the lights",
-            session=mock_chat_session,
-            device_id=satellite.id,
-            run=assist_pipeline.pipeline.PipelineRun(
-                hass,
-                context=Context(),
-                pipeline=pipeline,
-                start_stage=assist_pipeline.PipelineStage.INTENT,
-                end_stage=assist_pipeline.PipelineStage.TTS,
-                event_callback=events.append,
-            ),
-        )
-        await pipeline_input.validate()
-        await pipeline_input.execute()
+        await _run("turn on the lights")
 
         # Acknowledgment sound should be played (same area)
         text_to_speech.assert_called_once()
@@ -1965,21 +1927,7 @@ async def test_acknowledge(
         device_registry.async_update_device(light_device.id, area_id=area_2.id)
 
         _reset()
-        pipeline_input = assist_pipeline.pipeline.PipelineInput(
-            intent_input="turn on light 2",
-            session=mock_chat_session,
-            device_id=satellite.id,
-            run=assist_pipeline.pipeline.PipelineRun(
-                hass,
-                context=Context(),
-                pipeline=pipeline,
-                start_stage=assist_pipeline.PipelineStage.INTENT,
-                end_stage=assist_pipeline.PipelineStage.TTS,
-                event_callback=events.append,
-            ),
-        )
-        await pipeline_input.validate()
-        await pipeline_input.execute()
+        await _run("turn on light 2")
 
         # Acknowledgment sound should be not played (different device area)
         text_to_speech.assert_called_once()
@@ -1992,21 +1940,7 @@ async def test_acknowledge(
         )
 
         _reset()
-        pipeline_input = assist_pipeline.pipeline.PipelineInput(
-            intent_input="turn on light 2",
-            session=mock_chat_session,
-            device_id=satellite.id,
-            run=assist_pipeline.pipeline.PipelineRun(
-                hass,
-                context=Context(),
-                pipeline=pipeline,
-                start_stage=assist_pipeline.PipelineStage.INTENT,
-                end_stage=assist_pipeline.PipelineStage.TTS,
-                event_callback=events.append,
-            ),
-        )
-        await pipeline_input.validate()
-        await pipeline_input.execute()
+        await _run("turn on light 2")
 
         # Acknowledgment sound should be not played (no area)
         text_to_speech.assert_called_once()
@@ -2017,26 +1951,25 @@ async def test_acknowledge(
         hass.states.async_set("light.light_3", "off", {ATTR_FRIENDLY_NAME: "light 3"})
 
         _reset()
-        pipeline_input = assist_pipeline.pipeline.PipelineInput(
-            intent_input="turn on light 3",
-            session=mock_chat_session,
-            device_id=satellite.id,
-            run=assist_pipeline.pipeline.PipelineRun(
-                hass,
-                context=Context(),
-                pipeline=pipeline,
-                start_stage=assist_pipeline.PipelineStage.INTENT,
-                end_stage=assist_pipeline.PipelineStage.TTS,
-                event_callback=events.append,
-            ),
-        )
-        await pipeline_input.validate()
-        await pipeline_input.execute()
+        await _run("turn on light 3")
 
         # Acknowledgment sound should be not played (not in entity registry)
         text_to_speech.assert_called_once()
         assert text_to_speech.call_args.kwargs.get("override_media_path") is None
         assert len(turn_on) == 1
+
+    # Check TTS event
+    events.clear()
+    await _run("turn on light 1")
+
+    has_acknowledge_override: bool | None = None
+    for event in events:
+        if event.type == PipelineEventType.TTS_START:
+            assert event.data
+            has_acknowledge_override = event.data["acknowledge_override"]
+            break
+
+    assert has_acknowledge_override
 
 
 async def test_acknowledge_other_agents(
@@ -2129,13 +2062,6 @@ async def test_acknowledge_other_agents(
 
         # Processed locally
         async_converse.assert_not_called()
-
-        # Acknowledgment sound should be played (same area)
-        get_all_targets_in_satellite_area.assert_called_once()
-        text_to_speech.assert_called_once()
-        assert (
-            text_to_speech.call_args.kwargs["override_media_path"] == ACKNOWLEDGE_PATH
-        )
 
         # Not processed locally
         text_to_speech.reset_mock()

@@ -1424,6 +1424,7 @@ class PipelineRun:
                     "language": self.pipeline.tts_language,
                     "voice": self.pipeline.tts_voice,
                     "tts_input": tts_input,
+                    "acknowledge_override": override_media_path is not None,
                 },
             )
         )
