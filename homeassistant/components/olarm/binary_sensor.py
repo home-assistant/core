@@ -1,12 +1,24 @@
-"""Support for Olarm binary sensors."""
+"""Support for Olarm binary sensors.
+
+An Olarm device connected to an alarm system can have up to 192 zones, these are usually
+door/window contacts and motion sensors. They can be either active or closed depending
+if motion is detected or door/window is open.
+
+The zones can also be bypassed so they are ignored if the alarm system is armed so
+additional binary sensors are added for this. Alarm systems also monitor AC power
+as they have battery backup so this is added as a binary sensor as well.
+"""
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -17,21 +29,63 @@ from .entity import OlarmEntity
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True, kw_only=True)
+class OlarmBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes an Olarm binary sensor entity."""
+
+    value_fn: Callable[[object, int | None], bool]
+    name_fn: Callable[[int, str], str]
+    unique_id_fn: Callable[[str, int], str]
+
+
+# Descriptions for the different Olarm binary sensor types
+SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
+    "zone": OlarmBinarySensorEntityDescription(
+        key="zone",
+        value_fn=lambda coord, index: (
+            bool(coord and coord.data and coord.data.device_state)
+            and coord.data.device_state.get("zones", [])[index] == "a"
+        ),
+        name_fn=lambda index, label: f"Zone {index + 1:03} - {label}",
+        unique_id_fn=lambda device_id, index: f"{device_id}.zone.{index}",
+    ),
+    "zone_bypass": OlarmBinarySensorEntityDescription(
+        key="zone_bypass",
+        value_fn=lambda coord, index: (
+            bool(coord and coord.data and coord.data.device_state)
+            and coord.data.device_state.get("zones", [])[index] == "b"
+        ),
+        name_fn=lambda index, label: f"Zone {index + 1:03} Bypass - {label}",
+        unique_id_fn=lambda device_id, index: f"{device_id}.zone.bypass.{index}",
+    ),
+    "ac_power": OlarmBinarySensorEntityDescription(
+        key="ac_power",
+        value_fn=lambda coord, _: (
+            bool(coord and coord.data and coord.data.device_state)
+            and (
+                coord.data.device_state.get("powerAC") == "ok"
+                or coord.data.device_state.get("power", {}).get("AC") == "1"
+            )
+        ),
+        name_fn=lambda index, label: f"{label}",
+        unique_id_fn=lambda device_id, index: f"{device_id}.ac_power",
+    ),
+}
+
+CLASS_MAP: dict[int, BinarySensorDeviceClass] = {
+    10: BinarySensorDeviceClass.DOOR,
+    11: BinarySensorDeviceClass.WINDOW,
+    20: BinarySensorDeviceClass.MOTION,
+    21: BinarySensorDeviceClass.MOTION,
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add binary sensors for a config entry.
-
-    An Olarm device connected to an alarm system can have up to 192 zones, these are usually
-    door/window contacts and motion sensors. They can be either active or closed depending
-    if motion is detected or door/window is open.
-
-    The zones can also be bypassed so they are ignored if the alarm system is armed so
-    additional binary sensors are added for this. Alarm systems also monitor AC power
-    as they have battery backup so this is added as a binary sensor as well.
-    """
+    """Add binary sensors for a config entry."""
 
     # get coordinator
     coordinator = config_entry.runtime_data.coordinator
@@ -51,33 +105,25 @@ def load_zone_sensors(coordinator, config_entry, sensors):
         and coordinator.data.device_profile is not None
         and coordinator.data.device_state is not None
     ):
-        for zone_index, zone_state in enumerate(
-            coordinator.data.device_state.get("zones", [])
-        ):
-            # load zone entities
-            sensors.append(
-                OlarmBinarySensor(
-                    coordinator,
-                    "zone",
-                    config_entry.data["device_id"],
-                    zone_index,
-                    zone_state,
-                    coordinator.data.device_profile.get("zonesLabels")[zone_index],
-                    coordinator.data.device_profile.get("zonesTypes")[zone_index],
+        device_id = config_entry.data["device_id"]
+        zones = coordinator.data.device_state.get("zones", [])
+        labels = coordinator.data.device_profile.get("zonesLabels")
+        types = coordinator.data.device_profile.get("zonesTypes")
+        for zone_index, zone_state in enumerate(zones):
+            zone_label = labels[zone_index]
+            zone_class = types[zone_index]
+            for sensor_type in ("zone", "zone_bypass"):
+                sensors.append(
+                    OlarmBinarySensor(
+                        coordinator,
+                        SENSOR_DESCRIPTIONS[sensor_type],
+                        device_id,
+                        zone_index,
+                        zone_state,
+                        zone_label,
+                        zone_class,
+                    )
                 )
-            )
-            # load bypass entities
-            sensors.append(
-                OlarmBinarySensor(
-                    coordinator,
-                    "zone_bypass",
-                    config_entry.data["device_id"],
-                    zone_index,
-                    zone_state,
-                    coordinator.data.device_profile.get("zonesLabels")[zone_index],
-                    coordinator.data.device_profile.get("zonesTypes")[zone_index],
-                )
-            )
 
 
 def load_ac_power_sensor(coordinator, config_entry, sensors):
@@ -92,7 +138,7 @@ def load_ac_power_sensor(coordinator, config_entry, sensors):
         sensors.append(
             OlarmBinarySensor(
                 coordinator,
-                "ac_power",
+                SENSOR_DESCRIPTIONS["ac_power"],
                 config_entry.data["device_id"],
                 0,
                 ac_power_state,
@@ -105,10 +151,12 @@ def load_ac_power_sensor(coordinator, config_entry, sensors):
 class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
     """Define an Olarm Binary Sensor."""
 
+    entity_description: OlarmBinarySensorEntityDescription
+
     def __init__(
         self,
         coordinator,
-        sensor_type: str,
+        description: OlarmBinarySensorEntityDescription,
         device_id: str,
         sensor_index: int,
         sensor_state: str,
@@ -122,33 +170,27 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         # Initialize base entity
         super().__init__(coordinator, device_id)
 
-        # set attributes
-        self._attr_name = f"Zone {sensor_index + 1:03} - {sensor_label}"
-        self._attr_unique_id = f"{device_id}.zone.{sensor_index}"
-        if sensor_type == "zone_bypass":
-            self._attr_name = f"Zone {sensor_index + 1:03} Bypass - {sensor_label}"
-            self._attr_unique_id = f"{device_id}.zone.bypass.{sensor_index}"
-        if sensor_type == "ac_power":
-            self._attr_name = f"{sensor_label}"
-            self._attr_unique_id = f"{device_id}.ac_power"
+        # store description
+        self.entity_description = description
+
+        # set attributes via description
+        self._attr_name = self.entity_description.name_fn(sensor_index, sensor_label)
+        self._attr_unique_id = self.entity_description.unique_id_fn(
+            device_id, sensor_index
+        )
 
         _LOGGER.debug(
             "BinarySensor: init %s -> %s -> %s",
-            sensor_type,
+            self.entity_description.key,
             self._attr_name,
             sensor_state,
         )
 
-        # set the class attribute if zone type is set
-        if sensor_class == 10:
-            self._attr_device_class = BinarySensorDeviceClass.DOOR
-        elif sensor_class == 11:
-            self._attr_device_class = BinarySensorDeviceClass.WINDOW
-        elif sensor_class in (20, 21):
-            self._attr_device_class = BinarySensorDeviceClass.MOTION
+        # set the device class if provided
+        if sensor_class in CLASS_MAP:
+            self._attr_device_class = CLASS_MAP[sensor_class]
 
         # custom attributes
-        self.sensor_type = sensor_type
         self.sensor_index = sensor_index
         self.sensor_state = sensor_state
         self.sensor_label = sensor_label
@@ -157,18 +199,10 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
             link_id  # only used for olarm LINKs to track which LINK as can have upto 8
         )
 
-        # set state if zone is active[a] or closed[c] or bypassed[b]
-        self._attr_is_on = self._determine_is_on()
-
-    def _determine_is_on(self) -> bool:
-        """Determine if the binary sensor should be on."""
-        if self.sensor_type == "zone" and self.sensor_state == "a":
-            return True
-        if self.sensor_type == "zone_bypass" and self.sensor_state == "b":
-            return True
-        if self.sensor_type == "ac_power" and self.sensor_state == "on":
-            return True
-        return False
+        # initialize state via description
+        self._attr_is_on = self.entity_description.value_fn(
+            self.coordinator, self.sensor_index
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -182,19 +216,11 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         # Store the previous state to check if it changed
         previous_state = self._attr_is_on
 
-        # update state
-        if (self.sensor_type in {"zone", "zone_bypass"}) and device_state is not None:
-            self.sensor_state = device_state.get("zones", [])[self.sensor_index]
-        elif self.sensor_type == "ac_power" and device_state is not None:
-            self.sensor_state = (
-                "on"
-                if device_state.get("powerAC") == "ok"
-                or device_state.get("power", {}).get("AC") == "1"
-                else "off"
+        # compute state using description
+        if device_state is not None:
+            self._attr_is_on = self.entity_description.value_fn(
+                self.coordinator, self.sensor_index
             )
-
-        # set state if zone is active[a] or closed[c] or bypassed[b]
-        self._attr_is_on = self._determine_is_on()
 
         # Only schedule state update if the state actually changed
         if self._attr_is_on != previous_state:
