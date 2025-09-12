@@ -2293,7 +2293,11 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         ):
             integration.add_error(
                 "quality_scale",
-                "Quality scale definition not found. New integrations are required to at least reach the Bronze tier.",
+                (
+                    "New integrations marked as internal should be added to INTEGRATIONS_WITHOUT_SCALE in script/hassfest/quality_scale.py"
+                    if integration.quality_scale == "internal"
+                    else "Quality scale definition not found. New integrations are required to at least reach the Bronze tier."
+                ),
             )
             return
         if declared_quality_scale is not None:
@@ -2338,7 +2342,11 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     ):
         integration.add_error(
             "quality_scale",
-            "New integrations are required to at least reach the Bronze tier.",
+            (
+                "New integrations marked as internal should be added to INTEGRATIONS_WITHOUT_SCALE in script/hassfest/quality_scale.py"
+                if integration.quality_scale == "internal"
+                else "New integrations are required to at least reach the Bronze tier."
+            ),
         )
         return
     name = str(iqs_file)
