@@ -114,10 +114,6 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator):
             departure for departure in departures if departure.stopExtId == stop_id
         ]
 
-        # # Apply filters
-        # if route_filter:
-        #     filtered_data = [d for d in filtered_data if d. in route_filter]
-
         if direction_filter:
             filtered_data = [
                 d for d in filtered_data if d.direction in direction_filter
