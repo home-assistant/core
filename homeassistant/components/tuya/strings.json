@@ -981,6 +981,12 @@
       },
       "output_power_limit": {
         "name": "Output power limit"
+      },
+      "music": {
+        "name": "Music"
+      },
+      "snooze": {
+        "name": "Snooze"
       }
     },
     "valve": {

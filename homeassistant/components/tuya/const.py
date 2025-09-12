@@ -331,6 +331,7 @@ class DPCode(StrEnum):
     SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
     SMOKE_SENSOR_VALUE = "smoke_sensor_value"
+    SNOOZE = "snooze"
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
@@ -371,6 +372,7 @@ class DPCode(StrEnum):
     SWITCH_MODE7 = "switch_mode7"
     SWITCH_MODE8 = "switch_mode8"
     SWITCH_MODE9 = "switch_mode9"
+    SWITCH_MUSIC = "switch_music"
     SWITCH_NIGHT_LIGHT = "switch_night_light"
     SWITCH_SAVE_ENERGY = "switch_save_energy"
     SWITCH_SOUND = "switch_sound"  # Voice switch
