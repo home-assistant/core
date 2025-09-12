@@ -3228,13 +3228,13 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Level',
+    'original_name': 'Up/Down',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'desk_up_down',
-    'unique_id': 'tuya.vpfdskpi8pr8cbtfzjsupdown',
+    'unique_id': 'tuya.vpfdskpi8pr8cbtfzjsup_down',
     'unit_of_measurement': None,
   })
 # ---
