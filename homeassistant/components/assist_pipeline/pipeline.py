@@ -1304,7 +1304,7 @@ class PipelineRun:
                 if agent_id == conversation.HOME_ASSISTANT_AGENT:
                     # Check if all targeted entities were in the same area as
                     # the satellite device.
-                    # If so, the satellite can response with an acknowledge beep
+                    # If so, the satellite should respond with an acknowledge beep
                     # instead of a full response.
                     can_acknowledge = self._can_acknowledge_response(
                         conversation_result.response, self._device_id
