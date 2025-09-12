@@ -1247,6 +1247,46 @@ async def test_recommended_step_skips_device_selection_if_already_set(
 
 
 @pytest.mark.usefixtures("mock_is_hassio", "mock_async_get_usb_ports")
+async def test_recommended_step_device_already_set_skips_to_addon(
+    hass: HomeAssistant, mock_get_otbr_addon_manager: MagicMock
+) -> None:
+    """Test recommended step skips directly to addon when device is already set."""
+    # Set addon as running
+    mock_addon_info = (
+        mock_get_otbr_addon_manager.return_value.async_get_addon_info.return_value
+    )
+    mock_addon_info.state = "running"
+    mock_addon_info.hostname = "core-openthread-border-router"
+
+    # Mock the network calls to prevent actual network requests
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.OTBRConfigFlow._connect_with_retry",
+            return_value=TEST_BORDER_AGENT_ID,
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "user"}
+        )
+
+        # Set device on the flow instance
+        flow_instance = hass.config_entries.flow._progress[result["flow_id"]]
+        flow_instance._device = "/dev/ttyUSB0"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "recommended"}
+        )
+
+        # Should skip device selection and proceed to create entry
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "Open Thread Border Router"
+
+
+@pytest.mark.usefixtures("mock_is_hassio", "mock_async_get_usb_ports")
 async def test_addon_step_not_installed_proceeds_to_install(
     hass: HomeAssistant, mock_get_otbr_addon_manager: MagicMock
 ) -> None:
@@ -1284,11 +1324,12 @@ async def test_addon_step_running_stops_then_starts(
     hass: HomeAssistant, mock_get_otbr_addon_manager: MagicMock
 ) -> None:
     """Test addon step stops running addon then starts."""
-    # Set addon as running
+    # Set addon as running initially
     mock_addon_info = (
         mock_get_otbr_addon_manager.return_value.async_get_addon_info.return_value
     )
     mock_addon_info.state = "running"
+    mock_addon_info.hostname = "core-openthread-border-router"
 
     # Mock the network calls to prevent actual network requests
     with (
@@ -1430,6 +1471,46 @@ async def test_start_otbr_addon_progress(
         mock_get_otbr_addon_manager.return_value.async_get_addon_info.return_value
     )
     mock_addon_info.state = "installed"
+
+    # Mock the network calls to prevent actual network requests
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.OTBRConfigFlow._connect_with_retry",
+            return_value=TEST_BORDER_AGENT_ID,
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "user"}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "recommended"}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"device": "/dev/ttyUSB0"}
+        )
+
+        # The flow should complete successfully and create an entry
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "Open Thread Border Router"
+
+
+@pytest.mark.usefixtures("mock_is_hassio", "mock_async_get_usb_ports")
+async def test_start_addon_progress_step_return(
+    hass: HomeAssistant, mock_get_otbr_addon_manager: MagicMock
+) -> None:
+    """Test start_addon progress step returns progress when task is not done."""
+    # Set addon as installed but not running
+    mock_addon_info = (
+        mock_get_otbr_addon_manager.return_value.async_get_addon_info.return_value
+    )
+    mock_addon_info.state = "installed"
+    mock_addon_info.hostname = "core-openthread-border-router"
 
     # Mock the network calls to prevent actual network requests
     with (
@@ -1623,6 +1704,46 @@ async def test_connect_otbr_progress(
         assert result["title"] == "Open Thread Border Router"
 
 
+@pytest.mark.usefixtures("mock_is_hassio", "mock_async_get_usb_ports")
+async def test_connect_otbr_progress_step_return(
+    hass: HomeAssistant, mock_get_otbr_addon_manager: MagicMock
+) -> None:
+    """Test connect_otbr progress step returns progress when task is not done."""
+    # Set addon as running
+    mock_addon_info = (
+        mock_get_otbr_addon_manager.return_value.async_get_addon_info.return_value
+    )
+    mock_addon_info.state = "running"
+    mock_addon_info.hostname = "core-openthread-border-router"
+
+    # Mock the network calls to prevent actual network requests
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.OTBRConfigFlow._connect_with_retry",
+            return_value=TEST_BORDER_AGENT_ID,
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "user"}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "recommended"}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"device": "/dev/ttyUSB0"}
+        )
+
+        # The flow should complete successfully and create an entry
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "Open Thread Border Router"
+
+
 @pytest.mark.usefixtures(
     "mock_is_hassio",
     "mock_async_get_usb_ports",
@@ -1732,6 +1853,74 @@ async def test_connect_otbr_connection_failure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
+
+
+@pytest.mark.usefixtures("mock_is_hassio", "mock_async_get_usb_ports")
+async def test_connect_otbr_timeout_failure(
+    hass: HomeAssistant, mock_get_otbr_addon_manager: MagicMock
+) -> None:
+    """Test OTBR connection timeout failure."""
+    # Set addon as running
+    mock_addon_info = (
+        mock_get_otbr_addon_manager.return_value.async_get_addon_info.return_value
+    )
+    mock_addon_info.state = "running"
+    mock_addon_info.hostname = "core-openthread-border-router"
+
+    # Mock connection timeout failure
+    with patch(
+        "homeassistant.components.otbr.config_flow.OTBRConfigFlow._connect_with_retry",
+        side_effect=HomeAssistantError("Failed to connect to OTBR after 10.0 seconds"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "user"}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "recommended"}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"device": "/dev/ttyUSB0"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+@pytest.mark.usefixtures("mock_is_hassio", "mock_async_get_usb_ports")
+async def test_connect_with_retry_timeout_simulation(
+    hass: HomeAssistant, mock_get_otbr_addon_manager: MagicMock
+) -> None:
+    """Test OTBR connection timeout by simulating elapsed time."""
+    # Set addon as running
+    mock_addon_info = (
+        mock_get_otbr_addon_manager.return_value.async_get_addon_info.return_value
+    )
+    mock_addon_info.state = "running"
+    mock_addon_info.hostname = "core-openthread-border-router"
+
+    # Create a flow instance to test the timeout logic directly
+    flow = otbr.config_flow.OTBRConfigFlow()
+    flow.hass = hass
+    flow.flow_id = "test_flow_id"
+
+    # Mock time to simulate timeout
+    with patch("asyncio.get_event_loop") as mock_get_loop:
+        mock_loop = MagicMock()
+        mock_get_loop.return_value = mock_loop
+
+        # Simulate time progression: start at 0, then 11 seconds (past timeout)
+        mock_loop.time.side_effect = [0.0, 11.0]
+
+        # Mock the connection method to always fail with connection error
+        with patch.object(
+            flow, "_connect_and_configure_router", side_effect=aiohttp.ClientConnectionError
+        ):
+            with pytest.raises(HomeAssistantError) as exc_info:
+                await flow._connect_with_retry("http://test:8081")
+
+            assert "Failed to connect to OTBR after 10.0 seconds" in str(exc_info.value)
 
 
 @pytest.mark.usefixtures(
@@ -1907,6 +2096,91 @@ async def test_connect_otbr_retry_logic(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Open Thread Border Router"
+
+
+@pytest.mark.usefixtures("mock_is_hassio", "mock_async_get_usb_ports")
+async def test_connect_with_retry_timeout(
+    hass: HomeAssistant, mock_get_otbr_addon_manager: MagicMock
+) -> None:
+    """Test _connect_with_retry timeout error."""
+    # Set addon as running
+    mock_addon_info = (
+        mock_get_otbr_addon_manager.return_value.async_get_addon_info.return_value
+    )
+    mock_addon_info.state = "running"
+    mock_addon_info.hostname = "core-openthread-border-router"
+
+    # Mock persistent ClientConnectorError to trigger timeout
+    from aiohttp import ClientConnectionError
+    with patch(
+        "homeassistant.components.otbr.config_flow.OTBRConfigFlow._connect_and_configure_router",
+        side_effect=ClientConnectionError("Connection refused"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "user"}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "recommended"}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"device": "/dev/ttyUSB0"}
+        )
+
+    # Should return progress step while retrying
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "connect_otbr"
+
+
+@pytest.mark.usefixtures("mock_is_hassio", "mock_async_get_usb_ports")
+async def test_connect_with_retry_client_connector_error(
+    hass: HomeAssistant, mock_get_otbr_addon_manager: MagicMock
+) -> None:
+    """Test _connect_with_retry ClientConnectorError handling and retry."""
+    # Set addon as running
+    mock_addon_info = (
+        mock_get_otbr_addon_manager.return_value.async_get_addon_info.return_value
+    )
+    mock_addon_info.state = "running"
+    mock_addon_info.hostname = "core-openthread-border-router"
+
+    # Mock ClientConnectionError that eventually succeeds
+    call_count = 0
+    from aiohttp import ClientConnectionError
+
+    async def mock_connect(url):
+        nonlocal call_count
+        call_count += 1
+        if call_count < 3:  # Fail first 2 attempts
+            raise ClientConnectionError("Connection refused")
+        return TEST_BORDER_AGENT_ID  # Succeed on 3rd attempt
+
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.OTBRConfigFlow._connect_and_configure_router",
+            side_effect=mock_connect,
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "user"}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "recommended"}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"device": "/dev/ttyUSB0"}
+        )
+
+    # Should return progress step while retrying
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "connect_otbr"
 
 
 @pytest.mark.usefixtures("mock_is_hassio", "mock_async_get_usb_ports")

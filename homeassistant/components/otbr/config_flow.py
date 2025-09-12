@@ -8,7 +8,6 @@ import logging
 from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
-from aiohttp.client_exceptions import ClientConnectorError
 import python_otbr_api
 from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
@@ -196,7 +195,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 return await self._connect_and_configure_router(url)
-            except ClientConnectorError as exc:
+            except aiohttp.ClientConnectionError as exc:
                 _LOGGER.debug(
                     "ClientConnectorError after %.2f seconds, retrying in %.1fs: %s",
                     elapsed_time,
