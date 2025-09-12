@@ -80,8 +80,7 @@ class MockApiResponseKey(str, Enum):
 
 
 def mock_uptimerobot_api_response(
-    data: dict[str, Any]
-    | list[dict[str, Any]]
+    data: list[dict[str, Any]]
     | list[UptimeRobotMonitor]
     | UptimeRobotAccount
     | UptimeRobotApiError

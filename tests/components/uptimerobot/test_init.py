@@ -207,9 +207,7 @@ async def test_device_management(
 
     assert (entity := hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY))
     assert entity.state == STATE_ON
-    assert (
-        entity2 := hass.states.get(f"{UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY}_2")
-    ) is None
+    assert hass.states.get(f"{UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY}_2") is None
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
@@ -245,4 +243,4 @@ async def test_device_management(
 
     assert (entity := hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY))
     assert entity.state == STATE_ON
-    assert (hass.states.get(f"{UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY}_2")) is None
+    assert hass.states.get(f"{UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY}_2") is None
