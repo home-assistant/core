@@ -96,7 +96,7 @@
       },
       "numeric_state": {
         "title": "[%key:component::bayesian::config_subentries::observation::step::state::title%]",
-        "description": "[%key:component::bayesian::config_subentries::observation::step::state::description%]",
+        "description": "[%key:component::bayesian::config_subentries::observation::step::numeric_state::description%]",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "entity_id": "[%key:component::bayesian::config_subentries::observation::step::state::data::entity_id%]",

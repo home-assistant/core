@@ -1473,6 +1473,48 @@ async def test_discover_alarm_control_panel(
             "Hello World 19",
             "device_tracker",
         ),
+        (
+            "homeassistant/binary_sensor/object/bla/config",
+            '{ "name": "Hello World 2", "obj_id": "hello_id", '
+            '"o": {"name": "X2mqtt"}, "state_topic": "test-topic" }',
+            "binary_sensor.hello_id",
+            "Hello World 2",
+            "binary_sensor",
+        ),
+        (
+            "homeassistant/button/object/bla/config",
+            '{ "name": "Hello World button", "obj_id": "hello_id", '
+            '"o": {"name": "X2mqtt", "url": "https://example.com/x2mqtt"}, '
+            '"command_topic": "test-topic" }',
+            "button.hello_id",
+            "Hello World button",
+            "button",
+        ),
+        (
+            "homeassistant/alarm_control_panel/object/bla/config",
+            '{ "name": "Hello World 1", "def_ent_id": "alarm_control_panel.hello_id", '
+            '"state_topic": "test-topic", "command_topic": "test-topic" }',
+            "alarm_control_panel.hello_id",
+            "Hello World 1",
+            "alarm_control_panel",
+        ),
+        (
+            "homeassistant/binary_sensor/object/bla/config",
+            '{ "name": "Hello World 2", "def_ent_id": "binary_sensor.hello_id", '
+            '"o": {"name": "X2mqtt"}, "state_topic": "test-topic" }',
+            "binary_sensor.hello_id",
+            "Hello World 2",
+            "binary_sensor",
+        ),
+        (
+            "homeassistant/button/object/bla/config",
+            '{ "name": "Hello World button", "def_ent_id": "button.hello_id", '
+            '"o": {"name": "X2mqtt", "url": "https://example.com/x2mqtt"}, '
+            '"command_topic": "test-topic" }',
+            "button.hello_id",
+            "Hello World button",
+            "button",
+        ),
     ],
 )
 async def test_discovery_with_object_id(
@@ -1496,20 +1538,20 @@ async def test_discovery_with_object_id(
     assert (domain, "object bla") in hass.data["mqtt"].discovery_already_discovered
 
 
-async def test_discovery_with_object_id_for_previous_deleted_entity(
+async def test_discovery_with_default_entity_id_for_previous_deleted_entity(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test discovering an MQTT entity with object_id and unique_id."""
+    """Test discovering an MQTT entity with default_entity_id and unique_id."""
 
     topic = "homeassistant/sensor/object/bla/config"
     config = (
         '{ "name": "Hello World 11", "unique_id": "very_unique", '
-        '"obj_id": "hello_id", "state_topic": "test-topic" }'
+        '"def_ent_id": "sensor.hello_id", "state_topic": "test-topic" }'
     )
     new_config = (
         '{ "name": "Hello World 11", "unique_id": "very_unique", '
-        '"obj_id": "updated_hello_id", "state_topic": "test-topic" }'
+        '"def_ent_id": "sensor.updated_hello_id", "state_topic": "test-topic" }'
     )
     initial_entity_id = "sensor.hello_id"
     new_entity_id = "sensor.updated_hello_id"
@@ -1531,7 +1573,7 @@ async def test_discovery_with_object_id_for_previous_deleted_entity(
     await hass.async_block_till_done()
     assert (domain, "object bla") not in hass.data["mqtt"].discovery_already_discovered
 
-    # Rediscover with new object_id
+    # Rediscover with new default_entity_id
     async_fire_mqtt_message(hass, topic, new_config)
     await hass.async_block_till_done()
 

@@ -126,7 +126,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema(
             {
                 vol.Required(ATTR_TASK_NAME): cv.string,
-                vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+                vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
                 vol.Required(ATTR_INSTRUCTIONS): cv.string,
                 vol.Optional(ATTR_ATTACHMENTS): vol.All(
                     cv.ensure_list, [selector.MediaSelector({"accept": ["*/*"]})]
@@ -163,9 +163,10 @@ async def async_service_generate_image(call: ServiceCall) -> ServiceResponse:
 class AITaskPreferences:
     """AI Task preferences."""
 
-    KEYS = ("gen_data_entity_id",)
+    KEYS = ("gen_data_entity_id", "gen_image_entity_id")
 
     gen_data_entity_id: str | None = None
+    gen_image_entity_id: str | None = None
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the preferences."""
@@ -179,17 +180,21 @@ class AITaskPreferences:
         if data is None:
             return
         for key in self.KEYS:
-            setattr(self, key, data[key])
+            setattr(self, key, data.get(key))
 
     @callback
     def async_set_preferences(
         self,
         *,
         gen_data_entity_id: str | None | UndefinedType = UNDEFINED,
+        gen_image_entity_id: str | None | UndefinedType = UNDEFINED,
     ) -> None:
         """Set the preferences."""
         changed = False
-        for key, value in (("gen_data_entity_id", gen_data_entity_id),):
+        for key, value in (
+            ("gen_data_entity_id", gen_data_entity_id),
+            ("gen_image_entity_id", gen_image_entity_id),
+        ):
             if value is not UNDEFINED:
                 if getattr(self, key) != value:
                     setattr(self, key, value)
@@ -211,7 +216,6 @@ class ImageView(HomeAssistantView):
 
     url = f"/api/{DOMAIN}/images/{{filename}}"
     name = f"api:{DOMAIN}/images"
-    requires_auth = False
 
     async def get(
         self,
