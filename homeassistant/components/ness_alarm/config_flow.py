@@ -90,20 +90,24 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(
-                f"{user_input[CONF_HOST]}:{user_input.get(CONF_PORT, DEFAULT_PORT)}"
-            )
-            self._abort_if_unique_id_configured()
-
             try:
+                # Validate the connection and fetch model/version
                 info = await validate_input(self.hass, user_input)
+
+                # Use model + version + port for uniqueness
+                unique_id = f"{info['model']}_{info['version']}_{user_input.get(CONF_PORT, DEFAULT_PORT)}"
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=info["title"],
+                    data=user_input,
+                )
             except NessAlarmConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(title=info["title"], data=user_input)
 
         schema = vol.Schema(
             {
@@ -146,6 +150,12 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
             CONF_MAX_SUPPORTED_ZONES: max_zone_id,
         }
+        options = {
+            CONF_SCAN_INTERVAL: scan_interval,
+            CONF_INFER_ARMING_STATE: import_config.get(
+                CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE
+            ),
+        }
 
         if zones:
             data[CONF_ZONES] = [
@@ -167,7 +177,7 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, data)
-            unique_id = f"{info['model']}_{data[CONF_HOST]}_{data[CONF_PORT]}"
+            unique_id = f"{info['model']}_{info['version']}_{data[CONF_PORT]}"
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
