@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import replace
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, Platform
@@ -64,12 +65,26 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         translation_key="pipeline",
         entity_category=EntityCategory.CONFIG,
     )
+
     _attr_should_poll = False
     _attr_current_option = OPTION_PREFERRED
     _attr_options = [OPTION_PREFERRED]
 
-    def __init__(self, hass: HomeAssistant, domain: str, unique_id_prefix: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        domain: str,
+        unique_id_prefix: str,
+        index: int = 0,
+    ) -> None:
         """Initialize a pipeline selector."""
+        key_suffix = "" if index < 1 else f"_{index + 1}"
+        self.entity_description = replace(
+            self.entity_description,
+            key=f"pipeline{key_suffix}",
+            translation_placeholders={"index": str(index + 1)},
+        )
+
         self._domain = domain
         self._unique_id_prefix = unique_id_prefix
         self._attr_unique_id = f"{unique_id_prefix}-{self.entity_description.key}"
@@ -123,16 +138,6 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
 
         if self._attr_current_option not in options:
             self._attr_current_option = OPTION_PREFERRED
-
-
-class AssistSecondaryPipelineSelect(AssistPipelineSelect):
-    """Entity to represent a secondary pipeline selector."""
-
-    entity_description = SelectEntityDescription(
-        key="pipeline_2",
-        translation_key="pipeline_2",
-        entity_category=EntityCategory.CONFIG,
-    )
 
 
 class VadSensitivitySelect(SelectEntity, restore_state.RestoreEntity):

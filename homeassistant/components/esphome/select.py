@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from aioesphomeapi import EntityInfo, SelectInfo, SelectState
 
 from homeassistant.components.assist_pipeline.select import (
     AssistPipelineSelect,
-    AssistSecondaryPipelineSelect,
     VadSensitivitySelect,
 )
 from homeassistant.components.assist_satellite import AssistSatelliteConfiguration
@@ -51,11 +52,11 @@ async def async_setup_entry(
     ):
         async_add_entities(
             [
-                EsphomeAssistPipelineSelect(hass, entry_data),
-                EsphomeSecondaryAssistPipelineSelect(hass, entry_data),
+                EsphomeAssistPipelineSelect(hass, entry_data, index=0),
+                EsphomeAssistPipelineSelect(hass, entry_data, index=1),
                 EsphomeVadSensitivitySelect(hass, entry_data),
-                EsphomeAssistSatelliteWakeWordSelect(entry_data, 0),
-                EsphomeAssistSatelliteWakeWordSelect(entry_data, 1),
+                EsphomeAssistSatelliteWakeWordSelect(entry_data, index=0),
+                EsphomeAssistSatelliteWakeWordSelect(entry_data, index=1),
             ]
         )
 
@@ -87,22 +88,13 @@ class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
 class EsphomeAssistPipelineSelect(EsphomeAssistEntity, AssistPipelineSelect):
     """Pipeline selector for esphome devices."""
 
-    def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry_data: RuntimeEntryData, index: int = 0
+    ) -> None:
         """Initialize a pipeline selector."""
         EsphomeAssistEntity.__init__(self, entry_data)
-        AssistPipelineSelect.__init__(self, hass, DOMAIN, self._device_info.mac_address)
-
-
-class EsphomeSecondaryAssistPipelineSelect(
-    EsphomeAssistEntity, AssistSecondaryPipelineSelect
-):
-    """Secondary pipeline selector for esphome devices."""
-
-    def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
-        """Initialize a secondary pipeline selector."""
-        EsphomeAssistEntity.__init__(self, entry_data)
-        AssistSecondaryPipelineSelect.__init__(
-            self, hass, DOMAIN, self._device_info.mac_address
+        AssistPipelineSelect.__init__(
+            self, hass, DOMAIN, self._device_info.mac_address, index=index
         )
 
 
@@ -120,20 +112,22 @@ class EsphomeAssistSatelliteWakeWordSelect(
 ):
     """Wake word selector for esphome devices."""
 
+    entity_description = SelectEntityDescription(
+        key="wake_word",
+        translation_key="wake_word",
+        entity_category=EntityCategory.CONFIG,
+    )
+
     _attr_current_option: str | None = None
     _attr_options: list[str] = [NO_WAKE_WORD]
 
-    def __init__(self, entry_data: RuntimeEntryData, wake_word_index: int = 0) -> None:
+    def __init__(self, entry_data: RuntimeEntryData, index: int = 0) -> None:
         """Initialize a wake word selector."""
-        if wake_word_index > 0:
-            suffix = f"_{wake_word_index + 1}"
-        else:
-            suffix = ""
-
-        self.entity_description = SelectEntityDescription(
-            key=f"wake_word{suffix}",
-            translation_key=f"wake_word{suffix}",
-            entity_category=EntityCategory.CONFIG,
+        key_suffix = "" if index < 1 else f"_{index + 1}"
+        self.entity_description = replace(
+            self.entity_description,
+            key=f"wake_word{key_suffix}",
+            translation_placeholders={"index": str(index + 1)},
         )
 
         EsphomeAssistEntity.__init__(self, entry_data)
@@ -143,7 +137,7 @@ class EsphomeAssistSatelliteWakeWordSelect(
 
         # name -> id
         self._wake_words: dict[str, str] = {}
-        self._wake_word_index = wake_word_index
+        self._wake_word_index = index
 
     @property
     def available(self) -> bool:

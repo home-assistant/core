@@ -7,13 +7,10 @@
     },
     "select": {
       "pipeline": {
-        "name": "Assistant",
+        "name": "Assistant {index}",
         "state": {
           "preferred": "Preferred"
         }
-      },
-      "pipeline_2": {
-        "name": "Secondary assistant"
       },
       "vad_sensitivity": {
         "name": "Finished speaking detection",
