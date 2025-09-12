@@ -94,6 +94,34 @@
     "log_current_tasks": {
       "name": "Log current asyncio tasks",
       "description": "Logs all the current asyncio tasks."
+    },
+    "start_auditing_events": {
+      "name": "Add audited events",
+      "description": "Add list of Python events to audit.",
+      "fields": {
+        "events": {
+          "name": "Events",
+          "description": "List of Python events to audit (see https://docs.python.org/3/library/audit_events.html#audit-events for the list of auditable events)."
+        },
+        "verbose": {
+          "name": "Verbose",
+          "description": "Include full stack trace of the audited event."
+        },
+        "filter": {
+          "name": "Filter",
+          "description": "Text that must be contained in the string representation of event's arguments (e.g. an IP address)."
+        }
+      }
+    },
+    "stop_auditing_events": {
+      "name": "Remove audited events",
+      "description": "Remove events from auditing.",
+      "fields": {
+        "events": {
+          "name": "Events",
+          "description": "List of Python events to remove."
+        }
+      }
     }
   }
 }

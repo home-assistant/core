@@ -60,3 +60,26 @@ set_asyncio_debug:
       selector:
         boolean:
 log_current_tasks:
+start_auditing_events:
+  fields:
+    events:
+      required: true
+      example: socket.bind
+      selector:
+        text:
+          multiple: true
+    verbose:
+      default: false
+      selector:
+        boolean:
+    filter:
+      selector:
+        text:
+stop_auditing_events:
+  fields:
+    events:
+      required: true
+      example: socket.bind
+      selector:
+        text:
+          multiple: true
