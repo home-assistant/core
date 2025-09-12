@@ -583,6 +583,9 @@ class PipelineRun:
     _device_id: str | None = None
     """Optional device id set during run start."""
 
+    _satellite_id: str | None = None
+    """Optional satellite id set during run start."""
+
     _conversation_data: PipelineConversationData | None = None
     """Data tied to the conversation ID."""
 
@@ -636,9 +639,12 @@ class PipelineRun:
             return
         pipeline_data.pipeline_debug[self.pipeline.id][self.id].events.append(event)
 
-    def start(self, conversation_id: str, device_id: str | None) -> None:
+    def start(
+        self, conversation_id: str, device_id: str | None, satellite_id: str | None
+    ) -> None:
         """Emit run start event."""
         self._device_id = device_id
+        self._satellite_id = satellite_id
         self._start_debug_recording_thread()
 
         data: dict[str, Any] = {
@@ -646,6 +652,8 @@ class PipelineRun:
             "language": self.language,
             "conversation_id": conversation_id,
         }
+        if satellite_id is not None:
+            data["satellite_id"] = satellite_id
         if self.runner_data is not None:
             data["runner_data"] = self.runner_data
         if self.tts_stream:
@@ -1057,7 +1065,6 @@ class PipelineRun:
         self,
         intent_input: str,
         conversation_id: str,
-        device_id: str | None,
         conversation_extra_system_prompt: str | None,
     ) -> str:
         """Run intent recognition portion of pipeline. Returns text to speak."""
@@ -1088,7 +1095,8 @@ class PipelineRun:
                     "language": input_language,
                     "intent_input": intent_input,
                     "conversation_id": conversation_id,
-                    "device_id": device_id,
+                    "device_id": self._device_id,
+                    "satellite_id": self._satellite_id,
                     "prefer_local_intents": self.pipeline.prefer_local_intents,
                 },
             )
@@ -1099,7 +1107,8 @@ class PipelineRun:
                 text=intent_input,
                 context=self.context,
                 conversation_id=conversation_id,
-                device_id=device_id,
+                device_id=self._device_id,
+                satellite_id=self._satellite_id,
                 language=input_language,
                 agent_id=self.intent_agent.id,
                 extra_system_prompt=conversation_extra_system_prompt,
@@ -1269,6 +1278,7 @@ class PipelineRun:
                         text=user_input.text,
                         conversation_id=user_input.conversation_id,
                         device_id=user_input.device_id,
+                        satellite_id=user_input.satellite_id,
                         context=user_input.context,
                         language=user_input.language,
                         agent_id=user_input.agent_id,
@@ -1567,10 +1577,15 @@ class PipelineInput:
     device_id: str | None = None
     """Identifier of the device that is processing the input/output of the pipeline."""
 
+    satellite_id: str | None = None
+    """Identifier of the satellite that is processing the input/output of the pipeline."""
+
     async def execute(self) -> None:
         """Run pipeline."""
         self.run.start(
-            conversation_id=self.session.conversation_id, device_id=self.device_id
+            conversation_id=self.session.conversation_id,
+            device_id=self.device_id,
+            satellite_id=self.satellite_id,
         )
         current_stage: PipelineStage | None = self.run.start_stage
         stt_audio_buffer: list[EnhancedAudioChunk] = []
@@ -1656,7 +1671,6 @@ class PipelineInput:
                     tts_input = await self.run.recognize_intent(
                         intent_input,
                         self.session.conversation_id,
-                        self.device_id,
                         self.conversation_extra_system_prompt,
                     )
                     if tts_input.strip():

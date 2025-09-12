@@ -38,6 +38,7 @@ SENSOR_TYPE_POWER = "power"
 SENSOR_TYPE_VOLTAGE = "voltage"
 SENSOR_TYPE_CURRENT = "electricCurrent"
 SENSOR_TYPE_USED_ELECTRICITY = "usedElectricity"
+SENSOR_TYPE_LIGHTLEVEL = "lightLevel"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -55,7 +56,6 @@ USED_ELECTRICITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     suggested_display_precision=2,
     value_fn=lambda data: (data.get(SENSOR_TYPE_USED_ELECTRICITY) or 0) / 60000,
 )
-
 
 TEMPERATURE_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
@@ -111,6 +111,12 @@ CO2_DESCRIPTION = SensorEntityDescription(
     device_class=SensorDeviceClass.CO2,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+)
+
+LIGHTLEVEL_DESCRIPTION = SensorEntityDescription(
+    key="lightLevel",
+    translation_key="light_level",
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
 
@@ -174,6 +180,15 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Curtain3": (BATTERY_DESCRIPTION,),
     "Roller Shade": (BATTERY_DESCRIPTION,),
     "Blind Tilt": (BATTERY_DESCRIPTION,),
+    "Hub 3": (
+        TEMPERATURE_DESCRIPTION,
+        HUMIDITY_DESCRIPTION,
+        LIGHTLEVEL_DESCRIPTION,
+    ),
+    "Motion Sensor": (BATTERY_DESCRIPTION,),
+    "Contact Sensor": (BATTERY_DESCRIPTION,),
+    "Water Detector": (BATTERY_DESCRIPTION,),
+    "Humidifier": (TEMPERATURE_DESCRIPTION,),
 }
 
 

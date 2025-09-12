@@ -1164,7 +1164,7 @@ async def test_query_param_json_string_preserved(
 
     # Verify the request was made with the JSON string intact
     assert len(aioclient_mock.mock_calls) == 1
-    method, url, data, headers = aioclient_mock.mock_calls[0]
+    _method, url, _data, _headers = aioclient_mock.mock_calls[0]
     assert url.query["filter"] == '{"type": "sensor", "id": 123}'
     assert url.query["normal"] == "value"
 

@@ -37,10 +37,10 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 5
+  CACHE_VERSION: 8
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2025.9"
+  HA_SHORT_VERSION: "2025.10"
   DEFAULT_PYTHON: "3.13"
   ALL_PYTHON_VERSIONS: "['3.13']"
   # 10.3 is the oldest supported version
@@ -61,6 +61,9 @@ env:
   POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   UV_CACHE_DIR: /tmp/uv-cache
+  APT_CACHE_BASE: /home/runner/work/apt
+  APT_CACHE_DIR: /home/runner/work/apt/cache
+  APT_LIST_CACHE_DIR: /home/runner/work/apt/lists
   SQLALCHEMY_WARN_20: 1
   PYTHONASYNCIODEBUG: 1
   HASS_CI: 1
@@ -78,6 +81,7 @@ jobs:
       core: ${{ steps.core.outputs.changes }}
       integrations_glob: ${{ steps.info.outputs.integrations_glob }}
       integrations: ${{ steps.integrations.outputs.changes }}
+      apt_cache_key: ${{ steps.generate_apt_cache_key.outputs.key }}
       pre-commit_cache_key: ${{ steps.generate_pre-commit_cache_key.outputs.key }}
       python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
       requirements: ${{ steps.core.outputs.requirements }}
@@ -111,6 +115,10 @@ jobs:
         run: >-
           echo "key=pre-commit-${{ env.CACHE_VERSION }}-${{
             hashFiles('.pre-commit-config.yaml') }}"  >> $GITHUB_OUTPUT
+      - name: Generate partial apt restore key
+        id: generate_apt_cache_key
+        run: |
+          echo "key=$(lsb_release -rs)-apt-${{ env.CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}" >> $GITHUB_OUTPUT
       - name: Filter for core changes
         uses: dorny/paths-filter@v3.0.2
         id: core
@@ -249,7 +257,7 @@ jobs:
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -294,7 +302,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -334,7 +342,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -374,7 +382,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -484,7 +492,7 @@ jobs:
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -515,15 +523,36 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-uv-${{
             env.UV_CACHE_VERSION }}-${{ steps.generate-uv-key.outputs.version }}-${{
             env.HA_SHORT_VERSION }}-
+      - name: Restore apt cache
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        id: cache-apt
+        uses: actions/cache@v4.2.4
+        with:
+          path: |
+            ${{ env.APT_CACHE_DIR }}
+            ${{ env.APT_LIST_CACHE_DIR }}
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          if [[ "${{ steps.cache-apt.outputs.cache-hit }}" != 'true' ]]; then
+            mkdir -p ${{ env.APT_CACHE_DIR }}
+            mkdir -p ${{ env.APT_LIST_CACHE_DIR }}
+          fi
+
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
             libturbojpeg \
+            libxml2-utils \
             libavcodec-dev \
             libavdevice-dev \
             libavfilter-dev \
@@ -533,6 +562,10 @@ jobs:
             libswresample-dev \
             libswscale-dev \
             libudev-dev
+
+          if [[ "${{ steps.cache-apt.outputs.cache-hit }}" != 'true' ]]; then
+            sudo chmod -R 755 ${{ env.APT_CACHE_BASE }}
+          fi
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -577,17 +610,31 @@ jobs:
       - info
       - base
     steps:
+      - name: Restore apt cache
+        uses: actions/cache/restore@v4.2.4
+        with:
+          path: |
+            ${{ env.APT_CACHE_DIR }}
+            ${{ env.APT_LIST_CACHE_DIR }}
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             libturbojpeg
       - name: Check out code from GitHub
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -620,7 +667,7 @@ jobs:
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -653,7 +700,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v5.0.0
       - name: Dependency review
-        uses: actions/dependency-review-action@v4.7.2
+        uses: actions/dependency-review-action@v4.7.3
         with:
           license-check: false # We use our own license audit checks
 
@@ -677,7 +724,7 @@ jobs:
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -720,7 +767,7 @@ jobs:
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -767,7 +814,7 @@ jobs:
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -812,7 +859,7 @@ jobs:
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -876,11 +923,25 @@ jobs:
       - mypy
     name: Split tests for full run
     steps:
+      - name: Restore apt cache
+        uses: actions/cache/restore@v4.2.4
+        with:
+          path: |
+            ${{ env.APT_CACHE_DIR }}
+            ${{ env.APT_LIST_CACHE_DIR }}
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
             libturbojpeg \
@@ -889,7 +950,7 @@ jobs:
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -936,11 +997,25 @@ jobs:
     name: >-
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     steps:
+      - name: Restore apt cache
+        uses: actions/cache/restore@v4.2.4
+        with:
+          path: |
+            ${{ env.APT_CACHE_DIR }}
+            ${{ env.APT_LIST_CACHE_DIR }}
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
             libturbojpeg \
@@ -950,7 +1025,7 @@ jobs:
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1069,11 +1144,25 @@ jobs:
     name: >-
       Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
     steps:
+      - name: Restore apt cache
+        uses: actions/cache/restore@v4.2.4
+        with:
+          path: |
+            ${{ env.APT_CACHE_DIR }}
+            ${{ env.APT_LIST_CACHE_DIR }}
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
             libturbojpeg \
@@ -1083,7 +1172,7 @@ jobs:
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1209,11 +1298,25 @@ jobs:
     name: >-
       Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
     steps:
+      - name: Restore apt cache
+        uses: actions/cache/restore@v4.2.4
+        with:
+          path: |
+            ${{ env.APT_CACHE_DIR }}
+            ${{ env.APT_LIST_CACHE_DIR }}
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
             libturbojpeg \
@@ -1225,7 +1328,7 @@ jobs:
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1341,7 +1444,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v5.5.1
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1370,11 +1473,25 @@ jobs:
     name: >-
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     steps:
+      - name: Restore apt cache
+        uses: actions/cache/restore@v4.2.4
+        with:
+          path: |
+            ${{ env.APT_CACHE_DIR }}
+            ${{ env.APT_LIST_CACHE_DIR }}
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
+        timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
           sudo apt-get -y install \
+            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
+            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
             libturbojpeg \
@@ -1384,7 +1501,7 @@ jobs:
         uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1491,7 +1608,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v5.5.1
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}

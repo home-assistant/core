@@ -7,7 +7,7 @@ from collections.abc import AsyncGenerator, Callable, Iterable
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import openai
 from openai._streaming import AsyncStream
@@ -37,14 +37,20 @@ from openai.types.responses import (
     ResponseReasoningSummaryTextDeltaEvent,
     ResponseStreamEvent,
     ResponseTextDeltaEvent,
+    ToolChoiceTypesParam,
     ToolParam,
     WebSearchToolParam,
 )
 from openai.types.responses.response_create_params import ResponseCreateParamsStreaming
-from openai.types.responses.response_input_param import FunctionCallOutput
+from openai.types.responses.response_input_param import (
+    FunctionCallOutput,
+    ImageGenerationCall as ImageGenerationCallParam,
+)
+from openai.types.responses.response_output_item import ImageGenerationCall
 from openai.types.responses.tool_param import (
     CodeInterpreter,
     CodeInterpreterContainerCodeInterpreterToolAuto,
+    ImageGeneration,
 )
 from openai.types.responses.web_search_tool_param import UserLocation
 import voluptuous as vol
@@ -54,7 +60,7 @@ from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, llm
+from homeassistant.helpers import device_registry as dr, issue_registry as ir, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -230,11 +236,15 @@ def _convert_content_to_param(
                     )
                 )
                 reasoning_summary = []
+            elif isinstance(content.native, ImageGenerationCall):
+                messages.append(
+                    cast(ImageGenerationCallParam, content.native.to_dict())
+                )
 
     return messages
 
 
-async def _transform_stream(
+async def _transform_stream(  # noqa: C901 - This is complex, but better to have it in one place
     chat_log: conversation.ChatLog,
     stream: AsyncStream[ResponseStreamEvent],
 ) -> AsyncGenerator[
@@ -324,6 +334,9 @@ async def _transform_stream(
                     "tool_result": {"status": event.item.status},
                 }
                 last_role = "tool_result"
+            elif isinstance(event.item, ImageGenerationCall):
+                yield {"native": event.item}
+                last_summary_index = -1  # Trigger new assistant message on next turn
         elif isinstance(event, ResponseTextDeltaEvent):
             yield {"content": event.delta}
         elif isinstance(event, ResponseReasoningSummaryTextDeltaEvent):
@@ -429,6 +442,7 @@ class OpenAIBaseLLMEntity(Entity):
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
+        force_image: bool = False,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -495,6 +509,17 @@ class OpenAIBaseLLMEntity(Entity):
             )
             model_args.setdefault("include", []).append("code_interpreter_call.outputs")  # type: ignore[union-attr]
 
+        if force_image:
+            tools.append(
+                ImageGeneration(
+                    type="image_generation",
+                    input_fidelity="high",
+                    output_format="png",
+                )
+            )
+            model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
+            model_args["store"] = True  # Avoid sending image data back and forth
+
         if tools:
             model_args["tools"] = tools
 
@@ -553,6 +578,20 @@ class OpenAIBaseLLMEntity(Entity):
                 ):
                     LOGGER.error("Insufficient funds for OpenAI: %s", err)
                     raise HomeAssistantError("Insufficient funds for OpenAI") from err
+                if "Verify Organization" in str(err):
+                    ir.async_create_issue(
+                        self.hass,
+                        DOMAIN,
+                        "organization_verification_required",
+                        is_fixable=False,
+                        is_persistent=False,
+                        learn_more_url="https://help.openai.com/en/articles/10910291-api-organization-verification",
+                        severity=ir.IssueSeverity.WARNING,
+                        translation_key="organization_verification_required",
+                        translation_placeholders={
+                            "platform_settings": "https://platform.openai.com/settings/organization/general"
+                        },
+                    )
 
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err

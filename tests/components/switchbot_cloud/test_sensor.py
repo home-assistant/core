@@ -12,38 +12,39 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import configure_integration
+from . import (
+    CONTACT_SENSOR_INFO,
+    HUB3_INFO,
+    METER_INFO,
+    MOTION_SENSOR_INFO,
+    WATER_DETECTOR_INFO,
+    configure_integration,
+)
 
-from tests.common import async_load_json_object_fixture, snapshot_platform
+from tests.common import async_load_json_array_fixture, snapshot_platform
 
 
+@pytest.mark.parametrize(
+    ("device_info", "index"),
+    [
+        (METER_INFO, 0),
+        (METER_INFO, 1),
+        (CONTACT_SENSOR_INFO, 2),
+        (HUB3_INFO, 3),
+        (MOTION_SENSOR_INFO, 4),
+        (WATER_DETECTOR_INFO, 5),
+    ],
+)
 async def test_meter(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_list_devices,
     mock_get_status,
+    device_info: Device,
+    index: int,
 ) -> None:
-    """Test Meter sensors."""
-
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="meter-id-1",
-            deviceName="meter-1",
-            deviceType="Meter",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-    mock_get_status.return_value = await async_load_json_object_fixture(
-        hass, "meter_status.json", DOMAIN
-    )
-
-    with patch("homeassistant.components.switchbot_cloud.PLATFORMS", [Platform.SENSOR]):
-        entry = await configure_integration(hass)
-
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
-
+    """Test all sensors."""
 
 async def test_plug_mini_eu(
     hass: HomeAssistant,
@@ -102,7 +103,8 @@ async def test_no_coordinator_data(
         ),
     ]
 
-    mock_get_status.return_value = None
+    json_data = await async_load_json_array_fixture(hass, "status.json", DOMAIN)
+    mock_get_status.return_value = json_data[index]
 
     with patch("homeassistant.components.switchbot_cloud.PLATFORMS", [Platform.SENSOR]):
         entry = await configure_integration(hass)

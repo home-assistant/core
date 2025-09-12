@@ -75,13 +75,11 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
         data: dict[str, str | float | int] = {}
 
         async with timeout(TIMEOUT):
-            await self._api.login(
-                self.config_entry.data[CONF_USERNAME],
-                self.config_entry.data[CONF_PASSWORD],
-            )
-
-            # Fetch data using distant API
             try:
+                await self._api.login(
+                    self.config_entry.data[CONF_USERNAME],
+                    self.config_entry.data[CONF_PASSWORD],
+                )
                 await self._api.update()
             except (ValueError, TimeoutError, ClientError) as e:
                 raise UpdateFailed(e) from e
