@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_humidifier[device_info0-0][humidifier.humidifier_1-entry]
+# name: test_humidifier[device_info0-6][humidifier.humidifier_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -41,7 +41,31 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_humidifier[device_info1-1][humidifier.humidifier2_1-entry]
+# name: test_humidifier[device_info0-6][humidifier.humidifier_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'available_modes': list([
+        'normal',
+        'auto',
+      ]),
+      'current_humidity': 50,
+      'device_class': 'humidifier',
+      'friendly_name': 'humidifier-1',
+      'humidity': 50,
+      'max_humidity': 100,
+      'min_humidity': 1,
+      'mode': 'normal',
+      'supported_features': <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.humidifier_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_humidifier[device_info1-7][humidifier.humidifier2_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -89,7 +113,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_humidifier[device_info1-1][humidifier.humidifier2_1-state]
+# name: test_humidifier[device_info1-7][humidifier.humidifier2_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'available_modes': list([
@@ -102,13 +126,13 @@
         'auto',
         'drying_filter',
       ]),
-      'current_humidity': 32,
+      'current_humidity': 50,
       'device_class': 'humidifier',
       'friendly_name': 'humidifier2-1',
       'humidity': 50,
       'max_humidity': 100,
       'min_humidity': 0,
-      'mode': None,
+      'mode': 'high',
       'supported_features': <HumidifierEntityFeature: 1>,
     }),
     'context': <ANY>,
@@ -116,6 +140,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
