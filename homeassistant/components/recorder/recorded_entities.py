@@ -277,7 +277,13 @@ class RecordedEntities:
     {
         vol.Required("type"): "homeassistant/record_entity/set_options",
         vol.Required("entity_ids"): [str],
-        vol.Required("recording_disabled_by"): vol.Any(EntityRecordingDisabler, None),
+        vol.Required("recording_disabled_by"): vol.Any(
+            None,
+            vol.All(
+                vol.Coerce(EntityRecordingDisabler),
+                EntityRecordingDisabler.USER.value,
+            ),
+        ),
     }
 )
 def ws_record_entity(
