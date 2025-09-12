@@ -36,7 +36,7 @@ from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
 from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.const import DEGREE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import recorder as recorder_helper
+from homeassistant.helpers import entity_registry as er, recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
@@ -4343,4 +4343,144 @@ async def test_import_statistics_with_last_reset(
                 "sum": 3.0,
             },
         ]
+    }
+
+
+async def test_record_entity_ws(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test record entity WS commands."""
+    client = await hass_ws_client()
+
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+
+    await async_setup_recorder_instance(hass, {"include": {"domains": "test2"}})
+
+    await client.send_json_auto_id(
+        {
+            "type": "homeassistant/record_entity/list",
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] == {
+        "recorded_entities": {
+            "test.recorder": {"recording_disabled_by": "user"},
+            "test2.recorder": {"recording_disabled_by": None},
+        },
+    }
+
+    # Change setting of an entity
+    await client.send_json_auto_id(
+        {
+            "type": "homeassistant/record_entity/set_options",
+            "entity_ids": ["test.recorder"],
+            "recording_disabled_by": None,
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] is None
+
+    await client.send_json_auto_id(
+        {
+            "type": "homeassistant/record_entity/list",
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] == {
+        "recorded_entities": {
+            "test.recorder": {"recording_disabled_by": None},
+            "test2.recorder": {"recording_disabled_by": None},
+        },
+    }
+
+    # Change setting of an entity
+    await client.send_json_auto_id(
+        {
+            "type": "homeassistant/record_entity/set_options",
+            "entity_ids": ["test2.recorder"],
+            "recording_disabled_by": "user",
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] is None
+
+    await client.send_json_auto_id(
+        {
+            "type": "homeassistant/record_entity/list",
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] == {
+        "recorded_entities": {
+            "test.recorder": {"recording_disabled_by": None},
+            "test2.recorder": {"recording_disabled_by": "user"},
+        },
+    }
+
+    # Change setting of an entity
+    await client.send_json_auto_id(
+        {
+            "type": "homeassistant/record_entity/set_options",
+            "entity_ids": ["test2.recorder"],
+            "recording_disabled_by": "my dog",
+        }
+    )
+    response = await client.receive_json()
+    assert response == {
+        "error": {
+            "code": "invalid_format",
+            "message": "not a valid value for dictionary value @ "
+            "data['recording_disabled_by']. Got 'my dog'",
+        },
+        "id": ANY,
+        "success": False,
+        "type": "result",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "homeassistant/record_entity/list",
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] == {
+        "recorded_entities": {
+            "test.recorder": {"recording_disabled_by": None},
+            "test2.recorder": {"recording_disabled_by": "user"},
+        },
+    }
+
+    # Change setting of an unknown entity
+    await client.send_json_auto_id(
+        {
+            "type": "homeassistant/record_entity/set_options",
+            "entity_ids": ["test.test"],
+            "recording_disabled_by": None,
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] is None
+
+    await client.send_json_auto_id(
+        {
+            "type": "homeassistant/record_entity/list",
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] == {
+        "recorded_entities": {
+            "test.recorder": {"recording_disabled_by": None},
+            "test.test": {"recording_disabled_by": None},
+            "test2.recorder": {"recording_disabled_by": "user"},
+        },
     }
