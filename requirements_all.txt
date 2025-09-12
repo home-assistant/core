@@ -2160,7 +2160,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.11.1
+pymodbus==3.11.2
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
