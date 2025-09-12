@@ -90,10 +90,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config[DOMAIN],
             )
         )
-
     return True
 
 
@@ -110,6 +111,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     infer_arming_state = entry.options.get(
         CONF_INFER_ARMING_STATE,
         entry.data.get(CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE),
+    )
+
+    support_home_arm = entry.options.get(
+        CONF_SUPPORT_HOME_ARM,
+        entry.data.get(CONF_SUPPORT_HOME_ARM, DEFAULT_SUPPORT_HOME_ARM),
     )
 
     client = Client(
@@ -140,6 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_PORT: port,
             CONF_SCAN_INTERVAL: scan_interval,
             CONF_INFER_ARMING_STATE: infer_arming_state,
+            CONF_SUPPORT_HOME_ARM: support_home_arm,
             CONF_ZONES: entry.data.get(CONF_ZONES, []),
         },
     }
