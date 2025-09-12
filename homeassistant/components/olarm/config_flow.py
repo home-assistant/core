@@ -104,6 +104,10 @@ class OlarmOauth2FlowHandler(
             _LOGGER.debug(user_input)
             self._device_id = user_input["select_device"]
 
+            # abort if oauth data is not available
+            if self._oauth_data is None:
+                return self.async_abort(reason="oauth_data_missing")
+
             # load device details into config
             data = {
                 "user_id": self._user_id,
@@ -118,6 +122,10 @@ class OlarmOauth2FlowHandler(
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(title="Olarm Integration", data=data)
+
+        # abort if no devices are found
+        if self._devices is None:
+            return self.async_abort(reason="no_devices_found")
 
         # setup device selection dropdown and sort by device name
         device_options: dict[str, str] = {
