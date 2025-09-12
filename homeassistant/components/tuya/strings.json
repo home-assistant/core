@@ -534,6 +534,14 @@
           "level_4": "Level 4"
         }
       },
+      "desk_up_down": {
+        "name": "Up/Down",
+        "state": {
+          "up": "Up",
+          "down": "Down",
+          "stop": "Stop"
+        }
+      },
       "inverter_work_mode": {
         "name": "Inverter work mode",
         "state": {
