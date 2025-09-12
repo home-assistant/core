@@ -97,7 +97,7 @@ class OlarmFlowClientMQTT:
     async def _handle_mqtt_reconnection(self) -> None:
         """Handle MQTT reconnection by refreshing the OAuth2 token.
 
-        Handles MQTT reconnection when connection is lost, also checks access token hasnt expired and gets a new one if required.
+        Handles MQTT reconnection when connection is lost, also checks access token hasn't expired and gets a new one if required.
         """
         _LOGGER.debug("Handling MQTT reconnection - refreshing token")
         try:
