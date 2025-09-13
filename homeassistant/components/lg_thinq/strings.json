@@ -1100,6 +1100,18 @@
   "exceptions": {
     "failed_to_connect_mqtt": {
       "message": "Failed to connect MQTT: {error}"
+    },
+    "command_not_supported_in_power_off": {
+      "message": "Command not supported in power off."
+    },
+    "command_not_supported_in_remote_off": {
+      "message": "Command not supported in remote off."
+    },
+    "command_not_supported_in_state": {
+      "message": "Command not supported in {state} state."
+    },
+    "power_on_command_not_supported": {
+      "message": "Remote power on is not supported."
     }
   }
 }

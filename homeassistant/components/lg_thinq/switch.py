@@ -15,7 +15,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -249,27 +249,37 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
         """Update status itself."""
         super()._update_status()
 
-        if (key := self.entity_description.on_key) is not None:
-            self._attr_is_on = self.data.value == key
-        else:
-            self._attr_is_on = self.data.is_on
-
         _LOGGER.debug(
-            "[%s:%s] update status: %s -> %s",
+            "[%s:%s] update status: value=%s, is_on=%s",
             self.coordinator.device_name,
             self.property_id,
-            self.data.is_on,
+            self.data.value,
             self.is_on,
         )
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return the state of the switch."""
+        if self.device_state is not None:
+            return self.device_state.device_is_on
+
+        if (key := self.entity_description.on_key) is not None:
+            return self.data.value == key
+
+        return self.data.is_on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         _LOGGER.debug(
-            "[%s:%s] async_turn_on id: %s",
+            "[%s:%s] async_turn_on: on_key=%s",
             self.coordinator.device_name,
-            self.name,
             self.property_id,
+            self.entity_description.on_key,
         )
+        # check device's condition
+        if not self.check_control_condition(switch=SERVICE_TURN_ON):
+            return
+
         if (on_command := self.entity_description.on_key) is not None:
             await self.async_call_api(
                 self.coordinator.api.post(self.property_id, on_command)
@@ -282,11 +292,15 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         _LOGGER.debug(
-            "[%s:%s] async_turn_off id: %s",
+            "[%s:%s] async_turn_off: off_key=%s",
             self.coordinator.device_name,
-            self.name,
             self.property_id,
+            self.entity_description.off_key,
         )
+        # check device's condition
+        if not self.check_control_condition(switch=SERVICE_TURN_OFF):
+            return
+
         if (off_command := self.entity_description.off_key) is not None:
             await self.async_call_api(
                 self.coordinator.api.post(self.property_id, off_command)
