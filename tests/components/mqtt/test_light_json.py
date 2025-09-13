@@ -82,6 +82,7 @@ light:
 """
 
 import copy
+import json
 from typing import Any
 from unittest.mock import call, patch
 
@@ -168,6 +169,39 @@ COLOR_MODES_CONFIG = {
         }
     }
 }
+
+GROUP_MEMBER_1_TOPIC = "homeassistant/light/member_1/config"
+GROUP_MEMBER_2_TOPIC = "homeassistant/light/member_2/config"
+GROUP_TOPIC = "homeassistant/light/group/config"
+GROUP_DISCOVERY_MEMBER_1_CONFIG = json.dumps(
+    {
+        "schema": "json",
+        "command_topic": "test-command-topic-member1",
+        "unique_id": "very_unique_member1",
+        "name": "member1",
+        "default_entity_id": "light.member1",
+    }
+)
+GROUP_DISCOVERY_MEMBER_2_CONFIG = json.dumps(
+    {
+        "schema": "json",
+        "command_topic": "test-command-topic-member2",
+        "unique_id": "very_unique_member2",
+        "name": "member2",
+        "default_entity_id": "light.member2",
+    }
+)
+GROUP_DISCOVERY_LIGHT_GROUP_CONFIG = json.dumps(
+    {
+        "schema": "json",
+        "command_topic": "test-command-topic-group",
+        "state_topic": "test-state-topic-group",
+        "unique_id": "very_unique_group",
+        "name": "group",
+        "default_entity_id": "light.group",
+        "group": ["very_unique_member1", "very_unique_member2"],
+    }
+)
 
 
 class JsonValidator:
@@ -1859,6 +1893,69 @@ async def test_white_scale(
     assert state.attributes.get("brightness") == 129
 
 
+async def test_light_group_discovery_members_before_group(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the discovery of a light group and linked entity IDs.
+
+    The members are discovered first, so they are known in the entity registry.
+    """
+    await mqtt_mock_entry()
+    # Discover light group members
+    async_fire_mqtt_message(hass, GROUP_MEMBER_1_TOPIC, GROUP_DISCOVERY_MEMBER_1_CONFIG)
+    async_fire_mqtt_message(hass, GROUP_MEMBER_2_TOPIC, GROUP_DISCOVERY_MEMBER_2_CONFIG)
+    await hass.async_block_till_done()
+
+    # Discover group
+    async_fire_mqtt_message(hass, GROUP_TOPIC, GROUP_DISCOVERY_LIGHT_GROUP_CONFIG)
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.member1") is not None
+    assert hass.states.get("light.member2") is not None
+    group_state = hass.states.get("light.group")
+    assert group_state is not None
+    assert group_state.attributes.get("entity_id") == ["light.member1", "light.member2"]
+    assert group_state.attributes.get("icon") == "mdi:lightbulb-group"
+
+
+async def test_light_group_discovery_group_before_members(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the discovery of a light group and linked entity IDs.
+
+    The group is discovered first, so the group members are
+    not (all) known yet in the entity registry.
+    """
+    await mqtt_mock_entry()
+
+    # Discover group
+    async_fire_mqtt_message(hass, GROUP_TOPIC, GROUP_DISCOVERY_LIGHT_GROUP_CONFIG)
+    await hass.async_block_till_done()
+
+    # Discover light group members
+    async_fire_mqtt_message(hass, GROUP_MEMBER_1_TOPIC, GROUP_DISCOVERY_MEMBER_1_CONFIG)
+    async_fire_mqtt_message(hass, GROUP_MEMBER_2_TOPIC, GROUP_DISCOVERY_MEMBER_2_CONFIG)
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.member1") is not None
+    assert hass.states.get("light.member2") is not None
+
+    group_state = hass.states.get("light.group")
+    assert group_state is not None
+    # Members are not added yet, we need a group state update first
+    # to trigger a state update
+    assert not group_state.attributes.get("entity_id")
+    async_fire_mqtt_message(hass, "test-state-topic-group", '{"state": "ON"}')
+    await hass.async_block_till_done()
+
+    group_state = hass.states.get("light.group")
+    assert group_state is not None
+    assert group_state.attributes.get("entity_id") == ["light.member1", "light.member2"]
+    assert group_state.attributes.get("icon") == "mdi:lightbulb-group"
+
+
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -2040,13 +2137,59 @@ async def test_custom_availability_payload(
     )
 
 
-async def test_setting_attribute_via_mqtt_json_message(
+async def test_setting_attribute_via_mqtt_json_message_single_light(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            light.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "unique_id": "very_unique_member_1",
+                    "name": "Part 1",
+                    "default_entity_id": "light.member_1",
+                },
+                {
+                    "unique_id": "very_unique_member_2",
+                    "name": "Part 2",
+                    "default_entity_id": "light.member_2",
+                },
+                {
+                    "unique_id": "very_unique_group",
+                    "name": "My group",
+                    "default_entity_id": "light.my_group",
+                    "json_attributes_topic": "attr-topic",
+                    "group": [
+                        "very_unique_member_1",
+                        "very_unique_member_2",
+                        "member_3_not_exists",
+                    ],
+                },
+            ),
+        )
+    ],
+)
+async def test_setting_attribute_via_mqtt_json_message_light_group(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await mqtt_mock_entry()
+
+    async_fire_mqtt_message(hass, "attr-topic", '{ "val": "100" }')
+    state = hass.states.get("light.my_group")
+
+    assert state and state.attributes.get("val") == "100"
+    assert state.attributes.get("entity_id") == ["light.member_1", "light.member_2"]
+    assert state.attributes.get("icon") == "mdi:lightbulb-group"
 
 
 async def test_setting_blocked_attribute_via_mqtt_json_message(

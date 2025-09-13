@@ -546,7 +546,7 @@ class MqttAttributesMixin(Entity):
             _LOGGER.warning("Erroneous JSON: %s", payload)
         else:
             if isinstance(json_dict, dict):
-                filtered_dict = {
+                filtered_dict: dict[str, Any] = {
                     k: v
                     for k, v in json_dict.items()
                     if k not in MQTT_ATTRIBUTES_BLOCKED
@@ -1373,6 +1373,7 @@ class MqttEntity(
     _attr_force_update = False
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _default_entity: str | None = None
     _default_name: str | None
     _entity_id_format: str
     _update_registry_entity_id: str | None = None
@@ -1609,7 +1610,7 @@ class MqttEntity(
         self._attr_entity_registry_enabled_default = bool(
             config.get(CONF_ENABLED_BY_DEFAULT)
         )
-        self._attr_icon = config.get(CONF_ICON)
+        self._attr_icon = config.get(CONF_ICON, self._default_entity)
         self._attr_entity_picture = config.get(CONF_ENTITY_PICTURE)
         # Set the entity name if needed
         self._set_entity_name(config)
