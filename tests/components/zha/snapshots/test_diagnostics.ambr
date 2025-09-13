@@ -272,6 +272,7 @@
             'migrate_unique_ids': list([
             ]),
             'platform': 'alarm_control_panel',
+            'postfix': None,
             'primary': False,
             'state_class': None,
             'supported_features': 15,
@@ -318,6 +319,7 @@
             'migrate_unique_ids': list([
             ]),
             'platform': 'binary_sensor',
+            'postfix': None,
             'primary': True,
             'state_class': None,
             'translation_key': 'ias_zone',
