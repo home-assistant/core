@@ -160,6 +160,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Motion Sensor": (BATTERY_DESCRIPTION,),
     "Contact Sensor": (BATTERY_DESCRIPTION,),
     "Water Detector": (BATTERY_DESCRIPTION,),
+    "Humidifier": (TEMPERATURE_DESCRIPTION,),
 }
 
 

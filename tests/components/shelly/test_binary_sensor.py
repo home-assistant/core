@@ -21,6 +21,7 @@ from . import (
     mutate_rpc_device_status,
     register_device,
     register_entity,
+    register_sub_device,
 )
 
 from tests.common import mock_restore_cache
@@ -475,8 +476,10 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
 ) -> None:
     """Check whether the virtual binary sensor will be removed if it has been removed from the device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
+
+    # create orphaned entity on main device
     device_entry = register_device(device_registry, config_entry)
-    entity_id = register_entity(
+    entity_id1 = register_entity(
         hass,
         BINARY_SENSOR_DOMAIN,
         "test_name_boolean_200",
@@ -485,10 +488,29 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
         device_id=device_entry.id,
     )
 
+    # create orphaned entity on sub device
+    sub_device_entry = register_sub_device(
+        device_registry,
+        config_entry,
+        "boolean:201-boolean",
+    )
+    entity_id2 = register_entity(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "boolean_201",
+        "boolean:201-boolean",
+        config_entry,
+        device_id=sub_device_entry.id,
+    )
+
+    assert entity_registry.async_get(entity_id1) is not None
+    assert entity_registry.async_get(entity_id2) is not None
+
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get(entity_id) is None
+    assert entity_registry.async_get(entity_id1) is None
+    assert entity_registry.async_get(entity_id2) is None
 
 
 async def test_blu_trv_binary_sensor_entity(
