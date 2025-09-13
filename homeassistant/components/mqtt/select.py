@@ -109,7 +109,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     @callback
     def _message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
-        payload = str(self._value_template(msg.payload))
+        payload = str(self._value_template(msg.payload)).lower()
         if not payload.strip():  # No output from template, ignore
             _LOGGER.debug(
                 "Ignoring empty payload '%s' after rendering for topic %s",
@@ -117,7 +117,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
                 msg.topic,
             )
             return
-        if payload.lower() == "none":
+        if payload == "none":
             self._attr_current_option = None
             return
 
