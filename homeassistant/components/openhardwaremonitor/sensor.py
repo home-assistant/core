@@ -1,8 +1,9 @@
-"""Support for Open Hardware Monitor Sensor Platform."""
+"""Sensor platform for Open Hardware Monitor."""
 
 from __future__ import annotations
 
 from datetime import timedelta
+import functools
 import logging
 
 import requests
@@ -13,11 +14,15 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
@@ -29,6 +34,7 @@ STATE_MAX_VALUE = "maximum_value"
 STATE_VALUE = "value"
 STATE_OBJECT = "object"
 CONF_INTERVAL = "interval"
+CONF_POLLING_ENABLED = "polling_enabled"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -41,8 +47,29 @@ OHM_CHILDREN = "Children"
 OHM_NAME = "Text"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=8085): cv.port,
+        vol.Optional(CONF_POLLING_ENABLED, default=True): cv.boolean,
+    }
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Open Hardware Monitor sensors from a config entry."""
+    config = {
+        CONF_HOST: entry.data[CONF_HOST],
+        CONF_PORT: entry.data.get(CONF_PORT, 8085),
+        CONF_POLLING_ENABLED: entry.data.get(CONF_POLLING_ENABLED, True),
+    }
+    data = OpenHardwareMonitorData(config, hass)
+    # Run the blocking initialize in the executor to avoid blocking the event loop
+    await hass.async_add_executor_job(functools.partial(data.initialize, utcnow()))
+    async_add_entities(data.devices)
 
 
 def setup_platform(
@@ -52,16 +79,22 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Open Hardware Monitor platform."""
+    polling_enabled = config.get(CONF_POLLING_ENABLED, True)
     data = OpenHardwareMonitorData(config, hass)
     if data.data is None:
         raise PlatformNotReady
-    add_entities(data.devices, True)
+    entities = data.devices
+    if not polling_enabled:
+        for entity in entities:
+            entity.should_poll = False
+    add_entities(entities, True)
 
 
 class OpenHardwareMonitorDevice(SensorEntity):
     """Device used to display information from OpenHardwareMonitor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_should_poll = True
 
     def __init__(self, data, name, path, unit_of_measurement):
         """Initialize an OpenHardwareMonitor sensor."""
@@ -70,7 +103,6 @@ class OpenHardwareMonitorDevice(SensorEntity):
         self.path = path
         self.attributes = {}
         self._unit_of_measurement = unit_of_measurement
-
         self.value = None
 
     @property
@@ -100,9 +132,10 @@ class OpenHardwareMonitorDevice(SensorEntity):
         """In some locales a decimal numbers uses ',' instead of '.'."""
         return string.replace(",", ".")
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update the device from a new JSON object."""
-        self._data.update()
+        # Run the blocking update in the executor to avoid blocking the event loop
+        await self._data.hass.async_add_executor_job(self._data.update)
 
         array = self._data.data[OHM_CHILDREN]
         _attributes = {}
@@ -137,9 +170,9 @@ class OpenHardwareMonitorData:
         """Initialize the Open Hardware Monitor data-handler."""
         self.data = None
         self._config = config
-        self._hass = hass
+        self.hass = hass
         self.devices = []
-        self.initialize(utcnow())
+        # Do not call initialize here, as it may block the event loop
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
