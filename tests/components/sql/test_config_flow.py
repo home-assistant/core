@@ -30,7 +30,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
-from tests.common import MockConfigEntry
 
 from . import (
     ENTRY_CONFIG,
@@ -54,6 +53,8 @@ from . import (
     ENTRY_CONFIG_WITH_QUERY_TEMPLATE,
     ENTRY_CONFIG_WITH_VALUE_TEMPLATE,
 )
+
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry", "recorder_mock")
 

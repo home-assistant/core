@@ -6,11 +6,11 @@ import logging
 from typing import Any
 
 import sqlalchemy
-import voluptuous as vol
 from sqlalchemy.engine import Engine, Result
 from sqlalchemy.exc import MultipleResultsFound, NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlparse.exceptions import SQLParseError
+import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
 from homeassistant.components.sensor import (
