@@ -654,6 +654,7 @@ FLOWS = {
         "tessie",
         "thermobeacon",
         "thermopro",
+        "thesilentwave",
         "thethingsnetwork",
         "thread",
         "tibber",
