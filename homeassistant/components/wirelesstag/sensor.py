@@ -1,156 +1,133 @@
-"""Sensor support for Wireless Sensor Tags platform."""
+"""Sensor platform for Wireless Sensor Tags."""
 
 from __future__ import annotations
 
-import logging
-
-import voluptuous as vol
-
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_MONITORED_CONDITIONS, Platform
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, UnitOfElectricPotential, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SIGNAL_TAG_UPDATE
-from .entity import WirelessTagBaseSensor
-from .util import async_migrate_unique_id
+from .const import DOMAIN
+from .coordinator import WirelessTagDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
-SENSOR_TEMPERATURE = "temperature"
-SENSOR_AMBIENT_TEMPERATURE = "ambient_temperature"
-SENSOR_HUMIDITY = "humidity"
-SENSOR_MOISTURE = "moisture"
-SENSOR_LIGHT = "light"
-
-SENSOR_TYPES: dict[str, SensorEntityDescription] = {
-    SENSOR_TEMPERATURE: SensorEntityDescription(
-        key=SENSOR_TEMPERATURE,
+SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    SENSOR_AMBIENT_TEMPERATURE: SensorEntityDescription(
-        key=SENSOR_AMBIENT_TEMPERATURE,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SENSOR_HUMIDITY: SensorEntityDescription(
-        key=SENSOR_HUMIDITY,
+    SensorEntityDescription(
+        key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
     ),
-    SENSOR_MOISTURE: SensorEntityDescription(
-        key=SENSOR_MOISTURE,
-        device_class=SensorDeviceClass.MOISTURE,
+    SensorEntityDescription(
+        key="battery",
+        device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
     ),
-    SENSOR_LIGHT: SensorEntityDescription(
-        key=SENSOR_LIGHT,
-        device_class=SensorDeviceClass.ILLUMINANCE,
+    SensorEntityDescription(
+        key="voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
-}
-
-SENSOR_KEYS: list[str] = list(SENSOR_TYPES)
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
-        )
-    }
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the sensor platform."""
-    platform = hass.data[DOMAIN]
-    sensors = []
-    tags = platform.tags
-    for tag in tags.values():
-        for key in config[CONF_MONITORED_CONDITIONS]:
-            if key not in tag.allowed_sensor_types:
+    """Set up Wireless Tag sensor platform."""
+    coordinator: WirelessTagDataUpdateCoordinator = config_entry.runtime_data
+
+    def _async_add_entities_for_tags(tag_ids: set[str]) -> None:
+        """Add sensor entities for the given tag IDs."""
+        entities: list[WirelessTagSensor] = []
+
+        for tag_id in tag_ids:
+            if tag_id not in coordinator.data:
                 continue
-            description = SENSOR_TYPES[key]
-            async_migrate_unique_id(hass, tag, Platform.SENSOR, description.key)
-            sensors.append(WirelessTagSensor(platform, tag, description))
 
-    async_add_entities(sensors, True)
-
-
-class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
-    """Representation of a Sensor."""
-
-    entity_description: SensorEntityDescription
-
-    def __init__(self, api, tag, description):
-        """Initialize a WirelessTag sensor."""
-        super().__init__(api, tag)
-
-        self._sensor_type = description.key
-        self.entity_description = description
-        self._name = self._tag.name
-        self._attr_unique_id = f"{self._uuid}_{self._sensor_type}"
-
-        # I want to see entity_id as:
-        # sensor.wirelesstag_bedroom_temperature
-        # and not as sensor.bedroom for temperature and
-        # sensor.bedroom_2 for humidity
-        self.entity_id = f"sensor.{DOMAIN}_{self.underscored_name}_{self._sensor_type}"
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_TAG_UPDATE.format(self.tag_id, self.tag_manager_mac),
-                self._update_tag_info_callback,
+            tag_data = coordinator.data[tag_id]
+            entities.extend(
+                WirelessTagSensor(coordinator, tag_id, description)
+                for description in SENSOR_DESCRIPTIONS
+                if tag_data.get(description.key) is not None
             )
+
+        async_add_entities(entities)
+
+    # Register callback for dynamic device addition
+    coordinator.new_devices_callbacks.append(_async_add_entities_for_tags)
+
+    # Add entities for existing devices
+    if coordinator.data:
+        _async_add_entities_for_tags(set(coordinator.data.keys()))
+
+
+class WirelessTagSensor(
+    CoordinatorEntity[WirelessTagDataUpdateCoordinator], SensorEntity
+):
+    """Implementation of a Wireless Tag sensor."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: WirelessTagDataUpdateCoordinator,
+        tag_id: str,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._tag_id = tag_id
+
+        # Set unique ID
+        tag_data = coordinator.data[tag_id]
+        self._attr_unique_id = f"{tag_data['uuid']}_{description.key}"
+
+        # Set device info (static)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, tag_data["uuid"])},
+            name=tag_data["name"],
+            manufacturer="Wireless Sensor Tag",
+            model="Wireless Sensor Tag",
+            sw_version=tag_data.get("version"),
+            serial_number=tag_data["uuid"],
         )
 
-    @property
-    def underscored_name(self):
-        """Provide name savvy to be used in entity_id name of self."""
-        return self.name.lower().replace(" ", "_")
+        # Initialize state
+        self._update_from_coordinator()
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
+    def _update_from_coordinator(self) -> None:
+        """Update entity state from coordinator data."""
+        if self._tag_id not in self.coordinator.data:
+            self._attr_available = False
+            self._attr_native_value = None
+            return
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._sensor.unit
+        tag_data = self.coordinator.data[self._tag_id]
+        self._attr_available = tag_data["is_alive"]
+        self._attr_native_value = tag_data.get(self.entity_description.key)
 
-    @property
-    def principal_value(self):
-        """Return sensor current value."""
-        return self._sensor.value
-
-    @property
-    def _sensor(self):
-        """Return tag sensor entity."""
-        return self._tag.sensor[self._sensor_type]
-
-    @callback
-    def _update_tag_info_callback(self, new_tag):
-        """Handle push notification sent by tag manager."""
-        _LOGGER.debug("Entity to update state: %s with new tag: %s", self, new_tag)
-        self._tag = new_tag
-        self._state = self.updated_state_value()
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_from_coordinator()
         self.async_write_ha_state()

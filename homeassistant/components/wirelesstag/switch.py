@@ -1,113 +1,132 @@
-"""Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
+"""Switch platform for Wireless Sensor Tags."""
 
 from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.components.switch import (
-    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
-    SwitchEntity,
-    SwitchEntityDescription,
-)
-from homeassistant.const import CONF_MONITORED_CONDITIONS, Platform
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .entity import WirelessTagBaseSensor
-from .util import async_migrate_unique_id
+from .coordinator import WirelessTagDataUpdateCoordinator
 
-SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
+PARALLEL_UPDATES = 0
+
+SWITCH_DESCRIPTIONS: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="temperature",
-        name="Arm Temperature",
+        translation_key="arm_temperature",
     ),
     SwitchEntityDescription(
         key="humidity",
-        name="Arm Humidity",
+        translation_key="arm_humidity",
     ),
     SwitchEntityDescription(
         key="motion",
-        name="Arm Motion",
+        translation_key="arm_motion",
     ),
     SwitchEntityDescription(
         key="light",
-        name="Arm Light",
+        translation_key="arm_light",
     ),
     SwitchEntityDescription(
         key="moisture",
-        name="Arm Moisture",
+        translation_key="arm_moisture",
     ),
 )
 
-SWITCH_KEYS: list[str] = [desc.key for desc in SWITCH_TYPES]
 
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SWITCH_KEYS)]
-        )
-    }
-)
-
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up switches for a Wireless Sensor Tags."""
-    platform = hass.data[DOMAIN]
+    """Set up Wireless Tag switch platform."""
+    coordinator: WirelessTagDataUpdateCoordinator = config_entry.runtime_data
 
-    tags = platform.load_tags()
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-    entities = []
-    for tag in tags.values():
-        for description in SWITCH_TYPES:
-            if (
-                description.key in monitored_conditions
-                and description.key in tag.allowed_monitoring_types
-            ):
-                async_migrate_unique_id(hass, tag, Platform.SWITCH, description.key)
-                entities.append(WirelessTagSwitch(platform, tag, description))
+    def _async_add_entities_for_tags(tag_ids: set[str]) -> None:
+        """Add switch entities for the given tag IDs."""
+        entities = [
+            WirelessTagSwitch(coordinator, tag_id, description)
+            for tag_id in tag_ids
+            if tag_id in coordinator.data
+            for description in SWITCH_DESCRIPTIONS
+            # Only create switch if the tag supports this sensor type
+            if coordinator.data[tag_id].get(description.key) is not None
+        ]
+        async_add_entities(entities)
 
-    async_add_entities(entities, True)
+    # Register callback for dynamic device addition
+    coordinator.new_devices_callbacks.append(_async_add_entities_for_tags)
+
+    # Create switch entities for arming/disarming sensor monitoring
+    if coordinator.data:
+        _async_add_entities_for_tags(set(coordinator.data.keys()))
 
 
-class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
-    """A switch implementation for Wireless Sensor Tags."""
+class WirelessTagSwitch(
+    CoordinatorEntity[WirelessTagDataUpdateCoordinator], SwitchEntity
+):
+    """Implementation of a Wireless Tag switch for arming/disarming sensors."""
 
-    def __init__(self, api, tag, description: SwitchEntityDescription) -> None:
-        """Initialize a switch for Wireless Sensor Tag."""
-        super().__init__(api, tag)
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: WirelessTagDataUpdateCoordinator,
+        tag_id: str,
+        description: SwitchEntityDescription,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self._name = f"{self._tag.name} {description.name}"
-        self._attr_unique_id = f"{self._uuid}_{description.key}"
+        self._tag_id = tag_id
 
-    def turn_on(self, **kwargs: Any) -> None:
-        """Turn on the switch."""
-        self._api.arm(self)
+        # Set unique ID
+        tag_data = coordinator.data[tag_id]
+        self._attr_unique_id = f"{tag_data['uuid']}_arm_{description.key}"
 
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn on the switch."""
-        self._api.disarm(self)
+        # Set device info (static)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, tag_data["uuid"])},
+            name=tag_data["name"],
+            manufacturer="Wireless Sensor Tag",
+            model="Wireless Sensor Tag",
+            sw_version=tag_data.get("version"),
+            serial_number=tag_data["uuid"],
+        )
 
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._state
+        # Initialize state
+        self._update_from_coordinator()
 
-    def updated_state_value(self):
-        """Provide formatted value."""
-        return self.principal_value
+    def _update_from_coordinator(self) -> None:
+        """Update entity state from coordinator data."""
+        if self._tag_id not in self.coordinator.data:
+            self._attr_available = False
+            self._attr_is_on = False
+            return
 
-    @property
-    def principal_value(self):
-        """Provide actual value of switch."""
-        attr_name = f"is_{self.entity_description.key}_sensor_armed"
-        return getattr(self._tag, attr_name, False)
+        tag_data = self.coordinator.data[self._tag_id]
+        self._attr_available = tag_data["is_alive"]
+        # Switch state is whether the sensor monitoring is armed
+        armed_key = f"{self.entity_description.key}_armed"
+        self._attr_is_on = tag_data.get(armed_key, False)
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_from_coordinator()
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on (arm the sensor)."""
+        await self.coordinator.async_arm_tag(self._tag_id, self.entity_description.key)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off (disarm the sensor)."""
+        await self.coordinator.async_disarm_tag(
+            self._tag_id, self.entity_description.key
+        )

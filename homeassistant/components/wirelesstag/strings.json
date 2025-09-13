@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter your Wireless Sensor Tags account credentials",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        },
+        "data_description": {
+          "username": "Email address for your Wireless Sensor Tags account",
+          "password": "Password for your Wireless Sensor Tags account"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Integration",
+        "description": "The Wireless Sensor Tags integration needs to be reauthenticated due to invalid credentials.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        },
+        "data_description": {
+          "username": "Email address for your Wireless Sensor Tags account",
+          "password": "Password for your Wireless Sensor Tags account"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Account is already configured",
+      "reauth_successful": "Re-authentication successful"
+    }
+  },
+  "entity": {
+    "switch": {
+      "arm_temperature": {
+        "name": "Arm temperature"
+      },
+      "arm_humidity": {
+        "name": "Arm humidity"
+      },
+      "arm_motion": {
+        "name": "Arm motion"
+      },
+      "arm_light": {
+        "name": "Arm light"
+      },
+      "arm_moisture": {
+        "name": "Arm moisture"
+      }
+    }
+  }
+}
