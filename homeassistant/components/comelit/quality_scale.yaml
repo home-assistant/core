@@ -72,9 +72,7 @@ rules:
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
-  stale-devices:
-    status: todo
-    comment: missing implementation
+  stale-devices: done
 
   # Platinum
   async-dependency: done

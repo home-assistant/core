@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 from datetime import timedelta
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from aiocomelit.api import (
     AlarmDataObject,
@@ -13,7 +13,16 @@ from aiocomelit.api import (
     ComelitVedoAreaObject,
     ComelitVedoZoneObject,
 )
-from aiocomelit.const import BRIDGE, VEDO
+from aiocomelit.const import (
+    BRIDGE,
+    CLIMATE,
+    COVER,
+    IRRIGATION,
+    LIGHT,
+    OTHER,
+    SCENARIO,
+    VEDO,
+)
 from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
 from aiohttp import ClientSession
 
@@ -111,6 +120,32 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
     async def _async_update_system_data(self) -> T:
         """Class method for updating data."""
 
+    async def _async_remove_device_stale(
+        self,
+        previous_list: dict[int, Any],
+        current_list: dict[int, Any],
+        dev_type: str,
+    ) -> None:
+        """Remove stale device."""
+        device_registry = dr.async_get(self.hass)
+
+        for i in range(max(previous_list.keys(), default=0) + 1):
+            if previous_list.get(i) and not current_list.get(i):
+                _LOGGER.debug(
+                    "Detected change in %s devices: index %s removed",
+                    dev_type,
+                    i,
+                )
+                identifier = f"{self.config_entry.entry_id}-{dev_type}-{i}"
+                device = device_registry.async_get_device(
+                    identifiers={(DOMAIN, identifier)}
+                )
+                if device:
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+
 
 class ComelitSerialBridge(
     ComelitBaseCoordinator[dict[str, dict[int, ComelitSerialBridgeObject]]]
@@ -132,12 +167,22 @@ class ComelitSerialBridge(
         """Initialize the scanner."""
         self.api = ComeliteSerialBridgeApi(host, port, pin, session)
         super().__init__(hass, entry, BRIDGE, host)
+        self.previous_devices: dict[str, dict[int, ComelitSerialBridgeObject]] = {}
 
     async def _async_update_system_data(
         self,
     ) -> dict[str, dict[int, ComelitSerialBridgeObject]]:
         """Specific method for updating data."""
-        return await self.api.get_all_devices()
+        data = await self.api.get_all_devices()
+
+        if self.previous_devices:
+            for dev_type in (CLIMATE, COVER, LIGHT, IRRIGATION, OTHER, SCENARIO):
+                await self._async_remove_device_stale(
+                    self.previous_devices[dev_type], data[dev_type], dev_type
+                )
+
+        self.previous_devices = data.copy()
+        return data
 
 
 class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):
@@ -158,9 +203,21 @@ class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):
         """Initialize the scanner."""
         self.api = ComelitVedoApi(host, port, pin, session)
         super().__init__(hass, entry, VEDO, host)
+        self.previous_devices: AlarmDataObject | None = None
 
     async def _async_update_system_data(
         self,
     ) -> AlarmDataObject:
         """Specific method for updating data."""
-        return await self.api.get_all_areas_and_zones()
+        data = await self.api.get_all_areas_and_zones()
+
+        if self.previous_devices:
+            for obj_type in ("alarm_areas", "alarm_zones"):
+                await self._async_remove_device_stale(
+                    self.previous_devices[obj_type],
+                    data[obj_type],
+                    "area" if obj_type == "alarm_areas" else "zone",
+                )
+
+        self.previous_devices = data.copy()
+        return data
