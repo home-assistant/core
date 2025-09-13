@@ -316,7 +316,7 @@ async def test_generate_image_service(
 
     assert "image_data" not in result
     assert result["media_source_id"].startswith("media-source://ai_task/images/")
-    assert result["url"].startswith("http://10.10.10.10:8123/api/ai_task/images/")
+    assert result["url"].startswith("/api/ai_task/images/")
     assert result["mime_type"] == "image/png"
     assert result["model"] == "mock_model"
     assert result["revised_prompt"] == "mock_revised_prompt"

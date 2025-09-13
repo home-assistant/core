@@ -212,7 +212,7 @@ async def test_microwave_oven(
     """Test Cooktime for microwave oven."""
 
     # Cooktime on MicrowaveOvenControl cluster (1/96/2)
-    state = hass.states.get("number.microwave_oven_cook_time")
+    state = hass.states.get("number.microwave_oven_cooking_time")
     assert state
     assert state.state == "30"
 
@@ -221,7 +221,7 @@ async def test_microwave_oven(
         "number",
         "set_value",
         {
-            "entity_id": "number.microwave_oven_cook_time",
+            "entity_id": "number.microwave_oven_cooking_time",
             "value": 60,  # 60 seconds
         },
         blocking=True,

@@ -522,6 +522,7 @@ class AssistSatelliteEntity(entity.Entity):
                         pipeline_id=self._resolve_pipeline(),
                         conversation_id=session.conversation_id,
                         device_id=device_id,
+                        satellite_id=self.entity_id,
                         tts_audio_output=self.tts_options,
                         wake_word_phrase=wake_word_phrase,
                         audio_settings=AudioSettings(
