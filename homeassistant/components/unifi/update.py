@@ -81,6 +81,7 @@ class UnifiDeviceUpdateEntity[_HandlerT: Devices, _DataT: Device](
     """Representation of a UniFi device update entity."""
 
     entity_description: UnifiUpdateEntityDescription[_HandlerT, _DataT]
+    _attr_entity_registry_enabled_default = False
 
     @callback
     def async_initiate_state(self) -> None:
