@@ -197,6 +197,12 @@
       "start_time": {
         "name": "Start in"
       },
+      "start": {
+        "name": "Start"
+      },
+      "finish": {
+        "name": "Finish"
+      },
       "energy_consumption": {
         "name": "Energy consumption"
       },
