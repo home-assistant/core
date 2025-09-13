@@ -16,10 +16,8 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import DOMAIN
 from .gateway import HausbusGateway
 
-# Wenn die Integration nur über Config Entries läuft:
-CONFIG_SCHEMA = cv.config_entry_only_config_schema
+CONFIG_SCHEMA = cv.empty_config_schema
 
-# , Platform.NUMBER
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,

@@ -416,7 +416,7 @@ class HausbusGateway(IBusDataListener):
                         name,
                     )
 
-                    if deviceId in (HOMESERVER_DEVICE_ID, 9999, 12222):
+                    if deviceId in (29725, 22784):
                         className = ProxyFactory.getBusClassNameForClass(
                             instanceObjectId.getClassId()
                         ).rsplit(".", 1)[-1]
