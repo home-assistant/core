@@ -241,7 +241,9 @@
               "timer_is_complete": "Timer has been completed",
               "washing_is_complete": "Washing is completed",
               "water_is_full": "Water is full",
-              "water_leak_has_occurred": "The dishwasher has detected a water leak"
+              "water_leak_has_occurred": "The dishwasher has detected a water leak",
+              "filter_reset_complete": "Reset the air filter",
+              "water_filter_reset_complete": "Reset water filter"
             }
           }
         }
@@ -608,8 +610,20 @@
       "filter_lifetime": {
         "name": "Filter remaining"
       },
+      "top_filter_remain_percent": {
+        "name": "Upper filter remaining"
+      },
       "used_time": {
         "name": "Water filter used"
+      },
+      "water_filter_state": {
+        "name": "Water filter"
+      },
+      "water_filter_2_remain_percent": {
+        "name": "Water filter stage 2"
+      },
+      "water_filter_3_remain_percent": {
+        "name": "Water filter stage 3"
       },
       "current_job_mode": {
         "name": "Operating mode",

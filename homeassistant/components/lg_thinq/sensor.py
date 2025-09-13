@@ -105,6 +105,11 @@ FILTER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         translation_key=ThinQProperty.FILTER_LIFETIME,
     ),
+    ThinQProperty.TOP_FILTER_REMAIN_PERCENT: SensorEntityDescription(
+        key=ThinQProperty.TOP_FILTER_REMAIN_PERCENT,
+        native_unit_of_measurement=PERCENTAGE,
+        translation_key=ThinQProperty.TOP_FILTER_REMAIN_PERCENT,
+    ),
 }
 HUMIDITY_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.CURRENT_HUMIDITY: SensorEntityDescription(
@@ -216,6 +221,11 @@ REFRIGERATION_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         translation_key=ThinQProperty.FRESH_AIR_FILTER,
     ),
+    ThinQProperty.FRESH_AIR_FILTER_REMAIN_PERCENT: SensorEntityDescription(
+        key=ThinQProperty.FRESH_AIR_FILTER_REMAIN_PERCENT,
+        native_unit_of_measurement=PERCENTAGE,
+        translation_key=ThinQProperty.FRESH_AIR_FILTER,
+    ),
 }
 RUN_STATE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.CURRENT_STATE: SensorEntityDescription(
@@ -297,6 +307,25 @@ WATER_FILTER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
         key=ThinQProperty.USED_TIME,
         native_unit_of_measurement=UnitOfTime.MONTHS,
         translation_key=ThinQProperty.USED_TIME,
+    ),
+    ThinQProperty.WATER_FILTER_STATE: SensorEntityDescription(
+        key=ThinQProperty.WATER_FILTER_STATE,
+        translation_key=ThinQProperty.WATER_FILTER_STATE,
+    ),
+    ThinQProperty.WATER_FILTER_1_REMAIN_PERCENT: SensorEntityDescription(
+        key=ThinQProperty.WATER_FILTER_1_REMAIN_PERCENT,
+        native_unit_of_measurement=PERCENTAGE,
+        translation_key=ThinQProperty.WATER_FILTER_STATE,
+    ),
+    ThinQProperty.WATER_FILTER_2_REMAIN_PERCENT: SensorEntityDescription(
+        key=ThinQProperty.WATER_FILTER_2_REMAIN_PERCENT,
+        native_unit_of_measurement=PERCENTAGE,
+        translation_key=ThinQProperty.WATER_FILTER_2_REMAIN_PERCENT,
+    ),
+    ThinQProperty.WATER_FILTER_3_REMAIN_PERCENT: SensorEntityDescription(
+        key=ThinQProperty.WATER_FILTER_3_REMAIN_PERCENT,
+        native_unit_of_measurement=PERCENTAGE,
+        translation_key=ThinQProperty.WATER_FILTER_3_REMAIN_PERCENT,
     ),
 }
 WATER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
@@ -432,6 +461,7 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.ODOR_LEVEL],
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.TOTAL_POLLUTION_LEVEL],
         FILTER_INFO_SENSOR_DESC[ThinQProperty.FILTER_REMAIN_PERCENT],
+        FILTER_INFO_SENSOR_DESC[ThinQProperty.TOP_FILTER_REMAIN_PERCENT],
         JOB_MODE_SENSOR_DESC[ThinQProperty.CURRENT_JOB_MODE],
         JOB_MODE_SENSOR_DESC[ThinQProperty.PERSONALIZATION_MODE],
         TIME_SENSOR_DESC[TimerProperty.ABSOLUTE_TO_START],
@@ -508,7 +538,12 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
     ),
     DeviceType.REFRIGERATOR: (
         REFRIGERATION_SENSOR_DESC[ThinQProperty.FRESH_AIR_FILTER],
+        REFRIGERATION_SENSOR_DESC[ThinQProperty.FRESH_AIR_FILTER_REMAIN_PERCENT],
         WATER_FILTER_INFO_SENSOR_DESC[ThinQProperty.USED_TIME],
+        WATER_FILTER_INFO_SENSOR_DESC[ThinQProperty.WATER_FILTER_STATE],
+        WATER_FILTER_INFO_SENSOR_DESC[ThinQProperty.WATER_FILTER_1_REMAIN_PERCENT],
+        WATER_FILTER_INFO_SENSOR_DESC[ThinQProperty.WATER_FILTER_2_REMAIN_PERCENT],
+        WATER_FILTER_INFO_SENSOR_DESC[ThinQProperty.WATER_FILTER_3_REMAIN_PERCENT],
     ),
     DeviceType.ROBOT_CLEANER: (
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
