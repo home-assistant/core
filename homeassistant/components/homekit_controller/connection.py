@@ -57,7 +57,10 @@ from .utils import IidTuple, unique_id_to_iids
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
-
+# HomeKit accessories have varying limits on how many characteristics
+# they can handle per request. Since we don't know each device's specific limit,
+# we batch requests to a conservative size to avoid overwhelming any device.
+MAX_CHARACTERISTICS_PER_REQUEST = 49
 
 BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
@@ -326,16 +329,20 @@ class HKDevice:
         )
         entry.async_on_unload(self._async_cancel_subscription_timer)
 
+        if transport != Transport.BLE:
+            # Although async_populate_accessories_state fetched the accessory database,
+            # the /accessories endpoint may return cached values from the accessory's
+            # perspective. For example, Ecobee thermostats may report stale temperature
+            # values (like 100°C) in their /accessories response after restarting.
+            # We need to explicitly poll characteristics to get fresh sensor readings
+            # before processing the entity map and creating devices.
+            # Use poll_all=True since entities haven't registered their characteristics yet.
+            await self.async_update(poll_all=True)
+
         await self.async_process_entity_map()
 
         if transport != Transport.BLE:
-            # When Home Assistant starts, we restore the accessory map from storage
-            # which contains characteristic values from when HA was last running.
-            # These values are stale and may be incorrect (e.g., Ecobee thermostats
-            # report 100°C when restarting). We need to poll for fresh values before
-            # creating entities. Use poll_all=True since entities haven't registered
-            # their characteristics yet.
-            await self.async_update(poll_all=True)
+            # Start regular polling after entity map is processed
             self._async_start_polling()
 
         # If everything is up to date, we can create the entities
@@ -938,20 +945,26 @@ class HKDevice:
         async with self._polling_lock:
             _LOGGER.debug("Starting HomeKit device update: %s", self.unique_id)
 
-            try:
-                new_values_dict = await self.get_characteristics(to_poll)
-            except AccessoryNotFoundError:
-                # Not only did the connection fail, but also the accessory is not
-                # visible on the network.
-                self.async_set_available_state(False)
-                return
-            except (AccessoryDisconnectedError, EncryptionError):
-                # Temporary connection failure. Device may still available but our
-                # connection was dropped or we are reconnecting
-                self._poll_failures += 1
-                if self._poll_failures >= MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE:
+            new_values_dict: dict[tuple[int, int], dict[str, Any]] = {}
+            to_poll_list = list(to_poll)
+
+            for i in range(0, len(to_poll_list), MAX_CHARACTERISTICS_PER_REQUEST):
+                batch = to_poll_list[i : i + MAX_CHARACTERISTICS_PER_REQUEST]
+                try:
+                    batch_values = await self.get_characteristics(batch)
+                    new_values_dict.update(batch_values)
+                except AccessoryNotFoundError:
+                    # Not only did the connection fail, but also the accessory is not
+                    # visible on the network.
                     self.async_set_available_state(False)
-                return
+                    return
+                except (AccessoryDisconnectedError, EncryptionError):
+                    # Temporary connection failure. Device may still available but our
+                    # connection was dropped or we are reconnecting
+                    self._poll_failures += 1
+                    if self._poll_failures >= MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE:
+                        self.async_set_available_state(False)
+                    return
 
             self._poll_failures = 0
             self.process_new_events(new_values_dict)
