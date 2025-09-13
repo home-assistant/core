@@ -109,10 +109,8 @@ class Server:
 
         self._startup_complete.clear()
 
-        # close_fds=False was used for posix_spawn on CPython < 3.13
-        # But this causes go2rtc to inherit file descriptors like Bluetooth
-        # management sockets, leading to conflicts. Since HA requires Python 3.13+,
-        # we can safely use close_fds=True
+        # close_fds=True prevents go2rtc from inheriting file descriptors
+        # like Bluetooth management sockets which can cause conflicts
         self._process = await asyncio.create_subprocess_exec(
             self._binary,
             "-c",
