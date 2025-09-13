@@ -44,7 +44,7 @@ def mock_rejseplan() -> Generator[AsyncMock]:
 
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
-    """Mock ntfy configuration entry."""
+    """Mock Rejseplanen configuration entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="rejseplanen",
