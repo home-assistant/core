@@ -19,38 +19,19 @@ from . import MockBridge, async_setup_integration
 
 
 @pytest.fixture
-async def mock_bridge_with_mocked_set_value(hass: HomeAssistant) -> MockBridge:
-    """Set up mock bridge with mocked set_value for testing open/close."""
+async def mock_bridge_with_cover_mocks(hass: HomeAssistant) -> MockBridge:
+    """Set up mock bridge with all cover methods mocked for testing."""
     instance = MockBridge()
 
     def factory(*args: Any, **kwargs: Any) -> MockBridge:
         """Return the mock bridge instance."""
         return instance
 
-    # Patch the methods on the instance with AsyncMocks
+    # Patch all cover methods on the instance with AsyncMocks
     instance.set_value = AsyncMock()
     instance.raise_cover = AsyncMock()
     instance.lower_cover = AsyncMock()
-
-    await async_setup_integration(hass, factory)
-    await hass.async_block_till_done()
-
-    return instance
-
-
-@pytest.fixture
-async def mock_bridge_with_mocked_covers(hass: HomeAssistant) -> MockBridge:
-    """Set up mock bridge with mocked cover methods for testing."""
-    instance = MockBridge()
-
-    def factory(*args: Any, **kwargs: Any) -> MockBridge:
-        """Return the mock bridge instance."""
-        return instance
-
-    # Patch the methods on the instance with AsyncMocks
     instance.stop_cover = AsyncMock()
-    instance.raise_cover = AsyncMock()
-    instance.lower_cover = AsyncMock()
 
     await async_setup_integration(hass, factory)
     await hass.async_block_till_done()
@@ -71,10 +52,10 @@ async def test_cover_unique_id(
 
 
 async def test_cover_open_close_using_set_value(
-    hass: HomeAssistant, mock_bridge_with_mocked_set_value: MockBridge
+    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
 ) -> None:
     """Test that open/close commands use set_value to avoid stuttering."""
-    mock_instance = mock_bridge_with_mocked_set_value
+    mock_instance = mock_bridge_with_cover_mocks
     cover_entity_id = "cover.basement_bedroom_left_shade"
 
     # Test opening the cover
@@ -106,10 +87,10 @@ async def test_cover_open_close_using_set_value(
 
 
 async def test_cover_stop_with_direction_tracking(
-    hass: HomeAssistant, mock_bridge_with_mocked_covers: MockBridge
+    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
 ) -> None:
     """Test that stop command sends appropriate directional command first."""
-    mock_instance = mock_bridge_with_mocked_covers
+    mock_instance = mock_bridge_with_cover_mocks
     cover_entity_id = "cover.basement_bedroom_left_shade"
 
     # Simulate shade moving up (opening)
@@ -162,10 +143,10 @@ async def test_cover_stop_with_direction_tracking(
 
 
 async def test_cover_stop_at_endpoints(
-    hass: HomeAssistant, mock_bridge_with_mocked_covers: MockBridge
+    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
 ) -> None:
     """Test stop command behavior when shade is at fully open or closed."""
-    mock_instance = mock_bridge_with_mocked_covers
+    mock_instance = mock_bridge_with_cover_mocks
     cover_entity_id = "cover.basement_bedroom_left_shade"
 
     # Test stop at fully open (100) - should infer it was opening
@@ -206,10 +187,10 @@ async def test_cover_stop_at_endpoints(
 
 
 async def test_cover_position_heuristic_fallback(
-    hass: HomeAssistant, mock_bridge_with_mocked_covers: MockBridge
+    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
 ) -> None:
     """Test stop command uses position heuristic when movement direction is unknown."""
-    mock_instance = mock_bridge_with_mocked_covers
+    mock_instance = mock_bridge_with_cover_mocks
     cover_entity_id = "cover.basement_bedroom_left_shade"
 
     # Test stop at position < 50 with no movement
