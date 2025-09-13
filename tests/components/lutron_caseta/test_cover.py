@@ -259,3 +259,45 @@ async def test_cover_stopped_movement_detection(
     # Position >= 50 with STOPPED direction, should send raise_cover
     mock_instance.raise_cover.assert_called_with("802")
     mock_instance.stop_cover.assert_called_with("802")
+
+
+async def test_cover_startup_with_shade_in_motion(
+    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
+) -> None:
+    """Test stop command when HA starts with shade already in motion."""
+    mock_instance = mock_bridge_with_cover_mocks
+    cover_entity_id = "cover.basement_bedroom_left_shade"
+
+    # Shade starts at position 50 (simulating HA startup with shade in motion)
+    # First stop without seeing movement should use position heuristic
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # Should have used position heuristic since we haven't seen movement yet
+    # Initial position is 100 from MockBridge, so >= 50, should send raise_cover
+    mock_instance.raise_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
+
+    mock_instance.raise_cover.reset_mock()
+    mock_instance.stop_cover.reset_mock()
+
+    # Now simulate shade moving down (shade was actually in motion)
+    mock_instance.devices["802"]["current_state"] = 45
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    # Now we've detected downward movement
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # Should now correctly send lower_cover since we detected downward movement
+    mock_instance.lower_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")

@@ -49,12 +49,6 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
         """Return the current position of cover."""
         return self._device["current_state"]
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-        # Initialize the previous position
-        self._previous_position = self.current_cover_position
-
     def _handle_bridge_update(self) -> None:
         """Handle updated data from the bridge and track movement direction."""
         current_position = self.current_cover_position
@@ -68,7 +62,7 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
                 # Moving down or at fully closed
                 self._movement_direction = ShadeMovementDirection.CLOSING
             else:
-                # Stopped in the middle
+                # Stopped
                 self._movement_direction = ShadeMovementDirection.STOPPED
 
         self._previous_position = current_position
