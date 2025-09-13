@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
@@ -13,6 +15,26 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MockBridge, async_setup_integration
+
+
+@pytest.fixture
+async def mock_bridge_with_mocked_covers(hass: HomeAssistant):
+    """Set up mock bridge with mocked cover methods for testing."""
+    instance = MockBridge()
+
+    def factory(*args, **kwargs):
+        """Return the mock bridge instance."""
+        return instance
+
+    # Patch the methods on the instance with AsyncMocks
+    instance.stop_cover = AsyncMock()
+    instance.raise_cover = AsyncMock()
+    instance.lower_cover = AsyncMock()
+
+    await async_setup_integration(hass, factory)
+    await hass.async_block_till_done()
+
+    return instance
 
 
 async def test_cover_unique_id(
@@ -67,173 +89,146 @@ async def test_cover_open_close_using_set_value(hass: HomeAssistant) -> None:
         mock_lower_cover.assert_not_called()
 
 
-async def test_cover_stop_with_direction_tracking(hass: HomeAssistant) -> None:
+async def test_cover_stop_with_direction_tracking(
+    hass: HomeAssistant, mock_bridge_with_mocked_covers: MockBridge
+) -> None:
     """Test that stop command sends appropriate directional command first."""
-    # Create instance to modify devices
-    mock_instance = MockBridge()
+    mock_instance = mock_bridge_with_mocked_covers
+    cover_entity_id = "cover.basement_bedroom_left_shade"
 
-    with (
-        patch.object(MockBridge, "__new__", return_value=mock_instance),
-        patch.object(mock_instance, "stop_cover", new=AsyncMock()) as mock_stop,
-        patch.object(mock_instance, "raise_cover", new=AsyncMock()) as mock_raise,
-        patch.object(mock_instance, "lower_cover", new=AsyncMock()) as mock_lower,
-    ):
-        await async_setup_integration(hass, MockBridge)
-        await hass.async_block_till_done()
+    # Simulate shade moving up (opening)
+    mock_instance.devices["802"]["current_state"] = 30
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
 
-        cover_entity_id = "cover.basement_bedroom_left_shade"
+    mock_instance.devices["802"]["current_state"] = 60
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
 
-        # Simulate shade moving up (opening)
-        mock_instance.devices["802"]["current_state"] = 30
-        mock_instance.call_subscribers("802")
-        await hass.async_block_till_done()
+    # Now stop while opening
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
 
-        mock_instance.devices["802"]["current_state"] = 60
-        mock_instance.call_subscribers("802")
-        await hass.async_block_till_done()
+    # Should send raise_cover before stop_cover when opening
+    mock_instance.raise_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
+    mock_instance.lower_cover.assert_not_called()
 
-        # Now stop while opening
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: cover_entity_id},
-            blocking=True,
-        )
+    mock_instance.raise_cover.reset_mock()
+    mock_instance.lower_cover.reset_mock()
+    mock_instance.stop_cover.reset_mock()
 
-        # Should send raise_cover before stop_cover when opening
-        mock_raise.assert_called_with("802")
-        mock_stop.assert_called_with("802")
-        mock_lower.assert_not_called()
+    # Simulate shade moving down (closing)
+    mock_instance.devices["802"]["current_state"] = 40
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
 
-        mock_raise.reset_mock()
-        mock_lower.reset_mock()
-        mock_stop.reset_mock()
+    mock_instance.devices["802"]["current_state"] = 20
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
 
-        # Simulate shade moving down (closing)
-        mock_instance.devices["802"]["current_state"] = 40
-        mock_instance.call_subscribers("802")
-        await hass.async_block_till_done()
+    # Now stop while closing
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
 
-        mock_instance.devices["802"]["current_state"] = 20
-        mock_instance.call_subscribers("802")
-        await hass.async_block_till_done()
-
-        # Now stop while closing
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: cover_entity_id},
-            blocking=True,
-        )
-
-        # Should send lower_cover before stop_cover when closing
-        mock_lower.assert_called_with("802")
-        mock_stop.assert_called_with("802")
-        mock_raise.assert_not_called()
+    # Should send lower_cover before stop_cover when closing
+    mock_instance.lower_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
+    mock_instance.raise_cover.assert_not_called()
 
 
-async def test_cover_stop_at_endpoints(hass: HomeAssistant) -> None:
+async def test_cover_stop_at_endpoints(
+    hass: HomeAssistant, mock_bridge_with_mocked_covers: MockBridge
+) -> None:
     """Test stop command behavior when shade is at fully open or closed."""
-    # Create instance to modify devices
-    mock_instance = MockBridge()
+    mock_instance = mock_bridge_with_mocked_covers
+    cover_entity_id = "cover.basement_bedroom_left_shade"
 
-    with (
-        patch.object(MockBridge, "__new__", return_value=mock_instance),
-        patch.object(mock_instance, "stop_cover", new=AsyncMock()) as mock_stop,
-        patch.object(mock_instance, "raise_cover", new=AsyncMock()) as mock_raise,
-        patch.object(mock_instance, "lower_cover", new=AsyncMock()) as mock_lower,
-    ):
-        await async_setup_integration(hass, MockBridge)
-        await hass.async_block_till_done()
+    # Test stop at fully open (100) - should infer it was opening
+    mock_instance.devices["802"]["current_state"] = 100
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
 
-        cover_entity_id = "cover.basement_bedroom_left_shade"
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
 
-        # Test stop at fully open (100) - should infer it was opening
-        mock_instance.devices["802"]["current_state"] = 100
-        mock_instance.call_subscribers("802")
-        await hass.async_block_till_done()
+    # At fully open, should send raise_cover before stop
+    mock_instance.raise_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
 
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: cover_entity_id},
-            blocking=True,
-        )
+    mock_instance.raise_cover.reset_mock()
+    mock_instance.lower_cover.reset_mock()
+    mock_instance.stop_cover.reset_mock()
 
-        # At fully open, should send raise_cover before stop
-        mock_raise.assert_called_with("802")
-        mock_stop.assert_called_with("802")
+    # Test stop at fully closed (0) - should infer it was closing
+    mock_instance.devices["802"]["current_state"] = 0
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
 
-        mock_raise.reset_mock()
-        mock_lower.reset_mock()
-        mock_stop.reset_mock()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
 
-        # Test stop at fully closed (0) - should infer it was closing
-        mock_instance.devices["802"]["current_state"] = 0
-        mock_instance.call_subscribers("802")
-        await hass.async_block_till_done()
-
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: cover_entity_id},
-            blocking=True,
-        )
-
-        # At fully closed, should send lower_cover before stop
-        mock_lower.assert_called_with("802")
-        mock_stop.assert_called_with("802")
+    # At fully closed, should send lower_cover before stop
+    mock_instance.lower_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
 
 
-async def test_cover_position_heuristic_fallback(hass: HomeAssistant) -> None:
+async def test_cover_position_heuristic_fallback(
+    hass: HomeAssistant, mock_bridge_with_mocked_covers: MockBridge
+) -> None:
     """Test stop command uses position heuristic when movement direction is unknown."""
-    # Create instance to modify devices
-    mock_instance = MockBridge()
+    mock_instance = mock_bridge_with_mocked_covers
+    cover_entity_id = "cover.basement_bedroom_left_shade"
 
-    with (
-        patch.object(MockBridge, "__new__", return_value=mock_instance),
-        patch.object(mock_instance, "stop_cover", new=AsyncMock()) as mock_stop,
-        patch.object(mock_instance, "raise_cover", new=AsyncMock()) as mock_raise,
-        patch.object(mock_instance, "lower_cover", new=AsyncMock()) as mock_lower,
-    ):
-        await async_setup_integration(hass, MockBridge)
-        await hass.async_block_till_done()
+    # Test stop at position < 50 with no movement
+    # Update the device data directly in the bridge's devices dict
+    mock_instance.devices["802"]["current_state"] = 30
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
 
-        cover_entity_id = "cover.basement_bedroom_left_shade"
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
 
-        # Test stop at position < 50 with no movement
-        # Update the device data directly in the bridge's devices dict
-        mock_instance.devices["802"]["current_state"] = 30
-        mock_instance.call_subscribers("802")
-        await hass.async_block_till_done()
+    # Position < 50, should send lower_cover
+    mock_instance.lower_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
 
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: cover_entity_id},
-            blocking=True,
-        )
+    mock_instance.raise_cover.reset_mock()
+    mock_instance.lower_cover.reset_mock()
+    mock_instance.stop_cover.reset_mock()
 
-        # Position < 50, should send lower_cover
-        mock_lower.assert_called_with("802")
-        mock_stop.assert_called_with("802")
+    # Test stop at position >= 50 with no movement
+    mock_instance.devices["802"]["current_state"] = 70
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
 
-        mock_raise.reset_mock()
-        mock_lower.reset_mock()
-        mock_stop.reset_mock()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
 
-        # Test stop at position >= 50 with no movement
-        mock_instance.devices["802"]["current_state"] = 70
-        mock_instance.call_subscribers("802")
-        await hass.async_block_till_done()
-
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: cover_entity_id},
-            blocking=True,
-        )
-
-        # Position >= 50, should send raise_cover
-        mock_raise.assert_called_with("802")
-        mock_stop.assert_called_with("802")
+    # Position >= 50, should send raise_cover
+    mock_instance.raise_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
