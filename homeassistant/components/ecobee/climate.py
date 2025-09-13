@@ -349,6 +349,7 @@ class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
 
     _attr_precision = PRECISION_TENTHS
+    _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_min_humidity = DEFAULT_MIN_HUMIDITY
     _attr_max_humidity = DEFAULT_MAX_HUMIDITY
@@ -452,11 +453,6 @@ class Thermostat(ClimateEntity):
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.thermostat["runtime"]["desiredCool"] / 10.0
         return None
-
-    @property
-    def target_temperature_step(self) -> float:
-        """Set target temperature step to halves."""
-        return PRECISION_HALVES
 
     @property
     def settings(self) -> dict[str, Any]:
