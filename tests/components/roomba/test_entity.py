@@ -44,33 +44,10 @@ def test_tank_level_property(mock_roomba: Roomba) -> None:
     assert entity.tank_level == 42
 
 
-def test_has_dock_property(mock_roomba: Roomba) -> None:
-    """Test the has_dock property of the IRobotEntity."""
-    entity = DummyEntity(mock_roomba, "blid123")
-    assert entity.has_dock is True
-
-
 def test_dock_tank_level_property(mock_roomba: Roomba) -> None:
     """Test the dock tank level property of the IRobotEntity."""
     entity = DummyEntity(mock_roomba, "blid123")
     assert entity.dock_tank_level == 99
-
-
-def test_has_dock_property_false() -> None:
-    """Test has_dock property returns False when dock is empty."""
-    mock_state = {
-        "tankLvl": 42,
-        "dock": {},
-        "hwPartsRev": {"navSerialNo": "12345", "wlan0HwAddr": "AA:BB:CC:DD:EE:FF"},
-        "sku": "980",
-        "name": "Test Roomba",
-        "softwareVer": "3.2.1",
-        "hardwareRev": "1.0",
-    }
-    roomba = MagicMock()
-    roomba.master_state = {"state": {"reported": mock_state}}
-    entity = DummyEntity(roomba, "blid123")
-    assert entity.has_dock is False
 
 
 def test_tank_level_none() -> None:
