@@ -192,7 +192,7 @@ aioamazondevices==6.0.0
 aioambient==2024.08.0
 
 # homeassistant.components.apcupsd
-aioapcaccess==0.4.2
+aioapcaccess==1.0.0
 
 # homeassistant.components.aquacell
 aioaquacell==0.2.0
@@ -1005,7 +1005,7 @@ gassist-text==0.0.14
 gcal-sync==8.0.0
 
 # homeassistant.components.aladdin_connect
-genie-partner-sdk==1.0.10
+genie-partner-sdk==1.0.11
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1137,10 +1137,10 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.5
 
 # homeassistant.components.bluetooth
-habluetooth==5.6.2
+habluetooth==5.6.4
 
 # homeassistant.components.cloud
-hass-nabucasa==1.1.0
+hass-nabucasa==1.1.1
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1181,7 +1181,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250903.3
+home-assistant-frontend==20250903.5
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.9.3
@@ -1822,7 +1822,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.31.7
+pyTibber==0.32.0
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2067,7 +2067,7 @@ pyiqvia==2022.04.0
 pyirishrail==0.0.2
 
 # homeassistant.components.iskra
-pyiskra==0.1.26
+pyiskra==0.1.27
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -2163,7 +2163,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.11.1
+pymodbus==3.11.2
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2952,7 +2952,7 @@ thermopro-ble==0.13.1
 thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.7
+thinqconnect==1.0.8
 
 # homeassistant.components.tikteck
 tikteck==0.4
@@ -3205,7 +3205,7 @@ zabbix-utils==2.0.3
 zamg==0.3.6
 
 # homeassistant.components.zimi
-zcc-helper==3.6
+zcc-helper==3.7
 
 # homeassistant.components.zeroconf
 zeroconf==0.147.2

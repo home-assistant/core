@@ -18,7 +18,6 @@ from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession, async_get_chat_session
-from homeassistant.helpers.network import get_url
 from homeassistant.util import RE_SANITIZE_FILENAME, slugify
 
 from .const import (
@@ -229,7 +228,7 @@ async def async_generate_image(
     item = media_source.MediaSourceItem.from_uri(
         hass, service_result["media_source_id"], None
     )
-    service_result["url"] = get_url(hass) + async_sign_path(
+    service_result["url"] = async_sign_path(
         hass,
         (await source.async_resolve_media(item)).url,
         timedelta(seconds=IMAGE_EXPIRY_TIME),

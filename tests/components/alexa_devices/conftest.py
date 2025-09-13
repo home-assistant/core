@@ -45,6 +45,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.login_mode_interactive.return_value = {
             "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
         }
         client.get_devices_data.return_value = {
             TEST_SERIAL_NUMBER: deepcopy(TEST_DEVICE)

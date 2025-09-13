@@ -330,7 +330,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'YINMIK Water Quality Tester (unsupported)',
+    'model': 'YINMIK Water Quality Tester',
     'model_id': 'u5xgcpcngk3pfxb4',
     'name': 'YINMIK Water Quality Tester',
     'name_by_user': None,
@@ -2004,7 +2004,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'BlissRadia  (unsupported)',
+    'model': 'BlissRadia ',
     'model_id': 'ssimhf6r8kgwepfb',
     'name': 'BlissRadia ',
     'name_by_user': None,
@@ -5755,7 +5755,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart White Noise Machine (unsupported)',
+    'model': 'Smart White Noise Machine',
     'model_id': '45idzfufidgee7ir',
     'name': 'Smart White Noise Machine',
     'name_by_user': None,
@@ -6716,7 +6716,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'geniodesk (unsupported)',
+    'model': 'geniodesk',
     'model_id': 'ftbc8rp8ipksdfpv',
     'name': 'mesa',
     'name_by_user': None,
@@ -7119,7 +7119,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'ZEDAR K1200 (unsupported)',
+    'model': 'ZEDAR K1200',
     'model_id': '3ddulzljdjjwkhoy',
     'name': 'Kattenbak',
     'name_by_user': None,

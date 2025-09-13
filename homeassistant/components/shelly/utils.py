@@ -682,20 +682,20 @@ def async_remove_orphaned_entities(
     ):
         return
 
-    device_id = devices[0].id
-    entities = er.async_entries_for_device(entity_reg, device_id, True)
-    for entity in entities:
-        if not entity.entity_id.startswith(platform):
-            continue
-        if key_suffix is not None and key_suffix not in entity.unique_id:
-            continue
-        # we are looking for the component ID, e.g. boolean:201, em1data:1
-        if not (match := COMPONENT_ID_PATTERN.search(entity.unique_id)):
-            continue
+    for device in devices:
+        entities = er.async_entries_for_device(entity_reg, device.id, True)
+        for entity in entities:
+            if not entity.entity_id.startswith(platform):
+                continue
+            if key_suffix is not None and key_suffix not in entity.unique_id:
+                continue
+            # we are looking for the component ID, e.g. boolean:201, em1data:1
+            if not (match := COMPONENT_ID_PATTERN.search(entity.unique_id)):
+                continue
 
-        key = match.group()
-        if key not in keys:
-            orphaned_entities.append(entity.unique_id.split("-", 1)[1])
+            key = match.group()
+            if key not in keys:
+                orphaned_entities.append(entity.unique_id.split("-", 1)[1])
 
     if orphaned_entities:
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
@@ -811,7 +811,7 @@ def get_rpc_device_info(
 
 
 def get_blu_trv_device_info(
-    config: dict[str, Any], ble_addr: str, parent_mac: str
+    config: dict[str, Any], ble_addr: str, parent_mac: str, fw_ver: str | None
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     model_id = config.get("local_name")
@@ -823,6 +823,7 @@ def get_blu_trv_device_info(
         model=BLU_TRV_MODEL_NAME.get(model_id) if model_id else None,
         model_id=config.get("local_name"),
         name=config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}",
+        sw_version=fw_ver,
     )
 
 

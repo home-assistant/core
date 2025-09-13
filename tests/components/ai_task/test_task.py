@@ -296,7 +296,7 @@ async def test_generate_image(
         == "media-source://ai_task/image/2025-06-14_225900_test_task.png"
     )
     assert result["url"].startswith(
-        "http://10.10.10.10:8123/ai_task/image/2025-06-14_225900_test_task.png?authSig="
+        "/ai_task/image/2025-06-14_225900_test_task.png?authSig="
     )
     assert result["mime_type"] == "image/png"
     assert result["model"] == "mock_model"
