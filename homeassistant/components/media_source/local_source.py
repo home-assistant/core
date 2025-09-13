@@ -134,12 +134,12 @@ class LocalSource(MediaSource):
         def _do_move() -> None:
             """Move file to target."""
             try:
-                target_dir.mkdir(parents=True, exist_ok=True)
-
                 target_path = target_dir / uploaded_file.filename
 
                 target_path.relative_to(target_dir)
                 raise_if_invalid_path(str(target_path))
+
+                target_dir.mkdir(parents=True, exist_ok=True)
             except ValueError as err:
                 raise PathNotSupportedError("Invalid path") from err
 
