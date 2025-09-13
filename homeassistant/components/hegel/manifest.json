@@ -1,0 +1,24 @@
+{
+  "domain": "hegel",
+  "name": "Hegel Amplifier",
+  "version": "0.1.0",
+  "documentation": "https://example.invalid/hegel-ha",
+  "requirements": [],
+  "codeowners": [
+    "@boazca"
+  ],
+  "iot_class": "local_push",
+  "icon": "mdi:audio-video",
+  "config_flow": true,
+  "issue_tracker": "https://example.invalid/hegel-ha/issues",
+  "integration_type": "device",
+  "loggers": [
+    "custom_components.hegel"
+  ],
+  "ssdp": [
+    {
+      "manufacturer": "Hegel",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    }
+  ]
+}
