@@ -33,9 +33,9 @@ class HausbusDevice:
         self.software_version = sw_version
         self.hardware_version = hw_version
         self.firmware_id = firmware_id
-        self.hass_device_entry_id = None
-        self.special_type = 0
-        self.fcke=0
+        self.hass_device_entry_id: str = ""
+        self.special_type: int = 0
+        self.fcke: int = 0
 
         LOGGER.debug("new device %s", self.name)
 
@@ -58,7 +58,11 @@ class HausbusDevice:
         self.special_type = configuration.getStartupDelay()
 
         LOGGER.debug(
-            "fcke %s, special_type %s, isSpecialType %s, configuration = %s", self.fcke, self.special_type, self.is_special_type(), configuration
+            "fcke %s, special_type %s, isSpecialType %s, configuration = %s",
+            self.fcke,
+            self.special_type,
+            self.is_special_type(),
+            configuration,
         )
 
         if not self.is_special_type():

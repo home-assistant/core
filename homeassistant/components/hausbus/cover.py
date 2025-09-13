@@ -45,9 +45,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a cover from a config entry."""
-    gateway = config_entry.runtime_data.gateway
 
-    # Services gelten für alle Hausbus-Entities, die die jeweilige Funktion implementieren
+    gateway = config_entry.runtime_data.gateway
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
@@ -139,7 +138,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
         LOGGER.debug("async_stop_cover")
         self._channel.stop()
 
-    async def async_set_cover_position(self, **kwargs:Any) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Moves cover to the given position."""
         position = kwargs.get("position")
         LOGGER.debug("async_set_cover_position position %s", position)
@@ -150,7 +149,6 @@ class HausbusCover(HausbusEntity, CoverEntity):
         position = max(position, 0)
 
         self._channel.moveToPosition(100 - position)
-
 
     def handle_event(self, data: Any) -> None:
         """Handle haus-bus cover events."""
@@ -196,7 +194,10 @@ class HausbusCover(HausbusEntity, CoverEntity):
     ):
         """Set cover configuration."""
         LOGGER.debug(
-            "async_cover_set_configuration close_time %s, open_time %s, invert_direction %s", close_time, open_time, invert_direction
+            "async_cover_set_configuration close_time %s, open_time %s, invert_direction %s",
+            close_time,
+            open_time,
+            invert_direction,
         )
 
         if not await self.ensure_configuration():

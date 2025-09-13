@@ -52,7 +52,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "switch_off",
         {
-            vol.Required("offDelay", default=0): vol.All(
+            vol.Required("off_delay", default=0): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=65535)
             ),
         },
@@ -75,10 +75,10 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "switch_toggle",
         {
-            vol.Required("offTime", default=1): vol.All(
+            vol.Required("off_time", default=1): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=255)
             ),
-            vol.Required("onTime", default=1): vol.All(
+            vol.Required("on_time", default=1): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=255)
             ),
             vol.Optional("quantity", default=0): vol.All(
@@ -170,29 +170,35 @@ class HausbusSwitch(HausbusEntity, SwitchEntity):
         if state_changed:
             self.schedule_update_ha_state()
 
-    async def async_switch_off(self, offDelay: int):
+    async def async_switch_off(self, off_delay: int):
         """Switches a relay with the given off delay time."""
-        LOGGER.debug("async_switch_off offDelay %s", offDelay)
-        self._channel.off(offDelay)
+        LOGGER.debug("async_switch_off off_delay %s", off_delay)
+        self._channel.off(off_delay)
 
     async def async_switch_on(self, duration: int, onDelay: int):
         """Switches a relay for given duration and on delay time."""
         LOGGER.debug("async_switch_on duration %s, onDelay %s", duration, onDelay)
         self._channel.on(duration, onDelay)
 
-    async def async_switch_toggle(self, offTime: int, onTime: int, quantity: int):
+    async def async_switch_toggle(self, off_time: int, on_time: int, quantity: int):
         """Toggels a relay with interval with given off and on time and quantity."""
         LOGGER.debug(
-            "async_switch_toggle offTime %s, onTime %s, quantity %s", offTime, onTime, quantity
+            "async_switch_toggle off_time %s, on_time %s, quantity %s",
+            off_time,
+            on_time,
+            quantity,
         )
-        self._channel.toggle(offTime, onTime, quantity)
+        self._channel.toggle(off_time, on_time, quantity)
 
     async def async_switch_set_configuration(
         self, max_on_time: int, off_delay_time: int, time_base: int
     ):
         """Setzt die Konfiguration eines Relais."""
         LOGGER.debug(
-            "async_switch_set_configuration max_on_time %s, off_delay_time %s, time_base %s", max_on_time, off_delay_time, time_base
+            "async_switch_set_configuration max_on_time %s, off_delay_time %s, time_base %s",
+            max_on_time,
+            off_delay_time,
+            time_base,
         )
         if not self._configuration:
             LOGGER.debug("reading missing configuration")

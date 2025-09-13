@@ -56,7 +56,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "push_button_configure_events",
         {
-            vol.Required("eventActivationStatus", default="ENABLED"): vol.In(
+            vol.Required("event_activation_status", default="ENABLED"): vol.In(
                 ["DISABLED", "ENABLED", "INVERT"]
             ),
             vol.Optional("disabled_duration", default=0): vol.All(
@@ -93,9 +93,10 @@ async def async_setup_entry(
         "async_push_button_set_configuration",
     )
 
-    async def async_add_event(channel: HausBusEvent) -> None:
+    async def async_add_event(entity: HausbusEntity) -> None:
         """Add event entity."""
-        async_add_entities([channel])
+        if isinstance(entity, HausBusEvent):
+            async_add_entities([entity])
 
     gateway.register_platform_add_channel_callback(async_add_event, "EVENTS")
 
@@ -147,7 +148,7 @@ class HausBusEvent(HausbusEntity, EventEntity):
                 self.schedule_update_ha_state()
 
         elif isinstance(data, Enabled):
-            self._attr_extra_state_attributes["eventActivationStatus"] = (
+            self._attr_extra_state_attributes["event_activation_status"] = (
                 "DISABLED" if data.getEnabled() == 0 else "ENABLED"
             )
 
@@ -190,18 +191,20 @@ class HausBusEvent(HausbusEntity, EventEntity):
             )
 
     async def async_push_button_configure_events(
-        self, eventActivationStatus: str, disabled_duration: int
+        self, event_activation_status: str, disabled_duration: int
     ):
         """Disables all events from this input for the given time or activates them again."""
         LOGGER.debug(
-            "async_push_button_configure_events eventActivationStatus %s, disabled_duration %s", eventActivationStatus, disabled_duration
+            "async_push_button_configure_events event_activation_status %s, disabled_duration %s",
+            event_activation_status,
+            disabled_duration,
         )
 
         enable = {
             "DISABLED": EEnable.FALSE,
             "ENABLED": EEnable.TRUE,
             "INVERT": EEnable.INVERT,
-        }.get(eventActivationStatus, EEnable.TRUE)
+        }.get(event_activation_status, EEnable.TRUE)
 
         self._channel.enableEvents(enable, disabled_duration)
 
@@ -221,7 +224,18 @@ class HausBusEvent(HausbusEntity, EventEntity):
     ):
         """Sets configuration for this input."""
         LOGGER.debug(
-            "async_push_button_set_configuration hold_timeout %s, double_click_timeout %s, event_button_pressed_active %s, event_button_released_active %s, event_button_hold_start_active %s, event_button_hold_end_active %s, event_button_clicked_active %s, event_button_double_clicked_active %s, led_feedback_active %s, inverted %s, debounce_time %s", hold_timeout, double_click_timeout, event_button_pressed_active, event_button_released_active, event_button_hold_start_active, event_button_hold_end_active, event_button_clicked_active, event_button_double_clicked_active, led_feedback_active, inverted, debounce_time
+            "async_push_button_set_configuration hold_timeout %s, double_click_timeout %s, event_button_pressed_active %s, event_button_released_active %s, event_button_hold_start_active %s, event_button_hold_end_active %s, event_button_clicked_active %s, event_button_double_clicked_active %s, led_feedback_active %s, inverted %s, debounce_time %s",
+            hold_timeout,
+            double_click_timeout,
+            event_button_pressed_active,
+            event_button_released_active,
+            event_button_hold_start_active,
+            event_button_hold_end_active,
+            event_button_clicked_active,
+            event_button_double_clicked_active,
+            led_feedback_active,
+            inverted,
+            debounce_time,
         )
 
         if not await self.ensure_configuration():

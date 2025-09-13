@@ -28,5 +28,409 @@
         "name": "RGB Dimmer"
       }
     }
+  },
+  "services": {
+    "discover_devices": {
+      "name": "Discover Devices",
+      "description": "Start a manual search for Haus-Bus devices."
+    },
+    "reset_device": {
+      "name": "Reset Device",
+      "description": "Resets a device controller"
+    },
+    "dimmer_set_brightness": {
+      "name": "Turn dimmer on with additional parameters",
+      "description": "Allows to turn a dimmer on with a given duration",
+      "fields": {
+        "brightness": {
+          "name": "Brightness",
+          "description": "Brightness in percent (0-100)"
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "On duration in seconds"
+        }
+      }
+    },
+    "dimmer_start_ramp": {
+      "name": "Start dimming ramp into given direction",
+      "description": "Starts a ramp of a dimmer in given direction or toggle to opposite direction than last turn",
+      "fields": {
+        "direction": {
+          "name": "Ramp direction",
+          "description": "Direction of dimmer ramp ('up','down','toggle')"
+        }
+      }
+    },
+    "dimmer_stop_ramp": {
+      "name": "Stop active dimming ramp",
+      "description": "Stops a ramp of a dimmer that was started with dimmer_start_ramp",
+      "fields": {}
+    },
+    "dimmer_set_configuration": {
+      "name": "Configure a dimmer channel",
+      "description": "Set all possible configuration values for a dimmer channel",
+      "fields": {
+        "mode": {
+          "name": "Dimming mode",
+          "description": "Defines the mode the dimmer shall work in"
+        },
+        "dimming_time": {
+          "name": "Time for dimming",
+          "description": "Time (a 50ms) to fade from 0% to 100% brightness when selecting a new brightness"
+        },
+        "ramp_time": {
+          "name": "Time for ramps",
+          "description": "Time (a 50ms) to fade from 0% to 100% brightness when starting a dimming ramp"
+        },
+        "dimming_start_brightness": {
+          "name": "Start brightness for dimming",
+          "description": "Lowest brightness a dimming action starts with"
+        },
+        "dimming_end_brightness": {
+          "name": "End brightness for dimming",
+          "description": "Highest brightness a dimming action ends with"
+        }
+      }
+    },
+    "rgb_set_color": {
+      "name": "Turns on given color with additional parameters",
+      "description": "Allows to turn an RGB light on with a given color and duration",
+      "fields": {
+        "brightness_red": {
+          "name": "Brightness red",
+          "description": "Brightness for color red in percent (0-100)"
+        },
+        "brightness_green": {
+          "name": "Brightness green",
+          "description": "Brightness for color green in percent (0-100)"
+        },
+        "brightness_blue": {
+          "name": "Brightness blue",
+          "description": "Brightness for color blue in percent (0-100)"
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "On duration in seconds"
+        }
+      }
+    },
+    "rgb_set_configuration": {
+      "name": "Configure an RGB channel",
+      "description": "Set all possible configuration values for an RGB channel",
+      "fields": {
+        "dimming_time": {
+          "name": "Time for dimming",
+          "description": "Time (a 50ms) to fade from 0% to 100% brightness when selecting a new brightness"
+        }
+      }
+    },
+    "led_off": {
+      "name": "Turn LED off",
+      "description": "Allows to turn an LED off with a given off delay",
+      "fields": {
+        "off_delay": {
+          "name": "Off Delay",
+          "description": "Delay in seconds before switching off"
+        }
+      }
+    },
+    "led_on": {
+      "name": "Switch LED on",
+      "description": "Allows to switch an LED on with duration and switch on delay",
+      "fields": {
+        "brightness": {
+          "name": "Brightness",
+          "description": "Brightness in percent (0-100)"
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Switch on duration in seconds"
+        },
+        "on_delay": {
+          "name": "On Delay",
+          "description": "Delay in seconds before switching on"
+        }
+      }
+    },
+    "led_blink": {
+      "name": "Blink LED",
+      "description": "Allows to make an LED blink with blink pattern and quantity",
+      "fields": {
+        "brightness": {
+          "name": "Brightness",
+          "description": "Brightness in percent (0-100)"
+        },
+        "off_time": {
+          "name": "Off Time",
+          "description": "Off time of blink pattern in seconds"
+        },
+        "on_time": {
+          "name": "On Time",
+          "description": "On time of blink pattern in seconds"
+        },
+        "quantity": {
+          "name": "Quantity",
+          "description": "Number of blink rounds"
+        }
+      }
+    },
+    "led_set_min_brightness": {
+      "name": "Set minimum LED brightness",
+      "description": "Sets a minimum remaining brightness for a LED",
+      "fields": {
+        "min_brightness": {
+          "name": "min brightness",
+          "description": "Minimum brightness in percent (0-100)"
+        }
+      }
+    },
+    "led_set_configuration": {
+      "name": "Configure LED channel",
+      "description": "Set all possible configuration values for a LED channel",
+      "fields": {
+        "time_base": {
+          "name": "Timebase for time parameters",
+          "description": "Basis for time parameters. 1000 = seconds, 1 = milliseconds"
+        }
+      }
+    },
+    "temperatur_sensor_set_configuration": {
+      "name": "Configure temperature sensor",
+      "description": "Set all possible configuration values for a temperature sensor",
+      "fields": {
+        "correction": {
+          "name": "Correction",
+          "description": "Adjustment value added to reported temperature"
+        },
+        "auto_event_diff": {
+          "name": "Auto event diff",
+          "description": "Temperature change that triggers a new event"
+        },
+        "manual_event_interval": {
+          "name": "Manual event interval",
+          "description": "Time interval that triggers temperature update regardless of changes"
+        }
+      }
+    },
+    "power_meter_sensor_set_configuration": {
+      "name": "Configure power meter",
+      "description": "Set all possible configuration values for a power meter",
+      "fields": {
+        "correction": {
+          "name": "Correction",
+          "description": "Adjustment value added to reported power"
+        },
+        "auto_event_diff": {
+          "name": "Auto event diff",
+          "description": "Power change that triggers a new event"
+        },
+        "manual_event_interval": {
+          "name": "Manual event interval",
+          "description": "Time interval that triggers power update regardless of changes"
+        }
+      }
+    },
+    "brightness_sensor_set_configuration": {
+      "name": "Configure brightness sensor",
+      "description": "Set all possible configuration values for a brightness sensor",
+      "fields": {
+        "correction": {
+          "name": "Correction",
+          "description": "Adjustment value added to reported brightness"
+        },
+        "auto_event_diff": {
+          "name": "Auto event diff",
+          "description": "Brightness change that triggers a new event"
+        },
+        "manual_event_interval": {
+          "name": "Manual event interval",
+          "description": "Time interval that triggers brightness update regardless of changes"
+        }
+      }
+    },
+    "humidity_sensor_set_configuration": {
+      "name": "Configure humidity sensor",
+      "description": "Set all possible configuration values for a humidity sensor",
+      "fields": {
+        "correction": {
+          "name": "Correction",
+          "description": "Adjustment value added to reported humidity"
+        },
+        "auto_event_diff": {
+          "name": "Auto event diff",
+          "description": "Humidity change that triggers a new event"
+        },
+        "manual_event_interval": {
+          "name": "Manual event interval",
+          "description": "Time interval that triggers humidity update regardless of changes"
+        }
+      }
+    },
+    "analog_eingang_set_configuration": {
+      "name": "Configure analog input",
+      "description": "Set all possible configuration values for an analog input channel",
+      "fields": {
+        "correction": {
+          "name": "Correction",
+          "description": "Adjustment value added to reported analog input"
+        },
+        "auto_event_diff": {
+          "name": "Auto event diff",
+          "description": "Analog input change that triggers a new event"
+        },
+        "manual_event_interval": {
+          "name": "Manual event interval",
+          "description": "Time interval that triggers analog input update regardless of changes"
+        }
+      }
+    },
+    "switch_off": {
+      "name": "Switch off",
+      "description": "Switch a relay off after delay",
+      "fields": {
+        "off_delay": {
+          "name": "Off Delay",
+          "description": "Time in seconds before switching off"
+        }
+      }
+    },
+    "switch_on": {
+      "name": "Switch on",
+      "description": "Switch a relay on for given duration and delay",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Time the switch stays on"
+        },
+        "on_delay": {
+          "name": "On Delay",
+          "description": "Time in seconds before switching on"
+        }
+      }
+    },
+    "switch_toggle": {
+      "name": "Toggle switch",
+      "description": "Toggle a relay with given on/off times and quantity",
+      "fields": {
+        "off_time": {
+          "name": "Off Time",
+          "description": "Duration the relay is off"
+        },
+        "on_time": {
+          "name": "On Time",
+          "description": "Duration the relay is on"
+        },
+        "quantity": {
+          "name": "Quantity",
+          "description": "Number of toggle cycles, 0 = forever"
+        }
+      }
+    },
+    "switch_set_configuration": {
+      "name": "Configure switch",
+      "description": "Set configuration values for a switch channel",
+      "fields": {
+        "max_on_time": {
+          "name": "Max On Time",
+          "description": "Maximum allowed on time"
+        },
+        "off_delay_time": {
+          "name": "Off Delay Time",
+          "description": "Delay before switching off"
+        },
+        "time_base": {
+          "name": "Time Base",
+          "description": "Basis for time parameters"
+        }
+      }
+    },
+    "cover_toggle": {
+      "name": "Toggle cover",
+      "description": "Start the cover in the opposite direction than last time",
+      "fields": {}
+    },
+    "cover_set_configuration": {
+      "name": "Configure cover",
+      "description": "Set configuration values for a cover channel",
+      "fields": {
+        "close_time": {
+          "name": "Close Time",
+          "description": "Duration to close the cover fully"
+        },
+        "open_time": {
+          "name": "Open Time",
+          "description": "Duration to open the cover fully"
+        },
+        "invert_direction": {
+          "name": "Invert Direction",
+          "description": "Invert UP/DOWN outputs"
+        }
+      }
+    },
+    "push_button_configure_events": {
+      "name": "Configure push button events",
+      "description": "Enable/disable input events",
+      "fields": {
+        "event_activation_status": {
+          "name": "Activation Status",
+          "description": "ENABLED, DISABLED, INVERT"
+        },
+        "disabled_duration": {
+          "name": "Disabled Duration",
+          "description": "Time events remain disabled"
+        }
+      }
+    },
+    "push_button_set_configuration": {
+      "name": "Configure push button",
+      "description": "Set all configuration parameters for a push button",
+      "fields": {
+        "hold_timeout": {
+          "name": "Hold Timeout",
+          "description": "Duration to detect hold start"
+        },
+        "double_click_timeout": {
+          "name": "Double Click Timeout",
+          "description": "Time to detect double click"
+        },
+        "event_button_pressed_active": {
+          "name": "Button Pressed Event",
+          "description": "Enable button_pressed event"
+        },
+        "event_button_released_active": {
+          "name": "Button Released Event",
+          "description": "Enable button_released event"
+        },
+        "event_button_hold_start_active": {
+          "name": "Button Hold Start Event",
+          "description": "Enable button_hold_start event"
+        },
+        "event_button_hold_end_active": {
+          "name": "Button Hold End Event",
+          "description": "Enable button_hold_end event"
+        },
+        "event_button_clicked_active": {
+          "name": "Button Clicked Event",
+          "description": "Enable button_clicked event"
+        },
+        "event_button_double_clicked_active": {
+          "name": "Button Double Clicked Event",
+          "description": "Enable button_double_clicked event"
+        },
+        "led_feedback_active": {
+          "name": "LED Feedback",
+          "description": "Enable automatic LED feedback"
+        },
+        "inverted": {
+          "name": "Inverted Input",
+          "description": "Invert input logic"
+        },
+        "debounce_time": {
+          "name": "Debounce Time",
+          "description": "Debounce time in ms"
+        }
+      }
+    }
   }
 }

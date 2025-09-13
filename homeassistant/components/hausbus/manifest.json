@@ -1,23 +1,21 @@
 {
   "domain": "hausbus",
   "name": "Haus-Bus",
-  "codeowners": [
-    "@hausbus"
-  ],
+  "codeowners": ["@hausbus"],
   "config_flow": true,
-  "device_automation": true,
-  "device_action": true,
-  "homeassistant": "2023.8.0",
+  "dependencies": [
+    "light",
+    "switch",
+    "sensor",
+    "binary_sensor",
+    "event",
+    "cover",
+    "button",
+    "number"
+  ],
   "documentation": "https://www.home-assistant.io/integrations/hausbus",
   "iot_class": "local_push",
-  "loggers": [
-    "pyhausbus"
-  ],
-  "dependencies": ["light", "switch", "sensor", "binary_sensor","event", "cover", "button","number"],
+  "loggers": ["pyhausbus"],
   "quality_scale": "bronze",
-  "requirements": [
-    "pyhausbus==1.0.15"
-  ],
-  "single_config_entry": true,
-  "version": "1.0.2"
+  "requirements": ["pyhausbus==1.0.15"]
 }

@@ -43,7 +43,6 @@ from pyhausbus.ObjectId import ObjectId
 from pyhausbus.Templates import Templates
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -88,7 +87,7 @@ DOMAIN = "hausbus"
 LOGGER = logging.getLogger(__name__)
 
 
-class HausbusGateway(IBusDataListener):  # type: ignore[misc]
+class HausbusGateway(IBusDataListener):
     """Manages a Haus-Bus gateway."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -104,14 +103,17 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         self._new_channel_listeners: dict[
             str, Callable[[HausbusEntity], Coroutine[Any, Any, None]]
         ] = {}
+        self._new_button_listener: (
+            Callable[[HausbusButton], Coroutine[Any, Any, None]] | None
+        ) = None
 
         # Listener für state_changed registrieren
         # self.hass.bus.async_listen("state_changed", self._state_changed_listener)
 
         # asyncio.run_coroutine_threadsafe(self.async_delete_devices(), self.hass.loop)
 
-    async def createDiscoveryButtonAndStartDiscovery(self):
-        """Creates a Button to manually start device discovery and starts discovery."""
+    async def createDiscoveryButton(self):
+        """Creates a Button to manually start device discovery."""
 
         async def discovery_callback():
             LOGGER.debug("Search devices")
@@ -120,7 +122,6 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         self.addStandaloneButton(
             "hausbus_discovery_button", "Discover Haus-Bus Devices", discovery_callback
         )
-        await discovery_callback()
 
     def addStandaloneButton(
         self,
@@ -129,12 +130,13 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         callback: Callable[[], Coroutine[Any, Any, None]],
     ):
         """Creates a Button that calls a method."""
-        asyncio.run_coroutine_threadsafe(
-            self._new_channel_listeners[BUTTON_DOMAIN](
-                HausbusButton(uniqueId, name, callback)
-            ),
-            self.hass.loop,
-        )
+        if self._new_button_listener is not None:
+            asyncio.run_coroutine_threadsafe(
+                self._new_button_listener(HausbusButton(uniqueId, name, callback)),
+                self.hass.loop,
+            )
+        else:
+            LOGGER.debug("new button listener missing!")
 
     def add_device(self, device_id: str, module: ModuleId) -> None:
         """Add a new Haus-Bus Device to this gateway's device list."""
@@ -142,10 +144,10 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
             self.devices[device_id] = HausbusDevice(
                 device_id,
                 module.getFirmwareId().getTemplateId()
-                +" "
-                +str(module.getMajorRelease())
-                +"."
-                +str(module.getMinorRelease()),
+                + " "
+                + str(module.getMajorRelease())
+                + "."
+                + str(module.getMinorRelease()),
                 module.getName(),
                 module.getFirmwareId(),
             )
@@ -191,7 +193,6 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
             and channel_list is not None
             and self.get_channel_id(object_id) not in channel_list
         ):
-
             new_channel = None
 
             # Specials
@@ -324,7 +325,9 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
 
         # ModuleId -> getConfiguration
         if isinstance(data, ModuleId):
-            LOGGER.debug("got moduleId of %s with data: %s", object_id.getDeviceId(), data)
+            LOGGER.debug(
+                "got moduleId of %s with data: %s", object_id.getDeviceId(), data
+            )
             self.add_device(str(object_id.getDeviceId()), data)
             controller.getConfiguration()
             return
@@ -333,7 +336,9 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         device = self.get_device(object_id)
         if device is None:
             LOGGER.debug(
-                "got event of unknown device %s with data: %s", object_id.getDeviceId(), data
+                "got event of unknown device %s with data: %s",
+                object_id.getDeviceId(),
+                data,
             )
             if not self.was_automatic_get_module_id_already_sent(deviceId):
                 LOGGER.debug("-> calling getModuleId")
@@ -366,7 +371,6 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
 
             device = self.get_device(object_id)
             if device is not None:
-
                 instances: list[ABusFeature] = self.home_server.getDeviceInstances(
                     object_id.getValue(), data
                 )
@@ -404,7 +408,12 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
                     )
 
                     LOGGER.debug(
-                        "name for firmwareId %s, fcke: %s, classId %s, instanceId %s is %s", device.firmware_id, device.fcke, instanceObjectId.getClassId(), instanceObjectId.getInstanceId(), name
+                        "name for firmwareId %s, fcke: %s, classId %s, instanceId %s is %s",
+                        device.firmware_id,
+                        device.fcke,
+                        instanceObjectId.getClassId(),
+                        instanceObjectId.getInstanceId(),
+                        name,
                     )
 
                     if deviceId in (HOMESERVER_DEVICE_ID, 9999, 12222):
@@ -443,37 +452,43 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
                         "inputs": inputs
                     }
                     LOGGER.debug(
-                        "%s inputs angemeldet %s deviceId %s", inputs, device.hass_device_entry_id, deviceId
+                        "%s inputs angemeldet %s deviceId %s",
+                        inputs,
+                        device.hass_device_entry_id,
+                        deviceId,
                     )
 
                 return
 
-        # Device_trigger und Events melden
-        eventEntity = self.get_event_entity(object_id.getValue())
-        if eventEntity is not None:
-            LOGGER.debug("eventEntity is %s", eventEntity)
-            eventEntity.handle_event(data)
-            self.generate_device_trigger(data, device, object_id)
+        if device is not None:
+            # Device_trigger und Events melden
+            eventEntity = self.get_event_entity(object_id.getValue())
+            if eventEntity is not None:
+                LOGGER.debug("eventEntity is %s", eventEntity)
+                eventEntity.handle_event(data)
+                self.generate_device_trigger(data, device, object_id)
 
-        # Alles andere wird an die jeweiligen Channel weitergeleitet
-        channel = self.get_channel(object_id)
+            # Alles andere wird an die jeweiligen Channel weitergeleitet
+            channel = self.get_channel(object_id)
 
-        # all channel events
-        if isinstance(channel, HausbusEntity):
-            LOGGER.debug("handle_event %s %s", channel, data)
-            channel.handle_event(data)
+            # all channel events
+            if isinstance(channel, HausbusEntity):
+                LOGGER.debug("handle_event %s %s", channel, data)
+                channel.handle_event(data)
+            else:
+                LOGGER.debug("kein zugehöriger channel")
 
-        if isinstance(channel, HausbusRfidSensor) and isinstance(data, RfidEvData):
-            LOGGER.debug("rfid data %s %s", channel, data)
-            self.hass.loop.call_soon_threadsafe(
-                lambda: self.hass.bus.async_fire(
-                    "hausbus_rfid_event",
-                    {"device_id": device.hass_device_entry_id, "tag": data.getTagID()},
+            if isinstance(channel, HausbusRfidSensor) and isinstance(data, RfidEvData):
+                LOGGER.debug("rfid data %s %s", channel, data)
+                self.hass.loop.call_soon_threadsafe(
+                    lambda: self.hass.bus.async_fire(
+                        "hausbus_rfid_event",
+                        {
+                            "device_id": device.hass_device_entry_id,
+                            "tag": data.getTagID(),
+                        },
+                    )
                 )
-            )
-
-        else:
-            LOGGER.debug("kein zugehöriger channel")
 
     def generate_device_trigger(self, data, device: HausbusDevice, object_id: ObjectId):
         """Generates device trigger from a haus-bus event."""
@@ -496,7 +511,10 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
             )
             if name is not None:
                 LOGGER.debug(
-                    "sending trigger %s name %s hass_device_id %s", eventType, name, device.hass_device_entry_id
+                    "sending trigger %s name %s hass_device_id %s",
+                    eventType,
+                    name,
+                    device.hass_device_entry_id,
                 )
                 self.hass.loop.call_soon_threadsafe(
                     lambda: self.hass.bus.async_fire(
@@ -519,6 +537,12 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
         """Register add channel callbacks."""
         self._new_channel_listeners[platform] = add_channel_callback
 
+    def register_platform_add_button_callback(
+        self, add_button_callback: Callable[[HausbusButton], Coroutine[Any, Any, None]]
+    ) -> None:
+        """Register add channel callbacks."""
+        self._new_button_listener = add_button_callback
+
     def extract_final_number(self, text: str) -> int | None:
         """Extract a number from the end of the given string."""
         match = re.search(r"(\d+)$", text.strip())
@@ -528,15 +552,22 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
 
     async def async_update_device_registry(self, device: HausbusDevice):
         """Updates the device name in the hass registry."""
-        device_registry = dr.get(self.hass)
+        device_registry = dr.async_get(self.hass)
         device_entry = device_registry.async_update_device(
             device.hass_device_entry_id, name=device.name
         )
-        LOGGER.debug("updated hassEntryId = %s", device_entry.id)
+
+        if device_entry is not None:
+            LOGGER.debug("updated hassEntryId = %s", device_entry.id)
+        else:
+            LOGGER.debug(
+                "device_entry is none for hass_device_entry_id %s",
+                device.hass_device_entry_id,
+            )
 
     async def async_create_device_registry(self, device: HausbusDevice):
         """Creates a device in the hass registry."""
-        device_registry = dr.get(self.hass)
+        device_registry = dr.async_get(self.hass)
         device_entry = device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, device.device_id)},
@@ -554,7 +585,9 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
 
         if last_time is not None and now - last_time < 60:
             LOGGER.debug(
-                "no automatic get_module_id to %s because done before %.1f s", device_id, now - last_time
+                "no automatic get_module_id to %s because done before %.1f s",
+                device_id,
+                now - last_time,
             )
             return True
 
@@ -593,3 +626,6 @@ class HausbusGateway(IBusDataListener):  # type: ignore[misc]
                 return True
             LOGGER.debug("passt nicht %s", hausBusDevice.hass_device_entry_id)
         return False
+
+
+# pre-commit: skip=codespell

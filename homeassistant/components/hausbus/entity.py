@@ -29,7 +29,7 @@ class HausbusEntity(Entity):
         self,
         channel: ABusFeature,
         device: HausbusDevice,
-        alternativeType: str | None=None,
+        alternativeType: str | None = None,
     ) -> None:
         """Set up channel."""
         super().__init__()
@@ -52,8 +52,9 @@ class HausbusEntity(Entity):
         self._attr_device_info = self._device.device_info
         self._attr_translation_key = self._type
         self._attr_extra_state_attributes = {}
-        self._configuration = {}
-        self._special_type = device.special_type
+        self._configuration: Any = None
+        if device is not None:
+            self._special_type = device.special_type
 
     def get_hardware_status(self) -> None:
         """Request status and configuration of this channel from hardware."""
@@ -80,7 +81,10 @@ class HausbusEntity(Entity):
                 self.entity_id, DOMAIN, {"hausbus_special_type": self._special_type}
             )
         LOGGER.debug(
-            "added_to_hass %s type %s special_type %s", self._attr_name, self.__class__.__name__, self._special_type
+            "added_to_hass %s type %s special_type %s",
+            self._attr_name,
+            self.__class__.__name__,
+            self._special_type,
         )
 
     async def ensure_configuration(self) -> bool:
@@ -93,7 +97,10 @@ class HausbusEntity(Entity):
         try:
             await asyncio.wait_for(self._wait_for_configuration(), timeout=5.0)
         except TimeoutError:
-            LOGGER.warning("Timeout while waiting for configuration of %s", self.entity_id)
+            LOGGER.warning(
+                "Timeout while waiting for configuration of %s", self.entity_id
+            )
+            return False
         else:
             return True
 

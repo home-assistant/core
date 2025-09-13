@@ -12,6 +12,7 @@ repos:
     hooks:
       - id: codespell
         args:
+          - --ignore-words=.codespellignore
           - --ignore-words-list=aiport,astroid,checkin,currenty,hass,iif,incomfort,lookin,nam,NotIn
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
@@ -66,7 +67,7 @@ repos:
         files: ^(homeassistant|pylint)/.+\.(py|pyi)$
       - id: pylint
         name: pylint
-        entry: script/run-in-env.sh pylint --ignore-missing-annotations=y
+        entry: script/run-in-env.sh pylint
         language: script
         require_serial: true
         types_or: [python, pyi]

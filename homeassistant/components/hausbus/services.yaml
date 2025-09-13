@@ -1,945 +1,227 @@
-#GLOBAL services
+# GLOBAL services
 discover_devices:
-  name: Discover Devices
-  description: Start a manual search for Haus-Bus devices.
   fields: {}
 
 reset_device:
-  name: Reset Device
-  description: Resets a device controller
   target:
     device:
       integration: hausbus
-        
-#DIMMER services
+  fields: {}
+
+# DIMMER services
 dimmer_set_brightness:
-  name: Turn dimmer on with additional parameters
-  description: Allows to turn an dimmer on with a given duration
   target:
     entity:
       domain: light
   fields:
-    brightness:
-      name: Brightness
-      description: Brightness in percent (0-100)
-      required: true
-      default: 100
-      example: 100
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-          mode: slider
-    duration:
-      name: Duration
-      description: On duration in seconds
-      required: false
-      default: 0
-      example: 0
-      selector:
-        number:
-          min: 0
-          max: 65535
-          unit_of_measurement: s
+    brightness: {}
+    duration: {}
 
 dimmer_start_ramp:
   target:
     entity:
       domain: light
-  name: Start dimming ramp into given direction
-  description: Starts a ramp of a dimmer in give direction or toggle to opposite direction than last turn
   fields:
-    direction:
-      name: Ramp direction
-      description: Direction of dimmer ramp ("up","down","toggle")
-      required: true
-      default: "up"
-      example: "up"
-      selector:
-        select:
-          options:
-            - "up"
-            - "down"
-            - "toggle"
+    direction: {}
 
 dimmer_stop_ramp:
   target:
     entity:
       domain: light
-
-  name: Stop active dimming ramp
-  description: Stops a ramp of a dimmer that was started with dimmer_start_ramp
+  fields: {}
 
 dimmer_set_configuration:
   target:
     entity:
       domain: light
-  name: Configure a dimmer channel
-  description: Set all possible configuration values for a dimmer channel
   fields:
-    mode:
-      name: Dimming mode
-      description: Defines the mode the dimmer shall work in
-      required: true
-      default: "dimm_trailing_edge"
-      example: "dimm_trailing_edge"
-      selector:
-        select:
-          options:
-            - "dimm_trailing_edge"
-            - "dimm_leading_edge"
-            - "switch_only"
-    dimming_time:
-      name: Time for dimming
-      description: Time (a 50ms) to fade from 0% to 100% brightness when selecting a new brightness with command set_brightness. Possible time 50ms to 10s.
-      required: true
-      default: 12
-      example: 12
-      selector:
-        number:
-          min: 1
-          max: 255
-    ramp_time:
-      name: Time for ramps
-      description: Time (a 50ms) to fade from 0% to 100% brightness when starting a dimming ramp with command start_ramp. Possible time 50ms to 10s.
-      required: true
-      default: 60
-      example: 60
-      selector:
-        number:
-          min: 1
-          max: 255
-    dimming_start_brightness:
-      name: start brightness for dimming
-      description: Lowest brightness a dimming action starts with
-      required: true
-      default: 0
-      example: 0
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-          mode: slider
-    dimming_end_brightness:
-      name: end brightness for dimming
-      description: Highest brightness a dimming action ends with
-      required: true
-      default: 100
-      example: 100
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-          mode: slider
+    mode: {}
+    dimming_time: {}
+    ramp_time: {}
+    dimming_start_brightness: {}
+    dimming_end_brightness: {}
 
-
-#RGB services
+# RGB services
 rgb_set_color:
-  name: Turns on given color with additional parameters
-  description: Allows to turn an rgb light on with a given color and duration
   target:
     entity:
       domain: light
   fields:
-    brightness_red:
-      name: Brightness red
-      description: Brightness for color red in percent (0-100)
-      required: true
-      default: 100
-      example: 100
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-          mode: slider
-    brightness_green:
-      name: Brightness green
-      description: Brightness for color green in percent (0-100)
-      required: true
-      default: 100
-      example: 100
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-          mode: slider          
-    brightness_blue:
-      name: Brightness blue
-      description: Brightness for color blue in percent (0-100)
-      required: true
-      default: 100
-      example: 100
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-          mode: slider           
-    duration:
-      name: Duration
-      description: On duration in seconds
-      required: false
-      default: 0
-      example: 0
-      selector:
-        number:
-          min: 0
-          max: 65535
-          unit_of_measurement: s
+    brightness_red: {}
+    brightness_green: {}
+    brightness_blue: {}
+    duration: {}
 
 rgb_set_configuration:
   target:
     entity:
       domain: light
-  name: Configure a rgb channel
-  description: Set all possible configuration values for a rgb channel
   fields:
-    dimming_time:
-      name: Time for dimming
-      description: Time (a 50ms) to fade from 0% to 100% brightness when selecting a new brightness with command set_brightness. Possible time 50ms to 10s.
-      required: true
-      default: 12
-      example: 12
-      selector:
-        number:
-          min: 1
-          max: 255
-          
-#LED services
+    dimming_time: {}
+
+# LED services
 led_off:
-  name: Turn led off with additional parameters
-  description: Allows to turn a led off with a given on delay
   target:
     entity:
       domain: light
   fields:
-    offDelay:
-      name: OffDelay
-      description: delay in seconds before switching off
-      required: false
-      default: 0
-      example: 0
-      selector:
-        number:
-          min: 0
-          max: 65535
-          unit_of_measurement: s   
-      
+    off_delay: {}
+
 led_on:
-  name: Switch LED on with additional parameters
-  description: Allows to switch an LED on with duration and switch on delay
   target:
     entity:
       domain: light
   fields:
-    brightness:
-      name: Brightness
-      description: Brightness in percent (0-100)
-      required: true
-      default: 100
-      example: 0
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-          mode: slider
-    duration:
-      name: Duration
-      description: Switch on duration in seconds
-      required: false
-      default: 0
-      example: 0
-      selector:
-        number:
-          min: 0
-          max: 65535
-          unit_of_measurement: s
-    onDelay:
-      name: OnDelay
-      description: delay in seconds before switching on
-      required: false
-      default: 0
-      example: 0
-      selector:
-        number:
-          min: 0
-          max: 65535
-          unit_of_measurement: s
+    brightness: {}
+    duration: {}
+    on_delay: {}
 
 led_blink:
-  name: Lets a led blink with additional parameters
-  description: Allows to led an LED blink with blink pattern and quantity
   target:
     entity:
       domain: light
   fields:
-    brightness:
-      name: Brightness
-      description: Brightness in percent (0-100)
-      required: true
-      default: 100
-      example: 100
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-          mode: slider
-    offTime:
-      name: OffTime
-      description: offTime of blink pattern
-      required: true
-      default: 1
-      example: 1
-      selector:
-        number:
-          min: 0
-          max: 255
-    onTime:
-      name: OnTime
-      description: onTime of blink pattern
-      required: true
-      default: 1
-      example: 1
-      selector:
-        number:
-          min: 0
-          max: 255
-    quantity:
-      name: Quantity
-      description: number of blink rounds
-      required: false
-      default: 0
-      example: 0
-      selector:
-        number:
-          min: 0
-          max: 65535
+    brightness: {}
+    off_time: {}
+    on_time: {}
+    quantity: {}
 
 led_set_min_brightness:
-  name: Sets a minimum remaining brightness for a led
-  description: Sets a minimum brightness for a led that also remains if the led is switched up
   target:
     entity:
       domain: light
   fields:
-    minBrightness:
-      name: MinBrightness
-      description: minBrightness in percent (0-100)
-      required: true
-      default: 0
-      example: 0
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-          mode: slider
+    min_brightness: {}
 
 led_set_configuration:
   target:
     entity:
       domain: light
-  name: Configure a led channel
-  description: Set all possible configuration values for a led channel
   fields:
-    time_base:
-      name: Timebase for time parameters
-      description: The value of a time parameter has this basis. 1000 means that the value means seconds, 1 means that the value means milliseconds.
-      required: true
-      default: 1000
-      example: 1000
-      selector:
-        number:
-          min: 1
-          max: 65535
-          mode: slider
+    time_base: {}
 
 # Temperatur sensor services
 temperatur_sensor_set_configuration:
   target:
     entity:
       domain: sensor
-  name: Configure a temperature sensor channel
-  description: Set all possible configuration values for a temperature sensor
   fields:
-    correction:
-      name: Correction value to adjust the reported temperature.
-      description: Correction value to adjust the reported temperature. Value can be negative and positive and is added to the reported sensor value.
-      required: true
-      default: -2
-      example: -0.5
-      selector:
-        number:
-          min: -10
-          max: 10
-          step: 0.1
-          mode: slider
-          unit_of_measurement: "°C"
-    auto_event_diff:
-      name: Temperature change that triggers a new event.
-      description: Instead of a fixed event interval this temperature change triggers an temperature update 
-      required: true
-      default: 0.5
-      example: 0.5
-      selector:
-        number:
-          min: 0.1
-          max: 20
-          step: 0.1
-          mode: slider
-          unit_of_measurement: "°C"
-    manual_event_interval:
-      name: Interval of reported temperature values
-      description: Time interval that triggers a temperature update independent from temperature changes 
-      required: true
-      default: "5 minutes"
-      example: "60 seconds"
-      selector:
-        select:
-          options:
-            - "1 second"
-            - "5 seconds"
-            - "10 seconds"
-            - "30 seconds"
-            - "1 minute"
-            - "5 minutes"
-            - "10 minutes"
-            - "20 minutes"
-            - "30 minutes"
-            - "60 minutes"
+    correction: {}
+    auto_event_diff: {}
+    manual_event_interval: {}
 
 # PowerMeter sensor services
 power_meter_sensor_set_configuration:
   target:
     entity:
       domain: sensor
-  name: Configure a power meter channel
-  description: Set all possible configuration values for a power meter
   fields:
-    correction:
-      name: Correction value to adjust the reported power.
-      description: Correction value to adjust the reported power. Value can be negative and positive and is added to the reported power value.
-      required: true
-      default: 0
-      example: 0
-      selector:
-        number:
-          min: -100
-          max: 100
-          step: 0.1
-          mode: slider
-          unit_of_measurement: "kW"
-    auto_event_diff:
-      name: Power change that triggers a new event.
-      description: Instead of a fixed event interval this power change triggers an power update 
-      required: true
-      default: 1
-      example: 1
-      selector:
-        number:
-          min: 0.1
-          max: 100
-          step: 0.1
-          mode: slider
-          unit_of_measurement: "kW"
-    manual_event_interval:
-      name: Interval of reported power values
-      description: Time interval that triggers a power update independent from power changes 
-      required: true
-      default: "5 minutes"
-      example: "60 seconds"
-      selector:
-        select:
-          options:
-            - "1 second"
-            - "5 seconds"
-            - "10 seconds"
-            - "30 seconds"
-            - "1 minute"
-            - "5 minutes"
-            - "10 minutes"
-            - "20 minutes"
-            - "30 minutes"
-            - "60 minutes"
+    correction: {}
+    auto_event_diff: {}
+    manual_event_interval: {}
 
 # Brightness sensor services
 brightness_sensor_set_configuration:
   target:
     entity:
       domain: sensor
-  name: Configure a brightness sensor channel
-  description: Set all possible configuration values for a brightness sensor
   fields:
-    correction:
-      name: Correction value to adjust the reported brightness.
-      description: Correction value to adjust the reported brightness. Value can be negative and positive and is added to the reported sensor value.
-      required: true
-      default: 0
-      example: -10
-      selector:
-        number:
-          min: -100
-          max: 100
-          step: 10
-          mode: slider
-          unit_of_measurement: "lux"
-    auto_event_diff:
-      name: Brightness change that triggers a new event.
-      description: Instead of a fixed event interval this brightness change triggers an brightness update 
-      required: true
-      default: 30
-      example: 30
-      selector:
-        number:
-          min: 10
-          max: 100
-          step: 10
-          mode: slider
-          unit_of_measurement: "lux"
-    manual_event_interval:
-      name: Interval of reported brightness values
-      description: Time interval that triggers a brightness update independent from brightness changes 
-      required: true
-      default: "5 minutes"
-      example: "60 seconds"
-      selector:
-        select:
-          options:
-            - "1 second"
-            - "5 seconds"
-            - "10 seconds"
-            - "30 seconds"
-            - "1 minute"
-            - "5 minutes"
-            - "10 minutes"
-            - "20 minutes"
-            - "30 minutes"
-            - "60 minutes"
+    correction: {}
+    auto_event_diff: {}
+    manual_event_interval: {}
 
 # Feuchtigkeitssensor services
 humidity_sensor_set_configuration:
   target:
     entity:
       domain: sensor
-  name: Configure a humidity sensor channel
-  description: Set all possible configuration values for a humidity sensor
   fields:
-    correction:
-      name: Correction value to adjust the reported humidity.
-      description: Correction value to adjust the reported humidity. Value can be negative and positive and is added to the reported sensor value.
-      required: true
-      default: 0
-      example: -0.5
-      selector:
-        number:
-          min: -100
-          max: 100
-          step: 0.1
-          mode: slider
-          unit_of_measurement: "%"
-    auto_event_diff:
-      name: Humidity change that triggers a new event.
-      description: Instead of a fixed event interval this humidity change triggers an humidity update 
-      required: true
-      default: 1
-      example: 1
-      selector:
-        number:
-          min: 0.1
-          max: 100
-          step: 0.1
-          mode: slider
-          unit_of_measurement: "%"
-    manual_event_interval:
-      name: Interval of reported humidity values
-      description: Time interval that triggers a humidity update independent from humidity changes 
-      required: true
-      default: "5 minutes"
-      example: "60 seconds"
-      selector:
-        select:
-          options:
-            - "1 second"
-            - "5 seconds"
-            - "10 seconds"
-            - "30 seconds"
-            - "1 minute"
-            - "5 minutes"
-            - "10 minutes"
-            - "20 minutes"
-            - "30 minutes"
-            - "60 minutes"
+    correction: {}
+    auto_event_diff: {}
+    manual_event_interval: {}
 
 # Analogeingang services
 analog_eingang_set_configuration:
   target:
     entity:
       domain: sensor
-  name: Configure a analog input channel
-  description: Set all possible configuration values for a analog input channel
   fields:
-    correction:
-      name: Correction value to adjust the reported analog input.
-      description: Correction value to adjust the reported analog input. Value can be negative and positive and is added to the reported input value.
-      required: true
-      default: 0
-      example: -10
-      selector:
-        number:
-          min: -100
-          max: 100
-          step: 1
-          mode: slider
-    auto_event_diff:
-      name: Analog input change that triggers a new event.
-      description: Instead of a fixed event interval this Analog input change triggers an analog input update 
-      required: true
-      default: 30
-      example: 30
-      selector:
-        number:
-          min: 10
-          max: 100
-          step: 1
-          mode: slider
-    manual_event_interval:
-      name: Interval of reported brightness values
-      description: Time interval that triggers a brightness update independent from brightness changes 
-      required: true
-      default: "5 minutes"
-      example: "60 seconds"
-      selector:
-        select:
-          options:
-            - "1 second"
-            - "5 seconds"
-            - "10 seconds"
-            - "30 seconds"
-            - "1 minute"
-            - "5 minutes"
-            - "10 minutes"
-            - "20 minutes"
-            - "30 minutes"
-            - "60 minutes"
-            
-# Schalter Services
+    correction: {}
+    auto_event_diff: {}
+    manual_event_interval: {}
+
+# Switch services
 switch_off:
   target:
     entity:
       domain: switch
-  name: Switch off after delay
-  description: Switches a relay with the given off delay time
   fields:
-    offDelay:
-      name: Delay before the switch is switched off
-      description: If configured greater than 0 the switch disables after the given time.
-      required: true
-      default: 0
-      example: 600
-      selector:
-        number:
-          min: 0
-          max: 65535
-          mode: slider
+    off_delay: {}
 
 switch_on:
   target:
     entity:
       domain: switch
-  name: Switch on after delay
-  description: Switches a relay for given duration and on delay time
   fields:
-    duration:
-      name: Switch duration
-      description: If configured greater than 0 the switch disables after this time
-      required: true
-      default: 0
-      example: 600
-      selector:
-        number:
-          min: 0
-          max: 65535
-          mode: slider
-    onDelay:
-      name: Delay before the switch is switched on
-      description: If configured greater than 0 the switch enables after the given time.
-      required: true
-      default: 0
-      example: 600
-      selector:
-        number:
-          min: 0
-          max: 65535
-          mode: slider
+    duration: {}
+    on_delay: {}
 
 switch_toggle:
   target:
     entity:
       domain: switch
-  name: Toggle relay with interval
-  description: Toggels a relay with interval with given off and on time and quantity
   fields:
-    offTime:
-      name: offTime
-      description: Duration the relay is off in the toggle period
-      required: true
-      default: 1
-      example: 10
-      selector:
-        number:
-          min: 1
-          max: 255
-          mode: slider
-    onTime:
-      name: onTime
-      description: Duration the relay is on in the toggle period
-      required: true
-      default: 1
-      example: 10
-      selector:
-        number:
-          min: 1
-          max: 255
-          mode: slider
-    quantity:
-      name: quantity
-      description: Number of toggle times. 0 means forever
-      required: false
-      default: 0
-      example: 10
-      selector:
-        number:
-          min: 1
-          max: 255
-          mode: slider
+    off_time: {}
+    on_time: {}
+    quantity: {}
 
 switch_set_configuration:
   target:
     entity:
       domain: switch
-  name: Configure a switch channel
-  description: Set all possible configuration values for a switch channel
   fields:
-    max_on_time:
-      name: Maximum allowed on time
-      description: If configured greater than 0 the switch disabled automatically after the given time.
-      required: true
-      default: 0
-      example: 600
-      selector:
-        number:
-          min: 0
-          max: 255
-          mode: slider
-    off_delay_time:
-      name: Delay time before switching off
-      description: Switching off this relay is delayed for the configured time
-      required: true
-      default: 0
-      example: 10
-      selector:
-        number:
-          min: 1
-          max: 255
-          mode: slider
-    time_base:
-      name: Timebase for time parameters
-      description: The value of a time parameter has this basis. 1000 means that the value means seconds, 1 means that the value means milliseconds.
-      required: true
-      default: 1000
-      example: 1000
-      selector:
-        number:
-          min: 1
-          max: 65535
-          mode: slider
+    max_on_time: {}
+    off_delay_time: {}
+    time_base: {}
 
-# Rolladen Services
+# Cover services
 cover_toggle:
   target:
     entity:
       domain: cover
-  name: Toggle direction
-  description: Starts the cover in the opposite direction than last time
+  fields: {}
 
 cover_set_configuration:
   target:
     entity:
       domain: cover
-  name: Configure a cover channel
-  description: Set all possible configuration values for a cover channel
   fields:
-    close_time:
-      name: Duration of a full cover close movement
-      description: Time it takes to close the shutter from completely open to completely closed
-      required: true
-      default: 30
-      example: 30
-      selector:
-        number:
-          min: 1
-          max: 255
-          mode: slider
-    open_time:
-      name: Duration of a full cover open movement
-      description: Time it takes to close the shutter from completely closed to completely open
-      required: true
-      default: 30
-      example: 30
-      selector:
-        number:
-          min: 1
-          max: 255
-          mode: slider
-    invert_direction:
-      name: Inverts UP and DOWN direction
-      description: Can be used to invert the relay outputs for UP and DOWN direction 
-      required: true
-      default: False
-      example: False
-      selector:
-        boolean:
+    close_time: {}
+    open_time: {}
+    invert_direction: {}
 
-# Taster Services
+# Push Button services
 push_button_configure_events:
   target:
     entity:
       domain: event
-  name: Disable oder enable input events
-  description: Disables all events from this input for the given time or activates them again.
   fields:
-    eventActivationStatus:
-      name: Disable or enable
-      description: DISABLED to disable all events, ENABLED to enable them again, INVERT to invert the actual status
-      required: true
-      default: "ENABLED"
-      example: "ENABLED"
-      selector:
-        select:
-          options:
-            - "ENABLED"
-            - "DISABLED"
-            - "INVERT"
-    disabled_duration:
-      name: Time events remain disabled
-      description: Events remain disabled for the given time or forever if configured to 0
-      required: true
-      default: 0
-      example: 30
-      selector:
-        number:
-          min: 1
-          max: 255
-          mode: slider
-          
+    event_activation_status: {}
+    disabled_duration: {}
+
 push_button_set_configuration:
   target:
     entity:
       domain: event
-  name: Configure input
-  description: Configured all parameters for the input 
   fields:
-    hold_timeout:
-      name: Button hold start time 
-      description: Duration a push button has to be pressed to generate button_hold_start event if active
-      required: true
-      default: 100
-      example: 100
-      selector:
-        number:
-          min: 1
-          max: 255
-          mode: slider
-    double_click_timeout:
-      name: Button double click time out
-      description: Within this time a push button has to be clicked again to generate button_double_clicked event if active
-      required: true
-      default: 50
-      example: 50
-      selector:
-        number:
-          min: 1
-          max: 255
-          mode: slider
-    event_button_pressed_active:
-      name: Enables or disables event button_pressed
-      description: True if a push button shall send event button_pressed
-      required: true
-      default: True
-      example: True
-      selector:
-        boolean:
-    event_button_released_active:
-      name: Enables or disables event button_released
-      description: True if a push button shall send event button_released
-      required: true
-      default: True
-      example: True
-      selector:
-        boolean:
-    event_button_hold_start_active:
-      name: Enables or disables event button_hold_start
-      description: True if a push button shall send event button_hold_start
-      required: true
-      default: False
-      example: False
-      selector:
-        boolean:
-    event_button_hold_end_active:
-      name: Enables or disables event button_hold_end
-      description: True if a push button shall send event button_hold_end
-      required: true
-      default: False
-      example: False
-      selector:
-        boolean:
-    event_button_clicked_active:
-      name: Enables or disables event button_clicked
-      description: True if a push button shall send event button_clicked.
-      required: true
-      default: False
-      example: False
-      selector:
-        boolean:
-    event_button_double_clicked_active:
-      name: Enables or disables event button_double_clicked
-      description: True if a push button shall send event button_double_clicked. Please note that event button_clicked is delayed for this time to device if it was a double click
-      required: true
-      default: False
-      example: False
-      selector:
-        boolean:
-    led_feedback_active:
-      name: Enables or disables led feedback
-      description: True means that the led of a haus-bus multitaster automatically indicates a pressed button 
-      required: true
-      default: True
-      example: True
-      selector:
-        boolean:
-    inverted:
-      name: Inverts this input
-      description: True if the logic of this input is to be inverted 
-      required: true
-      default: False
-      example: False
-      selector:
-        boolean:
-    debounce_time:
-      name: Configured debounce time of this input
-      description: If a push button is connected to this input the debounce time should be configured to 40. If a sensor with a high frequence signal is connected it should be reduced to 10. 
-      required: true
-      default: 40
-      example: 40
-      selector:
-        number:
-          min: 1
-          max: 254
-          mode: slider
+    hold_timeout: {}
+    double_click_timeout: {}
+    event_button_pressed_active: {}
+    event_button_released_active: {}
+    event_button_hold_start_active: {}
+    event_button_hold_end_active: {}
+    event_button_clicked_active: {}
+    event_button_double_clicked_active: {}
+    led_feedback_active: {}
+    inverted: {}
+    debounce_time: {}

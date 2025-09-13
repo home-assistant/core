@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonEntity
+from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -25,11 +25,11 @@ async def async_setup_entry(
     """Set up a button from a config entry."""
     gateway = config_entry.runtime_data.gateway
 
-    async def async_add_button(channel: HausbusButton) -> None:
+    async def async_add_button(entity: HausbusButton) -> None:
         """Add button entity."""
-        async_add_entities([channel])
+        async_add_entities([entity])
 
-    gateway.register_platform_add_channel_callback(async_add_button, BUTTON_DOMAIN)
+    gateway.register_platform_add_button_callback(async_add_button)
 
 
 class HausbusButton(ButtonEntity):
@@ -52,6 +52,4 @@ class HausbusButton(ButtonEntity):
         try:
             await self._callback()
         except Exception:
-            LOGGER.exception(
-                "Error executing button %s", self._attr_name
-            )
+            LOGGER.exception("Error executing button %s", self._attr_name)

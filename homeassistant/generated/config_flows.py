@@ -257,6 +257,7 @@ FLOWS = {
         "guardian",
         "habitica",
         "harmony",
+        "hausbus",
         "heos",
         "here_travel_time",
         "hisense_aehw4a1",

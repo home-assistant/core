@@ -4,14 +4,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
 from .gateway import HausbusGateway
+
+# Wenn die Integration nur über Config Entries läuft:
+CONFIG_SCHEMA = cv.config_entry_only_config_schema
 
 # , Platform.NUMBER
 PLATFORMS: list[Platform] = [
@@ -34,7 +40,9 @@ class HausbusConfig:
 
     gateway: HausbusGateway
 
+
 HausbusConfigEntry = ConfigEntry[HausbusConfig]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> bool:
     """Set up Haus-Bus integration from a config entry."""
@@ -42,17 +50,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN]["entity_info"] = {}
 
-    gateway = HausbusGateway(hass, entry)
+    try:
+        gateway = HausbusGateway(hass, entry)
+    except Exception as err:
+        raise ConfigEntryNotReady(f"Setup failed: {err}") from err
+
     entry.runtime_data = HausbusConfig(gateway)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Creates a button to manually start device discovery
-    hass.async_create_task(gateway.createDiscoveryButtonAndStartDiscovery())
+    hass.async_create_task(gateway.createDiscoveryButton())
 
     return True
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up the Haus-Bus integration (global services etc.)."""
 
     async def discover_devices(call: ServiceCall):
@@ -100,7 +112,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_remove_config_entry_device(hass: HomeAssistant, config_entry:ConfigEntry, device_entry: DeviceEntry) -> bool:
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
     """Handle removal of a device from the integration."""
 
     gateway = config_entry.runtime_data.gateway

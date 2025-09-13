@@ -40,18 +40,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Haus-Bus number entity from a config entry."""
+
     gateway = config_entry.runtime_data.gateway
-
-    # Services gelten für alle Hausbus-Entities, die die jeweilige Funktion implementieren
-    # platform = entity_platform.async_get_current_platform()
-
-    # platform.async_register_entity_service(
-    #    "switch_off",
-    #    {
-    #        vol.Required("offDelay", default=0): vol.All(vol.Coerce(int), vol.Range(min=0, max=65535)),
-    #    },
-    #    "async_switch_off",
-    # )
 
     async def async_add_number(channel: HausbusEntity) -> None:
         """Add number from Haus-Bus."""
@@ -71,7 +61,7 @@ class HausbusControl(HausbusEntity, NumberEntity):
         self._attr_native_max_value = 100.0
         self._attr_native_step = 1.0
         self._attr_native_unit_of_measurement = "%"
-        self._value = 0
+        self._value: float = 0
         LOGGER.debug("HausBusControl created %s", self._attr_name)
 
     def set_native_value_internal(self, native_value: float):

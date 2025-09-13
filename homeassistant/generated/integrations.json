@@ -2594,6 +2594,12 @@
       "iot_class": "local_polling",
       "single_config_entry": true
     },
+    "hausbus": {
+      "name": "Haus-Bus",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "havana_shade": {
       "name": "Havana Shade",
       "integration_type": "virtual",

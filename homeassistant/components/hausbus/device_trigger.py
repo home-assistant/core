@@ -1,6 +1,6 @@
 """Defines device_trigger of the haus-bus integration."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -12,7 +12,6 @@ from homeassistant.components.device_automation.trigger import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import ConfigType, TriggerActionType, TriggerInfo, CALLBACK_TYPE
 
 LOGGER = logging.getLogger(__name__)
 
@@ -66,8 +65,8 @@ async def async_get_triggers(
 
 
 async def async_validate_trigger_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConfigType:
+    hass: HomeAssistant, config: dict[str, Any]
+) -> dict[str, Any]:
     """Validates the Trigger-Schema."""
     try:
         return TRIGGER_SCHEMA(config)
@@ -77,9 +76,9 @@ async def async_validate_trigger_config(
 
 async def async_attach_trigger(
     hass: HomeAssistant,
-    config: ConfigType,
-    action: TriggerActionType,
-    trigger_info: TriggerInfo,
+    config: dict[str, Any],
+    action: Callable[[dict[str, Any]], Any],
+    trigger_info: dict[str, Any],
 ) -> CALLBACK_TYPE:
     """Connects event listener and automation."""
 

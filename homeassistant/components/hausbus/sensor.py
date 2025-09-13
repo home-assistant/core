@@ -1,4 +1,4 @@
-﻿"""Support for Haus-Bus temperatur sensor."""
+"""Support for Haus-Bus temperature sensor."""
 
 from __future__ import annotations
 
@@ -73,7 +73,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfPower, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -95,8 +95,6 @@ async def async_setup_entry(
     """Set up the Haus-Bus sensor from a config entry."""
 
     gateway = config_entry.runtime_data.gateway
-
-    # Services gelten für alle HausbusLight-Entities, die die jeweilige Funktion implementieren
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
@@ -236,7 +234,7 @@ async def async_setup_entry(
 
     # Registriere Callback für neue Sensor-Entities
     async def async_add_sensor(channel: HausbusEntity) -> None:
-        """Add temperatur sensor from Haus-Bus."""
+        """Add temperature sensor from Haus-Bus."""
         if isinstance(channel, HausbusSensor):
             async_add_entities([channel])
 
@@ -255,7 +253,7 @@ class HausbusSensor(HausbusEntity, SensorEntity):
 
     @staticmethod
     def getTimeIntervalMapping(key):
-        """Lookup-Funktion, die zu einem Internal Base und Value liefert oder zum Tupel den Value."""
+        """Lookup function that maps selector text to base time and value."""
 
         mapping = {
             "1 second": (1, 1),
@@ -277,8 +275,8 @@ class HausbusSensor(HausbusEntity, SensorEntity):
         result = next((k for k, (a, b) in mapping.items() if a * b == key), "Unknown")
         if result == "Unknown":
             for front, (a, b) in mapping.items():
-                produkt = a * b
-                LOGGER.debug("%s %s: %s", key, front, produkt)
+                product = a * b
+                LOGGER.debug("%s %s: %s", key, front, product)
         return result
 
 
@@ -294,11 +292,11 @@ class HausbusTemperaturSensor(HausbusSensor):
         self._attr_native_value = None
 
     def handle_event(self, data: Any) -> None:
-        """Handle temperatur sensor events from Haus-Bus."""
+        """Handle temperature sensor events from Haus-Bus."""
 
         if isinstance(data, (TemperatursensorEvStatus, TemperatursensorStatus)):
             value = float(data.getCelsius()) + float(data.getCentiCelsius()) / 100
-            LOGGER.debug("Temperatur empfangen: %s C", value)
+            LOGGER.debug("received temperature: %s C", value)
             self._attr_native_value = value
             self.schedule_update_ha_state()
         elif isinstance(data, TemperaturSensorConfiguration):
@@ -322,7 +320,10 @@ class HausbusTemperaturSensor(HausbusSensor):
     ):
         """Setzt die Konfiguration eines Temperatursensors."""
         LOGGER.debug(
-            "async_temperatur_sensor_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s", correction, auto_event_diff, manual_event_interval
+            "async_temperatur_sensor_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s",
+            correction,
+            auto_event_diff,
+            manual_event_interval,
         )
 
         if not await self.ensure_configuration():
@@ -388,7 +389,10 @@ class HausbusPowerMeter(HausbusSensor):
     ):
         """Setzt die Konfiguration eines LogicalButton."""
         LOGGER.debug(
-            "async_power_meter_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s", correction, auto_event_diff, manual_event_interval
+            "async_power_meter_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s",
+            correction,
+            auto_event_diff,
+            manual_event_interval,
         )
 
         if not await self.ensure_configuration():
@@ -454,7 +458,10 @@ class HausbusBrightnessSensor(HausbusSensor):
     ):
         """Setzt die Konfiguration eines Helligkeitssensors."""
         LOGGER.debug(
-            "async_brightness_sensor_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s", correction, auto_event_diff, manual_event_interval
+            "async_brightness_sensor_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s",
+            correction,
+            auto_event_diff,
+            manual_event_interval,
         )
 
         if not await self.ensure_configuration():
@@ -520,7 +527,10 @@ class HausbusHumiditySensor(HausbusSensor):
     ):
         """Sets configuration of a humidity sensor."""
         LOGGER.debug(
-            "async_humidity_sensor_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s", correction, auto_event_diff, manual_event_interval
+            "async_humidity_sensor_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s",
+            correction,
+            auto_event_diff,
+            manual_event_interval,
         )
 
         if not await self.ensure_configuration():
@@ -584,7 +594,10 @@ class HausbusAnalogEingang(HausbusSensor):
     ):
         """Setzt die Konfiguration eines Analogeingangs."""
         LOGGER.debug(
-            "async_analog_eingang_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s", correction, auto_event_diff, manual_event_interval
+            "async_analog_eingang_set_configuration correction %s, auto_event_diff %s, manual_event_interval %s",
+            correction,
+            auto_event_diff,
+            manual_event_interval,
         )
 
         if not await self.ensure_configuration():

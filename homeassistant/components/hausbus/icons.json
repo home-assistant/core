@@ -1,0 +1,82 @@
+{
+  "services": {
+    "discover_devices": {
+      "service": "mdi:magnify"
+    },
+    "reset_device": {
+      "service": "mdi:restart"
+    },
+    "dimmer_set_brightness": {
+      "service": "mdi:brightness-6"
+    },
+    "dimmer_start_ramp": {
+      "service": "mdi:timer-sand"
+    },
+    "dimmer_stop_ramp": {
+      "service": "mdi:stop"
+    },
+    "dimmer_set_configuration": {
+      "service": "mdi:settings"
+    },
+    "rgb_set_color": {
+      "service": "mdi:palette"
+    },
+    "rgb_set_configuration": {
+      "service": "mdi:settings"
+    },
+    "led_off": {
+      "service": "mdi:led-off"
+    },
+    "led_on": {
+      "service": "mdi:led-on"
+    },
+    "led_blink": {
+      "service": "mdi:flash"
+    },
+    "led_set_min_brightness": {
+      "service": "mdi:brightness-5"
+    },
+    "led_set_configuration": {
+      "service": "mdi:settings"
+    },
+    "temperatur_sensor_set_configuration": {
+      "service": "mdi:settings"
+    },
+    "power_meter_sensor_set_configuration": {
+      "service": "mdi:settings"
+    },
+    "brightness_sensor_set_configuration": {
+      "service": "mdi:settings"
+    },
+    "humidity_sensor_set_configuration": {
+      "service": "mdi:settings"
+    },
+    "analog_eingang_set_configuration": {
+      "service": "mdi:settings"
+    },
+    "switch_off": {
+      "service": "mdi:power-off"
+    },
+    "switch_on": {
+      "service": "mdi:power"
+    },
+    "switch_toggle": {
+      "service": "mdi:toggle-switch"
+    },
+    "switch_set_configuration": {
+      "service": "mdi:settings"
+    },
+    "cover_toggle": {
+      "service": "mdi:window-shutter"
+    },
+    "cover_set_configuration": {
+      "service": "mdi:settings"
+    },
+    "push_button_configure_events": {
+      "service": "mdi:gesture-tap-button"
+    },
+    "push_button_set_configuration": {
+      "service": "mdi:settings"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """Tests for the Hausbus config flow integration."""
+
 # start in custom_components directory: pytest hausbus/tests/ --cov=hausbus --cov-branch
 import os
 import sys
@@ -28,7 +29,6 @@ async def test_user_flow_success():
         patch("hausbus.config_flow.HomeServer", return_value=MagicMock()),
         patch.object(ConfigFlow, "_async_wait_for_device", new=dummy_wait),
     ):
-
         flow = ConfigFlow()
         flow.hass = hass_mock
         flow.hass.async_create_task = asyncio.create_task
@@ -38,7 +38,7 @@ async def test_user_flow_success():
         assert result["type"] == "progress"
 
         # Task abwarten -> Progress Done
-        await flow._search_task # noqa: SLF001
+        await flow._search_task  # noqa: SLF001
         result = await flow.async_step_user(user_input={})
         assert result["type"] == "progress_done"  # <---- korrekt
 
@@ -55,7 +55,6 @@ async def test_user_flow_invalid_input():
         patch("hausbus.config_flow.HomeServer", return_value=MagicMock()),
         patch.object(ConfigFlow, "_async_wait_for_device", new=dummy_wait),
     ):
-
         flow = ConfigFlow()
         flow.hass = hass_mock
         flow.hass.async_create_task = asyncio.create_task
@@ -65,10 +64,9 @@ async def test_user_flow_invalid_input():
         assert result["type"] == "progress"
 
         # Task abwarten -> Progress Done
-        await flow._search_task # noqa: SLF001
+        await flow._search_task  # noqa: SLF001
         result = await flow.async_step_user(user_input={"invalid": "data"})
         assert result["type"] == "progress_done"  # <---- korrekt
-
 
 
 # pylint: skip-file

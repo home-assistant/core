@@ -4,9 +4,11 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from voluptuous import Schema
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.typing import TemplateVarsType
 
 DOMAIN = "hausbus"
 
@@ -26,11 +28,12 @@ ACTION_SCHEMA = vol.Schema(
 # ----------------------------
 # Actions für ein Device holen
 # ----------------------------
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
-
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """Returns the device actions for a device."""
 
-    actions = []
+    actions: list[dict[str, str]] = []
 
     registry = er.async_get(hass)
     entities = [ent for ent in registry.entities.values() if ent.device_id == device_id]
@@ -42,7 +45,10 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[st
             name = ent.name or ent.original_name
 
             _LOGGER.debug(
-                "%s is type %s special_type %s", name, hausbus_type, hausbus_special_type
+                "%s is type %s special_type %s",
+                name,
+                hausbus_type,
+                hausbus_special_type,
             )
 
             if hausbus_type == "HausbusDimmerLight":
@@ -84,7 +90,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[st
 
 def addAction(
     actionName: str,
-    entityName: str,
+    entityName: str | None,
     device_id: str,
     entity_id: str,
     actions: list[dict],
@@ -104,7 +110,10 @@ def addAction(
 # Action ausführen
 # ----------------------------
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: ConfigType, variables: TemplateVarsType, context: Context
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    variables: TemplateVarsType,
+    context: Context,
 ) -> None:
     """Processes an device action call."""
     service = config["type"].partition(" ")[0]
@@ -114,10 +123,13 @@ async def async_call_action_from_config(
     _LOGGER.debug("Rufe Service hausbus.%s mit %s", service, service_data)
     await hass.services.async_call(DOMAIN, service, service_data, context=context)
 
+
 # ----------------------------
 # Action-Capabilities
 # ----------------------------
-async def async_get_action_capabilities(hass: HomeAssistant, config: ConfigType) -> dict[str, Schema]:
+async def async_get_action_capabilities(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> dict[str, Schema]:
     """Returns capabilities for a device action."""
 
     service_type = config["type"]
@@ -127,14 +139,16 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: ConfigType)
 
     registry = er.async_get(hass)
     entity = registry.entities.get(config["entity_id"])
-    _LOGGER.debug("entity %s %s", entity, entity.options)
+    _LOGGER.debug("entity %s", entity)
 
     if entity and DOMAIN in entity.options:
         hausbus_type = entity.options[DOMAIN].get("hausbus_type")
         hausbus_special_type = entity.options[DOMAIN].get("hausbus_special_type")
 
         _LOGGER.debug(
-            "hausbus_type %s hausbus_special_type %s", hausbus_type, hausbus_special_type
+            "hausbus_type %s hausbus_special_type %s",
+            hausbus_type,
+            hausbus_special_type,
         )
 
         if hausbus_type == "HausbusDimmerLight":
@@ -193,7 +207,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: ConfigType)
             if service_type.startswith("led_off"):
                 SCHEMA = vol.Schema(
                     {
-                        vol.Required("offDelay", default=0): vol.All(
+                        vol.Required("off_delay", default=0): vol.All(
                             vol.Coerce(int), vol.Range(min=0, max=65535)
                         ),
                     }
@@ -207,7 +221,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: ConfigType)
                         vol.Required("duration", default=0): vol.All(
                             vol.Coerce(int), vol.Range(min=0, max=65535)
                         ),
-                        vol.Optional("onDelay", default=0): vol.All(
+                        vol.Optional("on_delay", default=0): vol.All(
                             vol.Coerce(int), vol.Range(min=0, max=65535)
                         ),
                     }
@@ -218,10 +232,10 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: ConfigType)
                         vol.Required("brightness", default=100): vol.All(
                             vol.Coerce(int), vol.Range(min=0, max=100)
                         ),
-                        vol.Required("offTime", default=1): vol.All(
+                        vol.Required("off_time", default=1): vol.All(
                             vol.Coerce(int), vol.Range(min=1, max=255)
                         ),
-                        vol.Optional("onTime", default=1): vol.All(
+                        vol.Optional("on_time", default=1): vol.All(
                             vol.Coerce(int), vol.Range(min=0, max=255)
                         ),
                         vol.Optional("quantity", default=0): vol.All(
@@ -232,7 +246,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: ConfigType)
             elif service_type.startswith("led_set_min_brightness"):
                 SCHEMA = vol.Schema(
                     {
-                        vol.Required("minBrightness", default=0): vol.All(
+                        vol.Required("min_brightness", default=0): vol.All(
                             vol.Coerce(int), vol.Range(min=0, max=100)
                         ),
                     }
@@ -241,7 +255,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: ConfigType)
             if service_type.startswith("switch_off"):
                 SCHEMA = vol.Schema(
                     {
-                        vol.Required("offDelay", default=0): vol.All(
+                        vol.Required("off_delay", default=0): vol.All(
                             vol.Coerce(int), vol.Range(min=0, max=65535)
                         ),
                     }
@@ -252,7 +266,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: ConfigType)
                         vol.Required("duration", default=0): vol.All(
                             vol.Coerce(int), vol.Range(min=0, max=65535)
                         ),
-                        vol.Optional("onDelay", default=0): vol.All(
+                        vol.Optional("on_delay", default=0): vol.All(
                             vol.Coerce(int), vol.Range(min=0, max=65535)
                         ),
                     }
@@ -260,10 +274,10 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: ConfigType)
             elif service_type.startswith("switch_toggle"):
                 SCHEMA = vol.Schema(
                     {
-                        vol.Required("offTime", default=1): vol.All(
+                        vol.Required("off_time", default=1): vol.All(
                             vol.Coerce(int), vol.Range(min=1, max=255)
                         ),
-                        vol.Required("onTime", default=1): vol.All(
+                        vol.Required("on_time", default=1): vol.All(
                             vol.Coerce(int), vol.Range(min=1, max=255)
                         ),
                         vol.Optional("quantity", default=0): vol.All(
@@ -279,7 +293,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: ConfigType)
                 SCHEMA = vol.Schema(
                     {
                         vol.Required(
-                            "eventActivationStatus", default="ENABLED"
+                            "event_activation_status", default="ENABLED"
                         ): vol.In(["DISABLED", "ENABLED", "INVERT"]),
                         vol.Optional("disabled_duration", default=0): vol.All(
                             vol.Coerce(int), vol.Range(min=0, max=255)

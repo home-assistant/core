@@ -15,31 +15,30 @@ from pyhausbus.ObjectId import ObjectId
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult as ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 DEVICE_SEARCH_TIMEOUT = 5
-
 STEP_USER_SCHEMA = vol.Schema({})
 
 
-class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[misc]
-    """Handle a config flow for hausbus."""
+class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Haus-Bus."""
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._found_device = False
+        self._found_device: bool = False
         self._search_task: asyncio.Task | None = None
-        self.home_server = HomeServer()
+        self.home_server: HomeServer = HomeServer()
         self.home_server.addBusEventListener(self)
 
     def remove_bus_event_listeners(self) -> None:
         """Cleanup after finishing the config flow."""
         self.home_server.removeBusEventListener(self)
-        # self.home_server.removeBusEventListener(self.home_server)
 
     def async_remove(self) -> None:
         """Trigger cleanup of bus event listeners after config flow."""
@@ -51,7 +50,8 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
-            # start searching for devices
+            await self.async_set_unique_id("42")
+            self._abort_if_unique_id_configured()
             return await self.async_step_wait_for_device()
 
         errors: dict[str, str] = {}
@@ -62,7 +62,7 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
     async def async_step_wait_for_device(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Wait for a hausbus device to be found."""
+        """Wait for a Haus-Bus device to be found."""
         if not self._search_task:
             self._search_task = self.hass.async_create_task(
                 self._async_wait_for_device()
@@ -96,20 +96,38 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
     async def async_step_search_complete(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Create a configuration entry for the hausbus devices."""
+        """Create a configuration entry for the Haus-Bus devices."""
         return self.async_create_entry(title="Haus-Bus", data={})
 
     async def _async_wait_for_device(self) -> None:
-        """Start searching for devices and wait until at least one device was found or timeout is reached."""
+        """Start searching for devices and wait until at least one device is found or timeout is reached."""
         self.hass.async_add_executor_job(self.home_server.searchDevices)
-        # wait for up to 5 seconds to find devices
         await asyncio.wait_for(self._check_device_found(), DEVICE_SEARCH_TIMEOUT)
 
     async def _check_device_found(self) -> bool:
-        """Check if a device was found periodically."""
+        """Check periodically if a device was found."""
         while not self._found_device:
-            await asyncio.sleep(0.1)  # Poll every 0.1 seconds
+            await asyncio.sleep(0.1)
         return True
+
+    async def async_step_discovery(self, discovery_info=None):
+        """Handle discovery of Haus-Bus devices."""
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        if not entries:
+            LOGGER.debug("No Haus-Bus config entries found, cannot discover devices")
+            return self.async_abort(reason="no_config_entry")
+
+        gateway = entries[0].runtime_data.gateway
+
+        try:
+            LOGGER.debug("Running device discovery via async_step_discovery")
+            gateway.home_server.searchDevices()
+        except Exception as err:
+            raise HomeAssistantError(f"Failed to discover devices: {err}") from err
+
+        return self.async_create_entry(
+            title="Haus-Bus Devices Discovered", data={"discovered": True}
+        )
 
     def busDataReceived(self, busDataMessage: BusDataMessage) -> None:
         """Handle Haus-Bus messages."""
@@ -117,8 +135,7 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
         data = busDataMessage.getData()
 
         if object_id.getDeviceId() == HOMESERVER_DEVICE_ID:
-            # ignore messages sent from this module
-            return
+            return  # ignore messages from this module
 
         if isinstance(data, ModuleId):
             # module ID of a Haus-Bus device was received
