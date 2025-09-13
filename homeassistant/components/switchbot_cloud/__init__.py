@@ -143,6 +143,7 @@ async def make_device_data(
         "Relay Switch 1PM",
         "Plug Mini (US)",
         "Plug Mini (JP)",
+        "Plug Mini (EU)",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
