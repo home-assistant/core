@@ -182,6 +182,9 @@ aioambient==2024.08.0
 # homeassistant.components.apcupsd
 aioapcaccess==1.0.0
 
+# homeassistant.components.aqara
+aqara-iot-py-sdk==1.0.9
+
 # homeassistant.components.aquacell
 aioaquacell==0.2.0
 
