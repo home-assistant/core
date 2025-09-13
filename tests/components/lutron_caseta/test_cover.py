@@ -229,3 +229,33 @@ async def test_cover_position_heuristic_fallback(
     # Position >= 50, should send raise_cover
     mock_instance.raise_cover.assert_called_with("802")
     mock_instance.stop_cover.assert_called_with("802")
+
+
+async def test_cover_stopped_movement_detection(
+    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
+) -> None:
+    """Test that movement direction is set to STOPPED when position doesn't change."""
+    mock_instance = mock_bridge_with_cover_mocks
+    cover_entity_id = "cover.basement_bedroom_left_shade"
+
+    # Set initial position
+    mock_instance.devices["802"]["current_state"] = 50
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    # Send same position again - should detect as stopped
+    mock_instance.devices["802"]["current_state"] = 50
+    mock_instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    # Now stop command should use position heuristic (>= 50)
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    # Position >= 50 with STOPPED direction, should send raise_cover
+    mock_instance.raise_cover.assert_called_with("802")
+    mock_instance.stop_cover.assert_called_with("802")
