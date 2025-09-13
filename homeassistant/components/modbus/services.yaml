@@ -47,6 +47,39 @@ write_register:
       default: "modbus_hub"
       selector:
         text:
+read_registers:
+  fields:
+    address:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 65535
+    count:
+      required: false
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 125
+    type:
+      required: true
+      selector:
+        select:
+          options:
+            - "input"
+            - "holding"
+    slave:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 255
+    hub:
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:
 stop:
   fields:
     hub:
