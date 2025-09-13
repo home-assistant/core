@@ -328,3 +328,66 @@ def test_bitwise_xor(hass: HomeAssistant) -> None:
     assert template.Template("{{ bitwise_xor(8, 2) }}", hass).async_render() == 10
     assert template.Template("{{ bitwise_xor(8, 8) }}", hass).async_render() == 0
     assert template.Template("{{ bitwise_xor(10, 2) }}", hass).async_render() == 8
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    [
+        "a",
+        "b",
+        "c",
+    ],
+)
+def test_min_max_attribute(hass: HomeAssistant, attribute) -> None:
+    """Test the min and max filters with attribute."""
+    hass.states.async_set(
+        "test.object",
+        "test",
+        {
+            "objects": [
+                {
+                    "a": 1,
+                    "b": 2,
+                    "c": 3,
+                },
+                {
+                    "a": 2,
+                    "b": 1,
+                    "c": 2,
+                },
+                {
+                    "a": 3,
+                    "b": 3,
+                    "c": 1,
+                },
+            ],
+        },
+    )
+    assert (
+        template.Template(
+            f"{{{{ (state_attr('test.object', 'objects') | min(attribute='{attribute}'))['{attribute}']}}}}",
+            hass,
+        ).async_render()
+        == 1
+    )
+    assert (
+        template.Template(
+            f"{{{{ (min(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
+            hass,
+        ).async_render()
+        == 1
+    )
+    assert (
+        template.Template(
+            f"{{{{ (state_attr('test.object', 'objects') | max(attribute='{attribute}'))['{attribute}']}}}}",
+            hass,
+        ).async_render()
+        == 3
+    )
+    assert (
+        template.Template(
+            f"{{{{ (max(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
+            hass,
+        ).async_render()
+        == 3
+    )
