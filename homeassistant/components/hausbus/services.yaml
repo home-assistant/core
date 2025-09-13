@@ -6,9 +6,13 @@ reset_device:
   target:
     device:
       integration: hausbus
+  fields: {}
 
 # DIMMER services
 dimmer_set_brightness:
+  target:
+    entity:
+      domain: light
   fields:
     brightness:
       required: true

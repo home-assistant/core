@@ -16,7 +16,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import DOMAIN
 from .gateway import HausbusGateway
 
-CONFIG_SCHEMA = cv.empty_config_schema
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -81,9 +81,16 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
         if not entries:
             raise HomeAssistantError("No Hausbus-Gateway available")
 
+        LOGGER.debug("call  %s ", call)
+
         device_id = call.data.get("device_id")
-        if not device_id or not isinstance(device_id, str):
+        if not device_id and getattr(call, "target", None):
+            device_id = getattr(call.target, "device_ids", [])
+
+        if not device_id:
             raise HomeAssistantError("device_id missing")
+
+        device_id = device_id[0]
 
         LOGGER.debug("Reset device %s called", device_id)
         gateway = entries[0].runtime_data.gateway

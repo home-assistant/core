@@ -122,6 +122,7 @@ class HausbusGateway(IBusDataListener):
         self.addStandaloneButton(
             "hausbus_discovery_button", "Discover Haus-Bus Devices", discovery_callback
         )
+        await discovery_callback()
 
     def addStandaloneButton(
         self,
