@@ -131,14 +131,12 @@ async def test_cover_open_error_handling(
     await cover.async_open_cover()
 
     mock_vitrea_client.blind_open.assert_called_once_with("01", "01")
-    assert cover.current_cover_position == 100  # Position is set optimistically
-    # No exception should be raised, error is logged
+    assert cover.current_cover_position == 0
     mock_vitrea_client.blind_open.reset_mock()
     mock_vitrea_client.blind_open.side_effect = TimeoutError("Timeout error")
     await cover.async_open_cover()
     mock_vitrea_client.blind_open.assert_called_once_with("01", "01")
-    assert cover.current_cover_position == 100  # Position is set optimistically
-    # No exception should be raised, error is logged
+    assert cover.current_cover_position == 0
 
 
 async def test_cover_close_error_handling(
@@ -154,14 +152,12 @@ async def test_cover_close_error_handling(
     await cover.async_close_cover()
 
     mock_vitrea_client.blind_close.assert_called_once_with("01", "01")
-    assert cover.current_cover_position == 0  # Position is set optimistically
-    # No exception should be raised, error is logged
+    assert cover.current_cover_position == 100
     mock_vitrea_client.blind_close.reset_mock()
     mock_vitrea_client.blind_close.side_effect = TimeoutError("Timeout error")
     await cover.async_close_cover()
     mock_vitrea_client.blind_close.assert_called_once_with("01", "01")
-    assert cover.current_cover_position == 0  # Position is set optimistically
-    # No exception should be raised, error is logged
+    assert cover.current_cover_position == 100
 
 
 async def test_cover_set_position_error_handling(
@@ -177,14 +173,12 @@ async def test_cover_set_position_error_handling(
     await cover.async_set_cover_position(position=75)
 
     mock_vitrea_client.blind_percent.assert_called_once_with("01", "01", 75)
-    assert cover.current_cover_position == 75  # Position is set optimistically
-    # No exception should be raised, error is logged
+    assert cover.current_cover_position == 0
     mock_vitrea_client.blind_percent.reset_mock()
     mock_vitrea_client.blind_percent.side_effect = TimeoutError("Timeout error")
     await cover.async_set_cover_position(position=75)
     mock_vitrea_client.blind_percent.assert_called_once_with("01", "01", 75)
-    assert cover.current_cover_position == 75  # Position is set optimistically
-    # No exception should be raised, error is logged
+    assert cover.current_cover_position == 0  # Position is set optimistically
 
 
 async def test_cover_stop_error_handling(

@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 import logging
 import time
 
 from vitreaclient import DeviceStatus, VitreaClient, VitreaResponse
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
@@ -18,6 +16,7 @@ from .const import MAX_DISCOVERY_TIME, SLEEP_INTERVAL
 
 # Import entity classes - only cover for simplified integration
 from .cover import VitreaCover
+from .models import VitreaConfigEntry, VitreaRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,26 +24,15 @@ _LOGGER = logging.getLogger(__name__)
 _PLATFORMS = [Platform.COVER]
 
 
-@dataclass
-class VitreaRuntimeData:
-    """Runtime data for Vitrea integration."""
-
-    client: VitreaClient
-    covers: list[VitreaCover]
-
-
-type VitreaConfigEntry = ConfigEntry[VitreaRuntimeData]
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bool:
     """Set up vitrea from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
+    _LOGGER.debug(
+        "Connecting to Vitrea box at %s:%s with config: %s", host, port, entry.data
+    )
 
     try:
-        _LOGGER.debug(
-            "Connecting to Vitrea box at %s:%s with config: %s", host, port, entry.data
-        )
         monitor = VitreaClient(host, port)
 
         # Initialize runtime data with the client and empty entity lists

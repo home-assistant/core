@@ -9,12 +9,12 @@ from vitreaclient.client import VitreaClient
 from vitreaclient.constants import DeviceStatus, VitreaResponse
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .models import VitreaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ async def async_setup_entry(
     )
 
 
-def _handle_cover_event(entry: ConfigEntry, event: Any) -> None:
+def _handle_cover_event(entry: VitreaConfigEntry, event: Any) -> None:
     """Handle cover events from Vitrea client."""
     if event.status != DeviceStatus.BLIND:
         return
@@ -70,6 +70,8 @@ class VitreaCover(CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
     _attr_has_entity_name = True
+    _attr_should_poll = False
+    _attr_assumed_state = True
 
     def __init__(
         self, node: str, key: str, position: str, monitor: VitreaClient
@@ -105,16 +107,6 @@ class VitreaCover(CoverEntity):
         """Return if the cover is open."""
         return self._attr_current_cover_position == 100
 
-    @property
-    def should_poll(self) -> bool:
-        """Return if polling is needed."""
-        return False
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return if the state is assumed."""
-        return True
-
     def set_position(self, position: int) -> None:
         """Set the cover position."""
         self._attr_current_cover_position = position
@@ -128,47 +120,49 @@ class VitreaCover(CoverEntity):
         _LOGGER.debug("open_cover %s/%s", self._node, self._key)
 
         try:
-            self._attr_current_cover_position = 100
-            self._target_position = 100
-            self._is_opening = True
-            self._is_closing = False
             await self.monitor.blind_open(self._node, self._key)
-
         except (OSError, TimeoutError) as err:
             _LOGGER.error("Failed to open cover %s/%s: %s", self._node, self._key, err)
+            return
+
+        self._attr_current_cover_position = 100
+        self._target_position = 100
+        self._is_opening = True
+        self._is_closing = False
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         _LOGGER.debug("close_cover %s/%s", self._node, self._key)
 
         try:
-            self._attr_current_cover_position = 0
-            self._target_position = 0
-            self._is_opening = False
-            self._is_closing = True
             await self.monitor.blind_close(self._node, self._key)
-
         except (OSError, TimeoutError) as err:
             _LOGGER.error("Failed to close cover %s/%s: %s", self._node, self._key, err)
+            return
+
+        self._attr_current_cover_position = 0
+        self._target_position = 0
+        self._is_opening = False
+        self._is_closing = True
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
         _LOGGER.debug("set_cover_position %s/%s: %s", self._node, self._key, kwargs)
         position = kwargs.get("position")
         if position is not None:
-            _LOGGER.debug("cover_position %s/%s", self._node, self._key)
             try:
-                self._target_position = position
-                self._attr_current_cover_position = position
-                self._is_opening = position > self._initial_position
-                self._is_closing = position < self._initial_position
                 await self.monitor.blind_percent(self._node, self._key, position)
 
             except (OSError, TimeoutError) as err:
                 _LOGGER.error(
                     "Failed to set cover position %s/%s: %s", self._node, self._key, err
                 )
+                return
 
+            self._target_position = position
+            self._attr_current_cover_position = position
+            self._is_opening = position > self._initial_position
+            self._is_closing = position < self._initial_position
         else:
             _LOGGER.error("Cover_position missing POSITION value")
 
