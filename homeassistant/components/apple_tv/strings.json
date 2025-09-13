@@ -62,6 +62,17 @@
       "inconsistent_device": "Expected protocols were not found during discovery. This normally indicates a problem with multicast DNS (Zeroconf). Please try adding the device again."
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "keyboard_focused": {
+        "name": "Keyboard focused",
+        "state": {
+          "on": "Focused",
+          "off": "Not focused"
+        }
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -70,6 +81,37 @@
           "start_off": "Do not turn device on when starting Home Assistant"
         }
       }
+    }
+  },
+  "services": {
+    "set_search_text": {
+      "name": "Set Search Text",
+      "description": "Set the search text on the Apple TV.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "The text to set for search."
+        }
+      }
+    },
+    "append_search_text": {
+      "name": "Append Search Text",
+      "description": "Append text to the current search text on the Apple TV.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "The text to append."
+        }
+      }
+    },
+    "clear_search_text": {
+      "name": "Clear Search Text",
+      "description": "Clear the current search text on the Apple TV."
+    }
+  },
+  "exceptions": {
+    "keyboard_not_supported": {
+      "message": "Keyboard is not supported on your Apple TV."
     }
   }
 }
