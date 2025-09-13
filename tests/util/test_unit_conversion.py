@@ -29,6 +29,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfReactiveEnergy,
+    UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -57,6 +58,7 @@ from homeassistant.util.unit_conversion import (
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
+    ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -89,6 +91,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         PowerConverter,
         PressureConverter,
         ReactiveEnergyConverter,
+        ReactivePowerConverter,
         SpeedConverter,
         TemperatureConverter,
         UnitlessRatioConverter,
@@ -100,6 +103,11 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
+    ApparentPowerConverter: (
+        UnitOfApparentPower.MILLIVOLT_AMPERE,
+        UnitOfApparentPower.VOLT_AMPERE,
+        1000,
+    ),
     AreaConverter: (UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_METERS, 0.000001),
     BloodGlucoseConcentrationConverter: (
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
@@ -141,16 +149,16 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         1000,
     ),
-    ApparentPowerConverter: (
-        UnitOfApparentPower.MILLIVOLT_AMPERE,
-        UnitOfApparentPower.VOLT_AMPERE,
-        1000,
-    ),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
     PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
     ReactiveEnergyConverter: (
         UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        1000,
+    ),
+    ReactivePowerConverter: (
+        UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+        UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         1000,
     ),
     SpeedConverter: (
@@ -176,6 +184,32 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
 _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
+    ApparentPowerConverter: [
+        (
+            10,
+            UnitOfApparentPower.MILLIVOLT_AMPERE,
+            0.01,
+            UnitOfApparentPower.VOLT_AMPERE,
+        ),
+        (
+            10,
+            UnitOfApparentPower.MILLIVOLT_AMPERE,
+            0.00001,
+            UnitOfApparentPower.KILO_VOLT_AMPERE,
+        ),
+        (
+            10,
+            UnitOfApparentPower.VOLT_AMPERE,
+            0.01,
+            UnitOfApparentPower.KILO_VOLT_AMPERE,
+        ),
+        (
+            10,
+            UnitOfApparentPower.KILO_VOLT_AMPERE,
+            10000,
+            UnitOfApparentPower.VOLT_AMPERE,
+        ),
+    ],
     AreaConverter: [
         # Square Meters to other units
         (5, UnitOfArea.SQUARE_METERS, 50000, UnitOfArea.SQUARE_CENTIMETERS),
@@ -623,14 +657,6 @@ _CONVERTED_VALUE: dict[
         (1, UnitOfMass.STONES, 14, UnitOfMass.POUNDS),
         (1, UnitOfMass.STONES, 224, UnitOfMass.OUNCES),
     ],
-    ApparentPowerConverter: [
-        (
-            10,
-            UnitOfApparentPower.MILLIVOLT_AMPERE,
-            0.01,
-            UnitOfApparentPower.VOLT_AMPERE,
-        ),
-    ],
     PowerConverter: [
         (10, UnitOfPower.KILO_WATT, 10000, UnitOfPower.WATT),
         (10, UnitOfPower.MEGA_WATT, 10e6, UnitOfPower.WATT),
@@ -646,12 +672,21 @@ _CONVERTED_VALUE: dict[
         (1000, UnitOfPressure.HPA, 100, UnitOfPressure.KPA),
         (1000, UnitOfPressure.HPA, 1000, UnitOfPressure.MBAR),
         (1000, UnitOfPressure.HPA, 100, UnitOfPressure.CBAR),
+        (1000, UnitOfPressure.HPA, 401.46307866177, UnitOfPressure.INH2O),
         (100, UnitOfPressure.KPA, 14.5037743897, UnitOfPressure.PSI),
         (100, UnitOfPressure.KPA, 29.5299801647, UnitOfPressure.INHG),
         (100, UnitOfPressure.KPA, 100000, UnitOfPressure.PA),
         (100, UnitOfPressure.KPA, 1000, UnitOfPressure.HPA),
         (100, UnitOfPressure.KPA, 1000, UnitOfPressure.MBAR),
         (100, UnitOfPressure.KPA, 100, UnitOfPressure.CBAR),
+        (100, UnitOfPressure.INH2O, 3.6127291827353996, UnitOfPressure.PSI),
+        (100, UnitOfPressure.INH2O, 186.83201548767, UnitOfPressure.MMHG),
+        (100, UnitOfPressure.INH2O, 7.3555912463681, UnitOfPressure.INHG),
+        (100, UnitOfPressure.INH2O, 24908.890833333, UnitOfPressure.PA),
+        (100, UnitOfPressure.INH2O, 249.08890833333, UnitOfPressure.HPA),
+        (100, UnitOfPressure.INH2O, 249.08890833333, UnitOfPressure.MBAR),
+        (100, UnitOfPressure.INH2O, 24.908890833333, UnitOfPressure.KPA),
+        (100, UnitOfPressure.INH2O, 24.908890833333, UnitOfPressure.CBAR),
         (30, UnitOfPressure.INHG, 14.7346266155, UnitOfPressure.PSI),
         (30, UnitOfPressure.INHG, 101.59167, UnitOfPressure.KPA),
         (30, UnitOfPressure.INHG, 1015.9167, UnitOfPressure.HPA),
@@ -659,6 +694,7 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.INHG, 1015.9167, UnitOfPressure.MBAR),
         (30, UnitOfPressure.INHG, 101.59167, UnitOfPressure.CBAR),
         (30, UnitOfPressure.INHG, 762, UnitOfPressure.MMHG),
+        (30, UnitOfPressure.INHG, 407.85300589959, UnitOfPressure.INH2O),
         (30, UnitOfPressure.MMHG, 0.580103, UnitOfPressure.PSI),
         (30, UnitOfPressure.MMHG, 3.99967, UnitOfPressure.KPA),
         (30, UnitOfPressure.MMHG, 39.9967, UnitOfPressure.HPA),
@@ -666,6 +702,7 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 39.9967, UnitOfPressure.MBAR),
         (30, UnitOfPressure.MMHG, 3.99967, UnitOfPressure.CBAR),
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
+        (30, UnitOfPressure.MMHG, 16.0572051431838, UnitOfPressure.INH2O),
         (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
     ],
     ReactiveEnergyConverter: [
@@ -680,6 +717,32 @@ _CONVERTED_VALUE: dict[
             UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
             0.005,
             UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        ),
+    ],
+    ReactivePowerConverter: [
+        (
+            10,
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+            10000,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        ),
+        (
+            10,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+            0.01,
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+        ),
+        (
+            10,
+            UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+            0.01,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        ),
+        (
+            10,
+            UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+            0.00001,
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         ),
     ],
     SpeedConverter: [
@@ -827,6 +890,11 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 478753.24, UnitOfVolume.FLUID_OUNCES),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 3740.26, UnitOfVolume.GALLONS),
         (5, UnitOfVolume.CENTUM_CUBIC_FEET, 14158.42, UnitOfVolume.LITERS),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 5000, UnitOfVolume.CUBIC_FEET),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 141.5842, UnitOfVolume.CUBIC_METERS),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 4787532.4, UnitOfVolume.FLUID_OUNCES),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 37402.6, UnitOfVolume.GALLONS),
+        (5, UnitOfVolume.MILLE_CUBIC_FEET, 141584.2, UnitOfVolume.LITERS),
     ],
     VolumeFlowRateConverter: [
         (
@@ -911,6 +979,12 @@ _CONVERTED_VALUE: dict[
             3.6,
             UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
             1,
+            UnitOfVolumeFlowRate.LITERS_PER_SECOND,
+        ),
+        (
+            0.6,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
+            10,
             UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         ),
     ],

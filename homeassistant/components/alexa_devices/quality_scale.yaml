@@ -60,13 +60,11 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
-  stale-devices:
-    status: todo
-    comment: automate the cleanup process
+  stale-devices: done
 
   # Platinum
   async-dependency: done
