@@ -76,7 +76,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The provided API key does not match the existing configuration"
     }
   },
   "options": {
@@ -101,10 +102,21 @@
         "user": {
           "title": "Add chat",
           "data": {
-            "chat_id": "Chat ID"
+            "chat_id": "Chat ID",
+            "user_id": "User"
           },
           "data_description": {
-            "chat_id": "ID representing the user or group chat to which messages can be sent."
+            "chat_id": "ID representing the user or group chat to which messages can be sent.",
+            "user_id": "Home Assistant user that will be used for events from this chat."
+          }
+        },
+        "reconfigure": {
+          "title": "Configure chat",
+          "data": {
+            "user_id": "User"
+          },
+          "data_description": {
+            "user_id": "Home Assistant user that will be used for events from this chat."
           }
         }
       },
@@ -112,6 +124,7 @@
         "chat_not_found": "Chat not found"
       },
       "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "already_configured": "Chat already configured"
       }
     }
@@ -130,6 +143,11 @@
         "markdownv2": "MarkdownV2",
         "html": "HTML",
         "plain_text": "Plain text"
+      }
+    },
+    "user_id": {
+      "options": {
+        "unspecified": "Unspecified"
       }
     },
     "authentication": {

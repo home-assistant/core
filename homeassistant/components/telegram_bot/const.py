@@ -19,6 +19,7 @@ CONF_TRUSTED_NETWORKS = "trusted_networks"
 
 # subentry
 CONF_CHAT_ID = "chat_id"
+CONF_USER_ID = "user_id"
 
 BOT_NAME = "telegram_bot"
 ERROR_FIELD = "error_field"
