@@ -109,8 +109,10 @@ from .const import (
     TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
+    TYPE_SET_TOP_BOX,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
+    TYPE_STREAMING_STICK,
     TYPE_SWITCH,
     TYPE_VALVE,
     VIDEO_CODEC_COPY,
@@ -693,7 +695,12 @@ def state_needs_accessory_mode(state: State) -> bool:
     return (
         state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS)
-        in (MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.RECEIVER)
+        in (
+            MediaPlayerDeviceClass.TV,
+            MediaPlayerDeviceClass.RECEIVER,
+            TYPE_SET_TOP_BOX,
+            TYPE_STREAMING_STICK,
+        )
     ) or (
         state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
