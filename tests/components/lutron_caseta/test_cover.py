@@ -42,7 +42,7 @@ async def mock_bridge_with_cover_mocks(hass: HomeAssistant) -> MockBridge:
 async def test_cover_unique_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test a cover unique id."""
+    """Test a cover unique ID."""
     await async_setup_integration(hass, MockBridge)
 
     cover_entity_id = "cover.basement_bedroom_left_shade"
