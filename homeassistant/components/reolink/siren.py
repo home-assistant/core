@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 from dataclasses import dataclass
 from typing import Any
 
@@ -62,7 +64,7 @@ async def async_setup_entry(
     config_entry: ReolinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up a Reolink siren entities."""
+    """Set up Reolink siren entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[SirenEntity] = [
@@ -118,7 +120,10 @@ class ReolinkHostSirenEntity(ReolinkHostCoordinatorEntity, SirenEntity):
     """Base siren class for Reolink hub/NVR."""
 
     _attr_supported_features = (
-        SirenEntityFeature.TURN_ON | SirenEntityFeature.VOLUME_SET
+        SirenEntityFeature.TURN_ON
+        | SirenEntityFeature.TURN_OFF
+        | SirenEntityFeature.VOLUME_SET
+        | SirenEntityFeature.DURATION
     )
     entity_description: ReolinkHostSirenEntityDescription
 
@@ -130,11 +135,37 @@ class ReolinkHostSirenEntity(ReolinkHostCoordinatorEntity, SirenEntity):
         """Initialize Reolink host siren."""
         self.entity_description = entity_description
         super().__init__(reolink_data)
+        self._siren_task: asyncio.Task | None = None
 
     @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the siren."""
+        """Turn on the siren with optional volume and duration."""
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
             await self._host.api.set_hub_audio(alarm_volume=int(volume * 100))
-        else:
+
+        duration = kwargs.get(ATTR_DURATION)
+
+        if self._siren_task and not self._siren_task.done():
+            self._siren_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._siren_task
+
+        if duration is None:
             await self._host.api.set_siren()
+            return
+
+        async def siren_loop() -> None:
+            end_time = asyncio.get_event_loop().time() + duration
+            while asyncio.get_event_loop().time() < end_time:
+                await self._host.api.set_siren()
+                await asyncio.sleep(2.5)
+
+        self._siren_task = asyncio.create_task(siren_loop())
+
+    @raise_translated_error
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the hub siren immediately."""
+        if self._siren_task and not self._siren_task.done():
+            self._siren_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._siren_task
