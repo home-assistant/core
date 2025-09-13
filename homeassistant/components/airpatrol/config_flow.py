@@ -25,7 +25,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.EMAIL,
-                autocomplete="username",
+                autocomplete="email",
             )
         ),
         vol.Required(CONF_PASSWORD): TextSelector(

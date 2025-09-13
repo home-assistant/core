@@ -55,11 +55,9 @@ async def async_setup_entry(
     units = coordinator.data
 
     async_add_entities(
-        [
-            AirPatrolClimate(coordinator, unit_id)
-            for unit_id, unit in units.items()
-            if "climate" in unit
-        ]
+        AirPatrolClimate(coordinator, unit_id)
+        for unit_id, unit in units.items()
+        if "climate" in unit
     )
 
 
@@ -88,7 +86,7 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate entity."""
         super().__init__(coordinator, unit_id)
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-{unit_id}-climate"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-{unit_id}"
 
     @property
     def climate_data(self) -> dict[str, Any]:
