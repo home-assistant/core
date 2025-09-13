@@ -20,6 +20,7 @@ from huawei_lte_api.exceptions import (
     ResponseErrorNotSupportedException,
 )
 from requests.exceptions import Timeout
+from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -39,7 +40,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -90,7 +95,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
+SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.string})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -465,26 +470,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         because the latter is not available anywhere in the UI.
         """
         routers = hass.data[DOMAIN].routers
-        if url := service.data.get(CONF_URL):
+        if url := url_normalize(service.data.get(CONF_URL), default_scheme="http"):
             router = next(
                 (router for router in routers.values() if router.url == url), None
             )
         elif not routers:
-            _LOGGER.error("%s: no routers configured", service.service)
-            return
+            raise ServiceValidationError("No routers configured")
         elif len(routers) == 1:
             router = next(iter(routers.values()))
         else:
-            _LOGGER.error(
-                "%s: more than one router configured, must specify one of URLs %s",
-                service.service,
-                sorted(router.url for router in routers.values()),
+            raise ServiceValidationError(
+                f"More than one router configured, must specify one of URLs {sorted(router.url for router in routers.values())}"
             )
-            return
         if not router:
-            _LOGGER.error("%s: router %s unavailable", service.service, url)
-            return
+            raise ServiceValidationError(f"Router {url} not available")
 
+        was_suspended = router.suspended
         if service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
             router.suspended = False
@@ -494,7 +495,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             router.suspended = True
             _LOGGER.debug("%s: %s", service.service, "done")
         else:
-            _LOGGER.error("%s: unsupported service", service.service)
+            raise ServiceValidationError(f"Unsupported service {service.service}")
+        if was_suspended != router.suspended:
+            # Make interactive entities' availability update
+            dispatcher_send(hass, UPDATE_SIGNAL, router.config_entry.unique_id)
 
     for service in ADMIN_SERVICES:
         async_register_admin_service(
