@@ -1,6 +1,6 @@
 """Test the Playstation Network config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -13,6 +13,7 @@ from homeassistant.components.playstation_network.config_flow import (
 from homeassistant.components.playstation_network.const import (
     CONF_ACCOUNT_ID,
     CONF_NPSSO,
+    CONF_SHOW_ENTITY_PICTURES,
     DOMAIN,
 )
 from homeassistant.config_entries import (
@@ -516,3 +517,34 @@ async def test_add_friend_flow_no_friends(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_friends"
+
+
+@pytest.mark.usefixtures("mock_psnawpapi")
+async def test_options_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test options flow."""
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options.get(CONF_SHOW_ENTITY_PICTURES) is None
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SHOW_ENTITY_PICTURES: True},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_SHOW_ENTITY_PICTURES: True}
+    assert len(mock_setup_entry.mock_calls) == 1
