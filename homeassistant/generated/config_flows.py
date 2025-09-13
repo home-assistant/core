@@ -291,6 +291,7 @@ FLOWS = {
         "ibeacon",
         "icloud",
         "idasen_desk",
+        "idrive_e2",
         "ifttt",
         "igloohome",
         "imap",
