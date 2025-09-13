@@ -35,7 +35,6 @@ from .const import (  # noqa: F401
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
-    ATTR_STEP_VALIDATION,
     ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
@@ -184,7 +183,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Number entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_STEP_VALIDATION, ATTR_MODE}
+        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_MODE}
     )
 
     entity_description: NumberEntityDescription

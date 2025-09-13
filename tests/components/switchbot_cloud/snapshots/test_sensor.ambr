@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_meter[sensor.meter_1_battery-entry]
+# name: test_meter[device_info0-0][sensor.meter_1_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -36,7 +36,169 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_meter[sensor.meter_1_battery-state]
+# name: test_meter[device_info0-0][sensor.meter_1_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'meter-1 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.meter_1_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_meter[device_info0-0][sensor.meter_1_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.meter_1_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'switchbot_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'meter-id-1_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_meter[device_info0-0][sensor.meter_1_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'meter-1 Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.meter_1_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_meter[device_info0-0][sensor.meter_1_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.meter_1_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'switchbot_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'meter-id-1_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_meter[device_info0-0][sensor.meter_1_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'meter-1 Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.meter_1_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_meter[device_info1-1][sensor.meter_1_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.meter_1_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'switchbot_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'meter-id-1_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_meter[device_info1-1][sensor.meter_1_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -52,7 +214,7 @@
     'state': '100',
   })
 # ---
-# name: test_meter[sensor.meter_1_humidity-entry]
+# name: test_meter[device_info1-1][sensor.meter_1_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -89,7 +251,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_meter[sensor.meter_1_humidity-state]
+# name: test_meter[device_info1-1][sensor.meter_1_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -105,7 +267,7 @@
     'state': '32',
   })
 # ---
-# name: test_meter[sensor.meter_1_temperature-entry]
+# name: test_meter[device_info1-1][sensor.meter_1_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -145,7 +307,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_meter[sensor.meter_1_temperature-state]
+# name: test_meter[device_info1-1][sensor.meter_1_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -161,7 +323,7 @@
     'state': '21.8',
   })
 # ---
-# name: test_meter_no_coordinator_data[sensor.meter_1_battery-entry]
+# name: test_meter[device_info2-2][sensor.contact_sensor_name_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -176,7 +338,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.meter_1_battery',
+    'entity_id': 'sensor.contact_sensor_name_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -194,27 +356,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'meter-id-1_battery',
+    'unique_id': 'contact-sensor-id_battery',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_meter_no_coordinator_data[sensor.meter_1_battery-state]
+# name: test_meter[device_info2-2][sensor.contact_sensor_name_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'meter-1 Battery',
+      'friendly_name': 'contact-sensor-name Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.meter_1_battery',
+    'entity_id': 'sensor.contact_sensor_name_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '60',
   })
 # ---
-# name: test_meter_no_coordinator_data[sensor.meter_1_humidity-entry]
+# name: test_meter[device_info3-3][sensor.hub_3_name_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -229,7 +391,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.meter_1_humidity',
+    'entity_id': 'sensor.hub_3_name_humidity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -247,27 +409,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'meter-id-1_humidity',
+    'unique_id': 'hub3-id_humidity',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_meter_no_coordinator_data[sensor.meter_1_humidity-state]
+# name: test_meter[device_info3-3][sensor.hub_3_name_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
-      'friendly_name': 'meter-1 Humidity',
+      'friendly_name': 'Hub-3-name Humidity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.meter_1_humidity',
+    'entity_id': 'sensor.hub_3_name_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '55',
   })
 # ---
-# name: test_meter_no_coordinator_data[sensor.meter_1_temperature-entry]
+# name: test_meter[device_info3-3][sensor.hub_3_name_light_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -282,7 +444,58 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.meter_1_temperature',
+    'entity_id': 'sensor.hub_3_name_light_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light level',
+    'platform': 'switchbot_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_level',
+    'unique_id': 'hub3-id_lightLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_meter[device_info3-3][sensor.hub_3_name_light_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Hub-3-name Light level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hub_3_name_light_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_meter[device_info3-3][sensor.hub_3_name_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hub_3_name_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -303,23 +516,129 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'meter-id-1_temperature',
+    'unique_id': 'hub3-id_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_meter_no_coordinator_data[sensor.meter_1_temperature-state]
+# name: test_meter[device_info3-3][sensor.hub_3_name_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'meter-1 Temperature',
+      'friendly_name': 'Hub-3-name Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.meter_1_temperature',
+    'entity_id': 'sensor.hub_3_name_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '26.5',
+  })
+# ---
+# name: test_meter[device_info4-4][sensor.motion_sensor_name_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.motion_sensor_name_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'switchbot_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'motion-sensor-id_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_meter[device_info4-4][sensor.motion_sensor_name_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'motion-sensor-name Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.motion_sensor_name_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_meter[device_info5-5][sensor.water_detector_name_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.water_detector_name_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'switchbot_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'water-detector-id_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_meter[device_info5-5][sensor.water_detector_name_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'water-detector-name Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_detector_name_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
   })
 # ---
