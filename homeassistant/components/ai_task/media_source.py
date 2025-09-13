@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from homeassistant.components.media_source import MediaSource, local_source
 from homeassistant.core import HomeAssistant
 
@@ -13,11 +11,6 @@ from .const import DATA_MEDIA_SOURCE, DOMAIN, IMAGE_DIR
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up local media source."""
     media_dir = hass.config.path(f"{DOMAIN}/{IMAGE_DIR}")
-
-    def check_dir_exists(path: Path) -> None:
-        path.mkdir(parents=True, exist_ok=True)
-
-    await hass.async_add_executor_job(check_dir_exists, Path(media_dir))
 
     hass.data[DATA_MEDIA_SOURCE] = source = local_source.LocalSource(
         hass,
