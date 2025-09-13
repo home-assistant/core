@@ -119,6 +119,6 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
-            title=f"PoolDose {self.unique_id}",
+            title=f"PoolDose {serial_number}",
             data={CONF_HOST: host},
         )
