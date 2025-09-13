@@ -9,12 +9,19 @@ from unittest.mock import patch
 from gspread.exceptions import APIError
 import pytest
 from requests.models import Response
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
 from homeassistant.components.google_sheets.const import DOMAIN
+from homeassistant.components.google_sheets.services import (
+    DATA_CONFIG_ENTRY,
+    ROWS,
+    SERVICE_FETCH_SHEET,
+    WORKSHEET,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -217,6 +224,7 @@ async def test_fetch_sheet(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test service call fetching from a sheet."""
     await setup_integration()
@@ -226,18 +234,24 @@ async def test_fetch_sheet(
     assert entries[0].state is ConfigEntryState.LOADED
 
     with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
-        await hass.services.async_call(
+        mock_client.return_value.open_by_key.return_value.worksheet.return_value.get_values.return_value = [
+            ["col1", "col2"],
+            ["a", "b"],
+            ["c", "d"],
+        ]
+        response = await hass.services.async_call(
             DOMAIN,
-            "fetch_sheet",
+            SERVICE_FETCH_SHEET,
             {
-                "config_entry": config_entry.entry_id,
-                "worksheet": "Sheet1",
-                "rows": 2,
+                DATA_CONFIG_ENTRY: config_entry.entry_id,
+                WORKSHEET: "Sheet1",
+                ROWS: 2,
             },
             blocking=True,
             return_response=True,
         )
-    assert len(mock_client.mock_calls) == 5
+    assert len(mock_client.mock_calls) == 4
+    assert response == snapshot
 
 
 async def test_append_sheet_multiple_rows(

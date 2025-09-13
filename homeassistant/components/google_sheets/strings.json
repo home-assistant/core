@@ -65,12 +65,12 @@
       "description": "Fetches data from a worksheet in Google Sheets.",
       "fields": {
         "config_entry": {
-          "name": "Sheet",
+          "name": "[%key:component::google_sheets::services::append_sheet::fields::config_entry::name%]",
           "description": "The sheet to fetch data from."
         },
         "worksheet": {
-          "name": "Worksheet",
-          "description": "Name of the worksheet. Defaults to the first one in the document."
+          "name": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::name%]",
+          "description": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::description%]"
         },
         "rows": {
           "name": "Rows",

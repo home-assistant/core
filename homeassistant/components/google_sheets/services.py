@@ -12,6 +12,7 @@ from gspread.exceptions import APIError
 from gspread.utils import ValueInputOption
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import (
     HomeAssistant,
@@ -20,9 +21,10 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import ConfigEntrySelector
+from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN
 
@@ -81,7 +83,9 @@ def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
     worksheet.append_rows(rows, value_input_option=ValueInputOption.user_entered)
 
 
-def _fetch_from_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> dict:
+def _fetch_from_sheet(
+    call: ServiceCall, entry: GoogleSheetsConfigEntry
+) -> JsonObjectType:
     """Run fetch in the executor."""
     service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
     try:
@@ -114,8 +118,13 @@ async def _async_fetch_from_sheet(call: ServiceCall) -> ServiceResponse:
     entry: GoogleSheetsConfigEntry | None = call.hass.config_entries.async_get_entry(
         call.data[DATA_CONFIG_ENTRY]
     )
-    if not entry or not hasattr(entry, "runtime_data"):
-        raise ValueError(f"Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}")
+    if entry is None:
+        raise ServiceValidationError(
+            f"Invalid config entry id: {call.data[DATA_CONFIG_ENTRY]}"
+        )
+    if entry.state is not ConfigEntryState.LOADED:
+        raise HomeAssistantError(f"Config entry {entry.entry_id} is not loaded")
+
     await entry.runtime_data.async_ensure_token_valid()
     return await call.hass.async_add_executor_job(_fetch_from_sheet, call, entry)
 
