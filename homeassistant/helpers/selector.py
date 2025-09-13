@@ -1194,7 +1194,23 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        return data
+        parent_schema: vol.Schema | None = None
+        if self.config.get("fields") is not None:
+            field_schemas = {
+                (
+                    vol.Optional(key)
+                    if not value.get("required")
+                    else vol.Required(key)
+                ): vol.Schema(selector(value["selector"]))
+                for key, value in self.config["fields"].items()
+            }
+            parent_schema = vol.Schema(field_schemas)
+
+        if not self.config["multiple"]:
+            return parent_schema(data) if parent_schema else data
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [parent_schema(item) for item in data] if parent_schema else data
 
 
 class QrErrorCorrectionLevel(StrEnum):

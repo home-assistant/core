@@ -648,7 +648,40 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
     [
-        ({}, ("abc123",), ()),
+        ({}, ("abc123", 123, 10.0, True, False, {}, [], None), ()),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            (
+                {"name": "abc"},
+                {"name": "abc", "percentage": 50},
+            ),
+            (
+                {"name": None},
+                {"name": None, "percentage": 50},
+                {"percentage": 50},
+                {"name": "abc", "percentage": 50, "unknown": "123"},
+                "abc123",
+                123,
+                10.0,
+                True,
+                False,
+                {},
+                [],
+                None,
+            ),
+        ),
         (
             {
                 "fields": {
@@ -664,8 +697,21 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
                 "label_field": "name",
                 "description_field": "percentage",
             },
-            (),
-            (),
+            (
+                # [{"name": "abc"}],
+                # [
+                #     {"name": "abc", "percentage": 50},
+                #     {"name": "abc"},
+                #     {"name": "abc", "percentage": None},
+                # ],
+                [],
+            ),
+            (
+                {"name": "abc", "percentage": 50},
+                [{"name": None}, {"name": "abc"}],
+                [{"name": None, "percentage": 50}],
+                [{"percentage": 50}],
+            ),
         ),
     ],
     [],
