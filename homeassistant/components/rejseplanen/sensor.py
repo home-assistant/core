@@ -6,252 +6,267 @@ https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 
 from __future__ import annotations
 
-from contextlib import suppress
-from datetime import datetime, timedelta
+from collections.abc import Callable, Mapping
+from datetime import date as Date, datetime, time as Time, timedelta
 import logging
-from operator import itemgetter
+from typing import Any
+import zoneinfo
 
-import rjpl
-import voluptuous as vol
+from py_rejseplan.dataclasses.departure import Departure
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorEntity,
+from homeassistant import const
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import (
+    ATTR_DUE_AT,
+    ATTR_DUE_IN,
+    ATTR_FINAL_STOP,
+    ATTR_REAL_TIME_AT,
+    ATTR_SCHEDULED_AT,
+    ATTR_STOP_ID,
+    ATTR_STOP_NAME,
+    ATTR_TRACK,
+    CONF_DEPARTURE_TYPE,
+    CONF_DIRECTION,
+    CONF_NAME,
+    CONF_ROUTE,
+    CONF_STOP_ID,
+    DEFAULT_STOP_NAME,
+    DOMAIN,
 )
-from homeassistant.const import CONF_NAME, UnitOfTime
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util
+from .coordinator import RejseplanenDataUpdateCoordinator
+from .entity import RejseplanenUpdaterStatusSensor
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STOP_ID = "stop_id"
-ATTR_STOP_NAME = "stop"
-ATTR_ROUTE = "route"
-ATTR_TYPE = "type"
-ATTR_DIRECTION = "direction"
-ATTR_FINAL_STOP = "final_stop"
-ATTR_DUE_IN = "due_in"
-ATTR_DUE_AT = "due_at"
-ATTR_SCHEDULED_AT = "scheduled_at"
-ATTR_REAL_TIME_AT = "real_time_at"
-ATTR_TRACK = "track"
-ATTR_NEXT_UP = "next_departures"
 
-CONF_STOP_ID = "stop_id"
-CONF_ROUTE = "route"
-CONF_DIRECTION = "direction"
-CONF_DEPARTURE_TYPE = "departure_type"
-
-DEFAULT_NAME = "Next departure"
-
-
-SCAN_INTERVAL = timedelta(minutes=1)
-
-BUS_TYPES = ["BUS", "EXB", "TB"]
-TRAIN_TYPES = ["LET", "S", "REG", "IC", "LYN", "TOG"]
-METRO_TYPES = ["M"]
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_STOP_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_ROUTE, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_DIRECTION, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_DEPARTURE_TYPE, default=[]): vol.All(
-            cv.ensure_list, [vol.In([*BUS_TYPES, *TRAIN_TYPES, *METRO_TYPES])]
-        ),
-    }
-)
-
-
-def due_in_minutes(timestamp):
-    """Get the time in minutes from a timestamp.
-
-    The timestamp should be in the format day.month.year hour:minute
-    """
-    diff = datetime.strptime(timestamp, "%d.%m.%y %H:%M") - dt_util.now().replace(
-        tzinfo=None
-    )
-
-    return int(diff.total_seconds() // 60)
-
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_devices: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Rejseplanen transport sensor."""
-    name = config[CONF_NAME]
-    stop_id = config[CONF_STOP_ID]
-    route = config.get(CONF_ROUTE)
-    direction = config[CONF_DIRECTION]
-    departure_type = config[CONF_DEPARTURE_TYPE]
 
-    data = PublicTransportData(stop_id, route, direction, departure_type)
-    add_devices(
-        [RejseplanenTransportSensor(data, stop_id, route, direction, name)], True
+    _LOGGER.info(
+        "Setting up Rejseplanen transport sensor for entry: %s", config_entry.entry_id
     )
 
+    if hass.data.get(DOMAIN) is None:
+        hass.data[DOMAIN] = {}
 
-class RejseplanenTransportSensor(SensorEntity):
+    entry_data = hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
+    coordinator: RejseplanenDataUpdateCoordinator = RejseplanenDataUpdateCoordinator(
+        hass,
+        config_entry.data["authentication"],
+    )
+    entry_data["coordinator"] = coordinator
+
+    # Only add the updater status sensor for the main entry
+    if config_entry.data.get("is_main_entry"):
+        async_add_entities(
+            [RejseplanenUpdaterStatusSensor(coordinator, config_entry.entry_id)]
+        )
+
+    for subentry_id, subentry in config_entry.subentries.items():
+        _LOGGER.debug("Subentry %s with data: %s", subentry_id, subentry.data)
+
+        entry_data = hass.data[DOMAIN][config_entry.entry_id]
+        coordinator = entry_data["coordinator"]
+
+        config = subentry.data
+        name = config.get(CONF_NAME, DEFAULT_STOP_NAME)
+        stop_id = int(config[CONF_STOP_ID])
+        route = config.get(CONF_ROUTE, [])
+        direction = config.get(CONF_DIRECTION, [])
+        departure_type = config.get(CONF_DEPARTURE_TYPE, [])
+        unique_id = subentry.unique_id
+
+        async_add_entities(
+            [
+                RejseplanenTransportSensor(
+                    coordinator=coordinator,
+                    stop_id=stop_id,
+                    name=name,
+                    route=route,
+                    direction=direction,
+                    departure_type=departure_type,
+                    unique_id=unique_id,
+                )
+            ],
+            config_subentry_id=subentry_id,
+        )
+
+    await coordinator.async_config_entry_first_refresh()
+
+
+class RejseplanenTransportSensor(
+    CoordinatorEntity[RejseplanenDataUpdateCoordinator], SensorEntity
+):
     """Implementation of Rejseplanen transport sensor."""
 
     _attr_attribution = "Data provided by rejseplanen.dk"
     _attr_icon = "mdi:bus"
 
-    def __init__(self, data, stop_id, route, direction, name):
+    def __init__(
+        self,
+        coordinator,
+        stop_id,
+        route,
+        direction,
+        departure_type,
+        name,
+        unique_id=None,
+    ) -> None:
         """Initialize the sensor."""
-        self.data = data
-        self._name = name
+        super().__init__(coordinator)
         self._stop_id = stop_id
         self._route = route
         self._direction = direction
-        self._times = self._state = None
+        self._departure_type = departure_type
+        self._attr_name = name
+        self.coordinator.add_stop_id(stop_id)
+        self._unsub_interval: Callable[[], None] | None = None
+        self._attr_unique_id = unique_id
+        """Initialize the sensor's state."""
+        self._attr_native_value = self.native_value
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self._state
+        departures: list[Departure] = self._get_filtered_departures()
+        if departures:
+            next_departure = departures[0]
+            next_date = next_departure.rtDate or next_departure.date
+            next_time = next_departure.rtTime or next_departure.time
+            return self.due_in(date=next_date, time=next_time)
+        return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
-        if not self._times:
+        departures: list[Departure] = self._get_filtered_departures()
+        if not departures:
             return {ATTR_STOP_ID: self._stop_id}
+        attributes: dict[str, Any] = {}
 
-        next_up = []
-        if len(self._times) > 1:
-            next_up = self._times[1:]
-
-        attributes = {
-            ATTR_NEXT_UP: next_up,
-            ATTR_STOP_ID: self._stop_id,
-        }
-
-        if self._times[0] is not None:
-            attributes.update(self._times[0])
+        next_departure: Departure = departures[0]
+        next_date = next_departure.rtDate or next_departure.date
+        next_time = next_departure.rtTime or next_departure.time
+        next_track = next_departure.rtTrack or next_departure.track
+        attributes.update(
+            {
+                ATTR_STOP_ID: self._stop_id,
+                ATTR_STOP_NAME: next_departure.name,
+                ATTR_FINAL_STOP: next_departure.direction,
+                ATTR_DUE_IN: self.due_in(date=next_date, time=next_time),
+                ATTR_DUE_AT: datetime.combine(next_date, next_time).isoformat(),
+                ATTR_SCHEDULED_AT: datetime.combine(
+                    next_departure.date, next_departure.time
+                ).isoformat(),
+                ATTR_REAL_TIME_AT: datetime.combine(next_date, next_time).isoformat(),
+                ATTR_TRACK: next_track,
+            }
+        )
+        if len(departures) > 1:
+            attributes["next_departures"] = self.parse_next_departures(departures[1:])
 
         return attributes
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
-        return UnitOfTime.MINUTES
+        return const.UnitOfTime.MINUTES
 
-    def update(self) -> None:
-        """Get the latest data from rejseplanen.dk and update the states."""
-        self.data.update()
-        self._times = self.data.info
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks when entity is added to hass."""
+        await super().async_added_to_hass()
+        self._unsub_interval = async_track_time_interval(
+            self.hass,
+            self._handle_minute_tick,
+            timedelta(minutes=1),
+            name=f"rejseplanen_{self._attr_unique_id}_minute_tick",
+        )
 
-        if not self._times:
-            self._state = None
-        else:
-            with suppress(TypeError):
-                self._state = self._times[0][ATTR_DUE_IN]
-
-
-class PublicTransportData:
-    """The Class for handling the data retrieval."""
-
-    def __init__(self, stop_id, route, direction, departure_type):
-        """Initialize the data object."""
-        self.stop_id = stop_id
-        self.route = route
-        self.direction = direction
-        self.departure_type = departure_type
-        self.info = []
-
-    def update(self):
-        """Get the latest data from rejseplanen."""
-        self.info = []
-
-        def intersection(lst1, lst2):
-            """Return items contained in both lists."""
-            return list(set(lst1) & set(lst2))
-
-        # Limit search to selected types, to get more results
-        all_types = not bool(self.departure_type)
-        use_train = all_types or bool(intersection(TRAIN_TYPES, self.departure_type))
-        use_bus = all_types or bool(intersection(BUS_TYPES, self.departure_type))
-        use_metro = all_types or bool(intersection(METRO_TYPES, self.departure_type))
-
-        try:
-            results = rjpl.departureBoard(
-                int(self.stop_id),
-                timeout=5,
-                useTrain=use_train,
-                useBus=use_bus,
-                useMetro=use_metro,
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle removal of the sensor from Home Assistant."""
+        _LOGGER.debug("Removing sensor %s from coordinator", self._attr_unique_id)
+        self.coordinator.remove_stop_id(self._stop_id)
+        if self._unsub_interval:
+            self._unsub_interval()
+            self._unsub_interval = None
+            _LOGGER.debug(
+                "Unsubscribed from minute tick for sensor %s", self._attr_unique_id
             )
-        except rjpl.rjplAPIError as error:
-            _LOGGER.debug("API returned error: %s", error)
-            return
-        except (rjpl.rjplConnectionError, rjpl.rjplHTTPError):
-            _LOGGER.debug("Error occurred while connecting to the API")
-            return
 
-        # Filter result
-        results = [d for d in results if "cancelled" not in d]
-        if self.route:
-            results = [d for d in results if d["name"] in self.route]
-        if self.direction:
-            results = [d for d in results if d["direction"] in self.direction]
-        if self.departure_type:
-            results = [d for d in results if d["type"] in self.departure_type]
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        _LOGGER.debug(
+            "Coordinator update callback triggered for sensor %s", self._attr_unique_id
+        )
+        self.async_write_ha_state()
 
-        for item in results:
-            route = item.get("name")
+    @callback
+    def _handle_minute_tick(self, now):
+        """Call every minute to update the state."""
+        _LOGGER.debug(
+            "Minute tick callback triggered for sensor %s at %s",
+            self._attr_unique_id,
+            now.isoformat(),
+        )
+        self.async_write_ha_state()
 
-            scheduled_date = item.get("date")
-            scheduled_time = item.get("time")
-            real_time_date = due_at_date = item.get("rtDate")
-            real_time_time = due_at_time = item.get("rtTime")
+    def _get_filtered_departures(self) -> list[dict[str, Any]]:
+        """Get filtered departures based on the configured parameters."""
+        route_filter = self._route if self._route else None
+        direction_filter = self._direction if self._direction else None
+        departure_type_filter = self._departure_type if self._departure_type else None
 
-            if due_at_date is None:
-                due_at_date = scheduled_date
-            if due_at_time is None:
-                due_at_time = scheduled_time
+        return self.coordinator.get_filtered_departures(
+            stop_id=self._stop_id,
+            route_filter=route_filter,
+            direction_filter=direction_filter,
+            departure_type_filter=departure_type_filter,
+        )
 
-            if (
-                due_at_date is not None
-                and due_at_time is not None
-                and route is not None
-            ):
-                due_at = f"{due_at_date} {due_at_time}"
-                scheduled_at = f"{scheduled_date} {scheduled_time}"
+    @staticmethod
+    def parse_next_departures(departures: list[Departure]) -> list[dict[str, Any]]:
+        """Parse the next departures into a list of dictionaries."""
+        parsed_departures = []
+        for departure in departures:
+            parsed_departure = {
+                ATTR_STOP_ID: departure.stopExtId,
+                ATTR_STOP_NAME: departure.name,
+                ATTR_FINAL_STOP: departure.direction,
+                ATTR_DUE_IN: RejseplanenTransportSensor.due_in(
+                    departure.rtTime or departure.time, departure.rtDate or departure.date
+                ),
+                ATTR_DUE_AT: datetime.combine(
+                    departure.date, departure.time
+                ).isoformat(),
+                ATTR_SCHEDULED_AT: datetime.combine(
+                    departure.date, departure.time
+                ).isoformat(),
+                ATTR_REAL_TIME_AT: datetime.combine(
+                    departure.rtDate or departure.date,
+                    departure.rtTime or departure.time,
+                ).isoformat(),
+                ATTR_TRACK: departure.rtTrack or departure.track,
+            }
+            parsed_departures.append(parsed_departure)
+        return parsed_departures
 
-                departure_data = {
-                    ATTR_DIRECTION: item.get("direction"),
-                    ATTR_DUE_IN: due_in_minutes(due_at),
-                    ATTR_DUE_AT: due_at,
-                    ATTR_FINAL_STOP: item.get("finalStop"),
-                    ATTR_ROUTE: route,
-                    ATTR_SCHEDULED_AT: scheduled_at,
-                    ATTR_STOP_NAME: item.get("stop"),
-                    ATTR_TYPE: item.get("type"),
-                }
-
-                if real_time_date is not None and real_time_time is not None:
-                    departure_data[ATTR_REAL_TIME_AT] = (
-                        f"{real_time_date} {real_time_time}"
-                    )
-                if item.get("rtTrack") is not None:
-                    departure_data[ATTR_TRACK] = item.get("rtTrack")
-
-                self.info.append(departure_data)
-
-        if not self.info:
-            _LOGGER.debug("No departures with given parameters")
-
-        # Sort the data by time
-        self.info = sorted(self.info, key=itemgetter(ATTR_DUE_IN))
+    @staticmethod
+    def due_in(time: Time, date: Date) -> int:
+        """Calculate the due in time in minutes."""
+        tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
+        now = datetime.now(tz)
+        departure_time = datetime.combine(date, time).replace(tzinfo=tz)
+        due_in_seconds = (departure_time - now).total_seconds()
+        return round(due_in_seconds / 60) if due_in_seconds > 0 else 0
