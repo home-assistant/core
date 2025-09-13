@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 
 import growattServer
+import requests
 
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -32,12 +33,12 @@ def get_device_list(
     # Log in to api and fetch first plant if no plant id is defined.
     try:
         login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-        # DEBUG: Log the actual response structure
-    except Exception as ex:
-        _LOGGER.error("DEBUG - Login response: %s", login_response)
-        raise ConfigEntryError(
-            f"Error communicating with Growatt API during login: {ex}"
-        ) from ex
+    except requests.exceptions.RequestException as ex:
+        raise ConfigEntryError(f"Network error during Growatt API login: {ex}") from ex
+    except ValueError as ex:
+        raise ConfigEntryError(f"Invalid response format during login: {ex}") from ex
+    except KeyError as ex:
+        raise ConfigEntryError(f"Missing expected key in login response: {ex}") from ex
 
     if not login_response.get("success"):
         msg = login_response.get("msg", "Unknown error")
@@ -46,27 +47,42 @@ def get_device_list(
             raise ConfigEntryAuthFailed("Username, Password or URL may be incorrect!")
         raise ConfigEntryError(f"Growatt login failed: {msg}")
 
-    user_id = login_response["user"]["id"]
+    try:
+        user_id = login_response["user"]["id"]
+    except KeyError as ex:
+        raise ConfigEntryError(f"Missing user ID in login response: {ex}") from ex
 
     if plant_id == DEFAULT_PLANT_ID:
         try:
             plant_info = api.plant_list(user_id)
-        except Exception as ex:
+        except requests.exceptions.RequestException as ex:
+            raise ConfigEntryError(f"Network error during plant list: {ex}") from ex
+        except ValueError as ex:
             raise ConfigEntryError(
-                f"Error communicating with Growatt API during plant list: {ex}"
+                f"Invalid response format during plant list: {ex}"
             ) from ex
+        except KeyError as ex:
+            raise ConfigEntryError(
+                f"Missing expected key in plant list response: {ex}"
+            ) from ex
+
         if not plant_info or "data" not in plant_info or not plant_info["data"]:
             raise ConfigEntryError("No plants found for this account.")
         plant_id = plant_info["data"][0].get("plantId")
         if not plant_id:
             raise ConfigEntryError("Plant ID missing in plant info.")
 
-    # Get a list of devices for specified plant to add sensors for.
     try:
         devices = api.device_list(plant_id)
-    except Exception as ex:
+    except requests.exceptions.RequestException as ex:
+        raise ConfigEntryError(f"Network error during device list: {ex}") from ex
+    except ValueError as ex:
         raise ConfigEntryError(
-            f"Error communicating with Growatt API during device list: {ex}"
+            f"Invalid response format during device list: {ex}"
+        ) from ex
+    except KeyError as ex:
+        raise ConfigEntryError(
+            f"Missing expected key in device list response: {ex}"
         ) from ex
 
     return devices, plant_id
