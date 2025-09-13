@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
 from . import YAML_CONFIG_INVALID, YAML_CONFIG_NO_DB, init_integration
@@ -73,34 +74,41 @@ async def test_setup_invalid_config(
 
 async def test_invalid_query(hass: HomeAssistant) -> None:
     """Test invalid query."""
-    with pytest.raises(vol.Invalid):
-        validate_sql_select("DROP TABLE *")
+    with pytest.raises(vol.Invalid, match="SQL query must be of type SELECT"):
+        validate_sql_select(Template("DROP TABLE *", hass))
 
-    with pytest.raises(vol.Invalid):
-        validate_sql_select("SELECT5 as value")
+    with pytest.raises(vol.Invalid, match="SQL query is empty or unknown type"):
+        validate_sql_select(Template("SELECT5 as value", hass))
 
-    with pytest.raises(vol.Invalid):
-        validate_sql_select(";;")
+    with pytest.raises(vol.Invalid, match="SQL query is empty or unknown type"):
+        validate_sql_select(Template(";;", hass))
 
 
 async def test_query_no_read_only(hass: HomeAssistant) -> None:
     """Test query no read only."""
-    with pytest.raises(vol.Invalid):
-        validate_sql_select("UPDATE states SET state = 999999 WHERE state_id = 11125")
+    with pytest.raises(vol.Invalid, match="SQL query must be of type SELECT"):
+        validate_sql_select(
+            Template("UPDATE states SET state = 999999 WHERE state_id = 11125", hass)
+        )
 
 
 async def test_query_no_read_only_cte(hass: HomeAssistant) -> None:
     """Test query no read only CTE."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(vol.Invalid, match="SQL query must be of type SELECT"):
         validate_sql_select(
-            "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;"
+            Template(
+                "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;",
+                hass,
+            )
         )
 
 
 async def test_multiple_queries(hass: HomeAssistant) -> None:
     """Test multiple queries."""
-    with pytest.raises(vol.Invalid):
-        validate_sql_select("SELECT 5 as value; UPDATE states SET state = 10;")
+    with pytest.raises(vol.Invalid, match="Multiple SQL statements are not allowed"):
+        validate_sql_select(
+            Template("SELECT 5 as value; UPDATE states SET state = 10;", hass)
+        )
 
 
 async def test_migration_from_future(
