@@ -85,15 +85,20 @@ def async_clear_install_history(hass: HomeAssistant) -> None:
     _async_get_manager(hass).install_failure_history.clear()
 
 
-def pip_kwargs(config_dir: str | None) -> dict[str, Any]:
-    """Return keyword arguments for PIP install."""
+async def async_pip_kwargs(config_dir: str | None) -> dict[str, Any]:
+    """Return keyword arguments for PIP install.
+
+    This function is a coroutine.
+    """
     is_docker = pkg_util.is_docker_env()
     kwargs = {
         "constraints": os.path.join(os.path.dirname(__file__), CONSTRAINT_FILE),
         "timeout": PIP_TIMEOUT,
     }
     if not (config_dir is None or pkg_util.is_virtual_env()) and not is_docker:
-        kwargs["target"] = os.path.join(config_dir, "deps")
+        kwargs["target"] = await pkg_util.async_get_user_site(
+            os.path.join(config_dir, "deps")
+        )
     return kwargs
 
 
@@ -297,7 +302,7 @@ class RequirementsManager:
         requirements: list[str],
     ) -> None:
         """Install a requirement and save failures."""
-        kwargs = pip_kwargs(self.hass.config.config_dir)
+        kwargs = await async_pip_kwargs(self.hass.config.config_dir)
         installed, failures = await self.hass.async_add_executor_job(
             _install_requirements_if_missing, requirements, kwargs
         )
