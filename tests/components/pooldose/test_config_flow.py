@@ -6,10 +6,11 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.pooldose.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import RequestStatus
 
@@ -237,3 +238,23 @@ async def test_duplicate_entry_aborts(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test the full DHCP config flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.0.123", hostname="kommspot", macaddress="a4e57caabbcc"
+        ),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "dhcp_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "PoolDose TEST123456789"
+    assert result["data"] == {CONF_HOST: "192.168.0.123"}
+    assert result["result"].unique_id == "TEST123456789"
