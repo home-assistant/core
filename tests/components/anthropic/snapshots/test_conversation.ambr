@@ -405,3 +405,67 @@
     ),
   })
 # ---
+# name: test_web_search_multi_turn_with_snapshot
+  list([
+    dict({
+      'attachments': None,
+      'content': "What's the weather like today?",
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': "I'll search for current weather information.",
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'toolu_web_search_001',
+          'tool_args': dict({
+            'query': 'current weather forecast today',
+          }),
+          'tool_name': 'web_search',
+        }),
+      ]),
+    }),
+  ])
+# ---
+# name: test_web_search_multi_turn_with_snapshot.1
+  list([
+    dict({
+      'content': "What's the weather like today?",
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': "I'll search for current weather information.",
+          'type': 'text',
+        }),
+        dict({
+          'id': 'toolu_web_search_001',
+          'input': dict({
+            'query': 'current weather forecast today',
+          }),
+          'name': 'web_search',
+          'type': 'tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': 'What temperature will it be?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Based on my previous search, it looks sunny with 75°F.',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
