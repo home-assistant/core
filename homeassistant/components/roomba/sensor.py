@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .entity import IRobotEntity
+from .entity import IRobotEntity, roomba_reported_state
 from .models import RoombaData
 
 
@@ -149,18 +149,17 @@ async def async_setup_entry(
     roomba = domain_data.roomba
     blid = domain_data.blid
 
+    sensor_list: list[RoombaSensorEntityDescription] = SENSORS
+
+    has_dock: bool = len(roomba_reported_state(roomba).get("dock", {})) > 0
+
+    if has_dock:
+        sensor_list.extend(DOCK_SENSORS)
+
     async_add_entities(
-        RoombaSensor(roomba, blid, entity_description) for entity_description in SENSORS
+        RoombaSensor(roomba, blid, entity_description)
+        for entity_description in sensor_list
     )
-
-    dock_entities: list[RoombaSensor] = []
-    for entity_description in DOCK_SENSORS:
-        entity = RoombaSensor(roomba, blid, entity_description)
-        if entity.has_dock:
-            dock_entities.append(entity)
-
-    if len(dock_entities) > 0:
-        async_add_entities(dock_entities)
 
 
 class RoombaSensor(IRobotEntity, SensorEntity):
