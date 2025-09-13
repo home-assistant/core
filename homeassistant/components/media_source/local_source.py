@@ -133,12 +133,11 @@ class LocalSource(MediaSource):
 
         def _do_move() -> None:
             """Move file to target."""
-            if not target_dir.is_dir():
-                raise PathNotSupportedError("Target is not an existing directory")
-
-            target_path = target_dir / uploaded_file.filename
-
             try:
+                target_dir.mkdir(parents=True, exist_ok=True)
+
+                target_path = target_dir / uploaded_file.filename
+
                 target_path.relative_to(target_dir)
                 raise_if_invalid_path(str(target_path))
             except ValueError as err:
