@@ -25,7 +25,7 @@ from .const import (
     SERVER_UNAVAILABLE,
 )
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
