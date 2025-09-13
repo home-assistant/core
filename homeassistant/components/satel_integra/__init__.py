@@ -1,59 +1,67 @@
 """Support for Satel Integra devices."""
 
-import collections
 import logging
 
 from satel_integra.satel_integra import AsyncSatel
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-DEFAULT_ALARM_NAME = "satel_integra"
-DEFAULT_PORT = 7094
-DEFAULT_CONF_ARM_HOME_MODE = 1
-DEFAULT_DEVICE_PARTITION = 1
-DEFAULT_ZONE_TYPE = "motion"
+from .const import (
+    CONF_ARM_HOME_MODE,
+    CONF_DEVICE_PARTITIONS,
+    CONF_OUTPUT_NUMBER,
+    CONF_OUTPUTS,
+    CONF_PARTITION_NUMBER,
+    CONF_SWITCHABLE_OUTPUT_NUMBER,
+    CONF_SWITCHABLE_OUTPUTS,
+    CONF_ZONE_NUMBER,
+    CONF_ZONE_TYPE,
+    CONF_ZONES,
+    DEFAULT_CONF_ARM_HOME_MODE,
+    DEFAULT_PORT,
+    DEFAULT_ZONE_TYPE,
+    DOMAIN,
+    SIGNAL_OUTPUTS_UPDATED,
+    SIGNAL_PANEL_MESSAGE,
+    SIGNAL_ZONES_UPDATED,
+    SUBENTRY_TYPE_OUTPUT,
+    SUBENTRY_TYPE_PARTITION,
+    SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+    SUBENTRY_TYPE_ZONE,
+    ZONES,
+    SatelConfigEntry,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "satel_integra"
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SWITCH]
 
-DATA_SATEL = "satel_integra"
-
-CONF_DEVICE_CODE = "code"
-CONF_DEVICE_PARTITIONS = "partitions"
-CONF_ARM_HOME_MODE = "arm_home_mode"
-CONF_ZONE_NAME = "name"
-CONF_ZONE_TYPE = "type"
-CONF_ZONES = "zones"
-CONF_OUTPUTS = "outputs"
-CONF_SWITCHABLE_OUTPUTS = "switchable_outputs"
-
-ZONES = "zones"
-
-SIGNAL_PANEL_MESSAGE = "satel_integra.panel_message"
-SIGNAL_PANEL_ARM_AWAY = "satel_integra.panel_arm_away"
-SIGNAL_PANEL_ARM_HOME = "satel_integra.panel_arm_home"
-SIGNAL_PANEL_DISARM = "satel_integra.panel_disarm"
-
-SIGNAL_ZONES_UPDATED = "satel_integra.zones_updated"
-SIGNAL_OUTPUTS_UPDATED = "satel_integra.outputs_updated"
 
 ZONE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ZONE_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): cv.string,
     }
 )
-EDITABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_ZONE_NAME): cv.string})
+EDITABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 PARTITION_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ZONE_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.In(
             [1, 2, 3]
         ),
@@ -63,7 +71,7 @@ PARTITION_SCHEMA = vol.Schema(
 
 def is_alarm_code_necessary(value):
     """Check if alarm code must be configured."""
-    if value.get(CONF_SWITCHABLE_OUTPUTS) and CONF_DEVICE_CODE not in value:
+    if value.get(CONF_SWITCHABLE_OUTPUTS) and CONF_CODE not in value:
         raise vol.Invalid("You need to specify alarm code to use switchable_outputs")
 
     return value
@@ -75,7 +83,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_DEVICE_CODE): cv.string,
+                vol.Optional(CONF_CODE): cv.string,
                 vol.Optional(CONF_DEVICE_PARTITIONS, default={}): {
                     vol.Coerce(int): PARTITION_SCHEMA
                 },
@@ -92,64 +100,106 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Satel Integra component."""
-    conf = config[DOMAIN]
+async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
+    """Set up  Satel Integra from YAML."""
 
-    zones = conf.get(CONF_ZONES)
-    outputs = conf.get(CONF_OUTPUTS)
-    switchable_outputs = conf.get(CONF_SWITCHABLE_OUTPUTS)
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    partitions = conf.get(CONF_DEVICE_PARTITIONS)
+    if config := hass_config.get(DOMAIN):
+        hass.async_create_task(_async_import(hass, config))
 
-    monitored_outputs = collections.OrderedDict(
-        list(outputs.items()) + list(switchable_outputs.items())
+    return True
+
+
+async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
+    """Process YAML import."""
+
+    if not hass.config_entries.async_entries(DOMAIN):
+        # Start import flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+
+        if result.get("type") == FlowResultType.ABORT:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_yaml_import_issue_cannot_connect",
+                breaks_in_ha_version="2026.4.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue_cannot_connect",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "Satel Integra",
+                },
+            )
+            return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2026.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Satel Integra",
+        },
     )
 
-    controller = AsyncSatel(host, port, hass.loop, zones, monitored_outputs, partitions)
 
-    hass.data[DATA_SATEL] = controller
+async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bool:
+    """Set up  Satel Integra from a config entry."""
+
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
+
+    # Make sure we initialize the Satel controller with the configured entries to monitor
+    partitions = [
+        subentry.data[CONF_PARTITION_NUMBER]
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_PARTITION
+    ]
+
+    zones = [
+        subentry.data[CONF_ZONE_NUMBER]
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_ZONE
+    ]
+
+    outputs = [
+        subentry.data[CONF_OUTPUT_NUMBER]
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_OUTPUT
+    ]
+
+    switchable_outputs = [
+        subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT
+    ]
+
+    monitored_outputs = outputs + switchable_outputs
+
+    controller = AsyncSatel(host, port, hass.loop, zones, monitored_outputs, partitions)
 
     result = await controller.connect()
 
     if not result:
-        return False
+        raise ConfigEntryNotReady("Controller failed to connect")
+
+    entry.runtime_data = controller
 
     @callback
     def _close(*_):
         controller.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
-    _LOGGER.debug("Arm home config: %s, mode: %s ", conf, conf.get(CONF_ARM_HOME_MODE))
-
-    hass.async_create_task(
-        async_load_platform(hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, conf, config)
-    )
-
-    hass.async_create_task(
-        async_load_platform(
-            hass,
-            Platform.BINARY_SENSOR,
-            DOMAIN,
-            {CONF_ZONES: zones, CONF_OUTPUTS: outputs},
-            config,
-        )
-    )
-
-    hass.async_create_task(
-        async_load_platform(
-            hass,
-            Platform.SWITCH,
-            DOMAIN,
-            {
-                CONF_SWITCHABLE_OUTPUTS: switchable_outputs,
-                CONF_DEVICE_CODE: conf.get(CONF_DEVICE_CODE),
-            },
-            config,
-        )
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
     def alarm_status_update_callback():
@@ -179,3 +229,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bool:
+    """Unloading the Satel platforms."""
+
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        controller = entry.runtime_data
+        controller.close()
+
+    return unload_ok
