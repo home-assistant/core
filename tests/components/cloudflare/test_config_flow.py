@@ -10,19 +10,18 @@ from homeassistant.const import CONF_API_TOKEN, CONF_SOURCE, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
-    ENTRY_CONFIG,
-    USER_INPUT,
-    USER_INPUT_RECORDS,
-    USER_INPUT_ZONE,
-    patch_async_setup_entry,
-)
+from . import ENTRY_CONFIG, USER_INPUT, USER_INPUT_ZONE, patch_async_setup_entry
 
 from tests.common import MockConfigEntry
 
 
-async def test_user_form(hass: HomeAssistant, cfupdate_flow: MagicMock) -> None:
-    """Test we get the user initiated form."""
+async def test_user_form_with_a_and_aaaa_records(
+    hass: HomeAssistant, cfupdate_flow: MagicMock
+) -> None:
+    """Test user flow with A and AAAA record types."""
+
+    # Simulated user inputs for both record types
+    user_input_records = {CONF_RECORDS: ["ha.mock.com|A", "ha.mock.com|AAAA"]}
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
@@ -54,7 +53,7 @@ async def test_user_form(hass: HomeAssistant, cfupdate_flow: MagicMock) -> None:
     with patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            USER_INPUT_RECORDS,
+            user_input_records,
         )
         await hass.async_block_till_done()
 
@@ -64,7 +63,7 @@ async def test_user_form(hass: HomeAssistant, cfupdate_flow: MagicMock) -> None:
     assert result["data"]
     assert result["data"][CONF_API_TOKEN] == USER_INPUT[CONF_API_TOKEN]
     assert result["data"][CONF_ZONE] == USER_INPUT_ZONE[CONF_ZONE]
-    assert result["data"][CONF_RECORDS] == USER_INPUT_RECORDS[CONF_RECORDS]
+    assert result["data"][CONF_RECORDS] == user_input_records[CONF_RECORDS]
 
     assert result["result"]
     assert result["result"].unique_id == USER_INPUT_ZONE[CONF_ZONE]
