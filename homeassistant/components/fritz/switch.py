@@ -25,16 +25,10 @@ from .const import (
     WIFI_STANDARD,
     MeshRoles,
 )
-from .coordinator import (
-    FRITZ_DATA_KEY,
-    AvmWrapper,
-    FritzConfigEntry,
-    FritzData,
-    FritzDevice,
-    SwitchInfo,
-    device_filter_out_from_trackers,
-)
+from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzBoxBaseEntity, FritzDeviceBase
+from .helpers import device_filter_out_from_trackers
+from .models import FritzDevice, SwitchInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -282,7 +276,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
             configuration_url=f"http://{self.coordinator.host}",
             connections={(CONNECTION_NETWORK_MAC, self.coordinator.mac)},
             identifiers={(DOMAIN, self.coordinator.unique_id)},
-            manufacturer="AVM",
+            manufacturer="FRITZ!",
             model=self.coordinator.model,
             name=self._device_name,
             sw_version=self.coordinator.current_firmware,

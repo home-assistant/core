@@ -25,7 +25,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 from .coordinator import BlinkConfigEntry, BlinkUpdateCoordinator
-from .services import setup_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> b
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Blink."""
 
-    setup_services(hass)
+    async_setup_services(hass)
 
     return True
 

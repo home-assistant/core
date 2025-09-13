@@ -87,5 +87,7 @@ def mock_suez_client(recorder_mock: Recorder) -> Generator[AsyncMock]:
         )
 
         suez_client.fetch_aggregated_data.return_value = result
-        suez_client.get_price.return_value = PriceResult("4.74")
+        suez_client.get_price.return_value = PriceResult(
+            "OK", {"price": 4.74}, "Price is 4.74"
+        )
         yield suez_client

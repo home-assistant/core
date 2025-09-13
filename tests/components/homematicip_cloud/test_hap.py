@@ -1,6 +1,6 @@
 """Test HomematicIP Cloud accesspoint."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homematicip.auth import Auth
 from homematicip.connection.connection_context import ConnectionContext
@@ -16,6 +16,7 @@ from homeassistant.components.homematicip_cloud.const import (
 )
 from homeassistant.components.homematicip_cloud.errors import HmipcConnectionError
 from homeassistant.components.homematicip_cloud.hap import (
+    AsyncHome,
     HomematicipAuth,
     HomematicipHAP,
 )
@@ -231,3 +232,94 @@ async def test_auth_create_exception(hass: HomeAssistant, simple_mock_auth) -> N
         ),
     ):
         assert not await hmip_auth.get_auth(hass, HAPID, HAPPIN)
+
+
+async def test_get_state_after_disconnect(
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
+) -> None:
+    """Test get state after disconnect."""
+    hass.config.components.add(DOMAIN)
+    hap = HomematicipHAP(hass, hmip_config_entry)
+    assert hap
+
+    simple_mock_home = AsyncMock(spec=AsyncHome, autospec=True)
+    hap.home = simple_mock_home
+    hap.home.websocket_is_connected = Mock(side_effect=[False, True])
+
+    with (
+        patch("asyncio.sleep", new=AsyncMock()) as mock_sleep,
+        patch.object(hap, "get_state") as mock_get_state,
+    ):
+        assert not hap._ws_connection_closed.is_set()
+
+        await hap.ws_connected_handler()
+        mock_get_state.assert_not_called()
+
+        await hap.ws_disconnected_handler()
+        assert hap._ws_connection_closed.is_set()
+        with patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.websocket_is_connected",
+            return_value=True,
+        ):
+            await hap.ws_connected_handler()
+            mock_get_state.assert_called_once()
+
+    assert not hap._ws_connection_closed.is_set()
+    hap.home.websocket_is_connected.assert_called()
+    mock_sleep.assert_awaited_with(2)
+
+
+async def test_try_get_state_exponential_backoff() -> None:
+    """Test _try_get_state waits for websocket connection."""
+
+    # Arrange: Create instance and mock home
+    hap = HomematicipHAP(MagicMock(), MagicMock())
+    hap.home = MagicMock()
+    hap.home.websocket_is_connected = Mock(return_value=True)
+
+    hap.get_state = AsyncMock(
+        side_effect=[HmipConnectionError, HmipConnectionError, True]
+    )
+
+    with patch("asyncio.sleep", new=AsyncMock()) as mock_sleep:
+        await hap._try_get_state()
+
+    assert mock_sleep.mock_calls[0].args[0] == 8
+    assert mock_sleep.mock_calls[1].args[0] == 16
+    assert hap.get_state.call_count == 3
+
+
+async def test_try_get_state_handle_exception() -> None:
+    """Test _try_get_state handles exceptions."""
+    # Arrange: Create instance and mock home
+    hap = HomematicipHAP(MagicMock(), MagicMock())
+    hap.home = MagicMock()
+
+    expected_exception = Exception("Connection error")
+    future = AsyncMock()
+    future.result = Mock(side_effect=expected_exception)
+
+    with patch("homeassistant.components.homematicip_cloud.hap._LOGGER") as mock_logger:
+        hap.get_state_finished(future)
+
+    mock_logger.error.assert_called_once_with(
+        "Error updating state after HMIP access point reconnect: %s", expected_exception
+    )
+
+
+async def test_async_connect(
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
+) -> None:
+    """Test async_connect."""
+    hass.config.components.add(DOMAIN)
+    hap = HomematicipHAP(hass, hmip_config_entry)
+    assert hap
+
+    simple_mock_home = AsyncMock(spec=AsyncHome, autospec=True)
+
+    await hap.async_connect(simple_mock_home)
+
+    simple_mock_home.set_on_connected_handler.assert_called_once()
+    simple_mock_home.set_on_disconnected_handler.assert_called_once()
+    simple_mock_home.set_on_reconnect_handler.assert_called_once()
+    simple_mock_home.enable_events.assert_called_once()

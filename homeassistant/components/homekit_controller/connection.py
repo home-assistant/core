@@ -20,7 +20,12 @@ from aiohomekit.exceptions import (
     EncryptionError,
 )
 from aiohomekit.model import Accessories, Accessory, Transport
-from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
+from aiohomekit.model.characteristics import (
+    EVENT_CHARACTERISTICS,
+    Characteristic,
+    CharacteristicPermissions,
+    CharacteristicsTypes,
+)
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread import async_get_preferred_dataset
@@ -179,6 +184,21 @@ class HKDevice:
         for aid_iid in characteristics:
             self.pollable_characteristics.discard(aid_iid)
 
+    def get_all_pollable_characteristics(self) -> set[tuple[int, int]]:
+        """Get all characteristics that can be polled.
+
+        This is used during startup to poll all readable characteristics
+        before entities have registered what they care about.
+        """
+        return {
+            (accessory.aid, char.iid)
+            for accessory in self.entity_map.accessories
+            for service in accessory.services
+            for char in service.characteristics
+            if CharacteristicPermissions.paired_read in char.perms
+            and char.type not in EVENT_CHARACTERISTICS
+        }
+
     def add_watchable_characteristics(
         self, characteristics: list[tuple[int, int]]
     ) -> None:
@@ -228,7 +248,9 @@ class HKDevice:
         _LOGGER.debug(
             "Called async_set_available_state with %s for %s", available, self.unique_id
         )
-        if self.available == available:
+        # Don't mark entities as unavailable during shutdown to preserve their last known state
+        # Also skip if the availability state hasn't changed
+        if (self.hass.is_stopping and not available) or self.available == available:
             return
         self.available = available
         for callback_ in self._availability_callbacks:
@@ -294,7 +316,6 @@ class HKDevice:
             await self.pairing.async_populate_accessories_state(
                 force_update=True, attempts=attempts
             )
-            self._async_start_polling()
 
         entry.async_on_unload(pairing.dispatcher_connect(self.process_new_events))
         entry.async_on_unload(
@@ -306,6 +327,16 @@ class HKDevice:
         entry.async_on_unload(self._async_cancel_subscription_timer)
 
         await self.async_process_entity_map()
+
+        if transport != Transport.BLE:
+            # When Home Assistant starts, we restore the accessory map from storage
+            # which contains characteristic values from when HA was last running.
+            # These values are stale and may be incorrect (e.g., Ecobee thermostats
+            # report 100°C when restarting). We need to poll for fresh values before
+            # creating entities. Use poll_all=True since entities haven't registered
+            # their characteristics yet.
+            await self.async_update(poll_all=True)
+            self._async_start_polling()
 
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
@@ -711,9 +742,11 @@ class HKDevice:
         """Stop interacting with device and prepare for removal from hass."""
         await self.pairing.shutdown()
 
-        await self.hass.config_entries.async_unload_platforms(
-            self.config_entry, self.platforms
-        )
+        # Skip platform unloading during shutdown to preserve entity states
+        if not self.hass.is_stopping:
+            await self.hass.config_entries.async_unload_platforms(
+                self.config_entry, self.platforms
+            )
 
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""
@@ -854,9 +887,25 @@ class HKDevice:
         """Request an debounced update from the accessory."""
         await self._debounced_update.async_call()
 
-    async def async_update(self, now: datetime | None = None) -> None:
-        """Poll state of all entities attached to this bridge/accessory."""
-        to_poll = self.pollable_characteristics
+    async def async_update(
+        self, now: datetime | None = None, *, poll_all: bool = False
+    ) -> None:
+        """Poll state of all entities attached to this bridge/accessory.
+
+        Args:
+            now: The current time (used by time interval callbacks).
+            poll_all: If True, poll all readable characteristics instead
+                     of just the registered ones.
+                     This is useful during initial setup before entities have
+                     registered their characteristics.
+        """
+        if poll_all:
+            # Poll all readable characteristics during initial startup
+            # excluding device trigger characteristics (buttons, doorbell, etc.)
+            to_poll = self.get_all_pollable_characteristics()
+        else:
+            to_poll = self.pollable_characteristics
+
         if not to_poll:
             self.async_update_available_state()
             _LOGGER.debug(

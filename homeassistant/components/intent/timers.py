@@ -444,8 +444,9 @@ class TimerManager:
         timer.finish()
 
         if timer.conversation_command:
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components.conversation import async_converse
+            from homeassistant.components.conversation import (  # noqa: PLC0415
+                async_converse,
+            )
 
             self.hass.async_create_background_task(
                 async_converse(

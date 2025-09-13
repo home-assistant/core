@@ -15,7 +15,7 @@ from homeassistant.components import media_source
 from homeassistant.components.tts import (
     CONF_LANG,
     DATA_TTS_MANAGER,
-    DOMAIN as TTS_DOMAIN,
+    DOMAIN,
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
     ResultStream,
@@ -212,11 +212,9 @@ async def mock_setup(
 ) -> None:
     """Set up a test provider."""
     mock_integration(hass, MockModule(domain=TEST_DOMAIN))
-    mock_platform(hass, f"{TEST_DOMAIN}.{TTS_DOMAIN}", MockTTS(mock_provider))
+    mock_platform(hass, f"{TEST_DOMAIN}.{DOMAIN}", MockTTS(mock_provider))
 
-    await async_setup_component(
-        hass, TTS_DOMAIN, {TTS_DOMAIN: {"platform": TEST_DOMAIN}}
-    )
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": TEST_DOMAIN}})
     await hass.async_block_till_done()
 
 
@@ -261,7 +259,7 @@ async def mock_config_entry_setup(
         async_add_entities([tts_entity])
 
     loaded_platform = MockPlatform(async_setup_entry=async_setup_entry_platform)
-    mock_platform(hass, f"{test_domain}.{TTS_DOMAIN}", loaded_platform)
+    mock_platform(hass, f"{test_domain}.{DOMAIN}", loaded_platform)
 
     config_entry = MockConfigEntry(domain=test_domain)
     config_entry.add_to_hass(hass)
@@ -287,6 +285,7 @@ class MockResultStream(ResultStream):
             supports_streaming_input=True,
             language="en",
             options={},
+            hass=hass,
             _manager=hass.data[DATA_TTS_MANAGER],
         )
         hass.data[DATA_TTS_MANAGER].token_to_stream[self.token] = self

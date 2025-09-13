@@ -166,12 +166,16 @@ async def test_discovery_update(
 
     await send_discovery_message(hass, payload)
 
-    # be sure that old relay are been removed
+    # entity id from the old relay configuration should be reused
     for i in range(8):
-        assert not hass.states.get(f"switch.first_test_relay_{i}")
+        state = hass.states.get(f"switch.first_test_relay_{i}")
+        assert state.state == STATE_UNKNOWN
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    for i in range(8):
+        assert not hass.states.get(f"switch.second_test_relay_{i}")
 
     # check new relay
-    for i in range(16):
+    for i in range(8, 16):
         state = hass.states.get(f"switch.second_test_relay_{i}")
         assert state.state == STATE_UNKNOWN
         assert not state.attributes.get(ATTR_ASSUMED_STATE)

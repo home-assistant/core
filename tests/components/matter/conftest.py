@@ -76,6 +76,9 @@ async def integration_fixture(
     params=[
         "air_purifier",
         "air_quality_sensor",
+        "aqara_door_window_p2",
+        "aqara_motion_p2",
+        "battery_storage",
         "color_temperature_light",
         "cooktop",
         "dimmable_light",
@@ -88,6 +91,7 @@ async def integration_fixture(
         "eve_thermo",
         "eve_weather_sensor",
         "extended_color_light",
+        "extractor_hood",
         "fan",
         "flow_sensor",
         "generic_switch",
