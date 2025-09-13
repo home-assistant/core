@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 
 from .mock_data import (
     BASE_URL,
+    DND_TIMER,
     HOME_DATA,
     MAP_DATA,
     MULTI_MAP_LIST,
@@ -35,6 +36,36 @@ from .mock_data import (
 )
 
 from tests.common import MockConfigEntry
+
+
+async def _fake_get_from_cache(self, key):
+    """Return cached values for DND/off-peak timers and ensure cache.value is populated."""
+    key_str = str(key)
+    if key_str in (
+        "CacheableAttribute.dnd_timer",
+        "CacheableAttribute.valley_electricity_timer",
+    ):
+        cache = self.cache.get(key)
+        if cache is not None:
+            cache._value = {
+                "start_hour": DND_TIMER.start_hour,
+                "start_minute": DND_TIMER.start_minute,
+                "end_hour": DND_TIMER.end_hour,
+                "end_minute": DND_TIMER.end_minute,
+                "enabled": DND_TIMER.enabled,
+            }
+            return cache._value
+    if key_str == "CacheableAttribute.child_lock_status":
+        cache = self.cache.get(key)
+        if cache is not None:
+            cache._value = {"lock_status": 0}
+            return cache._value
+    if key_str == "CacheableAttribute.flow_led_status":
+        cache = self.cache.get(key)
+        if cache is not None:
+            cache._value = {"status": 0}
+            return cache._value
+    return {}
 
 
 class A01Mock(RoborockMqttClientA01):
@@ -91,6 +122,14 @@ def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
     """Skip calls to the API."""
     with (
         patch("homeassistant.components.roborock.RoborockMqttClientV1.async_connect"),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.ping"
+        ),
+        # Provide stable cache values for DND/off-peak timers to avoid hitting the network
+        patch(
+            "roborock.version_1_apis.roborock_client_v1.RoborockClientV1.get_from_cache",
+            new=_fake_get_from_cache,
+        ),
         patch("homeassistant.components.roborock.RoborockMqttClientV1._send_command"),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockMqttClientV1._send_command"
@@ -115,18 +154,9 @@ def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
             "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=MAP_DATA,
         ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_message"
-        ),
         patch("homeassistant.components.roborock.RoborockMqttClientV1._wait_response"),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._wait_response"
-        ),
-        patch(
-            "roborock.version_1_apis.AttributeCache.async_value",
-        ),
-        patch(
-            "roborock.version_1_apis.AttributeCache.value",
         ),
         patch(
             "homeassistant.components.roborock.coordinator.MAP_SLEEP",
@@ -171,7 +201,7 @@ def send_message_side_effect_fixture() -> Any:
 def mock_send_message_fixture(send_message_side_effect: Any) -> Mock:
     """Fixture to mock the send_message method."""
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._send_command",
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._send_message",
         side_effect=send_message_side_effect,
     ) as mock_send_message:
         yield mock_send_message

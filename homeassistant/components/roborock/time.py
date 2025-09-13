@@ -52,8 +52,9 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 cache.value.get("end_minute"),
             ]
         ),
-        get_value=lambda cache: datetime.time(
-            hour=cache.value.get("start_hour"), minute=cache.value.get("start_minute")
+        get_value=lambda cache: time(
+            hour=cache.value.get("start_hour", 0),
+            minute=cache.value.get("start_minute", 0),
         ),
         entity_category=EntityCategory.CONFIG,
     ),
@@ -69,8 +70,9 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 desired_time.minute,
             ]
         ),
-        get_value=lambda cache: datetime.time(
-            hour=cache.value.get("end_hour"), minute=cache.value.get("end_minute")
+        get_value=lambda cache: time(
+            hour=cache.value.get("end_hour", 0),
+            minute=cache.value.get("end_minute", 0),
         ),
         entity_category=EntityCategory.CONFIG,
     ),
@@ -86,8 +88,9 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 cache.value.get("end_minute"),
             ]
         ),
-        get_value=lambda cache: datetime.time(
-            hour=cache.value.get("start_hour"), minute=cache.value.get("start_minute")
+        get_value=lambda cache: time(
+            hour=cache.value.get("start_hour", 0),
+            minute=cache.value.get("start_minute", 0),
         ),
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -104,8 +107,9 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 desired_time.minute,
             ]
         ),
-        get_value=lambda cache: datetime.time(
-            hour=cache.value.get("end_hour"), minute=cache.value.get("end_minute")
+        get_value=lambda cache: time(
+            hour=cache.value.get("end_hour", 0),
+            minute=cache.value.get("end_minute", 0),
         ),
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -169,9 +173,10 @@ class RoborockTimeEntity(RoborockEntityV1, TimeEntity):
     @property
     def native_value(self) -> time | None:
         """Return the value reported by the time."""
-        return self.entity_description.get_value(
-            self.get_cache(self.entity_description.cache_key)
-        )
+        cache = self.get_cache(self.entity_description.cache_key)
+        if not isinstance(cache.value, dict):
+            return None
+        return self.entity_description.get_value(cache)
 
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
