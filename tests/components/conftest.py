@@ -41,7 +41,9 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import yaml as yaml_util
 
 from tests.common import QualityScaleStatus, get_quality_scale
@@ -890,6 +892,27 @@ async def _check_exception_translation(
     )
 
 
+def _check_entity_name_translations(
+    entity: Entity, computed_name: str, translation_errors: dict[str, str]
+) -> None:
+    if computed_name is not UNDEFINED:
+        return
+
+    platform_data = entity.platform_data
+    if translation_key := entity._name_translation_key:
+        translation_errors[translation_key] = (
+            f"Translation not found for {platform_data.platform_name}: "
+            f"`entity.{platform_data.domain}.{entity.translation_key}.name`. "
+            "Please add to homeassistant/components/"
+            f"{platform_data.platform_name}/strings.json"
+        )
+    else:
+        translation_errors[translation_key] = (
+            "Unable to compute entity name for "
+            f"{platform_data.platform_name} entity: {entity.unique_id}"
+        )
+
+
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_missing_translations: str | list[str],
@@ -920,6 +943,7 @@ async def check_translations(
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
     _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
     _original_service_registry_async_call = ServiceRegistry.async_call
+    _original_entity_name_internal = Entity._name_internal
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -977,6 +1001,17 @@ async def check_translations(
             )
             raise
 
+    def _entity_name_internal(
+        self: Entity,
+        device_class_name: str | None,
+        platform_translations: dict[str, str],
+    ) -> str | UndefinedType | None:
+        result = _original_entity_name_internal(
+            self, device_class_name, platform_translations
+        )
+        _check_entity_name_translations(self, result, translation_errors)
+        return result
+
     # Use override functions
     with (
         patch(
@@ -990,6 +1025,10 @@ async def check_translations(
         patch(
             "homeassistant.core.ServiceRegistry.async_call",
             _service_registry_async_call,
+        ),
+        patch(
+            "homeassistant.helpers.entity.Entity._name_internal",
+            _entity_name_internal,
         ),
     ):
         yield
