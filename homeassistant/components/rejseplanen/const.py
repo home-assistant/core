@@ -28,6 +28,5 @@ ATTR_SCHEDULED_AT = "scheduled_at"
 ATTR_REAL_TIME_AT = "real_time_at"
 ATTR_TRACK = "track"
 ATTR_NEXT_UP = "next_departures"
-ATTR_STOP_ID = "stop_id"
 
 SCAN_INTERVAL_MINUTES = 5
