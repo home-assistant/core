@@ -1,6 +1,8 @@
 """Test helpers for AI Task integration."""
 
 import json
+from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -155,6 +157,10 @@ async def init_components(
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
-    with mock_config_flow(TEST_DOMAIN, ConfigFlow):
+    with (
+        mock_config_flow(TEST_DOMAIN, ConfigFlow),
+        patch.object(Path, "mkdir", autospec=True, return_value=None) as mock_mkdir,
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
+        mock_mkdir.assert_called_once()
