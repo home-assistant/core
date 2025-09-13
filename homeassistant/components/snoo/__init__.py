@@ -14,6 +14,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import SnooConfigEntry, SnooCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> bool
     await asyncio.gather(*tasks)
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    async_setup_services(hass)
 
     return True
 

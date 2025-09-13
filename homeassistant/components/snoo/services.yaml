@@ -1,0 +1,30 @@
+# Describes the format for available Snoo services
+log_diaper_change:
+  fields:
+    baby_device_id:
+      required: true
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
+      selector:
+        device:
+          filter:
+            integration: snoo
+            model: Baby
+    diaper_types:
+      required: true
+      example: ["wet", "dirty"]
+      selector:
+        select:
+          multiple: true
+          options:
+            - "wet"
+            - "dirty"
+    note:
+      required: false
+      example: "Logged via Home Assistant"
+      selector:
+        text:
+    start_time:
+      required: false
+      example: "2024-01-15T10:30:00"
+      selector:
+        datetime:

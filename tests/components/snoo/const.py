@@ -2,7 +2,7 @@
 
 import time
 
-from python_snoo.containers import AuthorizationInfo, SnooData
+from python_snoo.containers import AuthorizationInfo, BabyData, SnooData
 
 MOCK_AMAZON_AUTH = {
     # This is a JWT with random values.
@@ -67,6 +67,32 @@ MOCK_SNOO_DATA = SnooData.from_dict(
     }
 )
 
+MOCK_BABY_DATA = BabyData.from_dict(
+    {
+        "_id": "35235211235dfasdf32523",
+        "babyName": "Test Baby",
+        "birthDate": "2024-01-01",
+        "expectedBirthDate": "2024-01-01",
+        "breathSettingHistory": [],
+        "pictures": [],
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-01-01T00:00:00Z",
+        "disabledLimiter": False,
+        "sex": "unknown",
+        "preemie": False,
+        "startedUsingSnooAt": "2024-01-01T00:00:00Z",
+        "settings": {
+            "carRideMode": True,
+            "daytimeStart": 8,
+            "minimalLevel": "lvl0",
+            "minimalLevelVolume": "low",
+            "motionLimiter": False,
+            "responsivenessLevel": "medium",
+            "soothingLevelVolume": "low",
+            "weaning": True,
+        },
+    }
+)
 
 MOCKED_AUTH = AuthorizationInfo(
     snoo=MOCK_SNOO_AUTH,
