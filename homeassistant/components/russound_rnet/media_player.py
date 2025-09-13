@@ -17,6 +17,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -24,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ZONES = "zones"
 CONF_SOURCES = "sources"
+DOMAIN = "russound_rnet"
 
 
 ZONE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
@@ -62,9 +64,7 @@ def setup_platform(
 
     if russ.is_connected():
         for zone_id, extra in config[CONF_ZONES].items():
-            add_entities(
-                [RussoundRNETDevice(hass, russ, sources, zone_id, extra)], True
-            )
+            add_entities([RussoundRNETDevice(russ, sources, zone_id, extra)], True)
     else:
         _LOGGER.error("Not connected to %s:%s", host, port)
 
@@ -79,10 +79,11 @@ class RussoundRNETDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
-    def __init__(self, hass, russ, sources, zone_id, extra):
+    def __init__(self, russ, sources, zone_id, extra) -> None:
         """Initialise the Russound RNET device."""
-        self._attr_name = extra["name"]
         self._russ = russ
         self._attr_source_list = sources
         # Each controller has a maximum of 6 zones, every increment of 6 zones
@@ -90,6 +91,17 @@ class RussoundRNETDevice(MediaPlayerEntity):
         self._controller_id = str(math.ceil(zone_id / 6))
         # Each zone resets to 1-6 per controller
         self._zone_id = (zone_id - 1) % 6 + 1
+
+        # Stable unique_id so entity/device get registered once
+        self._attr_unique_id = f"rnet_{self._controller_id}_zone_{self._zone_id}"
+
+        # Expose a per-zone device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self._controller_id}-{self._zone_id}")},
+            name=extra["name"],
+            manufacturer="Russound",
+            model="RNET",
+        )
 
     def update(self) -> None:
         """Retrieve latest state."""
