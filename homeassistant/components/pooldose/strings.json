@@ -10,6 +10,10 @@
         "data_description": {
           "host": "IP address or hostname of your device"
         }
+      },
+      "dhcp_confirm": {
+        "title": "Confirm DHCP discovered PoolDose device",
+        "description": "A PoolDose device was found on your network at {ip} with MAC address {mac}.\n\nDo you want to add {name} to Home Assistant?"
       }
     },
     "error": {
@@ -22,7 +26,10 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_device_info": "Unable to retrieve device information",
+      "no_serial_number": "No serial number found on the device"
     }
   },
   "entity": {
