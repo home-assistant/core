@@ -181,7 +181,7 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("min_entity_id") is None
     assert state.attributes.get("max_entity_id") is None
 
@@ -203,7 +203,7 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("min_entity_id") is None
     assert state.attributes.get("max_entity_id") is None
 
@@ -652,7 +652,7 @@ async def test_sensor_calculated_result_fails_on_uom(hass: HomeAssistant) -> Non
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_sum")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("device_class") == "energy"
     assert state.attributes.get("state_class") == "total"
     assert state.attributes.get("unit_of_measurement") is None
@@ -758,6 +758,12 @@ async def test_last_sensor(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     entity_ids = config["sensor"]["entities"]
+
+    for entity_id in entity_ids[1:]:
+        hass.states.async_set(entity_id, "0.0")
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test_last")
+        assert state.state == STATE_UNKNOWN
 
     for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
