@@ -94,12 +94,24 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        AmazonBinarySensorEntity(coordinator, serial_num, sensor_desc)
-        for sensor_desc in BINARY_SENSORS
-        for serial_num in coordinator.data
-        if sensor_desc.is_supported(coordinator.data[serial_num], sensor_desc.key)
-    )
+    known_devices: set[str] = set()
+
+    def _check_device() -> None:
+        current_devices = set(coordinator.data)
+        new_devices = current_devices - known_devices
+        if new_devices:
+            known_devices.update(new_devices)
+            async_add_entities(
+                AmazonBinarySensorEntity(coordinator, serial_num, sensor_desc)
+                for sensor_desc in BINARY_SENSORS
+                for serial_num in new_devices
+                if sensor_desc.is_supported(
+                    coordinator.data[serial_num], sensor_desc.key
+                )
+            )
+
+    _check_device()
+    entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class AmazonBinarySensorEntity(AmazonEntity, BinarySensorEntity):
