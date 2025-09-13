@@ -164,14 +164,18 @@ async def test_host_switch(
         )
 
 
+@pytest.mark.parametrize("channel", [0, None])
 async def test_chime_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     reolink_host: MagicMock,
     reolink_chime: Chime,
+    channel: int | None,
 ) -> None:
     """Test host switch entity."""
+    reolink_chime.channel = channel
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
