@@ -1136,7 +1136,6 @@ DISCOVERY_SCHEMAS = [
             translation_key="operational_error",
             device_class=SensorDeviceClass.ENUM,
             options=list(OPERATIONAL_STATE_ERROR_MAP.values()),
-            # device_to_ha=OPERATIONAL_STATE_ERROR_MAP.get,
             device_to_ha=lambda x: OPERATIONAL_STATE_ERROR_MAP.get(
                 x.errorStateID,  # We retrieve the error ID from the ErrorStateStruct structure
                 "no_error",  # Default value
@@ -1216,7 +1215,6 @@ DISCOVERY_SCHEMAS = [
             translation_key="operational_error",
             device_class=SensorDeviceClass.ENUM,
             options=list(RVC_OPERATIONAL_STATE_ERROR_MAP.values()),
-            # device_to_ha=RVC_OPERATIONAL_STATE_ERROR_MAP.get,
             device_to_ha=lambda x: RVC_OPERATIONAL_STATE_ERROR_MAP.get(
                 x.errorStateID,  # We retrieve the error ID from the ErrorStateStruct structure
                 "no_error",  # Default value
