@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
+    ATTR_ENTITY_ID,
     ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -78,6 +79,7 @@ from .const import (
     CONF_ENABLED_BY_DEFAULT,
     CONF_ENCODING,
     CONF_ENTITY_PICTURE,
+    CONF_GROUP,
     CONF_HW_VERSION,
     CONF_IDENTIFIERS,
     CONF_JSON_ATTRS_TEMPLATE,
@@ -133,6 +135,7 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "device_class",
     "device_info",
     "entity_category",
+    "entity_id",
     "entity_picture",
     "entity_registry_enabled_default",
     "extra_state_attributes",
@@ -464,6 +467,8 @@ class MqttAttributesMixin(Entity):
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
     _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
+    _default_group_icon: str | None = None
+    _group_entity_ids: list[str] | None = None
     _message_callback: Callable[
         [MessageCallbackType, set[str] | None, ReceiveMessage], None
     ]
@@ -474,9 +479,32 @@ class MqttAttributesMixin(Entity):
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
         self._attributes_config = config
 
+    def _update_group_entity_ids(self) -> None:
+        """Set the entity_id property if the entity represents a group of entities.
+
+        Setting entity_id in the extra state attributes will show the discovered entity
+        as a group and will show the member entities in the UI.
+        """
+        if CONF_GROUP not in self._attributes_config:
+            self._default_entity_icon = None
+            return
+        self._attr_icon = self._attr_icon or self._default_group_icon
+        entity_registry = er.async_get(self.hass)
+
+        self._group_entity_ids = []
+        for resource_id in self._attributes_config[CONF_GROUP]:
+            if entity_id := entity_registry.async_get_entity_id(
+                self.entity_id.split(".")[0], DOMAIN, resource_id
+            ):
+                self._group_entity_ids.append(entity_id)
+
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
+        self._update_group_entity_ids()
+        if self._group_entity_ids is not None:
+            self._attr_extra_state_attributes = {ATTR_ENTITY_ID: self._group_entity_ids}
+
         self._attributes_prepare_subscribe_topics()
         self._attributes_subscribe_topics()
 
@@ -543,12 +571,14 @@ class MqttAttributesMixin(Entity):
             _LOGGER.warning("Erroneous JSON: %s", payload)
         else:
             if isinstance(json_dict, dict):
-                filtered_dict = {
+                filtered_dict: dict[str, Any] = {
                     k: v
                     for k, v in json_dict.items()
                     if k not in MQTT_ATTRIBUTES_BLOCKED
                     and k not in self._attributes_extra_blocked
                 }
+                if self._group_entity_ids is not None:
+                    filtered_dict[ATTR_ENTITY_ID] = self._group_entity_ids
                 if hasattr(self, "_process_update_extra_state_attributes"):
                     self._process_update_extra_state_attributes(filtered_dict)
                 else:
