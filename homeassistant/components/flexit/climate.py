@@ -14,12 +14,11 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.modbus import (
+from homeassistant.components.modbus import ModbusHub, get_hub
+from homeassistant.components.modbus.const import (  # pylint: disable=hass-component-root-import
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     DEFAULT_HUB,
-    ModbusHub,
-    get_hub,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
