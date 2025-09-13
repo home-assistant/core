@@ -6,8 +6,8 @@ from typing import cast
 from aiohttp import ClientSession
 from volvocarsapi.auth import AccessTokenManager
 
-from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers.redact import async_redact_data
 
 _LOGGER = logging.getLogger(__name__)
 _TO_REDACT = ["access_token", "id_token", "refresh_token"]
