@@ -1,0 +1,11 @@
+{
+  "domain": "daybetter_light_local",
+  "name": "DayBetter lights local",
+  "codeowners": ["@THDayBetter"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/daybetter_light_local",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["daybetter-local-api==1.0.6"]
+}
