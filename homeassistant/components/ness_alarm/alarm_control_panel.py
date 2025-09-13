@@ -1,10 +1,10 @@
-"""Support for Ness D8X/D16X alarm panel."""
+"""Support for Ness D8X/D16X alarm control panel."""
 
 from __future__ import annotations
 
 import logging
 
-from nessclient import ArmingMode, ArmingState, Client
+from nessclient import ArmingMode, ArmingState
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -12,12 +12,12 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
+from . import CONF_SUPPORT_HOME_ARM, DOMAIN, SIGNAL_ARMING_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,18 +31,31 @@ ARMING_MODE_TO_STATE = {
 }
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Ness Alarm alarm control panel devices."""
-    if discovery_info is None:
-        return
+    """Set up Ness alarm control panel from a config entry."""
 
-    device = NessAlarmPanel(hass.data[DATA_NESS], "Alarm Panel")
-    async_add_entities([device])
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    client = data["client"]
+    config = data["config"]
+
+    entities = []
+
+    support_home_arm = config.get(CONF_SUPPORT_HOME_ARM, True)
+    entities.append(
+        NessAlarmPanel(
+            client,
+            1,
+            "Alarm Panel",
+            support_home_arm,
+            config_entry.entry_id,
+        )
+    )
+
+    async_add_entities(entities)
 
 
 class NessAlarmPanel(AlarmControlPanelEntity):
@@ -50,40 +63,31 @@ class NessAlarmPanel(AlarmControlPanelEntity):
 
     _attr_code_format = CodeFormat.NUMBER
     _attr_should_poll = False
-    _attr_supported_features = (
-        AlarmControlPanelEntityFeature.ARM_HOME
-        | AlarmControlPanelEntityFeature.ARM_AWAY
-        | AlarmControlPanelEntityFeature.TRIGGER
-    )
 
-    def __init__(self, client: Client, name: str) -> None:
+    def __init__(
+        self,
+        client,
+        partition_id: int,
+        name: str,
+        support_home_arm: bool,
+        entry_id: str,
+    ) -> None:
         """Initialize the alarm panel."""
         self._client = client
-        self._attr_name = name
+        self._partition_id = partition_id
+        self._name = name
+        self._entry_id = entry_id
+        self._support_home_arm = support_home_arm
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_ARMING_STATE_CHANGED, self._handle_arming_state_change
+                self.hass,
+                SIGNAL_ARMING_STATE_CHANGED,
+                self._handle_arming_state_change,
             )
         )
-
-    async def async_alarm_disarm(self, code: str | None = None) -> None:
-        """Send disarm command."""
-        await self._client.disarm(code)
-
-    async def async_alarm_arm_away(self, code: str | None = None) -> None:
-        """Send arm away command."""
-        await self._client.arm_away(code)
-
-    async def async_alarm_arm_home(self, code: str | None = None) -> None:
-        """Send arm home command."""
-        await self._client.arm_home(code)
-
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
-        """Send trigger/panic command."""
-        await self._client.panic(code)
 
     @callback
     def _handle_arming_state_change(
@@ -109,3 +113,41 @@ class NessAlarmPanel(AlarmControlPanelEntity):
             _LOGGER.warning("Unhandled arming state: %s", arming_state)
 
         self.async_write_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID."""
+        return f"{self._entry_id}_partition_{self._partition_id}"
+
+    @property
+    def name(self) -> str:
+        """Return the name."""
+        return self._name
+
+    @property
+    def supported_features(self) -> AlarmControlPanelEntityFeature:
+        """Return the list of supported features."""
+        features = (
+            AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.TRIGGER
+        )
+        if self._support_home_arm:
+            features |= AlarmControlPanelEntityFeature.ARM_HOME
+        return features
+
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
+        """Send disarm command."""
+        await self._client.disarm(code)
+
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
+        """Send arm away command."""
+        await self._client.arm_away(code)
+
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
+        """Send arm home command."""
+        if self._support_home_arm:
+            await self._client.arm_home(code)
+
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
+        """Send alarm trigger command (panic)."""
+        await self._client.panic(code)
