@@ -79,6 +79,11 @@ class TotalConnectZoneBypassButton(TotalConnectZoneEntity, ButtonEntity):
         """Press the bypass button."""
         self._zone.bypass()
 
+    async def async_press(self) -> None:
+        """Press the bypass button and refresh state."""
+        await super().async_press()
+        await self.coordinator.async_request_refresh()
+
 
 class TotalConnectPanelButton(TotalConnectLocationEntity, ButtonEntity):
     """Generic TotalConnect panel button."""
@@ -99,3 +104,8 @@ class TotalConnectPanelButton(TotalConnectLocationEntity, ButtonEntity):
     def press(self) -> None:
         """Press the button."""
         self.entity_description.press_fn(self._location)
+
+    async def async_press(self) -> None:
+        """Press the button and refresh state."""
+        await super().async_press()
+        await self.coordinator.async_request_refresh()
