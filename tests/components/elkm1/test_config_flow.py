@@ -729,6 +729,7 @@ async def test_unknown_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # Simulate an unexpected exception (ValueError) and verify the flow returns an "unknown" error
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -1835,25 +1836,22 @@ async def test_reconfigure_nonsecure(
     assert mocked_elk.disconnect.call_count == 1
 
 
-@pytest.mark.usefixtures("socket_enabled")
 async def test_reconfigure_tls(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test reconfigure flow switching to TLS 1.2 protocol."""
+    """Test reconfigure flow switching to TLS 1.2 protocol, validating host, username, and password update."""
     mock_config_entry.add_to_hass(hass)
     await hass.async_block_till_done()
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Mock elk library to simulate successful connection
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
 
     with (
+        _patch_discovery(no_device=True),  # ensure no UDP/DNS work
         _patch_elk(mocked_elk),
         patch(
             "homeassistant.components.elkm1.async_setup_entry",
@@ -1873,20 +1871,14 @@ async def test_reconfigure_tls(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
-
-    # Verify config entry was updated
     assert mock_config_entry.data[CONF_HOST] == "elksv1_2://127.0.0.1"
     assert mock_config_entry.data[CONF_USERNAME] == "test-username"
     assert mock_config_entry.data[CONF_PASSWORD] == "test-password"
-
-    # Verify the setup was called during reload
     mock_setup_entry.assert_called_once()
 
 
-@pytest.mark.usefixtures("socket_enabled")
 async def test_reconfigure_device_offline(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure flow fails when device is offline."""
     mock_config_entry.add_to_hass(hass)
@@ -1894,7 +1886,6 @@ async def test_reconfigure_device_offline(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -1903,14 +1894,8 @@ async def test_reconfigure_device_offline(
     with (
         _patch_discovery(no_device=True),
         _patch_elk(elk=mocked_elk),
-        patch(
-            "homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT",
-            0,
-        ),
-        patch(
-            "homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT",
-            0,
-        ),
+        patch("homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT", 0),
+        patch("homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT", 0),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1922,15 +1907,14 @@ async def test_reconfigure_device_offline(
             },
         )
         await hass.async_block_till_done()
+        await hass.async_block_till_done()  # drain background tasks
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.usefixtures("socket_enabled")
 async def test_reconfigure_invalid_auth(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure flow with invalid authentication."""
     mock_config_entry.add_to_hass(hass)
@@ -1938,11 +1922,13 @@ async def test_reconfigure_invalid_auth(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
 
     # Mock validation to simulate authentication failure
     with patch(
         "homeassistant.components.elkm1.config_flow.validate_input",
-        side_effect=ElkInvalidAuth,  # Use the correct exception
+        side_effect=ElkInvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1958,11 +1944,11 @@ async def test_reconfigure_invalid_auth(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
 
+    assert result2.get("errors") == {CONF_PASSWORD: "invalid_auth"}
 
-@pytest.mark.usefixtures("socket_enabled")
+
 async def test_reconfigure_different_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Abort reconfigure if the device unique_id differs."""
     mock_config_entry.add_to_hass(hass)
@@ -1970,6 +1956,7 @@ async def test_reconfigure_different_device(
     await hass.async_block_till_done()
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -1986,14 +1973,16 @@ async def test_reconfigure_different_device(
                 CONF_PASSWORD: "test",
             },
         )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
+    # Abort occurs when the discovered device's unique_id does not match the existing config entry.
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "unique_id_mismatch"
 
 
 async def test_reconfigure_unknown_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure flow with an unexpected exception."""
     mock_config_entry.add_to_hass(hass)
@@ -2001,6 +1990,8 @@ async def test_reconfigure_unknown_error(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
 
     # Mock validation to simulate an unexpected exception
     with patch(
@@ -2016,6 +2007,7 @@ async def test_reconfigure_unknown_error(
                 CONF_PASSWORD: "test",
             },
         )
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
