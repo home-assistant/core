@@ -38,5 +38,17 @@
       "title": "The Feedreader YAML configuration import failed",
       "description": "Configuring the Feedreader using YAML is being removed but there was a connection error when trying to import the YAML configuration for `{url}`.\n\nPlease verify that the URL is reachable and accessible for Home Assistant and restart Home Assistant to try again or remove the Feedreader YAML configuration from your configuration.yaml file and continue to set up the integration manually."
     }
+  },
+  "services": {
+    "get_posts": {
+      "name": "Get posts",
+      "description": "Retrieves a list of posts from a feed.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Feedreader instance",
+          "description": "The Feed to get posts from."
+        }
+      }
+    }
   }
 }
