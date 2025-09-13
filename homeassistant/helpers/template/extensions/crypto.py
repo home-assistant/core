@@ -1,8 +1,7 @@
-"""Cryptographic and encoding functions for Home Assistant templates."""
+"""Cryptographic hash functions for Home Assistant templates."""
 
 from __future__ import annotations
 
-import base64
 import hashlib
 from typing import TYPE_CHECKING
 
@@ -13,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class CryptoExtension(BaseTemplateExtension):
-    """Jinja2 extension for cryptographic and encoding functions."""
+    """Jinja2 extension for cryptographic hash functions."""
 
     def __init__(self, environment: TemplateEnvironment) -> None:
         """Initialize the crypto extension."""
@@ -41,18 +40,6 @@ class CryptoExtension(BaseTemplateExtension):
                     as_filter=True,
                     limited_ok=False,
                 ),
-                TemplateFunction(
-                    "base64_encode",
-                    self.base64_encode,
-                    as_filter=True,
-                    limited_ok=False,
-                ),
-                TemplateFunction(
-                    "base64_decode",
-                    self.base64_decode,
-                    as_filter=True,
-                    limited_ok=False,
-                ),
             ],
         )
 
@@ -75,18 +62,3 @@ class CryptoExtension(BaseTemplateExtension):
     def sha512(value: str) -> str:
         """Generate sha512 hash from a string."""
         return hashlib.sha512(value.encode()).hexdigest()
-
-    @staticmethod
-    def base64_encode(value: str | bytes) -> str:
-        """Encode a string or bytes to base64."""
-        if isinstance(value, str):
-            value = value.encode("utf-8")
-        return base64.b64encode(value).decode("utf-8")
-
-    @staticmethod
-    def base64_decode(value: str, encoding: str | None = "utf-8") -> str | bytes:
-        """Decode a base64 string."""
-        decoded = base64.b64decode(value)
-        if encoding is None:
-            return decoded
-        return decoded.decode(encoding)

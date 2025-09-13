@@ -3063,6 +3063,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
+        self.add_extension("homeassistant.helpers.template.extensions.Base64Extension")
         self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
 
         self.globals["acos"] = arc_cosine
