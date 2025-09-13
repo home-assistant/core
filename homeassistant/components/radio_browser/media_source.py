@@ -319,7 +319,7 @@ class RadioMediaSource(MediaSource):
     async def _async_build_local(
         self, radios: RadioBrowser, item: MediaSourceItem
     ) -> list[BrowseMediaSource]:
-        """Handle browsing radio stations near me."""
+        """Handle browsing local radio stations."""
 
         if item.identifier == "local":
             country = self.hass.config.country
@@ -347,7 +347,7 @@ class RadioMediaSource(MediaSource):
                     identifier="local",
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaType.MUSIC,
-                    title="Stations near me",
+                    title="Local stations",
                     can_play=False,
                     can_expand=True,
                 )
