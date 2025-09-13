@@ -24,7 +24,10 @@ CONFIG = {
         "logo": "https://home-assistant.io/logo.png",
         "url": "https://home-assistant.io",
         "location": {"address": "In your Home"},
-        "contact": {"email": "hello@home-assistant.io"},
+        "contact": {
+            "email": "hello@home-assistant.io",
+            "jabber": "chatroom@conference.example.net",
+        },
         "issue_report_channels": ["email"],
         "state": {
             "entity_id": "test.test_door",
@@ -136,25 +139,27 @@ async def test_spaceapi_get(hass: HomeAssistant, mock_client) -> None:
     resp = await mock_client.get(URL_API_SPACEAPI)
     assert resp.status == HTTPStatus.OK
 
-    data = await resp.json()
+    data: dict = await resp.json()
 
-    assert data["api"] == SPACEAPI_VERSION
+    assert data["api_compatibility"] == [SPACEAPI_VERSION]
     assert data["space"] == "Home"
     assert data["contact"]["email"] == "hello@home-assistant.io"
+    assert data["contact"]["xmpp"] == "chatroom@conference.example.net"
+    assert data.get("issue_report_channels") is None
     assert data["location"]["address"] == "In your Home"
     assert data["location"]["lat"] == 32.87336
     assert data["location"]["lon"] == -117.22743
-    assert data["state"]["open"] == "null"
+    assert data["state"]["open"] is False
     assert data["state"]["icon"]["open"] == "https://home-assistant.io/open.png"
     assert data["state"]["icon"]["closed"] == "https://home-assistant.io/close.png"
-    assert data["spacefed"]["spacenet"] == bool(1)
-    assert data["spacefed"]["spacesaml"] == bool(0)
-    assert data["spacefed"]["spacephone"] == bool(1)
+    spacefed_resp: dict = data.get("spacefed")
+    assert spacefed_resp is not None
+    assert spacefed_resp["spacenet"] == bool(1)
+    assert spacefed_resp["spacesaml"] == bool(0)
+    assert spacefed_resp.get("spacephone") is None
     assert data["cam"][0] == "https://home-assistant.io/cam1"
     assert data["cam"][1] == "https://home-assistant.io/cam2"
-    assert data["stream"]["m4"] == "https://home-assistant.io/m4"
-    assert data["stream"]["mjpeg"] == "https://home-assistant.io/mjpeg"
-    assert data["stream"]["ustream"] == "https://home-assistant.io/ustream"
+    assert data.get("stream") is None
     assert data["feeds"]["blog"]["url"] == "https://home-assistant.io/blog"
     assert data["feeds"]["wiki"]["type"] == "mediawiki"
     assert data["feeds"]["wiki"]["url"] == "https://home-assistant.io/wiki"
@@ -164,15 +169,11 @@ async def test_spaceapi_get(hass: HomeAssistant, mock_client) -> None:
         data["feeds"]["flicker"]["url"]
         == "https://www.flickr.com/photos/home-assistant"
     )
-    assert data["cache"]["schedule"] == "m.02"
+    assert data.get("cache") is None
     assert data["projects"][0] == "https://home-assistant.io/projects/1"
     assert data["projects"][1] == "https://home-assistant.io/projects/2"
     assert data["projects"][2] == "https://home-assistant.io/projects/3"
-    assert data["radio_show"][0]["name"] == "Radioshow"
-    assert data["radio_show"][0]["url"] == "https://home-assistant.io/radio"
-    assert data["radio_show"][0]["type"] == "ogg"
-    assert data["radio_show"][0]["start"] == "2019-09-02T10:00Z"
-    assert data["radio_show"][0]["end"] == "2019-09-02T12:00Z"
+    assert data.get("radio_show") is None
 
 
 async def test_spaceapi_state_get(hass: HomeAssistant, mock_client) -> None:
