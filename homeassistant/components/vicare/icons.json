@@ -96,6 +96,9 @@
   "services": {
     "set_vicare_mode": {
       "service": "mdi:cog"
+    },
+    "reboot_gateway": {
+      "service": "mdi:cog"
     }
   }
 }
