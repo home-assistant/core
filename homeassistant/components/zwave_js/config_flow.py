@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-from serial.tools import list_ports
 import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.exceptions import FailedCommand
@@ -25,6 +24,7 @@ from homeassistant.components.hassio import (
     AddonManager,
     AddonState,
 )
+from homeassistant.components.usb import async_get_usb_ports
 from homeassistant.config_entries import (
     SOURCE_USB,
     ConfigEntryState,
@@ -143,44 +143,6 @@ async def validate_input(hass: HomeAssistant, user_input: dict) -> VersionInfo:
         return await async_get_version_info(hass, ws_address)
     except CannotConnect as err:
         raise InvalidInput("cannot_connect") from err
-
-
-def get_usb_ports() -> dict[str, str]:
-    """Return a dict of USB ports and their friendly names."""
-    ports = list_ports.comports()
-    port_descriptions = {}
-    for port in ports:
-        vid: str | None = None
-        pid: str | None = None
-        if port.vid is not None and port.pid is not None:
-            usb_device = usb.usb_device_from_port(port)
-            vid = usb_device.vid
-            pid = usb_device.pid
-        dev_path = usb.get_serial_by_id(port.device)
-        human_name = usb.human_readable_device_name(
-            dev_path,
-            port.serial_number,
-            port.manufacturer,
-            port.description,
-            vid,
-            pid,
-        )
-        port_descriptions[dev_path] = human_name
-
-    # Filter out "n/a" descriptions only if there are other ports available
-    non_na_ports = {
-        path: desc
-        for path, desc in port_descriptions.items()
-        if not desc.lower().startswith("n/a")
-    }
-
-    # If we have non-"n/a" ports, return only those; otherwise return all ports as-is
-    return non_na_ports if non_na_ports else port_descriptions
-
-
-async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
-    """Return a dict of USB ports and their friendly names."""
-    return await hass.async_add_executor_job(get_usb_ports)
 
 
 class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
