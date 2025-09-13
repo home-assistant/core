@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     sip_port = entry.options.get(CONF_SIP_PORT, SIP_PORT)
     devices = VoIPDevices(hass, entry)
-    devices.async_setup()
+    await devices.async_setup()
     transport, protocol = await _create_sip_server(
         hass,
         lambda: HassVoipDatagramProtocol(hass, devices),
