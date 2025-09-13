@@ -379,7 +379,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     def _process_update_extra_state_attributes(
         self, extra_state_attributes: dict[str, Any]
     ) -> None:
-        """Extract group members if the light is a group."""
+        """Process an the extra state attributes update.
+
+        Add extracted group members if the light represents a group.
+        """
         self._extra_state_attributes = extra_state_attributes
         self._update_extra_state_and_group_info()
 
