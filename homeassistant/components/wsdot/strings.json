@@ -1,0 +1,49 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "step": {
+      "user": {
+        "title": "WSDOT setup",
+        "description": "Set up your Washington State Department of Transportation integration.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your WSDOT API Key."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "travel_time": {
+      "entry_type": "Travel Time",
+      "initiate_flow": {
+        "user": "Travel Time"
+      },
+      "step": {
+        "user": {
+          "title": "WSDOT Travel Time setup",
+          "description": "Select one of the provided the highway routes to monitor estimated driving time along that route",
+          "data": {
+            "name": "Name"
+          },
+          "data_description": {
+            "name": "The official WSDOT description of the route."
+          }
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_platform_yaml": {
+      "title": "The {domain} YAML configuration is being removed",
+      "description": "A YAML-configured {domain} entry was found which matches an existing {domain} entry. This entry was successfully mirated to use the new config setup and can now be safely removed from your `configuration.yaml`"
+    }
+  }
+}

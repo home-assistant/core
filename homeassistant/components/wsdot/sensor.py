@@ -7,27 +7,38 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from wsdot import TravelTime, WsdotTravelError, WsdotTravelTimes
+import wsdot as wsdot_api
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_ID,
+    CONF_NAME,
+    CONF_PLATFORM,
+    CONF_SOURCE,
+    Platform,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import WsdotConfigEntry, WsdotRuntimeData
+from .const import ATTRIBUTION, CONF_TRAVEL_TIMES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by WSDOT"
-
-CONF_TRAVEL_TIMES = "travel_time"
-
 ICON = "mdi:car"
-DOMAIN = "wsdot"
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
@@ -44,22 +55,67 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the WSDOT sensor."""
-    sensors = []
-    session = async_get_clientsession(hass)
-    api_key = config[CONF_API_KEY]
-    wsdot_travel = WsdotTravelTimes(api_key=api_key, session=session)
-    for travel_time in config[CONF_TRAVEL_TIMES]:
-        name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
-        travel_time_id = int(travel_time[CONF_ID])
-        sensors.append(
-            WashingtonStateTravelTimeSensor(name, wsdot_travel, travel_time_id)
-        )
+    """Migrate a platform-style wsdot to entry-style."""
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if entries:
+        for entry in entries:
+            if entry.data[CONF_API_KEY] in [
+                config_entry[CONF_API_KEY]
+                for config_entry in config[Platform.SENSOR]
+                if config_entry[CONF_PLATFORM] == DOMAIN
+            ]:
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "deprecated_platform_yaml",
+                    breaks_in_ha_version="2025.11.0",
+                    is_fixable=False,
+                    is_persistent=True,
+                    issue_domain=DOMAIN,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="deprecated_platform_yaml",
+                    translation_placeholders={
+                        "domain": DOMAIN,
+                    },
+                )
+                _LOGGER.info(
+                    "Found already-setup WSDOT entry. Skipping platform setup. Your "
+                    'configuration.yaml might contain a "wsdot" entry in `sensor.platform` '
+                    "that is no longer needed"
+                )
+        return
 
-    add_entities(sensors, True)
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_IMPORT},
+        data=config,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: WsdotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the WSDOT sensor."""
+    session = async_get_clientsession(hass)
+    api_key = entry.data[CONF_API_KEY]
+    wsdot_travel_times = wsdot_api.WsdotTravelTimes(api_key=api_key, session=session)
+    try:
+        await wsdot_travel_times.get_all_travel_times()
+    except wsdot_api.WsdotTravelError as api_error:
+        raise ConfigEntryAuthFailed from api_error
+    entry.runtime_data = WsdotRuntimeData(wsdot_travel_times=wsdot_travel_times)
+    for subentry_id, subentry in entry.subentries.items():
+        name = subentry.data[CONF_NAME]
+        travel_time_id = subentry.data[CONF_ID]
+        sensor = WashingtonStateTravelTimeSensor(
+            name, wsdot_travel_times, travel_time_id
+        )
+        async_add_entities([sensor], config_subentry_id=subentry_id)
 
 
 class WashingtonStateTransportSensor(SensorEntity):
@@ -70,6 +126,7 @@ class WashingtonStateTransportSensor(SensorEntity):
     can read them and make them available.
     """
 
+    _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
 
     def __init__(self, name: str) -> None:
@@ -91,23 +148,23 @@ class WashingtonStateTransportSensor(SensorEntity):
 class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     """Travel time sensor from WSDOT."""
 
-    _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
-        self, name: str, wsdot_travel: WsdotTravelTimes, travel_time_id: int
+        self, name: str, wsdot_travel: wsdot_api.WsdotTravelTimes, travel_time_id: int
     ) -> None:
         """Construct a travel time sensor."""
         super().__init__(name)
-        self._data: TravelTime | None = None
+        self._data: wsdot_api.TravelTime | None = None
         self._travel_time_id = travel_time_id
         self._wsdot_travel = wsdot_travel
+        self._attr_unique_id = f"Travel_Time_{travel_time_id}"
 
     async def async_update(self) -> None:
         """Get the latest data from WSDOT."""
         try:
             travel_time = await self._wsdot_travel.get_travel_time(self._travel_time_id)
-        except WsdotTravelError:
+        except wsdot_api.WsdotTravelError:
             _LOGGER.warning("Invalid response from WSDOT API")
         else:
             self._data = travel_time
