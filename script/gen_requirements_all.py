@@ -155,7 +155,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.7
+pydantic==2.11.9
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
