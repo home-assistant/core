@@ -1035,7 +1035,7 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
     def _restore_last_value(self, last_value: str) -> None:
         """Restore the last value from cache."""
         self._last_value = datetime.fromisoformat(last_value)
-        
+
     def _update_last_value(self) -> None:
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
@@ -1062,7 +1062,7 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
         # otherwise, cache value and return it
         else:
             self._last_value = current_value
-            self._previous_value = current_value    
+            self._previous_value = current_value
 
 
 class MieleConsumptionSensor(MieleRestorableSensor):
