@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Check if integration label was added and extract details
         id: extract
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@v8
         with:
           script: |
             // Debug: Log the event payload
@@ -113,7 +113,7 @@ jobs:
       - name: Fetch similar issues
         id: fetch_similar
         if: steps.extract.outputs.should_continue == 'true'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@v8
         env:
           INTEGRATION_LABELS: ${{ steps.extract.outputs.integration_labels }}
           CURRENT_NUMBER: ${{ steps.extract.outputs.current_number }}
@@ -231,7 +231,7 @@ jobs:
       - name: Detect duplicates using AI
         id: ai_detection
         if: steps.extract.outputs.should_continue == 'true' && steps.fetch_similar.outputs.has_similar == 'true'
-        uses: actions/ai-inference@a1c11829223a786afe3b5663db904a3aa1eac3a2 # v2.0.1
+        uses: actions/ai-inference@v2.0.1
         with:
           model: openai/gpt-4o
           system-prompt: |
@@ -280,7 +280,7 @@ jobs:
       - name: Post duplicate detection results
         id: post_results
         if: steps.extract.outputs.should_continue == 'true' && steps.fetch_similar.outputs.has_similar == 'true'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@v8
         env:
           AI_RESPONSE: ${{ steps.ai_detection.outputs.response }}
           SIMILAR_ISSUES: ${{ steps.fetch_similar.outputs.similar_issues }}
