@@ -75,7 +75,10 @@
   },
   "services": {
     "publish": {
-      "service": "mdi:send"
+      "service": "mdi:send",
+      "sections": {
+        "actions": "mdi:gesture-tap-button"
+      }
     }
   }
 }
