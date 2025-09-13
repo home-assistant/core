@@ -71,6 +71,8 @@ from .const import (
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CONF_ALLOW_ANY_RECEIVE,
+    CONF_ALLOW_ANY_REPLY,
     CONF_ALLOWED_CHAT_IDS,
     CONF_BOT_COUNT,
     CONF_CONFIG_ENTRY_ID,
@@ -475,9 +477,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
         await bot.shutdown()
         return False
 
-    notify_service = TelegramNotificationService(
-        hass, receiver_service, bot, entry, entry.options[ATTR_PARSER]
-    )
+    notify_service = TelegramNotificationService(hass, receiver_service, bot, entry)
     entry.runtime_data = notify_service
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -490,6 +490,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
     """Handle config changes."""
     entry.runtime_data.parse_mode = entry.options[ATTR_PARSER]
+    entry.runtime_data.allow_any_reply = entry.options.get(CONF_ALLOW_ANY_REPLY, False)
+    entry.runtime_data.allow_any_receive = entry.options.get(
+        CONF_ALLOW_ANY_RECEIVE, False
+    )
 
     # reload entities
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

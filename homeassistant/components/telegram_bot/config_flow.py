@@ -39,6 +39,8 @@ from .bot import TelegramBotConfigEntry
 from .const import (
     ATTR_PARSER,
     BOT_NAME,
+    CONF_ALLOW_ANY_RECEIVE,
+    CONF_ALLOW_ANY_REPLY,
     CONF_ALLOWED_CHAT_IDS,
     CONF_BOT_COUNT,
     CONF_CHAT_ID,
@@ -138,6 +140,8 @@ STEP_WEBHOOKS_DATA_SCHEMA: vol.Schema = vol.Schema(
 )
 OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
+        vol.Optional(CONF_ALLOW_ANY_REPLY): cv.boolean,
+        vol.Optional(CONF_ALLOW_ANY_RECEIVE): cv.boolean,
         vol.Required(
             ATTR_PARSER,
         ): SelectSelector(
@@ -145,7 +149,7 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
                 options=[PARSER_MD, PARSER_MD2, PARSER_HTML, PARSER_PLAIN_TEXT],
                 translation_key="parse_mode",
             )
-        )
+        ),
     }
 )
 
