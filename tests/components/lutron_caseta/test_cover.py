@@ -1,6 +1,7 @@
 """Tests for the Lutron Caseta integration."""
 
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -18,11 +19,31 @@ from . import MockBridge, async_setup_integration
 
 
 @pytest.fixture
-async def mock_bridge_with_mocked_covers(hass: HomeAssistant):
+async def mock_bridge_with_mocked_set_value(hass: HomeAssistant) -> MockBridge:
+    """Set up mock bridge with mocked set_value for testing open/close."""
+    instance = MockBridge()
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    # Patch the methods on the instance with AsyncMocks
+    instance.set_value = AsyncMock()
+    instance.raise_cover = AsyncMock()
+    instance.lower_cover = AsyncMock()
+
+    await async_setup_integration(hass, factory)
+    await hass.async_block_till_done()
+
+    return instance
+
+
+@pytest.fixture
+async def mock_bridge_with_mocked_covers(hass: HomeAssistant) -> MockBridge:
     """Set up mock bridge with mocked cover methods for testing."""
     instance = MockBridge()
 
-    def factory(*args, **kwargs):
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
         """Return the mock bridge instance."""
         return instance
 
@@ -49,44 +70,39 @@ async def test_cover_unique_id(
     assert entity_registry.async_get(cover_entity_id).unique_id == "000004d2_802"
 
 
-async def test_cover_open_close_using_set_value(hass: HomeAssistant) -> None:
+async def test_cover_open_close_using_set_value(
+    hass: HomeAssistant, mock_bridge_with_mocked_set_value: MockBridge
+) -> None:
     """Test that open/close commands use set_value to avoid stuttering."""
-    with (
-        patch.object(MockBridge, "set_value", new=AsyncMock()) as mock_set_value,
-        patch.object(MockBridge, "raise_cover", new=AsyncMock()) as mock_raise_cover,
-        patch.object(MockBridge, "lower_cover", new=AsyncMock()) as mock_lower_cover,
-    ):
-        await async_setup_integration(hass, MockBridge)
-        await hass.async_block_till_done()
+    mock_instance = mock_bridge_with_mocked_set_value
+    cover_entity_id = "cover.basement_bedroom_left_shade"
 
-        cover_entity_id = "cover.basement_bedroom_left_shade"
+    # Test opening the cover
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
 
-        # Test opening the cover
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: cover_entity_id},
-            blocking=True,
-        )
+    # Should use set_value(100) instead of raise_cover
+    mock_instance.set_value.assert_called_with("802", 100)
+    mock_instance.raise_cover.assert_not_called()
 
-        # Should use set_value(100) instead of raise_cover
-        mock_set_value.assert_called_with("802", 100)
-        mock_raise_cover.assert_not_called()
+    mock_instance.set_value.reset_mock()
+    mock_instance.lower_cover.reset_mock()
 
-        mock_set_value.reset_mock()
-        mock_lower_cover.reset_mock()
+    # Test closing the cover
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
 
-        # Test closing the cover
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: cover_entity_id},
-            blocking=True,
-        )
-
-        # Should use set_value(0) instead of lower_cover
-        mock_set_value.assert_called_with("802", 0)
-        mock_lower_cover.assert_not_called()
+    # Should use set_value(0) instead of lower_cover
+    mock_instance.set_value.assert_called_with("802", 0)
+    mock_instance.lower_cover.assert_not_called()
 
 
 async def test_cover_stop_with_direction_tracking(
