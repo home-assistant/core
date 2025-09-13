@@ -39,6 +39,25 @@ async def async_setup_entry(
     )
     async_add_entities(entities)
 
+    known_devices: dict[str, set[int]] = {}
+    known_devices[IRRIGATION] = set()
+    known_devices[OTHER] = set()
+
+    def _check_device() -> None:
+        for dev_type in (IRRIGATION, OTHER):
+            current_devices = set(coordinator.data[dev_type])
+            new_devices = current_devices - known_devices[dev_type]
+            if new_devices:
+                known_devices[dev_type].update(new_devices)
+                async_add_entities(
+                    ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
+                    for device in coordinator.data[dev_type].values()
+                    if device.index in new_devices
+                )
+
+    _check_device()
+    config_entry.async_on_unload(coordinator.async_add_listener(_check_device))
+
 
 class ComelitSwitchEntity(ComelitBridgeBaseEntity, SwitchEntity):
     """Switch device."""
