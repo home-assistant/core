@@ -26,6 +26,7 @@ from .const import (
     DATA_MEDIA_SOURCE,
     DATA_PREFERENCES,
     DOMAIN,
+    IMAGE_DIR,
     IMAGE_EXPIRY_TIME,
     AITaskEntityFeature,
 )
@@ -218,7 +219,7 @@ async def async_generate_image(
     )
 
     target_folder = media_source.MediaSourceItem.from_uri(
-        hass, f"media-source://{DOMAIN}/image", None
+        hass, f"media-source://{DOMAIN}/{IMAGE_DIR}", None
     )
 
     service_result["media_source_id"] = await source.async_upload_media(

@@ -19,6 +19,7 @@ DATA_COMPONENT: HassKey[EntityComponent[AITaskEntity]] = HassKey(DOMAIN)
 DATA_PREFERENCES: HassKey[AITaskPreferences] = HassKey(f"{DOMAIN}_preferences")
 DATA_MEDIA_SOURCE: HassKey[local_source.LocalSource] = HassKey(f"{DOMAIN}_media_source")
 
+IMAGE_DIR: Final = "image"
 IMAGE_EXPIRY_TIME = 60 * 60  # 1 hour
 
 SERVICE_GENERATE_DATA = "generate_data"
