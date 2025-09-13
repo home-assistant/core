@@ -11,7 +11,7 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.UPDATE,
+    # Platform.UPDATE,
 ]
 
 CONF_CONSIDER_HOME = "consider_home"

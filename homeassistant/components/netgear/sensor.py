@@ -16,13 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    PERCENTAGE,
-    EntityCategory,
-    UnitOfDataRate,
-    UnitOfInformation,
-    UnitOfTime,
-)
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -32,7 +26,6 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_COORDINATOR_LINK,
-    KEY_COORDINATOR_SPEED,
     KEY_COORDINATOR_TRAFFIC,
     KEY_COORDINATOR_UTIL,
     KEY_ROUTER,
@@ -77,11 +70,11 @@ SENSOR_TYPES = {
 }
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class NetgearSensorEntityDescription(SensorEntityDescription):
     """Class describing Netgear sensor entities."""
 
-    value: Callable = lambda data: data
+    value_fn: Callable
     index: int = 0
 
 
@@ -92,6 +85,7 @@ SENSOR_TRAFFIC_TYPES = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
+        value_fn=lambda data: data.upload_today,
     ),
     NetgearSensorEntityDescription(
         key="NewTodayDownload",
@@ -99,6 +93,7 @@ SENSOR_TRAFFIC_TYPES = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
+        value_fn=lambda data: data.download_today,
     ),
     NetgearSensorEntityDescription(
         key="NewYesterdayUpload",
@@ -106,6 +101,7 @@ SENSOR_TRAFFIC_TYPES = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
+        value_fn=lambda data: data.upload_yesterday,
     ),
     NetgearSensorEntityDescription(
         key="NewYesterdayDownload",
@@ -113,6 +109,7 @@ SENSOR_TRAFFIC_TYPES = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
+        value_fn=lambda data: data.download_yesterday,
     ),
     NetgearSensorEntityDescription(
         key="NewWeekUpload",
@@ -121,7 +118,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         index=0,
-        value=lambda data: data[0],
+        value_fn=lambda data: data.total_upload_week,
     ),
     NetgearSensorEntityDescription(
         key="NewWeekUpload",
@@ -130,7 +127,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         index=1,
-        value=lambda data: data[1],
+        value_fn=lambda data: data.average_upload_week,
     ),
     NetgearSensorEntityDescription(
         key="NewWeekDownload",
@@ -139,7 +136,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         index=0,
-        value=lambda data: data[0],
+        value_fn=lambda data: data.total_download_week,
     ),
     NetgearSensorEntityDescription(
         key="NewWeekDownload",
@@ -148,7 +145,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         index=1,
-        value=lambda data: data[1],
+        value_fn=lambda data: data.average_download_week,
     ),
     NetgearSensorEntityDescription(
         key="NewMonthUpload",
@@ -157,7 +154,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         index=0,
-        value=lambda data: data[0],
+        value_fn=lambda data: data.total_upload_month,
     ),
     NetgearSensorEntityDescription(
         key="NewMonthUpload",
@@ -166,7 +163,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         index=1,
-        value=lambda data: data[1],
+        value_fn=lambda data: data.average_upload_month,
     ),
     NetgearSensorEntityDescription(
         key="NewMonthDownload",
@@ -175,7 +172,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         index=0,
-        value=lambda data: data[0],
+        value_fn=lambda data: data.total_download_month,
     ),
     NetgearSensorEntityDescription(
         key="NewMonthDownload",
@@ -184,7 +181,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         index=1,
-        value=lambda data: data[1],
+        value_fn=lambda data: data.average_download_month,
     ),
     NetgearSensorEntityDescription(
         key="NewLastMonthUpload",
@@ -193,7 +190,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         index=0,
-        value=lambda data: data[0],
+        value_fn=lambda data: data.total_upload_last_month,
     ),
     NetgearSensorEntityDescription(
         key="NewLastMonthUpload",
@@ -202,7 +199,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         index=1,
-        value=lambda data: data[1],
+        value_fn=lambda data: data.average_upload_last_month,
     ),
     NetgearSensorEntityDescription(
         key="NewLastMonthDownload",
@@ -211,7 +208,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         index=0,
-        value=lambda data: data[0],
+        value_fn=lambda data: data.total_download_last_month,
     ),
     NetgearSensorEntityDescription(
         key="NewLastMonthDownload",
@@ -220,32 +217,32 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         index=1,
-        value=lambda data: data[1],
+        value_fn=lambda data: data.average_download_last_month,
     ),
 ]
 
-SENSOR_SPEED_TYPES = [
-    NetgearSensorEntityDescription(
-        key="NewOOKLAUplinkBandwidth",
-        translation_key="uplink_bandwidth",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
-        device_class=SensorDeviceClass.DATA_RATE,
-    ),
-    NetgearSensorEntityDescription(
-        key="NewOOKLADownlinkBandwidth",
-        translation_key="downlink_bandwidth",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
-        device_class=SensorDeviceClass.DATA_RATE,
-    ),
-    NetgearSensorEntityDescription(
-        key="AveragePing",
-        translation_key="average_ping",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-    ),
-]
+# SENSOR_SPEED_TYPES = [
+#     NetgearSensorEntityDescription(
+#         key="NewOOKLAUplinkBandwidth",
+#         translation_key="uplink_bandwidth",
+#         entity_category=EntityCategory.DIAGNOSTIC,
+#         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+#         device_class=SensorDeviceClass.DATA_RATE,
+#     ),
+#     NetgearSensorEntityDescription(
+#         key="NewOOKLADownlinkBandwidth",
+#         translation_key="downlink_bandwidth",
+#         entity_category=EntityCategory.DIAGNOSTIC,
+#         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+#         device_class=SensorDeviceClass.DATA_RATE,
+#     ),
+#     NetgearSensorEntityDescription(
+#         key="AveragePing",
+#         translation_key="average_ping",
+#         entity_category=EntityCategory.DIAGNOSTIC,
+#         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+#     ),
+# ]
 
 SENSOR_UTILIZATION = [
     NetgearSensorEntityDescription(
@@ -254,6 +251,7 @@ SENSOR_UTILIZATION = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda system: system.cpu_usage,
     ),
     NetgearSensorEntityDescription(
         key="NewMemoryUtilization",
@@ -261,6 +259,7 @@ SENSOR_UTILIZATION = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda system: system.memory_usage,
     ),
 ]
 
@@ -269,6 +268,7 @@ SENSOR_LINK_TYPES = [
         key="NewEthernetLinkStatus",
         translation_key="ethernet_link_status",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data,
     ),
 ]
 
@@ -282,7 +282,7 @@ async def async_setup_entry(
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
     coordinator_traffic = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_TRAFFIC]
-    coordinator_speed = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_SPEED]
+    # coordinator_speed = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_SPEED]
     coordinator_utilization = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_UTIL]
     coordinator_link = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_LINK]
 
@@ -290,7 +290,7 @@ async def async_setup_entry(
         NetgearRouterSensorEntity(coordinator, router, description)
         for (coordinator, descriptions) in (
             (coordinator_traffic, SENSOR_TRAFFIC_TYPES),
-            (coordinator_speed, SENSOR_SPEED_TYPES),
+            # (coordinator_speed, SENSOR_SPEED_TYPES),
             (coordinator_utilization, SENSOR_UTILIZATION),
             (coordinator_link, SENSOR_LINK_TYPES),
         )
@@ -388,32 +388,8 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self._value
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        if self.coordinator.data is None:
-            sensor_data = await self.async_get_last_sensor_data()
-            if sensor_data is not None:
-                self._value = sensor_data.native_value
-            else:
-                await self.coordinator.async_request_refresh()
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @callback
     def async_update_device(self) -> None:
         """Update the Netgear device."""
-        if self.coordinator.data is None:
-            return
-
-        data = self.coordinator.data.get(self.entity_description.key)
-        if data is None:
-            self._value = None
-            _LOGGER.debug(
-                "key '%s' not in Netgear router response '%s'",
-                self.entity_description.key,
-                data,
-            )
-            return
-
-        self._value = self.entity_description.value(data)
