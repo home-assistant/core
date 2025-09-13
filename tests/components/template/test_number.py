@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_ICON,
     CONF_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall
@@ -63,11 +64,11 @@ _VALUE_INPUT_NUMBER_CONFIG = {
 }
 
 TEST_STATE_ENTITY_ID = "number.test_state"
-
+TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.test_availability"
 TEST_STATE_TRIGGER = {
     "trigger": {
         "trigger": "state",
-        "entity_id": [TEST_STATE_ENTITY_ID],
+        "entity_id": [TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY_ID],
     },
     "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
     "action": [
@@ -191,19 +192,6 @@ async def test_missing_optional_config(hass: HomeAssistant) -> None:
 
 async def test_missing_required_keys(hass: HomeAssistant) -> None:
     """Test: missing required fields will fail."""
-    with assert_setup_component(0, "template"):
-        assert await setup.async_setup_component(
-            hass,
-            "template",
-            {
-                "template": {
-                    "number": {
-                        "set_value": {"service": "script.set_value"},
-                    }
-                }
-            },
-        )
-
     with assert_setup_component(0, "template"):
         assert await setup.async_setup_component(
             hass,
@@ -576,6 +564,122 @@ async def test_device_id(
     template_entity = entity_registry.async_get("number.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+@pytest.mark.parametrize(
+    ("count", "number_config"),
+    [
+        (
+            1,
+            {
+                "set_value": [],
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_number")
+async def test_optimistic(hass: HomeAssistant) -> None:
+    """Test configuration with optimistic state."""
+    await hass.services.async_call(
+        number.DOMAIN,
+        number.SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: _TEST_NUMBER, "value": 4},
+        blocking=True,
+    )
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert float(state.state) == 4
+
+    await hass.services.async_call(
+        number.DOMAIN,
+        number.SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: _TEST_NUMBER, "value": 2},
+        blocking=True,
+    )
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert float(state.state) == 2
+
+
+@pytest.mark.parametrize(
+    ("count", "number_config"),
+    [
+        (
+            1,
+            {
+                "state": "{{ states('sensor.test_state') }}",
+                "optimistic": False,
+                "set_value": [],
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_number")
+async def test_not_optimistic(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        number.DOMAIN,
+        number.SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: _TEST_NUMBER, "value": 4},
+        blocking=True,
+    )
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("count", "number_config"),
+    [
+        (
+            1,
+            {
+                "set_value": [],
+                "state": "{{ states('number.test_state') }}",
+                "availability": "{{ is_state('binary_sensor.test_availability', 'on') }}",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_number")
+async def test_availability(hass: HomeAssistant) -> None:
+    """Test configuration with optimistic state."""
+
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, "on")
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "4.0")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert float(state.state) == 4
+
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "2.0")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert float(state.state) == 2
 
 
 @pytest.mark.parametrize(

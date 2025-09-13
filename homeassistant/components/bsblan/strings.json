@@ -33,14 +33,30 @@
           "username": "[%key:component::bsblan::config::step::user::data_description::username%]",
           "password": "[%key:component::bsblan::config::step::user::data_description::password%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The BSB-Lan integration needs to re-authenticate with {name}",
+        "data": {
+          "passkey": "[%key:component::bsblan::config::step::user::data::passkey%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "passkey": "[%key:component::bsblan::config::step::user::data_description::passkey%]",
+          "username": "[%key:component::bsblan::config::step::user::data_description::username%]",
+          "password": "[%key:component::bsblan::config::step::user::data_description::password%]"
+        }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "exceptions": {
@@ -55,15 +71,24 @@
     },
     "set_operation_mode_error": {
       "message": "An error occurred while setting the operation mode"
+    },
+    "setup_connection_error": {
+      "message": "Failed to retrieve static device data from BSB-Lan device at {host}"
+    },
+    "setup_auth_error": {
+      "message": "Authentication failed while retrieving static device data"
+    },
+    "setup_general_error": {
+      "message": "An unknown error occurred while retrieving static device data"
     }
   },
   "entity": {
     "sensor": {
       "current_temperature": {
-        "name": "Current Temperature"
+        "name": "Current temperature"
       },
       "outside_temperature": {
-        "name": "Outside Temperature"
+        "name": "Outside temperature"
       }
     }
   }

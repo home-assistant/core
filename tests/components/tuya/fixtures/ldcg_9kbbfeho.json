@@ -1,0 +1,45 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Luminosité",
+  "category": "ldcg",
+  "product_id": "9kbbfeho",
+  "product_name": "Luminance sensor",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-25T16:37:21+00:00",
+  "create_time": "2025-07-25T16:37:21+00:00",
+  "update_time": "2025-07-25T16:37:21+00:00",
+  "function": {},
+  "status_range": {
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "lux",
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "bright_value": 16,
+    "battery_percentage": 91
+  },
+  "set_up": true,
+  "support_local": true
+}
