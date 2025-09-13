@@ -156,6 +156,17 @@ def register_device(
     )
 
 
+def register_sub_device(
+    device_registry: DeviceRegistry, config_entry: ConfigEntry, unique_id: str
+) -> DeviceEntry:
+    """Register Shelly sub-device."""
+    return device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{MOCK_MAC}-{unique_id}")},
+        via_device=(DOMAIN, format_mac(MOCK_MAC)),
+    )
+
+
 async def snapshot_device_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
