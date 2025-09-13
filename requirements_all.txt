@@ -3090,7 +3090,7 @@ wallbox==0.9.0
 watchdog==6.0.0
 
 # homeassistant.components.waterfurnace
-waterfurnace==1.1.0
+waterfurnace==1.2.0
 
 # homeassistant.components.watergate
 watergate-local-api==2024.4.1
