@@ -60,6 +60,8 @@ from .const import (
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
+    DEFAULT_OFFSET,
+    DEFAULT_SCALE,
     SIGNAL_STOP_ENTITY,
     DataType,
 )
@@ -203,8 +205,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
     def __process_raw_value(
         self,
         entry: float | bytes,
-        scale: float = 1.0,
-        offset: float = 0,
+        scale: float = DEFAULT_SCALE,
+        offset: float = DEFAULT_OFFSET,
     ) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
         if self._nan_value and entry in (self._nan_value, -self._nan_value):
@@ -226,7 +228,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         return f"{float(val):.{self._precision}f}"
 
     def unpack_structure_result(
-        self, registers: list[int], scale: float = 1.0, offset: float = 0
+        self,
+        registers: list[int],
+        scale: float = DEFAULT_SCALE,
+        offset: float = DEFAULT_OFFSET,
     ) -> str | None:
         """Convert registers to proper result."""
 

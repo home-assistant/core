@@ -1759,6 +1759,23 @@ async def test_no_discovery_info_climate(
             30,
             [10],
         ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_CURRENT_TEMP_SCALE: 0,
+                        CONF_CURRENT_TEMP_OFFSET: 10,
+                    },
+                ]
+            },
+            20,
+            [10],
+        ),
     ],
 )
 async def test_update_current_temp_scale_and_offset(
@@ -1830,6 +1847,40 @@ async def test_update_current_temp_scale_and_offset(
             },
             26,
             [210],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_SCALE: 0,
+                        CONF_OFFSET: 2,
+                    },
+                ]
+            },
+            12,
+            [10],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TARGET_TEMP_SCALE: 0,
+                        CONF_TARGET_TEMP_OFFSET: 2,
+                    },
+                ]
+            },
+            12,
+            [10],
         ),
     ],
 )

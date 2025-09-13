@@ -103,6 +103,8 @@ from .const import (
     CONF_TARGET_TEMP_SCALE,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
+    DEFAULT_OFFSET,
+    DEFAULT_SCALE,
     DataType,
 )
 from .entity import BaseStructPlatform
@@ -494,7 +496,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # Read the HVAC mode register if defined
         if self._hvac_mode_register is not None:
             hvac_mode = await self._async_read_register(
-                CALL_TYPE_REGISTER_HOLDING, self._hvac_mode_register, 1.0, 0, raw=True
+                CALL_TYPE_REGISTER_HOLDING,
+                self._hvac_mode_register,
+                DEFAULT_SCALE,
+                DEFAULT_OFFSET,
+                raw=True,
             )
 
             # Translate the value received
@@ -513,7 +519,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # Read the HVAC action register if defined
         if self._hvac_action_register is not None:
             hvac_action = await self._async_read_register(
-                self._hvac_action_type, self._hvac_action_register, 1.0, 0, raw=True
+                self._hvac_action_type,
+                self._hvac_action_register,
+                DEFAULT_SCALE,
+                DEFAULT_OFFSET,
+                raw=True,
             )
 
             # Translate the value received
@@ -531,8 +541,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 self._fan_mode_register
                 if isinstance(self._fan_mode_register, int)
                 else self._fan_mode_register[0],
-                1.0,
-                0,
+                DEFAULT_SCALE,
+                DEFAULT_OFFSET,
                 raw=True,
             )
 
@@ -549,8 +559,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 self._swing_mode_register
                 if isinstance(self._swing_mode_register, int)
                 else self._swing_mode_register[0],
-                1.0,
-                0,
+                DEFAULT_SCALE,
+                DEFAULT_OFFSET,
                 raw=True,
             )
 
@@ -569,7 +579,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # in the mode register.
         if self._hvac_onoff_register is not None:
             onoff = await self._async_read_register(
-                CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register, 1.0, 0, raw=True
+                CALL_TYPE_REGISTER_HOLDING,
+                self._hvac_onoff_register,
+                DEFAULT_SCALE,
+                DEFAULT_OFFSET,
+                raw=True,
             )
             if onoff == self._hvac_off_value:
                 self._attr_hvac_mode = HVACMode.OFF
