@@ -158,8 +158,9 @@ jobs:
           sed -i "/uv/d" requirements.txt
           sed -i "/uv/d" requirements_diff.txt
 
+      # home-assistant/wheels doesn't support sha pinning
       - name: Build wheels
-        uses: home-assistant/wheels@bf4ddde339dde61ba98ccb4330517936bed6d2f8 # 2025.07.0
+        uses: home-assistant/wheels@2025.07.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -218,8 +219,9 @@ jobs:
           sed -i "/uv/d" requirements.txt
           sed -i "/uv/d" requirements_diff.txt
 
+      # home-assistant/wheels doesn't support sha pinning
       - name: Build wheels
-        uses: home-assistant/wheels@bf4ddde339dde61ba98ccb4330517936bed6d2f8 # 2025.07.0
+        uses: home-assistant/wheels@2025.07.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
