@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-import dataclasses
-import inspect
-import logging
 from collections.abc import Callable, Coroutine, Iterable
+import dataclasses
 from enum import Enum
 from functools import cache, partial
+import inspect
+import logging
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, TypedDict, cast, override
 
@@ -53,16 +53,12 @@ from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import (
     config_validation as cv,
-)
-from . import (
     device_registry,
     entity_registry,
     selector,
+    target as target_helpers,
     template,
     translation,
-)
-from . import (
-    target as target_helpers,
 )
 from .deprecation import deprecated_class, deprecated_function
 from .selector import TargetSelector
