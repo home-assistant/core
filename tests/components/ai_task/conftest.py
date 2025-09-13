@@ -162,5 +162,5 @@ async def init_components(
         patch.object(Path, "mkdir", autospec=True, return_value=None) as mock_mkdir,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         mock_mkdir.assert_called_once()
