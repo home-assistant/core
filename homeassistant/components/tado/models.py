@@ -2,7 +2,11 @@
 
 from dataclasses import dataclass
 
-from .coordinator import TadoDataUpdateCoordinator, TadoMobileDeviceUpdateCoordinator
+from .coordinator import (
+    TadoDataUpdateCoordinator,
+    TadoMobileDeviceUpdateCoordinator,
+    TadoZoneControlUpdateCoordinator,
+)
 
 
 @dataclass
@@ -11,3 +15,4 @@ class TadoData:
 
     coordinator: TadoDataUpdateCoordinator
     mobile_coordinator: TadoMobileDeviceUpdateCoordinator
+    zone_control_coordinator: TadoZoneControlUpdateCoordinator
