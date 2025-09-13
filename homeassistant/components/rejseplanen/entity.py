@@ -36,7 +36,7 @@ class RejseplanenUpdaterStatusSensor(CoordinatorEntity):
         """Return the state attributes."""
         return {
             "last_update": self.coordinator.last_update_success,
-            "last_update_time": self.coordinator.last_update_success,
+            "last_update_time": getattr(self.coordinator, "last_update_success_time", None),
             "update_interval": (
                 self.coordinator.update_interval.total_seconds()
                 if self.coordinator.update_interval
