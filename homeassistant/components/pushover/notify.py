@@ -98,7 +98,7 @@ class PushoverNotificationService(BaseNotificationService):
         callback_url = data.get(ATTR_CALLBACK_URL)
         timestamp = data.get(ATTR_TIMESTAMP)
         sound = data.get(ATTR_SOUND)
-        html = 1 if data.get(ATTR_HTML, False) else 0
+        html = bool(data.get(ATTR_HTML, False))
         tags = data.get(ATTR_TAGS, [])
 
         if isinstance(tags, str):
