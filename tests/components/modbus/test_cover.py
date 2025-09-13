@@ -8,6 +8,8 @@ from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
+    CONF_COMMAND_CLOSE,
+    CONF_COMMAND_OPEN,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_STATE_CLOSED,
@@ -226,6 +228,8 @@ async def test_service_cover_update(hass: HomeAssistant, mock_modbus_ha) -> None
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_INPUT_TYPE: CALL_TYPE_COIL,
                     CONF_ADDRESS: 1234,
+                    CONF_COMMAND_CLOSE: 4,
+                    CONF_COMMAND_OPEN: 5,
                     CONF_STATE_OPEN: 1,
                     CONF_STATE_CLOSED: 0,
                     CONF_STATE_OPENING: 2,
