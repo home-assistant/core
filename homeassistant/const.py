@@ -697,6 +697,15 @@ class UnitOfTemperature(StrEnum):
     KELVIN = "K"
 
 
+# Temperature units
+class UnitOfTemperatureDelta(StrEnum):
+    """Temperature interval units."""
+
+    CELSIUS = "Δ°C"
+    FAHRENHEIT = "Δ°F"
+    KELVIN = "ΔK"
+
+
 # Time units
 class UnitOfTime(StrEnum):
     """Time units."""

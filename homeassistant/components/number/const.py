@@ -41,6 +41,7 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTemperatureDelta,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -50,6 +51,7 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     ReactiveEnergyConverter,
     TemperatureConverter,
+    TemperatureDeltaConverter,
     VolumeFlowRateConverter,
 )
 
@@ -375,6 +377,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `°C`, `°F`, `K`
     """
 
+    TEMPERATURE_DELTA = "temperature_delta"
+    """Difference of temperatures - Temperature range.
+
+    Unit of measurement: `Δ°C`, `Δ°F`, `ΔK`
+    """
+
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
     """Amount of VOC.
 
@@ -529,6 +537,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
     NumberDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
+    NumberDeviceClass.TEMPERATURE_DELTA: set(UnitOfTemperatureDelta),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
@@ -557,6 +566,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
 UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     NumberDeviceClass.TEMPERATURE: TemperatureConverter,
+    NumberDeviceClass.TEMPERATURE_DELTA: TemperatureDeltaConverter,
     NumberDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
 }
 

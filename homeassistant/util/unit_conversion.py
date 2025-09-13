@@ -32,6 +32,7 @@ from homeassistant.const import (
     UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTemperatureDelta,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -708,6 +709,25 @@ class TemperatureConverter(BaseUnitConverter):
     def _celsius_to_kelvin(cls, celsius: float) -> float:
         """Convert a temperature in Celsius to Kelvin."""
         return celsius + 273.15
+
+
+class TemperatureDeltaConverter(BaseUnitConverter):
+    """Utility to convert temperature intervals.
+
+    eg. a 10°C interval (10°C to 20°C) will return a 18°F (50°F to 68°F) interval
+    """
+
+    UNIT_CLASS = "temperature_delta"
+    VALID_UNITS = {
+        UnitOfTemperatureDelta.CELSIUS,
+        UnitOfTemperatureDelta.FAHRENHEIT,
+        UnitOfTemperatureDelta.KELVIN,
+    }
+    _UNIT_CONVERSION = {
+        UnitOfTemperatureDelta.CELSIUS: 1.0,
+        UnitOfTemperatureDelta.FAHRENHEIT: 1.8,
+        UnitOfTemperatureDelta.KELVIN: 1.0,
+    }
 
 
 class UnitlessRatioConverter(BaseUnitConverter):

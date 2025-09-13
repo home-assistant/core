@@ -58,6 +58,7 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTemperatureDelta,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -90,9 +91,17 @@ TEST_DOMAIN = "test"
 
 
 @pytest.mark.parametrize(
-    ("unit_system", "native_unit", "state_unit", "native_value", "state_value"),
+    (
+        "device_class",
+        "unit_system",
+        "native_unit",
+        "state_unit",
+        "native_value",
+        "state_value",
+    ),
     [
         (
+            SensorDeviceClass.TEMPERATURE,
             US_CUSTOMARY_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.FAHRENHEIT,
@@ -100,6 +109,7 @@ TEST_DOMAIN = "test"
             100,
         ),
         (
+            SensorDeviceClass.TEMPERATURE,
             US_CUSTOMARY_SYSTEM,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.FAHRENHEIT,
@@ -107,6 +117,7 @@ TEST_DOMAIN = "test"
             100.4,
         ),
         (
+            SensorDeviceClass.TEMPERATURE,
             METRIC_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.CELSIUS,
@@ -114,16 +125,50 @@ TEST_DOMAIN = "test"
             pytest.approx(37.77778),
         ),
         (
+            SensorDeviceClass.TEMPERATURE,
             METRIC_SYSTEM,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.CELSIUS,
             38,
             38,
         ),
+        (
+            SensorDeviceClass.TEMPERATURE_DELTA,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            2,
+            2,
+        ),
+        (
+            SensorDeviceClass.TEMPERATURE_DELTA,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperatureDelta.CELSIUS,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            1,
+            1.8,
+        ),
+        (
+            SensorDeviceClass.TEMPERATURE_DELTA,
+            METRIC_SYSTEM,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperatureDelta.CELSIUS,
+            1,
+            pytest.approx(0.555555555556),
+        ),
+        (
+            SensorDeviceClass.TEMPERATURE_DELTA,
+            METRIC_SYSTEM,
+            UnitOfTemperatureDelta.CELSIUS,
+            UnitOfTemperatureDelta.CELSIUS,
+            0,
+            0,
+        ),
     ],
 )
 async def test_temperature_conversion(
     hass: HomeAssistant,
+    device_class,
     unit_system,
     native_unit,
     state_unit,
@@ -136,7 +181,7 @@ async def test_temperature_conversion(
         name="Test",
         native_value=str(native_value),
         native_unit_of_measurement=native_unit,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        device_class=device_class,
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
@@ -734,6 +779,26 @@ async def test_unit_translation_key_without_platform_raises(
             1,
         ),
         (
+            SensorDeviceClass.TEMPERATURE_DELTA,
+            UnitOfTemperatureDelta.CELSIUS,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            2,
+            3.6,
+            "3.6",
+            1,
+        ),
+        (
+            SensorDeviceClass.TEMPERATURE_DELTA,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperatureDelta.CELSIUS,
+            UnitOfTemperatureDelta.CELSIUS,
+            1,
+            pytest.approx(0.555556),
+            "0.6",
+            1,
+        ),
+        (
             SensorDeviceClass.ATMOSPHERIC_PRESSURE,
             UnitOfPressure.INHG,
             UnitOfPressure.HPA,
@@ -1105,6 +1170,15 @@ async def test_custom_unit(
             100,
             100,
             SensorDeviceClass.WEIGHT,
+        ),
+        (
+            UnitOfTemperatureDelta.CELSIUS,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            10,
+            10,
+            18,
+            SensorDeviceClass.TEMPERATURE_DELTA,
         ),
     ],
 )
@@ -1756,6 +1830,7 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
         (SensorDeviceClass.SOUND_PRESSURE, UnitOfSoundPressure.DECIBEL, 0),
         (SensorDeviceClass.SPEED, UnitOfSpeed.MILLIMETERS_PER_SECOND, 0),
         (SensorDeviceClass.TEMPERATURE, UnitOfTemperature.KELVIN, 1),
+        (SensorDeviceClass.TEMPERATURE_DELTA, UnitOfTemperatureDelta.KELVIN, 1),
         (SensorDeviceClass.VOLTAGE, UnitOfElectricPotential.VOLT, 0),
         (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, 0),
         (SensorDeviceClass.VOLUME_FLOW_RATE, UnitOfVolumeFlowRate.LITERS_PER_SECOND, 0),
@@ -2170,6 +2245,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.SPEED,
         SensorDeviceClass.SULPHUR_DIOXIDE,
         SensorDeviceClass.TEMPERATURE,
+        SensorDeviceClass.TEMPERATURE_DELTA,
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         SensorDeviceClass.VOLTAGE,

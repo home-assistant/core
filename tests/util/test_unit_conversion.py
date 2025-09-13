@@ -32,6 +32,7 @@ from homeassistant.const import (
     UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTemperatureDelta,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -61,6 +62,7 @@ from homeassistant.util.unit_conversion import (
     ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
+    TemperatureDeltaConverter,
     UnitlessRatioConverter,
     VolumeConverter,
     VolumeFlowRateConverter,
@@ -94,6 +96,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         ReactivePowerConverter,
         SpeedConverter,
         TemperatureConverter,
+        TemperatureDeltaConverter,
         UnitlessRatioConverter,
         EnergyDistanceConverter,
         VolumeConverter,
@@ -169,6 +172,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     TemperatureConverter: (
         UnitOfTemperature.CELSIUS,
         UnitOfTemperature.FAHRENHEIT,
+        0.555556,
+    ),
+    TemperatureDeltaConverter: (
+        UnitOfTemperatureDelta.CELSIUS,
+        UnitOfTemperatureDelta.FAHRENHEIT,
         0.555556,
     ),
     UnitlessRatioConverter: (PERCENTAGE, None, 100),
@@ -821,6 +829,34 @@ _CONVERTED_VALUE: dict[
         (100, UnitOfTemperature.KELVIN, -173.15, UnitOfTemperature.CELSIUS),
         (100, UnitOfTemperature.KELVIN, -279.6699, UnitOfTemperature.FAHRENHEIT),
     ],
+    TemperatureDeltaConverter: [
+        (
+            100,
+            UnitOfTemperatureDelta.CELSIUS,
+            180,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+        ),
+        (100, UnitOfTemperatureDelta.CELSIUS, 100, UnitOfTemperatureDelta.KELVIN),
+        (
+            100,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperatureDelta.CELSIUS,
+        ),
+        (
+            100,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperatureDelta.KELVIN,
+        ),
+        (100, UnitOfTemperatureDelta.KELVIN, 100, UnitOfTemperatureDelta.CELSIUS),
+        (
+            100,
+            UnitOfTemperatureDelta.KELVIN,
+            180,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+        ),
+    ],
     UnitlessRatioConverter: [
         (5, None, 500, PERCENTAGE),
         (5, None, 5000000000, CONCENTRATION_PARTS_PER_BILLION),
@@ -1179,6 +1215,18 @@ def test_unit_conversion_factory_allow_none_with_none() -> None:
         )(None)
         is None
     )
+    assert (
+        TemperatureDeltaConverter.converter_factory_allow_none(
+            UnitOfTemperatureDelta.CELSIUS, UnitOfTemperatureDelta.CELSIUS
+        )(1)
+        == 1
+    )
+    assert (
+        TemperatureDeltaConverter.converter_factory_allow_none(
+            UnitOfTemperatureDelta.CELSIUS, UnitOfTemperatureDelta.CELSIUS
+        )(None)
+        is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -1228,3 +1276,42 @@ def test_temperature_convert_with_interval(
     """Test conversion to other units."""
     expected = pytest.approx(expected)
     assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "from_unit", "expected", "to_unit"),
+    [
+        (
+            100,
+            UnitOfTemperatureDelta.CELSIUS,
+            180,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+        ),
+        (100, UnitOfTemperatureDelta.CELSIUS, 100, UnitOfTemperatureDelta.KELVIN),
+        (
+            100,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperatureDelta.CELSIUS,
+        ),
+        (
+            100,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+            55.5556,
+            UnitOfTemperatureDelta.KELVIN,
+        ),
+        (100, UnitOfTemperatureDelta.KELVIN, 100, UnitOfTemperatureDelta.CELSIUS),
+        (
+            100,
+            UnitOfTemperatureDelta.KELVIN,
+            180,
+            UnitOfTemperatureDelta.FAHRENHEIT,
+        ),
+    ],
+)
+def test_temperature_delta_convert(
+    value: float, from_unit: str, expected: float, to_unit: str
+) -> None:
+    """Test conversion to other units."""
+    expected = pytest.approx(expected)
+    assert TemperatureDeltaConverter.convert(value, from_unit, to_unit) == expected
