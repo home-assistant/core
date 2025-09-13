@@ -84,6 +84,9 @@ def create_mock_account(
         if skip_robots
         else [create_mock_robot(robot_data, account, v4, feeder, side_effect)]
     )
+    account.get_robots = lambda robot_class: [
+        robot for robot in account.robots if isinstance(robot, robot_class)
+    ]
     account.pets = [create_mock_pet(PET_DATA, account, side_effect)] if pet else []
     return account
 
