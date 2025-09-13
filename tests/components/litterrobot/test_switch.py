@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from pylitterbot import Robot
+from pylitterbot import FeederRobot, Robot
 import pytest
 
 from homeassistant.components.switch import (
@@ -65,4 +65,28 @@ async def test_on_off_commands(
 
         assert getattr(robot, robot_command).call_count == count + 1
         assert (state := hass.states.get(entity_id))
+        assert state.state == new_state
+
+
+async def test_feeder_robot_switch(
+    hass: HomeAssistant, mock_account_with_feederrobot: MagicMock
+) -> None:
+    """Tests Feeder-Robot switches."""
+    await setup_integration(hass, mock_account_with_feederrobot, PLATFORM_DOMAIN)
+    robot: FeederRobot = mock_account_with_feederrobot.robots[0]
+
+    gravity_mode_switch = "switch.test_gravity_mode"
+
+    switch = hass.states.get(gravity_mode_switch)
+    assert switch.state == STATE_OFF
+
+    data = {ATTR_ENTITY_ID: gravity_mode_switch}
+
+    services = ((SERVICE_TURN_ON, STATE_ON, True), (SERVICE_TURN_OFF, STATE_OFF, False))
+    for count, (service, new_state, new_value) in enumerate(services):
+        await hass.services.async_call(PLATFORM_DOMAIN, service, data, blocking=True)
+        robot._update_data({"state": {"info": {"gravity": new_value}}}, partial=True)
+
+        assert robot.set_gravity_mode.call_count == count + 1
+        assert (state := hass.states.get(gravity_mode_switch))
         assert state.state == new_state

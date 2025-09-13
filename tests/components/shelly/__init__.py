@@ -100,10 +100,12 @@ async def mock_rest_update(
 
 
 async def mock_polling_rpc_update(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    seconds: float = RPC_SENSORS_POLLING_INTERVAL,
 ) -> None:
     """Move time to create polling RPC sensors update event."""
-    freezer.tick(timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL))
+    freezer.tick(timedelta(seconds=seconds))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -151,6 +153,17 @@ def register_device(
     return device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
+    )
+
+
+def register_sub_device(
+    device_registry: DeviceRegistry, config_entry: ConfigEntry, unique_id: str
+) -> DeviceEntry:
+    """Register Shelly sub-device."""
+    return device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{MOCK_MAC}-{unique_id}")},
+        via_device=(DOMAIN, format_mac(MOCK_MAC)),
     )
 
 

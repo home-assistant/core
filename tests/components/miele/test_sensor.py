@@ -321,6 +321,13 @@ async def test_laundry_wash_scenario(
     check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "unknown", step)
     check_sensor_state(hass, "sensor.washing_machine_start", "unknown", step)
     check_sensor_state(hass, "sensor.washing_machine_finish", "unknown", step)
+    # consumption sensors have to report "unknown" when the device is not working
+    check_sensor_state(
+        hass, "sensor.washing_machine_energy_consumption", "unknown", step
+    )
+    check_sensor_state(
+        hass, "sensor.washing_machine_water_consumption", "unknown", step
+    )
 
     # Simulate program started
     device_fixture["DummyWasher"]["state"]["status"]["value_raw"] = 5
@@ -343,10 +350,41 @@ async def test_laundry_wash_scenario(
     device_fixture["DummyWasher"]["state"]["elapsedTime"][1] = 12
     device_fixture["DummyWasher"]["state"]["spinningSpeed"]["value_raw"] = 1200
     device_fixture["DummyWasher"]["state"]["spinningSpeed"]["value_localized"] = "1200"
+    device_fixture["DummyWasher"]["state"]["ecoFeedback"] = {
+        "currentEnergyConsumption": {
+            "value": 0.9,
+            "unit": "kWh",
+        },
+        "currentWaterConsumption": {
+            "value": 52,
+            "unit": "l",
+        },
+    }
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    # at this point, appliance is working, but it started reporting a value from last cycle, so it is forced to 0
+    check_sensor_state(hass, "sensor.washing_machine_energy_consumption", "0", step)
+    check_sensor_state(hass, "sensor.washing_machine_water_consumption", "0", step)
+
+    # intermediate step, only to report new consumption values
+    device_fixture["DummyWasher"]["state"]["ecoFeedback"] = {
+        "currentEnergyConsumption": {
+            "value": 0.0,
+            "unit": "kWh",
+        },
+        "currentWaterConsumption": {
+            "value": 0,
+            "unit": "l",
+        },
+    }
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     step += 1
 
     check_sensor_state(hass, "sensor.washing_machine", "in_use", step)
@@ -363,6 +401,28 @@ async def test_laundry_wash_scenario(
     check_sensor_state(
         hass, "sensor.washing_machine_finish", "2025-05-31T14:15:00+00:00", step
     )
+    check_sensor_state(hass, "sensor.washing_machine_energy_consumption", "0.0", step)
+    check_sensor_state(hass, "sensor.washing_machine_water_consumption", "0", step)
+
+    # intermediate step, only to report new consumption values
+    device_fixture["DummyWasher"]["state"]["ecoFeedback"] = {
+        "currentEnergyConsumption": {
+            "value": 0.1,
+            "unit": "kWh",
+        },
+        "currentWaterConsumption": {
+            "value": 7,
+            "unit": "l",
+        },
+    }
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # at this point, it starts reporting value from API
+    check_sensor_state(hass, "sensor.washing_machine_energy_consumption", "0.1", step)
+    check_sensor_state(hass, "sensor.washing_machine_water_consumption", "7", step)
 
     # Simulate rinse hold phase
     device_fixture["DummyWasher"]["state"]["status"]["value_raw"] = 11
@@ -409,6 +469,7 @@ async def test_laundry_wash_scenario(
     device_fixture["DummyWasher"]["state"]["remainingTime"][1] = 0
     device_fixture["DummyWasher"]["state"]["elapsedTime"][0] = 0
     device_fixture["DummyWasher"]["state"]["elapsedTime"][1] = 0
+    device_fixture["DummyWasher"]["state"]["ecoFeedback"] = None
 
     new_time = datetime(2025, 5, 31, 14, 30, tzinfo=UTC)
     mock_now.return_value = new_time
@@ -434,6 +495,9 @@ async def test_laundry_wash_scenario(
     check_sensor_state(
         hass, "sensor.washing_machine_finish", "2025-05-31T14:15:00+00:00", step
     )
+    # consumption values now are reporting last known value, API might start reporting null object
+    check_sensor_state(hass, "sensor.washing_machine_energy_consumption", "0.1", step)
+    check_sensor_state(hass, "sensor.washing_machine_water_consumption", "7", step)
 
     # Simulate when door is opened after program ended
     device_fixture["DummyWasher"]["state"]["status"]["value_raw"] = 3
