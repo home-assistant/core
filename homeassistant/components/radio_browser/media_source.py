@@ -66,7 +66,7 @@ class RadioMediaSource(MediaSource):
         # Register "click" with Radio Browser
         await radios.station_click(uuid=station.uuid)
 
-        return PlayMedia(station.url, mime_type)
+        return PlayMedia(station.url_resolved, mime_type)
 
     async def async_browse_media(
         self,
