@@ -180,6 +180,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.LevelControl.Attributes.OnLevel,),
         # allow None value to account for 'default' value
         allow_none_value=True,
+        not_device_type=(device_types.Speaker,),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
