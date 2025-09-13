@@ -245,7 +245,7 @@ class RejseplanenTransportSensor(
                 ATTR_STOP_NAME: departure.name,
                 ATTR_FINAL_STOP: departure.direction,
                 ATTR_DUE_IN: RejseplanenTransportSensor.due_in(
-                    departure.time, departure.date
+                    departure.rtTime or departure.time, departure.rtDate or departure.date
                 ),
                 ATTR_DUE_AT: datetime.combine(
                     departure.date, departure.time
