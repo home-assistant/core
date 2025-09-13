@@ -384,6 +384,7 @@ CLIMATE_SCHEMA = vol.All(
                 )
             ),
         },
+        extra=vol.ALLOW_EXTRA,
     ),
 )
 
@@ -408,13 +409,15 @@ COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             CONF_STATUS_REGISTER_TYPE,
             default=CALL_TYPE_REGISTER_HOLDING,
         ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 SWITCH_SCHEMA = BASE_SWITCH_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend(
@@ -423,10 +426,14 @@ LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend(
         vol.Optional(CONF_COLOR_TEMP_REGISTER): cv.positive_int,
         vol.Optional(CONF_MIN_TEMP): cv.positive_int,
         vol.Optional(CONF_MAX_TEMP): cv.positive_int,
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
-FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
+FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend(
+    {},
+    extra=vol.ALLOW_EXTRA,
+)
 
 SENSOR_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
@@ -442,6 +449,7 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_ZERO_SUPPRESS): cv.positive_float,
         }
     ),
+    extra=vol.ALLOW_EXTRA,
 )
 
 BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
@@ -457,7 +465,8 @@ BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         ),
         vol.Exclusive(CONF_VIRTUAL_COUNT, "vir_bin_count"): cv.positive_int,
         vol.Exclusive(CONF_SLAVE_COUNT, "vir_bin_count"): cv.positive_int,
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 MODBUS_SCHEMA = vol.Schema(
@@ -480,7 +489,6 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
     },
-    extra=vol.ALLOW_EXTRA,
 )
 
 SERIAL_SCHEMA = MODBUS_SCHEMA.extend(
@@ -492,7 +500,8 @@ SERIAL_SCHEMA = MODBUS_SCHEMA.extend(
         vol.Required(CONF_PORT): cv.string,
         vol.Required(CONF_PARITY): vol.Any("E", "O", "N"),
         vol.Required(CONF_STOPBITS): vol.Any(1, 2),
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 ETHERNET_SCHEMA = MODBUS_SCHEMA.extend(
@@ -500,7 +509,8 @@ ETHERNET_SCHEMA = MODBUS_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
         vol.Required(CONF_TYPE): vol.Any(TCP, UDP, RTUOVERTCP),
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -512,7 +522,6 @@ CONFIG_SCHEMA = vol.Schema(
             ],
         ),
     },
-    extra=vol.ALLOW_EXTRA,
 )
 
 
