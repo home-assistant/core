@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -11,6 +12,8 @@ from tuya_sharing import CustomerDevice, Manager
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
@@ -43,17 +46,50 @@ async def test_platform_setup_and_discovery(
 
 
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["kt_5wnlzekkstwcdsvm"],
+    ("mock_device_code", "entity_id", "extra_kwargs", "commands"),
+    [
+        (
+            "kt_5wnlzekkstwcdsvm",
+            "climate.air_conditioner",
+            {ATTR_TEMPERATURE: 22.7},
+            [{"code": "temp_set", "value": 22}],
+        ),
+        (
+            "wk_ccpwojhalfxryigz",
+            "climate.boiler_temperature_controller",
+            {ATTR_TARGET_TEMP_HIGH: 22.7, ATTR_TARGET_TEMP_LOW: 20.2},
+            [
+                {"code": "lower_temp", "value": 202},
+                {"code": "upper_temp", "value": 227},
+            ],
+        ),
+        (
+            "wk_gogb05wrtredz3bs",
+            "climate.smart_thermostats",
+            {ATTR_TEMPERATURE: 22.7},
+            [{"code": "temp_set", "value": 22}],
+        ),
+        (
+            "wk_gogb05wrtredz3bs",
+            "climate.smart_thermostats",
+            {ATTR_TARGET_TEMP_HIGH: 22.7, ATTR_TARGET_TEMP_LOW: 20.2},
+            [
+                {"code": "lower_temp", "value": 20},
+                {"code": "upper_temp", "value": 22},
+            ],
+        ),
+    ],
 )
 async def test_set_temperature(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    entity_id: str,
+    extra_kwargs: dict[str, Any],
+    commands: list[dict[str, Any]],
 ) -> None:
     """Test set temperature service."""
-    entity_id = "climate.air_conditioner"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)
@@ -61,15 +97,10 @@ async def test_set_temperature(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TEMPERATURE: 22.7,
-        },
+        {ATTR_ENTITY_ID: entity_id, **extra_kwargs},
         blocking=True,
     )
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "temp_set", "value": 22}]
-    )
+    mock_manager.send_commands.assert_called_once_with(mock_device.id, commands)
 
 
 @pytest.mark.parametrize(
