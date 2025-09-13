@@ -27,16 +27,18 @@ def sensor_only() -> Generator[None]:
 @pytest.mark.usefixtures("habitica", "entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry_with_subentry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setup of the Habitica sensor platform."""
 
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    config_entry_with_subentry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry_with_subentry.state is ConfigEntryState.LOADED
 
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    await snapshot_platform(
+        hass, entity_registry, snapshot, config_entry_with_subentry.entry_id
+    )
