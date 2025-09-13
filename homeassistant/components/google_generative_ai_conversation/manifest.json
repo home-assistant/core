@@ -1,6 +1,6 @@
 {
   "domain": "google_generative_ai_conversation",
-  "name": "Google Generative AI",
+  "name": "Google Gemini",
   "after_dependencies": ["assist_pipeline", "intent"],
   "codeowners": ["@tronikos", "@ivanlh"],
   "config_flow": true,

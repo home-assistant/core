@@ -611,14 +611,17 @@ async def test_load_bad_data(
                     "created_at": "2024-02-14T12:00:00.900075+00:00",
                     "device_class": None,
                     "disabled_by": None,
+                    "disabled_by_undefined": False,
                     "entity_id": "test.test3",
                     "hidden_by": None,
+                    "hidden_by_undefined": False,
                     "icon": None,
                     "id": "00003",
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
                     "options": None,
+                    "options_undefined": False,
                     "orphaned_timestamp": None,
                     "platform": "super_platform",
                     "unique_id": 234,  # Should not load
@@ -632,14 +635,17 @@ async def test_load_bad_data(
                     "created_at": "2024-02-14T12:00:00.900075+00:00",
                     "device_class": None,
                     "disabled_by": None,
+                    "disabled_by_undefined": False,
                     "entity_id": "test.test4",
                     "hidden_by": None,
+                    "hidden_by_undefined": False,
                     "icon": None,
                     "id": "00004",
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
                     "options": None,
+                    "options_undefined": False,
                     "orphaned_timestamp": None,
                     "platform": "super_platform",
                     "unique_id": ["also", "not", "valid"],  # Should not load
@@ -1207,15 +1213,182 @@ async def test_migration_1_11(
                     "config_subentry_id": None,
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "device_class": None,
-                    "disabled_by": "UNDEFINED",
+                    "disabled_by": None,
+                    "disabled_by_undefined": True,
                     "entity_id": "test.deleted_entity",
-                    "hidden_by": "UNDEFINED",
+                    "hidden_by": None,
+                    "hidden_by_undefined": True,
                     "icon": None,
                     "id": "23456",
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
-                    "options": "UNDEFINED",
+                    "options": {},
+                    "options_undefined": True,
+                    "orphaned_timestamp": None,
+                    "platform": "super_duper_platform",
+                    "unique_id": "very_very_unique",
+                }
+            ],
+        },
+    }
+
+    # Serialize the migrated data again
+    registry.async_schedule_save()
+    await flush_store(registry._store)
+    assert hass_storage[er.STORAGE_KEY] == migrated_data
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_18(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test migration from version 1.18.
+
+    This version has a flawed migration.
+    """
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 18,
+        "data": {
+            "entities": [
+                {
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": None,
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.entity",
+                    "has_entity_name": False,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "12345",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": None,
+                    "options": {},
+                    "original_device_class": "best_class",
+                    "original_icon": None,
+                    "original_name": None,
+                    "platform": "super_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "very_unique",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                }
+            ],
+            "deleted_entities": [
+                {
+                    "aliases": [],
+                    "area_id": None,
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_class": None,
+                    "disabled_by": None,
+                    "entity_id": "test.deleted_entity",
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "23456",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": None,
+                    "options": {},
+                    "orphaned_timestamp": None,
+                    "platform": "super_duper_platform",
+                    "unique_id": "very_very_unique",
+                }
+            ],
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    entry = registry.async_get_or_create("test", "super_platform", "very_unique")
+
+    assert entry.device_class is None
+    assert entry.original_device_class == "best_class"
+
+    deleted_entry = registry.deleted_entities[
+        ("test", "super_duper_platform", "very_very_unique")
+    ]
+    assert deleted_entry.disabled_by is None
+    assert deleted_entry.hidden_by is None
+    assert deleted_entry.options == {}
+
+    # Check migrated data
+    await flush_store(registry._store)
+    migrated_data = hass_storage[er.STORAGE_KEY]
+    assert migrated_data == {
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": er.STORAGE_VERSION_MINOR,
+        "key": er.STORAGE_KEY,
+        "data": {
+            "entities": [
+                {
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": {},
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_id": None,
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.entity",
+                    "has_entity_name": False,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": ANY,
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": None,
+                    "options": {},
+                    "original_device_class": "best_class",
+                    "original_icon": None,
+                    "original_name": None,
+                    "platform": "super_platform",
+                    "previous_unique_id": None,
+                    "suggested_object_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": "very_unique",
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                }
+            ],
+            "deleted_entities": [
+                {
+                    "aliases": [],
+                    "area_id": None,
+                    "categories": {},
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_class": None,
+                    "disabled_by": None,
+                    "disabled_by_undefined": False,
+                    "entity_id": "test.deleted_entity",
+                    "hidden_by": None,
+                    "hidden_by_undefined": False,
+                    "icon": None,
+                    "id": "23456",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": None,
+                    "options": {},
+                    "options_undefined": False,
                     "orphaned_timestamp": None,
                     "platform": "super_duper_platform",
                     "unique_id": "very_very_unique",
@@ -1289,9 +1462,56 @@ async def test_update_entity_unique_id_conflict(
     )
 
 
-async def test_update_entity_entity_id(entity_registry: er.EntityRegistry) -> None:
-    """Test entity's entity_id is updated."""
+async def test_update_entity_entity_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test entity's entity_id is updated for entity with a restored state."""
+    hass.set_state(CoreState.not_running)
+
+    mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
+    mock_config.add_to_hass(hass)
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=mock_config
+    )
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+    assert (
+        entity_registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
+    )
+    state = hass.states.get(entry.entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+    assert state.attributes == {"restored": True, "supported_features": 0}
+
+    new_entity_id = "light.blah"
+    assert new_entity_id != entry.entity_id
+    with patch.object(entity_registry, "async_schedule_save") as mock_schedule_save:
+        updated_entry = entity_registry.async_update_entity(
+            entry.entity_id, new_entity_id=new_entity_id
+        )
+    assert updated_entry != entry
+    assert updated_entry.entity_id == new_entity_id
+    assert mock_schedule_save.call_count == 1
+
+    assert entity_registry.async_get(entry.entity_id) is None
+    assert entity_registry.async_get(new_entity_id) is not None
+
+    # The restored state should be removed
+    old_state = hass.states.get(entry.entity_id)
+    assert old_state is None
+
+    # The new entity should have an unavailable initial state
+    new_state = hass.states.get(new_entity_id)
+    assert new_state is not None
+    assert new_state.state == "unavailable"
+
+
+async def test_update_entity_entity_id_without_state(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity's entity_id is updated for entity without a state."""
     entry = entity_registry.async_get_or_create("light", "hue", "5678")
+
     assert (
         entity_registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
     )

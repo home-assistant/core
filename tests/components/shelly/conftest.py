@@ -324,6 +324,7 @@ MOCK_BLU_TRV_REMOTE_STATUS = {
         "rssi": -60,
         "battery": 100,
         "errors": [],
+        "fw_ver": "v1.2.10",
     },
     "blutrv:201": {
         "id": 0,

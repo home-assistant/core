@@ -13,6 +13,7 @@ DOMAIN = "tasmota"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.CAMERA,
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,

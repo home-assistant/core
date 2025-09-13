@@ -160,23 +160,12 @@
           "description": "The prompt",
           "example": "Describe what you see in these images"
         },
-        "image_filename": {
-          "name": "Image filename",
-          "description": "Deprecated. Use filenames instead.",
-          "example": "/config/www/image.jpg"
-        },
         "filenames": {
           "name": "Attachment filenames",
           "description": "Attachments to add to the prompt (images, PDFs, etc)",
           "example": "/config/www/image.jpg"
         }
       }
-    }
-  },
-  "issues": {
-    "deprecated_image_filename_parameter": {
-      "title": "Deprecated 'image_filename' parameter",
-      "description": "The 'image_filename' parameter in Google Generative AI actions is deprecated. Please edit scripts and automations to use 'filenames' instead."
     }
   }
 }

@@ -69,6 +69,7 @@ async def test_entry_diagnostics(
         patch("pybravia.BraviaClient.get_playing_info", return_value={}),
         patch("pybravia.BraviaClient.get_app_list", return_value=[]),
         patch("pybravia.BraviaClient.get_content_list_all", return_value=[]),
+        patch("pybravia.BraviaClient.get_command_list", return_value=[]),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)

@@ -267,3 +267,56 @@
     'state': 'recording',
   })
 # ---
+# name: test_platform_setup_and_discovery[camera.mirilla_puerta-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.mirilla_puerta',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': None,
+    'unique_id': 'tuya.i6xywcsymer1kmb6ps',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[camera.mirilla_puerta-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'brand': 'Tuya',
+      'entity_picture': '/api/camera_proxy/camera.mirilla_puerta?token=1',
+      'friendly_name': 'Mirilla puerta',
+      'model_name': 'Smart DoorBell （WiFi）',
+      'supported_features': <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.mirilla_puerta',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

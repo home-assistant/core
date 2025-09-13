@@ -51,7 +51,7 @@ async def test_resolving(
         hass, f"media-source://ai_task/{image_id}", None
     )
     assert item is not None
-    assert item.url == f"/api/ai_task/images/{image_id}"
+    assert item.url.startswith(f"/api/ai_task/images/{image_id}?authSig=")
     assert item.mime_type == "image/png"
 
     invalid_id = "aabbccddeeff"

@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
 
 import attr
 import voluptuous as vol
@@ -79,13 +79,11 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 18
+STORAGE_VERSION_MINOR = 19
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
 ORPHANED_ENTITY_KEEP_SECONDS = 3600 * 24 * 30
-
-UNDEFINED_STR: Final = "UNDEFINED"
 
 ENTITY_CATEGORY_VALUE_TO_INDEX: dict[EntityCategory | None, int] = {
     val: idx for idx, val in enumerate(EntityCategory)
@@ -462,19 +460,20 @@ class DeletedRegistryEntry:
                     "device_class": self.device_class,
                     "disabled_by": self.disabled_by
                     if self.disabled_by is not UNDEFINED
-                    else UNDEFINED_STR,
+                    else None,
+                    "disabled_by_undefined": self.disabled_by is UNDEFINED,
                     "entity_id": self.entity_id,
                     "hidden_by": self.hidden_by
                     if self.hidden_by is not UNDEFINED
-                    else UNDEFINED_STR,
+                    else None,
+                    "hidden_by_undefined": self.hidden_by is UNDEFINED,
                     "icon": self.icon,
                     "id": self.id,
                     "labels": list(self.labels),
                     "modified_at": self.modified_at,
                     "name": self.name,
-                    "options": self.options
-                    if self.options is not UNDEFINED
-                    else UNDEFINED_STR,
+                    "options": self.options if self.options is not UNDEFINED else {},
+                    "options_undefined": self.options is UNDEFINED,
                     "orphaned_timestamp": self.orphaned_timestamp,
                     "platform": self.platform,
                     "unique_id": self.unique_id,
@@ -605,12 +604,20 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     entity["area_id"] = None
                     entity["categories"] = {}
                     entity["device_class"] = None
-                    entity["disabled_by"] = UNDEFINED_STR
-                    entity["hidden_by"] = UNDEFINED_STR
+                    entity["disabled_by"] = None
+                    entity["hidden_by"] = None
                     entity["icon"] = None
                     entity["labels"] = []
                     entity["name"] = None
-                    entity["options"] = UNDEFINED_STR
+                    entity["options"] = {}
+            if old_minor_version < 19:
+                # Version 1.19 adds undefined flags to deleted entities, this is a bugfix
+                # of version 1.18
+                set_to_undefined = old_minor_version < 18
+                for entity in data["deleted_entities"]:
+                    entity["disabled_by_undefined"] = set_to_undefined
+                    entity["hidden_by_undefined"] = set_to_undefined
+                    entity["options_undefined"] = set_to_undefined
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -1558,13 +1565,13 @@ class EntityRegistry(BaseRegistry):
                 )
 
             def get_optional_enum[_EnumT: StrEnum](
-                cls: type[_EnumT], value: str | None
+                cls: type[_EnumT], value: str | None, undefined: bool
             ) -> _EnumT | UndefinedType | None:
                 """Convert string to the passed enum, UNDEFINED or None."""
+                if undefined:
+                    return UNDEFINED
                 if value is None:
                     return None
-                if value == UNDEFINED_STR:
-                    return UNDEFINED
                 try:
                     return cls(value)
                 except ValueError:
@@ -1587,7 +1594,6 @@ class EntityRegistry(BaseRegistry):
                     entity["platform"],
                     entity["unique_id"],
                 )
-
                 deleted_entities[key] = DeletedRegistryEntry(
                     aliases=set(entity["aliases"]),
                     area_id=entity["area_id"],
@@ -1597,11 +1603,15 @@ class EntityRegistry(BaseRegistry):
                     created_at=datetime.fromisoformat(entity["created_at"]),
                     device_class=entity["device_class"],
                     disabled_by=get_optional_enum(
-                        RegistryEntryDisabler, entity["disabled_by"]
+                        RegistryEntryDisabler,
+                        entity["disabled_by"],
+                        entity["disabled_by_undefined"],
                     ),
                     entity_id=entity["entity_id"],
                     hidden_by=get_optional_enum(
-                        RegistryEntryHider, entity["hidden_by"]
+                        RegistryEntryHider,
+                        entity["hidden_by"],
+                        entity["hidden_by_undefined"],
                     ),
                     icon=entity["icon"],
                     id=entity["id"],
@@ -1609,7 +1619,7 @@ class EntityRegistry(BaseRegistry):
                     modified_at=datetime.fromisoformat(entity["modified_at"]),
                     name=entity["name"],
                     options=entity["options"]
-                    if entity["options"] is not UNDEFINED_STR
+                    if not entity["options_undefined"]
                     else UNDEFINED,
                     orphaned_timestamp=entity["orphaned_timestamp"],
                     platform=entity["platform"],
@@ -1889,11 +1899,25 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
     @callback
     def cleanup_restored_states_filter(event_data: Mapping[str, Any]) -> bool:
         """Clean up restored states filter."""
-        return bool(event_data["action"] == "remove")
+        return (event_data["action"] == "remove") or (
+            event_data["action"] == "update"
+            and "old_entity_id" in event_data
+            and event_data["entity_id"] != event_data["old_entity_id"]
+        )
 
     @callback
     def cleanup_restored_states(event: Event[EventEntityRegistryUpdatedData]) -> None:
         """Clean up restored states."""
+        if event.data["action"] == "update":
+            old_entity_id = event.data["old_entity_id"]
+            old_state = hass.states.get(old_entity_id)
+            if old_state is None or not old_state.attributes.get(ATTR_RESTORED):
+                return
+            hass.states.async_remove(old_entity_id, context=event.context)
+            if entry := registry.async_get(event.data["entity_id"]):
+                entry.write_unavailable_state(hass)
+            return
+
         state = hass.states.get(event.data["entity_id"])
 
         if state is None or not state.attributes.get(ATTR_RESTORED):

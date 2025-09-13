@@ -39,6 +39,7 @@ def create_mock_robot(
         robot = LitterRobot4(data={**ROBOT_4_DATA, **robot_data}, account=account)
     elif feeder:
         robot = FeederRobot(data={**FEEDER_ROBOT_DATA, **robot_data}, account=account)
+        robot.set_gravity_mode = AsyncMock(side_effect=side_effect)
     else:
         robot = LitterRobot3(data={**ROBOT_DATA, **robot_data}, account=account)
     robot.start_cleaning = AsyncMock(side_effect=side_effect)

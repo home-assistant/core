@@ -494,7 +494,7 @@ async def test_bad_address(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, kpl_properties_data
 ) -> None:
     """Test for a bad Insteon address."""
-    ws_client, devices = await _setup(
+    ws_client, _devices = await _setup(
         hass, hass_ws_client, "33.33.33", kpl_properties_data
     )
 

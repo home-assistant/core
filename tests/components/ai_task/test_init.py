@@ -12,6 +12,7 @@ from homeassistant.components import media_source
 from homeassistant.components.ai_task import AITaskPreferences
 from homeassistant.components.ai_task.const import DATA_PREFERENCES
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
@@ -273,6 +274,73 @@ async def test_generate_data_service_invalid_structure(
                 "instructions": "Please generate a profile for a new user",
                 "entity_id": TEST_ENTITY_ID,
                 "structure": structure,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("set_preferences", "msg_extra"),
+    [
+        ({}, {"entity_id": TEST_ENTITY_ID}),
+        ({"gen_image_entity_id": TEST_ENTITY_ID}, {}),
+        (
+            {"gen_image_entity_id": "ai_task.other_entity"},
+            {"entity_id": TEST_ENTITY_ID},
+        ),
+    ],
+)
+async def test_generate_image_service(
+    hass: HomeAssistant,
+    init_components: None,
+    set_preferences: dict[str, str | None],
+    msg_extra: dict[str, str],
+    mock_ai_task_entity: MockAITaskEntity,
+) -> None:
+    """Test the generate image service."""
+    preferences = hass.data[DATA_PREFERENCES]
+    preferences.async_set_preferences(**set_preferences)
+
+    result = await hass.services.async_call(
+        "ai_task",
+        "generate_image",
+        {
+            "task_name": "Test Image",
+            "instructions": "Generate a test image",
+        }
+        | msg_extra,
+        blocking=True,
+        return_response=True,
+    )
+
+    assert "image_data" not in result
+    assert result["media_source_id"].startswith("media-source://ai_task/images/")
+    assert result["url"].startswith("/api/ai_task/images/")
+    assert result["mime_type"] == "image/png"
+    assert result["model"] == "mock_model"
+    assert result["revised_prompt"] == "mock_revised_prompt"
+
+    assert len(mock_ai_task_entity.mock_generate_image_tasks) == 1
+    task = mock_ai_task_entity.mock_generate_image_tasks[0]
+    assert task.instructions == "Generate a test image"
+
+
+async def test_generate_image_service_no_entity(
+    hass: HomeAssistant,
+    init_components: None,
+) -> None:
+    """Test the generate image service with no entity specified."""
+    with pytest.raises(
+        HomeAssistantError,
+        match="No entity_id provided and no preferred entity set",
+    ):
+        await hass.services.async_call(
+            "ai_task",
+            "generate_image",
+            {
+                "task_name": "Test Image",
+                "instructions": "Generate a test image",
             },
             blocking=True,
             return_response=True,

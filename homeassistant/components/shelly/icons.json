@@ -20,6 +20,9 @@
       }
     },
     "sensor": {
+      "detected_objects": {
+        "default": "mdi:account-group"
+      },
       "gas_concentration": {
         "default": "mdi:gauge"
       },
@@ -43,6 +46,9 @@
       },
       "valve_status": {
         "default": "mdi:valve"
+      },
+      "illuminance_level": {
+        "default": "mdi:brightness-5"
       }
     },
     "switch": {

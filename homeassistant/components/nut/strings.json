@@ -295,7 +295,7 @@
       "ups_realpower": { "name": "Real power" },
       "ups_realpower_nominal": { "name": "Nominal real power" },
       "ups_shutdown": { "name": "Shutdown ability" },
-      "ups_start_auto": { "name": "Start on ac" },
+      "ups_start_auto": { "name": "Start on AC" },
       "ups_start_battery": { "name": "Start on battery" },
       "ups_start_reboot": { "name": "Reboot on battery" },
       "ups_status": { "name": "Status data" },

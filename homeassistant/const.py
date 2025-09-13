@@ -749,6 +749,7 @@ class UnitOfPressure(StrEnum):
     MBAR = "mbar"
     MMHG = "mmHg"
     INHG = "inHg"
+    INH2O = "inH₂O"
     PSI = "psi"
 
 
@@ -766,6 +767,7 @@ class UnitOfVolume(StrEnum):
 
     CUBIC_FEET = "ft³"
     CENTUM_CUBIC_FEET = "CCF"
+    MILLE_CUBIC_FEET = "MCF"
     CUBIC_METERS = "m³"
     LITERS = "L"
     MILLILITERS = "mL"

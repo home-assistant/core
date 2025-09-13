@@ -1,6 +1,5 @@
 """Tests for the Velux binary sensor platform."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -11,7 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from . import update_polled_entities
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -33,21 +34,31 @@ async def test_rain_sensor_state(
     test_entity_id = "binary_sensor.test_window_rain_sensor"
 
     # simulate no rain detected
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await update_polled_entities(hass, freezer)
     state = hass.states.get(test_entity_id)
     assert state is not None
     assert state.state == STATE_OFF
 
-    # simulate rain detected
-    mock_window.get_limitation.return_value.min_value = 93
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    # simulate rain detected (Velux GPU reports 100)
+    mock_window.get_limitation.return_value.min_value = 100
+    await update_polled_entities(hass, freezer)
     state = hass.states.get(test_entity_id)
     assert state is not None
     assert state.state == STATE_ON
+
+    # simulate rain detected (other Velux models report 93)
+    mock_window.get_limitation.return_value.min_value = 93
+    await update_polled_entities(hass, freezer)
+    state = hass.states.get(test_entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # simulate no rain detected again
+    mock_window.get_limitation.return_value.min_value = 95
+    await update_polled_entities(hass, freezer)
+    state = hass.states.get(test_entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

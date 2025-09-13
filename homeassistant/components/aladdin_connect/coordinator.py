@@ -41,4 +41,10 @@ class AladdinConnectCoordinator(DataUpdateCoordinator[GarageDoor]):
     async def _async_update_data(self) -> GarageDoor:
         """Fetch data from the Aladdin Connect API."""
         await self.client.update_door(self.data.device_id, self.data.door_number)
+        self.data.status = self.client.get_door_status(
+            self.data.device_id, self.data.door_number
+        )
+        self.data.battery_level = self.client.get_battery_status(
+            self.data.device_id, self.data.door_number
+        )
         return self.data

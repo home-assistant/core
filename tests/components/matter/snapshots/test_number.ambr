@@ -751,7 +751,7 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[microwave_oven][number.microwave_oven_cook_time-entry]
+# name: test_numbers[microwave_oven][number.microwave_oven_cooking_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -769,7 +769,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.microwave_oven_cook_time',
+    'entity_id': 'number.microwave_oven_cooking_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -781,7 +781,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Cook time',
+    'original_name': 'Cooking time',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -791,11 +791,11 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[microwave_oven][number.microwave_oven_cook_time-state]
+# name: test_numbers[microwave_oven][number.microwave_oven_cooking_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Microwave Oven Cook time',
+      'friendly_name': 'Microwave Oven Cooking time',
       'max': 86400,
       'min': 1,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -803,7 +803,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.microwave_oven_cook_time',
+    'entity_id': 'number.microwave_oven_cooking_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
