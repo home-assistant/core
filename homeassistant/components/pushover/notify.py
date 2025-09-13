@@ -43,9 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_CANCEL = "cancel"
 SERVICE_CANCEL_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_DATA): {
-            vol.Optional(ATTR_TAG): cv.string,
-        },
+        vol.Optional(ATTR_TAG): cv.string,
     }
 )
 
@@ -150,9 +148,8 @@ class PushoverNotificationService(BaseNotificationService):
             raise HomeAssistantError(str(err)) from err
 
     def cancel_message_service(self, service: ServiceCall):
-        """Cancel all notifications with a given tag."""
-        data = service.data.get(ATTR_DATA)
-        tag = data.get(ATTR_TAG) if data else ""
+        """Cancel all notifications with a given tag or all if no specific tag is given."""
+        tag = service.data.get(ATTR_TAG, "")
 
         if not self.receipt_tags:
             _LOGGER.debug("There are no notifications to be canceled")
