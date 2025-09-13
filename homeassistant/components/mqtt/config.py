@@ -10,6 +10,7 @@ from homeassistant.helpers import config_validation as cv
 from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
+    CONF_GROUP,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -23,6 +24,7 @@ from .util import valid_publish_topic, valid_qos_schema, valid_subscribe_topic
 SCHEMA_BASE = {
     vol.Optional(CONF_QOS, default=DEFAULT_QOS): valid_qos_schema,
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+    vol.Optional(CONF_GROUP): vol.All(cv.ensure_list, [cv.string]),
 }
 
 MQTT_BASE_SCHEMA = vol.Schema(SCHEMA_BASE)
