@@ -6,12 +6,11 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.tado import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .util import async_init_integration
+from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -23,13 +22,15 @@ def setup_platforms() -> AsyncGenerator[None]:
         yield
 
 
+@pytest.mark.usefixtures("mock_tado_api")
 async def test_entities(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test creation of water heater."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

@@ -4,10 +4,9 @@ from ipaddress import ip_address
 import threading
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from PyTado.http import DeviceActivationStatus
 import pytest
 
-from homeassistant.components.tado.config_flow import TadoException
+from homeassistant.components.tado.config_flow import TadoError
 from homeassistant.components.tado.const import (
     CONF_FALLBACK,
     CONF_REFRESH_TOKEN,
@@ -114,17 +113,14 @@ async def test_auth_timeout(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the auth timeout."""
-    mock_tado_api.device_activation_status.return_value = DeviceActivationStatus.PENDING
-
+    mock_tado_api.device_activation_status.return_value = "PENDING"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
     assert result["step_id"] == "timeout"
 
-    mock_tado_api.device_activation_status.return_value = (
-        DeviceActivationStatus.COMPLETED
-    )
+    mock_tado_api.device_activation_status.return_value = "COMPLETED"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.FORM
@@ -161,7 +157,7 @@ async def test_tado_creation(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.tado.config_flow.Tado",
-        side_effect=TadoException("Test exception"),
+        side_effect=TadoError("Test exception"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -174,7 +170,7 @@ async def test_tado_creation(hass: HomeAssistant) -> None:
     ("exception", "error"),
     [
         (Exception, "timeout"),
-        (TadoException, "timeout"),
+        (TadoError, "timeout"),
     ],
 )
 async def test_wait_for_login_exception(
