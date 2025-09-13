@@ -49,6 +49,15 @@
         "name": "Refill error"
       }
     },
+    "number": {
+      "light_brightness": {
+        "name": "Light brightness"
+      },
+      "plant_days": {
+        "name": "Plants age",
+        "unit_of_measurement": "days"
+      }
+    },
     "select": {
       "display_temperature_unit": {
         "name": "Temperature unit on display",
@@ -58,7 +67,7 @@
         }
       },
       "light_brightness": {
-        "name": "Light brightness",
+        "name": "[%key:component::letpot::entity::number::light_brightness::name%]",
         "state": {
           "low": "[%key:common::state::low%]",
           "high": "[%key:common::state::high%]"
