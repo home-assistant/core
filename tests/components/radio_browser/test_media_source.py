@@ -131,3 +131,13 @@ async def test_browsing_local(hass: HomeAssistant, init_integration: AsyncMock) 
         assert len(item_child.children) == 2
         assert item_child.children[0].title == "Near Station 1"
         assert item_child.children[1].title == "Near Station 2"
+
+        # Test browsing a different category to hit the path where async_build_local
+        # returns []
+        other_browse = await media_source.async_browse_media(
+            hass, f"{media_source.URI_SCHEME}{DOMAIN}/nonexistent"
+        )
+
+        assert other_browse is not None
+        assert other_browse.title == "My Radios"
+        assert len(other_browse.children) == 0
