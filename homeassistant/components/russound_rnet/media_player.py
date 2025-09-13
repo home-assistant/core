@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ZONES = "zones"
 CONF_SOURCES = "sources"
+DOMAIN = "russound_rnet"
 
 
 ZONE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
@@ -78,10 +79,11 @@ class RussoundRNETDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, russ, sources, zone_id, extra) -> None:
         """Initialise the Russound RNET device."""
-        self._attr_name = extra["name"]
         self._russ = russ
         self._attr_source_list = sources
         # Each controller has a maximum of 6 zones, every increment of 6 zones
@@ -95,8 +97,8 @@ class RussoundRNETDevice(MediaPlayerEntity):
 
         # Expose a per-zone device
         self._attr_device_info = DeviceInfo(
-            identifiers={("russound_rnet", f"{self._controller_id}-{self._zone_id}")},
-            name=self._attr_name,
+            identifiers={(DOMAIN, f"{self._controller_id}-{self._zone_id}")},
+            name=extra["name"],
             manufacturer="Russound",
             model="RNET",
         )
