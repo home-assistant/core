@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 DOMAIN = "waze_travel_time"
 SEMAPHORE = "semaphore"
 
@@ -29,7 +31,15 @@ METRIC_UNITS = "metric"
 UNITS = [METRIC_UNITS, IMPERIAL_UNITS]
 
 REGIONS = ["us", "na", "eu", "il", "au"]
-VEHICLE_TYPES = ["car", "taxi", "motorcycle"]
+
+VEHICLE_CAR = "car"
+VEHICLE_TAXI = "taxi"
+VEHICLE_MOTORCYCLE = "motorcycle"
+VEHICLE_TYPES = [
+    VEHICLE_CAR,
+    VEHICLE_TAXI,
+    VEHICLE_MOTORCYCLE,
+]
 
 DEFAULT_OPTIONS: dict[str, str | bool | list[str]] = {
     CONF_REALTIME: DEFAULT_REALTIME,
@@ -41,3 +51,18 @@ DEFAULT_OPTIONS: dict[str, str | bool | list[str]] = {
     CONF_INCL_FILTER: DEFAULT_FILTER,
     CONF_EXCL_FILTER: DEFAULT_FILTER,
 }
+
+ICON_CAR = "mdi:car"
+ICON_TAXI = "mdi:taxi"
+ICON_MOTORCYCLE = "mdi:motorbike"
+VEHICLE_ICONS = {
+    VEHICLE_CAR: ICON_CAR,
+    VEHICLE_TAXI: ICON_TAXI,
+    VEHICLE_MOTORCYCLE: ICON_MOTORCYCLE,
+}
+
+ATTR_DESTINATION: Final = "destination"
+ATTR_DURATION: Final = "duration"
+ATTR_DISTANCE: Final = "distance"
+ATTR_ORIGIN: Final = "origin"
+ATTR_ROUTE: Final = "route"
