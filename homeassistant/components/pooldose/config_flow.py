@@ -72,19 +72,20 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("DHCP discovery IP address  %s", discovery_info.ip)
         _LOGGER.debug("DHCP discovery MAC address %s", discovery_info.macaddress)
         serial_number, _, _ = await self._validate_host(discovery_info.ip)
-        if serial_number:
-            await self.async_set_unique_id(serial_number)
-            self._abort_if_unique_id_configured()
-            self._discovered_ip = discovery_info.ip
-            return self.async_show_form(
-                step_id="dhcp_confirm",
-                description_placeholders={
-                    "ip": discovery_info.ip,
-                    "mac": discovery_info.macaddress,
-                    "name": f"PoolDose {serial_number}",
-                },
-            )
-        return self.async_abort(reason="already_configured")
+        if not serial_number:
+            return self.async_abort(reason="no_serial_number")
+
+        await self.async_set_unique_id(serial_number)
+        self._abort_if_unique_id_configured()
+        self._discovered_ip = discovery_info.ip
+        return self.async_show_form(
+            step_id="dhcp_confirm",
+            description_placeholders={
+                "ip": discovery_info.ip,
+                "mac": discovery_info.macaddress,
+                "name": f"PoolDose {serial_number}",
+            },
+        )
 
     async def async_step_dhcp_confirm(
         self, user_input: dict[str, Any] | None = None
