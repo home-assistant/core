@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+import re
 import logging
 from typing import Any, Protocol, cast
 
@@ -171,10 +172,29 @@ def entities_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all entities in an automation."""
     return _x_in_automation(hass, entity_id, "referenced_entities")
 
+_LOGGER = logging.getLogger(__name__)
+
+def _is_valid_device_id(val: str) -> bool:
+    """Check if a string looks like a hex-based device_id."""
+    return bool(re.fullmatch(r"[a-f0-9]{32}", val))
+
 
 @callback
-def automations_with_device(hass: HomeAssistant, device_id: str) -> list[str]:
-    """Return all automations that reference the device."""
+def automations_with_device(hass: HomeAssistant, device_id_or_alias: str) -> list[str]:
+    """Return all automations that reference the device or alias."""
+    device_id = device_id_or_alias
+
+    # Resolve alias if it's not a hex string
+    if not _is_valid_device_id(device_id_or_alias):
+        device_aliases = hass.data.get("device_aliases", {})
+        resolved_id = device_aliases.get(device_id_or_alias)
+
+        if resolved_id is None:
+            _LOGGER.warning("Unknown device alias: %s", device_id_or_alias)
+            return []
+
+        device_id = resolved_id
+
     return _automations_with_x(hass, device_id, "referenced_devices")
 
 
