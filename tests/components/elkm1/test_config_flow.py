@@ -1942,9 +1942,7 @@ async def test_reconfigure_invalid_auth(
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"password": "invalid_auth"}
-
-    assert result2.get("errors") == {CONF_PASSWORD: "invalid_auth"}
+    assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
 async def test_reconfigure_different_device(
