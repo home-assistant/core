@@ -7,10 +7,9 @@ import pytest
 from togrill_bluetooth.client import Client
 from togrill_bluetooth.packets import Packet, PacketA0Notify, PacketNotify
 
-from homeassistant.components.togrill.const import CONF_PROBE_COUNT, DOMAIN
-from homeassistant.const import CONF_ADDRESS, CONF_MODEL
+from homeassistant.components.togrill.const import DOMAIN, MAJOR_VERSION, MINOR_VERSION
 
-from . import TOGRILL_SERVICE_INFO
+from . import TOGRILL_MOCK_ENTRY_DATA, TOGRILL_MOCK_ENTRY_OPTIONS, TOGRILL_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 
@@ -20,12 +19,11 @@ def mock_entry() -> MockConfigEntry:
     """Create hass config fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_ADDRESS: TOGRILL_SERVICE_INFO.address,
-            CONF_MODEL: "Pro-05",
-            CONF_PROBE_COUNT: 2,
-        },
+        data=TOGRILL_MOCK_ENTRY_DATA,
+        options=TOGRILL_MOCK_ENTRY_OPTIONS,
         unique_id=TOGRILL_SERVICE_INFO.address,
+        version=MAJOR_VERSION,
+        minor_version=MINOR_VERSION,
     )
 
 
@@ -57,9 +55,18 @@ def mock_client(enable_bluetooth: None, mock_client_class: Mock) -> Generator[Mo
     client_object.mocked_notify = None
 
     async def _connect(
-        address: str, callback: Callable[[Packet], None] | None = None
+        address: str,
+        callback: Callable[[Packet], None] | None = None,
+        disconnected_callback: Callable[[], None] | None = None,
     ) -> Mock:
         client_object.mocked_notify = callback
+        if disconnected_callback:
+
+            def _disconnected_callback():
+                client_object.is_connected = False
+                disconnected_callback()
+
+            client_object.mocked_disconnected_callback = _disconnected_callback
         return client_object
 
     async def _disconnect() -> None:
