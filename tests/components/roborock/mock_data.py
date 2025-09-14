@@ -11,6 +11,8 @@ from roborock.containers import (
     HomeData,
     HomeDataScene,
     MultiMapsList,
+    MultiMapsListMapInfo,
+    MultiMapsListMapInfoBakMaps,
     NetworkInfo,
     S7Status,
     UserData,
@@ -1127,28 +1129,26 @@ NETWORK_INFO_2 = NetworkInfo(
     ip="123.232.12.2", ssid="wifi", mac="ac:cc:cc:cc:cd:cc", bssid="bssid", rssi=90
 )
 
-MULTI_MAP_LIST = MultiMapsList.from_dict(
-    {
-        "maxMultiMap": 4,
-        "maxBakMap": 1,
-        "multiMapCount": 2,
-        "mapInfo": [
-            {
-                "mapFlag": 0,
-                "addTime": 1686235489,
-                "length": 8,
-                "name": "Upstairs",
-                "bakMaps": [{"addTime": 1673304288}],
-            },
-            {
-                "mapFlag": 1,
-                "addTime": 1697579901,
-                "length": 10,
-                "name": "Downstairs",
-                "bakMaps": [{"addTime": 1695521431}],
-            },
-        ],
-    }
+MULTI_MAP_LIST = MultiMapsList(
+    max_multi_map=4,
+    max_bak_map=1,
+    multi_map_count=2,
+    map_info=[
+        MultiMapsListMapInfo(
+            mapFlag=0,
+            name="Upstairs",
+            add_time=1686235489,
+            length=8,
+            bak_maps=[MultiMapsListMapInfoBakMaps(add_time=1673304288)],
+        ),
+        MultiMapsListMapInfo(
+            mapFlag=1,
+            name="Downstairs",
+            add_time=1697579901,
+            length=10,
+            bak_maps=[MultiMapsListMapInfoBakMaps(add_time=1695521431)],
+        ),
+    ],
 )
 
 MAP_DATA = MapData(0, 0)

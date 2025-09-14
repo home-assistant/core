@@ -108,6 +108,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         for coord in coordinators
         if isinstance(coord, RoborockDataUpdateCoordinatorA01)
     ]
+    _LOGGER.debug(
+        "Roborock setup: v1_coords=%s, a01_coords=%s",
+        len(v1_coords),
+        len(a01_coords),
+    )
     if len(v1_coords) + len(a01_coords) == 0:
         raise ConfigEntryNotReady(
             "No devices were able to successfully setup",
