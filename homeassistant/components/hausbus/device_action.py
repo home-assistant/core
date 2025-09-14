@@ -301,12 +301,6 @@ async def async_get_action_capabilities(
                     }
                 )
 
-        # if hausbus_special_type==1:
-        #  if service_type.startswith("ssr_control"):
-        #    SCHEMA = vol.Schema({
-        #      vol.Required("power", default=0): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
-        #    })
-
         result = {"extra_fields": SCHEMA}
 
     _LOGGER.debug("returns %s", result)

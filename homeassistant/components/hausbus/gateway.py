@@ -107,11 +107,6 @@ class HausbusGateway(IBusDataListener):
             Callable[[HausbusButton], Coroutine[Any, Any, None]] | None
         ) = None
 
-        # Listener für state_changed registrieren
-        # self.hass.bus.async_listen("state_changed", self._state_changed_listener)
-
-        # asyncio.run_coroutine_threadsafe(self.async_delete_devices(), self.hass.loop)
-
     async def createDiscoveryButton(self):
         """Creates a Button to manually start device discovery."""
 
@@ -283,42 +278,8 @@ class HausbusGateway(IBusDataListener):
         if deviceId in {HOMESERVER_DEVICE_ID, 9999, 12222}:
             return
 
-        if deviceId in [
-            110,
-            503,
-            1000,
-            1541,
-            3422,
-            4000,
-            4001,
-            4002,
-            4003,
-            4004,
-            4005,
-            4009,
-            4096,
-            5068,
-            8192,
-            8270,
-            11581,
-            12223,
-            12622,
-            13976,
-            14896,
-            18343,
-            19075,
-            20043,
-            21336,
-            22909,
-            24261,
-            25661,
-            25874,
-            28900,
-            3423,
-            4006,
-            4008,
-        ]:
-            return
+        # if deviceId in [110,503,1000,1541,3422,4000,4001,4002,4003,4004,4005,4009,4096,5068,8192,8270,11581,12223,12622,13976,14896,18343,19075,20043,21336,22909,24261,25661,25874,28900,3423,4006,4008]:
+        #  return
 
         LOGGER.debug("busDataReceived with data = %s from %s", data, object_id)
 
@@ -417,12 +378,12 @@ class HausbusGateway(IBusDataListener):
                         name,
                     )
 
-                    if deviceId in (29725, 22784):
-                        className = ProxyFactory.getBusClassNameForClass(
-                            instanceObjectId.getClassId()
-                        ).rsplit(".", 1)[-1]
-                        name = f"{className} {instanceObjectId.getInstanceId()}"
-                        LOGGER.debug("specialName %s", name)
+                    # f deviceId in (29725, 22784):
+                    #   className = ProxyFactory.getBusClassNameForClass(
+                    #       instanceObjectId.getClassId()
+                    #   ).rsplit(".", 1)[-1]
+                    #   name = f"{className} {instanceObjectId.getInstanceId()}"
+                    #   LOGGER.debug("specialName %s", name)
 
                     # automatische Namen für dynamische Elemente, die nicht alle in den Template stehen sollen
                     if name is None:
