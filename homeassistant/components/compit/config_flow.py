@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from compit_inext_api import CannotConnect, CompitAPI, InvalidAuth, SystemInfo
+from compit_inext_api import CannotConnect, CompitApiConnector, InvalidAuth
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
@@ -44,10 +44,14 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             session = async_create_clientsession(self.hass)
-            api = CompitAPI(user_input[CONF_EMAIL], user_input[CONF_PASSWORD], session)
-            system_info = None
+            api = CompitApiConnector(session)
+            success = False
             try:
-                system_info = await api.authenticate()
+                success = await api.init(
+                    user_input[CONF_EMAIL],
+                    user_input[CONF_PASSWORD],
+                    self.hass.config.language,
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -56,11 +60,7 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            if (
-                system_info
-                and isinstance(system_info, SystemInfo)
-                and system_info.gates is not None
-            ):
+            if success:
                 await self.async_set_unique_id(user_input[CONF_EMAIL])
 
                 if self.source == SOURCE_REAUTH:
@@ -69,7 +69,9 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._get_reauth_entry(), data_updates=user_input
                     )
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title="Compit", data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_EMAIL], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -88,12 +90,14 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry_data = reauth_entry.data
 
         if user_input:
+            # Reuse async_step_user with combined credentials
             return await self.async_step_user(
                 {
                     CONF_EMAIL: reauth_entry_data[CONF_EMAIL],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                 }
             )
+
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_SCHEMA,

@@ -3,22 +3,16 @@
 from datetime import timedelta
 import logging
 
-from compit_inext_api import (
-    CompitAPI,
-    DeviceDefinitions,
-    DeviceInstance,
-    DeviceState,
-    Gate,
-)
+from compit_inext_api import CompitApiConnector, DeviceInstance
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=30)
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+_LOGGER: logging.Logger = logging.getLogger(__name__)
 
 type CompitConfigEntry = ConfigEntry[CompitDataUpdateCoordinator]
 
@@ -30,15 +24,10 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        gates: list[Gate],
-        api: CompitAPI,
-        device_definitions: DeviceDefinitions,
+        connector: CompitApiConnector,
     ) -> None:
         """Initialize."""
-        self.device_instances: dict[int, DeviceInstance] = {}
-        self.api = api
-        self.gates = gates
-        self.device_definitions = device_definitions
+        self.connector = connector
 
         super().__init__(
             hass,
@@ -50,44 +39,5 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
 
     async def _async_update_data(self) -> dict[int, DeviceInstance]:
         """Update data via library."""
-
-        for gate in self.gates:
-            _LOGGER.debug("Gate: %s, Code: %s", gate.label, gate.code)
-            for device in gate.devices:
-                if device.id not in self.device_instances:
-                    device_definition = next(
-                        (
-                            item
-                            for item in self.device_definitions.devices
-                            if item.device_class == device.device_class
-                            and item.code == device.type
-                        ),
-                        None,
-                    )
-                    if device_definition is None:
-                        _LOGGER.warning(
-                            "Device definition not found for device %s, class: %s, type: %s",
-                            device.label,
-                            device.device_class,
-                            device.type,
-                        )
-                        continue
-                    self.device_instances[device.id] = DeviceInstance(device_definition)
-
-                _LOGGER.debug(
-                    "Device: %s, id: %s, class: %s, type: %s",
-                    device.label,
-                    device.id,
-                    device.device_class,
-                    device.type,
-                )
-                try:
-                    state = await self.api.get_state(device.id)
-
-                    if state and isinstance(state, DeviceState):
-                        self.device_instances[device.id].state = state
-                    else:
-                        _LOGGER.error("Failed to get state for device %s", device.id)
-                except ValueError as exception:
-                    raise UpdateFailed from exception
-        return self.device_instances
+        await self.connector.update_state(device_id=None)  # Update all devices
+        return self.connector.devices
