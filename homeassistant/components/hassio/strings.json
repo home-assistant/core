@@ -37,7 +37,7 @@
     },
     "issue_addon_detached_addon_missing": {
       "title": "Missing repository for an installed add-on",
-      "description": "Repository for add-on {addon} is missing. This means it will not get updates, and backups may not be restored correctly as Home Assistant Supervisor may not be able to build/download the resources required.\n\nPlease check the [add-on's documentation]({addon_url}) for installation instructions and add the repository to the store."
+      "description": "Repository for add-on {addon} is missing. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nPlease check the [add-on's documentation]({addon_url}) for installation instructions and add the repository to the store."
     },
     "issue_addon_detached_addon_removed": {
       "title": "Installed add-on has been removed from repository",
