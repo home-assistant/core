@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -12,6 +14,16 @@ from .coordinator import RitualsDataUpdateCoordinator
 MANUFACTURER = "Rituals Cosmetics"
 MODEL = "The Perfume Genie"
 MODEL2 = "The Perfume Genie 2.0"
+
+
+def _normalize_fw(v: Any) -> str:
+    """Return a string firmware version from various shapes (str/dict/object)."""
+    if isinstance(v, str):
+        return v
+    if isinstance(v, dict):
+        return v.get("version") or v.get("current") or v.get("fw") or str(v)
+    ver = getattr(v, "version", None) or getattr(v, "current", None)
+    return str(ver) if ver is not None else str(v)
 
 
 class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
@@ -32,8 +44,8 @@ class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
             identifiers={(DOMAIN, coordinator.diffuser.hublot)},
             manufacturer=MANUFACTURER,
             model=MODEL if coordinator.diffuser.has_battery else MODEL2,
-            name=coordinator.diffuser.name,
-            sw_version=coordinator.diffuser.version,
+            name=coordinator.diffuser.name or "Rituals Perfume Genie",
+            sw_version=_normalize_fw(getattr(coordinator.diffuser, "version", None)),
         )
 
     @property

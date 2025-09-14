@@ -30,8 +30,8 @@ class RitualsSwitchEntityDescription(SwitchEntityDescription):
 ENTITY_DESCRIPTIONS = (
     RitualsSwitchEntityDescription(
         key="is_on",
-        name=None,
         translation_key="fan",
+        name="Power",
         is_on_fn=lambda diffuser: diffuser.is_on,
         turn_on_fn=lambda diffuser: diffuser.turn_on(),
         turn_off_fn=lambda diffuser: diffuser.turn_off(),

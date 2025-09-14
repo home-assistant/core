@@ -33,6 +33,8 @@ class RitualsSensorEntityDescription(SensorEntityDescription):
 ENTITY_DESCRIPTIONS = (
     RitualsSensorEntityDescription(
         key="battery_percentage",
+        translation_key="battery_percentage",
+        name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=lambda diffuser: diffuser.battery_percentage,
@@ -41,16 +43,19 @@ ENTITY_DESCRIPTIONS = (
     RitualsSensorEntityDescription(
         key="fill",
         translation_key="fill",
+        name="Fill level",
         value_fn=lambda diffuser: diffuser.fill,
     ),
     RitualsSensorEntityDescription(
         key="perfume",
         translation_key="perfume",
+        name="Perfume",
         value_fn=lambda diffuser: diffuser.perfume,
     ),
     RitualsSensorEntityDescription(
         key="wifi_percentage",
         translation_key="wifi_percentage",
+        name="Wi-Fi percentage",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda diffuser: diffuser.wifi_percentage,
     ),
