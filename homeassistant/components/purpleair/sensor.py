@@ -1,4 +1,4 @@
-"""PurpleAir sensors."""
+"""Support for PurpleAir sensors."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ CONCENTRATION_PARTICLES_PER_100_MILLILITERS: Final[str] = (
 
 @dataclass(frozen=True, kw_only=True)
 class PurpleAirSensorEntityDescription(SensorEntityDescription):
-    """Sensor entity descriptions."""
+    """Define an object to describe PurpleAir sensor entities."""
 
     value_fn: Callable[[SensorModel], float | str | None]
 
@@ -169,7 +169,7 @@ async def async_setup_entry(
     entry: PurpleAirConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up sensors."""
+    """Set up PurpleAir sensors based on a config entry."""
     for subentry in entry.subentries.values():
         for description in SENSOR_DESCRIPTIONS:
             async_add_entities(
@@ -184,7 +184,7 @@ async def async_setup_entry(
 
 
 class PurpleAirSensorEntity(PurpleAirEntity, SensorEntity):
-    """Sensor entity."""
+    """Define a representation of a PurpleAir sensor."""
 
     entity_description: PurpleAirSensorEntityDescription
 
@@ -202,5 +202,5 @@ class PurpleAirSensorEntity(PurpleAirEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | str | None:
-        """Return sensor value."""
+        """Return the sensor value."""
         return self.entity_description.value_fn(self.sensor_data)

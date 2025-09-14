@@ -1,1 +1,1 @@
-"""PurpleAir integration tests."""
+"""Tests for the PurpleAir integration."""

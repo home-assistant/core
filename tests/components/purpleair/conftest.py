@@ -1,4 +1,4 @@
-"""Fixtures for PurpleAir tests."""
+"""Define fixtures for PurpleAir tests."""
 
 from collections.abc import Generator
 from types import MappingProxyType

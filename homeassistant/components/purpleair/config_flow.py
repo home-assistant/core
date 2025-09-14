@@ -1,4 +1,4 @@
-"""PurpleAir config flow."""
+"""Config flow for PurpleAir integration."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ from .subentry_flow import PurpleAirSubentryFlow
 
 
 class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Config flow."""
+    """Handle a config flow for PurpleAir."""
 
     VERSION = SCHEMA_VERSION
 
@@ -118,7 +118,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> PurpleAirOptionsFlow:
-        """Get options flow."""
+        """Define the config flow to handle options."""
         return PurpleAirOptionsFlow()
 
     async def async_step_user(
@@ -174,7 +174,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle re-auth step."""
+        """Handle the re-auth step."""
         if user_input is None:
             self._flow_data[CONF_API_KEY] = self._get_reauth_entry().data.get(
                 CONF_API_KEY

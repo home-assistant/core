@@ -1,4 +1,4 @@
-"""PurpleAir entities."""
+"""The PurpleAir integration."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Get extra state attributes."""
+        """Return entity specific state attributes."""
         attrs: dict[str, Any] = {}
         if self.sensor_data.latitude is None or self.sensor_data.longitude is None:
             return attrs
@@ -58,5 +58,5 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
 
     @property
     def sensor_data(self) -> SensorModel:
-        """Get SensorModel object."""
+        """Define a property to get this entity's SensorModel object."""
         return self.coordinator.data.data[self._sensor_index]

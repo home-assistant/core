@@ -1,4 +1,4 @@
-"""PurpleAir consts."""
+"""Constants for the PurpleAir integration."""
 
 import logging
 from typing import Final

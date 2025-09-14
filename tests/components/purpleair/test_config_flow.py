@@ -1,4 +1,4 @@
-"""PurpleAir config flow tests."""
+"""Define tests for the PurpleAir config flow."""
 
 from unittest.mock import AsyncMock, patch
 

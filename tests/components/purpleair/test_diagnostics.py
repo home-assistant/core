@@ -1,4 +1,4 @@
-"""PurpleAir diagnostics tests."""
+"""Test PurpleAir diagnostics."""
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.purpleair.const import (
@@ -7,7 +7,6 @@ from homeassistant.components.purpleair.const import (
     CONF_SENSOR_READ_KEY,
     DOMAIN,
     SCHEMA_VERSION,
-    TITLE,
 )
 from homeassistant.const import CONF_API_KEY, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
@@ -58,11 +57,11 @@ async def test_diagnostics(
                     },
                     "subentry_id": ANY,
                     "subentry_type": CONF_SENSOR,
-                    "title": f"TEST_SENSOR_INDEX1 ({TEST_SENSOR_INDEX1})",
+                    "title": REDACTED,
                     "unique_id": REDACTED,
                 },
             ],
-            "title": TITLE,
+            "title": REDACTED,
             "unique_id": REDACTED,
             "version": SCHEMA_VERSION,
         },

@@ -24,7 +24,7 @@ UPDATE_INTERVAL: Final[int] = 2
 
 
 class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
-    """Data update coordinator."""
+    """Define a PurpleAir-specific coordinator."""
 
     config_entry: PurpleAirConfigEntry
 
@@ -35,7 +35,7 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
             LOGGER,
             config_entry=entry,
             name=entry.title,
-            update_interval=timedelta(UPDATE_INTERVAL),
+            update_interval=timedelta(minutes=UPDATE_INTERVAL),
             always_update=True,
         )
         self._api = API(
@@ -48,7 +48,7 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
         return self._api.get_map_url(sensor_index)
 
     async def _async_update_data(self) -> GetSensorsResponse:
-        """Update sensor data."""
+        """Get the latest sensor information."""
         index_list: list[int] = [
             int(subentry.data[CONF_SENSOR_INDEX])
             for subentry in self.config_entry.subentries.values()

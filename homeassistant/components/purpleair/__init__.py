@@ -1,4 +1,4 @@
-"""PurpleAir integration."""
+"""The PurpleAir integration."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ PLATFORMS: Final[list[str]] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) -> bool:
-    """Set up config entry."""
+    """Set up PurpleAir config entry."""
     coordinator = PurpleAirDataUpdateCoordinator(
         hass,
         entry,
@@ -46,7 +46,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) 
     CONF_SENSOR_INDICES: Final[str] = "sensor_indices"
     index_list: Any | None = entry.options.get(CONF_SENSOR_INDICES)
 
-    if not index_list or type(index_list) is not list or len(index_list) == 0:
+    if not index_list or not isinstance(index_list, list) or len(index_list) == 0:
         LOGGER.warning("No sensors registered in configuration")
         return hass.config_entries.async_update_entry(
             entry,
