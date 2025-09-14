@@ -46,7 +46,14 @@ class UploadedFile(Protocol):
 
 async def async_get_media_source(hass: HomeAssistant) -> LocalSource:
     """Set up local media source."""
-    return LocalSource(hass, DOMAIN, "My media", hass.config.media_dirs, "/media")
+    return LocalSource(
+        hass,
+        DOMAIN,
+        "My media",
+        hass.config.media_dirs,
+        not hass.config.media_dirs_set_default,
+        "/media",
+    )
 
 
 class LocalSource(MediaSource):
@@ -58,6 +65,7 @@ class LocalSource(MediaSource):
         domain: str,
         name: str,
         media_dirs: dict[str, str],
+        error_missing_media_dir: bool,
         url_prefix: str,
     ) -> None:
         """Initialize local source."""
@@ -65,6 +73,7 @@ class LocalSource(MediaSource):
         self.hass = hass
         self.name = name
         self.media_dirs = media_dirs
+        self.error_missing_media_dir = error_missing_media_dir
         self.url_prefix = url_prefix
 
     @callback
@@ -210,9 +219,23 @@ class LocalSource(MediaSource):
         full_path = Path(self.media_dirs[source_dir_id], location)
 
         if not full_path.exists():
-            if location == "":
+            if location != "":
+                raise BrowseError("Path does not exist.")
+
+            if self.error_missing_media_dir:
                 raise BrowseError("Media directory does not exist.")
-            raise BrowseError("Path does not exist.")
+
+            # If a media dir does not exist, return an empty folder
+            # It will be created when uploading files
+            return BrowseMediaSource(
+                domain=self.domain,
+                identifier=source_dir_id,
+                media_class=MediaClass.DIRECTORY,
+                media_content_type=None,
+                title=self.name,
+                can_play=False,
+                can_expand=True,
+            )
 
         if not full_path.is_dir():
             raise BrowseError("Path is not a directory.")
