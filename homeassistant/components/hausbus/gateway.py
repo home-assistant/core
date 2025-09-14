@@ -64,6 +64,15 @@ class HausbusGateway(IBusDataListener):
             self.hass.async_add_executor_job(self.home_server.searchDevices)
 
         await discovery_callback()
+        
+    async def createDiscoveryButton(self):
+        """Creates a Button to manually start device discovery."""
+
+        async def discovery_callback():
+            LOGGER.debug("Search devices")
+            self.hass.async_add_executor_job(self.home_server.searchDevices)
+
+        await discovery_callback()
 
     def add_device(self, device_id: str, module: ModuleId) -> None:
         """Add a new Haus-Bus Device to this gateway's device list."""
@@ -219,12 +228,12 @@ class HausbusGateway(IBusDataListener):
                         name,
                     )
 
-                    # f deviceId in (29725, 22784):
-                    #   className = ProxyFactory.getBusClassNameForClass(
-                    #       instanceObjectId.getClassId()
-                    #   ).rsplit(".", 1)[-1]
-                    #   name = f"{className} {instanceObjectId.getInstanceId()}"
-                    #   LOGGER.debug("specialName %s", name)
+                    if deviceId in (29725, 22784):
+                      className = ProxyFactory.getBusClassNameForClass(
+                        instanceObjectId.getClassId()
+                      ).rsplit(".", 1)[-1]
+                      name = f"{className} {instanceObjectId.getInstanceId()}"
+                      LOGGER.debug("specialName %s", name)
 
                     # automatische Namen für dynamische Elemente, die nicht alle in den Template stehen sollen
                     if name is None:
@@ -248,13 +257,6 @@ class HausbusGateway(IBusDataListener):
                 return
 
         if device is not None:
-            # Device_trigger und Events melden
-            eventEntity = self.get_event_entity(object_id.getValue())
-            if eventEntity is not None:
-                LOGGER.debug("eventEntity is %s", eventEntity)
-                eventEntity.handle_event(data)
-                self.generate_device_trigger(data, device, object_id)
-
             # Alles andere wird an die jeweiligen Channel weitergeleitet
             channel = self.get_channel(object_id)
 
