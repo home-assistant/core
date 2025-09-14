@@ -9,7 +9,6 @@ from elkm1_lib.discovery import ElkSystem
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.elkm1.config_flow import InvalidAuth as ElkInvalidAuth
 from homeassistant.components.elkm1.const import DOMAIN
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -1925,10 +1924,11 @@ async def test_reconfigure_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Mock validation to simulate authentication failure
-    with patch(
-        "homeassistant.components.elkm1.config_flow.validate_input",
-        side_effect=ElkInvalidAuth,
+    elk = mock_elk(invalid_auth=True, sync_complete=True)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=elk),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1991,10 +1991,13 @@ async def test_reconfigure_unknown_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Mock validation to simulate an unexpected exception
-    with patch(
-        "homeassistant.components.elkm1.config_flow.validate_input",
-        side_effect=ValueError("Unexpected error"),
+    elk = mock_elk(invalid_auth=None, sync_complete=None, exception=OSError)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=elk),
+        patch("homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT", 0),
+        patch("homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT", 0),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
