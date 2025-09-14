@@ -22,7 +22,7 @@ certifi>=2021.5.30
 ciso8601==2.3.3
 cronsim==2.6
 fnv-hash-fast==1.5.0
-hass-nabucasa==1.1.0
+hass-nabucasa==1.1.1
 httpx==0.28.1
 home-assistant-bluetooth==1.13.1
 ifaddr==0.2.0
@@ -52,4 +52,4 @@ voluptuous-serialize==2.7.0
 voluptuous-openapi==0.1.0
 yarl==1.20.1
 webrtc-models==0.3.0
-zeroconf==0.147.0
+zeroconf==0.147.2
