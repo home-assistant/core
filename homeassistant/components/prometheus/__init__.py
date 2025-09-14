@@ -64,7 +64,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
 from homeassistant.helpers import (
+    area_registry as ar,
     config_validation as cv,
+    entity_registry as er,
     entityfilter,
     state as state_helper,
 )
@@ -140,6 +142,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
 
+    area_registry = ar.async_get(hass)
+    entity_registry = er.async_get(hass)
+
     metrics = PrometheusMetrics(
         entity_filter,
         namespace,
@@ -147,6 +152,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         component_config,
         override_metric,
         default_metric,
+        area_registry,
+        entity_registry,
     )
 
     hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
@@ -189,6 +196,8 @@ class PrometheusMetrics:
         component_config: EntityValues,
         override_metric: str | None,
         default_metric: str | None,
+        area_registry: ar.AreaRegistry,
+        entity_registry: er.EntityRegistry,
     ) -> None:
         """Initialize Prometheus Metrics."""
         self._component_config = component_config
@@ -215,6 +224,9 @@ class PrometheusMetrics:
             defaultdict(set)
         )
         self._climate_units = climate_units
+
+        self.area_registry = area_registry
+        self.entity_registry = entity_registry
 
     def handle_state_changed_event(self, event: Event[EventStateChangedData]) -> None:
         """Handle new messages from the bus."""
@@ -384,23 +396,48 @@ class PrometheusMetrics:
             value = None
         return value
 
-    @staticmethod
     def _labels(
+        self,
         state: State,
         extra_labels: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         if extra_labels is None:
             extra_labels = {}
+
         labels = {
             "entity": state.entity_id,
             "domain": state.domain,
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
+            # Have to set the keys, because a metric cannot have variable labels
+            "area_id": "<no-area>",
+            "area_name": "<no-area>",
+            "area_norm_name": "<no-area>",
         }
+
+        entity = self.entity_registry.async_get(state.entity_id)
+        if entity is None:
+            _LOGGER.error("Cannot find RegistryEntry for entity %s", state.entity_id)
+        else:
+            area_id = entity.area_id
+
+            if area_id is None:
+                _LOGGER.debug("No area for entity %s", state.entity_id)
+            else:
+                labels["area_id"] = area_id
+
+                area = self.area_registry.async_get_area(area_id)
+                if area is None:
+                    _LOGGER.error("Cannot find AreaEntry for area_id %s", area_id)
+                else:
+                    labels["area_name"] = area.name
+                    labels["area_norm_name"] = area.normalized_name
+
         if not labels.keys().isdisjoint(extra_labels.keys()):
             conflicting_keys = labels.keys() & extra_labels.keys()
             raise ValueError(
                 f"extra_labels contains conflicting keys: {conflicting_keys}"
             )
+
         return labels | extra_labels
 
     def _battery(self, state: State) -> None:
