@@ -6,7 +6,7 @@ from bleak.exc import BleakError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.togrill.const import DOMAIN
+from homeassistant.components.togrill.const import CONF_ACTIVE_BY_DEFAULT, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -153,3 +153,24 @@ async def test_bluetooth(
     }
     assert result["title"] == "Pro-05"
     assert result["result"].unique_id == TOGRILL_SERVICE_INFO.address
+
+
+async def test_options_flow(hass: HomeAssistant, mock_entry: MockConfigEntry) -> None:
+    """Test specifying non default settings using options flow."""
+
+    await setup_entry(hass, mock_entry, [])
+
+    assert mock_entry.options == {CONF_ACTIVE_BY_DEFAULT: True}
+
+    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTIVE_BY_DEFAULT: False},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_entry.options == {CONF_ACTIVE_BY_DEFAULT: False}
