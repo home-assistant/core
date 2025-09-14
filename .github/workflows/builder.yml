@@ -196,6 +196,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # home-assistant/builder doesn't support sha pinning
       - name: Build base image
         uses: home-assistant/builder@2025.03.0
         with:
@@ -262,6 +263,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # home-assistant/builder doesn't support sha pinning
       - name: Build base image
         uses: home-assistant/builder@2025.03.0
         with:
