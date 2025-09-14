@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import suppress
 import logging
 from typing import Any
 
@@ -37,12 +38,17 @@ class RitualsPerfumeGenieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+
+        _LOGGER.debug("CF:user form opened")
+
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
         errors = {}
 
         session = async_get_clientsession(self.hass)
+        with suppress(Exception):
+            session.cookie_jar.clear()
         account = Account(user_input[CONF_EMAIL], user_input[CONF_PASSWORD], session)
 
         try:

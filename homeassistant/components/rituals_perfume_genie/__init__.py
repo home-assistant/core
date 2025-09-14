@@ -1,8 +1,10 @@
 """The Rituals Perfume Genie integration."""
 
 import asyncio
+from contextlib import suppress
+import logging
 
-import aiohttp
+from aiohttp import ClientError, ClientResponseError
 from pyrituals import Account, AuthenticationException, Diffuser
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
@@ -15,6 +17,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import ACCOUNT_HASH, DOMAIN, PASSWORD, UPDATE_INTERVAL, USERNAME
 from .coordinator import RitualsDataUpdateCoordinator
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.NUMBER,
@@ -26,7 +30,10 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
+    _LOGGER.debug("async_setup_entry start (entry_id=%s)", entry.entry_id)
     session = async_get_clientsession(hass)
+    with suppress(Exception):
+        session.cookie_jar.clear()
 
     # Require credentials for runtime; if missing, trigger reauth and stop setup
     if USERNAME not in entry.data or PASSWORD not in entry.data:
@@ -54,8 +61,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await _trigger_reauth(hass, entry)
         return False
 
-    except aiohttp.ClientError as err:
-        # Network/HTTP error → retry setup later
+    except ClientResponseError as err:
+        _LOGGER.warning(
+            "HTTP error during Rituals setup: status=%s, url=%s, headers=%s",
+            getattr(err, "status", "?"),
+            getattr(err, "request_info", None),
+            dict(err.headers or {}),
+        )
+        raise ConfigEntryNotReady from err
+
+    except ClientError as err:
+        _LOGGER.warning("Network error during Rituals setup: %r", err)
         raise ConfigEntryNotReady from err
 
     # Migrate old unique_ids to the new format

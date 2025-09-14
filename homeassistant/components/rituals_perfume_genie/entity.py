@@ -17,13 +17,23 @@ MODEL2 = "The Perfume Genie 2.0"
 
 
 def _normalize_fw(v: Any) -> str:
-    """Return a string firmware version from various shapes (str/dict/object)."""
+    """Return firmware version as a string from various shapes (str/dict/object)."""
+    if not v:
+        return ""
     if isinstance(v, str):
-        return v
+        return v.strip()
     if isinstance(v, dict):
-        return v.get("version") or v.get("current") or v.get("fw") or str(v)
-    ver = getattr(v, "version", None) or getattr(v, "current", None)
-    return str(ver) if ver is not None else str(v)
+        for key in ("raw", "title", "version", "current", "fw"):
+            val = v.get(key)
+            if isinstance(val, str) and val.strip():
+                return val.strip()
+        return str(v)
+    # object with attributes
+    for attr in ("raw", "title", "version", "current", "fw"):
+        val = getattr(v, attr, None)
+        if isinstance(val, str) and val.strip():
+            return val.strip()
+    return str(v)
 
 
 class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
