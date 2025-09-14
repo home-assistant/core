@@ -239,6 +239,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT light."""
 
     _default_name = DEFAULT_NAME
+    _default_group_icon = "mdi:lightbulb-group"
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
     _topic: dict[str, str | None]
