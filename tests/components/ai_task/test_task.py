@@ -1,6 +1,6 @@
 """Test tasks for the AI Task integration."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
@@ -11,16 +11,16 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import media_source
 from homeassistant.components.ai_task import (
     AITaskEntityFeature,
-    ImageData,
     async_generate_data,
     async_generate_image,
 )
+from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE
 from homeassistant.components.camera import Image
 from homeassistant.components.conversation import async_get_chat_log
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session
+from homeassistant.helpers import chat_session, llm
 from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
@@ -78,10 +78,12 @@ async def test_generate_data_preferred_entity(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
+    llm_api = llm.AssistAPI(hass)
     result = await async_generate_data(
         hass,
         task_name="Test Task",
         instructions="Test prompt",
+        llm_api=llm_api,
     )
     assert result.data == "Mock result"
     as_dict = result.as_dict()
@@ -90,6 +92,12 @@ async def test_generate_data_preferred_entity(
     state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNKNOWN
+
+    with (
+        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert chat_log.llm_api.api is llm_api
 
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(
@@ -237,9 +245,7 @@ async def test_generate_data_mixed_attachments(
         hass,
         dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT + timedelta(seconds=1),
     )
-    await hass.async_block_till_done()  # Need several iterations
-    await hass.async_block_till_done()  # because one iteration of the loop
-    await hass.async_block_till_done()  # simply schedules the cleanup
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify the temporary file cleaned up
     assert not camera_attachment.path.exists()
@@ -251,6 +257,7 @@ async def test_generate_data_mixed_attachments(
     assert media_attachment.path == Path("/media/test.mp4")
 
 
+@freeze_time("2025-06-14 22:59:00")
 async def test_generate_image(
     hass: HomeAssistant,
     init_components: None,
@@ -271,17 +278,26 @@ async def test_generate_image(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    result = await async_generate_image(
-        hass,
-        task_name="Test Task",
-        entity_id=TEST_ENTITY_ID,
-        instructions="Test prompt",
-    )
+    with patch.object(
+        hass.data[DATA_MEDIA_SOURCE],
+        "async_upload_media",
+        return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
+    ) as mock_upload_media:
+        result = await async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id=TEST_ENTITY_ID,
+            instructions="Test prompt",
+        )
+    mock_upload_media.assert_called_once()
     assert "image_data" not in result
-    assert result["media_source_id"].startswith("media-source://ai_task/images/")
-    assert result["media_source_id"].endswith("_test_task.png")
-    assert result["url"].startswith("http://10.10.10.10:8123/api/ai_task/images/")
-    assert result["url"].endswith("_test_task.png")
+    assert (
+        result["media_source_id"]
+        == "media-source://ai_task/image/2025-06-14_225900_test_task.png"
+    )
+    assert result["url"].startswith(
+        "/ai_task/image/2025-06-14_225900_test_task.png?authSig="
+    )
     assert result["mime_type"] == "image/png"
     assert result["model"] == "mock_model"
     assert result["revised_prompt"] == "mock_revised_prompt"
@@ -303,40 +319,3 @@ async def test_generate_image(
             entity_id=TEST_ENTITY_ID,
             instructions="Test prompt",
         )
-
-
-async def test_image_cleanup(
-    hass: HomeAssistant,
-    init_components: None,
-    mock_ai_task_entity: MockAITaskEntity,
-) -> None:
-    """Test image cache cleanup."""
-    image_storage = hass.data.setdefault("ai_task_images", {})
-    image_storage.clear()
-    image_storage.update(
-        {
-            str(idx): ImageData(
-                data=b"mock_image_data",
-                timestamp=int(datetime.now().timestamp()),
-                mime_type="image/png",
-                title="Test Image",
-            )
-            for idx in range(20)
-        }
-    )
-    assert len(image_storage) == 20
-
-    result = await async_generate_image(
-        hass,
-        task_name="Test Task",
-        entity_id=TEST_ENTITY_ID,
-        instructions="Test prompt",
-    )
-
-    assert result["url"].split("/")[-1] in image_storage
-    assert len(image_storage) == 20
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
-    await hass.async_block_till_done()
-
-    assert len(image_storage) == 19
