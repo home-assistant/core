@@ -1,11 +1,11 @@
 """Support for VeSync switches."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 from typing import Any, Final
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import is_outlet, is_wall_switch, rgetattr
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -32,14 +32,14 @@ class VeSyncSwitchEntityDescription(SwitchEntityDescription):
 
     is_on: Callable[[VeSyncBaseDevice], bool]
     exists_fn: Callable[[VeSyncBaseDevice], bool]
-    on_fn: Callable[[VeSyncBaseDevice], bool]
-    off_fn: Callable[[VeSyncBaseDevice], bool]
+    on_fn: Callable[[VeSyncBaseDevice], Awaitable[bool]]
+    off_fn: Callable[[VeSyncBaseDevice], Awaitable[bool]]
 
 
 SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
     VeSyncSwitchEntityDescription(
         key="device_status",
-        is_on=lambda device: device.device_status == "on",
+        is_on=lambda device: device.state.device_status == "on",
         # Other types of wall switches support dimming.  Those use light.py platform.
         exists_fn=lambda device: is_wall_switch(device) or is_outlet(device),
         name=None,
@@ -48,11 +48,13 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
     ),
     VeSyncSwitchEntityDescription(
         key="display",
-        is_on=lambda device: device.display_state,
-        exists_fn=lambda device: rgetattr(device, "display_state") is not None,
+        is_on=lambda device: device.state.display_set_status == "on",
+        exists_fn=(
+            lambda device: rgetattr(device, "state.display_set_status") is not None
+        ),
         translation_key="display",
-        on_fn=lambda device: device.turn_on_display(),
-        off_fn=lambda device: device.turn_off_display(),
+        on_fn=lambda device: device.toggle_display(True),
+        off_fn=lambda device: device.toggle_display(False),
     ),
 )
 
@@ -75,7 +77,9 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
+    _setup_entities(
+        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+    )
 
 
 @callback
@@ -118,16 +122,16 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
         """Return the entity value to represent the entity state."""
         return self.entity_description.is_on(self.device)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        if not self.entity_description.off_fn(self.device):
-            raise HomeAssistantError("An error occurred while turning off.")
+        if not await self.entity_description.off_fn(self.device):
+            raise HomeAssistantError(self.device.last_response.message)
 
         self.schedule_update_ha_state()
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if not self.entity_description.on_fn(self.device):
-            raise HomeAssistantError("An error occurred while turning on.")
+        if not await self.entity_description.on_fn(self.device):
+            raise HomeAssistantError(self.device.last_response.message)
 
         self.schedule_update_ha_state()

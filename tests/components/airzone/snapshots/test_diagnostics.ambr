@@ -340,6 +340,7 @@
             5,
           ]),
           'problems': False,
+          'q-adapt': 0,
         }),
         '2': dict({
           'available': True,
