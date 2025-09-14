@@ -52,16 +52,6 @@ def sensor_descriptions(vehicle_type: str) -> tuple[WazeSensorDescription, ...]:
 
     return (
         WazeSensorDescription(
-            key=ATTR_DURATION,
-            translation_key="duration",
-            icon=VEHICLE_ICONS.get(vehicle_type, ICON_CAR),
-            state_class=SensorStateClass.MEASUREMENT,
-            device_class=SensorDeviceClass.DURATION,
-            native_unit_of_measurement=UnitOfTime.MINUTES,
-            suggested_display_precision=0,
-            value_fn=lambda data: data.duration,
-        ),
-        WazeSensorDescription(
             key=ATTR_DISTANCE,
             translation_key="distance",
             icon=VEHICLE_ICONS.get(vehicle_type, ICON_CAR),
@@ -99,6 +89,9 @@ async def async_setup_entry(
         )
         for sensor_description in sensor_descriptions(options[CONF_VEHICLE_TYPE])
     ]
+    sensors.append(
+        DurationSensor(entry_id, name, coordinator, options[CONF_VEHICLE_TYPE])
+    )
     sensors.append(OriginSensor(entry_id, name, coordinator))
     sensors.append(DestinationSensor(entry_id, name, coordinator))
     async_add_entities(sensors, False)
@@ -133,6 +126,41 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class DurationSensor(WazeTravelTimeSensor):
+    """Sensor holding information about the route origin."""
+
+    def __init__(
+        self,
+        unique_id_prefix: str,
+        name: str,
+        coordinator: WazeTravelTimeCoordinator,
+        vehicle_type: str,
+    ) -> None:
+        """Initialize the sensor."""
+        description = WazeSensorDescription(
+            key=ATTR_DURATION,
+            translation_key="duration",
+            icon=VEHICLE_ICONS.get(vehicle_type, ICON_CAR),
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.DURATION,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
+            suggested_display_precision=0,
+            value_fn=lambda data: data.duration,
+        )
+        super().__init__(unique_id_prefix, name, description, coordinator)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Legacy attributes."""
+        return {
+            "duration": self.coordinator.data.duration,
+            "distance": self.coordinator.data.distance,
+            "route": self.coordinator.data.route,
+            "origin": self.coordinator.data.origin,
+            "destination": self.coordinator.data.destination,
+        }
 
 
 class OriginSensor(WazeTravelTimeSensor):
