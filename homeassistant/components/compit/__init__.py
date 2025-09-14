@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bo
         raise ConfigEntryNotReady(f"Error while connecting to Compit: {e}") from e
     except InvalidAuth as e:
         raise ConfigEntryAuthFailed(
-            f"Invalid credentials for {entry.data['email']}"
+            f"Invalid credentials for {entry.data[CONF_EMAIL]}"
         ) from e
 
     if connected:
