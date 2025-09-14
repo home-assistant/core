@@ -13,6 +13,8 @@ from homeassistant.components.rest.schema import (  # pylint: disable=hass-compo
 )
 from homeassistant.components.scrape import DOMAIN
 from homeassistant.components.scrape.const import (
+    CONF_ADVANCED,
+    CONF_AUTH,
     CONF_ENCODING,
     CONF_INDEX,
     CONF_SELECT,
@@ -57,8 +59,8 @@ async def test_entry_and_subentry(
             {
                 CONF_RESOURCE: "https://www.home-assistant.io",
                 CONF_METHOD: "GET",
-                "auth": {},
-                "advanced": {
+                CONF_AUTH: {},
+                CONF_ADVANCED: {
                     CONF_VERIFY_SSL: True,
                     CONF_TIMEOUT: 10.0,
                 },
@@ -66,12 +68,13 @@ async def test_entry_and_subentry(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["version"] == 2
+    assert result["version"] == 1
+    assert result["minor_version"] == 2
     assert result["options"] == {
         CONF_RESOURCE: "https://www.home-assistant.io",
         CONF_METHOD: "GET",
-        "auth": {},
-        "advanced": {
+        CONF_AUTH: {},
+        CONF_ADVANCED: {
             CONF_VERIFY_SSL: True,
             CONF_TIMEOUT: 10.0,
             CONF_ENCODING: "UTF-8",
@@ -91,14 +94,14 @@ async def test_entry_and_subentry(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_INDEX: 0, CONF_SELECT: ".current-version h1", "advanced": {}},
+        {CONF_INDEX: 0, CONF_SELECT: ".current-version h1", CONF_ADVANCED: {}},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_INDEX: 0,
         CONF_SELECT: ".current-version h1",
-        "advanced": {},
+        CONF_ADVANCED: {},
     }
 
 
@@ -123,8 +126,8 @@ async def test_form_with_post(
                 CONF_RESOURCE: "https://www.home-assistant.io",
                 CONF_METHOD: "GET",
                 CONF_PAYLOAD: "POST",
-                "auth": {},
-                "advanced": {
+                CONF_AUTH: {},
+                CONF_ADVANCED: {
                     CONF_VERIFY_SSL: True,
                     CONF_TIMEOUT: 10.0,
                 },
@@ -132,13 +135,14 @@ async def test_form_with_post(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["version"] == 2
+    assert result["version"] == 1
+    assert result["minor_version"] == 2
     assert result["options"] == {
         CONF_RESOURCE: "https://www.home-assistant.io",
         CONF_METHOD: "GET",
         CONF_PAYLOAD: "POST",
-        "auth": {},
-        "advanced": {
+        CONF_AUTH: {},
+        CONF_ADVANCED: {
             CONF_VERIFY_SSL: True,
             CONF_TIMEOUT: 10.0,
             CONF_ENCODING: "UTF-8",
@@ -170,8 +174,8 @@ async def test_flow_fails(
             user_input={
                 CONF_RESOURCE: "https://www.home-assistant.io",
                 CONF_METHOD: "GET",
-                "auth": {},
-                "advanced": {
+                CONF_AUTH: {},
+                CONF_ADVANCED: {
                     CONF_VERIFY_SSL: True,
                     CONF_TIMEOUT: 10.0,
                 },
@@ -189,8 +193,8 @@ async def test_flow_fails(
             user_input={
                 CONF_RESOURCE: "https://www.home-assistant.io",
                 CONF_METHOD: "GET",
-                "auth": {},
-                "advanced": {
+                CONF_AUTH: {},
+                CONF_ADVANCED: {
                     CONF_VERIFY_SSL: True,
                     CONF_TIMEOUT: 10.0,
                 },
@@ -208,8 +212,8 @@ async def test_flow_fails(
             {
                 CONF_RESOURCE: "https://www.home-assistant.io",
                 CONF_METHOD: "GET",
-                "auth": {},
-                "advanced": {
+                CONF_AUTH: {},
+                CONF_ADVANCED: {
                     CONF_VERIFY_SSL: True,
                     CONF_TIMEOUT: 10.0,
                 },
@@ -221,8 +225,8 @@ async def test_flow_fails(
     assert result["options"] == {
         CONF_RESOURCE: "https://www.home-assistant.io",
         CONF_METHOD: "GET",
-        "auth": {},
-        "advanced": {
+        CONF_AUTH: {},
+        CONF_ADVANCED: {
             CONF_VERIFY_SSL: True,
             CONF_TIMEOUT: 10.0,
             CONF_ENCODING: "UTF-8",
@@ -250,11 +254,11 @@ async def test_options_resource_flow(
             user_input={
                 CONF_RESOURCE: "https://www.home-assistant.io",
                 CONF_METHOD: DEFAULT_METHOD,
-                "auth": {
+                CONF_AUTH: {
                     CONF_USERNAME: "secret_username",
                     CONF_PASSWORD: "secret_password",
                 },
-                "advanced": {
+                CONF_ADVANCED: {
                     CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
                     CONF_TIMEOUT: DEFAULT_TIMEOUT,
                     CONF_ENCODING: DEFAULT_ENCODING,
@@ -267,11 +271,11 @@ async def test_options_resource_flow(
     assert result["data"] == {
         CONF_RESOURCE: "https://www.home-assistant.io",
         CONF_METHOD: "GET",
-        "auth": {
+        CONF_AUTH: {
             CONF_USERNAME: "secret_username",
             CONF_PASSWORD: "secret_password",
         },
-        "advanced": {
+        CONF_ADVANCED: {
             CONF_VERIFY_SSL: True,
             CONF_TIMEOUT: 10.0,
             CONF_ENCODING: "UTF-8",

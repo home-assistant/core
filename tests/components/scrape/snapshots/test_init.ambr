@@ -1,51 +1,5 @@
 # serializer version: 1
-# name: test_migrate_from_version_1_to_2[config_entry]
-  ConfigEntrySnapshot({
-    'data': dict({
-    }),
-    'disabled_by': None,
-    'discovery_keys': dict({
-    }),
-    'domain': 'scrape',
-    'entry_id': <ANY>,
-    'minor_version': 1,
-    'options': dict({
-      'advanced': dict({
-        'encoding': 'UTF-8',
-        'timeout': 10.0,
-        'verify_ssl': True,
-      }),
-      'auth': dict({
-        'password': 'pass',
-        'username': 'user',
-      }),
-      'method': 'GET',
-      'resource': 'http://www.home-assistant.io',
-    }),
-    'pref_disable_new_entities': False,
-    'pref_disable_polling': False,
-    'source': 'user',
-    'subentries': list([
-      dict({
-        'data': dict({
-          'advanced': dict({
-            'value_template': '{{ value }}',
-          }),
-          'index': 0,
-          'select': '.release-date',
-        }),
-        'subentry_id': '01JZQ1G63X2DX66GZ9ZTFY9PEH',
-        'subentry_type': 'entity',
-        'title': 'Current version',
-        'unique_id': None,
-      }),
-    ]),
-    'title': 'Mock Title',
-    'unique_id': None,
-    'version': 2,
-  })
-# ---
-# name: test_migrate_from_version_1_to_2[device_registry]
+# name: test_migrate_from_version_1_to_1_2[device_registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -78,7 +32,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_migrate_from_version_1_to_2[entity_registry]
+# name: test_migrate_from_version_1_to_1_2[entity_registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -111,5 +65,97 @@
     'translation_key': None,
     'unique_id': '01JZQ1G63X2DX66GZ9ZTFY9PEH',
     'unit_of_measurement': None,
+  })
+# ---
+# name: test_migrate_from_version_1_to_1_2[post_migration_config_entry]
+  ConfigEntrySnapshot({
+    'data': dict({
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'scrape',
+    'entry_id': <ANY>,
+    'minor_version': 2,
+    'options': dict({
+      'advanced': dict({
+        'encoding': 'UTF-8',
+        'timeout': 10.0,
+        'verify_ssl': True,
+      }),
+      'auth': dict({
+        'password': 'pass',
+        'username': 'user',
+      }),
+      'method': 'GET',
+      'resource': 'http://www.home-assistant.io',
+      'sensor': list([
+        dict({
+          'index': 0,
+          'select': '.release-date',
+          'unique_id': 'a0bde946-5c96-11f0-b55f-0242ac110002',
+          'value_template': '{{ value }}',
+        }),
+      ]),
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'subentries': list([
+      dict({
+        'data': dict({
+          'advanced': dict({
+            'value_template': '{{ value }}',
+          }),
+          'index': 0,
+          'select': '.release-date',
+        }),
+        'subentry_id': '01JZQ1G63X2DX66GZ9ZTFY9PEH',
+        'subentry_type': 'entity',
+        'title': 'Current version',
+        'unique_id': None,
+      }),
+    ]),
+    'title': 'Mock Title',
+    'unique_id': None,
+    'version': 1,
+  })
+# ---
+# name: test_migrate_from_version_1_to_1_2[pre_migration_config_entry]
+  ConfigEntrySnapshot({
+    'data': dict({
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'scrape',
+    'entry_id': <ANY>,
+    'minor_version': 1,
+    'options': dict({
+      'encoding': 'UTF-8',
+      'method': 'GET',
+      'password': 'pass',
+      'resource': 'http://www.home-assistant.io',
+      'sensor': list([
+        dict({
+          'index': 0,
+          'name': 'Current version',
+          'select': '.release-date',
+          'unique_id': 'a0bde946-5c96-11f0-b55f-0242ac110002',
+          'value_template': '{{ value }}',
+        }),
+      ]),
+      'timeout': 10.0,
+      'username': 'user',
+      'verify_ssl': True,
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'subentries': list([
+    ]),
+    'title': 'Mock Title',
+    'unique_id': None,
+    'version': 1,
   })
 # ---
