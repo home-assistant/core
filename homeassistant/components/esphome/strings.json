@@ -91,7 +91,7 @@
           "subscribe_logs": "Subscribe to logs from the device."
         },
         "data_description": {
-          "allow_service_calls": "When enabled, ESPHome devices can perform Home Assistant actions, such as calling actions or sending events. Only enable this if you trust the device.",
+          "allow_service_calls": "When enabled, ESPHome devices can perform Home Assistant actions, such as calling services or sending events. Only enable this if you trust the device.",
           "subscribe_logs": "When enabled, the device will send logs to Home Assistant and you can view them in the logs panel."
         }
       }
