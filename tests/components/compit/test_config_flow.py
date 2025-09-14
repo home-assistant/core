@@ -34,10 +34,8 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
     """Test user step with successful authentication."""
     with (
         patch(
-            "homeassistant.components.compit.config_flow.CompitAPI.authenticate",
-            return_value=SystemInfo(
-                gates=[Gate(label="Test", code="1", devices=[], id=1)]
-            ),
+            "homeassistant.components.compit.config_flow.CompitApiConnector.init",
+            return_value=True,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -51,7 +49,7 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Compit"
+        assert result["title"] == CONFIG_INPUT[CONF_EMAIL]
         assert result["data"] == CONFIG_INPUT
 
 
@@ -71,7 +69,7 @@ async def test_async_step_user_invalid(
     """Test user step with invalid authentication."""
     with (
         patch(
-            "homeassistant.components.compit.config_flow.CompitAPI.authenticate",
+            "homeassistant.components.compit.config_flow.CompitApiConnector.init",
             side_effect=exception,
         ),
     ):
@@ -95,10 +93,8 @@ async def test_async_step_reauth_confirm_success(
     """Test reauth confirm step with successful authentication."""
     with (
         patch(
-            "homeassistant.components.compit.config_flow.CompitAPI.authenticate",
-            return_value=SystemInfo(
-                gates=[Gate(label="Test", code="1", devices=[], id=1)]
-            ),
+            "homeassistant.components.compit.config_flow.CompitApiConnector.init",
+            return_value=True,
         ),
     ):
         mock_reauth_entry.add_to_hass(hass)
@@ -138,7 +134,7 @@ async def test_async_step_reauth_confirm_invalid(
     """Test reauth confirm step with invalid authentication."""
     with (
         patch(
-            "homeassistant.components.compit.config_flow.CompitAPI.authenticate",
+            "homeassistant.components.compit.config_flow.CompitApiConnector.init",
             side_effect=exception,
         ),
     ):
@@ -161,10 +157,10 @@ async def test_async_step_reauth_confirm_invalid(
 async def test_async_step_user_success_after_error(hass: HomeAssistant) -> None:
     """Test user step succeeds after an error is cleared."""
     with patch(
-        "homeassistant.components.compit.config_flow.CompitAPI.authenticate",
+        "homeassistant.components.compit.config_flow.CompitApiConnector.init",
         side_effect=[
             CannotConnect,
-            SystemInfo(gates=[Gate(label="Test", code="1", devices=[], id=1)]),
+            True,
         ],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -183,7 +179,7 @@ async def test_async_step_user_success_after_error(hass: HomeAssistant) -> None:
             result["flow_id"], CONFIG_INPUT
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Compit"
+        assert result["title"] == CONFIG_INPUT[CONF_EMAIL]
         assert result["data"] == CONFIG_INPUT
 
 
@@ -192,10 +188,10 @@ async def test_async_step_reauth_confirm_success_after_error(
 ) -> None:
     """Test reauth confirm step succeeds after an error is cleared."""
     with patch(
-        "homeassistant.components.compit.config_flow.CompitAPI.authenticate",
+        "homeassistant.components.compit.config_flow.CompitApiConnector.init",
         side_effect=[
             InvalidAuth,
-            SystemInfo(gates=[Gate(label="Test", code="1", devices=[], id=1)]),
+            True,
         ],
     ):
         mock_reauth_entry.add_to_hass(hass)
