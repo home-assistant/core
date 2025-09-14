@@ -37,8 +37,8 @@
           "data": {
             "stop_id": "Stop ID",
             "name": "[%key:common::config_flow::data::name%]",
-            "route": "[%key:component::transport_nsw::config::step::user::data::route%]",
-            "destination": "[%key:component::transport_nsw::config::step::user::data::destination%]"
+            "route": "[%%key:common::config_flow::data::route%]",
+            "destination": "[%%key:common::config_flow::data::destination%]"
           }
         },
         "reconfigure": {
@@ -47,8 +47,8 @@
           "data": {
             "stop_id": "Stop ID",
             "name": "[%key:common::config_flow::data::name%]",
-            "route": "[%key:component::transport_nsw::config::step::user::data::route%]",
-            "destination": "[%key:component::transport_nsw::config::step::user::data::destination%]"
+            "route": "[%%key:common::config_flow::data::route%]",
+            "destination": "[%%key:common::config_flow::data::destination%]"
           }
         }
       },
