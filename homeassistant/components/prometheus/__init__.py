@@ -66,6 +66,7 @@ from homeassistant.core import Event, EventStateChangedData, HomeAssistant, Stat
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
     entityfilter,
     state as state_helper,
@@ -147,6 +148,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
     metrics = PrometheusMetrics(
@@ -157,6 +159,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         override_metric,
         default_metric,
         area_registry,
+        device_registry,
         entity_registry,
     )
 
@@ -211,6 +214,7 @@ class PrometheusMetrics:
         override_metric: str | None,
         default_metric: str | None,
         area_registry: ar.AreaRegistry,
+        device_registry: dr.DeviceRegistry,
         entity_registry: er.EntityRegistry,
     ) -> None:
         """Initialize Prometheus Metrics."""
@@ -246,10 +250,10 @@ class PrometheusMetrics:
                 area.id, area.name, area.normalized_name
             )
 
+        self.device_registry = device_registry
         self.entity_registry = entity_registry
-        self.entity_area_cache: dict[
-            str, str | None
-        ] = {}  # Populated on-demand, invalidated in handle_entity_registry_updated
+        # Populated on-demand, invalidated in handle_entity_registry_updated
+        self.entity_area_cache: dict[str, str | None] = {}
 
     def handle_state_changed_event(self, event: Event[EventStateChangedData]) -> None:
         """Handle new messages from the bus."""
@@ -331,6 +335,11 @@ class PrometheusMetrics:
                 metrics_entity_id = entity_id
 
             if entity_id and "area_id" in changes:
+                _LOGGER.debug(
+                    "Entity %s got a new area: %s. Invalidating entity->area cache",
+                    entity_id,
+                    changes["area_id"],
+                )
                 del self.entity_area_cache[entity_id]
 
         if metrics_entity_id:
@@ -488,7 +497,29 @@ class PrometheusMetrics:
             if entity is None:
                 _LOGGER.error("Cannot find RegistryEntry for entity %s", entity_id)
                 return defaults
-            self.entity_area_cache[entity_id] = entity.area_id
+
+            if entity.area_id is None and entity.device_id is not None:
+                _LOGGER.debug(
+                    "Entity has no area, but has device, looking up device's area"
+                )
+                device = self.device_registry.async_get(entity.device_id)
+                if device is None:
+                    _LOGGER.error(
+                        "Cannot find device for entity %s (device id=%s)",
+                        entity_id,
+                        entity.device_id,
+                    )
+                    return defaults
+
+                _LOGGER.debug(
+                    "Caching area for entity: %s -> %s", entity_id, device.area_id
+                )
+                self.entity_area_cache[entity_id] = device.area_id
+            else:
+                _LOGGER.debug(
+                    "Caching area for entity: %s -> %s", entity_id, entity.area_id
+                )
+                self.entity_area_cache[entity_id] = entity.area_id
 
         entity_area_id = self.entity_area_cache[entity_id]
         if entity_area_id is None:
