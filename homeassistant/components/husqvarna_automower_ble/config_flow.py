@@ -67,7 +67,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Husqvarna Bluetooth."""
 
     VERSION = 1
-    MINOR_VERSION = 1
 
     address: str | None = None
     mower_name: str = ""

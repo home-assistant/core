@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN, LOGGER
 from .coordinator import HusqvarnaCoordinator
@@ -23,31 +22,6 @@ PLATFORMS = [
     Platform.LAWN_MOWER,
     Platform.SENSOR,
 ]
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> bool:
-    """Migrate old entry."""
-
-    LOGGER.debug(
-        "Migrating configuration from version %s.%s",
-        entry.version,
-        entry.minor_version,
-    )
-
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
-    if entry.version == 1:
-        if entry.minor_version < 1:
-            # Migrate from version 1.0 to 1.1
-            new_data = entry.data.copy()
-            new_data[CONF_ADDRESS] = format_mac(entry.data[CONF_ADDRESS])
-            hass.config_entries.async_update_entry(
-                entry, data=new_data, version=1, minor_version=1
-            )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> bool:
