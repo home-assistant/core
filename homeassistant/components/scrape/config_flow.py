@@ -63,6 +63,8 @@ from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 
 from . import COMBINED_SCHEMA
 from .const import (
+    CONF_ADVANCED,
+    CONF_AUTH,
     CONF_ENCODING,
     CONF_INDEX,
     CONF_SELECT,
@@ -83,7 +85,7 @@ RESOURCE_SETUP = vol.Schema(
             SelectSelectorConfig(options=METHODS, mode=SelectSelectorMode.DROPDOWN)
         ),
         vol.Optional(CONF_PAYLOAD): ObjectSelector(),
-        vol.Required("auth"): data_entry_flow.section(
+        vol.Required(CONF_AUTH): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_AUTHENTICATION): SelectSelector(
@@ -110,7 +112,7 @@ RESOURCE_SETUP = vol.Schema(
             ),
             data_entry_flow.SectionConfig(collapsed=True),
         ),
-        vol.Required("advanced"): data_entry_flow.section(
+        vol.Required(CONF_ADVANCED): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_HEADERS): ObjectSelector(),
@@ -140,7 +142,7 @@ SENSOR_SETUP = vol.Schema(
             ),
             vol.Coerce(int),
         ),
-        vol.Required("advanced"): data_entry_flow.section(
+        vol.Required(CONF_ADVANCED): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_ATTRIBUTE): TextSelector(),
@@ -188,8 +190,8 @@ async def validate_rest_setup(
 ) -> dict[str, Any]:
     """Validate rest setup."""
     config = deepcopy(user_input)
-    config.update(config.pop("advanced", {}))
-    config.update(config.pop("auth", {}))
+    config.update(config.pop(CONF_ADVANCED, {}))
+    config.update(config.pop(CONF_AUTH, {}))
     rest_config: dict[str, Any] = COMBINED_SCHEMA(config)
     try:
         rest = create_rest_data_from_config(hass, rest_config)
@@ -205,7 +207,8 @@ async def validate_rest_setup(
 class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Scrape configuration flow."""
 
-    VERSION = 2
+    VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
