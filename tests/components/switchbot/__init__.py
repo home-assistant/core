@@ -1056,3 +1056,27 @@ RGBICWW_FLOOR_LAMP_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+PLUG_MINI_EU_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Plug Mini (EU)",
+    manufacturer_data={
+        2409: b"\x94\xa9\x90T\x85^?\xa1\x00\x00\x04\xe6\x00\x00\x00\x00",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"?\x00\x00\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Plug Mini (EU)",
+        manufacturer_data={
+            2409: b"\x94\xa9\x90T\x85^?\xa1\x00\x00\x04\xe6\x00\x00\x00\x00",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"?\x00\x00\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Plug Mini (EU)"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
