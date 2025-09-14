@@ -583,7 +583,6 @@ async def test_register_entity_service_non_entity_service_schema(
             vol.All(cv.make_entity_service_schema({"some": str})),
         )
     ):
-        expected_message = f"The test_domain.hello_{idx} service registers an entity service with a non entity service schema"
         component.async_register_entity_service(f"test_service_{idx}", schema, Mock())
 
 
