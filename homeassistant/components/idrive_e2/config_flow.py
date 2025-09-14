@@ -97,7 +97,7 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, {}),
+            data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
 
@@ -126,11 +126,11 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        # Information should be available from the previous step
+        assert self._endpoint_url is not None
+        assert self._access_key is not None
+        assert self._secret_key is not None
         try:
-            # Information should be available from the previous step
-            assert self._endpoint_url is not None
-            assert self._access_key is not None
-            assert self._secret_key is not None
             # List buckets using the provided credentials
             buckets = await self.hass.async_add_executor_job(
                 _list_buckets,

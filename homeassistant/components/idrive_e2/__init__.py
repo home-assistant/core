@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 import boto3
 from botocore.exceptions import ClientError, ConnectionError
@@ -57,21 +56,20 @@ def _initialize_client(
 async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> bool:
     """Set up IDrive e2 from a config entry."""
 
-    data = cast(dict, entry.data)
     try:
         client = await hass.async_add_executor_job(
             _initialize_client,
-            data[CONF_ENDPOINT_URL],
-            data[CONF_ACCESS_KEY_ID],
-            data[CONF_SECRET_ACCESS_KEY],
-            data[CONF_BUCKET],
+            entry.data[CONF_ENDPOINT_URL],
+            entry.data[CONF_ACCESS_KEY_ID],
+            entry.data[CONF_SECRET_ACCESS_KEY],
+            entry.data[CONF_BUCKET],
         )
     except ClientError as err:
         if "Not Found" in str(err):
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="bucket_not_found",
-                translation_placeholders={"bucket": data[CONF_BUCKET]},
+                translation_placeholders={"bucket": entry.data[CONF_BUCKET]},
             ) from err
 
         raise ConfigEntryError(

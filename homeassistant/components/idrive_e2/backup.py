@@ -297,12 +297,14 @@ class IDriveE2BackupAgent(BackupAgent):
         # Delete both the backup file and its metadata file
         await self._hass.async_add_executor_job(
             functools.partial(
-                self._client.delete_object, Bucket=self._bucket, Key=tar_filename
-            )
-        )
-        await self._hass.async_add_executor_job(
-            functools.partial(
-                self._client.delete_object, Bucket=self._bucket, Key=metadata_filename
+                self._client.delete_objects,
+                Bucket=self._bucket,
+                Delete={
+                    "Objects": [
+                        {"Key": tar_filename},
+                        {"Key": metadata_filename},
+                    ]
+                },
             )
         )
 

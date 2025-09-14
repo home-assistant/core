@@ -17,7 +17,7 @@
           "bucket": "Bucket name"
         },
         "data_description": {
-          "bucket": "Bucket must be writable by the provided credentials."
+          "bucket": "The name of the bucket to store the Home Assistant backups in."
         },
         "title": "Select IDrive e2 bucket"
       }
