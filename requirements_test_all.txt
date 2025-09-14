@@ -235,7 +235,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==40.1.0
+aioesphomeapi==40.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -256,7 +256,7 @@ aiohasupervisor==0.3.2
 aiohomeconnect==0.19.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.16
+aiohomekit==3.2.17
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -953,7 +953,7 @@ gotailwind==0.3.0
 govee-ble==0.44.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==2.1.0
+govee-local-api==2.2.0
 
 # homeassistant.components.gpsd
 gps3==0.33.3
@@ -1027,7 +1027,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.79
+holidays==0.80
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250903.5
@@ -1706,7 +1706,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==1.0.0
+pyicloud==2.0.3
 
 # homeassistant.components.insteon
 pyinsteon==1.6.3
