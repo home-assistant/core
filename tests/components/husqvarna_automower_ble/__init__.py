@@ -17,7 +17,6 @@ AUTOMOWER_SERVICE_INFO = BluetoothServiceInfo(
     manufacturer_data={1062: b"\x05\x04\xbf\xcf\xbb\r"},
     service_uuids=[
         "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
-        "00001800-0000-1000-8000-00805f9b34fb",
     ],
     source="local",
 )
@@ -30,7 +29,6 @@ AUTOMOWER_UNNAMED_SERVICE_INFO = BluetoothServiceInfo(
     manufacturer_data={1062: b"\x05\x04\xbf\xcf\xbb\r"},
     service_uuids=[
         "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
-        "00001800-0000-1000-8000-00805f9b34fb",
     ],
     source="local",
 )
@@ -43,7 +41,6 @@ AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO = BluetoothServiceInfo(
     manufacturer_data={},
     service_uuids=[
         "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
-        "00001800-0000-1000-8000-00805f9b34fb",
     ],
     source="local",
 )

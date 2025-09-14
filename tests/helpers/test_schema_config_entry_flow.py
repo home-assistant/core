@@ -317,7 +317,9 @@ async def test_menu_step(hass: HomeAssistant) -> None:
     """Test menu step."""
 
     MENU_1 = ["option1", "option2"]
-    MENU_2 = ["option3", "option4"]
+
+    async def menu_2(handler: SchemaCommonFlowHandler) -> list[str]:
+        return ["option3", "option4"]
 
     async def _option1_next_step(_: dict[str, Any]) -> str:
         return "menu2"
@@ -325,7 +327,7 @@ async def test_menu_step(hass: HomeAssistant) -> None:
     CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         "user": SchemaFlowMenuStep(MENU_1),
         "option1": SchemaFlowFormStep(vol.Schema({}), next_step=_option1_next_step),
-        "menu2": SchemaFlowMenuStep(MENU_2),
+        "menu2": SchemaFlowMenuStep(menu_2),
         "option3": SchemaFlowFormStep(vol.Schema({}), next_step="option4"),
         "option4": SchemaFlowFormStep(vol.Schema({})),
     }

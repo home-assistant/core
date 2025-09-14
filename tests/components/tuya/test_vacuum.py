@@ -13,7 +13,7 @@ from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
 )
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -58,7 +58,7 @@ async def test_return_home(
         VACUUM_DOMAIN,
         SERVICE_RETURN_TO_BASE,
         {
-            "entity_id": entity_id,
+            ATTR_ENTITY_ID: entity_id,
         },
         blocking=True,
     )

@@ -70,6 +70,14 @@ CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kCritical: "critical",
 }
 
+EVE_CLUSTER_WEATHER_MAP = {
+    # enum with known Weather state values which we can translate
+    1: "sunny",
+    3: "cloudy",
+    6: "rainy",
+    14: "stormy",
+}
+
 OPERATIONAL_STATE_MAP = {
     # enum with known Operation state values which we can translate
     clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "stopped",
@@ -516,6 +524,19 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.Pressure,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EveWeatherWeatherTrend",
+            translation_key="eve_weather_trend",
+            device_class=SensorDeviceClass.ENUM,
+            native_unit_of_measurement=None,
+            options=[x for x in EVE_CLUSTER_WEATHER_MAP.values() if x is not None],
+            device_to_ha=EVE_CLUSTER_WEATHER_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveCluster.Attributes.WeatherTrend,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1348,5 +1369,20 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.PumpConfigurationAndControl.Attributes.Speed,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ValveConfigurationAndControlAutoCloseTime",
+            translation_key="auto_close_time",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            state_class=None,
+            device_to_ha=(lambda x: dt_util.utc_from_timestamp(x) if x > 0 else None),
+        ),
+        entity_class=MatterSensor,
+        featuremap_contains=clusters.ValveConfigurationAndControl.Bitmaps.Feature.kTimeSync,
+        required_attributes=(
+            clusters.ValveConfigurationAndControl.Attributes.AutoCloseTime,
+        ),
     ),
 ]

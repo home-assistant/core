@@ -9,11 +9,12 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.select import (
+    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.tuya import ManagerCompat
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -58,8 +59,8 @@ async def test_select_option(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            "entity_id": entity_id,
-            "option": "forward",
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_OPTION: "forward",
         },
         blocking=True,
     )
@@ -89,8 +90,8 @@ async def test_select_invalid_option(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                "entity_id": entity_id,
-                "option": "hello",
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_OPTION: "hello",
             },
             blocking=True,
         )

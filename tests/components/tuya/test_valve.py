@@ -14,7 +14,7 @@ from homeassistant.components.valve import (
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
 )
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -58,7 +58,7 @@ async def test_open_valve(
         VALVE_DOMAIN,
         SERVICE_OPEN_VALVE,
         {
-            "entity_id": entity_id,
+            ATTR_ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -87,7 +87,7 @@ async def test_close_valve(
         VALVE_DOMAIN,
         SERVICE_CLOSE_VALVE,
         {
-            "entity_id": entity_id,
+            ATTR_ENTITY_ID: entity_id,
         },
         blocking=True,
     )

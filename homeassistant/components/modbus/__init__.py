@@ -479,7 +479,8 @@ MODBUS_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 SERIAL_SCHEMA = MODBUS_SCHEMA.extend(

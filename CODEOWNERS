@@ -87,6 +87,8 @@ build.json @home-assistant/supervisor
 /tests/components/airzone/ @Noltari
 /homeassistant/components/airzone_cloud/ @Noltari
 /tests/components/airzone_cloud/ @Noltari
+/homeassistant/components/aladdin_connect/ @swcloudgenie
+/tests/components/aladdin_connect/ @swcloudgenie
 /homeassistant/components/alarm_control_panel/ @home-assistant/core
 /tests/components/alarm_control_panel/ @home-assistant/core
 /homeassistant/components/alert/ @home-assistant/core @frenck
@@ -422,6 +424,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/emby/ @mezz64
 /homeassistant/components/emoncms/ @borpin @alexandrecuer
 /tests/components/emoncms/ @borpin @alexandrecuer
+/homeassistant/components/emoncms_history/ @alexandrecuer
+/tests/components/emoncms_history/ @alexandrecuer
 /homeassistant/components/emonitor/ @bdraco
 /tests/components/emonitor/ @bdraco
 /homeassistant/components/emulated_hue/ @bdraco @Tho85
@@ -438,8 +442,8 @@ build.json @home-assistant/supervisor
 /tests/components/enigma2/ @autinerd
 /homeassistant/components/enocean/ @bdurrer
 /tests/components/enocean/ @bdurrer
-/homeassistant/components/enphase_envoy/ @bdraco @cgarwood @joostlek @catsmanac
-/tests/components/enphase_envoy/ @bdraco @cgarwood @joostlek @catsmanac
+/homeassistant/components/enphase_envoy/ @bdraco @cgarwood @catsmanac
+/tests/components/enphase_envoy/ @bdraco @cgarwood @catsmanac
 /homeassistant/components/entur_public_transport/ @hfurubotten
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
@@ -511,8 +515,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/forked_daapd/ @uvjustin
 /tests/components/forked_daapd/ @uvjustin
 /homeassistant/components/fortios/ @kimfrellsen
-/homeassistant/components/foscam/ @krmarien
-/tests/components/foscam/ @krmarien
+/homeassistant/components/foscam/ @Foscam-wangzhengyu
+/tests/components/foscam/ @Foscam-wangzhengyu
 /homeassistant/components/freebox/ @hacf-fr @Quentame
 /tests/components/freebox/ @hacf-fr @Quentame
 /homeassistant/components/freedompro/ @stefano055415
@@ -856,6 +860,8 @@ build.json @home-assistant/supervisor
 /tests/components/lg_netcast/ @Drafteed @splinter98
 /homeassistant/components/lg_thinq/ @LG-ThinQ-Integration
 /tests/components/lg_thinq/ @LG-ThinQ-Integration
+/homeassistant/components/libre_hardware_monitor/ @Sab44
+/tests/components/libre_hardware_monitor/ @Sab44
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/lifx/ @Djelibeybi
@@ -1181,6 +1187,8 @@ build.json @home-assistant/supervisor
 /tests/components/plum_lightpad/ @ColinHarrington @prystupa
 /homeassistant/components/point/ @fredrike
 /tests/components/point/ @fredrike
+/homeassistant/components/pooldose/ @lmaertin
+/tests/components/pooldose/ @lmaertin
 /homeassistant/components/poolsense/ @haemishkyd
 /tests/components/poolsense/ @haemishkyd
 /homeassistant/components/powerfox/ @klaasnicolaas

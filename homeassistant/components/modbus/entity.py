@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
 from collections.abc import Callable
+import copy
 from datetime import datetime, timedelta
 import struct
 from typing import Any, cast
@@ -28,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, ToggleEntity
-from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -90,9 +90,7 @@ class BasePlatform(Entity):
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
-        self._cancel_timer: Callable[[], None] | None = None
         self._cancel_call: Callable[[], None] | None = None
-
         self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
@@ -109,42 +107,64 @@ class BasePlatform(Entity):
         self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
         self._nan_value = entry.get(CONF_NAN_VALUE)
         self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
-        self._update_lock = asyncio.Lock()
 
     @abstractmethod
     async def _async_update(self) -> None:
         """Virtual function to be overwritten."""
 
-    async def async_update(self, now: datetime | None = None) -> None:
+    async def async_update(self) -> None:
         """Update the entity state."""
-        async with self._update_lock:
-            await self._async_update()
+        if self._cancel_call:
+            self._cancel_call()
+        await self.async_local_update()
+
+    async def async_local_update(self, now: datetime | None = None) -> None:
+        """Update the entity state."""
+        await self._async_update()
+        self.async_write_ha_state()
+        if self._scan_interval > 0:
+            self._cancel_call = async_call_later(
+                self.hass,
+                timedelta(seconds=self._scan_interval),
+                self.async_local_update,
+            )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove entity from hass."""
+        _LOGGER.debug(f"Removing entity {self._attr_name}")
+        if self._cancel_call:
+            self._cancel_call()
+            self._cancel_call = None
+
+    @callback
+    def async_hold(self) -> None:
+        """Remote stop entity."""
+        _LOGGER.debug(f"hold entity {self._attr_name}")
+        self._async_cancel_future_pending_update()
+        self._attr_available = False
+        self.async_write_ha_state()
 
     async def _async_update_write_state(self) -> None:
         """Update the entity state and write it to the state machine."""
-        await self.async_update()
-        self.async_write_ha_state()
+        if self._cancel_call:
+            self._cancel_call()
+            self._cancel_call = None
+        await self.async_local_update()
 
     async def _async_update_if_not_in_progress(
         self, now: datetime | None = None
     ) -> None:
         """Update the entity state if not already in progress."""
-        if self._update_lock.locked():
-            _LOGGER.debug("Update for entity %s is already in progress", self.name)
-            return
         await self._async_update_write_state()
 
     @callback
     def async_run(self) -> None:
         """Remote start entity."""
-        self._async_cancel_update_polling()
+        _LOGGER.info(f"start entity {self._attr_name}")
         self._async_schedule_future_update(0.1)
-        if self._scan_interval > 0:
-            self._cancel_timer = async_track_time_interval(
-                self.hass,
-                self._async_update_if_not_in_progress,
-                timedelta(seconds=self._scan_interval),
-            )
+        self._cancel_call = async_call_later(
+            self.hass, timedelta(seconds=0.1), self.async_local_update
+        )
         self._attr_available = True
         self.async_write_ha_state()
 
@@ -163,23 +183,20 @@ class BasePlatform(Entity):
             self._cancel_call()
             self._cancel_call = None
 
-    def _async_cancel_update_polling(self) -> None:
-        """Cancel the polling."""
-        if self._cancel_timer:
-            self._cancel_timer()
-            self._cancel_timer = None
-
-    @callback
-    def async_hold(self) -> None:
-        """Remote stop entity."""
-        self._async_cancel_future_pending_update()
-        self._async_cancel_update_polling()
-        self._attr_available = False
-        self.async_write_ha_state()
+    async def async_await_connection(self, _now: Any) -> None:
+        """Wait for first connect."""
+        await self._hub.event_connected.wait()
+        self.async_run()
 
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
-        self.async_run()
+        self.async_on_remove(
+            async_call_later(
+                self.hass,
+                self._hub.config_delay + 0.1,
+                self.async_await_connection,
+            )
+        )
         self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_hold)
         )
@@ -264,7 +281,9 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         """Convert registers to proper result."""
 
         if self._swap:
-            registers = self._swap_registers(registers, self._slave_count)
+            registers = self._swap_registers(
+                copy.deepcopy(registers), self._slave_count
+            )
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
             return byte_string.decode()

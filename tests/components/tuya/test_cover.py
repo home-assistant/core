@@ -9,6 +9,9 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
@@ -16,7 +19,7 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_TILT_POSITION,
 )
 from homeassistant.components.tuya import ManagerCompat
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
@@ -62,10 +65,10 @@ async def test_open_service(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
         {
-            "entity_id": entity_id,
+            ATTR_ENTITY_ID: entity_id,
         },
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id,
         [
@@ -96,10 +99,10 @@ async def test_close_service(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
         {
-            "entity_id": entity_id,
+            ATTR_ENTITY_ID: entity_id,
         },
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id,
         [
@@ -129,11 +132,11 @@ async def test_set_position(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
         {
-            "entity_id": entity_id,
-            "position": 25,
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_POSITION: 25,
         },
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id,
         [
@@ -173,7 +176,7 @@ async def test_percent_state_on_cover(
 
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
-    assert state.attributes["current_position"] == percent_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == percent_state
 
 
 @pytest.mark.parametrize(
@@ -197,8 +200,8 @@ async def test_set_tilt_position_not_supported(
             COVER_DOMAIN,
             SERVICE_SET_COVER_TILT_POSITION,
             {
-                "entity_id": entity_id,
-                "tilt_position": 50,
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_TILT_POSITION: 50,
             },
             blocking=True,
         )
