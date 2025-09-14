@@ -24,13 +24,15 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-# New main entry data (API key only)
+# New main entry data (API key and optional name)
 MOCK_USER_DATA = {
     CONF_API_KEY: "test_api_key",
+    CONF_NAME: "",  # Empty name for default behavior
 }
 
 EXPECTED_CONFIG_DATA = {
     CONF_API_KEY: "test_api_key",
+    CONF_NAME: "",
 }
 
 # Legacy test data for backward compatibility tests
@@ -138,16 +140,14 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            CONF_API_KEY: "updated_api_key",
             CONF_NAME: "Updated Test Stop",
-            CONF_ROUTE: "test_route",
-            CONF_DESTINATION: "test_destination",
         },
     )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
+        CONF_API_KEY: "updated_api_key",
         CONF_NAME: "Updated Test Stop",
-        CONF_ROUTE: "test_route",
-        CONF_DESTINATION: "test_destination",
     }
 
 
@@ -177,12 +177,12 @@ async def test_subentry_flow_creation(hass: HomeAssistant) -> None:
             MOCK_SUBENTRY_DATA,
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Test Stop"
-    assert result2["data"] == MOCK_SUBENTRY_DATA
-    assert (
-        result2["unique_id"] == f"{entry.entry_id}_{MOCK_SUBENTRY_DATA[CONF_STOP_ID]}"
-    )
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
+        assert result2["title"] == "Test Stop"
+        assert result2["data"] == MOCK_SUBENTRY_DATA
+        # Enhanced unique ID now includes route and destination
+        expected_unique_id = f"{entry.entry_id}_{MOCK_SUBENTRY_DATA[CONF_STOP_ID]}_route_{MOCK_SUBENTRY_DATA[CONF_ROUTE]}_dest_{MOCK_SUBENTRY_DATA[CONF_DESTINATION]}"
+        assert result2["unique_id"] == expected_unique_id
 
 
 async def test_subentry_flow_invalid_stop_id(hass: HomeAssistant) -> None:
@@ -335,7 +335,11 @@ async def test_subentry_validation_with_empty_name(hass: HomeAssistant) -> None:
 
         result = await validate_subentry_input(hass, api_key, data)
 
-        assert result["title"] == f"Stop {data[CONF_STOP_ID]}"
+        # Enhanced title generation now includes route and destination
+        expected_title = (
+            f"Stop {data[CONF_STOP_ID]} ({data[CONF_ROUTE]} → {data[CONF_DESTINATION]})"
+        )
+        assert result["title"] == expected_title
 
 
 async def test_subentry_validation_api_error(hass: HomeAssistant) -> None:
@@ -381,7 +385,9 @@ async def test_validate_input_api_key_success(hass: HomeAssistant) -> None:
 
         result = await validate_input(hass, data)
 
-        assert result["title"] == "Transport NSW"
+        # Enhanced title generation includes API key suffix when no custom name
+        expected_title = "Transport NSW (_key)"  # Last 4 chars of "valid_api_key"
+        assert result["title"] == expected_title
         mock_instance.get_departures.assert_called_once_with(
             "10101100",
             "",
@@ -573,6 +579,156 @@ async def test_subentry_reconfigure_error_handling(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
+
+
+async def test_main_entry_with_custom_name(hass: HomeAssistant) -> None:
+    """Test main entry creation with custom name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    custom_name = "My Transport NSW"
+    user_data = {
+        CONF_API_KEY: "test_api_key",
+        CONF_NAME: custom_name,
+    }
+
+    with patch(
+        "homeassistant.components.transport_nsw.config_flow.validate_input",
+        return_value={"title": custom_name},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_data,
+        )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == custom_name
+    assert result2["data"] == user_data
+
+
+async def test_validate_input_with_custom_name(hass: HomeAssistant) -> None:
+    """Test validate_input with custom name provided."""
+    api_key = "test_api_key"
+    custom_name = "My Custom Transport"
+    data = {CONF_API_KEY: api_key, CONF_NAME: custom_name}
+
+    with patch(
+        "homeassistant.components.transport_nsw.config_flow.TransportNSW"
+    ) as mock_transport:
+        mock_instance = mock_transport.return_value
+        mock_instance.get_departures.return_value = {"route": "T1", "due": 5}
+
+        result = await validate_input(hass, data)
+
+        assert result["title"] == custom_name
+
+
+async def test_subentry_title_generation_variants(hass: HomeAssistant) -> None:
+    """Test various subentry title generation scenarios."""
+    api_key = "test_api_key"
+
+    test_cases = [
+        # Custom name takes priority
+        {
+            "data": {
+                CONF_STOP_ID: "123",
+                CONF_NAME: "My Stop",
+                CONF_ROUTE: "T1",
+                CONF_DESTINATION: "Central",
+            },
+            "expected": "My Stop",
+        },
+        # Route and destination
+        {
+            "data": {
+                CONF_STOP_ID: "123",
+                CONF_ROUTE: "T1",
+                CONF_DESTINATION: "Central",
+            },
+            "expected": "Stop 123 (T1 → Central)",
+        },
+        # Route only
+        {
+            "data": {CONF_STOP_ID: "123", CONF_ROUTE: "T1"},
+            "expected": "Stop 123 (Route T1)",
+        },
+        # Destination only
+        {
+            "data": {CONF_STOP_ID: "123", CONF_DESTINATION: "Central"},
+            "expected": "Stop 123 (→ Central)",
+        },
+        # Stop ID only
+        {"data": {CONF_STOP_ID: "123"}, "expected": "Stop 123"},
+    ]
+
+    with patch(
+        "homeassistant.components.transport_nsw.config_flow.TransportNSW"
+    ) as mock_transport:
+        mock_instance = mock_transport.return_value
+        mock_instance.get_departures.return_value = {"route": "T1", "due": 5}
+
+        for case in test_cases:
+            result = await validate_subentry_input(hass, api_key, case["data"])
+            assert result["title"] == case["expected"], f"Failed for {case['data']}"
+
+
+async def test_options_flow_api_key_update_without_name(hass: HomeAssistant) -> None:
+    """Test options flow API key update when no custom name is set."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "old_api_key", CONF_NAME: ""},
+        unique_id="test_entry",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    # Update only API key, no custom name
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY: "new_api_key_123",
+            CONF_NAME: "",  # Empty name
+        },
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+
+    # Check that entry was updated with new API key and generated title
+    assert entry.data[CONF_API_KEY] == "new_api_key_123"
+    assert entry.title == "Transport NSW (_123)"  # Last 4 chars of new API key
+
+
+async def test_options_flow_data_update_without_title_change(
+    hass: HomeAssistant,
+) -> None:
+    """Test options flow that updates data but not title."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test_api_key", CONF_NAME: "Custom Name"},
+        title="Custom Name",
+        unique_id="test_entry",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    # Update API key but keep the same custom name (no title change needed)
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY: "updated_api_key",
+            CONF_NAME: "Custom Name",  # Same name, so title shouldn't change
+        },
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+
+    # Check that entry was updated with new API key but title unchanged
+    assert entry.data[CONF_API_KEY] == "updated_api_key"
+    assert entry.title == "Custom Name"  # Title should remain the same
 
 
 async def test_config_flow_direct_validation_errors(hass: HomeAssistant) -> None:
