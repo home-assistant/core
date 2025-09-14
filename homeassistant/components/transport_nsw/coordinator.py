@@ -53,23 +53,12 @@ class TransportNSWCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize the coordinator."""
         self.config_entry = config_entry
-        self.api_key = config_entry.data[CONF_API_KEY]
-
-        if subentry:
-            # New subentry mode
-            self.stop_id = subentry.data[CONF_STOP_ID]
-            self.route = subentry.data.get(CONF_ROUTE, "")
-            self.destination = subentry.data.get(CONF_DESTINATION, "")
-            name = subentry.title or f"Stop {self.stop_id}"
-        else:
-            # Legacy mode
-            self.stop_id = config_entry.data[CONF_STOP_ID]
-            self.route = config_entry.options.get(CONF_ROUTE, "")
-            self.destination = config_entry.options.get(CONF_DESTINATION, "")
-            name = config_entry.data.get("name", DEFAULT_NAME)
+        self.subentry = subentry
+        self._load_configuration()
 
         self.transport_nsw = TransportNSW()
 
+        name = self._get_coordinator_name()
         super().__init__(
             hass,
             logger=_LOGGER,
@@ -77,6 +66,48 @@ class TransportNSWCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )
+
+    def _load_configuration(self) -> None:
+        """Load configuration from config entry and subentry."""
+        if self.config_entry is None:
+            raise ValueError("Config entry is required")
+
+        self.api_key = self.config_entry.data[CONF_API_KEY]
+
+        if self.subentry:
+            # New subentry mode
+            self.stop_id = self.subentry.data[CONF_STOP_ID]
+            self.route = self.subentry.data.get(CONF_ROUTE, "")
+            self.destination = self.subentry.data.get(CONF_DESTINATION, "")
+        else:
+            # Legacy mode
+            self.stop_id = self.config_entry.data[CONF_STOP_ID]
+            self.route = self.config_entry.options.get(CONF_ROUTE, "")
+            self.destination = self.config_entry.options.get(CONF_DESTINATION, "")
+
+    def _get_coordinator_name(self) -> str:
+        """Get the coordinator name based on configuration."""
+        if self.config_entry is None:
+            return DEFAULT_NAME
+
+        if self.subentry:
+            return self.subentry.title or f"Stop {self.stop_id}"
+        return self.config_entry.data.get("name", DEFAULT_NAME)
+
+    async def async_update_config(
+        self, config_entry: ConfigEntry, subentry: ConfigSubentry | None = None
+    ) -> None:
+        """Update coordinator configuration and trigger refresh."""
+        self.config_entry = config_entry
+        self.subentry = subentry
+        self._load_configuration()
+
+        # Update coordinator name if needed
+        new_name = self._get_coordinator_name()
+        self.name = f"Transport NSW {new_name}"
+
+        # Trigger immediate refresh with new configuration
+        await self.async_request_refresh()
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Transport NSW."""

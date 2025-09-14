@@ -2,8 +2,14 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.transport_nsw.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.transport_nsw.const import (
+    CONF_DESTINATION,
+    CONF_ROUTE,
+    CONF_STOP_ID,
+    DOMAIN,
+)
+from homeassistant.components.transport_nsw.coordinator import TransportNSWCoordinator
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 
@@ -199,6 +205,81 @@ async def test_unload_entry_failure_handling(
 
     # Unload should return False but not crash
     assert not result
+
+
+async def test_config_entry_reload_on_update(hass: HomeAssistant) -> None:
+    """Test that config entry updates trigger a reload."""
+    # Create a config entry with subentries
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test_api_key", CONF_NAME: "Test Integration"},
+        title="Test Integration",
+        unique_id="test_config_entry",
+    )
+    entry.add_to_hass(hass)
+
+    # Mock the async_reload method
+    with patch.object(hass.config_entries, "async_reload") as mock_reload:
+        # Set up the entry
+        result = await hass.config_entries.async_setup(entry.entry_id)
+        assert result is True
+
+        # Simulate a config entry update (this would normally happen when a subentry is modified)
+        # We need to call the update listener that was registered
+        if entry.update_listeners:
+            for listener in entry.update_listeners:
+                await listener(hass, entry)
+
+        # Verify that reload was called
+        mock_reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_coordinator_config_update(hass: HomeAssistant) -> None:
+    """Test coordinator configuration update functionality."""
+    # Create initial config entry
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test_api_key", CONF_NAME: "Test"},
+        unique_id="test_entry",
+    )
+    config_entry.add_to_hass(hass)
+
+    # Create subentry
+    subentry = ConfigSubentry(
+        subentry_id="sub1",
+        unique_id="sub1_unique",
+        subentry_type="stop",
+        data={CONF_STOP_ID: "123456", CONF_ROUTE: "T1", CONF_DESTINATION: "Central"},
+        title="Test Stop",
+    )
+
+    # Create coordinator
+    coordinator = TransportNSWCoordinator(hass, config_entry, subentry)
+
+    # Verify initial configuration
+    assert coordinator.stop_id == "123456"
+    assert coordinator.route == "T1"
+    assert coordinator.destination == "Central"
+
+    # Create updated subentry
+    updated_subentry = ConfigSubentry(
+        subentry_id="sub1",
+        unique_id="sub1_unique",
+        subentry_type="stop",
+        data={CONF_STOP_ID: "123456", CONF_ROUTE: "T2", CONF_DESTINATION: "Town Hall"},
+        title="Updated Stop",
+    )
+
+    # Update coordinator configuration
+    with patch.object(coordinator, "async_request_refresh") as mock_refresh:
+        await coordinator.async_update_config(config_entry, updated_subentry)
+
+        # Verify configuration was updated
+        assert coordinator.route == "T2"
+        assert coordinator.destination == "Town Hall"
+
+        # Verify refresh was triggered
+        mock_refresh.assert_called_once()
 
 
 async def test_multiple_entries_data_isolation(hass: HomeAssistant) -> None:

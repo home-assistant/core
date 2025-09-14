@@ -6,14 +6,13 @@
         "description": "Set up Transport NSW to get real-time departure information.\n\nTo get a free API key:\n1. Go to [Transport NSW Open Data](https://opendata.transport.nsw.gov.au/)\n2. Register an account\n3. Create a new application\n4. Add the 'Trip Planner APIs' to your application\n\nAfter setup, you can add individual stops as subentries.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "route": "Route filter (optional)",
-          "destination": "Destination filter (optional)"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to Transport NSW API. Please check your API key.",
+      "invalid_auth": "Invalid authentication",
       "unknown": "Unknown error occurred"
     }
   },

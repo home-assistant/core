@@ -138,6 +138,22 @@ class TransportNSWSensor(CoordinatorEntity, SensorEntity):
         # Legacy mode - get name from config entry data
         return self.config_entry.data.get(CONF_NAME, "Transport NSW Stop")
 
+    async def async_update_config(
+        self, config_entry: ConfigEntry, subentry: ConfigSubentry | None = None
+    ) -> None:
+        """Update sensor configuration and refresh coordinator."""
+        self.config_entry = config_entry
+        self.subentry = subentry
+
+        # Update the coordinator with new configuration
+        # Type checking: coordinator is guaranteed to be TransportNSWCoordinator
+        coordinator = self.coordinator
+        if hasattr(coordinator, "async_update_config"):
+            await coordinator.async_update_config(config_entry, subentry)
+
+        # Trigger entity state update to reflect new name/configuration
+        self.async_write_ha_state()
+
     @property
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
