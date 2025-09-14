@@ -41,6 +41,7 @@ TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.template,
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+        vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
     }
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
 

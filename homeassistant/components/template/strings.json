@@ -3,6 +3,8 @@
     "advanced_options": "Advanced options",
     "availability": "Availability template",
     "availability_description": "Defines a template to get the `available` state of the entity. If the template either fails to render or returns `True`, `\"1\"`, `\"true\"`, `\"yes\"`, `\"on\"`, `\"enable\"`, or a non-zero number, the entity will be `available`. If the template returns any other value, the entity will be `unavailable`. If not configured, the entity will always be `available`. Note that the string comparison is not case sensitive; `\"TrUe\"` and `\"yEs\"` are allowed.",
+    "attributes": "Extra Attributes",
+    "attributes_description": "Supplementary attributes templates for this entity",
     "code_format": "Code format",
     "device_class": "Device class",
     "device_id_description": "Select a device to link to this entity.",
@@ -45,10 +47,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -69,10 +73,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -93,10 +99,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -127,10 +135,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -153,10 +163,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -186,10 +198,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -211,10 +225,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -250,10 +266,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -281,10 +299,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -314,10 +334,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -341,10 +363,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -368,10 +392,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -416,10 +442,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -458,10 +486,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -499,10 +529,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -549,10 +581,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -571,10 +605,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -593,10 +629,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -626,10 +664,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -651,10 +691,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -683,10 +725,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -707,10 +751,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -746,10 +792,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -776,10 +824,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -807,10 +857,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -834,10 +886,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -860,10 +914,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -887,10 +943,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -929,10 +987,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -970,10 +1030,12 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "attributes": "[%key:component::template::common::attributes%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "attributes": "[%key:component::template::common::attributes_description%]"
             }
           }
         },
@@ -982,6 +1044,12 @@
     }
   },
   "selector": {
+    "common_attributes": {
+      "fields": {
+        "key": "Attribute Key",
+        "value": "Attribute Value"
+      }
+    },
     "alarm_control_panel_code_format": {
       "options": {
         "no_code": "No code format",

@@ -59,6 +59,7 @@ from .alarm_control_panel import (
 from .binary_sensor import async_create_preview_binary_sensor
 from .const import (
     CONF_ADVANCED_OPTIONS,
+    CONF_ATTRIBUTES,
     CONF_AVAILABILITY,
     CONF_PRESS,
     CONF_TURN_OFF,
@@ -400,6 +401,26 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Schema(
                 {
                     vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
+                    vol.Optional(CONF_ATTRIBUTES): selector.ObjectSelector(
+                        selector.ObjectSelectorConfig(
+                            multiple=True,
+                            label_field="key",
+                            description_field="value",
+                            translation_key="common_attributes",
+                            fields={
+                                "key": {
+                                    "label": "Key",
+                                    "selector": {"text": {}},
+                                    "required": True,
+                                },
+                                "value": {
+                                    "label": "Value",
+                                    "selector": {"template": {}},
+                                    "required": True,
+                                },
+                            },
+                        ),
+                    ),
                 }
             ),
             {"collapsed": True},
@@ -806,9 +827,11 @@ def ws_start_preview(
 
     config: dict = msg["user_input"]
     advanced_options = config.pop(CONF_ADVANCED_OPTIONS, {})
-    preview_entity = CREATE_PREVIEW_ENTITY[template_type](
-        hass, name, {**config, **advanced_options}
-    )
+    options = {**config, **advanced_options}
+    if CONF_ATTRIBUTES in options and isinstance(options[CONF_ATTRIBUTES], list):
+        attrs = {d["key"]: d["value"] for d in options[CONF_ATTRIBUTES]}
+        options[CONF_ATTRIBUTES] = attrs
+    preview_entity = CREATE_PREVIEW_ENTITY[template_type](hass, name, options)
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry
 

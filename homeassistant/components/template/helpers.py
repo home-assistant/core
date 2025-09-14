@@ -252,6 +252,9 @@ async def async_setup_template_entry(
 
     if advanced_options := options.pop(CONF_ADVANCED_OPTIONS, None):
         options = {**options, **advanced_options}
+        if CONF_ATTRIBUTES in options and isinstance(options[CONF_ATTRIBUTES], list):
+            attrs = {d["key"]: d["value"] for d in options[CONF_ATTRIBUTES]}
+            options[CONF_ATTRIBUTES] = attrs
 
     if replace_value_template and CONF_VALUE_TEMPLATE in options:
         options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)
