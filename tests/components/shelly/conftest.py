@@ -768,7 +768,7 @@ def mock_setup() -> Generator[AsyncMock]:
 def disable_async_remove_shelly_rpc_entities() -> Generator[None]:
     """Patch out async_remove_shelly_rpc_entities.
 
-    This is used by virtual componetns tests that should not create entities,
+    This is used by virtual components tests that should not create entities,
     without it async_remove_shelly_rpc_entities will clean up the entities.
     """
     with patch(
