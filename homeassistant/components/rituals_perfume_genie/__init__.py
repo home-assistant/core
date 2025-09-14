@@ -28,10 +28,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
     session = async_get_clientsession(hass)
 
-    # Require credentials for runtime; if missing, trigger reauth and retry later
+    # Require credentials for runtime; if missing, trigger reauth and stop setup
     if USERNAME not in entry.data or PASSWORD not in entry.data:
         await _trigger_reauth(hass, entry)
-        raise ConfigEntryNotReady
+        return False
 
     email = entry.data[USERNAME]
     password = entry.data[PASSWORD]
@@ -49,10 +49,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await account.authenticate()
         account_devices = await account.get_devices()
 
-    except AuthenticationException as err:
-        # Credentials invalid/expired → start reauth and let HA retry setup later
+    except AuthenticationException:
+        # Credentials invalid/expired → start reauth and stop setup until user completes it
         await _trigger_reauth(hass, entry)
-        raise ConfigEntryNotReady from err
+        return False
 
     except aiohttp.ClientError as err:
         # Network/HTTP error → retry setup later
@@ -143,7 +143,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _trigger_reauth(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Start a reauth flow to collect credentials for V2."""
+    """Start a reauth flow to collect credentials for V2.
+
+    Debounce so we only create one reauth flow per entry.
+    """
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    in_progress: set[str] = domain_data.setdefault("_reauth_in_progress", set())
+    if entry.entry_id in in_progress:
+        return
+    in_progress.add(entry.entry_id)
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
