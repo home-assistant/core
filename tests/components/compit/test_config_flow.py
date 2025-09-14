@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from compit_inext_api import Gate, SystemInfo
 import pytest
 
 from homeassistant import config_entries
