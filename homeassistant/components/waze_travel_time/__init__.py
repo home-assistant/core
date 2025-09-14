@@ -14,6 +14,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.selector import (
@@ -26,7 +27,9 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from .config_flow import WazeConfigFlow
 from .const import (
+    ATTR_DURATION,
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
@@ -167,25 +170,63 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate an old config entry."""
 
-    if config_entry.version == 1:
+    if config_entry.version != WazeConfigFlow.VERSION:
         _LOGGER.debug(
-            "Migrating from version %s.%s",
+            "Migrating config entry %s from version %s to %s",
+            config_entry.entry_id,
             config_entry.version,
-            config_entry.minor_version,
+            WazeConfigFlow.VERSION,
         )
-        options = dict(config_entry.options)
-        if (incl_filters := options.pop(CONF_INCL_FILTER, None)) not in {None, ""}:
-            options[CONF_INCL_FILTER] = [incl_filters]
-        else:
-            options[CONF_INCL_FILTER] = DEFAULT_FILTER
-        if (excl_filters := options.pop(CONF_EXCL_FILTER, None)) not in {None, ""}:
-            options[CONF_EXCL_FILTER] = [excl_filters]
-        else:
-            options[CONF_EXCL_FILTER] = DEFAULT_FILTER
-        hass.config_entries.async_update_entry(config_entry, options=options, version=2)
-        _LOGGER.debug(
-            "Migration to version %s.%s successful",
-            config_entry.version,
-            config_entry.minor_version,
-        )
+
+        if config_entry.version == 1:
+            options = dict(config_entry.options)
+            if (incl_filters := options.pop(CONF_INCL_FILTER, None)) not in {None, ""}:
+                options[CONF_INCL_FILTER] = [incl_filters]
+            else:
+                options[CONF_INCL_FILTER] = DEFAULT_FILTER
+            if (excl_filters := options.pop(CONF_EXCL_FILTER, None)) not in {None, ""}:
+                options[CONF_EXCL_FILTER] = [excl_filters]
+            else:
+                options[CONF_EXCL_FILTER] = DEFAULT_FILTER
+            hass.config_entries.async_update_entry(
+                config_entry, options=options, version=2
+            )
+
+        if config_entry.version == 2:
+            entity_registry = er.async_get(hass)
+            old_unique_id = config_entry.entry_id
+            new_unique_id = f"{config_entry.entry_id}_{ATTR_DURATION}"
+
+            if old_entity_id := entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, old_unique_id
+            ):
+                new_entity_id = f"{old_entity_id}_{ATTR_DURATION}"
+
+                _LOGGER.debug(
+                    "Migrating unique_id from '%s' to '%s'",
+                    old_unique_id,
+                    new_unique_id,
+                )
+                try:
+                    _LOGGER.debug(
+                        "Migrating entity_id from '%s' to '%s'",
+                        old_entity_id,
+                        new_entity_id,
+                    )
+                    entity_registry.async_update_entity(
+                        old_entity_id,
+                        new_entity_id=new_entity_id,
+                        new_unique_id=new_unique_id,
+                    )
+                except ValueError:
+                    _LOGGER.debug(
+                        "Cannot change entity_id '%s', updating unique_id only",
+                        old_entity_id,
+                    )
+                    entity_registry.async_update_entity(
+                        old_entity_id,
+                        new_unique_id=new_unique_id,
+                    )
+            hass.config_entries.async_update_entry(config_entry, version=3)
+
     return True
