@@ -409,7 +409,7 @@ async def test_well_known_auth_info(
     config: dict[str, str],
     expected_url_prefix: str,
 ) -> None:
-    """Test logging in and the ip address changes results in an rejection."""
+    """Test the well-known OAuth authorization server endpoint with different URL configurations."""
     await async_process_ha_core_config(hass, config)
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.get(
