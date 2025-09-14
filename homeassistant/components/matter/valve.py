@@ -21,7 +21,6 @@ from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 ValveConfigurationAndControl = clusters.ValveConfigurationAndControl
-
 ValveStateEnum = ValveConfigurationAndControl.Enums.ValveStateEnum
 
 
