@@ -256,7 +256,7 @@ aiohasupervisor==0.3.2
 aiohomeconnect==0.19.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.15
+aiohomekit==3.2.16
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -589,7 +589,7 @@ bluemaestro-ble==0.4.1
 bluetooth-adapters==2.1.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.5.2
+bluetooth-auto-recovery==1.5.3
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -1706,7 +1706,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==1.0.0
+pyicloud==2.0.3
 
 # homeassistant.components.insteon
 pyinsteon==1.6.3
