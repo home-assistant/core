@@ -48,8 +48,8 @@ async def test_common_control(
 
     with freeze_time(NOW):
         await client.send_json({"id": 1, "type": "usage_prediction/common_control"})
+        msg = await client.receive_json()
 
-    msg = await client.receive_json()
     assert msg["id"] == 1
     assert msg["type"] == "result"
     assert msg["success"] is True
