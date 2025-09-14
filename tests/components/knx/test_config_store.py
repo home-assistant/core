@@ -88,7 +88,7 @@ async def test_create_entity_error(
     assert res["success"], res
     assert not res["result"]["success"]
     assert res["result"]["errors"][0]["path"] == ["platform"]
-    assert res["result"]["error_base"].startswith("expected EntityPlatform or one of")
+    assert res["result"]["error_base"].startswith("expected EntityPlatforms or one of")
 
     # create entity with unsupported platform
     await client.send_json_auto_id(
