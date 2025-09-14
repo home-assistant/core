@@ -19,14 +19,7 @@ from .gateway import HausbusGateway
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
     Platform.COVER,
-    Platform.EVENT,
-    Platform.LIGHT,
-    Platform.NUMBER,
-    Platform.SENSOR,
-    Platform.SWITCH,
 ]
 
 LOGGER = logging.getLogger(__name__)
@@ -55,9 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
 
     entry.runtime_data = HausbusConfig(gateway)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Creates a button to manually start device discovery
-    hass.async_create_task(gateway.createDiscoveryButton())
 
     return True
 

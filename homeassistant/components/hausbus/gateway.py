@@ -9,8 +9,6 @@ import re
 import time
 from typing import Any, cast
 
-from custom_components.hausbus.number import HausbusControl
-from custom_components.hausbus.sensor import HausbusPowerMeter, HausbusRfidSensor
 from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.BusDataMessage import BusDataMessage
 from pyhausbus.de.hausbus.homeassistant.proxy import ProxyFactory
@@ -52,35 +50,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .binary_sensor import HausbusBinarySensor
-from .button import HausbusButton
 from .cover import HausbusCover, Rollladen
 from .device import HausbusDevice
 from .entity import HausbusEntity
-from .event import HausBusEvent
-from .light import (
-    Dimmer,
-    HausbusBackLight,
-    HausbusDimmerLight,
-    HausbusLedLight,
-    HausbusRGBDimmerLight,
-    Led,
-    LogicalButton,
-    RGBDimmer,
-)
-
-# from .number import HausBusNumber
-from .sensor import (
-    AnalogEingang,
-    Feuchtesensor,
-    HausbusAnalogEingang,
-    HausbusBrightnessSensor,
-    HausbusHumiditySensor,
-    HausbusTemperaturSensor,
-    Helligkeitssensor,
-    Temperatursensor,
-)
-from .switch import HausbusSwitch, Schalter
 
 DOMAIN = "hausbus"
 
@@ -96,16 +68,12 @@ class HausbusGateway(IBusDataListener):
         self.config_entry = config_entry
         self.devices: dict[str, HausbusDevice] = {}
         self.channels: dict[str, dict[tuple[str, str], HausbusEntity]] = {}
-        self.events: dict[int, HausBusEvent] = {}
         self.automatic_get_module_id_time: dict[int, float] = {}
         self.home_server = HomeServer()
         self.home_server.addBusEventListener(self)
         self._new_channel_listeners: dict[
             str, Callable[[HausbusEntity], Coroutine[Any, Any, None]]
         ] = {}
-        self._new_button_listener: (
-            Callable[[HausbusButton], Coroutine[Any, Any, None]] | None
-        ) = None
 
     async def createDiscoveryButton(self):
         """Creates a Button to manually start device discovery."""
@@ -114,25 +82,7 @@ class HausbusGateway(IBusDataListener):
             LOGGER.debug("Search devices")
             self.hass.async_add_executor_job(self.home_server.searchDevices)
 
-        self.addStandaloneButton(
-            "hausbus_discovery_button", "Discover Haus-Bus Devices", discovery_callback
-        )
         await discovery_callback()
-
-    def addStandaloneButton(
-        self,
-        uniqueId: str,
-        name: str,
-        callback: Callable[[], Coroutine[Any, Any, None]],
-    ):
-        """Creates a Button that calls a method."""
-        if self._new_button_listener is not None:
-            asyncio.run_coroutine_threadsafe(
-                self._new_button_listener(HausbusButton(uniqueId, name, callback)),
-                self.hass.loop,
-            )
-        else:
-            LOGGER.debug("new button listener missing!")
 
     def add_device(self, device_id: str, module: ModuleId) -> None:
         """Add a new Haus-Bus Device to this gateway's device list."""
@@ -154,10 +104,6 @@ class HausbusGateway(IBusDataListener):
     def get_device(self, object_id: ObjectId) -> HausbusDevice | None:
         """Get the device referenced by ObjectId from the devices list."""
         return self.devices.get(str(object_id.getDeviceId()))
-
-    def get_event_entity(self, object_id: int) -> HausBusEvent | None:
-        """Get the event referenced by ObjectId."""
-        return self.events.get(object_id)
 
     def get_channel_list(
         self, object_id: ObjectId
@@ -191,58 +137,10 @@ class HausbusGateway(IBusDataListener):
         ):
             new_channel = None
 
-            # Specials
-            if (
-                device.is_leistungs_regler()
-                and isinstance(instance, Schalter)
-                and "Rote Modul LED" not in instance.getName()
-            ):
-                new_channel = HausbusControl(instance, device)
-                new_domain = NUMBER_DOMAIN
-            # LIGHT
-            elif isinstance(instance, Dimmer):
-                new_channel = HausbusDimmerLight(instance, device)
-                new_domain = LIGHT_DOMAIN
-            elif isinstance(instance, Led):
-                new_channel = HausbusLedLight(instance, device)
-                new_domain = LIGHT_DOMAIN
-            elif isinstance(instance, LogicalButton):
-                new_channel = HausbusBackLight(instance, device)
-                new_domain = LIGHT_DOMAIN
-            elif isinstance(instance, RGBDimmer):
-                new_channel = HausbusRGBDimmerLight(instance, device)
-                new_domain = LIGHT_DOMAIN
-            # SWITCH
-            elif isinstance(instance, Schalter):
-                new_channel = HausbusSwitch(instance, device)
-                new_domain = SWITCH_DOMAIN
             # COVER
-            elif isinstance(instance, Rollladen):
+            if isinstance(instance, Rollladen):
                 new_channel = HausbusCover(instance, device)
                 new_domain = COVER_DOMAIN
-            # SENSOR
-            elif isinstance(instance, Temperatursensor):
-                new_channel = HausbusTemperaturSensor(instance, device)
-                new_domain = SENSOR_DOMAIN
-            elif isinstance(instance, Helligkeitssensor):
-                new_channel = HausbusBrightnessSensor(instance, device)
-                new_domain = SENSOR_DOMAIN
-            elif isinstance(instance, Feuchtesensor):
-                new_channel = HausbusHumiditySensor(instance, device)
-                new_domain = SENSOR_DOMAIN
-            elif isinstance(instance, AnalogEingang):
-                new_channel = HausbusAnalogEingang(instance, device)
-                new_domain = SENSOR_DOMAIN
-            elif isinstance(instance, PowerMeter):
-                new_channel = HausbusPowerMeter(instance, device)
-                new_domain = SENSOR_DOMAIN
-            elif isinstance(instance, RFIDReader):
-                new_channel = HausbusRfidSensor(instance, device)
-                new_domain = SENSOR_DOMAIN
-            elif isinstance(instance, Taster):
-                # if not instance.getName().startswith("Taster"):
-                new_channel = HausbusBinarySensor(instance, device)
-                new_domain = BINARY_SENSOR_DOMAIN
             else:
                 return
 
@@ -253,18 +151,6 @@ class HausbusGateway(IBusDataListener):
                     self._new_channel_listeners[new_domain](new_channel), self.hass.loop
                 ).result()
                 new_channel.get_hardware_status()
-
-            # additional EventEnties for all binary inputs and pushbuttons
-            if (
-                isinstance(instance, Taster)
-                and self.get_event_entity(instance.getObjectId()) is None
-            ):
-                LOGGER.debug("create event channel for %s", instance)
-                new_channel = HausBusEvent(instance, device)
-                self.events[instance.getObjectId()] = new_channel
-                asyncio.run_coroutine_threadsafe(
-                    self._new_channel_listeners["EVENTS"](new_channel), self.hass.loop
-                ).result()
 
     def busDataReceived(self, busDataMessage: BusDataMessage) -> None:
         """Handle Haus-Bus messages."""
@@ -277,9 +163,6 @@ class HausbusGateway(IBusDataListener):
         # ignore messages sent from this module
         if deviceId in {HOMESERVER_DEVICE_ID, 9999, 12222}:
             return
-
-        # if deviceId in [110,503,1000,1541,3422,4000,4001,4002,4003,4004,4005,4009,4096,5068,8192,8270,11581,12223,12622,13976,14896,18343,19075,20043,21336,22909,24261,25661,25874,28900,3423,4006,4008]:
-        #  return
 
         LOGGER.debug("busDataReceived with data = %s from %s", data, object_id)
 
@@ -337,29 +220,7 @@ class HausbusGateway(IBusDataListener):
                     object_id.getValue(), data
                 )
 
-                # Spezialmodule
-                if device.is_special_type():
-                    update_needed = False
-                    if device.is_leistungs_regler():
-                        update_needed = device.set_model_id("SSR Leistungsregler")
-                    elif device.is_rollo_modul():
-                        nr_schalter = sum(
-                            1
-                            for instance in instances
-                            if isinstance(instance, Schalter)
-                        )
-                        if nr_schalter > 6:
-                            update_needed = device.set_model_id("8-fach Rollos")
-                        else:
-                            update_needed = device.set_model_id("2-fach Rollos")
 
-                    if update_needed:
-                        asyncio.run_coroutine_threadsafe(
-                            self.async_update_device_registry(device), self.hass.loop
-                        ).result()
-
-                # Inputs merken für die Trigger
-                inputs = []
                 for instance in instances:
                     instanceObjectId = ObjectId(instance.getObjectId())
                     name = templates.get_feature_name_from_template(
@@ -404,22 +265,6 @@ class HausbusGateway(IBusDataListener):
                         instance.setName(name)
                         self.add_channel(instance)
 
-                        # Bei allen Taster Instanzen die Events anlegen, weil da auch ein Taster angeschlossen sein kann
-                        if isinstance(instance, Taster):
-                            inputs.append(name)
-
-                if inputs:
-                    self.hass.data.setdefault(DOMAIN, {})
-                    self.hass.data[DOMAIN][device.hass_device_entry_id] = {
-                        "inputs": inputs
-                    }
-                    LOGGER.debug(
-                        "%s inputs angemeldet %s deviceId %s",
-                        inputs,
-                        device.hass_device_entry_id,
-                        deviceId,
-                    )
-
                 return
 
         if device is not None:
@@ -440,57 +285,6 @@ class HausbusGateway(IBusDataListener):
             else:
                 LOGGER.debug("kein zugehöriger channel")
 
-            if isinstance(channel, HausbusRfidSensor) and isinstance(data, RfidEvData):
-                LOGGER.debug("rfid data %s %s", channel, data)
-                self.hass.loop.call_soon_threadsafe(
-                    lambda: self.hass.bus.async_fire(
-                        "hausbus_rfid_event",
-                        {
-                            "device_id": device.hass_device_entry_id,
-                            "tag": data.getTagID(),
-                        },
-                    )
-                )
-
-    def generate_device_trigger(self, data, device: HausbusDevice, object_id: ObjectId):
-        """Generates device trigger from a haus-bus event."""
-
-        eventType = {
-            EvCovered: "button_pressed",
-            EvFree: "button_released",
-            EvHoldStart: "button_hold_start",
-            EvHoldEnd: "button_hold_end",
-            EvClicked: "button_clicked",
-            EvDoubleClick: "button_double_clicked",
-        }.get(type(data), "unknown")
-
-        if eventType != "unknown":
-            name = Templates.get_instance().get_feature_name_from_template(
-                device.firmware_id,
-                device.fcke,
-                object_id.getClassId(),
-                object_id.getInstanceId(),
-            )
-            if name is not None:
-                LOGGER.debug(
-                    "sending trigger %s name %s hass_device_id %s",
-                    eventType,
-                    name,
-                    device.hass_device_entry_id,
-                )
-                self.hass.loop.call_soon_threadsafe(
-                    lambda: self.hass.bus.async_fire(
-                        "hausbus_button_event",
-                        {
-                            "device_id": device.hass_device_entry_id,
-                            "type": eventType,
-                            "subtype": name,
-                        },
-                    )
-                )
-            else:
-                LOGGER.debug("unknown name for event %s", data)
-
     def register_platform_add_channel_callback(
         self,
         add_channel_callback: Callable[[HausbusEntity], Coroutine[Any, Any, None]],
@@ -498,12 +292,6 @@ class HausbusGateway(IBusDataListener):
     ) -> None:
         """Register add channel callbacks."""
         self._new_channel_listeners[platform] = add_channel_callback
-
-    def register_platform_add_button_callback(
-        self, add_button_callback: Callable[[HausbusButton], Coroutine[Any, Any, None]]
-    ) -> None:
-        """Register add channel callbacks."""
-        self._new_button_listener = add_button_callback
 
     def extract_final_number(self, text: str) -> int | None:
         """Extract a number from the end of the given string."""
