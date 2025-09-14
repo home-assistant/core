@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import asynccontextmanager
+import mimetypes
+from pathlib import Path
+import tempfile
 
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
@@ -17,7 +21,7 @@ from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import Camera, _async_stream_endpoint_url
+from . import Camera, Image, _async_stream_endpoint_url, async_get_image
 from .const import DATA_COMPONENT, DOMAIN, StreamType
 
 
@@ -83,6 +87,30 @@ class CameraMediaSource(MediaSource):
             raise Unresolvable(str(err)) from err
 
         return PlayMedia(url, FORMAT_CONTENT_TYPE[HLS_PROVIDER])
+
+    @asynccontextmanager
+    async def async_resolve_with_path(self, item: MediaSourceItem) -> PlayMedia:
+        """Resolve to playable item with path."""
+        media = await self.async_resolve_media(item)
+        entity_id = item.identifier
+        image = await async_get_image(self.hass, entity_id)
+        media.path = await self.hass.async_add_executor_job(
+            self._save_camera_snapshot, image
+        )
+
+        yield media
+
+        await self.hass.async_add_executor_job(media.path.unlink)
+
+    def _save_camera_snapshot(self, image: Image) -> Path:
+        """Save camera snapshot to temp file."""
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            suffix=mimetypes.guess_extension(image.content_type, False),
+            delete=False,
+        ) as temp_file:
+            temp_file.write(image.content)
+            return Path(temp_file.name)
 
     async def async_browse_media(
         self,

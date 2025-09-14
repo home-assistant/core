@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.core import HomeAssistant, callback
 
-from .const import MEDIA_SOURCE_DATA, URI_SCHEME, URI_SCHEME_REGEX
+from .const import DOMAIN, MEDIA_SOURCE_DATA, URI_SCHEME, URI_SCHEME_REGEX
+from .error import Unresolvable
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -103,6 +105,12 @@ class MediaSourceItem:
             assert self.domain is not None
         return self.hass.data[MEDIA_SOURCE_DATA][self.domain]
 
+    @asynccontextmanager
+    async def async_resolve_with_path(self) -> PlayMedia:
+        """Resolve to playable item with path."""
+        async with self.async_media_source().async_resolve_with_path(self) as media:
+            yield media
+
     @classmethod
     def from_uri(
         cls, hass: HomeAssistant, uri: str, target_media_player: str | None
@@ -131,6 +139,23 @@ class MediaSource:
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve a media item to a playable item."""
         raise NotImplementedError
+
+    @asynccontextmanager
+    async def async_resolve_with_path(self, item: MediaSourceItem) -> PlayMedia:
+        """Resolve to playable item with path."""
+        item = await self.async_resolve_media(item)
+
+        if item.path is None:
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                # TODO translations
+                translation_key="resolve_media_path_failed",
+                translation_placeholders={
+                    "media_content_id": item.media_source_id,
+                },
+            )
+
+        yield item
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Browse media."""

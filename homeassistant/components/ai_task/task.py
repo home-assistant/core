@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import io
@@ -14,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components import camera, conversation, media_source
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession, async_get_chat_session
@@ -42,45 +43,21 @@ def _save_camera_snapshot(image: camera.Image) -> Path:
         return Path(temp_file.name)
 
 
+@asynccontextmanager
 async def _resolve_attachments(
     hass: HomeAssistant,
     session: ChatSession,
     attachments: list[dict] | None = None,
 ) -> list[conversation.Attachment]:
     """Resolve attachments for a task."""
-    resolved_attachments: list[conversation.Attachment] = []
-    created_files: list[Path] = []
+    async with AsyncExitStack() as stack:
+        resolved_attachments: list[conversation.Attachment] = []
 
-    for attachment in attachments or []:
-        media_content_id = attachment["media_content_id"]
-
-        # Special case for camera media sources
-        if media_content_id.startswith("media-source://camera/"):
-            # Extract entity_id from the media content ID
-            entity_id = media_content_id.removeprefix("media-source://camera/")
-
-            # Get snapshot from camera
-            image = await camera.async_get_image(hass, entity_id)
-
-            temp_filename = await hass.async_add_executor_job(
-                _save_camera_snapshot, image
+        for attachment in attachments or []:
+            media_content_id = attachment["media_content_id"]
+            media = await stack.enter_async_context(
+                media_source.async_resolve_with_path(hass, media_content_id, None)
             )
-            created_files.append(temp_filename)
-
-            resolved_attachments.append(
-                conversation.Attachment(
-                    media_content_id=media_content_id,
-                    mime_type=image.content_type,
-                    path=temp_filename,
-                )
-            )
-        else:
-            # Handle regular media sources
-            media = await media_source.async_resolve_media(hass, media_content_id, None)
-            if media.path is None:
-                raise HomeAssistantError(
-                    "Only local attachments are currently supported"
-                )
             resolved_attachments.append(
                 conversation.Attachment(
                     media_content_id=media_content_id,
@@ -89,22 +66,7 @@ async def _resolve_attachments(
                 )
             )
 
-    if not created_files:
-        return resolved_attachments
-
-    def cleanup_files() -> None:
-        """Cleanup temporary files."""
-        for file in created_files:
-            file.unlink(missing_ok=True)
-
-    @callback
-    def cleanup_files_callback() -> None:
-        """Cleanup temporary files."""
-        hass.async_add_executor_job(cleanup_files)
-
-    session.async_on_cleanup(cleanup_files_callback)
-
-    return resolved_attachments
+        yield resolved_attachments
 
 
 async def async_generate_data(
@@ -142,18 +104,19 @@ async def async_generate_data(
         )
 
     with async_get_chat_session(hass) as session:
-        resolved_attachments = await _resolve_attachments(hass, session, attachments)
-
-        return await entity.internal_async_generate_data(
-            session,
-            GenDataTask(
-                name=task_name,
-                instructions=instructions,
-                structure=structure,
-                attachments=resolved_attachments or None,
-                llm_api=llm_api,
-            ),
-        )
+        async with _resolve_attachments(
+            hass, session, attachments
+        ) as resolved_attachments:
+            return await entity.internal_async_generate_data(
+                session,
+                GenDataTask(
+                    name=task_name,
+                    instructions=instructions,
+                    structure=structure,
+                    attachments=resolved_attachments or None,
+                    llm_api=llm_api,
+                ),
+            )
 
 
 async def async_generate_image(
@@ -189,16 +152,17 @@ async def async_generate_image(
         )
 
     with async_get_chat_session(hass) as session:
-        resolved_attachments = await _resolve_attachments(hass, session, attachments)
-
-        task_result = await entity.internal_async_generate_image(
-            session,
-            GenImageTask(
-                name=task_name,
-                instructions=instructions,
-                attachments=resolved_attachments or None,
-            ),
-        )
+        async with _resolve_attachments(
+            hass, session, attachments
+        ) as resolved_attachments:
+            task_result = await entity.internal_async_generate_image(
+                session,
+                GenImageTask(
+                    name=task_name,
+                    instructions=instructions,
+                    attachments=resolved_attachments or None,
+                ),
+            )
 
     service_result = task_result.as_dict()
     image_data = service_result.pop("image_data")

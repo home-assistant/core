@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import asynccontextmanager
 from typing import Any, Protocol
 
 import voluptuous as vol
@@ -195,6 +196,30 @@ async def async_resolve_media(
         ) from err
 
     return await item.async_resolve()
+
+
+@asynccontextmanager
+async def async_resolve_with_path(
+    hass: HomeAssistant, media_content_id: str, target_media_player: str | None
+) -> PlayMedia:
+    """Get info to play media."""
+    if DOMAIN not in hass.data:
+        raise Unresolvable("Media Source not loaded")
+
+    try:
+        item = _get_media_item(hass, media_content_id, target_media_player)
+    except ValueError as err:
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="resolve_media_failed",
+            translation_placeholders={
+                "media_content_id": str(media_content_id),
+                "error": str(err),
+            },
+        ) from err
+
+    async with item.async_resolve_with_path() as media:
+        yield media
 
 
 @websocket_api.websocket_command(
