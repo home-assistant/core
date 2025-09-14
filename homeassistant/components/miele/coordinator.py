@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio.timeouts
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
+from aiohttp import ClientResponseError
 from pymiele import MieleAction, MieleAPI, MieleDevice
 
 from homeassistant.config_entries import ConfigEntry
@@ -66,7 +67,22 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
             self.devices = devices
             actions = {}
             for device_id in devices:
-                actions_json = await self.api.get_actions(device_id)
+                try:
+                    actions_json = await self.api.get_actions(device_id)
+                except ClientResponseError as err:
+                    _LOGGER.debug(
+                        "Error fetching actions for device %s: Status: %s, Message: %s",
+                        device_id,
+                        err.status,
+                        err.message,
+                    )
+                    actions_json = {}
+                except asyncio.exceptions.TimeoutError:
+                    _LOGGER.debug(
+                        "Timeout fetching actions for device %s",
+                        device_id,
+                    )
+                    actions_json = {}
                 actions[device_id] = MieleAction(actions_json)
             return MieleCoordinatorData(devices=devices, actions=actions)
 
