@@ -192,7 +192,7 @@ aioamazondevices==6.2.3
 aioambient==2024.08.0
 
 # homeassistant.components.apcupsd
-aioapcaccess==0.4.2
+aioapcaccess==1.0.0
 
 # homeassistant.components.aquacell
 aioaquacell==0.2.0
@@ -271,7 +271,7 @@ aiohasupervisor==0.3.2
 aiohomeconnect==0.19.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.15
+aiohomekit==3.2.16
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -658,7 +658,7 @@ bluemaestro-ble==0.4.1
 bluetooth-adapters==2.1.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.5.2
+bluetooth-auto-recovery==1.5.3
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -1005,7 +1005,7 @@ gassist-text==0.0.14
 gcal-sync==8.0.0
 
 # homeassistant.components.aladdin_connect
-genie-partner-sdk==1.0.10
+genie-partner-sdk==1.0.11
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1137,10 +1137,10 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.5
 
 # homeassistant.components.bluetooth
-habluetooth==5.6.2
+habluetooth==5.6.4
 
 # homeassistant.components.cloud
-hass-nabucasa==1.1.0
+hass-nabucasa==1.1.1
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1181,7 +1181,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250903.3
+home-assistant-frontend==20250903.5
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.9.3
@@ -1822,7 +1822,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.31.7
+pyTibber==0.32.0
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2046,7 +2046,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==1.0.0
+pyicloud==2.0.3
 
 # homeassistant.components.insteon
 pyinsteon==1.6.3
@@ -2067,7 +2067,7 @@ pyiqvia==2022.04.0
 pyirishrail==0.0.2
 
 # homeassistant.components.iskra
-pyiskra==0.1.26
+pyiskra==0.1.27
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -2163,7 +2163,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.11.1
+pymodbus==3.11.2
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -3102,7 +3102,7 @@ wallbox==0.9.0
 watchdog==6.0.0
 
 # homeassistant.components.waterfurnace
-waterfurnace==1.1.0
+waterfurnace==1.2.0
 
 # homeassistant.components.watergate
 watergate-local-api==2024.4.1

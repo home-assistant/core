@@ -176,7 +176,7 @@
         "name": "Max connection upload throughput"
       },
       "cpu_temperature": {
-        "name": "CPU Temperature"
+        "name": "CPU temperature"
       }
     }
   },
