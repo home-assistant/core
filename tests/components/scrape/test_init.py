@@ -227,7 +227,7 @@ async def test_migrate_from_future(
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
-async def test_migrate_from_version_1_to_2(
+async def test_migrate_from_version_1_to_1_2(
     hass: HomeAssistant,
     get_data: MockRestData,
     device_registry: dr.DeviceRegistry,
@@ -284,6 +284,9 @@ async def test_migrate_from_version_1_to_2(
         has_entity_name=True,
         suggested_object_id="current_version",
     )
+    assert hass.config_entries.async_get_entry(config_entry.entry_id) == snapshot(
+        name="pre_migration_config_entry"
+    )
     with (
         patch(
             "homeassistant.components.rest.RestData",
@@ -297,7 +300,7 @@ async def test_migrate_from_version_1_to_2(
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert hass.config_entries.async_get_entry(config_entry.entry_id) == snapshot(
-        name="config_entry"
+        name="post_migration_config_entry"
     )
     device = device_registry.async_get(device.id)
     assert device == snapshot(name="device_registry")

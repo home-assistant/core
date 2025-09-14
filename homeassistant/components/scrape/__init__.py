@@ -45,6 +45,8 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_ADVANCED,
+    CONF_AUTH,
     CONF_ENCODING,
     CONF_INDEX,
     CONF_SELECT,
@@ -125,8 +127,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bo
     """Set up Scrape from a config entry."""
 
     config: dict[str, Any] = dict(entry.options)
-    config.update(config.pop("advanced", {}))
-    config.update(config.pop("auth", {}))
+    config.update(config.pop(CONF_ADVANCED, {}))
+    config.update(config.pop(CONF_AUTH, {}))
 
     rest_config: dict[str, Any] = COMBINED_SCHEMA(dict(config))
     rest = create_rest_data_from_config(hass, rest_config)
@@ -153,15 +155,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
         # Don't migrate from future version
         return False
 
-    if entry.version == 1:
+    if entry.version == 1 and entry.minor_version == 1:
         old_to_new_sensor_id = {}
-        for sensor in entry.options[SENSOR_DOMAIN]:
+        for sensor_config in entry.options[SENSOR_DOMAIN]:
             # Create a new sub config entry per sensor
-            sensor_config = dict(sensor)
             title = sensor_config.pop(CONF_NAME)
-            old_unique_id = sensor_config.pop(CONF_UNIQUE_ID)
+            old_unique_id = sensor_config[CONF_UNIQUE_ID]
+            subentry_config = {
+                CONF_INDEX: sensor_config[CONF_INDEX],
+                CONF_SELECT: sensor_config[CONF_SELECT],
+                CONF_ADVANCED: {},
+            }
 
-            sensor_config["advanced"] = {}
             for sensor_advanced_key in (
                 CONF_ATTRIBUTE,
                 CONF_VALUE_TEMPLATE,
@@ -170,13 +175,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                 CONF_STATE_CLASS,
                 CONF_UNIT_OF_MEASUREMENT,
             ):
-                if sensor_advanced_key in sensor_config:
-                    sensor_config["advanced"][sensor_advanced_key] = sensor_config.pop(
-                        sensor_advanced_key
-                    )
+                if sensor_advanced_key not in sensor_config:
+                    continue
+                subentry_config[CONF_ADVANCED][sensor_advanced_key] = sensor_config[
+                    sensor_advanced_key
+                ]
 
             new_sub_entry = ConfigSubentry(
-                data=MappingProxyType(sensor_config),
+                data=MappingProxyType(subentry_config),
                 subentry_type="entity",
                 title=title,
                 unique_id=None,
@@ -214,21 +220,29 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
         device_reg = dr.async_get(hass)
         devices = dr.async_entries_for_config_entry(device_reg, entry.entry_id)
         for device in devices:
-            for identifier in device.identifiers:
-                old_device_unique_id = identifier[1]
-                if old_device_unique_id in old_to_new_sensor_id:
-                    new_unique_id = old_to_new_sensor_id[old_device_unique_id]
+            for domain, identifier in device.identifiers:
+                if domain != DOMAIN or identifier not in old_to_new_sensor_id:
+                    continue
+                if identifier in old_to_new_sensor_id:
+                    subentry_id = old_to_new_sensor_id[identifier]
+                    new_identifiers: set[tuple[str, str]] = set()
+                    new_identifiers.update(
+                        (s1, old_to_new_sensor_id[s2])
+                        if s1 == DOMAIN and s2 in old_to_new_sensor_id
+                        else (s1, s2)
+                        for s1, s2 in device.identifiers
+                    )
                     _LOGGER.debug(
-                        "Migrating device %s with identifiers %s to new unique id %s",
+                        "Migrating device %s with identifiers %s to new identifiers %s",
                         device.id,
                         device.identifiers,
-                        new_unique_id,
+                        new_identifiers,
                     )
                     device_reg.async_update_device(
                         device.id,
                         add_config_entry_id=entry.entry_id,
-                        add_config_subentry_id=new_unique_id,
-                        new_identifiers={(DOMAIN, new_unique_id)},
+                        add_config_subentry_id=subentry_id,
+                        new_identifiers=new_identifiers,
                     )
                     if (
                         sub_entries := device.config_entries_subentries.get(
@@ -242,13 +256,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                             remove_config_subentry_id=None,
                         )
 
-        # Remove the sensors as they are now subentries
-        new_config_entry_data = dict(entry.options)
-        new_config_entry_data.pop(SENSOR_DOMAIN)
-
         # Update the resource config
-        new_config_entry_data["auth"] = {}
-        new_config_entry_data["advanced"] = {}
+        new_config_entry_data = dict(entry.options)
+        new_config_entry_data[CONF_AUTH] = {}
+        new_config_entry_data[CONF_ADVANCED] = {}
         for resource_advanced_key in (
             CONF_HEADERS,
             CONF_VERIFY_SSL,
@@ -256,12 +267,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
             CONF_ENCODING,
         ):
             if resource_advanced_key in new_config_entry_data:
-                new_config_entry_data["advanced"][resource_advanced_key] = (
+                new_config_entry_data[CONF_ADVANCED][resource_advanced_key] = (
                     new_config_entry_data.pop(resource_advanced_key)
                 )
         for resource_auth_key in (CONF_AUTHENTICATION, CONF_USERNAME, CONF_PASSWORD):
             if resource_auth_key in new_config_entry_data:
-                new_config_entry_data["auth"][resource_auth_key] = (
+                new_config_entry_data[CONF_AUTH][resource_auth_key] = (
                     new_config_entry_data.pop(resource_auth_key)
                 )
 
@@ -271,7 +282,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
             new_config_entry_data,
         )
         hass.config_entries.async_update_entry(
-            entry, version=2, options=new_config_entry_data
+            entry, minor_version=2, options=new_config_entry_data
         )
 
     return True
