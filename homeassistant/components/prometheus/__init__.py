@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable
-from dataclasses import astuple, dataclass
+from dataclasses import asdict, astuple, dataclass
 import logging
 import string
 from typing import Any, cast
@@ -69,6 +69,10 @@ from homeassistant.helpers import (
     entity_registry as er,
     entityfilter,
     state as state_helper,
+)
+from homeassistant.helpers.area_registry import (
+    EVENT_AREA_REGISTRY_UPDATED,
+    EventAreaRegistryUpdatedData,
 )
 from homeassistant.helpers.entity_registry import (
     EVENT_ENTITY_REGISTRY_UPDATED,
@@ -161,6 +165,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         EVENT_ENTITY_REGISTRY_UPDATED,
         metrics.handle_entity_registry_updated,
     )
+    hass.bus.listen(EVENT_AREA_REGISTRY_UPDATED, metrics.handle_area_registry_updated)
 
     for state in hass.states.all():
         if entity_filter(state.entity_id):
@@ -183,6 +188,15 @@ class MetricNameWithLabelValues:
 
     metric_name: str
     label_values: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class AreaInfo:
+    """Class containing area information, to be cached."""
+
+    area_id: str
+    area_name: str | None = None
+    area_norm_name: str | None = None
 
 
 class PrometheusMetrics:
@@ -226,6 +240,12 @@ class PrometheusMetrics:
         self._climate_units = climate_units
 
         self.area_registry = area_registry
+        self.area_cache: dict[str, AreaInfo] = {}
+        for area in area_registry.async_list_areas():
+            self.area_cache[area.id] = AreaInfo(
+                area.id, area.name, area.normalized_name
+            )
+
         self.entity_registry = entity_registry
 
     def handle_state_changed_event(self, event: Event[EventStateChangedData]) -> None:
@@ -309,6 +329,31 @@ class PrometheusMetrics:
 
         if metrics_entity_id:
             self._remove_labelsets(metrics_entity_id)
+
+    def handle_area_registry_updated(
+        self, event: Event[EventAreaRegistryUpdatedData]
+    ) -> None:
+        """Listen for changes to areas and update the cache."""
+
+        area_id = event.data["area_id"]
+        action = event.data["action"]
+
+        _LOGGER.debug("Handling area update for %s (%s)", area_id, action)
+
+        if action == "remove":
+            del self.area_cache[area_id]
+            return
+
+        area = self.area_registry.async_get_area(area_id)
+        if area is None:
+            _LOGGER.error(
+                "Got area event %s for %s, but it is not found in AreaRegistry",
+                action,
+                area_id,
+            )
+            return
+
+        self.area_cache[area.id] = AreaInfo(area.id, area.name, area.normalized_name)
 
     def _remove_labelsets(
         self,
@@ -419,18 +464,10 @@ class PrometheusMetrics:
             _LOGGER.error("Cannot find RegistryEntry for entity %s", state.entity_id)
         else:
             area_id = entity.area_id
-
             if area_id is None:
                 _LOGGER.debug("No area for entity %s", state.entity_id)
-            else:
-                labels["area_id"] = area_id
-
-                area = self.area_registry.async_get_area(area_id)
-                if area is None:
-                    _LOGGER.error("Cannot find AreaEntry for area_id %s", area_id)
-                else:
-                    labels["area_name"] = area.name
-                    labels["area_norm_name"] = area.normalized_name
+            elif area_info := self.area_cache.get(area_id):
+                labels.update(asdict(area_info))
 
         if not labels.keys().isdisjoint(extra_labels.keys()):
             conflicting_keys = labels.keys() & extra_labels.keys()
