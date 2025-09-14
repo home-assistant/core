@@ -77,7 +77,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
                         err.message,
                     )
                     actions_json = {}
-                except asyncio.exceptions.TimeoutError:
+                except TimeoutError:
                     _LOGGER.debug(
                         "Timeout fetching actions for device %s",
                         device_id,
