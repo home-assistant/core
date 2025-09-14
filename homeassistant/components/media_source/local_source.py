@@ -210,9 +210,20 @@ class LocalSource(MediaSource):
         full_path = Path(self.media_dirs[source_dir_id], location)
 
         if not full_path.exists():
-            if location == "":
-                raise BrowseError("Media directory does not exist.")
-            raise BrowseError("Path does not exist.")
+            if location != "":
+                raise BrowseError("Path does not exist.")
+
+            # If a media dir does not exist, return an empty folder
+            # It will be created when uploading files
+            return BrowseMediaSource(
+                domain=self.domain,
+                identifier=source_dir_id,
+                media_class=MediaClass.DIRECTORY,
+                media_content_type=None,
+                title=self.name,
+                can_play=False,
+                can_expand=True,
+            )
 
         if not full_path.is_dir():
             raise BrowseError("Path is not a directory.")
