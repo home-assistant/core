@@ -5,7 +5,7 @@ import asyncio
 import aiohttp
 from pyrituals import Account, AuthenticationException, Diffuser
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -156,7 +156,7 @@ async def _trigger_reauth(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth"},
-            data={"entry_id": entry.entry_id, "unique_id": entry.unique_id or ""},
+            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data={"unique_id": entry.unique_id or ""},
         )
     )
