@@ -68,34 +68,31 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         description_placeholders = {}
-        ha_data = {
-            CONF_LATITUDE: self.hass.config.latitude,
-            CONF_LONGITUDE: self.hass.config.longitude,
-            CONF_LANGUAGE: self.hass.config.language,
-        }
-
-        schema_data = {
-            **ha_data,
-            **user_input,
-        }
 
         if user_input is not None:
-            latitude = schema_data[CONF_LATITUDE]
-            longitude = schema_data[CONF_LONGITUDE]
-            mode = schema_data[CONF_MODE]
+            latitude = user_input[CONF_LATITUDE]
+            longitude = user_input[CONF_LONGITUDE]
+            mode = user_input[CONF_MODE]
 
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
             errors, description_placeholders = await validate_api_key(
-                schema_data[CONF_API_KEY], mode
+                user_input[CONF_API_KEY], mode
             )
 
             if not errors:
-                data, options = build_data_and_options(schema_data)
+                data, options = build_data_and_options(user_input)
                 return self.async_create_entry(
-                    title=schema_data[CONF_NAME], data=data, options=options
+                    title=user_input[CONF_NAME], data=data, options=options
                 )
+            schema_data = user_input
+        else:
+            schema_data = {
+                CONF_LATITUDE: self.hass.config.latitude,
+                CONF_LONGITUDE: self.hass.config.longitude,
+                CONF_LANGUAGE: self.hass.config.language,
+            }
 
         description_placeholders["doc_url"] = (
             "https://www.home-assistant.io/integrations/openweathermap/"
@@ -114,22 +111,22 @@ class OpenWeatherMapOptionsFlow(OptionsFlow):
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""
+        default_data = {
+            CONF_MODE: DEFAULT_OWM_MODE,
+            CONF_LANGUAGE: DEFAULT_LANGUAGE,
+        }
+        schema_data = {
+            **default_data,
+            **self.config_entry.data,
+            **self.config_entry.options,
+        }
+
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA,
-                {
-                    CONF_MODE: self.config_entry.options.get(
-                        CONF_MODE,
-                        self.config_entry.data.get(CONF_MODE, DEFAULT_OWM_MODE),
-                    ),
-                    CONF_LANGUAGE: self.config_entry.options.get(
-                        CONF_LANGUAGE,
-                        self.config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE),
-                    ),
-                },
+                OPTIONS_SCHEMA, schema_data
             ),
         )
