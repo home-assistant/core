@@ -23,6 +23,8 @@ from .const import (
     ATTR_REAL_TIME,
     ATTR_ROUTE,
     ATTR_STOP_ID,
+    CONF_DESTINATION,
+    CONF_ROUTE,
     CONF_STOP_ID,
     DOMAIN,
     SUBENTRY_TYPE_STOP,
@@ -77,14 +79,27 @@ class TransportNSWSensor(CoordinatorEntity, SensorEntity):
         self.subentry = subentry
 
         if subentry:
-            # New subentry mode
-            self._attr_name = subentry.title or f"Stop {subentry.data[CONF_STOP_ID]}"
-            self._attr_unique_id = (
-                f"{DOMAIN}_{config_entry.entry_id}_{subentry.subentry_id}"
-            )
+            # New subentry mode - don't set _attr_name here, use dynamic property
+            # Build unique ID with route and destination for better differentiation
+            unique_id_parts = [
+                DOMAIN,
+                config_entry.entry_id,
+                subentry.data[CONF_STOP_ID],
+            ]
+
+            # Add route if present and not empty
+            route = subentry.data.get(CONF_ROUTE, "").strip()
+            if route:
+                unique_id_parts.append(f"route_{route}")
+
+            # Add destination if present and not empty
+            destination = subentry.data.get(CONF_DESTINATION, "").strip()
+            if destination:
+                unique_id_parts.append(f"dest_{destination}")
+
+            self._attr_unique_id = "_".join(unique_id_parts)
         else:
-            # Legacy mode
-            self._attr_name = config_entry.data[CONF_NAME]
+            # Legacy mode - don't set _attr_name here, use dynamic property
             self._attr_unique_id = f"{DOMAIN}_{config_entry.entry_id}"
 
         # Device info for grouping entities - all sensors for same API key group together
@@ -94,6 +109,34 @@ class TransportNSWSensor(CoordinatorEntity, SensorEntity):
             manufacturer="Transport NSW",
             entry_type=DeviceEntryType.SERVICE,
         )
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor (dynamically updateable)."""
+        if self.subentry:
+            # Check if name is provided in subentry data
+            custom_name = self.subentry.data.get(CONF_NAME, "").strip()
+            if custom_name:
+                return custom_name
+
+            # Fall back to subentry title or default pattern
+            if self.subentry.title and self.subentry.title.strip():
+                return self.subentry.title
+
+            # Generate descriptive name from stop ID, route, and destination
+            name_parts = [f"Stop {self.subentry.data[CONF_STOP_ID]}"]
+
+            route = self.subentry.data.get(CONF_ROUTE, "").strip()
+            if route:
+                name_parts.append(f"Route {route}")
+
+            destination = self.subentry.data.get(CONF_DESTINATION, "").strip()
+            if destination:
+                name_parts.append(f"to {destination}")
+
+            return " ".join(name_parts)
+        # Legacy mode - get name from config entry data
+        return self.config_entry.data.get(CONF_NAME, "Transport NSW Stop")
 
     @property
     def native_value(self) -> int | None:

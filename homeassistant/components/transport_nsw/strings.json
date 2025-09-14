@@ -17,11 +17,9 @@
     "step": {
       "init": {
         "title": "Transport NSW options",
-        "description": "Configure filtering options for departures.",
+        "description": "Update the API key.",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "route": "Route filter (optional)",
-          "destination": "Destination filter (optional)"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     }
@@ -30,23 +28,23 @@
     "stop": {
       "step": {
         "user": {
-          "title": "Add Transport Stop",
+          "title": "Add transport stop",
           "description": "Add a new transport stop to monitor departures.",
           "data": {
             "stop_id": "Stop ID",
-            "name": "Stop name (optional)",
-            "route": "Route filter (optional)",
-            "destination": "Destination filter (optional)"
+            "name": "[%key:common::config_flow::data::name%]",
+            "route": "[%key:component::transport_nsw::config::step::user::data::route%]",
+            "destination": "[%key:component::transport_nsw::config::step::user::data::destination%]"
           }
         },
         "reconfigure": {
-          "title": "Configure Transport Stop",
+          "title": "Reconfigure transport stop",
           "description": "Update the configuration for this transport stop.",
           "data": {
             "stop_id": "Stop ID",
-            "name": "Stop name (optional)",
-            "route": "Route filter (optional)",
-            "destination": "Destination filter (optional)"
+            "name": "[%key:common::config_flow::data::name%]",
+            "route": "[%key:component::transport_nsw::config::step::user::data::route%]",
+            "destination": "[%key:component::transport_nsw::config::step::user::data::destination%]"
           }
         }
       },
