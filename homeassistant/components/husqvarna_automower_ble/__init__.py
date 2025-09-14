@@ -39,12 +39,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) 
         return False
 
     if entry.version == 1:
-        if entry.minor_version < 2:
-            # Migrate from version 1.1 to 1.2
+        if entry.minor_version < 1:
+            # Migrate from version 1.0 to 1.1
             new_data = entry.data.copy()
             new_data[CONF_ADDRESS] = format_mac(entry.data[CONF_ADDRESS])
             hass.config_entries.async_update_entry(
-                entry, data=new_data, version=1, minor_version=2
+                entry, data=new_data, version=1, minor_version=1
             )
 
     return True
