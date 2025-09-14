@@ -30,7 +30,9 @@ TIME_CATEGORIES = ["morning", "afternoon", "evening", "night"]
 
 RESULTS_TO_INCLUDE = 8
 
+# List of domains for which we want to track usage
 ALLOWED_DOMAINS = {
+    # Entity platforms
     Platform.AIR_QUALITY,
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
@@ -63,34 +65,17 @@ ALLOWED_DOMAINS = {
     Platform.WAKE_WORD,
     Platform.WATER_HEATER,
     Platform.WEATHER,
-    # Helpers hardcoded until https://github.com/home-assistant/core/pull/152193
+    # Helpers with own domain
     "counter",
-    "derivative",
-    "filter",
-    "generic_hygrostat",
-    "generic_thermostat",
     "group",
-    "history_stats",
     "input_boolean",
     "input_button",
     "input_datetime",
     "input_number",
     "input_select",
     "input_text",
-    "integration",
-    "manual",
-    "min_max",
-    "mold_indicator",
-    "random",
     "schedule",
-    "statistics",
-    "switch_as_x",
-    "template",
-    "threshold",
     "timer",
-    "tod",
-    "trend",
-    "utility_meter",
 }
 
 
