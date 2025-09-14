@@ -518,21 +518,18 @@ class SynoDSMExternalUSBSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        found = False
         external_usb = self._api.external_usb
         assert external_usb is not None
         if "device" in self.entity_description.key:
             for device in external_usb.get_devices.values():
                 if device.device_name == self._device_id:
-                    found = True
-                    break
+                    return super().available
         elif "partition" in self.entity_description.key:
             for device in external_usb.get_devices.values():
                 for partition in device.device_partitions.values():
                     if partition.partition_title == self._device_id:
-                        found = True
-                        break
-        return found and super().available
+                        return super().available
+        return False
 
 
 class SynoDSMInfoSensor(SynoDSMSensor):
