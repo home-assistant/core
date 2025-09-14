@@ -6,7 +6,7 @@ To update, run python3 -m script.hassfest
 from enum import StrEnum
 
 
-class EntityPlatform(StrEnum):
+class EntityPlatforms(StrEnum):
     """Available entity platforms."""
 
     AI_TASK = "ai_task"
