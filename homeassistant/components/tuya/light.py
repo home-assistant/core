@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityDescription,
+    color_supported,
     filter_supported_color_modes,
 )
 from homeassistant.const import EntityCategory
@@ -28,7 +29,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType, WorkMode
 from .entity import TuyaEntity
 from .models import IntegerTypeData
-from .util import remap_value
+from .util import get_dpcode, remap_value
 
 
 @dataclass
@@ -72,6 +73,15 @@ class TuyaLightEntityDescription(LightEntityDescription):
 
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
+    # White noise machine
+    "bzyd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name=None,
+            color_mode=DPCode.WORK_MODE,
+            color_data=DPCode.COLOUR_DATA,
+        ),
+    ),
     # Curtain Switch
     # https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
     "clkg": (
@@ -514,9 +524,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         color_modes: set[ColorMode] = {ColorMode.ONOFF}
 
         # Determine DPCodes
-        self._color_mode_dpcode = self.find_dpcode(
-            description.color_mode, prefer_function=True
-        )
+        self._color_mode_dpcode = get_dpcode(self.device, description.color_mode)
 
         if int_type := self.find_dpcode(
             description.brightness, dptype=DPType.INTEGER, prefer_function=True
@@ -530,22 +538,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 description.brightness_min, dptype=DPType.INTEGER
             )
 
-        if int_type := self.find_dpcode(
-            description.color_temp, dptype=DPType.INTEGER, prefer_function=True
-        ):
-            self._color_temp = int_type
-            color_modes.add(ColorMode.COLOR_TEMP)
-        # If entity does not have color_temp, check if it has work_mode "white"
-        elif color_mode_enum := self.find_dpcode(
-            description.color_mode, dptype=DPType.ENUM, prefer_function=True
-        ):
-            if WorkMode.WHITE.value in color_mode_enum.range:
-                color_modes.add(ColorMode.WHITE)
-                self._white_color_mode = ColorMode.WHITE
-
         if (
-            dpcode := self.find_dpcode(description.color_data, prefer_function=True)
-        ) and self.get_dptype(dpcode) == DPType.JSON:
+            dpcode := get_dpcode(self.device, description.color_data)
+        ) and self.get_dptype(dpcode, prefer_function=True) == DPType.JSON:
             self._color_data_dpcode = dpcode
             color_modes.add(ColorMode.HS)
             if dpcode in self.device.function:
@@ -567,6 +562,26 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     self._brightness and self._brightness.max > 255
                 ):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
+
+        # Check if the light has color temperature
+        if int_type := self.find_dpcode(
+            description.color_temp, dptype=DPType.INTEGER, prefer_function=True
+        ):
+            self._color_temp = int_type
+            color_modes.add(ColorMode.COLOR_TEMP)
+        # If light has color but does not have color_temp, check if it has
+        # work_mode "white"
+        elif (
+            color_supported(color_modes)
+            and (
+                color_mode_enum := self.find_dpcode(
+                    description.color_mode, dptype=DPType.ENUM, prefer_function=True
+                )
+            )
+            and WorkMode.WHITE.value in color_mode_enum.range
+        ):
+            color_modes.add(ColorMode.WHITE)
+            self._white_color_mode = ColorMode.WHITE
 
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
         if len(self._attr_supported_color_modes) == 1:
@@ -657,8 +672,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 },
             ]
 
-        elif ATTR_BRIGHTNESS in kwargs and self._brightness:
-            brightness = kwargs[ATTR_BRIGHTNESS]
+        elif self._brightness and (ATTR_BRIGHTNESS in kwargs or ATTR_WHITE in kwargs):
+            if ATTR_BRIGHTNESS in kwargs:
+                brightness = kwargs[ATTR_BRIGHTNESS]
+            else:
+                brightness = kwargs[ATTR_WHITE]
 
             # If there is a min/max value, the brightness is actually limited.
             # Meaning it is actually not on a 0-255 scale.

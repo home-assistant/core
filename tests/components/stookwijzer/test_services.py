@@ -3,11 +3,8 @@
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.stookwijzer.const import (
-    ATTR_CONFIG_ENTRY_ID,
-    DOMAIN,
-    SERVICE_GET_FORECAST,
-)
+from homeassistant.components.stookwijzer.const import DOMAIN, SERVICE_GET_FORECAST
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er

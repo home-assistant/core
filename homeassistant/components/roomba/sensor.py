@@ -35,7 +35,7 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda self: self.battery_level,
+        value_fn=lambda self: self.vacuum_state.get("batPct"),
     ),
     RoombaSensorEntityDescription(
         key="battery_cycles",

@@ -55,10 +55,13 @@ async def test_device_conflict_manual(
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            mac_address="1122334455ab", name="test", model="esp32-iso-poe"
-        )
+    device_info = DeviceInfo(
+        mac_address="1122334455ab", name="test", model="esp32-iso-poe"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -102,10 +105,13 @@ async def test_device_conflict_manual(
     assert data["type"] == FlowResultType.FORM
     assert data["step_id"] == "manual"
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            mac_address="11:22:33:44:55:aa", name="test", model="esp32-iso-poe"
-        )
+    device_info = DeviceInfo(
+        mac_address="11:22:33:44:55:aa", name="test", model="esp32-iso-poe"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
     caplog.clear()
     data = await process_repair_fix_flow(client, flow_id)
@@ -169,6 +175,11 @@ async def test_device_conflict_migration(
         mac_address="11:22:33:44:55:AB", name="test", model="esp32-iso-poe"
     )
     mock_client.device_info = AsyncMock(return_value=new_device_info)
+    # Keep the same entity_info when reloading
+    mock_client.list_entities_services = AsyncMock(return_value=(entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(new_device_info, entity_info, [])
+    )
     device.device_info = new_device_info
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
