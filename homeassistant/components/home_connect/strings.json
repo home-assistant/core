@@ -712,8 +712,14 @@
           "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
           "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
         },
-        "key": { "name": "Key", "description": "Key of the setting." },
-        "value": { "name": "Value", "description": "Value of the setting." }
+        "key": {
+          "name": "Key",
+          "description": "Key of the setting."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value of the setting."
+        }
       }
     }
   },
@@ -804,6 +810,18 @@
             "state": {
               "auto": "[%key:common::state::auto%]",
               "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "air_conditioner": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic": "[%key:common::state::auto%]",
+              "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual": "[%key:common::state::manual%]"
             }
           }
         }

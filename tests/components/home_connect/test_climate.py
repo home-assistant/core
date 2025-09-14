@@ -588,7 +588,7 @@ async def test_set_preset_mode_raises_home_assistant_error_on_api_errors(
         ),
     ],
 )
-async def test_options_functionality(
+async def test_fan_mode_functionality(
     hass: HomeAssistant,
     client: MagicMock,
     config_entry: MockConfigEntry,
@@ -658,13 +658,13 @@ async def test_options_functionality(
     assert entity_state.attributes[ATTR_FAN_MODE] == expected_fan_modes[0]
 
 
-async def test_set_option_raises_home_assistant_error_on_api_errors(
+async def test_set_fan_mode_raises_home_assistant_error_on_api_errors(
     hass: HomeAssistant,
     client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Test that setting an option raises HomeAssistantError on API errors."""
+    """Test that setting a fan mode raises HomeAssistantError on API errors."""
     entity_id = "climate.airconditioner"
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
