@@ -65,7 +65,7 @@ class WorkdayCalendarEntity(BaseWorkdayEntity, CalendarEntity):
             name,
             entry_id,
         )
-        self._attr_unique_id = f"{entry_id}-calendar"
+        self._attr_unique_id = entry_id
         self._attr_event = None
         self.event_list: list[CalendarEvent] = []
         self._name = name
