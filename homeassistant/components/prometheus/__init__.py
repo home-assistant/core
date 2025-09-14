@@ -247,6 +247,9 @@ class PrometheusMetrics:
             )
 
         self.entity_registry = entity_registry
+        self.entity_area_cache: dict[
+            str, str | None
+        ] = {}  # Populated on-demand, invalidated in handle_entity_registry_updated
 
     def handle_state_changed_event(self, event: Event[EventStateChangedData]) -> None:
         """Handle new messages from the bus."""
@@ -326,6 +329,9 @@ class PrometheusMetrics:
                 metrics_entity_id = changes["entity_id"]
             elif "disabled_by" in changes:
                 metrics_entity_id = entity_id
+
+            if entity_id and "area_id" in changes:
+                del self.entity_area_cache[entity_id]
 
         if metrics_entity_id:
             self._remove_labelsets(metrics_entity_id)
@@ -459,15 +465,7 @@ class PrometheusMetrics:
             "area_norm_name": "<no-area>",
         }
 
-        entity = self.entity_registry.async_get(state.entity_id)
-        if entity is None:
-            _LOGGER.error("Cannot find RegistryEntry for entity %s", state.entity_id)
-        else:
-            area_id = entity.area_id
-            if area_id is None:
-                _LOGGER.debug("No area for entity %s", state.entity_id)
-            elif area_info := self.area_cache.get(area_id):
-                labels.update(asdict(area_info))
+        labels.update(**self._make_area_labels(state.entity_id))
 
         if not labels.keys().isdisjoint(extra_labels.keys()):
             conflicting_keys = labels.keys() & extra_labels.keys()
@@ -476,6 +474,39 @@ class PrometheusMetrics:
             )
 
         return labels | extra_labels
+
+    def _make_area_labels(self, entity_id: str) -> dict[str, str]:
+        defaults = {
+            # Have to set the keys, because a metric cannot have variable labels
+            "area_id": "<no-area>",
+            "area_name": "<no-area>",
+            "area_norm_name": "<no-area>",
+        }
+
+        if entity_id not in self.entity_area_cache:
+            entity = self.entity_registry.async_get(entity_id)
+            if entity is None:
+                _LOGGER.error("Cannot find RegistryEntry for entity %s", entity_id)
+                return defaults
+            self.entity_area_cache[entity_id] = entity.area_id
+
+        entity_area_id = self.entity_area_cache[entity_id]
+        if entity_area_id is None:
+            _LOGGER.debug("No area for entity %s", entity_id)
+            return defaults
+
+        if entity_area_id not in self.area_cache:
+            area = self.area_registry.async_get_area(entity_area_id)
+            if area is None:
+                _LOGGER.error("Cannot find area %s in AreaRegistry", entity_area_id)
+                return defaults
+            self.area_cache[area.id] = AreaInfo(
+                area.id, area.name, area.normalized_name
+            )
+
+        area_info = self.area_cache[entity_area_id]
+
+        return asdict(area_info)
 
     def _battery(self, state: State) -> None:
         if (battery_level := state.attributes.get(ATTR_BATTERY_LEVEL)) is None:
