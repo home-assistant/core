@@ -5159,9 +5159,15 @@ async def test_validate_statistics_unit_ignore_device_class(
             POWER_SENSOR_ATTRIBUTES,
             "W",
             "kW",
-            "GW, MW, TW, W, kW, mW",
+            "BTU/h, GW, MW, TW, W, kW, mW",
         ),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "GW, MW, TW, W, kW, mW"),
+        (
+            METRIC_SYSTEM,
+            POWER_SENSOR_ATTRIBUTES,
+            "W",
+            "kW",
+            "BTU/h, GW, MW, TW, W, kW, mW",
+        ),
         (
             US_CUSTOMARY_SYSTEM,
             TEMPERATURE_SENSOR_ATTRIBUTES,
