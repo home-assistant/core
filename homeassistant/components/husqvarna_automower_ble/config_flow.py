@@ -148,7 +148,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.address
 
         try:
-            (manufacturer, device_type, model) = await Mower(
+            (manufacturer, device_type, _model) = await Mower(
                 channel_id, self.address
             ).probe_gatts(device)
         except (BleakError, TimeoutError) as exception:

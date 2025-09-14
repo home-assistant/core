@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import WhirlpoolConfigEntry
 from .entity import WhirlpoolEntity
 
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(minutes=5)
 
 

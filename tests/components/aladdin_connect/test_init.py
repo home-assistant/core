@@ -30,6 +30,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     mock_door.status = "closed"
     mock_door.link_status = "connected"
     mock_door.battery_level = 100
+    mock_door.unique_id = f"{mock_door.device_id}-{mock_door.door_number}"
 
     mock_client = AsyncMock()
     mock_client.get_doors.return_value = [mock_door]
@@ -80,6 +81,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     mock_door.status = "closed"
     mock_door.link_status = "connected"
     mock_door.battery_level = 100
+    mock_door.unique_id = f"{mock_door.device_id}-{mock_door.door_number}"
 
     # Mock client
     mock_client = AsyncMock()
