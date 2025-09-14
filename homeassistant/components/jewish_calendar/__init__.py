@@ -83,17 +83,6 @@ async def async_setup_entry(
 
     config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    async def update_listener(
-        hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
-    ) -> None:
-        # Trigger update of states for all platforms
-        coordinator = config_entry.runtime_data
-        if coordinator.event_unsub:
-            coordinator.event_unsub()
-        await coordinator.async_request_refresh()
-
-    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
     return True
 
 
