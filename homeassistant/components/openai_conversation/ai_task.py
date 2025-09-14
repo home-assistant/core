@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import base64
 from json import JSONDecodeError
 import logging
+from typing import TYPE_CHECKING
+
+from openai.types.responses.response_output_item import ImageGenerationCall
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +16,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
+from .const import CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL, UNSUPPORTED_IMAGE_MODELS
 from .entity import OpenAIBaseLLMEntity
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigSubentry
+
+    from . import OpenAIConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,10 +49,16 @@ class OpenAITaskEntity(
 ):
     """OpenAI AI Task entity."""
 
-    _attr_supported_features = (
-        ai_task.AITaskEntityFeature.GENERATE_DATA
-        | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
-    )
+    def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
+        """Initialize the entity."""
+        super().__init__(entry, subentry)
+        self._attr_supported_features = (
+            ai_task.AITaskEntityFeature.GENERATE_DATA
+            | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
+        )
+        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        if not model.startswith(tuple(UNSUPPORTED_IMAGE_MODELS)):
+            self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 
     async def _async_generate_data(
         self,
@@ -77,4 +93,57 @@ class OpenAITaskEntity(
         return ai_task.GenDataTaskResult(
             conversation_id=chat_log.conversation_id,
             data=data,
+        )
+
+    async def _async_generate_image(
+        self,
+        task: ai_task.GenImageTask,
+        chat_log: conversation.ChatLog,
+    ) -> ai_task.GenImageTaskResult:
+        """Handle a generate image task."""
+        await self._async_handle_chat_log(chat_log, task.name, force_image=True)
+
+        if not isinstance(chat_log.content[-1], conversation.AssistantContent):
+            raise HomeAssistantError(
+                "Last content in chat log is not an AssistantContent"
+            )
+
+        image_call: ImageGenerationCall | None = None
+        for content in reversed(chat_log.content):
+            if not isinstance(content, conversation.AssistantContent):
+                break
+            if isinstance(content.native, ImageGenerationCall):
+                if image_call is None or image_call.result is None:
+                    image_call = content.native
+                else:  # Remove image data from chat log to save memory
+                    content.native.result = None
+
+        if image_call is None or image_call.result is None:
+            raise HomeAssistantError("No image returned")
+
+        image_data = base64.b64decode(image_call.result)
+        image_call.result = None
+
+        if hasattr(image_call, "output_format") and (
+            output_format := image_call.output_format
+        ):
+            mime_type = f"image/{output_format}"
+        else:
+            mime_type = "image/png"
+
+        if hasattr(image_call, "size") and (size := image_call.size):
+            width, height = tuple(size.split("x"))
+        else:
+            width, height = None, None
+
+        return ai_task.GenImageTaskResult(
+            image_data=image_data,
+            conversation_id=chat_log.conversation_id,
+            mime_type=mime_type,
+            width=int(width) if width else None,
+            height=int(height) if height else None,
+            model="gpt-image-1",
+            revised_prompt=image_call.revised_prompt
+            if hasattr(image_call, "revised_prompt")
+            else None,
         )

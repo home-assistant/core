@@ -7,13 +7,14 @@ from collections.abc import AsyncGenerator, Callable, Iterable
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import openai
 from openai._streaming import AsyncStream
 from openai.types.responses import (
     EasyInputMessageParam,
     FunctionToolParam,
+    ResponseCodeInterpreterToolCall,
     ResponseCompletedEvent,
     ResponseErrorEvent,
     ResponseFailedEvent,
@@ -21,6 +22,8 @@ from openai.types.responses import (
     ResponseFunctionCallArgumentsDoneEvent,
     ResponseFunctionToolCall,
     ResponseFunctionToolCallParam,
+    ResponseFunctionWebSearch,
+    ResponseFunctionWebSearchParam,
     ResponseIncompleteEvent,
     ResponseInputFileParam,
     ResponseInputImageParam,
@@ -34,14 +37,20 @@ from openai.types.responses import (
     ResponseReasoningSummaryTextDeltaEvent,
     ResponseStreamEvent,
     ResponseTextDeltaEvent,
+    ToolChoiceTypesParam,
     ToolParam,
     WebSearchToolParam,
 )
 from openai.types.responses.response_create_params import ResponseCreateParamsStreaming
-from openai.types.responses.response_input_param import FunctionCallOutput
+from openai.types.responses.response_input_param import (
+    FunctionCallOutput,
+    ImageGenerationCall as ImageGenerationCallParam,
+)
+from openai.types.responses.response_output_item import ImageGenerationCall
 from openai.types.responses.tool_param import (
     CodeInterpreter,
     CodeInterpreterContainerCodeInterpreterToolAuto,
+    ImageGeneration,
 )
 from openai.types.responses.web_search_tool_param import UserLocation
 import voluptuous as vol
@@ -51,7 +60,7 @@ from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, llm
+from homeassistant.helpers import device_registry as dr, issue_registry as ir, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -92,6 +101,8 @@ MAX_TOOL_ITERATIONS = 10
 def _adjust_schema(schema: dict[str, Any]) -> None:
     """Adjust the schema to be compatible with OpenAI API."""
     if schema["type"] == "object":
+        schema.setdefault("strict", True)
+        schema.setdefault("additionalProperties", False)
         if "properties" not in schema:
             return
 
@@ -125,8 +136,6 @@ def _format_structured_output(
 
     _adjust_schema(result)
 
-    result["strict"] = True
-    result["additionalProperties"] = False
     return result
 
 
@@ -149,16 +158,27 @@ def _convert_content_to_param(
     """Convert any native chat message for this agent to the native format."""
     messages: ResponseInputParam = []
     reasoning_summary: list[str] = []
+    web_search_calls: dict[str, ResponseFunctionWebSearchParam] = {}
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
-            messages.append(
-                FunctionCallOutput(
-                    type="function_call_output",
-                    call_id=content.tool_call_id,
-                    output=json.dumps(content.tool_result),
+            if (
+                content.tool_name == "web_search_call"
+                and content.tool_call_id in web_search_calls
+            ):
+                web_search_call = web_search_calls.pop(content.tool_call_id)
+                web_search_call["status"] = content.tool_result.get(  # type: ignore[typeddict-item]
+                    "status", "completed"
                 )
-            )
+                messages.append(web_search_call)
+            else:
+                messages.append(
+                    FunctionCallOutput(
+                        type="function_call_output",
+                        call_id=content.tool_call_id,
+                        output=json.dumps(content.tool_result),
+                    )
+                )
             continue
 
         if content.content:
@@ -173,15 +193,27 @@ def _convert_content_to_param(
 
         if isinstance(content, conversation.AssistantContent):
             if content.tool_calls:
-                messages.extend(
-                    ResponseFunctionToolCallParam(
-                        type="function_call",
-                        name=tool_call.tool_name,
-                        arguments=json.dumps(tool_call.tool_args),
-                        call_id=tool_call.id,
-                    )
-                    for tool_call in content.tool_calls
-                )
+                for tool_call in content.tool_calls:
+                    if (
+                        tool_call.external
+                        and tool_call.tool_name == "web_search_call"
+                        and "action" in tool_call.tool_args
+                    ):
+                        web_search_calls[tool_call.id] = ResponseFunctionWebSearchParam(
+                            type="web_search_call",
+                            id=tool_call.id,
+                            action=tool_call.tool_args["action"],
+                            status="completed",
+                        )
+                    else:
+                        messages.append(
+                            ResponseFunctionToolCallParam(
+                                type="function_call",
+                                name=tool_call.tool_name,
+                                arguments=json.dumps(tool_call.tool_args),
+                                call_id=tool_call.id,
+                            )
+                        )
 
             if content.thinking_content:
                 reasoning_summary.append(content.thinking_content)
@@ -204,32 +236,48 @@ def _convert_content_to_param(
                     )
                 )
                 reasoning_summary = []
+            elif isinstance(content.native, ImageGenerationCall):
+                messages.append(
+                    cast(ImageGenerationCallParam, content.native.to_dict())
+                )
 
     return messages
 
 
-async def _transform_stream(
+async def _transform_stream(  # noqa: C901 - This is complex, but better to have it in one place
     chat_log: conversation.ChatLog,
     stream: AsyncStream[ResponseStreamEvent],
-) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+) -> AsyncGenerator[
+    conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
+]:
     """Transform an OpenAI delta stream into HA format."""
     last_summary_index = None
+    last_role: Literal["assistant", "tool_result"] | None = None
 
     async for event in stream:
         LOGGER.debug("Received event: %s", event)
 
         if isinstance(event, ResponseOutputItemAddedEvent):
-            if isinstance(event.item, ResponseOutputMessage):
-                yield {"role": event.item.role}
-                last_summary_index = None
-            elif isinstance(event.item, ResponseFunctionToolCall):
+            if isinstance(event.item, ResponseFunctionToolCall):
                 # OpenAI has tool calls as individual events
                 # while HA puts tool calls inside the assistant message.
                 # We turn them into individual assistant content for HA
                 # to ensure that tools are called as soon as possible.
                 yield {"role": "assistant"}
+                last_role = "assistant"
                 last_summary_index = None
                 current_tool_call = event.item
+            elif (
+                isinstance(event.item, ResponseOutputMessage)
+                or (
+                    isinstance(event.item, ResponseReasoningItem)
+                    and last_summary_index is not None
+                )  # Subsequent ResponseReasoningItem
+                or last_role != "assistant"
+            ):
+                yield {"role": "assistant"}
+                last_role = "assistant"
+                last_summary_index = None
         elif isinstance(event, ResponseOutputItemDoneEvent):
             if isinstance(event.item, ResponseReasoningItem):
                 yield {
@@ -240,6 +288,55 @@ async def _transform_stream(
                         encrypted_content=event.item.encrypted_content,
                     )
                 }
+                last_summary_index = len(event.item.summary) - 1
+            elif isinstance(event.item, ResponseCodeInterpreterToolCall):
+                yield {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            id=event.item.id,
+                            tool_name="code_interpreter",
+                            tool_args={
+                                "code": event.item.code,
+                                "container": event.item.container_id,
+                            },
+                            external=True,
+                        )
+                    ]
+                }
+                yield {
+                    "role": "tool_result",
+                    "tool_call_id": event.item.id,
+                    "tool_name": "code_interpreter",
+                    "tool_result": {
+                        "output": [output.to_dict() for output in event.item.outputs]  # type: ignore[misc]
+                        if event.item.outputs is not None
+                        else None
+                    },
+                }
+                last_role = "tool_result"
+            elif isinstance(event.item, ResponseFunctionWebSearch):
+                yield {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            id=event.item.id,
+                            tool_name="web_search_call",
+                            tool_args={
+                                "action": event.item.action.to_dict(),
+                            },
+                            external=True,
+                        )
+                    ]
+                }
+                yield {
+                    "role": "tool_result",
+                    "tool_call_id": event.item.id,
+                    "tool_name": "web_search_call",
+                    "tool_result": {"status": event.item.status},
+                }
+                last_role = "tool_result"
+            elif isinstance(event.item, ImageGenerationCall):
+                yield {"native": event.item}
+                last_summary_index = -1  # Trigger new assistant message on next turn
         elif isinstance(event, ResponseTextDeltaEvent):
             yield {"content": event.delta}
         elif isinstance(event, ResponseReasoningSummaryTextDeltaEvent):
@@ -252,6 +349,7 @@ async def _transform_stream(
                 and event.summary_index != last_summary_index
             ):
                 yield {"role": "assistant"}
+                last_role = "assistant"
             last_summary_index = event.summary_index
             yield {"thinking_content": event.delta}
         elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
@@ -344,9 +442,37 @@ class OpenAIBaseLLMEntity(Entity):
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
+        force_image: bool = False,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
+
+        messages = _convert_content_to_param(chat_log.content)
+
+        model_args = ResponseCreateParamsStreaming(
+            model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            input=messages,
+            max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+            temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+            user=chat_log.conversation_id,
+            store=False,
+            stream=True,
+        )
+
+        if model_args["model"].startswith(("o", "gpt-5")):
+            model_args["reasoning"] = {
+                "effort": options.get(
+                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+                ),
+                "summary": "auto",
+            }
+            model_args["include"] = ["reasoning.encrypted_content"]
+
+        if model_args["model"].startswith("gpt-5"):
+            model_args["text"] = {
+                "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
+            }
 
         tools: list[ToolParam] = []
         if chat_log.llm_api:
@@ -381,35 +507,21 @@ class OpenAIBaseLLMEntity(Entity):
                     ),
                 )
             )
+            model_args.setdefault("include", []).append("code_interpreter_call.outputs")  # type: ignore[union-attr]
 
-        messages = _convert_content_to_param(chat_log.content)
+        if force_image:
+            tools.append(
+                ImageGeneration(
+                    type="image_generation",
+                    input_fidelity="high",
+                    output_format="png",
+                )
+            )
+            model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
+            model_args["store"] = True  # Avoid sending image data back and forth
 
-        model_args = ResponseCreateParamsStreaming(
-            model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
-            input=messages,
-            max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-            top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-            temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-            user=chat_log.conversation_id,
-            store=False,
-            stream=True,
-        )
         if tools:
             model_args["tools"] = tools
-
-        if model_args["model"].startswith(("o", "gpt-5")):
-            model_args["reasoning"] = {
-                "effort": options.get(
-                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                ),
-                "summary": "auto",
-            }
-            model_args["include"] = ["reasoning.encrypted_content"]
-
-        if model_args["model"].startswith("gpt-5"):
-            model_args["text"] = {
-                "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
-            }
 
         last_content = chat_log.content[-1]
 
@@ -466,6 +578,20 @@ class OpenAIBaseLLMEntity(Entity):
                 ):
                     LOGGER.error("Insufficient funds for OpenAI: %s", err)
                     raise HomeAssistantError("Insufficient funds for OpenAI") from err
+                if "Verify Organization" in str(err):
+                    ir.async_create_issue(
+                        self.hass,
+                        DOMAIN,
+                        "organization_verification_required",
+                        is_fixable=False,
+                        is_persistent=False,
+                        learn_more_url="https://help.openai.com/en/articles/10910291-api-organization-verification",
+                        severity=ir.IssueSeverity.WARNING,
+                        translation_key="organization_verification_required",
+                        translation_placeholders={
+                            "platform_settings": "https://platform.openai.com/settings/organization/general"
+                        },
+                    )
 
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err

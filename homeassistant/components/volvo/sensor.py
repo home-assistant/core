@@ -35,8 +35,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_BATTERY_CAPACITY
-from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
+from .const import API_NONE_VALUE, DATA_BATTERY_CAPACITY
+from .coordinator import VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_key
 
 PARALLEL_UPDATES = 0
@@ -67,8 +67,8 @@ def _calculate_time_to_service(field: VolvoCarsValue) -> int:
 
 def _charging_power_value(field: VolvoCarsValue) -> int:
     return (
-        int(field.value)
-        if isinstance(field, VolvoCarsValueStatusField) and field.status == "OK"
+        field.value
+        if isinstance(field, VolvoCarsValueStatusField) and isinstance(field.value, int)
         else 0
     )
 
@@ -248,7 +248,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     # We're not using `electricRange` from the energy state endpoint because
     # the official app seems to use `distanceToEmptyBattery`.
-    # In issue #150213, a user described to behavior as follows:
+    # In issue #150213, a user described the behavior as follows:
     # - For a `distanceToEmptyBattery` of 250km, the `electricRange` was 150mi
     # - For a `distanceToEmptyBattery` of 260km, the `electricRange` was 160mi
     VolvoSensorDescription(
@@ -354,27 +354,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-
-    entities: list[VolvoSensor] = []
-    added_keys: set[str] = set()
-
-    def _add_entity(
-        coordinator: VolvoBaseCoordinator, description: VolvoSensorDescription
-    ) -> None:
-        entities.append(VolvoSensor(coordinator, description))
-        added_keys.add(description.key)
-
     coordinators = entry.runtime_data
-
-    for coordinator in coordinators:
-        for description in _DESCRIPTIONS:
-            if description.key in added_keys:
-                continue
-
-            if description.api_field in coordinator.data:
-                _add_entity(coordinator, description)
-
-    async_add_entities(entities)
+    async_add_entities(
+        VolvoSensor(coordinator, description)
+        for coordinator in coordinators
+        for description in _DESCRIPTIONS
+        if description.api_field in coordinator.data
+    )
 
 
 class VolvoSensor(VolvoEntity, SensorEntity):
@@ -401,7 +387,7 @@ class VolvoSensor(VolvoEntity, SensorEntity):
             native_value = str(native_value)
             native_value = (
                 value_to_translation_key(native_value)
-                if native_value.upper() != "UNSPECIFIED"
+                if native_value.upper() != API_NONE_VALUE
                 else None
             )
 

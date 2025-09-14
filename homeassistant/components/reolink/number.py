@@ -151,6 +151,30 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_volume(ch, volume=int(value)),
     ),
     ReolinkNumberEntityDescription(
+        key="volume_speak",
+        cmd_key="GetAudioCfg",
+        translation_key="volume_speak",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "volume_speak"),
+        value=lambda api, ch: api.volume_speak(ch),
+        method=lambda api, ch, value: api.set_volume(ch, volume_speak=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
+        key="volume_doorbell",
+        cmd_key="GetAudioCfg",
+        translation_key="volume_doorbell",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "volume_doorbell"),
+        value=lambda api, ch: api.volume_doorbell(ch),
+        method=lambda api, ch, value: api.set_volume(ch, volume_doorbell=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
         key="guard_return_time",
         cmd_key="GetPtzGuard",
         translation_key="guard_return_time",
@@ -780,6 +804,19 @@ CHIME_NUMBER_ENTITIES = (
         value=lambda chime: chime.volume,
         method=lambda chime, value: chime.set_option(volume=int(value)),
     ),
+    ReolinkChimeNumberEntityDescription(
+        key="silent_time",
+        cmd_key="609",
+        translation_key="silent_time",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=720,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        value=lambda chime: int(chime.silent_time / 60),
+        method=lambda chime, value: chime.set_silent_time(time=int(value * 60)),
+    ),
 )
 
 
@@ -816,6 +853,7 @@ async def async_setup_entry(
         ReolinkChimeNumberEntity(reolink_data, chime, entity_description)
         for entity_description in CHIME_NUMBER_ENTITIES
         for chime in api.chime_list
+        if chime.channel is not None
     )
     async_add_entities(entities)
 
