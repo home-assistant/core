@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohomeconnect.model import (
     ArrayOfEvents,
     ArrayOfPrograms,
+    Event,
+    EventKey,
     EventMessage,
     EventType,
     HomeAppliance,
@@ -40,11 +42,17 @@ from homeassistant.components.climate import (
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
+    ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -455,6 +463,9 @@ async def test_preset_modes_programs_mapping_and_functionality(
     assert entity
     assert entity.capabilities
     assert entity.capabilities[ATTR_PRESET_MODES] == expected_preset_modes
+    state = hass.states.get(entity.entity_id)
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & ClimateEntityFeature.PRESET_MODE
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -470,48 +481,6 @@ async def test_preset_modes_programs_mapping_and_functionality(
     entity_state = hass.states.get(entity.entity_id)
     assert entity_state
     assert entity_state.attributes[ATTR_PRESET_MODE] == expected_preset_modes[0]
-
-
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
-@pytest.mark.parametrize(
-    ("program_keys"),
-    [
-        [ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO],
-        [
-            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
-            ProgramKey.LAUNDRY_CARE_DRYER_ANTI_SHRINK,
-        ],
-    ],
-)
-async def test_missing_preset_mode_programs(
-    entity_registry: er.EntityRegistry,
-    client: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    program_keys: list[ProgramKey],
-) -> None:
-    """Test that the preset modes are not added if there are no corresponding programs."""
-    client.get_all_programs.side_effect = None
-    client.get_all_programs.return_value = ArrayOfPrograms(
-        [
-            EnumerateProgram(
-                key=program_key,
-                raw_key=program_key.value,
-                constraints=EnumerateProgramConstraints(
-                    execution=Execution.SELECT_AND_START,
-                ),
-            )
-            for program_key in program_keys
-        ]
-    )
-
-    assert await integration_setup(client)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    entity = entity_registry.async_get("climate.airconditioner")
-    assert entity
-    assert entity.capabilities
-    assert ATTR_PRESET_MODES not in entity.capabilities
 
 
 @pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
@@ -698,3 +667,115 @@ async def test_set_fan_mode_raises_home_assistant_error_on_api_errors(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+async def test_fan_mode_feature_supported(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test that fan feature is supported depending on the fan speed mode option availability."""
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+                    "Enumeration",
+                    constraints=ProgramDefinitionConstraints(
+                        allowed_values=[
+                            "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
+                            "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
+                        ]
+                    ),
+                )
+            ],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = "climate.airconditioner"
+    state = hass.states.get(entity_id)
+    assert state
+
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & ClimateEntityFeature.FAN_MODE
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.UNKNOWN.value,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert not state.attributes[ATTR_SUPPORTED_FEATURES] & ClimateEntityFeature.FAN_MODE
+
+
+@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize(
+    ("program_keys"),
+    [
+        [ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO],
+        [
+            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+            ProgramKey.LAUNDRY_CARE_DRYER_ANTI_SHRINK,
+        ],
+    ],
+)
+async def test_preset_mode_feature_not_supported_on_missing_active_clean(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    program_keys: list[ProgramKey],
+) -> None:
+    """Test that the preset modes are supported if active clean program is missing."""
+    client.get_all_programs.side_effect = None
+    client.get_all_programs.return_value = ArrayOfPrograms(
+        [
+            EnumerateProgram(
+                key=program_key,
+                raw_key=program_key.value,
+                constraints=EnumerateProgramConstraints(
+                    execution=Execution.SELECT_AND_START,
+                ),
+            )
+            for program_key in program_keys
+        ]
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("climate.airconditioner")
+    assert state
+    assert (
+        not state.attributes[ATTR_SUPPORTED_FEATURES] & ClimateEntityFeature.PRESET_MODE
+    )

@@ -121,7 +121,6 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
         self.update_fan_mode()
         self.set_hvac_modes_and_preset()
-        self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
     def set_hvac_modes_and_preset(self) -> None:
         """Set the HVAC modes and preset modes for the entity."""
@@ -151,8 +150,10 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
         if self._attr_preset_modes:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+            self.__dict__.pop("supported_features", None)
         else:
             self._attr_supported_features &= ~ClimateEntityFeature.PRESET_MODE
+            self.__dict__.pop("supported_features", None)
 
     @callback
     def _handle_coordinator_update_fan_mode(self) -> None:
@@ -236,6 +237,16 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 for option in self._original_option_keys
                 if option is not None and option in FAN_MODES_OPTIONS_INVERTED
             ]
+        match (
+            self._attr_supported_features & ClimateEntityFeature.FAN_MODE,
+            option_definition is not None,
+        ):
+            case (0, True):
+                self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+                self.__dict__.pop("supported_features", None)
+            case (ClimateEntityFeature.FAN_MODE, False):
+                self._attr_supported_features &= ~ClimateEntityFeature.FAN_MODE
+                self.__dict__.pop("supported_features", None)
 
     async def set_program(self, program_key: ProgramKey) -> None:
         """Set new target program."""
