@@ -412,6 +412,7 @@ class PowerConverter(BaseUnitConverter):
         UnitOfPower.MEGA_WATT: 1 / 1e6,
         UnitOfPower.GIGA_WATT: 1 / 1e9,
         UnitOfPower.TERA_WATT: 1 / 1e12,
+        UnitOfPower.BTU_PER_HOUR: 1 / 0.29307107,
     }
     VALID_UNITS = {
         UnitOfPower.MILLIWATT,
@@ -420,6 +421,7 @@ class PowerConverter(BaseUnitConverter):
         UnitOfPower.MEGA_WATT,
         UnitOfPower.GIGA_WATT,
         UnitOfPower.TERA_WATT,
+        UnitOfPower.BTU_PER_HOUR,
     }
 
 
