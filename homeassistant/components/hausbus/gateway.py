@@ -20,32 +20,13 @@ from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import Mo
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.RemoteObjects import (
     RemoteObjects,
 )
-from pyhausbus.de.hausbus.homeassistant.proxy.PowerMeter import PowerMeter
-from pyhausbus.de.hausbus.homeassistant.proxy.RFIDReader import RFIDReader
-from pyhausbus.de.hausbus.homeassistant.proxy.rFIDReader.data.EvData import (
-    EvData as RfidEvData,
-)
-from pyhausbus.de.hausbus.homeassistant.proxy.Taster import Taster
-from pyhausbus.de.hausbus.homeassistant.proxy.taster.data.EvClicked import EvClicked
-from pyhausbus.de.hausbus.homeassistant.proxy.taster.data.EvCovered import EvCovered
-from pyhausbus.de.hausbus.homeassistant.proxy.taster.data.EvDoubleClick import (
-    EvDoubleClick,
-)
-from pyhausbus.de.hausbus.homeassistant.proxy.taster.data.EvFree import EvFree
-from pyhausbus.de.hausbus.homeassistant.proxy.taster.data.EvHoldEnd import EvHoldEnd
-from pyhausbus.de.hausbus.homeassistant.proxy.taster.data.EvHoldStart import EvHoldStart
 from pyhausbus.HausBusUtils import HOMESERVER_DEVICE_ID
 from pyhausbus.HomeServer import HomeServer
 from pyhausbus.IBusDataListener import IBusDataListener
 from pyhausbus.ObjectId import ObjectId
 from pyhausbus.Templates import Templates
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -219,7 +200,6 @@ class HausbusGateway(IBusDataListener):
                 instances: list[ABusFeature] = self.home_server.getDeviceInstances(
                     object_id.getValue(), data
                 )
-
 
                 for instance in instances:
                     instanceObjectId = ObjectId(instance.getObjectId())
