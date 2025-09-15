@@ -4,6 +4,7 @@ import logging
 
 import jinja2
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import CONF_DISCOVERY, CONF_PAYLOAD, Platform
 from homeassistant.exceptions import TemplateError
 
@@ -31,9 +32,13 @@ CONF_AVAILABILITY_TEMPLATE = "availability_template"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
 CONF_BROKER = "broker"
 CONF_BIRTH_MESSAGE = "birth_message"
+CONF_CODE_ARM_REQUIRED = "code_arm_required"
+CONF_CODE_DISARM_REQUIRED = "code_disarm_required"
 CONF_CODE_FORMAT = "code_format"
+CONF_CODE_TRIGGER_REQUIRED = "code_trigger_required"
 CONF_COMMAND_TEMPLATE = "command_template"
 CONF_COMMAND_TOPIC = "command_topic"
+CONF_DEFAULT_ENTITY_ID = "default_entity_id"
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 CONF_ENCODING = "encoding"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
@@ -127,7 +132,13 @@ CONF_OSCILLATION_COMMAND_TOPIC = "oscillation_command_topic"
 CONF_OSCILLATION_COMMAND_TEMPLATE = "oscillation_command_template"
 CONF_OSCILLATION_STATE_TOPIC = "oscillation_state_topic"
 CONF_OSCILLATION_VALUE_TEMPLATE = "oscillation_value_template"
+CONF_PAYLOAD_ARM_AWAY = "payload_arm_away"
+CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
+CONF_PAYLOAD_ARM_HOME = "payload_arm_home"
+CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
+CONF_PAYLOAD_ARM_VACATION = "payload_arm_vacation"
 CONF_PAYLOAD_CLOSE = "payload_close"
+CONF_PAYLOAD_DISARM = "payload_disarm"
 CONF_PAYLOAD_LOCK = "payload_lock"
 CONF_PAYLOAD_OPEN = "payload_open"
 CONF_PAYLOAD_OSCILLATION_OFF = "payload_oscillation_off"
@@ -137,6 +148,7 @@ CONF_PAYLOAD_RESET_PERCENTAGE = "payload_reset_percentage"
 CONF_PAYLOAD_RESET_PRESET_MODE = "payload_reset_preset_mode"
 CONF_PAYLOAD_STOP = "payload_stop"
 CONF_PAYLOAD_STOP_TILT = "payload_stop_tilt"
+CONF_PAYLOAD_TRIGGER = "payload_trigger"
 CONF_PAYLOAD_UNLOCK = "payload_unlock"
 CONF_PERCENTAGE_COMMAND_TEMPLATE = "percentage_command_template"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
@@ -247,6 +259,7 @@ CONF_CONFIGURATION_URL = "configuration_url"
 CONF_OBJECT_ID = "object_id"
 CONF_SUPPORT_URL = "support_url"
 
+DEFAULT_ALARM_CONTROL_PANEL_COMMAND_TEMPLATE = "{{action}}"
 DEFAULT_BRIGHTNESS = False
 DEFAULT_BRIGHTNESS_SCALE = 255
 DEFAULT_CLIMATE_INITIAL_TEMPERATURE = 21.0
@@ -260,8 +273,15 @@ DEFAULT_FLASH_TIME_SHORT = 2
 DEFAULT_OPTIMISTIC = False
 DEFAULT_ON_COMMAND_TYPE = "last"
 DEFAULT_QOS = 0
+
+DEFAULT_PAYLOAD_ARM_AWAY = "ARM_AWAY"
+DEFAULT_PAYLOAD_ARM_CUSTOM_BYPASS = "ARM_CUSTOM_BYPASS"
+DEFAULT_PAYLOAD_ARM_HOME = "ARM_HOME"
+DEFAULT_PAYLOAD_ARM_NIGHT = "ARM_NIGHT"
+DEFAULT_PAYLOAD_ARM_VACATION = "ARM_VACATION"
 DEFAULT_PAYLOAD_AVAILABLE = "online"
 DEFAULT_PAYLOAD_CLOSE = "CLOSE"
+DEFAULT_PAYLOAD_DISARM = "DISARM"
 DEFAULT_PAYLOAD_LOCK = "LOCK"
 DEFAULT_PAYLOAD_NOT_AVAILABLE = "offline"
 DEFAULT_PAYLOAD_OFF = "OFF"
@@ -270,10 +290,10 @@ DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_PAYLOAD_OSCILLATE_OFF = "oscillate_off"
 DEFAULT_PAYLOAD_OSCILLATE_ON = "oscillate_on"
 DEFAULT_PAYLOAD_PRESS = "PRESS"
-DEFAULT_PAYLOAD_STOP = "STOP"
 DEFAULT_PAYLOAD_RESET = "None"
+DEFAULT_PAYLOAD_STOP = "STOP"
+DEFAULT_PAYLOAD_TRIGGER = "TRIGGER"
 DEFAULT_PAYLOAD_UNLOCK = "UNLOCK"
-
 DEFAULT_PORT = 1883
 DEFAULT_RETAIN = False
 DEFAULT_TILT_CLOSED_POSITION = 0
@@ -302,6 +322,17 @@ COVER_PAYLOAD = "cover"
 TILT_PAYLOAD = "tilt"
 
 VALUES_ON_COMMAND_TYPE = ["first", "last", "brightness"]
+
+ALARM_CONTROL_PANEL_SUPPORTED_FEATURES = {
+    "arm_home": AlarmControlPanelEntityFeature.ARM_HOME,
+    "arm_away": AlarmControlPanelEntityFeature.ARM_AWAY,
+    "arm_night": AlarmControlPanelEntityFeature.ARM_NIGHT,
+    "arm_vacation": AlarmControlPanelEntityFeature.ARM_VACATION,
+    "arm_custom_bypass": AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    "trigger": AlarmControlPanelEntityFeature.TRIGGER,
+}
+REMOTE_CODE = "REMOTE_CODE"
+REMOTE_CODE_TEXT = "REMOTE_CODE_TEXT"
 
 PROTOCOL_31 = "3.1"
 PROTOCOL_311 = "3.1.1"
