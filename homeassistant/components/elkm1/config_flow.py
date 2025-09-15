@@ -248,19 +248,15 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                     # If we cannot confirm identity, keep existing behavior (don't block reconfigure)
                     await self.async_set_unique_id(reconfigure_entry.unique_id)
 
-                # Start with a copy of the existing data, then update only the changed fields
-                updated_data = dict(reconfigure_entry.data)
-                updated_data.update(
-                    {
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        **reconfigure_entry.data,
                         CONF_HOST: info[CONF_HOST],
                         CONF_USERNAME: validate_input_data[CONF_USERNAME],
                         CONF_PASSWORD: validate_input_data[CONF_PASSWORD],
                         CONF_PREFIX: info[CONF_PREFIX],
-                    }
-                )
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    data_updates=updated_data,
+                    },
                 )
 
         # Build defaults for the form from current entry
