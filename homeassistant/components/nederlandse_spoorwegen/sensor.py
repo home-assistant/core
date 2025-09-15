@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import datetime as dt
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
+from ns_api import NSAPI, Trip
 import requests
 import voluptuous as vol
 
@@ -142,7 +145,15 @@ class NSDepartureSensor(SensorEntity):
     _attr_attribution = "Data provided by NS"
     _attr_icon = "mdi:train"
 
-    def __init__(self, nsapi, name, departure, heading, via, time):
+    def __init__(
+        self,
+        nsapi: NSAPI,
+        name: str,
+        departure: str,
+        heading: str,
+        via: str | None,
+        time: dt.time | None,
+    ) -> None:
         """Initialize the sensor."""
         self._nsapi = nsapi
         self._name = name
@@ -150,23 +161,23 @@ class NSDepartureSensor(SensorEntity):
         self._via = via
         self._heading = heading
         self._time = time
-        self._state = None
-        self._trips = None
-        self._first_trip = None
-        self._next_trip = None
+        self._state: str | None = None
+        self._trips: list[Trip] | None = None
+        self._first_trip: Trip | None = None
+        self._next_trip: Trip | None = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the next departure time."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if not self._trips or self._first_trip is None:
             return None
@@ -236,6 +247,7 @@ class NSDepartureSensor(SensorEntity):
         ):
             attributes["arrival_delay"] = True
 
+        assert self._next_trip is not None
         # Next attributes
         if self._next_trip.departure_time_actual is not None:
             attributes["next"] = self._next_trip.departure_time_actual.strftime("%H:%M")
