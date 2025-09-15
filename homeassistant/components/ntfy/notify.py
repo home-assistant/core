@@ -16,10 +16,6 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import camera
-from homeassistant.components.image import (
-    DATA_COMPONENT as IMAGE_DATA_COMPONENT,
-    ImageEntity,
-)
 from homeassistant.components.media_source import async_resolve_media
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
@@ -94,18 +90,6 @@ async def async_setup_entry(
     )
 
 
-def get_image_from_entity_id(hass: HomeAssistant, entity_id: str) -> ImageEntity:
-    """Get image component from entity_id."""
-    component = hass.data.get(IMAGE_DATA_COMPONENT)
-    if component is None:
-        raise HomeAssistantError("Image integration not set up")
-
-    if (image := component.get_entity(entity_id)) is None:
-        raise HomeAssistantError("Image not found")
-
-    return image
-
-
 class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
     """Representation of a ntfy notification entity."""
 
@@ -154,10 +138,6 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                 entity_id = media_content_id.removeprefix("media-source://camera/")
                 img = await camera.async_get_image(self.hass, entity_id)
                 attachment = img.content
-            elif media_content_id.startswith("media-source://image/"):
-                entity_id = media_content_id.removeprefix("media-source://image/")
-                entity = get_image_from_entity_id(self.hass, entity_id)
-                attachment = await entity.async_image()
             else:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
