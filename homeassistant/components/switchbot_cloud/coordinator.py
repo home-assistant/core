@@ -4,7 +4,7 @@ from asyncio import timeout
 from logging import getLogger
 from typing import Any
 
-from switchbot_api import CannotConnect, Device, Remote, SwitchBotAPI
+from switchbot_api import Device, Remote, SwitchBotAPI, SwitchBotConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -70,5 +70,5 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
                 status: Status = await self._api.get_status(self._device_id)
                 _LOGGER.debug("Refreshing %s with %s", self._device_id, status)
                 return status
-        except CannotConnect as err:
+        except SwitchBotConnectionError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

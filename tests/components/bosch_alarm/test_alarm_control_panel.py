@@ -66,6 +66,16 @@ async def test_update_alarm_device(
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_AWAY
 
+    area.is_triggered.return_value = True
+
+    await call_observable(hass, area.alarm_observer)
+
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.TRIGGERED
+
+    area.is_triggered.return_value = False
+
+    await call_observable(hass, area.alarm_observer)
+
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
         SERVICE_ALARM_DISARM,

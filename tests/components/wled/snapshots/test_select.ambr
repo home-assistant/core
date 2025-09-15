@@ -51,6 +51,7 @@
     'original_name': 'Live override',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'live_override',
     'unique_id': 'aabbccddeeff_live_override',
@@ -79,7 +80,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',
@@ -89,7 +89,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '0.14.4',
     'via_device_id': None,
   })
@@ -282,6 +281,7 @@
     'original_name': 'Segment 1 color palette',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'segment_color_palette',
     'unique_id': 'aabbccddeeff_palette_1',
@@ -310,7 +310,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',
@@ -320,7 +319,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '0.14.4',
     'via_device_id': None,
   })
@@ -375,6 +373,7 @@
     'original_name': 'Playlist',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'playlist',
     'unique_id': 'aabbccddeeff_playlist',
@@ -403,7 +402,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',
@@ -413,7 +411,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '0.99.0b1',
     'via_device_id': None,
   })
@@ -468,6 +465,7 @@
     'original_name': 'Preset',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'preset',
     'unique_id': 'aabbccddeeff_preset',
@@ -496,7 +494,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',
@@ -506,7 +503,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '0.99.0b1',
     'via_device_id': None,
   })

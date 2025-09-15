@@ -34,10 +34,28 @@ async def test_load_unload_config_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_load_config_status_forbidden(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_paperless: AsyncMock,
+) -> None:
+    """Test loading and unloading the integration."""
+    mock_paperless.status.side_effect = PaperlessForbiddenError
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_state", "expected_error_key"),
     [
-        (PaperlessConnectionError(), ConfigEntryState.SETUP_RETRY, None),
+        (PaperlessConnectionError(), ConfigEntryState.SETUP_RETRY, "cannot_connect"),
         (PaperlessInvalidTokenError(), ConfigEntryState.SETUP_ERROR, "invalid_api_key"),
         (
             PaperlessInactiveOrDeletedError(),
@@ -45,7 +63,7 @@ async def test_load_unload_config_entry(
             "user_inactive_or_deleted",
         ),
         (PaperlessForbiddenError(), ConfigEntryState.SETUP_ERROR, "forbidden"),
-        (InitializationError(), ConfigEntryState.SETUP_ERROR, "cannot_connect"),
+        (InitializationError(), ConfigEntryState.SETUP_RETRY, "cannot_connect"),
     ],
 )
 async def test_setup_config_error_handling(

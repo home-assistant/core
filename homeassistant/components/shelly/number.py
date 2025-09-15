@@ -21,7 +21,6 @@ from homeassistant.components.number import (
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
@@ -38,8 +37,11 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
+    get_blu_trv_device_info,
     get_device_entry_gen,
     get_virtual_component_ids,
+    get_virtual_component_unit,
+    is_view_for_platform,
 )
 
 PARALLEL_UPDATES = 0
@@ -124,8 +126,9 @@ class RpcBluTrvNumber(RpcNumber):
 
         super().__init__(coordinator, key, attribute, description)
         ble_addr: str = coordinator.device.config[key]["addr"]
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, ble_addr)}
+        fw_ver = coordinator.device.status[key].get("fw_ver")
+        self._attr_device_info = get_blu_trv_device_info(
+            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
         )
 
 
@@ -183,17 +186,16 @@ RPC_NUMBERS: Final = {
     "number": RpcNumberDescription(
         key="number",
         sub_key="value",
-        has_entity_name=True,
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, NUMBER_PLATFORM
+        ),
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
         mode_fn=lambda config: VIRTUAL_NUMBER_MODE_MAP.get(
             config["meta"]["ui"]["view"], NumberMode.BOX
         ),
         step_fn=lambda config: config["meta"]["ui"].get("step"),
-        # If the unit is not set, the device sends an empty string
-        unit=lambda config: config["meta"]["ui"]["unit"]
-        if config["meta"]["ui"]["unit"]
-        else None,
+        unit=get_virtual_component_unit,
         method="number_set",
     ),
     "valve_position": RpcNumberDescription(

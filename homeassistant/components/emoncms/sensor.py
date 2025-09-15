@@ -34,13 +34,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .config_flow import sensor_name
-from .const import (
-    CONF_EXCLUDE_FEEDID,
-    CONF_ONLY_INCLUDE_FEEDID,
-    FEED_ID,
-    FEED_NAME,
-    FEED_TAG,
-)
+from .const import CONF_ONLY_INCLUDE_FEEDID, FEED_ID, FEED_NAME, FEED_TAG
 from .coordinator import EmonCMSConfigEntry, EmoncmsCoordinator
 
 SENSORS: dict[str | None, SensorEntityDescription] = {
@@ -163,7 +157,7 @@ SENSORS: dict[str | None, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "µg/m³": SensorEntityDescription(
+    "μg/m³": SensorEntityDescription(
         key="concentration|microgram_per_cubic_meter",
         translation_key="concentration",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -200,12 +194,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the emoncms sensors."""
     name = sensor_name(entry.data[CONF_URL])
-    exclude_feeds = entry.data.get(CONF_EXCLUDE_FEEDID)
     include_only_feeds = entry.options.get(
         CONF_ONLY_INCLUDE_FEEDID, entry.data.get(CONF_ONLY_INCLUDE_FEEDID)
     )
 
-    if exclude_feeds is None and include_only_feeds is None:
+    if include_only_feeds is None:
         return
 
     coordinator = entry.runtime_data

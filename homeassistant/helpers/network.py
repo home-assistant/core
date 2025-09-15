@@ -186,8 +186,7 @@ def get_url(
         known_hostnames = ["localhost"]
         if is_hassio(hass):
             # Local import to avoid circular dependencies
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components.hassio import get_host_info
+            from homeassistant.components.hassio import get_host_info  # noqa: PLC0415
 
             if host_info := get_host_info(hass):
                 known_hostnames.extend(
@@ -318,8 +317,7 @@ def _get_cloud_url(hass: HomeAssistant, require_current_request: bool = False) -
     """Get external Home Assistant Cloud URL of this instance."""
     if "cloud" in hass.config.components:
         # Local import to avoid circular dependencies
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.cloud import (
+        from homeassistant.components.cloud import (  # noqa: PLC0415
             CloudNotAvailable,
             async_remote_ui_url,
         )

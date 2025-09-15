@@ -1,7 +1,7 @@
 """The tests for Home Assistant frontend."""
 
-from asyncio import AbstractEventLoop
 from collections.abc import Generator
+from contextlib import nullcontext
 from http import HTTPStatus
 from pathlib import Path
 import re
@@ -27,6 +27,7 @@ from homeassistant.components.frontend import (
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
@@ -95,7 +96,6 @@ async def frontend_themes(hass: HomeAssistant) -> None:
 
 @pytest.fixture
 def aiohttp_client(
-    event_loop: AbstractEventLoop,
     aiohttp_client: ClientSessionGenerator,
     socket_enabled: None,
 ) -> ClientSessionGenerator:
@@ -407,6 +407,108 @@ async def test_themes_reload_themes(
     msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["themes"] == {"sad": {"primary-color": "blue"}}
+    assert msg["result"]["default_theme"] == "default"
+
+
+@pytest.mark.usefixtures("frontend")
+@pytest.mark.parametrize(
+    ("invalid_theme", "error", "log"),
+    [
+        (
+            {
+                "invalid0": "blue",
+            },
+            "expected a dictionary",
+            None,
+        ),
+        (
+            {
+                "invalid1": {
+                    "primary-color": "black",
+                    "modes": "light:{} dark:{}",
+                }
+            },
+            None,
+            "expected a dictionary",
+        ),
+        (
+            {
+                "invalid2": None,
+            },
+            "expected a dictionary",
+            None,
+        ),
+        (
+            {
+                "invalid3": {
+                    "primary-color": "black",
+                    "modes": {},
+                }
+            },
+            None,
+            "must contain at least one of light, dark",
+        ),
+        (
+            {
+                "invalid4": {
+                    "primary-color": "black",
+                    "modes": None,
+                }
+            },
+            "string value is None for dictionary value",
+            None,
+        ),
+        (
+            {
+                "invalid5": {
+                    "primary-color": "black",
+                    "modes": {"light": {}, "dank": {}},
+                }
+            },
+            "extra keys not allowed.*dank",
+            None,
+        ),
+    ],
+)
+async def test_themes_reload_invalid(
+    hass: HomeAssistant,
+    themes_ws_client: MockHAClientWebSocket,
+    invalid_theme: dict,
+    error: str | None,
+    log: str | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test frontend.reload_themes service with an invalid theme."""
+
+    with patch(
+        "homeassistant.components.frontend.async_hass_config_yaml",
+        return_value={DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "pink"}}}},
+    ):
+        await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
+
+    with (
+        patch(
+            "homeassistant.components.frontend.async_hass_config_yaml",
+            return_value={DOMAIN: {CONF_THEMES: invalid_theme}},
+        ),
+        pytest.raises(HomeAssistantError, match=rf"Failed to reload themes.*{error}")
+        if error is not None
+        else nullcontext(),
+    ):
+        await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
+
+    if log is not None:
+        assert log in caplog.text
+
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
+
+    msg = await themes_ws_client.receive_json()
+
+    expected_themes = {"happy": {"primary-color": "pink"}}
+    if error is None:
+        expected_themes = {}
+
+    assert msg["result"]["themes"] == expected_themes
     assert msg["result"]["default_theme"] == "default"
 
 

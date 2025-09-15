@@ -66,7 +66,7 @@ class RadioMediaSource(MediaSource):
         # Register "click" with Radio Browser
         await radios.station_click(uuid=station.uuid)
 
-        return PlayMedia(station.url, mime_type)
+        return PlayMedia(station.url_resolved, mime_type)
 
     async def async_browse_media(
         self,
@@ -134,7 +134,7 @@ class RadioMediaSource(MediaSource):
     ) -> list[BrowseMediaSource]:
         """Handle browsing radio stations by country."""
         category, _, country_code = (item.identifier or "").partition("/")
-        if country_code:
+        if category == "country" and country_code:
             stations = await radios.stations(
                 filter_by=FilterBy.COUNTRY_CODE_EXACT,
                 filter_term=country_code,
@@ -185,7 +185,7 @@ class RadioMediaSource(MediaSource):
             return [
                 BrowseMediaSource(
                     domain=DOMAIN,
-                    identifier=f"language/{language.code}",
+                    identifier=f"language/{language.name.lower()}",
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaType.MUSIC,
                     title=language.name,

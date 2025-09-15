@@ -80,6 +80,14 @@ CAPABILITY_TO_SENSORS: dict[
             entity_category=EntityCategory.DIAGNOSTIC,
         )
     },
+    Capability.CUSTOM_WATER_FILTER: {
+        Attribute.WATER_FILTER_STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.WATER_FILTER_STATUS,
+            translation_key="filter_status",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            is_on_key="replace",
+        )
+    },
     Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE: {
         Attribute.OPERATING_STATE: SmartThingsBinarySensorEntityDescription(
             key=Attribute.OPERATING_STATE,

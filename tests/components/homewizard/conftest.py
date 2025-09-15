@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homewizard_energy.models import (
+    Batteries,
     CombinedModels,
     Device,
     Measurement,
@@ -64,6 +65,13 @@ def mock_homewizardenergy(
                 if get_fixture_path(f"{device_fixture}/system.json", DOMAIN).exists()
                 else None
             ),
+            batteries=(
+                Batteries.from_dict(
+                    load_json_object_fixture(f"{device_fixture}/batteries.json", DOMAIN)
+                )
+                if get_fixture_path(f"{device_fixture}/batteries.json", DOMAIN).exists()
+                else None
+            ),
         )
 
         # device() call is used during configuration flow
@@ -110,6 +118,13 @@ def mock_homewizardenergy_v2(
                     load_json_object_fixture(f"v2/{device_fixture}/system.json", DOMAIN)
                 )
                 if get_fixture_path(f"v2/{device_fixture}/system.json", DOMAIN).exists()
+                else None
+            ),
+            batteries=(
+                Batteries.from_dict(
+                    load_json_object_fixture(f"{device_fixture}/batteries.json", DOMAIN)
+                )
+                if get_fixture_path(f"{device_fixture}/batteries.json", DOMAIN).exists()
                 else None
             ),
         )

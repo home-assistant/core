@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import WhirlpoolConfigEntry
 from .entity import WhirlpoolEntity
 
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
@@ -42,14 +43,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Config flow entry for Whirlpool binary sensors."""
-    entities: list = []
     appliances_manager = config_entry.runtime_data
-    for washer_dryer in appliances_manager.washer_dryers:
-        entities.extend(
-            WhirlpoolBinarySensor(washer_dryer, description)
-            for description in WASHER_DRYER_SENSORS
-        )
-    async_add_entities(entities)
+
+    washer_binary_sensors = [
+        WhirlpoolBinarySensor(washer, description)
+        for washer in appliances_manager.washers
+        for description in WASHER_DRYER_SENSORS
+    ]
+
+    dryer_binary_sensors = [
+        WhirlpoolBinarySensor(dryer, description)
+        for dryer in appliances_manager.dryers
+        for description in WASHER_DRYER_SENSORS
+    ]
+
+    async_add_entities([*washer_binary_sensors, *dryer_binary_sensors])
 
 
 class WhirlpoolBinarySensor(WhirlpoolEntity, BinarySensorEntity):

@@ -36,7 +36,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
     start,
 )
-from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
 
@@ -62,6 +61,7 @@ from .const import (
     LOGGER,
 )
 from .models import (
+    AddonInfo,
     AgentBackup,
     BackupError,
     BackupManagerError,
@@ -102,7 +102,9 @@ class ManagerBackup(BaseBackup):
     """Backup class."""
 
     agents: dict[str, AgentBackupStatus]
+    failed_addons: list[AddonInfo]
     failed_agent_ids: list[str]
+    failed_folders: list[Folder]
     with_automatic_settings: bool | None
 
 
@@ -110,7 +112,7 @@ class ManagerBackup(BaseBackup):
 class AddonErrorData:
     """Addon error class."""
 
-    name: str
+    addon: AddonInfo
     errors: list[tuple[str, str]]
 
 
@@ -369,12 +371,10 @@ class BackupManager:
         # Latest backup event and backup event subscribers
         self.last_event: ManagerStateEvent = BlockedEvent()
         self.last_action_event: ManagerStateEvent | None = None
-        self._backup_event_subscriptions = hass.data[
-            DATA_BACKUP
-        ].backup_event_subscriptions
-        self._backup_platform_event_subscriptions = hass.data[
-            DATA_BACKUP
-        ].backup_platform_event_subscriptions
+        self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
+        self._backup_platform_event_subscriptions: list[
+            Callable[[BackupPlatformEvent], None]
+        ] = []
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
@@ -646,9 +646,13 @@ class BackupManager:
             for agent_backup in result:
                 if (backup_id := agent_backup.backup_id) not in backups:
                     if known_backup := self.known_backups.get(backup_id):
+                        failed_addons = known_backup.failed_addons
                         failed_agent_ids = known_backup.failed_agent_ids
+                        failed_folders = known_backup.failed_folders
                     else:
+                        failed_addons = []
                         failed_agent_ids = []
+                        failed_folders = []
                     with_automatic_settings = self.is_our_automatic_backup(
                         agent_backup, await instance_id.async_get(self.hass)
                     )
@@ -659,7 +663,9 @@ class BackupManager:
                         date=agent_backup.date,
                         database_included=agent_backup.database_included,
                         extra_metadata=agent_backup.extra_metadata,
+                        failed_addons=failed_addons,
                         failed_agent_ids=failed_agent_ids,
+                        failed_folders=failed_folders,
                         folders=agent_backup.folders,
                         homeassistant_included=agent_backup.homeassistant_included,
                         homeassistant_version=agent_backup.homeassistant_version,
@@ -714,9 +720,13 @@ class BackupManager:
                 continue
             if backup is None:
                 if known_backup := self.known_backups.get(backup_id):
+                    failed_addons = known_backup.failed_addons
                     failed_agent_ids = known_backup.failed_agent_ids
+                    failed_folders = known_backup.failed_folders
                 else:
+                    failed_addons = []
                     failed_agent_ids = []
+                    failed_folders = []
                 with_automatic_settings = self.is_our_automatic_backup(
                     result, await instance_id.async_get(self.hass)
                 )
@@ -727,7 +737,9 @@ class BackupManager:
                     date=result.date,
                     database_included=result.database_included,
                     extra_metadata=result.extra_metadata,
+                    failed_addons=failed_addons,
                     failed_agent_ids=failed_agent_ids,
+                    failed_folders=failed_folders,
                     folders=result.folders,
                     homeassistant_included=result.homeassistant_included,
                     homeassistant_version=result.homeassistant_version,
@@ -884,7 +896,8 @@ class BackupManager:
         )
         agent_errors = {
             backup_id: error
-            for backup_id, error in zip(backup_ids, delete_results, strict=True)
+            for backup_id, error_dict in zip(backup_ids, delete_results, strict=True)
+            for error in error_dict.values()
             if error and not isinstance(error, BackupNotFound)
         }
         if agent_errors:
@@ -970,7 +983,7 @@ class BackupManager:
             password=None,
         )
         await written_backup.release_stream()
-        self.known_backups.add(written_backup.backup, agent_errors, [])
+        self.known_backups.add(written_backup.backup, agent_errors, {}, {}, [])
         return written_backup.backup.backup_id
 
     async def async_create_backup(
@@ -1107,7 +1120,7 @@ class BackupManager:
             )
         if unavailable_agents:
             LOGGER.warning(
-                "Backup agents %s are not available, will backupp to %s",
+                "Backup agents %s are not available, will backup to %s",
                 unavailable_agents,
                 available_agents,
             )
@@ -1208,7 +1221,11 @@ class BackupManager:
             finally:
                 await written_backup.release_stream()
             self.known_backups.add(
-                written_backup.backup, agent_errors, unavailable_agents
+                written_backup.backup,
+                agent_errors,
+                written_backup.addon_errors,
+                written_backup.folder_errors,
+                unavailable_agents,
             )
             if not agent_errors:
                 if with_automatic_settings:
@@ -1366,6 +1383,32 @@ class BackupManager:
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 
+    @callback
+    def async_subscribe_events(
+        self,
+        on_event: Callable[[ManagerStateEvent], None],
+    ) -> Callable[[], None]:
+        """Subscribe events."""
+
+        def remove_subscription() -> None:
+            self._backup_event_subscriptions.remove(on_event)
+
+        self._backup_event_subscriptions.append(on_event)
+        return remove_subscription
+
+    @callback
+    def async_subscribe_platform_events(
+        self,
+        on_event: Callable[[BackupPlatformEvent], None],
+    ) -> Callable[[], None]:
+        """Subscribe to backup platform events."""
+
+        def remove_subscription() -> None:
+            self._backup_platform_event_subscriptions.remove(on_event)
+
+        self._backup_platform_event_subscriptions.append(on_event)
+        return remove_subscription
+
     def _create_automatic_backup_failed_issue(
         self, translation_key: str, translation_placeholders: dict[str, str] | None
     ) -> None:
@@ -1416,7 +1459,12 @@ class BackupManager:
             # No issues with agents or folders, but issues with add-ons
             self._create_automatic_backup_failed_issue(
                 "automatic_backup_failed_addons",
-                {"failed_addons": ", ".join(val.name for val in addon_errors.values())},
+                {
+                    "failed_addons": ", ".join(
+                        val.addon.name or val.addon.slug
+                        for val in addon_errors.values()
+                    )
+                },
             )
         elif folder_errors and not (failed_agents or addon_errors):
             # No issues with agents or add-ons, but issues with folders
@@ -1431,7 +1479,11 @@ class BackupManager:
                 {
                     "failed_agents": ", ".join(failed_agents) or "-",
                     "failed_addons": (
-                        ", ".join(val.name for val in addon_errors.values()) or "-"
+                        ", ".join(
+                            val.addon.name or val.addon.slug
+                            for val in addon_errors.values()
+                        )
+                        or "-"
                     ),
                     "failed_folders": ", ".join(f for f in folder_errors) or "-",
                 },
@@ -1501,7 +1553,12 @@ class KnownBackups:
         self._backups = {
             backup["backup_id"]: KnownBackup(
                 backup_id=backup["backup_id"],
+                failed_addons=[
+                    AddonInfo(name=a["name"], slug=a["slug"], version=a["version"])
+                    for a in backup["failed_addons"]
+                ],
                 failed_agent_ids=backup["failed_agent_ids"],
+                failed_folders=[Folder(f) for f in backup["failed_folders"]],
             )
             for backup in stored_backups
         }
@@ -1514,12 +1571,16 @@ class KnownBackups:
         self,
         backup: AgentBackup,
         agent_errors: dict[str, Exception],
+        failed_addons: dict[str, AddonErrorData],
+        failed_folders: dict[Folder, list[tuple[str, str]]],
         unavailable_agents: list[str],
     ) -> None:
         """Add a backup."""
         self._backups[backup.backup_id] = KnownBackup(
             backup_id=backup.backup_id,
+            failed_addons=[val.addon for val in failed_addons.values()],
             failed_agent_ids=list(chain(agent_errors, unavailable_agents)),
+            failed_folders=list(failed_folders),
         )
         self._manager.store.save()
 
@@ -1540,21 +1601,38 @@ class KnownBackup:
     """Persistent backup data."""
 
     backup_id: str
+    failed_addons: list[AddonInfo]
     failed_agent_ids: list[str]
+    failed_folders: list[Folder]
 
     def to_dict(self) -> StoredKnownBackup:
         """Convert known backup to a dict."""
         return {
             "backup_id": self.backup_id,
+            "failed_addons": [
+                {"name": a.name, "slug": a.slug, "version": a.version}
+                for a in self.failed_addons
+            ],
             "failed_agent_ids": self.failed_agent_ids,
+            "failed_folders": [f.value for f in self.failed_folders],
         }
+
+
+class StoredAddonInfo(TypedDict):
+    """Stored add-on info."""
+
+    name: str | None
+    slug: str
+    version: str | None
 
 
 class StoredKnownBackup(TypedDict):
     """Stored persistent backup data."""
 
     backup_id: str
+    failed_addons: list[StoredAddonInfo]
     failed_agent_ids: list[str]
+    failed_folders: list[str]
 
 
 class CoreBackupReaderWriter(BackupReaderWriter):

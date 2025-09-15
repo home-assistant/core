@@ -293,7 +293,9 @@ async def test_websocket_get_action_capabilities(
     )
     expected_capabilities = {
         "turn_on": {
-            "extra_fields": [{"type": "string", "name": "code", "optional": True}]
+            "extra_fields": [
+                {"type": "string", "name": "code", "optional": True, "required": False}
+            ]
         },
         "turn_off": {"extra_fields": []},
         "toggle": {"extra_fields": []},
@@ -452,7 +454,12 @@ async def test_websocket_get_condition_capabilities(
     )
     expected_capabilities = {
         "extra_fields": [
-            {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+            {
+                "name": "for",
+                "optional": True,
+                "required": False,
+                "type": "positive_time_period_dict",
+            }
         ]
     }
 
@@ -745,7 +752,12 @@ async def test_websocket_get_trigger_capabilities(
     )
     expected_capabilities = {
         "extra_fields": [
-            {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+            {
+                "name": "for",
+                "optional": True,
+                "required": False,
+                "type": "positive_time_period_dict",
+            }
         ]
     }
 

@@ -21,7 +21,21 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from tests.common import MockConfigEntry
 
 DEFAULT_JOB = {
-    "job": {},
+    "job": {
+        "averagePrintTime": None,
+        "estimatedPrintTime": None,
+        "filament": None,
+        "file": {
+            "date": None,
+            "display": None,
+            "name": None,
+            "origin": None,
+            "path": None,
+            "size": None,
+        },
+        "lastPrintTime": None,
+        "user": None,
+    },
     "progress": {"completion": 50},
 }
 

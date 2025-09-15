@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from .coordinator import IturanConfigEntry, IturanDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
 ]

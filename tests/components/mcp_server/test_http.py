@@ -194,7 +194,7 @@ async def test_http_sse_multiple_config_entries(
     """
 
     config_entry = MockConfigEntry(
-        domain="mcp_server", data={CONF_LLM_HASS_API: "llm-api-id"}
+        domain="mcp_server", data={CONF_LLM_HASS_API: ["llm-api-id"]}
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

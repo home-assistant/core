@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import contextlib
-import itertools
 import logging
 from typing import Any, cast
 
@@ -13,10 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
-    CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_FRIENDLY_NAME,
     CONF_ICON,
-    CONF_ICON_TEMPLATE,
     CONF_NAME,
     CONF_PATH,
     CONF_VARIABLES,
@@ -47,122 +43,12 @@ from homeassistant.helpers.template import (
     TemplateStateFromEntityId,
     result_as_boolean,
 )
-from homeassistant.helpers.trigger_template_entity import (
-    TEMPLATE_ENTITY_BASE_SCHEMA,
-    make_template_entity_base_schema,
-)
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_ATTRIBUTE_TEMPLATES,
-    CONF_ATTRIBUTES,
-    CONF_AVAILABILITY,
-    CONF_AVAILABILITY_TEMPLATE,
-    CONF_PICTURE,
-)
+from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 from .entity import AbstractTemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-TEMPLATE_ENTITY_AVAILABILITY_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-    }
-)
-
-TEMPLATE_ENTITY_ICON_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ICON): cv.template,
-    }
-)
-
-TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
-    }
-)
-
-TEMPLATE_ENTITY_COMMON_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_AVAILABILITY): cv.template,
-            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema)
-)
-
-
-def make_template_entity_common_schema(default_name: str) -> vol.Schema:
-    """Return a schema with default name."""
-    return (
-        vol.Schema(
-            {
-                vol.Optional(CONF_AVAILABILITY): cv.template,
-            }
-        )
-        .extend(make_template_entity_base_schema(default_name).schema)
-        .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema)
-    )
-
-
-TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY = vol.Schema(
-    {
-        vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
-            {cv.string: cv.template}
-        ),
-    }
-)
-
-TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY = vol.Schema(
-    {
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-    }
-)
-
-TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY = vol.Schema(
-    {
-        vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-    }
-).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
-
-
-LEGACY_FIELDS = {
-    CONF_ICON_TEMPLATE: CONF_ICON,
-    CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
-    CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
-    CONF_ATTRIBUTE_TEMPLATES: CONF_ATTRIBUTES,
-    CONF_FRIENDLY_NAME: CONF_NAME,
-}
-
-
-def rewrite_common_legacy_to_modern_conf(
-    hass: HomeAssistant,
-    entity_cfg: dict[str, Any],
-    extra_legacy_fields: dict[str, str] | None = None,
-) -> dict[str, Any]:
-    """Rewrite legacy config."""
-    entity_cfg = {**entity_cfg}
-    if extra_legacy_fields is None:
-        extra_legacy_fields = {}
-
-    for from_key, to_key in itertools.chain(
-        LEGACY_FIELDS.items(), extra_legacy_fields.items()
-    ):
-        if from_key not in entity_cfg or to_key in entity_cfg:
-            continue
-
-        val = entity_cfg.pop(from_key)
-        if isinstance(val, str):
-            val = Template(val, hass)
-        entity_cfg[to_key] = val
-
-    if CONF_NAME in entity_cfg and isinstance(entity_cfg[CONF_NAME], str):
-        entity_cfg[CONF_NAME] = Template(entity_cfg[CONF_NAME], hass)
-
-    return entity_cfg
 
 
 class _TemplateAttribute:
@@ -270,17 +156,11 @@ class TemplateEntity(AbstractTemplateEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
-        availability_template: Template | None = None,
-        icon_template: Template | None = None,
-        entity_picture_template: Template | None = None,
-        attribute_templates: dict[str, Template] | None = None,
-        config: ConfigType | None = None,
-        fallback_name: str | None = None,
-        unique_id: str | None = None,
+        config: ConfigType,
+        unique_id: str | None,
     ) -> None:
         """Template Entity."""
-        AbstractTemplateEntity.__init__(self, hass)
+        AbstractTemplateEntity.__init__(self, hass, config)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._attr_extra_state_attributes = {}
@@ -299,22 +179,13 @@ class TemplateEntity(AbstractTemplateEntity):
             | None
         ) = None
         self._run_variables: ScriptVariables | dict
-        if config is None:
-            self._attribute_templates = attribute_templates
-            self._availability_template = availability_template
-            self._icon_template = icon_template
-            self._entity_picture_template = entity_picture_template
-            self._friendly_name_template = None
-            self._run_variables = {}
-            self._blueprint_inputs = None
-        else:
-            self._attribute_templates = config.get(CONF_ATTRIBUTES)
-            self._availability_template = config.get(CONF_AVAILABILITY)
-            self._icon_template = config.get(CONF_ICON)
-            self._entity_picture_template = config.get(CONF_PICTURE)
-            self._friendly_name_template = config.get(CONF_NAME)
-            self._run_variables = config.get(CONF_VARIABLES, {})
-            self._blueprint_inputs = config.get("raw_blueprint_inputs")
+        self._attribute_templates = config.get(CONF_ATTRIBUTES)
+        self._availability_template = config.get(CONF_AVAILABILITY)
+        self._icon_template = config.get(CONF_ICON)
+        self._entity_picture_template = config.get(CONF_PICTURE)
+        self._friendly_name_template = config.get(CONF_NAME)
+        self._run_variables = config.get(CONF_VARIABLES, {})
+        self._blueprint_inputs = config.get("raw_blueprint_inputs")
 
         class DummyState(State):
             """None-state for template entities not yet added to the state machine."""
@@ -332,7 +203,7 @@ class TemplateEntity(AbstractTemplateEntity):
         variables = {"this": DummyState()}
 
         # Try to render the name as it can influence the entity ID
-        self._attr_name = fallback_name
+        self._attr_name = None
         if self._friendly_name_template:
             with contextlib.suppress(TemplateError):
                 self._attr_name = self._friendly_name_template.async_render(

@@ -1,4 +1,7 @@
-"""Support for repeating alerts when conditions are met."""
+"""Support for repeating alerts when conditions are met.
+
+DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
+"""
 
 from __future__ import annotations
 
@@ -27,7 +30,10 @@ from .const import DOMAIN, LOGGER
 
 
 class AlertEntity(Entity):
-    """Representation of an alert."""
+    """Representation of an alert.
+
+    DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
+    """
 
     _attr_should_poll = False
 

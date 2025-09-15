@@ -10,7 +10,6 @@ from soco.alarms import Alarm
 from soco.exceptions import SoCoSlaveException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -18,15 +17,17 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
 
+from .alarms import SonosAlarms
 from .const import (
-    DATA_SONOS,
+    ATTR_SPEECH_ENHANCEMENT_ENABLED,
     DOMAIN,
+    MODEL_SONOS_ARC_ULTRA,
     SONOS_ALARMS_UPDATED,
     SONOS_CREATE_ALARM,
     SONOS_CREATE_SWITCHES,
 )
 from .entity import SonosEntity, SonosPollingEntity
-from .helpers import soco_error
+from .helpers import SonosConfigEntry, soco_error
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +61,7 @@ ALL_FEATURES = (
     ATTR_SURROUND_ENABLED,
     ATTR_STATUS_LIGHT,
 )
+ALL_SUBST_FEATURES = (ATTR_SPEECH_ENHANCEMENT_ENABLED,)
 
 COORDINATOR_FEATURES = ATTR_CROSSFADE
 
@@ -70,29 +72,44 @@ POLL_REQUIRED = (
 
 WEEKEND_DAYS = (0, 6)
 
+# Mapping of model names to feature attributes that need to be substituted.
+# This is used to handle differences in attributes across Sonos models.
+MODEL_FEATURE_SUBSTITUTIONS: dict[str, dict[str, str]] = {
+    MODEL_SONOS_ARC_ULTRA: {
+        ATTR_SPEECH_ENHANCEMENT: ATTR_SPEECH_ENHANCEMENT_ENABLED,
+    },
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SonosConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonos from a config entry."""
 
     async def _async_create_alarms(speaker: SonosSpeaker, alarm_ids: list[str]) -> None:
         entities = []
-        created_alarms = (
-            hass.data[DATA_SONOS].alarms[speaker.household_id].created_alarm_ids
-        )
+        created_alarms = config_entry.runtime_data.alarms[
+            speaker.household_id
+        ].created_alarm_ids
         for alarm_id in alarm_ids:
             if alarm_id in created_alarms:
                 continue
             _LOGGER.debug("Creating alarm %s on %s", alarm_id, speaker.zone_name)
             created_alarms.add(alarm_id)
-            entities.append(SonosAlarmEntity(alarm_id, speaker))
+            entities.append(SonosAlarmEntity(alarm_id, speaker, config_entry))
         async_add_entities(entities)
 
     def available_soco_attributes(speaker: SonosSpeaker) -> list[str]:
         features = []
+        for feature_type in ALL_SUBST_FEATURES:
+            try:
+                if (state := getattr(speaker.soco, feature_type, None)) is not None:
+                    setattr(speaker, feature_type, state)
+            except SoCoSlaveException:
+                pass
+
         for feature_type in ALL_FEATURES:
             try:
                 if (state := getattr(speaker.soco, feature_type, None)) is not None:
@@ -108,12 +125,23 @@ async def async_setup_entry(
             available_soco_attributes, speaker
         )
         for feature_type in available_features:
+            attribute_key = MODEL_FEATURE_SUBSTITUTIONS.get(
+                speaker.model_name.upper(), {}
+            ).get(feature_type, feature_type)
             _LOGGER.debug(
-                "Creating %s switch on %s",
+                "Creating %s switch on %s attribute %s",
                 feature_type,
                 speaker.zone_name,
+                attribute_key,
             )
-            entities.append(SonosSwitchEntity(feature_type, speaker))
+            entities.append(
+                SonosSwitchEntity(
+                    feature_type=feature_type,
+                    attribute_key=attribute_key,
+                    speaker=speaker,
+                    config_entry=config_entry,
+                )
+            )
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -127,10 +155,16 @@ async def async_setup_entry(
 class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
     """Representation of a Sonos feature switch."""
 
-    def __init__(self, feature_type: str, speaker: SonosSpeaker) -> None:
+    def __init__(
+        self,
+        feature_type: str,
+        attribute_key: str,
+        speaker: SonosSpeaker,
+        config_entry: SonosConfigEntry,
+    ) -> None:
         """Initialize the switch."""
-        super().__init__(speaker)
-        self.feature_type = feature_type
+        super().__init__(speaker, config_entry)
+        self.attribute_key = attribute_key
         self.needs_coordinator = feature_type in COORDINATOR_FEATURES
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_translation_key = feature_type
@@ -148,15 +182,15 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
     @soco_error()
     def poll_state(self) -> None:
         """Poll the current state of the switch."""
-        state = getattr(self.soco, self.feature_type)
-        setattr(self.speaker, self.feature_type, state)
+        state = getattr(self.soco, self.attribute_key)
+        setattr(self.speaker, self.attribute_key, state)
 
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
         if self.needs_coordinator and not self.speaker.is_coordinator:
-            return cast(bool, getattr(self.speaker.coordinator, self.feature_type))
-        return cast(bool, getattr(self.speaker, self.feature_type))
+            return cast(bool, getattr(self.speaker.coordinator, self.attribute_key))
+        return cast(bool, getattr(self.speaker, self.attribute_key))
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -174,7 +208,7 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
         else:
             soco = self.soco
         try:
-            setattr(soco, self.feature_type, enable)
+            setattr(soco, self.attribute_key, enable)
         except SoCoUPnPException as exc:
             _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
 
@@ -185,9 +219,11 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:alarm"
 
-    def __init__(self, alarm_id: str, speaker: SonosSpeaker) -> None:
+    def __init__(
+        self, alarm_id: str, speaker: SonosSpeaker, config_entry: SonosConfigEntry
+    ) -> None:
         """Initialize the switch."""
-        super().__init__(speaker)
+        super().__init__(speaker, config_entry)
         self._attr_unique_id = f"alarm-{speaker.household_id}:{alarm_id}"
         self.alarm_id = alarm_id
         self.household_id = speaker.household_id
@@ -218,7 +254,9 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     @property
     def alarm(self) -> Alarm:
         """Return the alarm instance."""
-        return self.hass.data[DATA_SONOS].alarms[self.household_id].get(self.alarm_id)
+        return self.config_entry.runtime_data.alarms[self.household_id].get(
+            self.alarm_id
+        )
 
     @property
     def name(self) -> str:
@@ -230,7 +268,9 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     async def _async_fallback_poll(self) -> None:
         """Call the central alarm polling method."""
-        await self.hass.data[DATA_SONOS].alarms[self.household_id].async_poll()
+        alarms: SonosAlarms = self.config_entry.runtime_data.alarms[self.household_id]
+        assert alarms.async_poll
+        await alarms.async_poll()
 
     @callback
     def async_check_if_available(self) -> bool:
@@ -252,9 +292,9 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             return
 
         if self.speaker.soco.uid != self.alarm.zone.uid:
-            self.speaker = self.hass.data[DATA_SONOS].discovered.get(
-                self.alarm.zone.uid
-            )
+            speaker = self.config_entry.runtime_data.discovered.get(self.alarm.zone.uid)
+            assert speaker
+            self.speaker = speaker
             if self.speaker is None:
                 raise RuntimeError(
                     "No configured Sonos speaker has been found to match the alarm."

@@ -3,6 +3,24 @@
     "flow_title": "{name} ({address})",
     "step": {
       "user": {
+        "description": "One or more of your Bluetooth adapters is using passive scanning, which may not discover all SwitchBot devices. Would you like to sign in to your SwitchBot account to download device information and automate discovery? If you're not sure, we recommend signing in.",
+        "menu_options": {
+          "cloud_login": "Sign in to SwitchBot account",
+          "select_device": "Continue without signing in"
+        }
+      },
+      "cloud_login": {
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and is only used to retrieve device model information to automate discovery. Usernames and passwords are case-sensitive.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::switchbot::config::step::encrypted_auth::data_description::username%]",
+          "password": "[%key:component::switchbot::config::step::encrypted_auth::data_description::password%]"
+        }
+      },
+      "select_device": {
         "data": {
           "address": "MAC address"
         },
@@ -34,7 +52,7 @@
         }
       },
       "encrypted_auth": {
-        "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your device's encryption key. Usernames and passwords are case sensitive.",
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your device's encryption key. Usernames and passwords are case-sensitive.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -105,6 +123,24 @@
       },
       "light_level": {
         "name": "Light level"
+      },
+      "aqi_quality_level": {
+        "name": "Air quality level",
+        "state": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "moderate": "Moderate",
+          "unhealthy": "Unhealthy"
+        }
+      },
+      "water_level": {
+        "name": "Water level",
+        "state": {
+          "empty": "[%key:common::state::empty%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
       }
     },
     "cover": {
@@ -126,6 +162,22 @@
             "state": {
               "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
               "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      },
+      "evaporative_humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "high": "[%key:common::state::high%]",
+              "medium": "[%key:common::state::medium%]",
+              "low": "[%key:common::state::low%]",
+              "quiet": "Quiet",
+              "target_humidity": "Target humidity",
+              "sleep": "Sleep",
+              "auto": "[%key:common::state::auto%]",
+              "drying_filter": "Drying filter"
             }
           }
         }
@@ -172,10 +224,30 @@
           },
           "preset_mode": {
             "state": {
-              "normal": "Normal",
+              "normal": "[%key:common::state::normal%]",
               "natural": "Natural",
               "sleep": "Sleep",
               "baby": "Baby"
+            }
+          }
+        }
+      },
+      "air_purifier": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "level_1": "Level 1",
+              "level_2": "Level 2",
+              "level_3": "Level 3",
+              "auto": "[%key:common::state::auto%]",
+              "pet": "Pet",
+              "sleep": "Sleep"
             }
           }
         }
@@ -188,6 +260,58 @@
             "state": {
               "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
               "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "christmas": "Christmas",
+              "halloween": "Halloween",
+              "sunset": "Sunset",
+              "vitality": "Vitality",
+              "flashing": "Flashing",
+              "strobe": "Strobe",
+              "fade": "Fade",
+              "smooth": "Smooth",
+              "forest": "Forest",
+              "ocean": "Ocean",
+              "autumn": "Autumn",
+              "cool": "Cool",
+              "flow": "Flow",
+              "relax": "Relax",
+              "modern": "Modern",
+              "rose": "Rose",
+              "colorful": "Colorful",
+              "flickering": "Flickering",
+              "breathing": "Breathing",
+              "romance": "Romance",
+              "energy": "Energy",
+              "heartbeat": "Heartbeat",
+              "party": "Party",
+              "dynamic": "Dynamic",
+              "mystery": "Mystery",
+              "lightning": "Lightning",
+              "rock": "Rock",
+              "starlight": "Starlight",
+              "valentine_day": "Valentine's Day",
+              "dream": "Dream",
+              "alarm": "Alarm",
+              "fireworks": "Fireworks",
+              "waves": "Waves",
+              "rainbow": "Rainbow",
+              "game": "Game",
+              "meditation": "Meditation",
+              "starlit_sky": "Starlit Sky",
+              "sleep": "Sleep",
+              "movie": "Movie",
+              "sunrise": "Sunrise",
+              "new_year": "New Year",
+              "cherry_blossom": "Cherry Blossom"
             }
           }
         }

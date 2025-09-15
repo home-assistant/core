@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "switch": {
+      "loudness": {
+        "default": "mdi:volume-high",
+        "state": {
+          "off": "mdi:volume-low"
+        }
+      }
+    }
+  }
+}

@@ -478,7 +478,7 @@ async def test_reconfigure_flow_smile_mismatch(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow aborts on other Smile ID."""
-    mock_smile_adam.smile_hostname = TEST_SMILE_HOST
+    mock_smile_adam.smile.hostname = TEST_SMILE_HOST
 
     result = await _start_reconfigure_flow(hass, mock_config_entry, TEST_HOST)
 

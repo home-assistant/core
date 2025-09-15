@@ -77,6 +77,9 @@
           }
         }
       },
+      "nox": {
+        "name": "Nitrogen oxides"
+      },
       "o3_index": {
         "name": "Ozone index",
         "state": {

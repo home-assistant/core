@@ -1,0 +1,75 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Pokerlamp 2",
+  "category": "dj",
+  "product_id": "baf9tt9lb8t5uc7z",
+  "product_name": "LED SMART",
+  "online": false,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2021-10-30T17:22:29+00:00",
+  "create_time": "2021-10-30T17:22:29+00:00",
+  "update_time": "2021-10-30T17:22:29+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 25,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 25,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch_led": true,
+    "bright_value": 45,
+    "temp_value": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

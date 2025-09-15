@@ -14,7 +14,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -113,14 +113,30 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="floodlight_brightness",
         cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
         translation_key="floodlight_brightness",
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         native_step=1,
         native_min_value=1,
         native_max_value=100,
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         value=lambda api, ch: api.whiteled_brightness(ch),
         method=lambda api, ch, value: api.set_whiteled(ch, brightness=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ir_brightness",
+        cmd_key="208",
+        translation_key="ir_brightness",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "ir_brightness"),
+        value=lambda api, ch: api.baichuan.ir_brightness(ch),
+        method=lambda api, ch, value: (
+            api.baichuan.set_status_led(ch, ir_brightness=int(value))
+        ),
     ),
     ReolinkNumberEntityDescription(
         key="volume",
@@ -133,6 +149,30 @@ NUMBER_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "volume"),
         value=lambda api, ch: api.volume(ch),
         method=lambda api, ch, value: api.set_volume(ch, volume=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
+        key="volume_speak",
+        cmd_key="GetAudioCfg",
+        translation_key="volume_speak",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "volume_speak"),
+        value=lambda api, ch: api.volume_speak(ch),
+        method=lambda api, ch, value: api.set_volume(ch, volume_speak=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
+        key="volume_doorbell",
+        cmd_key="GetAudioCfg",
+        translation_key="volume_doorbell",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "volume_doorbell"),
+        value=lambda api, ch: api.volume_doorbell(ch),
+        method=lambda api, ch, value: api.set_volume(ch, volume_doorbell=int(value)),
     ),
     ReolinkNumberEntityDescription(
         key="guard_return_time",
@@ -259,6 +299,18 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
     ),
     ReolinkNumberEntityDescription(
+        key="cry_sensitivity",
+        cmd_key="299",
+        translation_key="cry_sensitivity",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=1,
+        native_max_value=5,
+        supported=lambda api, ch: api.supported(ch, "ai_cry"),
+        value=lambda api, ch: api.baichuan.cry_sensitivity(ch),
+        method=lambda api, ch, value: api.baichuan.set_cry_detection(ch, int(value)),
+    ),
+    ReolinkNumberEntityDescription(
         key="ai_face_delay",
         cmd_key="GetAiAlarm",
         translation_key="ai_face_delay",
@@ -380,8 +432,8 @@ NUMBER_ENTITIES = (
         key="auto_track_limit_left",
         cmd_key="GetPtzTraceSection",
         translation_key="auto_track_limit_left",
-        mode=NumberMode.SLIDER,
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         native_step=1,
         native_min_value=-1,
         native_max_value=2700,
@@ -393,8 +445,8 @@ NUMBER_ENTITIES = (
         key="auto_track_limit_right",
         cmd_key="GetPtzTraceSection",
         translation_key="auto_track_limit_right",
-        mode=NumberMode.SLIDER,
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         native_step=1,
         native_min_value=-1,
         native_max_value=2700,
@@ -408,6 +460,7 @@ NUMBER_ENTITIES = (
         translation_key="auto_track_disappear_time",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=1,
@@ -424,6 +477,7 @@ NUMBER_ENTITIES = (
         translation_key="auto_track_stop_time",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=1,
@@ -514,6 +568,38 @@ NUMBER_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "isp_hue"),
         value=lambda api, ch: api.image_hue(ch),
         method=lambda api, ch, value: api.set_image(ch, hue=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
+        key="pre_record_time",
+        cmd_key="594",
+        translation_key="pre_record_time",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=2,
+        native_max_value=10,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        supported=lambda api, ch: api.supported(ch, "pre_record"),
+        value=lambda api, ch: api.baichuan.pre_record_time(ch),
+        method=lambda api, ch, value: api.baichuan.set_pre_recording(
+            ch, time=int(value)
+        ),
+    ),
+    ReolinkNumberEntityDescription(
+        key="pre_record_battery_stop",
+        cmd_key="594",
+        translation_key="pre_record_battery_stop",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=10,
+        native_max_value=80,
+        native_unit_of_measurement=PERCENTAGE,
+        supported=lambda api, ch: api.supported(ch, "pre_record"),
+        value=lambda api, ch: api.baichuan.pre_record_battery_stop(ch),
+        method=lambda api, ch, value: api.baichuan.set_pre_recording(
+            ch, battery_stop=int(value)
+        ),
     ),
 )
 
@@ -718,6 +804,19 @@ CHIME_NUMBER_ENTITIES = (
         value=lambda chime: chime.volume,
         method=lambda chime, value: chime.set_option(volume=int(value)),
     ),
+    ReolinkChimeNumberEntityDescription(
+        key="silent_time",
+        cmd_key="609",
+        translation_key="silent_time",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=720,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        value=lambda chime: int(chime.silent_time / 60),
+        method=lambda chime, value: chime.set_silent_time(time=int(value * 60)),
+    ),
 )
 
 
@@ -754,6 +853,7 @@ async def async_setup_entry(
         ReolinkChimeNumberEntity(reolink_data, chime, entity_description)
         for entity_description in CHIME_NUMBER_ENTITIES
         for chime in api.chime_list
+        if chime.channel is not None
     )
     async_add_entities(entities)
 

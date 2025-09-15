@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import configure_integration
 from .mocks import (
@@ -19,9 +19,11 @@ from .mocks import (
 )
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_binary_sensor(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup and state change of a binary sensor device."""
     entry = configure_integration(hass)
@@ -57,8 +59,13 @@ async def test_binary_sensor(
         hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_door").state == STATE_UNAVAILABLE
     )
 
+    # Emulate websocket message: device was deleted
+    test_gateway.publisher.dispatch("Test", ("Test", "del"))
+    await hass.async_block_till_done()
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "Test")})
+    assert not device
 
-@pytest.mark.usefixtures("mock_zeroconf")
+
 async def test_remote_control(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
@@ -99,7 +106,6 @@ async def test_remote_control(
     )
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_disabled(hass: HomeAssistant) -> None:
     """Test setup of a disabled device."""
     entry = configure_integration(hass)
@@ -113,7 +119,6 @@ async def test_disabled(hass: HomeAssistant) -> None:
     assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_door") is None
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_remove_from_hass(hass: HomeAssistant) -> None:
     """Test removing entity."""
     entry = configure_integration(hass)

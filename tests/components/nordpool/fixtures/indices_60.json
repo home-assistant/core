@@ -1,0 +1,185 @@
+{
+  "deliveryDateCET": "2025-07-06",
+  "version": 2,
+  "updatedAt": "2025-07-05T10:56:44.6936838Z",
+  "market": "DayAhead",
+  "indexNames": ["SE3"],
+  "currency": "SEK",
+  "resolutionInMinutes": 60,
+  "areaStates": [
+    {
+      "state": "Preliminary",
+      "areas": ["SE3"]
+    }
+  ],
+  "multiIndexEntries": [
+    {
+      "deliveryStart": "2025-07-05T22:00:00Z",
+      "deliveryEnd": "2025-07-05T23:00:00Z",
+      "entryPerArea": {
+        "SE3": 43.57
+      }
+    },
+    {
+      "deliveryStart": "2025-07-05T23:00:00Z",
+      "deliveryEnd": "2025-07-06T00:00:00Z",
+      "entryPerArea": {
+        "SE3": 36.47
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T00:00:00Z",
+      "deliveryEnd": "2025-07-06T01:00:00Z",
+      "entryPerArea": {
+        "SE3": 35.57
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T01:00:00Z",
+      "deliveryEnd": "2025-07-06T02:00:00Z",
+      "entryPerArea": {
+        "SE3": 30.73
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T02:00:00Z",
+      "deliveryEnd": "2025-07-06T03:00:00Z",
+      "entryPerArea": {
+        "SE3": 32.42
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T03:00:00Z",
+      "deliveryEnd": "2025-07-06T04:00:00Z",
+      "entryPerArea": {
+        "SE3": 38.73
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T04:00:00Z",
+      "deliveryEnd": "2025-07-06T05:00:00Z",
+      "entryPerArea": {
+        "SE3": 42.78
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T05:00:00Z",
+      "deliveryEnd": "2025-07-06T06:00:00Z",
+      "entryPerArea": {
+        "SE3": 54.71
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T06:00:00Z",
+      "deliveryEnd": "2025-07-06T07:00:00Z",
+      "entryPerArea": {
+        "SE3": 83.87
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T07:00:00Z",
+      "deliveryEnd": "2025-07-06T08:00:00Z",
+      "entryPerArea": {
+        "SE3": 78.8
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T08:00:00Z",
+      "deliveryEnd": "2025-07-06T09:00:00Z",
+      "entryPerArea": {
+        "SE3": 92.09
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T09:00:00Z",
+      "deliveryEnd": "2025-07-06T10:00:00Z",
+      "entryPerArea": {
+        "SE3": 104.92
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T10:00:00Z",
+      "deliveryEnd": "2025-07-06T11:00:00Z",
+      "entryPerArea": {
+        "SE3": 72.5
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T11:00:00Z",
+      "deliveryEnd": "2025-07-06T12:00:00Z",
+      "entryPerArea": {
+        "SE3": 63.49
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T12:00:00Z",
+      "deliveryEnd": "2025-07-06T13:00:00Z",
+      "entryPerArea": {
+        "SE3": 91.64
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T13:00:00Z",
+      "deliveryEnd": "2025-07-06T14:00:00Z",
+      "entryPerArea": {
+        "SE3": 111.79
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T14:00:00Z",
+      "deliveryEnd": "2025-07-06T15:00:00Z",
+      "entryPerArea": {
+        "SE3": 234.04
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T15:00:00Z",
+      "deliveryEnd": "2025-07-06T16:00:00Z",
+      "entryPerArea": {
+        "SE3": 435.33
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T16:00:00Z",
+      "deliveryEnd": "2025-07-06T17:00:00Z",
+      "entryPerArea": {
+        "SE3": 431.84
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T17:00:00Z",
+      "deliveryEnd": "2025-07-06T18:00:00Z",
+      "entryPerArea": {
+        "SE3": 423.73
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T18:00:00Z",
+      "deliveryEnd": "2025-07-06T19:00:00Z",
+      "entryPerArea": {
+        "SE3": 437.92
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T19:00:00Z",
+      "deliveryEnd": "2025-07-06T20:00:00Z",
+      "entryPerArea": {
+        "SE3": 416.42
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T20:00:00Z",
+      "deliveryEnd": "2025-07-06T21:00:00Z",
+      "entryPerArea": {
+        "SE3": 414.39
+      }
+    },
+    {
+      "deliveryStart": "2025-07-06T21:00:00Z",
+      "deliveryEnd": "2025-07-06T22:00:00Z",
+      "entryPerArea": {
+        "SE3": 396.38
+      }
+    }
+  ]
+}

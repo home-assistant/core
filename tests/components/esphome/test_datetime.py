@@ -26,7 +26,6 @@ async def test_generic_datetime_entity(
             object_id="mydatetime",
             key=1,
             name="my datetime",
-            unique_id="my_datetime",
         )
     ]
     states = [DateTimeState(key=1, epoch_seconds=1713270896)]
@@ -37,7 +36,7 @@ async def test_generic_datetime_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("datetime.test_mydatetime")
+    state = hass.states.get("datetime.test_my_datetime")
     assert state is not None
     assert state.state == "2024-04-16T12:34:56+00:00"
 
@@ -45,12 +44,12 @@ async def test_generic_datetime_entity(
         DATETIME_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: "datetime.test_mydatetime",
+            ATTR_ENTITY_ID: "datetime.test_my_datetime",
             ATTR_DATETIME: "2000-01-01T01:23:45+00:00",
         },
         blocking=True,
     )
-    mock_client.datetime_command.assert_has_calls([call(1, 946689825)])
+    mock_client.datetime_command.assert_has_calls([call(1, 946689825, device_id=0)])
     mock_client.datetime_command.reset_mock()
 
 
@@ -65,7 +64,6 @@ async def test_generic_datetime_missing_state(
             object_id="mydatetime",
             key=1,
             name="my datetime",
-            unique_id="my_datetime",
         )
     ]
     states = [DateTimeState(key=1, missing_state=True)]
@@ -76,6 +74,6 @@ async def test_generic_datetime_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("datetime.test_mydatetime")
+    state = hass.states.get("datetime.test_my_datetime")
     assert state is not None
     assert state.state == STATE_UNKNOWN

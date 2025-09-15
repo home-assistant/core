@@ -15,10 +15,12 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
+    DOMAIN as FAN_DOMAIN,
     ENTITY_ID_FORMAT,
     FanEntity,
     FanEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
@@ -33,20 +35,28 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .const import DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .template_entity import (
-    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
-    TemplateEntity,
-    rewrite_common_legacy_to_modern_conf,
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
 )
+from .schemas import (
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
+    make_template_entity_common_modern_schema,
+)
+from .template_entity import TemplateEntity
+from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +81,7 @@ CONF_OSCILLATING = "oscillating"
 CONF_PERCENTAGE = "percentage"
 CONF_PRESET_MODE = "preset_mode"
 
-LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+LEGACY_FIELDS = {
     CONF_DIRECTION_TEMPLATE: CONF_DIRECTION,
     CONF_OSCILLATING_TEMPLATE: CONF_OSCILLATING,
     CONF_PERCENTAGE_TEMPLATE: CONF_PERCENTAGE,
@@ -81,32 +91,29 @@ LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
 
 DEFAULT_NAME = "Template Fan"
 
-FAN_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_DIRECTION): cv.template,
-            vol.Optional(CONF_NAME): cv.template,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_OSCILLATING): cv.template,
-            vol.Optional(CONF_PERCENTAGE): cv.template,
-            vol.Optional(CONF_PICTURE): cv.template,
-            vol.Optional(CONF_PRESET_MODE): cv.template,
-            vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
-            vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
-            vol.Optional(CONF_STATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema),
+FAN_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DIRECTION): cv.template,
+        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_OSCILLATING): cv.template,
+        vol.Optional(CONF_PERCENTAGE): cv.template,
+        vol.Optional(CONF_PRESET_MODE): cv.template,
+        vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
+        vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
+        vol.Optional(CONF_STATE): cv.template,
+    }
 )
 
-LEGACY_FAN_SCHEMA = vol.All(
+FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
+    make_template_entity_common_modern_schema(FAN_DOMAIN, DEFAULT_NAME).schema
+)
+
+FAN_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
@@ -131,56 +138,12 @@ LEGACY_FAN_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_FANS): cv.schema_with_slug_keys(LEGACY_FAN_SCHEMA)}
+    {vol.Required(CONF_FANS): cv.schema_with_slug_keys(FAN_LEGACY_YAML_SCHEMA)}
 )
 
-
-def rewrite_legacy_to_modern_conf(
-    hass: HomeAssistant, config: dict[str, dict]
-) -> list[dict]:
-    """Rewrite legacy fan configuration definitions to modern ones."""
-    fans = []
-
-    for object_id, entity_conf in config.items():
-        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
-
-        entity_conf = rewrite_common_legacy_to_modern_conf(
-            hass, entity_conf, LEGACY_FIELDS
-        )
-
-        if CONF_NAME not in entity_conf:
-            entity_conf[CONF_NAME] = template.Template(object_id, hass)
-
-        fans.append(entity_conf)
-
-    return fans
-
-
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the template fans."""
-    fans = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        fans.append(
-            TemplateFan(
-                hass,
-                entity_conf,
-                unique_id,
-            )
-        )
-
-    async_add_entities(fans)
+FAN_CONFIG_ENTRY_SCHEMA = FAN_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
 
 
 async def async_setup_platform(
@@ -190,32 +153,58 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template fans."""
-    if discovery_info is None:
-        _async_create_template_tracking_entities(
-            async_add_entities,
-            hass,
-            rewrite_legacy_to_modern_conf(hass, config[CONF_FANS]),
-            None,
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        FAN_DOMAIN,
+        config,
+        StateFanEntity,
+        TriggerFanEntity,
+        async_add_entities,
+        discovery_info,
+        LEGACY_FIELDS,
+        legacy_key=CONF_FANS,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateFanEntity,
+        FAN_CONFIG_ENTRY_SCHEMA,
+    )
+
+
+@callback
+def async_create_preview_fan(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateFanEntity:
+    """Create a preview."""
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateFanEntity,
+        FAN_CONFIG_ENTRY_SCHEMA,
     )
 
 
 class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
     """Representation of a template fan features."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
+
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-
-        self._template = config.get(CONF_STATE)
         self._percentage_template = config.get(CONF_PERCENTAGE)
         self._preset_mode_template = config.get(CONF_PRESET_MODE)
         self._oscillating_template = config.get(CONF_OSCILLATING)
@@ -232,9 +221,12 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
 
         # List of valid preset modes
         self._preset_modes: list[str] | None = config.get(CONF_PRESET_MODES)
-        self._attr_assumed_state = self._template is None
 
-    def _register_scripts(
+        self._attr_supported_features |= (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
+
+    def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], FanEntityFeature | int]]:
         for action_id, supported_feature in (
@@ -390,7 +382,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if percentage is not None:
             await self.async_set_percentage(percentage)
 
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = True
             self.async_write_ha_state()
 
@@ -400,7 +392,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             self._action_scripts[CONF_OFF_ACTION], context=self._context
         )
 
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = False
             self.async_write_ha_state()
 
@@ -415,10 +407,10 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
                 context=self._context,
             )
 
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = percentage != 0
 
-        if self._template is None or self._percentage_template is None:
+        if self._attr_assumed_state or self._percentage_template is None:
             self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -432,10 +424,10 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
                 context=self._context,
             )
 
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = True
 
-        if self._template is None or self._preset_mode_template is None:
+        if self._attr_assumed_state or self._preset_mode_template is None:
             self.async_write_ha_state()
 
     async def async_oscillate(self, oscillating: bool) -> None:
@@ -476,7 +468,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             )
 
 
-class TemplateFan(TemplateEntity, AbstractTemplateFan):
+class StateFanEntity(TemplateEntity, AbstractTemplateFan):
     """A template fan component."""
 
     _attr_should_poll = False
@@ -488,22 +480,13 @@ class TemplateFan(TemplateEntity, AbstractTemplateFan):
         unique_id,
     ) -> None:
         """Initialize the fan."""
-        TemplateEntity.__init__(
-            self, hass, config=config, fallback_name=None, unique_id=unique_id
-        )
+        TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateFan.__init__(self, config)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
 
-        self._attr_supported_features |= (
-            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
-        )
-        for action_id, action_config, supported_feature in self._register_scripts(
+        for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
@@ -559,3 +542,66 @@ class TemplateFan(TemplateEntity, AbstractTemplateFan):
                 none_on_template_error=True,
             )
         super()._async_setup_templates()
+
+
+class TriggerFanEntity(TriggerEntity, AbstractTemplateFan):
+    """Fan entity based on trigger data."""
+
+    domain = FAN_DOMAIN
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: ConfigType,
+    ) -> None:
+        """Initialize the entity."""
+        TriggerEntity.__init__(self, hass, coordinator, config)
+        AbstractTemplateFan.__init__(self, config)
+
+        self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+
+        for action_id, action_config, supported_feature in self._iterate_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
+        for key in (
+            CONF_STATE,
+            CONF_PRESET_MODE,
+            CONF_PERCENTAGE,
+            CONF_OSCILLATING,
+            CONF_DIRECTION,
+        ):
+            if isinstance(config.get(key), template.Template):
+                self._to_render_simple.append(key)
+                self._parse_result.add(key)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle update of the data."""
+        self._process_data()
+
+        if not self.available:
+            self.async_write_ha_state()
+            return
+
+        write_ha_state = False
+        for key, updater in (
+            (CONF_STATE, self._handle_state),
+            (CONF_PRESET_MODE, self._update_preset_mode),
+            (CONF_PERCENTAGE, self._update_percentage),
+            (CONF_OSCILLATING, self._update_oscillating),
+            (CONF_DIRECTION, self._update_direction),
+        ):
+            if (rendered := self._rendered.get(key)) is not None:
+                updater(rendered)
+                write_ha_state = True
+
+        if len(self._rendered) > 0:
+            # In case any non optimistic template
+            write_ha_state = True
+
+        if write_ha_state:
+            self.async_write_ha_state()

@@ -23,8 +23,7 @@ def import_async_get_exception_message() -> Callable[
     Defaults to English, requires translations to already be cached.
     """
 
-    # pylint: disable-next=import-outside-toplevel
-    from .helpers.translation import (
+    from .helpers.translation import (  # noqa: PLC0415
         async_get_exception_message as async_get_exception_message_import,
     )
 

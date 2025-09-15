@@ -12,39 +12,7 @@ from typing import TYPE_CHECKING, Any, Final
 import orjson
 
 from homeassistant.util.file import write_utf8_file, write_utf8_file_atomic
-from homeassistant.util.json import (
-    JSON_DECODE_EXCEPTIONS as _JSON_DECODE_EXCEPTIONS,
-    JSON_ENCODE_EXCEPTIONS as _JSON_ENCODE_EXCEPTIONS,
-    SerializationError,
-    format_unserializable_data,
-    json_loads as _json_loads,
-)
-
-from .deprecation import (
-    DeprecatedConstant,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    deprecated_function,
-    dir_with_deprecated_constants,
-)
-
-_DEPRECATED_JSON_DECODE_EXCEPTIONS = DeprecatedConstant(
-    _JSON_DECODE_EXCEPTIONS, "homeassistant.util.json.JSON_DECODE_EXCEPTIONS", "2025.8"
-)
-_DEPRECATED_JSON_ENCODE_EXCEPTIONS = DeprecatedConstant(
-    _JSON_ENCODE_EXCEPTIONS, "homeassistant.util.json.JSON_ENCODE_EXCEPTIONS", "2025.8"
-)
-json_loads = deprecated_function(
-    "homeassistant.util.json.json_loads", breaks_in_ha_version="2025.8"
-)(_json_loads)
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
-
+from homeassistant.util.json import SerializationError, format_unserializable_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -235,10 +203,7 @@ def find_paths_unserializable_data(
 
     This method is slow! Only use for error handling.
     """
-    from homeassistant.core import (  # pylint: disable=import-outside-toplevel
-        Event,
-        State,
-    )
+    from homeassistant.core import Event, State  # noqa: PLC0415
 
     to_process = deque([(bad_data, "$")])
     invalid = {}

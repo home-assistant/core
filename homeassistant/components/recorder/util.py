@@ -27,6 +27,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
 
+from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.recorder import (  # noqa: F401
@@ -258,7 +259,7 @@ def basic_sanity_check(cursor: SQLiteCursor) -> bool:
 
 def validate_sqlite_database(dbpath: str) -> bool:
     """Run a quick check on an sqlite database to see if it is corrupt."""
-    import sqlite3  # pylint: disable=import-outside-toplevel
+    import sqlite3  # noqa: PLC0415
 
     try:
         conn = sqlite3.connect(dbpath)
@@ -402,9 +403,8 @@ def _datetime_or_none(value: str) -> datetime | None:
 def build_mysqldb_conv() -> dict:
     """Build a MySQLDB conv dict that uses cisco8601 to parse datetimes."""
     # Late imports since we only call this if they are using mysqldb
-    # pylint: disable=import-outside-toplevel
-    from MySQLdb.constants import FIELD_TYPE
-    from MySQLdb.converters import conversions
+    from MySQLdb.constants import FIELD_TYPE  # noqa: PLC0415
+    from MySQLdb.converters import conversions  # noqa: PLC0415
 
     return {**conversions, FIELD_TYPE.DATETIME: _datetime_or_none}
 
@@ -803,6 +803,7 @@ PERIOD_SCHEMA = vol.Schema(
             {
                 vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
                 vol.Optional("offset"): int,
+                vol.Optional("first_weekday"): vol.Any(*WEEKDAYS),
             }
         ),
         vol.Exclusive("fixed_period", "period"): vol.Schema(
@@ -841,7 +842,12 @@ def resolve_period(
             start_time += timedelta(days=cal_offset)
             end_time = start_time + timedelta(days=1)
         elif calendar_period == "week":
-            start_time = start_of_day - timedelta(days=start_of_day.weekday())
+            first_weekday = WEEKDAYS.index(
+                period_def["calendar"].get("first_weekday", WEEKDAYS[0])
+            )
+            start_time = start_of_day - timedelta(
+                days=(start_of_day.weekday() - first_weekday) % 7
+            )
             start_time += timedelta(days=cal_offset * 7)
             end_time = start_time + timedelta(weeks=1)
         elif calendar_period == "month":

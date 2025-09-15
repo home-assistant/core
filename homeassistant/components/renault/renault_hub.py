@@ -156,6 +156,7 @@ class RenaultHub:
             name=vehicle.device_info[ATTR_NAME],
             model=vehicle.device_info[ATTR_MODEL],
             model_id=vehicle.device_info[ATTR_MODEL_ID],
+            sw_version=None,  # cleanup from PR #125399
         )
         self._vehicles[vehicle_link.vin] = vehicle
 

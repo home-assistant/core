@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections import OrderedDict
 from collections.abc import Callable
+from dataclasses import dataclass, field
 import logging
 from typing import TYPE_CHECKING, Any, Concatenate, overload
 
@@ -10,13 +13,17 @@ from requests.exceptions import Timeout
 from soco import SoCo
 from soco.exceptions import SoCoException, SoCoUPnPException
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import SONOS_SPEAKER_ACTIVITY
 from .exception import SonosUpdateError
 
 if TYPE_CHECKING:
+    from .alarms import SonosAlarms
     from .entity import SonosEntity
+    from .favorites import SonosFavorites
     from .household_coordinator import SonosHouseholdCoordinator
     from .media import SonosMedia
     from .speaker import SonosSpeaker
@@ -120,3 +127,31 @@ def sync_get_visible_zones(soco: SoCo) -> set[SoCo]:
     _ = soco.household_id
     _ = soco.uid
     return soco.visible_zones
+
+
+@dataclass
+class UnjoinData:
+    """Class to track data necessary for unjoin coalescing."""
+
+    speakers: list[SonosSpeaker] = field(default_factory=list)
+    event: asyncio.Event = field(default_factory=asyncio.Event)
+
+
+@dataclass
+class SonosData:
+    """Storage class for platform global data."""
+
+    discovered: OrderedDict[str, SonosSpeaker] = field(default_factory=OrderedDict)
+    favorites: dict[str, SonosFavorites] = field(default_factory=dict)
+    alarms: dict[str, SonosAlarms] = field(default_factory=dict)
+    topology_condition: asyncio.Condition = field(default_factory=asyncio.Condition)
+    hosts_heartbeat: CALLBACK_TYPE | None = None
+    discovery_known: set[str] = field(default_factory=set)
+    boot_counts: dict[str, int] = field(default_factory=dict)
+    mdns_names: dict[str, str] = field(default_factory=dict)
+    # Maps the entity unique id to the associated SonosSpeaker instance.
+    unique_id_speaker_mappings: dict[str, SonosSpeaker] = field(default_factory=dict)
+    unjoin_data: dict[str, UnjoinData] = field(default_factory=dict)
+
+
+type SonosConfigEntry = ConfigEntry[SonosData]

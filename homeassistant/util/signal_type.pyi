@@ -31,9 +31,8 @@ def _test_signal_type_typing() -> None:  # noqa: PYI048
 
     This is tested during the mypy run. Do not move it to 'tests'!
     """
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.dispatcher import (
+    from homeassistant.core import HomeAssistant  # noqa: PLC0415
+    from homeassistant.helpers.dispatcher import (  # noqa: PLC0415
         async_dispatcher_connect,
         async_dispatcher_send,
     )

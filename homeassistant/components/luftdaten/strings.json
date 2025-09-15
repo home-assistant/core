@@ -19,7 +19,7 @@
   },
   "entity": {
     "sensor": {
-      "pressure_at_sealevel": { "name": "Pressure at sealevel" }
+      "pressure_at_sealevel": { "name": "Pressure at sea level" }
     }
   }
 }

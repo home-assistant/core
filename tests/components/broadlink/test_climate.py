@@ -92,7 +92,9 @@ async def test_climate(
     """Test Broadlink climate."""
 
     device = get_device("Guest room")
-    mock_setup = await device.setup_entry(hass)
+    mock_api = device.get_mock_api()
+    mock_api.get_full_status.return_value = api_return_value
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_setup.entry.unique_id)}
@@ -102,8 +104,6 @@ async def test_climate(
     assert len(climates) == 1
 
     climate = climates[0]
-
-    mock_setup.api.get_full_status.return_value = api_return_value
 
     await async_update_entity(hass, climate.entity_id)
     assert mock_setup.api.get_full_status.call_count == 2
@@ -122,7 +122,17 @@ async def test_climate_set_temperature_turn_off_turn_on(
     """Test Broadlink climate."""
 
     device = get_device("Guest room")
-    mock_setup = await device.setup_entry(hass)
+    mock_api = device.get_mock_api()
+    mock_api.get_full_status.return_value = {
+        "sensor": SensorMode.INNER_SENSOR_CONTROL.value,
+        "power": 1,
+        "auto_mode": 0,
+        "active": 1,
+        "room_temp": 22,
+        "thermostat_temp": 23,
+        "external_temp": 30,
+    }
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_setup.entry.unique_id)}

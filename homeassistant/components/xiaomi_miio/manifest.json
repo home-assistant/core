@@ -1,6 +1,6 @@
 {
   "domain": "xiaomi_miio",
-  "name": "Xiaomi Miio",
+  "name": "Xiaomi Home",
   "codeowners": ["@rytilahti", "@syssi", "@starkillerOG"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_miio",

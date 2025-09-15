@@ -16,7 +16,6 @@ from homeassistant.components.habitica.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
@@ -96,7 +95,6 @@ async def test_form_login(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
         CONF_API_USER: TEST_API_USER,
         CONF_API_KEY: TEST_API_KEY,
         CONF_URL: DEFAULT_URL,
-        CONF_NAME: "test-user",
         CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == TEST_API_USER
@@ -151,7 +149,6 @@ async def test_form_login_errors(
         CONF_API_USER: TEST_API_USER,
         CONF_API_KEY: TEST_API_KEY,
         CONF_URL: DEFAULT_URL,
-        CONF_NAME: "test-user",
         CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == TEST_API_USER
@@ -219,7 +216,6 @@ async def test_form_advanced(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         CONF_API_USER: TEST_API_USER,
         CONF_API_KEY: TEST_API_KEY,
         CONF_URL: DEFAULT_URL,
-        CONF_NAME: "test-user",
         CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == TEST_API_USER
@@ -275,7 +271,6 @@ async def test_form_advanced_errors(
         CONF_API_USER: TEST_API_USER,
         CONF_API_KEY: TEST_API_KEY,
         CONF_URL: DEFAULT_URL,
-        CONF_NAME: "test-user",
         CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == TEST_API_USER

@@ -9,9 +9,7 @@ import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.components import input_boolean, switch
-from homeassistant.components.generic_hygrostat import (
-    DOMAIN as GENERIC_HYDROSTAT_DOMAIN,
-)
+from homeassistant.components.generic_hygrostat import DOMAIN
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
@@ -1862,7 +1860,7 @@ async def test_device_id(
 
     helper_config_entry = MockConfigEntry(
         data={},
-        domain=GENERIC_HYDROSTAT_DOMAIN,
+        domain=DOMAIN,
         options={
             "device_class": "humidifier",
             "dry_tolerance": 2.0,

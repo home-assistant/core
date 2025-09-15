@@ -12,7 +12,7 @@
         }
       },
       "pairing": {
-        "title": "LG webOS TV Pairing",
+        "title": "LG webOS TV pairing",
         "description": "Select **Submit** and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)"
       },
       "reauth_confirm": {
@@ -37,7 +37,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "wrong_device": "The configured device is not the same found on this Hostname or IP address."
+      "wrong_device": "The configured device is not the same found at this hostname or IP address."
     }
   },
   "options": {
@@ -70,7 +70,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Name(s) of the webostv entities where to run the API method."
+          "description": "Name(s) of the webOS TV entities where to run the API method."
         },
         "button": {
           "name": "Button",
@@ -92,7 +92,7 @@
         },
         "payload": {
           "name": "Payload",
-          "description": "An optional payload to provide to the endpoint in the format of key value pair(s)."
+          "description": "An optional payload to provide to the endpoint in the format of key value pairs."
         }
       }
     },
@@ -102,7 +102,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Name(s) of the webostv entities to change sound output on."
+          "description": "Name(s) of the webOS TV entities to change sound output on."
         },
         "sound_output": {
           "name": "Sound output",
@@ -134,7 +134,7 @@
       "message": "Unknown trigger platform: {platform}"
     },
     "invalid_entity_id": {
-      "message": "Entity {entity_id} is not a valid webostv entity."
+      "message": "Entity {entity_id} is not a valid webOS TV entity."
     },
     "source_not_found": {
       "message": "Source {source} not found in the sources list for {name}."

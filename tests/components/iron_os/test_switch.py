@@ -5,7 +5,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pynecil import CharSetting, CommunicationError
+from pynecil import CharSetting, CommunicationError, TempUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -108,6 +108,47 @@ async def test_turn_on_off_toggle(
     )
     assert len(mock_pynecil.write.mock_calls) == 1
     mock_pynecil.write.assert_called_once_with(target, value)
+
+
+@pytest.mark.parametrize(
+    ("service", "value", "temp_unit"),
+    [
+        (SERVICE_TOGGLE, False, TempUnit.CELSIUS),
+        (SERVICE_TURN_OFF, False, TempUnit.CELSIUS),
+        (SERVICE_TURN_ON, 250, TempUnit.CELSIUS),
+        (SERVICE_TURN_ON, 480, TempUnit.FAHRENHEIT),
+    ],
+)
+@pytest.mark.usefixtures("ble_device")
+async def test_turn_on_off_toggle_boost(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_pynecil: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    service: str,
+    value: bool,
+    temp_unit: TempUnit,
+) -> None:
+    """Test the IronOS switch turn on/off, toggle services."""
+    mock_pynecil.get_settings.return_value["temp_unit"] = temp_unit
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        service_data={ATTR_ENTITY_ID: "switch.pinecil_boost"},
+        blocking=True,
+    )
+    assert len(mock_pynecil.write.mock_calls) == 1
+    mock_pynecil.write.assert_called_once_with(CharSetting.BOOST_TEMP, value)
 
 
 @pytest.mark.parametrize(

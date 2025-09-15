@@ -11,9 +11,16 @@ from homeassistant.components.image_processing import (
     ImageProcessingFaceEntity,
 )
 from homeassistant.const import ATTR_LOCATION, CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    split_entity_id,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import DOMAIN
 
 PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA
 
@@ -25,6 +32,20 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Dlib Face detection platform."""
+    create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_system_packages_yaml_integration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Dlib Face Detect",
+        },
+    )
     source: list[dict[str, str]] = config[CONF_SOURCE]
     add_entities(
         DlibFaceDetectEntity(camera[CONF_ENTITY_ID], camera.get(CONF_NAME))

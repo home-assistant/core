@@ -26,6 +26,7 @@ from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
     get_virtual_component_ids,
+    is_view_for_platform,
 )
 
 PARALLEL_UPDATES = 0
@@ -40,7 +41,9 @@ RPC_TEXT_ENTITIES: Final = {
     "text": RpcTextDescription(
         key="text",
         sub_key="value",
-        has_entity_name=True,
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, TEXT_PLATFORM
+        ),
     ),
 }
 

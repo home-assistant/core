@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator, Generator
 from io import StringIO
 from typing import Any
-from unittest.mock import ANY, Mock, PropertyMock, patch
+from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, patch
 
 from aiohttp import ClientError, ClientResponseError
 from hass_nabucasa import CloudError
@@ -21,7 +21,6 @@ from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.backup import async_register_backup_agents_listener
 from homeassistant.components.cloud.const import EVENT_CLOUD_EVENT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockStreamReaderChunked
@@ -37,8 +36,7 @@ async def setup_integration(
     cloud: MagicMock,
     cloud_logged_in: None,
 ) -> AsyncGenerator[None]:
-    """Set up cloud and backup integrations."""
-    async_initialize_backup(hass)
+    """Set up cloud integration."""
     with (
         patch("homeassistant.components.backup.is_hassio", return_value=False),
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),
@@ -50,62 +48,56 @@ async def setup_integration(
 
 
 @pytest.fixture
-def mock_delete_file() -> Generator[MagicMock]:
-    """Mock list files."""
-    with patch(
-        "homeassistant.components.cloud.backup.async_files_delete_file",
-        spec_set=True,
-    ) as delete_file:
-        yield delete_file
+def mock_delete_file(cloud: MagicMock) -> Generator[AsyncMock]:
+    """Mock delete files."""
+    cloud.files.delete = AsyncMock()
+    return cloud.files.delete
 
 
 @pytest.fixture
-def mock_list_files() -> Generator[MagicMock]:
+def mock_list_files(cloud: MagicMock) -> Generator[MagicMock]:
     """Mock list files."""
-    with patch(
-        "homeassistant.components.cloud.backup.async_files_list", spec_set=True
-    ) as list_files:
-        list_files.return_value = [
-            {
-                "Key": "462e16810d6841228828d9dd2f9e341e.tar",
-                "LastModified": "2024-11-22T10:49:01.182Z",
-                "Size": 34519040,
-                "Metadata": {
-                    "addons": [],
-                    "backup_id": "23e64aec",
-                    "date": "2024-11-22T11:48:48.727189+01:00",
-                    "database_included": True,
-                    "extra_metadata": {},
-                    "folders": [],
-                    "homeassistant_included": True,
-                    "homeassistant_version": "2024.12.0.dev0",
-                    "name": "Core 2024.12.0.dev0",
-                    "protected": False,
-                    "size": 34519040,
-                    "storage-type": "backup",
-                },
+    cloud.files.list.return_value = [
+        {
+            "Key": "462e16810d6841228828d9dd2f9e341e.tar",
+            "LastModified": "2024-11-22T10:49:01.182Z",
+            "Size": 34519040,
+            "Metadata": {
+                "addons": [],
+                "backup_id": "23e64aec",
+                "date": "2024-11-22T11:48:48.727189+01:00",
+                "database_included": True,
+                "extra_metadata": {},
+                "folders": [],
+                "homeassistant_included": True,
+                "homeassistant_version": "2024.12.0.dev0",
+                "name": "Core 2024.12.0.dev0",
+                "protected": False,
+                "size": 34519040,
+                "storage-type": "backup",
             },
-            {
-                "Key": "462e16810d6841228828d9dd2f9e341f.tar",
-                "LastModified": "2024-11-22T10:49:01.182Z",
-                "Size": 34519040,
-                "Metadata": {
-                    "addons": [],
-                    "backup_id": "23e64aed",
-                    "date": "2024-11-22T11:48:48.727189+01:00",
-                    "database_included": True,
-                    "extra_metadata": {},
-                    "folders": [],
-                    "homeassistant_included": True,
-                    "homeassistant_version": "2024.12.0.dev0",
-                    "name": "Core 2024.12.0.dev0",
-                    "protected": False,
-                    "size": 34519040,
-                    "storage-type": "backup",
-                },
+        },
+        {
+            "Key": "462e16810d6841228828d9dd2f9e341f.tar",
+            "LastModified": "2024-11-22T10:49:01.182Z",
+            "Size": 34519040,
+            "Metadata": {
+                "addons": [],
+                "backup_id": "23e64aed",
+                "date": "2024-11-22T11:48:48.727189+01:00",
+                "database_included": True,
+                "extra_metadata": {},
+                "folders": [],
+                "homeassistant_included": True,
+                "homeassistant_version": "2024.12.0.dev0",
+                "name": "Core 2024.12.0.dev0",
+                "protected": False,
+                "size": 34519040,
+                "storage-type": "backup",
             },
-        ]
-        yield list_files
+        },
+    ]
+    return cloud.files.list
 
 
 @pytest.fixture
@@ -143,7 +135,7 @@ async def test_agents_list_backups(
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/info"})
     response = await client.receive_json()
-    mock_list_files.assert_called_once_with(cloud, storage_type="backup")
+    mock_list_files.assert_called_once_with(storage_type="backup")
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
@@ -152,28 +144,32 @@ async def test_agents_list_backups(
             "addons": [],
             "agents": {"cloud.cloud": {"protected": False, "size": 34519040}},
             "backup_id": "23e64aec",
-            "date": "2024-11-22T11:48:48.727189+01:00",
             "database_included": True,
+            "date": "2024-11-22T11:48:48.727189+01:00",
             "extra_metadata": {},
+            "failed_addons": [],
+            "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0.dev0",
             "name": "Core 2024.12.0.dev0",
-            "failed_agent_ids": [],
             "with_automatic_settings": None,
         },
         {
             "addons": [],
             "agents": {"cloud.cloud": {"protected": False, "size": 34519040}},
             "backup_id": "23e64aed",
-            "date": "2024-11-22T11:48:48.727189+01:00",
             "database_included": True,
+            "date": "2024-11-22T11:48:48.727189+01:00",
             "extra_metadata": {},
+            "failed_addons": [],
+            "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0.dev0",
             "name": "Core 2024.12.0.dev0",
-            "failed_agent_ids": [],
             "with_automatic_settings": None,
         },
     ]
@@ -216,14 +212,16 @@ async def test_agents_list_backups_fail_cloud(
                 "addons": [],
                 "agents": {"cloud.cloud": {"protected": False, "size": 34519040}},
                 "backup_id": "23e64aec",
-                "date": "2024-11-22T11:48:48.727189+01:00",
                 "database_included": True,
+                "date": "2024-11-22T11:48:48.727189+01:00",
                 "extra_metadata": {},
+                "failed_addons": [],
+                "failed_agent_ids": [],
+                "failed_folders": [],
                 "folders": [],
                 "homeassistant_included": True,
                 "homeassistant_version": "2024.12.0.dev0",
                 "name": "Core 2024.12.0.dev0",
-                "failed_agent_ids": [],
                 "with_automatic_settings": None,
             },
         ),
@@ -246,7 +244,7 @@ async def test_agents_get_backup(
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
     response = await client.receive_json()
-    mock_list_files.assert_called_once_with(cloud, storage_type="backup")
+    mock_list_files.assert_called_once_with(storage_type="backup")
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
@@ -722,7 +720,6 @@ async def test_agents_delete(
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
     mock_delete_file.assert_called_once_with(
-        cloud,
         filename="462e16810d6841228828d9dd2f9e341e.tar",
         storage_type=StorageType.BACKUP,
     )

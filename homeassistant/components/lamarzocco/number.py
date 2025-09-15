@@ -119,7 +119,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         key="prebrew_on",
         translation_key="prebrew_time_on",
         device_class=NumberDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         native_step=PRECISION_TENTHS,
         native_min_value=0,
         native_max_value=10,
@@ -158,7 +158,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         key="prebrew_off",
         translation_key="prebrew_time_off",
         device_class=NumberDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         native_step=PRECISION_TENTHS,
         native_min_value=0,
         native_max_value=10,
@@ -221,7 +221,7 @@ class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
     entity_description: LaMarzoccoNumberEntityDescription
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | int:
         """Return the current value."""
         return self.entity_description.native_value_fn(self.coordinator.device)
 

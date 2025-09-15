@@ -33,6 +33,10 @@ FAKE_STATE = PilotParser(
         "c": 0,
         "w": 0,
         "dimming": 100,
+        "fanState": 0,
+        "fanMode": 1,
+        "fanSpeed": 1,
+        "fanRevrs": 0,
     }
 )
 FAKE_IP = "1.1.1.1"
@@ -173,6 +177,25 @@ FAKE_OLD_FIRMWARE_DIMMABLE_BULB = BulbType(
     white_channels=1,
     white_to_color_ratio=80,
 )
+FAKE_DIMMABLE_FAN = BulbType(
+    bulb_type=BulbClass.FANDIM,
+    name="ESP03_FANDIMS_31",
+    features=Features(
+        color=False,
+        color_tmp=False,
+        effect=True,
+        brightness=True,
+        dual_head=False,
+        fan=True,
+        fan_breeze_mode=True,
+        fan_reverse=True,
+    ),
+    kelvin_range=KelvinRange(max=2700, min=2700),
+    fw_version="1.31.32",
+    white_channels=1,
+    white_to_color_ratio=20,
+    fan_speed_range=6,
+)
 
 
 async def setup_integration(hass: HomeAssistant) -> MockConfigEntry:
@@ -220,6 +243,9 @@ def _mocked_wizlight(
     bulb.async_close = AsyncMock()
     bulb.set_speed = AsyncMock()
     bulb.set_ratio = AsyncMock()
+    bulb.fan_set_state = AsyncMock()
+    bulb.fan_turn_on = AsyncMock()
+    bulb.fan_turn_off = AsyncMock()
     bulb.diagnostics = {
         "mocked": "mocked",
         "roomId": 123,

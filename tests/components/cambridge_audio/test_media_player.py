@@ -45,7 +45,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -156,8 +155,8 @@ async def test_entity_supported_features_with_control_bus(
 @pytest.mark.parametrize(
     ("power_state", "play_state", "media_player_state"),
     [
-        (True, "NETWORK", STATE_STANDBY),
-        (False, "NETWORK", STATE_STANDBY),
+        (True, "NETWORK", STATE_OFF),
+        (False, "NETWORK", STATE_OFF),
         (False, "play", STATE_OFF),
         (True, "play", STATE_PLAYING),
         (True, "pause", STATE_PAUSED),

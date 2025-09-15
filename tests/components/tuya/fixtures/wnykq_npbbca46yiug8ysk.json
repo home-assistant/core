@@ -1,0 +1,21 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Bedroom IR",
+  "category": "wnykq",
+  "product_id": "npbbca46yiug8ysk",
+  "product_name": "Smart IR",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2023-08-10T17:32:31+00:00",
+  "create_time": "2023-08-10T17:32:31+00:00",
+  "update_time": "2023-08-10T17:32:31+00:00",
+  "function": {},
+  "status_range": {},
+  "status": {},
+  "set_up": false,
+  "support_local": true
+}

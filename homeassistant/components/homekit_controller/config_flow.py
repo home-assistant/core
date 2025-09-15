@@ -355,11 +355,10 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="ignored_model")
 
         # Late imports in case BLE is not available
-        # pylint: disable-next=import-outside-toplevel
-        from aiohomekit.controller.ble.discovery import BleDiscovery
-
-        # pylint: disable-next=import-outside-toplevel
-        from aiohomekit.controller.ble.manufacturer_data import HomeKitAdvertisement
+        from aiohomekit.controller.ble.discovery import BleDiscovery  # noqa: PLC0415
+        from aiohomekit.controller.ble.manufacturer_data import (  # noqa: PLC0415
+            HomeKitAdvertisement,
+        )
 
         mfr_data = discovery_info.manufacturer_data
 

@@ -1,6 +1,6 @@
 """Test the JustNimbus config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from justnimbus.exceptions import InvalidClientID, JustNimbusError
 import pytest
@@ -132,7 +132,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.justnimbus.config_flow.justnimbus.JustNimbusClient.get_data",
-        return_value=True,
+        return_value=MagicMock(api_version="1.0.0"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

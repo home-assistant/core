@@ -5,9 +5,9 @@ rules:
     comment: |
       This integration does not provide additional actions.
   appropriate-polling:
-    status: exempt
+    status: done
     comment: |
-      This integration only receives push-based updates.
+      Primarily uses push, but polls with a long interval for availability and missed updates.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -39,7 +39,7 @@ rules:
     comment: |
       The integration does not have configuration options.
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: done

@@ -29,7 +29,7 @@ from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .config_flow import PlayStation4FlowHandler  # noqa: F401
 from .const import ATTR_MEDIA_IMAGE_URL, COUNTRYCODE_NAMES, DOMAIN, GAMES_FILE, PS4_DATA
-from .services import register_services
+from .services import async_setup_services
 
 if TYPE_CHECKING:
     from .media_player import PS4Device
@@ -58,7 +58,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         protocol=protocol,
     )
     _LOGGER.debug("PS4 DDP endpoint created: %s, %s", transport, protocol)
-    register_services(hass)
+    async_setup_services(hass)
     return True
 
 

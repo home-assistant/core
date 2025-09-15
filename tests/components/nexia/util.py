@@ -9,7 +9,7 @@ from homeassistant.components.nexia.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import mock_aiohttp_client
 
 
@@ -18,13 +18,13 @@ async def async_init_integration(
     skip_setup: bool = False,
     exception: Exception | None = None,
     *,
-    house_fixture="nexia/mobile_houses_123456.json",
+    house_fixture="mobile_houses_123456.json",
 ) -> MockConfigEntry:
     """Set up the nexia integration in Home Assistant."""
 
-    session_fixture = "nexia/session_123456.json"
-    sign_in_fixture = "nexia/sign_in.json"
-    set_fan_speed_fixture = "nexia/set_fan_speed_2293892.json"
+    session_fixture = "session_123456.json"
+    sign_in_fixture = "sign_in.json"
+    set_fan_speed_fixture = "set_fan_speed_2293892.json"
     with (
         mock_aiohttp_client() as mock_session,
         patch("nexia.home.load_or_create_uuid", return_value=uuid.uuid4()),
@@ -40,19 +40,20 @@ async def async_init_integration(
             )
         else:
             mock_session.post(
-                nexia.API_MOBILE_SESSION_URL, text=load_fixture(session_fixture)
+                nexia.API_MOBILE_SESSION_URL,
+                text=await async_load_fixture(hass, session_fixture, DOMAIN),
             )
         mock_session.get(
             nexia.API_MOBILE_HOUSES_URL.format(house_id=123456),
-            text=load_fixture(house_fixture),
+            text=await async_load_fixture(hass, house_fixture, DOMAIN),
         )
         mock_session.post(
             nexia.API_MOBILE_ACCOUNTS_SIGN_IN_URL,
-            text=load_fixture(sign_in_fixture),
+            text=await async_load_fixture(hass, sign_in_fixture, DOMAIN),
         )
         mock_session.post(
             "https://www.mynexia.com/mobile/xxl_thermostats/2293892/fan_speed",
-            text=load_fixture(set_fan_speed_fixture),
+            text=await async_load_fixture(hass, set_fan_speed_fixture, DOMAIN),
         )
         entry = MockConfigEntry(
             domain=DOMAIN,

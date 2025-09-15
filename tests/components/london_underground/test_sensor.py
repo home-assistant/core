@@ -2,11 +2,11 @@
 
 from london_tube_status import API_URL
 
-from homeassistant.components.london_underground.const import CONF_LINE
+from homeassistant.components.london_underground.const import CONF_LINE, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 VALID_CONFIG = {
@@ -20,7 +20,7 @@ async def test_valid_state(
     """Test for operational london_underground sensor with proper attributes."""
     aioclient_mock.get(
         API_URL,
-        text=load_fixture("line_status.json", "london_underground"),
+        text=await async_load_fixture(hass, "line_status.json", DOMAIN),
     )
 
     assert await async_setup_component(hass, "sensor", VALID_CONFIG)

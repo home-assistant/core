@@ -52,6 +52,7 @@ class PlaybackProxyView(HomeAssistantView):
             verify_ssl=False,
             ssl_cipher=SSLCipherList.INSECURE,
         )
+        self._vod_type: str | None = None
 
     async def get(
         self,
@@ -68,6 +69,8 @@ class PlaybackProxyView(HomeAssistantView):
 
         filename_decoded = urlsafe_b64decode(filename.encode("utf-8")).decode("utf-8")
         ch = int(channel)
+        if self._vod_type is not None:
+            vod_type = self._vod_type
         try:
             host = get_host(self.hass, config_entry_id)
         except Unresolvable:
@@ -76,7 +79,7 @@ class PlaybackProxyView(HomeAssistantView):
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            mime_type, reolink_url = await host.api.get_vod_source(
+            _mime_type, reolink_url = await host.api.get_vod_source(
                 ch, filename_decoded, stream_res, VodRequestType(vod_type)
             )
         except ReolinkError as err:
@@ -127,6 +130,25 @@ class PlaybackProxyView(HomeAssistantView):
             "apolication/octet-stream",
         ]:
             err_str = f"Reolink playback expected video/mp4 but got {reolink_response.content_type}"
+            if (
+                reolink_response.content_type == "video/x-flv"
+                and vod_type == VodRequestType.PLAYBACK.value
+            ):
+                # next time use DOWNLOAD immediately
+                self._vod_type = VodRequestType.DOWNLOAD.value
+                _LOGGER.debug(
+                    "%s, retrying using download instead of playback cmd", err_str
+                )
+                return await self.get(
+                    request,
+                    config_entry_id,
+                    channel,
+                    stream_res,
+                    self._vod_type,
+                    filename,
+                    retry,
+                )
+
             _LOGGER.error(err_str)
             if reolink_response.content_type == "text/html":
                 text = await reolink_response.text()
@@ -140,7 +162,10 @@ class PlaybackProxyView(HomeAssistantView):
             reolink_response.reason,
             response_headers,
         )
-        response_headers["Content-Type"] = "video/mp4"
+        if "Content-Type" not in response_headers:
+            response_headers["Content-Type"] = reolink_response.content_type
+        if response_headers["Content-Type"] == "apolication/octet-stream":
+            response_headers["Content-Type"] = "application/octet-stream"
 
         response = web.StreamResponse(
             status=reolink_response.status,

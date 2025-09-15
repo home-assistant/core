@@ -7,7 +7,7 @@ import pytest
 from requests.exceptions import HTTPError
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
+from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -41,7 +41,7 @@ async def test_setup(
     device = FritzDeviceSwitchMock()
     with patch("homeassistant.components.fritzbox.PLATFORMS", [Platform.SWITCH]):
         entry = await setup_config_entry(
-            hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+            hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
         )
     assert entry.state is ConfigEntryState.LOADED
 
@@ -52,7 +52,7 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
     """Test turn device on."""
     device = FritzDeviceSwitchMock()
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     await hass.services.async_call(
@@ -66,7 +66,7 @@ async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
     device = FritzDeviceSwitchMock()
 
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     await hass.services.async_call(
@@ -82,7 +82,7 @@ async def test_toggle_while_locked(hass: HomeAssistant, fritz: Mock) -> None:
     device.lock = True
 
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     with pytest.raises(
@@ -106,7 +106,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
     """Test update without error."""
     device = FritzDeviceSwitchMock()
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     assert fritz().update_devices.call_count == 1
     assert fritz().login.call_count == 1
@@ -124,7 +124,7 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
     device = FritzDeviceSwitchMock()
     fritz().update_devices.side_effect = HTTPError("Boom")
     entry = await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert fritz().update_devices.call_count == 2
@@ -145,7 +145,7 @@ async def test_assume_device_unavailable(hass: HomeAssistant, fritz: Mock) -> No
     device.energy = 0
     device.power = 0
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -157,7 +157,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     """Test adding new discovered devices during runtime."""
     device = FritzDeviceSwitchMock()
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     state = hass.states.get(ENTITY_ID)

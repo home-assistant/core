@@ -1306,13 +1306,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -1423,13 +1422,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -1540,13 +1538,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -1671,13 +1668,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -1949,13 +1945,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2064,13 +2059,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2179,13 +2173,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2296,13 +2289,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': '06:00:00',
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2415,13 +2407,12 @@
             'mon',
           ]),
           'recurrence': 'custom_days',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2532,13 +2523,12 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2653,13 +2643,12 @@
             'sun',
           ]),
           'recurrence': 'custom_days',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2778,13 +2767,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -2895,13 +2883,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -3012,13 +2999,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -3129,13 +3115,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -3246,13 +3231,12 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -4397,7 +4381,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4478,7 +4466,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4540,7 +4532,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4586,7 +4582,11 @@
             'instance_id': 'unknown_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4643,7 +4643,11 @@
             'instance_id': 'unknown_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4698,7 +4702,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4760,7 +4768,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4823,7 +4835,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -4886,8 +4902,18 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+            dict({
+              'name': 'Test add-on',
+              'slug': 'test_addon',
+              'version': '1.0.0',
+            }),
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
+            'ssl',
           ]),
           'folders': list([
             'media',
@@ -4949,7 +4975,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5011,7 +5041,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5074,7 +5108,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5137,8 +5175,18 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+            dict({
+              'name': 'Test add-on',
+              'slug': 'test_addon',
+              'version': '1.0.0',
+            }),
+          ]),
           'failed_agent_ids': list([
             'test.remote',
+          ]),
+          'failed_folders': list([
+            'ssl',
           ]),
           'folders': list([
             'media',
@@ -5200,7 +5248,11 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -5243,7 +5295,11 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -5302,7 +5358,11 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -5358,7 +5418,11 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -5402,7 +5466,11 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -5446,7 +5514,11 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -5715,7 +5787,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5766,7 +5842,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5821,7 +5901,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5867,7 +5951,11 @@
             'instance_id': 'unknown_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5899,7 +5987,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -5951,7 +6043,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -6003,7 +6099,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -6055,7 +6155,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -6177,22 +6281,5 @@
     }),
     'id': 1,
     'type': 'event',
-  })
-# ---
-# name: test_subscribe_event_early
-  dict({
-    'event': dict({
-      'manager_state': 'idle',
-    }),
-    'id': 1,
-    'type': 'event',
-  })
-# ---
-# name: test_subscribe_event_early.1
-  dict({
-    'id': 1,
-    'result': None,
-    'success': True,
-    'type': 'result',
   })
 # ---

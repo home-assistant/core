@@ -17,7 +17,6 @@
         '123456',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tesla',
@@ -27,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '123456',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -50,7 +48,6 @@
         'LRWXF7EK4KC700000',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tesla',
@@ -60,7 +57,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'LRWXF7EK4KC700000',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -83,7 +79,6 @@
         'abd-123',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tesla',
@@ -93,7 +88,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '123',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -116,7 +110,6 @@
         'bcd-234',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tesla',
@@ -126,7 +119,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '234',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })

@@ -61,13 +61,16 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
         is_on_fn=(
             lambda machine: cast(
-                BackFlush, machine.dashboard.config[WidgetType.CM_BACK_FLUSH]
+                BackFlush,
+                machine.dashboard.config.get(
+                    WidgetType.CM_BACK_FLUSH, BackFlush(status=BackFlushStatus.OFF)
+                ),
             ).status
-            is BackFlushStatus.REQUESTED
+            in (BackFlushStatus.REQUESTED, BackFlushStatus.CLEANING)
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         supported_fn=lambda coordinator: (
-            coordinator.device.dashboard.model_name != ModelName.GS3_MP
+            coordinator.device.dashboard.model_name is not ModelName.GS3_MP
         ),
     ),
     LaMarzoccoBinarySensorEntityDescription(

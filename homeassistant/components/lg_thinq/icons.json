@@ -45,6 +45,9 @@
       },
       "display_light": {
         "default": "mdi:lightbulb-on-outline"
+      },
+      "air_clean_operation_mode": {
+        "default": "mdi:air-filter"
       }
     },
     "binary_sensor": {
@@ -92,7 +95,7 @@
             "state": {
               "slow": "mdi:fan-chevron-down",
               "low": "mdi:fan-speed-1",
-              "mid": "mdi:fan-speed-2",
+              "medium": "mdi:fan-speed-2",
               "high": "mdi:fan-speed-3",
               "power": "mdi:fan-chevron-up",
               "auto": "mdi:fan-auto"
@@ -166,6 +169,9 @@
       "monitoring_enabled": {
         "default": "mdi:monitor-eye"
       },
+      "current_job_mode_ventilator": {
+        "default": "mdi:format-list-bulleted"
+      },
       "current_job_mode": {
         "default": "mdi:format-list-bulleted"
       },
@@ -215,6 +221,9 @@
       },
       "total_pollution_level": {
         "default": "mdi:air-filter"
+      },
+      "carbon_dioxide": {
+        "default": "mdi:molecule-co2"
       },
       "monitoring_enabled": {
         "default": "mdi:monitor-eye"
@@ -327,7 +336,19 @@
       "hop_oil_info": {
         "default": "mdi:information-box-outline"
       },
+      "hop_oil_capsule_1": {
+        "default": "mdi:information-box-outline"
+      },
+      "hop_oil_capsule_2": {
+        "default": "mdi:information-box-outline"
+      },
       "flavor_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "flavor_capsule_1": {
+        "default": "mdi:information-box-outline"
+      },
+      "flavor_capsule_2": {
         "default": "mdi:information-box-outline"
       },
       "beer_remain": {

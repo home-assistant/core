@@ -40,9 +40,7 @@ def mock_ble_device() -> Generator[MagicMock]:
     """Mock BLEDevice."""
     with patch(
         "homeassistant.components.kulersky.async_ble_device_from_address",
-        return_value=BLEDevice(
-            address="AA:BB:CC:11:22:33", name="Bedroom", rssi=-50, details={}
-        ),
+        return_value=BLEDevice(address="AA:BB:CC:11:22:33", name="Bedroom", details={}),
     ) as ble_device:
         yield ble_device
 

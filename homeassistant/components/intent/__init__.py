@@ -615,7 +615,7 @@ class IntentHandleView(http.HomeAssistantView):
             intent_result = await intent.async_handle(
                 hass, DOMAIN, intent_name, slots, "", self.context(request)
             )
-        except intent.IntentHandleError as err:
+        except (intent.IntentHandleError, intent.MatchFailedError) as err:
             intent_result = intent.IntentResponse(language=language)
             intent_result.async_set_speech(str(err))
 

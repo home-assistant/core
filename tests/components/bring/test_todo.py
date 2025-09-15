@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, load_fixture, snapshot_platform
+from tests.common import MockConfigEntry, async_load_fixture, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -45,8 +45,12 @@ async def test_todo(
 ) -> None:
     """Snapshot test states of todo platform."""
     mock_bring_client.get_list.side_effect = [
-        BringItemsResponse.from_json(load_fixture("items.json", DOMAIN)),
-        BringItemsResponse.from_json(load_fixture("items2.json", DOMAIN)),
+        BringItemsResponse.from_json(
+            await async_load_fixture(hass, "items.json", DOMAIN)
+        ),
+        BringItemsResponse.from_json(
+            await async_load_fixture(hass, "items2.json", DOMAIN)
+        ),
     ]
     bring_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(bring_config_entry.entry_id)

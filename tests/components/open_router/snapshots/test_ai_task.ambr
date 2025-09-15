@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_all_entities[ai_task.gemini_1_5_pro-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'ai_task',
+    'entity_category': None,
+    'entity_id': 'ai_task.gemini_1_5_pro',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'conversation': dict({
+        'should_expose': False,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'open_router',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <AITaskEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': 'ABCDEG',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[ai_task.gemini_1_5_pro-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gemini 1.5 Pro',
+      'supported_features': <AITaskEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'ai_task.gemini_1_5_pro',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

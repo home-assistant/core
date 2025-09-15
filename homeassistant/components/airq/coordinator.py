@@ -10,7 +10,7 @@ from aioairq.core import AirQ, identify_warming_up_sensors
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -39,7 +39,7 @@ class AirQCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
-        session = async_get_clientsession(hass)
+        session = async_create_clientsession(hass)
         self.airq = AirQ(
             entry.data[CONF_IP_ADDRESS], entry.data[CONF_PASSWORD], session
         )
@@ -75,6 +75,7 @@ class AirQCoordinator(DataUpdateCoordinator):
             return_average=self.return_average,
             clip_negative_values=self.clip_negative,
         )
+        data["brightness"] = await self.airq.get_current_brightness()
         if warming_up_sensors := identify_warming_up_sensors(data):
             _LOGGER.debug(
                 "Following sensors are still warming up: %s", warming_up_sensors

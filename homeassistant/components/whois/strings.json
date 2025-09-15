@@ -52,7 +52,7 @@
         "name": "Status",
         "state": {
           "add_period": "Add period",
-          "auto_renew_period": "Auto renew period",
+          "auto_renew_period": "Auto-renew period",
           "inactive": "Inactive",
           "ok": "Active",
           "active": "Active",

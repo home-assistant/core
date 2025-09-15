@@ -1,0 +1,53 @@
+{
+  "batteryChargeLevel": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED",
+    "message": "Resource is not supported for this vehicle"
+  },
+  "electricRange": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED",
+    "message": "Resource is not supported for this vehicle"
+  },
+  "chargerConnectionStatus": {
+    "status": "OK",
+    "value": "DISCONNECTED",
+    "updatedAt": "2025-08-07T20:29:18Z"
+  },
+  "chargingStatus": {
+    "status": "OK",
+    "value": "IDLE",
+    "updatedAt": "2025-08-07T20:29:18Z"
+  },
+  "chargingType": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED",
+    "message": "Resource is not supported for this vehicle"
+  },
+  "chargerPowerStatus": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED",
+    "message": "Resource is not supported for this vehicle"
+  },
+  "estimatedChargingTimeToTargetBatteryChargeLevel": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED",
+    "message": "Resource is not supported for this vehicle"
+  },
+  "chargingCurrentLimit": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED",
+    "message": "Resource is not supported for this vehicle"
+  },
+  "targetBatteryChargeLevel": {
+    "status": "OK",
+    "value": 80,
+    "unit": "percentage",
+    "updatedAt": "2024-09-22T09:40:12Z"
+  },
+  "chargingPower": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED",
+    "message": "Resource is not supported for this vehicle"
+  }
+}

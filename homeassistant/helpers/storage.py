@@ -354,7 +354,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                         corrupt_path,
                         err,
                     )
-                    from .issue_registry import (  # pylint: disable=import-outside-toplevel
+                    from .issue_registry import (  # noqa: PLC0415
                         IssueSeverity,
                         async_create_issue,
                     )

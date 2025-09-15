@@ -80,6 +80,7 @@
       'work_area_name': 'Front lawn',
     }),
     'planner': dict({
+      'external_reason': 'ifttt',
       'next_start_datetime': '2023-06-05T19:00:00+02:00',
       'override': dict({
         'action': 'not_active',

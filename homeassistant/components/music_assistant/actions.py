@@ -8,6 +8,7 @@ from music_assistant_models.enums import MediaType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -24,7 +25,6 @@ from .const import (
     ATTR_ALBUMS,
     ATTR_ARTISTS,
     ATTR_AUDIOBOOKS,
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_FAVORITE,
     ATTR_ITEMS,
     ATTR_LIBRARY_ONLY,

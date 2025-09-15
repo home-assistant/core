@@ -166,8 +166,7 @@ def mock_backup_generation_fixture(
 @pytest.fixture
 def mock_backups() -> Generator[None]:
     """Fixture to setup test backups."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.backup import backup as core_backup
+    from homeassistant.components.backup import backup as core_backup  # noqa: PLC0415
 
     class CoreLocalBackupAgent(core_backup.CoreLocalBackupAgent):
         def __init__(self, hass: HomeAssistant) -> None:

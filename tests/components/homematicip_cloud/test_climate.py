@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.climate import (
     ATTR_PRESET_END_TIME,
     PERMANENT_END_TIME,
@@ -205,13 +205,14 @@ async def test_hmip_heating_group_heat(
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == HVACMode.AUTO
 
-    # hvac mode "dry" is not available. expect a valueerror.
-    await hass.services.async_call(
-        "climate",
-        "set_hvac_mode",
-        {"entity_id": entity_id, "hvac_mode": "dry"},
-        blocking=True,
-    )
+    # hvac mode "dry" is not available.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {"entity_id": entity_id, "hvac_mode": "dry"},
+            blocking=True,
+        )
 
     assert len(hmip_device.mock_calls) == service_call_counter + 24
     # Only fire event from last async_manipulate_test_data available.
@@ -489,7 +490,7 @@ async def test_hmip_heating_profile_name_not_in_list(
         test_devices=["Heizkörperthermostat2"],
         test_groups=[entity_name],
     )
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -617,7 +618,7 @@ async def test_hmip_climate_services(
             {"accesspoint_id": not_existing_hap_id},
             blocking=True,
         )
-    assert excinfo.value.translation_domain == HMIPC_DOMAIN
+    assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "access_point_not_found"
     # There is no further call on connection.
     assert len(home._connection.mock_calls) == 10
@@ -665,7 +666,7 @@ async def test_hmip_set_home_cooling_mode(
             {"accesspoint_id": not_existing_hap_id, "cooling": True},
             blocking=True,
         )
-    assert excinfo.value.translation_domain == HMIPC_DOMAIN
+    assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "access_point_not_found"
     # There is no further call on connection.
     assert len(home._connection.mock_calls) == 3

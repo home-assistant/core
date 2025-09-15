@@ -168,6 +168,8 @@ class TessieExportRuleSelectEntity(TessieEnergyEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await handle_command(self.api.grid_import_export(option))
+        await handle_command(
+            self.api.grid_import_export(customer_preferred_export_rule=option)
+        )
         self._attr_current_option = option
         self.async_write_ha_state()

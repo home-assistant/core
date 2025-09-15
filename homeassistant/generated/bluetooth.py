@@ -389,12 +389,27 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": True,
         "domain": "inkbird",
+        "local_name": "Ink@IAM-T2",
+    },
+    {
+        "connectable": True,
+        "domain": "inkbird",
         "manufacturer_data_start": [
             65,
             67,
             45,
         ],
         "manufacturer_id": 12628,
+    },
+    {
+        "connectable": False,
+        "domain": "inkbird",
+        "manufacturer_data_start": [
+            0,
+            98,
+            0,
+        ],
+        "manufacturer_id": 12884,
     },
     {
         "connectable": True,
@@ -818,6 +833,12 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
             187,
         ],
         "manufacturer_id": 76,
+    },
+    {
+        "connectable": True,
+        "domain": "togrill",
+        "manufacturer_id": 34714,
+        "service_uuid": "0000cee0-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": False,

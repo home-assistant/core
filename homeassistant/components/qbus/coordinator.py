@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import cast
 
-from qbusmqttapi.discovery import QbusDiscovery, QbusMqttDevice, QbusMqttOutput
+from qbusmqttapi.discovery import QbusDiscovery, QbusMqttDevice
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
 
 from homeassistant.components.mqtt import (
@@ -19,6 +19,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.hass_dict import HassKey
@@ -32,7 +33,7 @@ type QbusConfigEntry = ConfigEntry[QbusControllerCoordinator]
 QBUS_KEY: HassKey[QbusConfigCoordinator] = HassKey(DOMAIN)
 
 
-class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
+class QbusControllerCoordinator(DataUpdateCoordinator[QbusMqttDevice | None]):
     """Qbus data coordinator."""
 
     _STATE_REQUEST_DELAY = 3
@@ -63,8 +64,8 @@ class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
         )
 
-    async def _async_update_data(self) -> list[QbusMqttOutput]:
-        return self._controller.outputs if self._controller else []
+    async def _async_update_data(self) -> QbusMqttDevice | None:
+        return self._controller
 
     def shutdown(self, event: Event | None = None) -> None:
         """Shutdown Qbus coordinator."""
@@ -105,6 +106,7 @@ class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, self._controller.mac)},
             identifiers={(DOMAIN, format_mac(self._controller.mac))},
             manufacturer=MANUFACTURER,
             model="CTD3.x",
@@ -139,20 +141,25 @@ class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
             "%s - Receiving controller state %s", self.config_entry.unique_id, msg.topic
         )
 
-        if self._controller is None or self._controller_activated:
+        if self._controller is None:
             return
 
         state = self._message_factory.parse_device_state(msg.payload)
 
-        if state and state.properties and state.properties.connectable is False:
-            _LOGGER.debug(
-                "%s - Activating controller %s", self.config_entry.unique_id, state.id
-            )
-            self._controller_activated = True
-            request = self._message_factory.create_device_activate_request(
-                self._controller
-            )
-            await mqtt.async_publish(self.hass, request.topic, request.payload)
+        if state and state.properties:
+            async_dispatcher_send(self.hass, f"{DOMAIN}_{msg.topic}", state)
+
+            if not self._controller_activated and state.properties.connectable is False:
+                _LOGGER.debug(
+                    "%s - Activating controller %s",
+                    self.config_entry.unique_id,
+                    state.id,
+                )
+                self._controller_activated = True
+                request = self._message_factory.create_device_activate_request(
+                    self._controller
+                )
+                await mqtt.async_publish(self.hass, request.topic, request.payload)
 
     def _request_entity_states(self) -> None:
         async def request_state(_: datetime) -> None:

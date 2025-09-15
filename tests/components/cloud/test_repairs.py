@@ -4,6 +4,7 @@ from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import patch
 
+from hass_nabucasa.payments_api import PaymentsApiError
 import pytest
 
 from homeassistant.components.cloud.const import DOMAIN
@@ -210,7 +211,13 @@ async def test_legacy_subscription_repair_flow_timeout(
         "preview": None,
     }
 
-    with patch("homeassistant.components.cloud.repairs.MAX_RETRIES", new=0):
+    with (
+        patch("homeassistant.components.cloud.repairs.MAX_RETRIES", new=0),
+        patch(
+            "hass_nabucasa.payments_api.PaymentsApi.migrate_paypal_agreement",
+            side_effect=PaymentsApiError("some error", status=403),
+        ),
+    ):
         resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
         assert resp.status == HTTPStatus.OK
         data = await resp.json()
@@ -236,7 +243,6 @@ async def test_legacy_subscription_repair_flow_timeout(
         "handler": "cloud",
         "reason": "operation_took_too_long",
         "description_placeholders": None,
-        "result": None,
     }
 
     assert issue_registry.async_get_issue(

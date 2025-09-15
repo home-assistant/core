@@ -63,7 +63,7 @@ async def hassio_client_supervisor(
 
 
 @pytest.fixture
-def hassio_handler(
+async def hassio_handler(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> Generator[HassIO]:
     """Create mock hassio handler."""

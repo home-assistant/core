@@ -45,7 +45,7 @@ from .const import (  # noqa: F401
     SupportedDialect,
 )
 from .core import Recorder
-from .services import async_register_services
+from .services import async_setup_services
 from .tasks import AddRecorderPlatformTask
 from .util import get_instance
 
@@ -174,7 +174,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.async_initialize()
     instance.async_register()
     instance.start()
-    async_register_services(hass, instance)
+    async_setup_services(hass)
     websocket_api.async_setup(hass)
 
     await _async_setup_integration_platform(hass, instance)

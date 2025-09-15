@@ -15,7 +15,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import init_integration
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -25,7 +25,7 @@ async def test_full_user_flow_implementation(
     """Test the full manual user flow from start to finish."""
     aioclient_mock.post(
         "http://192.168.1.123:80/mf",
-        text=load_fixture("modern_forms/device_info.json"),
+        text=await async_load_fixture(hass, "device_info.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
@@ -59,7 +59,7 @@ async def test_full_zeroconf_flow_implementation(
     """Test the full manual user flow from start to finish."""
     aioclient_mock.post(
         "http://192.168.1.123:80/mf",
-        text=load_fixture("modern_forms/device_info.json"),
+        text=await async_load_fixture(hass, "device_info.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
@@ -191,7 +191,7 @@ async def test_user_device_exists_abort(
     """Test we abort zeroconf flow if Modern Forms device already configured."""
     aioclient_mock.post(
         "http://192.168.1.123:80/mf",
-        text=load_fixture("modern_forms/device_info.json"),
+        text=await async_load_fixture(hass, "device_info.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 

@@ -48,7 +48,7 @@ async def async_setup_entry(
 
     device = hass.data[DOMAIN][config_entry.entry_id]
 
-    entity = OpenhomeDevice(hass, device)
+    entity = OpenhomeDevice(device)
 
     async_add_entities([entity])
 
@@ -100,9 +100,8 @@ class OpenhomeDevice(MediaPlayerEntity):
     _attr_state = MediaPlayerState.PLAYING
     _attr_available = True
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialise the Openhome device."""
-        self.hass = hass
         self._device = device
         self._attr_unique_id = device.uuid()
         self._source_index = {}

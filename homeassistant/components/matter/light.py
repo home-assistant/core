@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Objects import NullValue
 from matter_server.client.models import device_types
 
 from homeassistant.components.light import (
@@ -162,7 +163,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         assert level_control is not None
 
-        level = round(  # type: ignore[unreachable]
+        level = round(
             renormalize(
                 brightness,
                 (0, 255),
@@ -241,7 +242,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         return int(color_temp)
 
-    def _get_brightness(self) -> int:
+    def _get_brightness(self) -> int | None:
         """Get brightness from matter."""
 
         level_control = self._endpoint.get_cluster(clusters.LevelControl)
@@ -249,11 +250,15 @@ class MatterLight(MatterEntity, LightEntity):
         # We should not get here if brightness is not supported.
         assert level_control is not None
 
-        LOGGER.debug(  # type: ignore[unreachable]
+        LOGGER.debug(
             "Got brightness %s for %s",
             level_control.currentLevel,
             self.entity_id,
         )
+
+        if level_control.currentLevel is NullValue:
+            # currentLevel is a nullable value.
+            return None
 
         return round(
             renormalize(
@@ -472,6 +477,7 @@ DISCOVERY_SCHEMAS = [
             device_types.ColorTemperatureLight,
             device_types.DimmableLight,
             device_types.DimmablePlugInUnit,
+            device_types.MountedDimmableLoadControl,
             device_types.ExtendedColorLight,
             device_types.OnOffLight,
             device_types.DimmerSwitch,

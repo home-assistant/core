@@ -14,10 +14,10 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.google_sheets import DOMAIN
+from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -95,7 +95,6 @@ async def test_setup_success(
 
     assert not hass.data.get(DOMAIN)
     assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert not hass.services.async_services().get(DOMAIN, {})
 
 
 @pytest.mark.parametrize(
@@ -200,7 +199,7 @@ async def test_append_sheet(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
-    with patch("homeassistant.components.google_sheets.Client") as mock_client:
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -226,7 +225,7 @@ async def test_append_sheet_multiple_rows(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
-    with patch("homeassistant.components.google_sheets.Client") as mock_client:
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -258,7 +257,7 @@ async def test_append_sheet_api_error(
     with (
         pytest.raises(HomeAssistantError),
         patch(
-            "homeassistant.components.google_sheets.Client.request",
+            "homeassistant.components.google_sheets.services.Client.request",
             side_effect=APIError(response),
         ),
     ):
@@ -326,23 +325,6 @@ async def test_append_sheet_invalid_config_entry(
             "append_sheet",
             {
                 "config_entry": config_entry2.entry_id,
-                "worksheet": "Sheet1",
-                "data": {"foo": "bar"},
-            },
-            blocking=True,
-        )
-
-    # Unloading the other config entry will de-register the service
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-    with pytest.raises(ServiceNotFound):
-        await hass.services.async_call(
-            DOMAIN,
-            "append_sheet",
-            {
-                "config_entry": config_entry.entry_id,
                 "worksheet": "Sheet1",
                 "data": {"foo": "bar"},
             },

@@ -45,6 +45,7 @@ from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
+    AMBIGUOUS_UNITS,
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     DOMAIN,
@@ -79,7 +80,7 @@ EQUIVALENT_UNITS = {
     "ft3": UnitOfVolume.CUBIC_FEET,
     "m3": UnitOfVolume.CUBIC_METERS,
     "ft³/m": UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
-}
+} | AMBIGUOUS_UNITS
 
 
 # Keep track of entities for which a warning about decreasing value has been logged

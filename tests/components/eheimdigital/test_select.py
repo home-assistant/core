@@ -59,8 +59,8 @@ async def test_setup(
                 (
                     "select.mock_classicvario_filter_mode",
                     "manual",
-                    "set_filter_mode",
-                    (FilterMode.MANUAL,),
+                    "pumpMode",
+                    int(FilterMode.MANUAL),
                 ),
             ],
         ),
@@ -71,7 +71,7 @@ async def test_set_value(
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_name: str,
-    entity_list: list[tuple[str, float, str, tuple[FilterMode]]],
+    entity_list: list[tuple[str, str, str, int]],
     request: pytest.FixtureRequest,
 ) -> None:
     """Test setting a value."""
@@ -91,8 +91,8 @@ async def test_set_value(
             {ATTR_ENTITY_ID: item[0], ATTR_OPTION: item[1]},
             blocking=True,
         )
-        calls = [call for call in device.mock_calls if call[0] == item[2]]
-        assert len(calls) == 1 and calls[0][1] == item[3]
+        calls = [call for call in device.hub.mock_calls if call[0] == "send_packet"]
+        assert calls[-1][1][0][item[2]] == item[3]
 
 
 @pytest.mark.usefixtures("classic_vario_mock", "heater_mock")
@@ -104,8 +104,10 @@ async def test_set_value(
             [
                 (
                     "select.mock_classicvario_filter_mode",
-                    "filter_mode",
-                    FilterMode.BIO,
+                    "classic_vario_data",
+                    "pumpMode",
+                    int(FilterMode.BIO),
+                    "bio",
                 ),
             ],
         ),
@@ -116,7 +118,7 @@ async def test_state_update(
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_name: str,
-    entity_list: list[tuple[str, str, FilterMode]],
+    entity_list: list[tuple[str, str, str, int, str]],
     request: pytest.FixtureRequest,
 ) -> None:
     """Test state updates."""
@@ -130,7 +132,7 @@ async def test_state_update(
     await hass.async_block_till_done()
 
     for item in entity_list:
-        setattr(device, item[1], item[2])
+        getattr(device, item[1])[item[2]] = item[3]
         await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
         assert (state := hass.states.get(item[0]))
-        assert state.state == item[2].name.lower()
+        assert state.state == item[4]

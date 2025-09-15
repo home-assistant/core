@@ -218,6 +218,9 @@ def _async_fix_device_id(
     for device_entry in device_entries:
         unique_id = str(next(iter(device_entry.identifiers))[1])
         device_entry_map[unique_id] = device_entry
+        if unique_id.startswith(mac_address):
+            # Already in the correct format
+            continue
         if (suffix := unique_id.removeprefix(str(serial_number))) != unique_id:
             migrations[unique_id] = f"{mac_address}{suffix}"
 

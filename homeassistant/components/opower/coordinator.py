@@ -12,8 +12,9 @@ from opower import (
     MeterType,
     Opower,
     ReadResolution,
+    create_cookie_jar,
 )
-from opower.exceptions import ApiException, CannotConnect, InvalidAuth
+from opower.exceptions import ApiException, CannotConnect, InvalidAuth, MfaChallenge
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
@@ -30,11 +31,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import aiohttp_client, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
+from .const import CONF_LOGIN_DATA, CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,11 +64,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             update_interval=timedelta(hours=12),
         )
         self.api = Opower(
-            aiohttp_client.async_get_clientsession(hass),
+            async_create_clientsession(hass, cookie_jar=create_cookie_jar()),
             config_entry.data[CONF_UTILITY],
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
             config_entry.data.get(CONF_TOTP_SECRET),
+            config_entry.data.get(CONF_LOGIN_DATA),
         )
 
         @callback
@@ -88,7 +91,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             # Given the infrequent updating (every 12h)
             # assume previous session has expired and re-login.
             await self.api.async_login()
-        except InvalidAuth as err:
+        except (InvalidAuth, MfaChallenge) as err:
             _LOGGER.error("Error during login: %s", err)
             raise ConfigEntryAuthFailed from err
         except CannotConnect as err:

@@ -3,9 +3,11 @@
   dict({
     '0': dict({
       'battery_level': 70,
+      'door_state': 0,
       'duration_pullspring': 2,
       'is_charging': False,
       'is_connected': True,
+      'is_enabled_auto_pullspring': False,
       'is_enabled_pullspring': 1,
       'lock_id': '**REDACTED**',
       'lock_name': 'Lock-1A2B',
@@ -15,9 +17,11 @@
     }),
     '1': dict({
       'battery_level': 70,
+      'door_state': 2,
       'duration_pullspring': 0,
       'is_charging': False,
       'is_connected': True,
+      'is_enabled_auto_pullspring': False,
       'is_enabled_pullspring': 0,
       'lock_id': '**REDACTED**',
       'lock_name': 'Lock-2C3D',

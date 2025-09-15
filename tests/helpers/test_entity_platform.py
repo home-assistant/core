@@ -1550,6 +1550,7 @@ async def test_entity_info_added_to_entity_registry(
         original_icon="nice:icon",
         original_name="best name",
         options=None,
+        suggested_object_id=None,
         supported_features=5,
         translation_key="my_translation_key",
         unit_of_measurement=PERCENTAGE,
@@ -1877,13 +1878,12 @@ async def test_register_entity_service_none_schema(
 
 
 async def test_register_entity_service_non_entity_service_schema(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
 ) -> None:
     """Test attempting to register a service with a non entity service schema."""
     entity_platform = MockEntityPlatform(
         hass, domain="mock_integration", platform_name="mock_platform", platform=None
     )
-    expected_message = "registers an entity service with a non entity service schema"
 
     for idx, schema in enumerate(
         (
@@ -1892,9 +1892,14 @@ async def test_register_entity_service_non_entity_service_schema(
             vol.Any(vol.Schema({"some": str})),
         )
     ):
-        entity_platform.async_register_entity_service(f"hello_{idx}", schema, Mock())
-        assert expected_message in caplog.text
-        caplog.clear()
+        expected_message = (
+            f"The mock_platform.hello_{idx} service registers "
+            "an entity service with a non entity service schema"
+        )
+        with pytest.raises(HomeAssistantError, match=expected_message):
+            entity_platform.async_register_entity_service(
+                f"hello_{idx}", schema, Mock()
+            )
 
     for idx, schema in enumerate(
         (
@@ -1906,7 +1911,6 @@ async def test_register_entity_service_non_entity_service_schema(
         entity_platform.async_register_entity_service(
             f"test_service_{idx}", schema, Mock()
         )
-        assert expected_message not in caplog.text
 
 
 @pytest.mark.parametrize("update_before_add", [True, False])
@@ -2446,3 +2450,56 @@ async def test_add_entity_unknown_subentry(
         "Can't add entities to unknown subentry unknown-subentry "
         "of config entry super-mock-id"
     ) in caplog.text
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.parametrize(
+    "deprecated_attribute",
+    [
+        "component_translations",
+        "platform_translations",
+        "object_id_component_translations",
+        "object_id_platform_translations",
+        "default_language_platform_translations",
+    ],
+)
+async def test_deprecated_attributes(
+    hass: HomeAssistant,
+    deprecated_attribute: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setting the device name based on input info."""
+
+    platform = MockPlatform()
+    entity_platform = MockEntityPlatform(hass, platform_name="test", platform=platform)
+
+    assert getattr(entity_platform, deprecated_attribute) is getattr(
+        entity_platform.platform_data, deprecated_attribute
+    )
+    assert (
+        f"The deprecated function {deprecated_attribute} was called from "
+        "my_integration. It will be removed in HA Core 2026.8. Use platform_data."
+        f"{deprecated_attribute} instead, please report it to the author of the "
+        "'my_integration' custom integration" in caplog.text
+    )
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_deprecated_async_load_translations(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setting the device name based on input info."""
+
+    platform = MockPlatform()
+    entity_platform = MockEntityPlatform(hass, platform_name="test", platform=platform)
+
+    await entity_platform.async_load_translations()
+    assert (
+        "The deprecated function async_load_translations was called from "
+        "my_integration. It will be removed in HA Core 2026.8. Use platform_data."
+        "async_load_translations instead, please report it to the author of the "
+        "'my_integration' custom integration" in caplog.text
+    )

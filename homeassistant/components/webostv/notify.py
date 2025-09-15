@@ -7,13 +7,13 @@ from typing import Any
 from aiowebostv import WebOsClient
 
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
-from homeassistant.const import ATTR_ICON
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import WebOsTvConfigEntry
-from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN, WEBOSTV_EXCEPTIONS
+from .const import DOMAIN, WEBOSTV_EXCEPTIONS
 
 PARALLEL_UPDATES = 0
 

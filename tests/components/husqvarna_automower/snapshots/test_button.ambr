@@ -27,6 +27,7 @@
     'original_name': 'Confirm error',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'confirm_error',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_confirm_error',
@@ -44,6 +45,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_button_snapshot[button.test_mower_1_reset_cutting_blade_usage_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_mower_1_reset_cutting_blade_usage_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset cutting blade usage time',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_cutting_blade_usage_time',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_reset_cutting_blade_usage_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_snapshot[button.test_mower_1_reset_cutting_blade_usage_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 1 Reset cutting blade usage time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_mower_1_reset_cutting_blade_usage_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_button_snapshot[button.test_mower_1_sync_clock-entry]
@@ -74,6 +123,7 @@
     'original_name': 'Sync clock',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sync_clock',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_sync_clock',
@@ -121,6 +171,7 @@
     'original_name': 'Sync clock',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sync_clock',
     'unique_id': '1234_sync_clock',

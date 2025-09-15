@@ -1,10 +1,12 @@
 """Test ZHA button."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
@@ -44,7 +46,9 @@ def button_platform_only():
 
 
 @pytest.fixture
-async def setup_zha_integration(hass: HomeAssistant, setup_zha):
+async def setup_zha_integration(
+    hass: HomeAssistant, setup_zha: Callable[..., Coroutine[None]]
+):
     """Set up ZHA component."""
 
     # if we call this in the test itself the test hangs forever
@@ -56,7 +60,7 @@ async def test_button(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_zha_integration,  # pylint: disable=unused-argument
-    zigpy_device_mock,
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test ZHA button platform."""
 

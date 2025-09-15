@@ -54,6 +54,9 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, An
             self.api_client.jellyfin.sessions
         )
 
+        if sessions is None:
+            return {}
+
         sessions_by_id: dict[str, dict[str, Any]] = {
             session["Id"]: session
             for session in sessions

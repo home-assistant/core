@@ -24,18 +24,20 @@ from .const import (
     WAVERTREE_SENSOR_RESULTS,
 )
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture, get_sensor_display_state
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_one_sensor_site_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test the Met Office sensor platform."""
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
 
@@ -69,21 +71,25 @@ async def test_one_sensor_site_running(
         sensor_id = re.search("met_office_wavertree_(.+?)$", running_id).group(1)
         sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
 
-        assert sensor.state == sensor_value
+        assert (
+            get_sensor_display_state(hass, entity_registry, running_id) == sensor_value
+        )
         assert sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
         assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_two_sensor_sites_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test we handle two sets of sensors running for two different sites."""
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     kingslynn_hourly = json.dumps(mock_json["kingslynn_hourly"])
@@ -139,7 +145,10 @@ async def test_two_sensor_sites_running(
         if "wavertree" in running_id:
             sensor_id = re.search("met_office_wavertree_(.+?)$", running_id).group(1)
             sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
-            assert sensor.state == sensor_value
+            assert (
+                get_sensor_display_state(hass, entity_registry, running_id)
+                == sensor_value
+            )
             assert (
                 sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
             )
@@ -148,7 +157,10 @@ async def test_two_sensor_sites_running(
         else:
             sensor_id = re.search("met_office_king_s_lynn_(.+?)$", running_id).group(1)
             sensor_value = KINGSLYNN_SENSOR_RESULTS[sensor_id]
-            assert sensor.state == sensor_value
+            assert (
+                get_sensor_display_state(hass, entity_registry, running_id)
+                == sensor_value
+            )
             assert (
                 sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
             )
@@ -170,7 +182,7 @@ async def test_legacy_entities_are_removed(
     old_unique_id: str,
 ) -> None:
     """Test the expected entities are deleted."""
-    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
 

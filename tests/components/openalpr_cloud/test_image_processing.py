@@ -9,7 +9,11 @@ from homeassistant.components.openalpr_cloud.image_processing import OPENALPR_AP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, async_capture_events, load_fixture
+from tests.common import (
+    assert_setup_component,
+    async_capture_events,
+    async_load_fixture,
+)
 from tests.components.image_processing import common
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -136,7 +140,7 @@ async def test_openalpr_process_image(
     aioclient_mock.post(
         OPENALPR_API_URL,
         params=PARAMS,
-        text=load_fixture("alpr_cloud.json", "openalpr_cloud"),
+        text=await async_load_fixture(hass, "alpr_cloud.json", "openalpr_cloud"),
         status=200,
     )
 

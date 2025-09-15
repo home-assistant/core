@@ -15,7 +15,7 @@
     }),
     'bluetooth': dict({
       'active': False,
-      'address': 'AA:BB:CC:DD:EE:FF',
+      'address': 'AA:BB:CC:DD:EE:EE',
       'available': True,
       'discoverable': True,
       'name': '**REDACTED**',
@@ -46,6 +46,7 @@
     'name': '**REDACTED**',
     'os_version': '2.2.2',
     'serial_number': '**REDACTED**',
+    'update': None,
     'wifi': dict({
       'active': True,
       'available': True,

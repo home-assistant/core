@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configure Iskra Device",
-        "description": "Enter the IP address of your Iskra Device and select protocol.",
+        "title": "Configure Iskra device",
+        "description": "Enter the IP address of your Iskra device and select protocol.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
@@ -12,7 +12,7 @@
         }
       },
       "authentication": {
-        "title": "Configure Rest API Credentials",
+        "title": "Configure REST API credentials",
         "description": "Enter username and password",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
@@ -44,7 +44,7 @@
   "selector": {
     "protocol": {
       "options": {
-        "rest_api": "Rest API",
+        "rest_api": "REST API",
         "modbus_tcp": "Modbus TCP"
       }
     }
@@ -88,16 +88,16 @@
         "name": "Phase 3 current"
       },
       "non_resettable_counter_1": {
-        "name": "Non Resettable counter 1"
+        "name": "Non-resettable counter 1"
       },
       "non_resettable_counter_2": {
-        "name": "Non Resettable counter 2"
+        "name": "Non-resettable counter 2"
       },
       "non_resettable_counter_3": {
-        "name": "Non Resettable counter 3"
+        "name": "Non-resettable counter 3"
       },
       "non_resettable_counter_4": {
-        "name": "Non Resettable counter 4"
+        "name": "Non-resettable counter 4"
       },
       "resettable_counter_1": {
         "name": "Resettable counter 1"

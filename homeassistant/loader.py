@@ -10,7 +10,6 @@ import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
-import functools as ft
 import importlib
 import logging
 import os
@@ -67,6 +66,7 @@ _LOGGER = logging.getLogger(__name__)
 #
 BASE_PRELOAD_PLATFORMS = [
     "backup",
+    "condition",
     "config",
     "config_flow",
     "diagnostics",
@@ -291,7 +291,7 @@ def _get_custom_components(hass: HomeAssistant) -> dict[str, Integration]:
         return {}
 
     try:
-        import custom_components  # pylint: disable=import-outside-toplevel
+        import custom_components  # noqa: PLC0415
     except ImportError:
         return {}
 
@@ -858,14 +858,24 @@ class Integration:
         return self.manifest.get("import_executor", True)
 
     @cached_property
-    def has_translations(self) -> bool:
-        """Return if the integration has translations."""
-        return "translations" in self._top_level_files
+    def has_conditions(self) -> bool:
+        """Return if the integration has conditions."""
+        return "conditions.yaml" in self._top_level_files
 
     @cached_property
     def has_services(self) -> bool:
         """Return if the integration has services."""
         return "services.yaml" in self._top_level_files
+
+    @cached_property
+    def has_translations(self) -> bool:
+        """Return if the integration has translations."""
+        return "translations" in self._top_level_files
+
+    @cached_property
+    def has_triggers(self) -> bool:
+        """Return if the integration has triggers."""
+        return "triggers.yaml" in self._top_level_files
 
     @property
     def mqtt(self) -> list[str] | None:
@@ -1392,7 +1402,7 @@ async def async_get_integrations(
 
     # Now the rest use resolve_from_root
     if needed:
-        from . import components  # pylint: disable=import-outside-toplevel
+        from . import components  # noqa: PLC0415
 
         integrations = await hass.async_add_executor_job(
             _resolve_integrations_from_root, hass, components, needed
@@ -1639,77 +1649,6 @@ class CircularDependency(LoaderError):
         self.args[1].insert(0, domain)
 
 
-def _load_file(
-    hass: HomeAssistant, comp_or_platform: str, base_paths: list[str]
-) -> ComponentProtocol | None:
-    """Try to load specified file.
-
-    Looks in config dir first, then built-in components.
-    Only returns it if also found to be valid.
-    Async friendly.
-    """
-    cache = hass.data[DATA_COMPONENTS]
-    if module := cache.get(comp_or_platform):
-        return cast(ComponentProtocol, module)
-
-    for path in (f"{base}.{comp_or_platform}" for base in base_paths):
-        try:
-            module = importlib.import_module(path)
-
-            # In Python 3 you can import files from directories that do not
-            # contain the file __init__.py. A directory is a valid module if
-            # it contains a file with the .py extension. In this case Python
-            # will succeed in importing the directory as a module and call it
-            # a namespace. We do not care about namespaces.
-            # This prevents that when only
-            # custom_components/switch/some_platform.py exists,
-            # the import custom_components.switch would succeed.
-            # __file__ was unset for namespaces before Python 3.7
-            if getattr(module, "__file__", None) is None:
-                continue
-
-            cache[comp_or_platform] = module
-
-            return cast(ComponentProtocol, module)
-
-        except ImportError as err:
-            # This error happens if for example custom_components/switch
-            # exists and we try to load switch.demo.
-            # Ignore errors for custom_components, custom_components.switch
-            # and custom_components.switch.demo.
-            white_listed_errors = []
-            parts = []
-            for part in path.split("."):
-                parts.append(part)
-                white_listed_errors.append(f"No module named '{'.'.join(parts)}'")
-
-            if str(err) not in white_listed_errors:
-                _LOGGER.exception(
-                    "Error loading %s. Make sure all dependencies are installed", path
-                )
-
-    return None
-
-
-class ModuleWrapper:
-    """Class to wrap a Python module and auto fill in hass argument."""
-
-    def __init__(self, hass: HomeAssistant, module: ComponentProtocol) -> None:
-        """Initialize the module wrapper."""
-        self._hass = hass
-        self._module = module
-
-    def __getattr__(self, attr: str) -> Any:
-        """Fetch an attribute."""
-        value = getattr(self._module, attr)
-
-        if hasattr(value, "__bind_hass"):
-            value = ft.partial(value, self._hass)
-
-        setattr(self, attr, value)
-        return value
-
-
 def bind_hass[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Decorate function to indicate that first argument is hass.
 
@@ -1728,16 +1667,9 @@ def _async_mount_config_dir(hass: HomeAssistant) -> None:
 
     sys.path.insert(0, hass.config.config_dir)
     with suppress(ImportError):
-        import custom_components  # pylint: disable=import-outside-toplevel  # noqa: F401
+        import custom_components  # noqa: F401, PLC0415
     sys.path.remove(hass.config.config_dir)
     sys.path_importer_cache.pop(hass.config.config_dir, None)
-
-
-def _lookup_path(hass: HomeAssistant) -> list[str]:
-    """Return the lookup paths for legacy lookups."""
-    if hass.config.recovery_mode or hass.config.safe_mode:
-        return [PACKAGE_BUILTIN]
-    return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
 
 
 def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
@@ -1783,6 +1715,13 @@ def async_get_issue_tracker(
     if not integration and not integration_domain and not module:
         # If we know nothing about the integration, suggest opening an issue on HA core
         return issue_tracker
+
+    if module and not integration_domain:
+        # If we only have a module, we can try to get the integration domain from it
+        if module.startswith("custom_components."):
+            integration_domain = module.split(".")[1]
+        elif module.startswith("homeassistant.components."):
+            integration_domain = module.split(".")[2]
 
     if not integration:
         integration = async_get_issue_integration(hass, integration_domain)

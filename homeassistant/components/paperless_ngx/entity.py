@@ -10,14 +10,16 @@ from .const import DOMAIN
 from .coordinator import PaperlessCoordinator
 
 
-class PaperlessEntity(CoordinatorEntity[PaperlessCoordinator]):
+class PaperlessEntity[CoordinatorT: PaperlessCoordinator](
+    CoordinatorEntity[CoordinatorT]
+):
     """Defines a base Paperless-ngx entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: PaperlessCoordinator,
+        coordinator: CoordinatorT,
         description: EntityDescription,
     ) -> None:
         """Initialize the Paperless-ngx entity."""

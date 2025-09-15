@@ -12,7 +12,11 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 
@@ -48,7 +52,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         await api.login()
     finally:
         await api.logout()
-        await api.close()
 
     return {"title": data[CONF_HOST]}
 
@@ -181,7 +184,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class VodafoneStationOptionsFlowHandler(OptionsFlow):
+class VodafoneStationOptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow."""
 
     async def async_step_init(

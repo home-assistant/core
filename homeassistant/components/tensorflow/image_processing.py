@@ -26,15 +26,21 @@ from homeassistant.const import (
     CONF_SOURCE,
     EVENT_HOMEASSISTANT_START,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    split_entity_id,
+)
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.pil import draw_box
 
+from . import CONF_GRAPH, DOMAIN
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-DOMAIN = "tensorflow"
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MATCHES = "matches"
@@ -47,7 +53,6 @@ CONF_BOTTOM = "bottom"
 CONF_CATEGORIES = "categories"
 CONF_CATEGORY = "category"
 CONF_FILE_OUT = "file_out"
-CONF_GRAPH = "graph"
 CONF_LABELS = "labels"
 CONF_LABEL_OFFSET = "label_offset"
 CONF_LEFT = "left"
@@ -110,6 +115,21 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the TensorFlow image processing platform."""
+    create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_system_packages_yaml_integration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Tensorflow",
+        },
+    )
+
     model_config = config[CONF_MODEL]
     model_dir = model_config.get(CONF_MODEL_DIR) or hass.config.path("tensorflow")
     labels = model_config.get(CONF_LABELS) or hass.config.path(
@@ -136,9 +156,8 @@ def setup_platform(
         # These imports shouldn't be moved to the top, because they depend on code from the model_dir.
         # (The model_dir is created during the manual setup process. See integration docs.)
 
-        # pylint: disable=import-outside-toplevel
-        from object_detection.builders import model_builder
-        from object_detection.utils import config_util, label_map_util
+        from object_detection.builders import model_builder  # noqa: PLC0415
+        from object_detection.utils import config_util, label_map_util  # noqa: PLC0415
     except ImportError:
         _LOGGER.error(
             "No TensorFlow Object Detection library found! Install or compile "
@@ -149,7 +168,7 @@ def setup_platform(
 
     try:
         # Display warning that PIL will be used if no OpenCV is found.
-        import cv2  # noqa: F401 pylint: disable=import-outside-toplevel
+        import cv2  # noqa: F401, PLC0415
     except ImportError:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "
@@ -334,7 +353,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         start = time.perf_counter()
         try:
-            import cv2  # pylint: disable=import-outside-toplevel
+            import cv2  # noqa: PLC0415
 
             img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB

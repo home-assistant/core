@@ -3,13 +3,18 @@
 from datetime import datetime, timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+from holidays import CATHOLIC
 import pytest
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     SERVICE_GET_EVENTS,
 )
-from homeassistant.components.holiday.const import CONF_PROVINCE, DOMAIN
+from homeassistant.components.holiday.const import (
+    CONF_CATEGORIES,
+    CONF_PROVINCE,
+    DOMAIN,
+)
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -349,6 +354,79 @@ async def test_language_not_exist(
                     "end": "2023-01-02",
                     "summary": "New Year's Day",
                     "location": "Norge",
+                }
+            ]
+        }
+    }
+
+
+async def test_categories(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test if there is no next event."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    zone = await dt_util.async_get_time_zone("Europe/Berlin")
+    freezer.move_to(datetime(2025, 8, 14, 12, tzinfo=zone))
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_COUNTRY: "DE",
+            CONF_PROVINCE: "BY",
+        },
+        options={
+            CONF_CATEGORIES: [CATHOLIC],
+        },
+        title="Germany",
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.germany",
+            "end_date_time": dt_util.now() + timedelta(days=2),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "calendar.germany": {
+            "events": [
+                {
+                    "start": "2025-08-15",
+                    "end": "2025-08-16",
+                    "summary": "Assumption Day",
+                    "location": "Germany",
+                }
+            ]
+        }
+    }
+
+    freezer.move_to(datetime(2025, 12, 23, 12, tzinfo=zone))
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.germany",
+            "end_date_time": dt_util.now() + timedelta(days=2),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "calendar.germany": {
+            "events": [
+                {
+                    "start": "2025-12-25",
+                    "end": "2025-12-26",
+                    "summary": "Christmas Day",
+                    "location": "Germany",
                 }
             ]
         }

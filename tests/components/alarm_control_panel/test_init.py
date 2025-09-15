@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    DOMAIN,
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
@@ -280,9 +280,7 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop
         ),
         built_in=False,
     )
-    setup_test_component_platform(
-        hass, ALARM_CONTROL_PANEL_DOMAIN, [entity], from_config_entry=True
-    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(entity.entity_id)
@@ -343,9 +341,7 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
         ),
         built_in=False,
     )
-    setup_test_component_platform(
-        hass, ALARM_CONTROL_PANEL_DOMAIN, [entity], from_config_entry=True
-    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(entity.entity_id)
@@ -426,9 +422,7 @@ async def test_alarm_control_panel_deprecated_state_does_not_break_state(
         ),
         built_in=False,
     )
-    setup_test_component_platform(
-        hass, ALARM_CONTROL_PANEL_DOMAIN, [entity], from_config_entry=True
-    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(entity.entity_id)

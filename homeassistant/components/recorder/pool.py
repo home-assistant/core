@@ -12,6 +12,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import (
     ConnectionPoolEntry,
     NullPool,
+    PoolProxiedConnection,
     SingletonThreadPool,
     StaticPool,
 )
@@ -90,7 +91,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             super().dispose()
 
-    def _do_get(self) -> ConnectionPoolEntry:  # type: ignore[return]
+    def _do_get(self) -> ConnectionPoolEntry:  # type: ignore[return]  # noqa: RET503
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             return super()._do_get()
         try:
@@ -100,7 +101,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
             # which is allowed but discouraged since its much slower
             return self._do_get_db_connection_protected()
         # In the event loop, raise an exception
-        raise_for_blocking_call(  # noqa: RET503
+        raise_for_blocking_call(
             self._do_get_db_connection_protected,
             strict=True,
             advise_msg=ADVISE_MSG,
@@ -118,6 +119,12 @@ class RecorderPool(SingletonThreadPool, NullPool):
             core_behavior=ReportBehavior.LOG,
         )
         return NullPool._create_connection(self)  # noqa: SLF001
+
+    def connect(self) -> PoolProxiedConnection:
+        """Return a connection from the pool."""
+        if threading.get_ident() in self.recorder_and_worker_thread_ids:
+            return super().connect()
+        return NullPool.connect(self)
 
 
 class MutexPool(StaticPool):

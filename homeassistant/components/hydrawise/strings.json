@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Hydrawise Login",
+        "title": "Hydrawise login",
         "description": "Please provide the username and password for your Hydrawise cloud account:",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
@@ -10,7 +10,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "You can generate an API Key in the 'Account Details' section of the Hydrawise app"
+          "api_key": "You can generate an API key in the 'Account Details' section of the Hydrawise app"
         }
       },
       "reauth_confirm": {

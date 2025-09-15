@@ -1,0 +1,77 @@
+{
+  "success": true,
+  "data": {
+    "leaderOnly": {
+      "challenges": false,
+      "getGems": false
+    },
+    "quest": {
+      "progress": {
+        "collect": {
+          "soapBars": 10
+        },
+        "hp": 50,
+        "rage": 3.14
+      },
+      "key": "atom1",
+      "active": true,
+      "leader": "d69833ef-4542-4259-ba50-9b4a1a841bcf",
+      "members": {
+        "d69833ef-4542-4259-ba50-9b4a1a841bcf": true
+      },
+      "extra": {}
+    },
+    "tasksOrder": {
+      "habits": [],
+      "dailys": [],
+      "todos": [],
+      "rewards": []
+    },
+    "purchased": {
+      "plan": {
+        "consecutive": {
+          "count": 0,
+          "offset": 0,
+          "gemCapExtra": 0,
+          "trinkets": 0
+        },
+        "quantity": 1,
+        "extraMonths": 0,
+        "gemsBought": 0,
+        "cumulativeCount": 0,
+        "mysteryItems": []
+      }
+    },
+    "cron": {},
+    "_id": "1e87097c-4c03-4f8c-a475-67cc7da7f409",
+    "name": "test-user's Party",
+    "type": "party",
+    "privacy": "private",
+    "chat": [],
+    "memberCount": 2,
+    "challengeCount": 0,
+    "balance": 0,
+    "managers": {},
+    "categories": [],
+    "leader": {
+      "auth": {
+        "local": {
+          "username": "test-username"
+        }
+      },
+      "flags": {
+        "verifiedUsername": true
+      },
+      "profile": {
+        "name": "test-user"
+      },
+      "_id": "af36e2a8-7927-4dec-a258-400ade7f0ae3",
+      "id": "af36e2a8-7927-4dec-a258-400ade7f0ae3"
+    },
+    "summary": "test-user's Party",
+    "id": "1e87097c-4c03-4f8c-a475-67cc7da7f409"
+  },
+  "notifications": [],
+  "userV": 0,
+  "appVersion": "5.38.0"
+}

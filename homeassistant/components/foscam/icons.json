@@ -6,5 +6,47 @@
     "ptz_preset": {
       "service": "mdi:target-variant"
     }
+  },
+  "entity": {
+    "switch": {
+      "flip_switch": {
+        "default": "mdi:flip-vertical"
+      },
+      "mirror_switch": {
+        "default": "mdi:mirror"
+      },
+      "ir_switch": {
+        "default": "mdi:theme-light-dark"
+      },
+      "sleep_switch": {
+        "default": "mdi:sleep"
+      },
+      "white_light_switch": {
+        "default": "mdi:light-flood-down"
+      },
+      "siren_alarm_switch": {
+        "default": "mdi:alarm-note"
+      },
+      "turn_off_volume_switch": {
+        "default": "mdi:volume-off"
+      },
+      "turn_off_light_switch": {
+        "default": "mdi:lightbulb-fluorescent-tube"
+      },
+      "hdr_switch": {
+        "default": "mdi:hdr"
+      },
+      "wdr_switch": {
+        "default": "mdi:alpha-w-box"
+      }
+    },
+    "number": {
+      "device_volume": {
+        "default": "mdi:volume-source"
+      },
+      "speak_volume": {
+        "default": "mdi:account-voice"
+      }
+    }
   }
 }
