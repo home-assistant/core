@@ -27,6 +27,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
@@ -80,9 +81,14 @@ class MatterNumber(MatterEntity, NumberEntity):
         sendvalue = int(value)
         if value_convert := self.entity_description.ha_to_device:
             sendvalue = value_convert(value)
-        await self.write_attribute(
-            value=sendvalue,
-        )
+        try:
+            await self.write_attribute(
+                value=sendvalue,
+            )
+        except:
+            raise HomeAssistantError(
+                "The device does not allow to change this value."
+            )
 
     @callback
     def _update_from_device(self) -> None:
