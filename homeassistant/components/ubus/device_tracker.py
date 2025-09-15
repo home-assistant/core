@@ -13,16 +13,19 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_SSL = False                         
+DEFAULT_VERIFY_SSL = True
+
 CONF_DHCP_SOFTWARE = "dhcp_software"
 DEFAULT_DHCP_SOFTWARE = "dnsmasq"
-DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "none"]
+DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "ethers", "none"]
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -32,6 +35,8 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DHCP_SOFTWARE, default=DEFAULT_DHCP_SOFTWARE): vol.In(
             DHCP_SOFTWARES
         ),
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
@@ -46,6 +51,8 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None
         scanner = DnsmasqUbusDeviceScanner(config)
     elif dhcp_sw == "odhcpd":
         scanner = OdhcpdUbusDeviceScanner(config)
+    elif dhcp_sw == "ethers":
+        scanner = EthersUbusDeviceScanner(config)
     else:
         scanner = UbusDeviceScanner(config)
 
@@ -81,12 +88,14 @@ class UbusDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.ssl = config[CONF_SSL]
+        self.verify_ssl = config[CONF_VERIFY_SSL]
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
         self.last_results = {}
-        self.url = f"http://{self.host}/ubus"
+        self.url = f"{'https' if self.ssl else 'http'}://{self.host}/ubus"
 
-        self.ubus = Ubus(self.url, self.username, self.password)
+        self.ubus = Ubus(self.url, self.username, self.password, verify=self.verify_ssl)
         self.hostapd = []
         self.mac2name = None
         self.success_init = self.ubus.connect() is not None
@@ -186,3 +195,18 @@ class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
         else:
             # Error, handled in the ubus.get_dhcp_method()
             return
+
+
+class EthersUbusDeviceScanner(UbusDeviceScanner):                             
+    """Implement the Ubus device scanning for /etc/ethers"""                                   
+                                                                               
+    def _generate_mac2name(self):                                                      
+        result = self.ubus.file_read("/etc/ethers")                          
+        if result:                                                               
+            self.mac2name = {}                                             
+            for line in result["data"].splitlines():                            
+                hosts = line.split(" ")               
+                self.mac2name[hosts[0].upper()] = hosts[1]                     
+        else:                                                                          
+            # Error, handled in the ubus.file_read()                          
+             return
