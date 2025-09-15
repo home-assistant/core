@@ -388,6 +388,11 @@ def get_shelly_model_name(
     return cast(str, MODEL_NAMES.get(model))
 
 
+def get_rpc_component_role(config: dict[str, Any], key: str) -> str:
+    """Get RPC component role from config."""
+    return config[key].get("role", "") if key in config else ""
+
+
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     """Get name based on device and channel name."""
     if BLU_TRV_IDENTIFIER in key:
@@ -401,6 +406,11 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
 
     if key in device.config and key != "em:0":
         # workaround for Pro 3EM, we don't want to get name for em:0
+        role = get_rpc_component_role(device.config, key)
+        if role.startswith("zone"):
+            # workaround for Irrigation controller, we don't want to get names for zones
+            return None
+
         if component_name := device.config[key].get("name"):
             if component in (*VIRTUAL_COMPONENTS, "script"):
                 return cast(str, component_name)
@@ -419,6 +429,13 @@ def get_rpc_sub_device_name(
     """Get name based on device and channel name."""
     if key in device.config and key != "em:0":
         # workaround for Pro 3EM, we don't want to get name for em:0
+        role = get_rpc_component_role(device.config, key)
+        if role.startswith("zone"):
+            # workaround for Irrigation controller, name stored in "service:0"
+            zone_id = int(role[4:])
+            if zone_name := device.config["service:0"]["zones"][zone_id]["name"]:
+                return cast(str, zone_name)
+
         if entity_name := device.config[key].get("name"):
             return cast(str, entity_name)
 
@@ -799,7 +816,10 @@ def get_rpc_device_info(
         )
 
     if (
-        component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
+        (
+            component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
+            and not get_rpc_component_role(device.config, key).startswith("zone")
+        )
         or idx is None
         or len(get_rpc_key_instances(device.status, component, all_lights=True)) < 2
     ):
