@@ -2,8 +2,8 @@
 
 from abc import abstractmethod
 from dataclasses import dataclass
-from functools import lru_cache
 import datetime as dt
+from functools import lru_cache
 import logging
 
 from hdate import HDateInfo, Location, Zmanim
@@ -49,7 +49,7 @@ def _create_results(
     location: Location,
     candle_lighting_offset: int,
     havdalah_offset: int,
-) -> None:
+) -> JewishCalendarDataResults:
     """Create results object."""
     zmanim = _make_zmanim(date, location, candle_lighting_offset, havdalah_offset)
     dateinfo = HDateInfo(date, diaspora)
