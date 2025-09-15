@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -129,8 +130,10 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import from YAML."""
 
         scan_interval = import_config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        if hasattr(scan_interval, "total_seconds"):
+        if isinstance(scan_interval, timedelta):
             scan_interval = int(scan_interval.total_seconds())
+        else:
+            scan_interval = int(scan_interval)
 
         zones = import_config.get(CONF_ZONES, [])
         if zones:
