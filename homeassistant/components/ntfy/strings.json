@@ -355,12 +355,11 @@
         "http": {
           "name": "Send HTTP request",
           "description": "Adds an 'http' button action that sends an HTTP request when the action button is tapped. See the documentation for details: https://docs.ntfy.sh/publish/#send-http-request"
-        }
-      },
-      "sections": {
+        },
+
         "actions": {
           "name": "Action buttons",
-          "description": "Up to three actions ('view', 'broadcast', or 'http') can be defined for a notification. These appear as buttons below the notification content. Actions are executed when the corresponding button is tapped or clicked."
+          "description": "Up to three actions ('view', 'broadcast', or 'http') can be added as buttons below the notification. Actions are executed when the corresponding button is tapped or clicked."
         }
       }
     }
@@ -375,32 +374,24 @@
         "5": "Maximum"
       }
     },
-    "view": {
+    "action_type": {
+      "options": {
+        "view": "Open website/app",
+        "broadcast": "Send Android broadcast",
+        "http": "Send HTTP request"
+      }
+    },
+    "actions": {
       "fields": {
         "label": "Label of the action button",
-        "url": "URL to open when action is tapped",
-        "clear": "Clear notification after action button is tapped",
-        "position": "Position of the action button"
-      }
-    },
-    "broadcast": {
-      "fields": {
-        "label": "[%key:component::ntfy::selector::view::fields::label%]",
-        "intent": "Android intent to send when action is tapped",
-        "extras": "Extras to include in the intent (key-value pairs)",
-        "clear": "[%key:component::ntfy::selector::view::fields::clear%]",
-        "position": "[%key:component::ntfy::selector::view::fields::position%]"
-      }
-    },
-    "http": {
-      "fields": {
-        "label": "[%key:component::ntfy::selector::view::fields::label%]",
-        "url": "URL to which the HTTP request will be sent",
-        "method": "HTTP method to use for request",
-        "headers": "Additional HTTP headers (key-value pairs)",
-        "body": "Body of the HTTP request",
-        "clear": "[%key:component::ntfy::selector::view::fields::clear%]",
-        "position": "[%key:component::ntfy::selector::view::fields::position%]"
+        "action": "Action type",
+        "url": "URL to open for the 'view' action or to request for the 'http' action",
+        "intent": "Android intent to send when the 'broadcast' action is triggered",
+        "extras": "Extras to include in the intent as key-value pairs ('broadcast' action only)",
+        "method": "HTTP method to use for the 'http' action",
+        "headers": "Additional HTTP headers as key-value pairs ('http' action only)",
+        "body": "Body of the HTTP request ('http' action only)",
+        "clear": "Clear notification after action button is tapped"
       }
     }
   },

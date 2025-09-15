@@ -43,6 +43,7 @@ ATTR_ICON = "icon"
 ATTR_MARKDOWN = "markdown"
 ATTR_PRIORITY = "priority"
 ATTR_TAGS = "tags"
+ATTR_ACTIONS = "actions"
 ATTR_ACTION = "action"
 ATTR_VIEW = "view"
 ATTR_BROADCAST = "broadcast"
@@ -66,25 +67,24 @@ ACTION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_LABEL): cv.string,
         vol.Optional(ATTR_CLEAR, default=False): cv.boolean,
-        vol.Optional(ATTR_POSITION): vol.All(vol.Coerce(int), vol.Range(1, 3)),
     }
 )
 VIEW_SCHEMA = ACTION_SCHEMA.extend(
     {
-        vol.Optional(ATTR_ACTION, default="view"): str,
+        vol.Optional(ATTR_ACTION): vol.All(str, "view"),
         vol.Required(ATTR_URL): cv.url,
     }
 )
 BROADCAST_SCHEMA = ACTION_SCHEMA.extend(
     {
-        vol.Optional(ATTR_ACTION, default="broadcast"): str,
+        vol.Optional(ATTR_ACTION): vol.All(str, "broadcast"),
         vol.Optional(ATTR_INTENT): cv.string,
         vol.Optional(ATTR_EXTRAS): dict[str, str],
     }
 )
 HTTP_SCHEMA = VIEW_SCHEMA.extend(
     {
-        vol.Optional(ATTR_ACTION, default="http"): str,
+        vol.Optional(ATTR_ACTION): vol.All(str, "http"),
         vol.Optional(ATTR_METHOD): cv.string,
         vol.Optional(ATTR_HEADERS): dict[str, str],
         vol.Optional(ATTR_BODY): cv.string,
@@ -106,9 +106,9 @@ SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
         vol.Optional(ATTR_EMAIL): vol.Email(),
         vol.Optional(ATTR_CALL): cv.string,
         vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
-        vol.Optional(ATTR_VIEW): vol.All(cv.ensure_list, [VIEW_SCHEMA]),
-        vol.Optional(ATTR_BROADCAST): vol.All(cv.ensure_list, [BROADCAST_SCHEMA]),
-        vol.Optional(ATTR_HTTP): vol.All(cv.ensure_list, [HTTP_SCHEMA]),
+        vol.Optional(ATTR_ACTIONS): vol.All(
+            cv.ensure_list, [vol.Any(VIEW_SCHEMA, BROADCAST_SCHEMA, HTTP_SCHEMA)]
+        ),
     }
 )
 
@@ -164,13 +164,8 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                     translation_domain=DOMAIN,
                     translation_key="delay_no_call",
                 )
-        actions: list[dict[str, Any]] = (
-            params.pop(ATTR_VIEW, [])
-            + params.pop(ATTR_BROADCAST, [])
-            + params.pop(ATTR_HTTP, [])
-        )
-        actions.sort(key=lambda a: a.pop(ATTR_POSITION, float("inf")))
 
+        actions: list[dict[str, Any]] | None = params.get(ATTR_ACTIONS)
         if actions:
             if len(actions) > MAX_ACTIONS_ALLOWED:
                 raise ServiceValidationError(
