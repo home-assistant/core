@@ -9,7 +9,7 @@ from elkm1_lib.discovery import ElkSystem
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.elkm1.const import DOMAIN
+from homeassistant.components.elkm1.const import CONF_AUTO_CONFIGURE, DOMAIN
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_HOST,
@@ -1906,7 +1906,6 @@ async def test_reconfigure_device_offline(
             },
         )
         await hass.async_block_till_done()
-        await hass.async_block_till_done()  # drain background tasks
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
@@ -1955,7 +1954,7 @@ async def test_reconfigure_different_device(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     different_device = ElkSystem("bb:cc:dd:ee:ff:aa", "1.2.3.4", 2601)
@@ -2009,7 +2008,6 @@ async def test_reconfigure_unknown_error(
             },
         )
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
@@ -2058,9 +2056,8 @@ async def test_reconfigure_preserves_existing_config_entry_fields(
             },
         )
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
 
     await hass.async_block_till_done()
@@ -2069,7 +2066,7 @@ async def test_reconfigure_preserves_existing_config_entry_fields(
     assert updated_entry.data[CONF_HOST] == "elks://5.6.7.8"
     assert updated_entry.data[CONF_USERNAME] == "newuser"
     assert updated_entry.data[CONF_PASSWORD] == "newpass"
-    assert updated_entry.data["auto_configure"] is False
+    assert updated_entry.data[CONF_AUTO_CONFIGURE] is False
     assert updated_entry.data[CONF_PREFIX] == "oldprefix"
     assert updated_entry.data["extra_field"] == "should_be_preserved"
     assert updated_entry.data["another_field"] == 42
