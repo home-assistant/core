@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL
+from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, SECTION_ADVANCED_SETTINGS
 from .coordinator import AirOSConfigEntry, AirOSDataUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [
@@ -29,14 +29,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
 
     # By default airOS 8 comes with self-signed SSL certificates,
     # with no option in the web UI to change or upload a custom certificate.
-    session = async_get_clientsession(hass, verify_ssl=entry.data[CONF_VERIFY_SSL])
+    session = async_get_clientsession(
+        hass, verify_ssl=entry.data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL]
+    )
 
     airos_device = AirOS8(
         host=entry.data[CONF_HOST],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
         session=session,
-        use_ssl=entry.data[CONF_SSL],
+        use_ssl=entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL],
     )
 
     coordinator = AirOSDataUpdateCoordinator(hass, entry, airos_device)
@@ -58,8 +60,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
 
     if entry.version == 1 and entry.minor_version == 1:
         new_data = {**entry.data}
-        new_data.setdefault(CONF_SSL, DEFAULT_SSL)
-        new_data.setdefault(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+        advanced_data = {
+            CONF_SSL: DEFAULT_SSL,
+            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+        }
+        new_data[SECTION_ADVANCED_SETTINGS] = advanced_data
 
         hass.config_entries.async_update_entry(
             entry,

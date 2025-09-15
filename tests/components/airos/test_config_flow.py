@@ -10,7 +10,7 @@ from airos.exceptions import (
 )
 import pytest
 
-from homeassistant.components.airos.const import DOMAIN, SECTION_ADVANCED_SETTINSGS
+from homeassistant.components.airos.const import DOMAIN, SECTION_ADVANCED_SETTINGS
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -28,7 +28,7 @@ MOCK_CONFIG = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: "ubnt",
     CONF_PASSWORD: "test-password",
-    SECTION_ADVANCED_SETTINSGS: {
+    SECTION_ADVANCED_SETTINGS: {
         CONF_SSL: True,
         CONF_VERIFY_SSL: False,
     },

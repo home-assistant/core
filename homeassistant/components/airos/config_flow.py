@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN, SECTION_ADVANCED_SETTINSGS
+from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN, SECTION_ADVANCED_SETTINGS
 from .coordinator import AirOS8
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME, default="ubnt"): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(SECTION_ADVANCED_SETTINSGS): section(
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
             vol.Schema(
                 {
                     vol.Required(CONF_SSL, default=DEFAULT_SSL): bool,
@@ -65,7 +65,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             # with no option in the web UI to change or upload a custom certificate.
             session = async_get_clientsession(
                 self.hass,
-                verify_ssl=user_input[SECTION_ADVANCED_SETTINSGS][CONF_VERIFY_SSL],
+                verify_ssl=user_input[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL],
             )
 
             airos_device = AirOS8(
@@ -73,7 +73,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
                 session=session,
-                use_ssl=user_input[SECTION_ADVANCED_SETTINSGS][CONF_SSL],
+                use_ssl=user_input[SECTION_ADVANCED_SETTINGS][CONF_SSL],
             )
             try:
                 await airos_device.login()
