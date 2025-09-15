@@ -1,6 +1,7 @@
 """Test config flow for Nederlandse Spoorwegen integration."""
 
 from datetime import time
+from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -31,16 +32,16 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM  # type: ignore[typeddict-item]
-    assert result["step_id"] == "user"  # type: ignore[typeddict-item]
-    assert not result["errors"]  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert not result.get("errors")
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_KEY: API_KEY}
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY  # type: ignore[typeddict-item]
-    assert result["title"] == "Nederlandse Spoorwegen"  # type: ignore[typeddict-item]
-    assert result["data"] == {CONF_API_KEY: API_KEY}  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Nederlandse Spoorwegen"
+    assert result.get("data") == {CONF_API_KEY: API_KEY}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -56,12 +57,12 @@ async def test_creating_route(
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "route"), context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM  # type: ignore[typeddict-item]
-    assert result["step_id"] == "user"  # type: ignore[typeddict-item]
-    assert not result["errors"]  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert not result.get("errors")
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
+        result.get("flow_id"),
         user_input={
             CONF_FROM: "ASD",
             CONF_TO: "RTD",
@@ -70,9 +71,9 @@ async def test_creating_route(
             CONF_TIME: "08:30",
         },
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY  # type: ignore[typeddict-item]
-    assert result["title"] == "Home to Work"  # type: ignore[typeddict-item]
-    assert result["data"] == {  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Home to Work"
+    assert result.get("data") == {
         CONF_FROM: "ASD",
         CONF_TO: "RTD",
         CONF_VIA: "HT",
@@ -102,28 +103,28 @@ async def test_flow_exceptions(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM  # type: ignore[typeddict-item]
-    assert result["step_id"] == "user"  # type: ignore[typeddict-item]
-    assert not result["errors"]  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert not result.get("errors")
 
     mock_nsapi.get_stations.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
+        result.get("flow_id"), user_input={CONF_API_KEY: API_KEY}
     )
-    assert result["type"] is FlowResultType.FORM  # type: ignore[typeddict-item]
-    assert result["step_id"] == "user"  # type: ignore[typeddict-item]
-    assert result["errors"] == {"base": expected_error}  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {"base": expected_error}
 
     mock_nsapi.get_stations.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
+        result.get("flow_id"), user_input={CONF_API_KEY: API_KEY}
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY  # type: ignore[typeddict-item]
-    assert result["title"] == "Nederlandse Spoorwegen"  # type: ignore[typeddict-item]
-    assert result["data"] == {CONF_API_KEY: API_KEY}  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Nederlandse Spoorwegen"
+    assert result.get("data") == {CONF_API_KEY: API_KEY}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -140,8 +141,8 @@ async def test_fetching_stations_failed(
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "route"), context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.ABORT  # type: ignore[typeddict-item]
-    assert result["reason"] == "cannot_connect"  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "cannot_connect"
 
 
 async def test_already_configured(
@@ -152,16 +153,16 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM  # type: ignore[typeddict-item]
-    assert result["step_id"] == "user"  # type: ignore[typeddict-item]
-    assert not result["errors"]  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert not result.get("errors")
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
+        result.get("flow_id"), user_input={CONF_API_KEY: API_KEY}
     )
 
-    assert result["type"] is FlowResultType.ABORT  # type: ignore[typeddict-item]
-    assert result["reason"] == "already_configured"  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
 
 
 async def test_config_flow_import_success(
@@ -174,22 +175,20 @@ async def test_config_flow_import_success(
         data={CONF_API_KEY: API_KEY},
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY  # type: ignore[typeddict-item]
-    assert result["title"] == "Nederlandse Spoorwegen"  # type: ignore[typeddict-item]
-    assert result["data"] == {CONF_API_KEY: API_KEY}  # type: ignore[typeddict-item]
-    assert not result["result"].subentries  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Nederlandse Spoorwegen"
+    assert result.get("data") == {CONF_API_KEY: API_KEY}
+    result_obj = result.get("result")
+    assert result_obj is not None, "Result object is None"
+    assert not getattr(result_obj, "subentries", None)
 
 
-async def test_config_flow_import_with_routes(
-    hass: HomeAssistant, mock_nsapi: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
-    """Test import flow with routes from YAML configuration."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_API_KEY: API_KEY,
-            CONF_ROUTES: [
+@pytest.mark.parametrize(
+    ("routes_data", "expected_routes_data"),
+    [
+        (
+            # Test with uppercase station codes (UI behavior)
+            [
                 {
                     CONF_NAME: "Home to Work",
                     CONF_FROM: "ASD",
@@ -198,22 +197,81 @@ async def test_config_flow_import_with_routes(
                     CONF_TIME: time(hour=8, minute=30),
                 }
             ],
+            [
+                {
+                    CONF_NAME: "Home to Work",
+                    CONF_FROM: "ASD",
+                    CONF_TO: "RTD",
+                    CONF_VIA: "HT",
+                    CONF_TIME: time(hour=8, minute=30),
+                }
+            ],
+        ),
+        (
+            # Test with lowercase station codes (converted to uppercase)
+            [
+                {
+                    CONF_NAME: "Rotterdam-Amsterdam",
+                    CONF_FROM: "rtd",  # lowercase input
+                    CONF_TO: "asd",  # lowercase input
+                },
+                {
+                    CONF_NAME: "Amsterdam-Haarlem",
+                    CONF_FROM: "asd",  # lowercase input
+                    CONF_TO: "ht",  # lowercase input
+                    CONF_VIA: "rtd",  # lowercase input
+                },
+            ],
+            [
+                {
+                    CONF_NAME: "Rotterdam-Amsterdam",
+                    CONF_FROM: "RTD",  # converted to uppercase
+                    CONF_TO: "ASD",  # converted to uppercase
+                },
+                {
+                    CONF_NAME: "Amsterdam-Haarlem",
+                    CONF_FROM: "ASD",  # converted to uppercase
+                    CONF_TO: "HT",  # converted to uppercase
+                    CONF_VIA: "RTD",  # converted to uppercase
+                },
+            ],
+        ),
+    ],
+)
+async def test_config_flow_import_with_routes(
+    hass: HomeAssistant,
+    mock_nsapi: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    routes_data: list[dict[str, Any]],
+    expected_routes_data: list[dict[str, Any]],
+) -> None:
+    """Test import flow with routes from YAML configuration."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_API_KEY: API_KEY,
+            CONF_ROUTES: routes_data,
         },
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY  # type: ignore[typeddict-item]
-    assert result["title"] == "Nederlandse Spoorwegen"  # type: ignore[typeddict-item]
-    assert result["data"] == {CONF_API_KEY: API_KEY}  # type: ignore[typeddict-item]
-    assert len(result["result"].subentries) == 1  # type: ignore[typeddict-item]
-    route_entry = list(result["result"].subentries.values())[0]  # type: ignore[typeddict-item]
-    assert route_entry.data == {
-        CONF_NAME: "Home to Work",
-        CONF_FROM: "ASD",
-        CONF_TO: "RTD",
-        CONF_VIA: "HT",
-        CONF_TIME: time(hour=8, minute=30),
-    }
-    assert route_entry.subentry_type == "route"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Nederlandse Spoorwegen"
+    assert result.get("data") == {CONF_API_KEY: API_KEY}
+    result_obj = result.get("result")
+    assert result_obj is not None, "Result object is None"
+    assert hasattr(result_obj, "subentries"), (
+        "Result object has no 'subentries' attribute"
+    )
+    assert len(result_obj.subentries) == len(expected_routes_data)
+
+    subentries = list(result_obj.subentries.values())
+    for expected_route in expected_routes_data:
+        route_entry = next(
+            entry for entry in subentries if entry.title == expected_route[CONF_NAME]
+        )
+        assert route_entry.data == expected_route
+        assert route_entry.subentry_type == "route"
 
 
 async def test_config_flow_import_with_unknown_station(
@@ -237,8 +295,8 @@ async def test_config_flow_import_with_unknown_station(
         },
     )
 
-    assert result["type"] is FlowResultType.ABORT  # type: ignore[typeddict-item]
-    assert result["reason"] == "invalid_station"  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "invalid_station"
 
 
 async def test_config_flow_import_already_configured(
@@ -253,8 +311,8 @@ async def test_config_flow_import_already_configured(
         data={CONF_API_KEY: API_KEY},
     )
 
-    assert result["type"] is FlowResultType.ABORT  # type: ignore[typeddict-item]
-    assert result["reason"] == "already_configured"  # type: ignore[typeddict-item]
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -278,51 +336,5 @@ async def test_import_flow_exceptions(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_API_KEY: API_KEY}
     )
-    assert result["type"] is FlowResultType.ABORT  # type: ignore[typeddict-item]
-    assert result["reason"] == expected_error  # type: ignore[typeddict-item]
-
-
-async def test_config_flow_import_with_lowercase_station_codes(
-    hass: HomeAssistant, mock_nsapi: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
-    """Test import flow with lowercase station codes (case-insensitive validation)."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_API_KEY: API_KEY,
-            CONF_ROUTES: [
-                {
-                    CONF_NAME: "Rotterdam-Amsterdam",
-                    CONF_FROM: "rtd",  # lowercase
-                    CONF_TO: "asd",  # lowercase
-                },
-                {
-                    CONF_NAME: "Amsterdam-Haarlem",
-                    CONF_FROM: "asd",  # lowercase
-                    CONF_TO: "ht",  # lowercase
-                    CONF_VIA: "rtd",  # lowercase
-                },
-            ],
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY  # type: ignore[typeddict-item]
-    assert result["title"] == "Nederlandse Spoorwegen"  # type: ignore[typeddict-item]
-    assert result["data"] == {CONF_API_KEY: API_KEY}  # type: ignore[typeddict-item]
-    assert len(result["result"].subentries) == 2  # type: ignore[typeddict-item]
-
-    # Verify subentries preserve original lowercase casing
-    subentries = list(result["result"].subentries.values())  # type: ignore[typeddict-item]
-    rotterdam_route = next(
-        entry for entry in subentries if entry.title == "Rotterdam-Amsterdam"
-    )
-    assert rotterdam_route.data[CONF_FROM] == "rtd"  # lowercase preserved
-    assert rotterdam_route.data[CONF_TO] == "asd"  # lowercase preserved
-
-    amsterdam_route = next(
-        entry for entry in subentries if entry.title == "Amsterdam-Haarlem"
-    )
-    assert amsterdam_route.data[CONF_FROM] == "asd"  # lowercase preserved
-    assert amsterdam_route.data[CONF_TO] == "ht"  # lowercase preserved
-    assert amsterdam_route.data[CONF_VIA] == "rtd"  # lowercase preserved
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == expected_error
