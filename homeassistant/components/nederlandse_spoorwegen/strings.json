@@ -54,10 +54,6 @@
     }
   },
   "issues": {
-    "deprecated_yaml": {
-      "title": "Nederlandse Spoorwegen YAML configuration deprecated",
-      "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nYour existing YAML configuration has been imported successfully. Please remove the existing YAML configuration and consider setting up additional routes via the UI."
-    },
     "deprecated_yaml_import_issue_invalid_auth": {
       "title": "Nederlandse Spoorwegen YAML configuration deprecated",
       "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an invalid API key was found. Please update your YAML configuration, or remove the existing YAML configuration and set the integration up via the UI."

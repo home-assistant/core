@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -92,7 +92,7 @@ async def async_setup_platform(
 
     ir.async_create_issue(
         hass,
-        DOMAIN,
+        HOMEASSISTANT_DOMAIN,
         "deprecated_yaml",
         breaks_in_ha_version="2026.4.0",
         is_fixable=False,
