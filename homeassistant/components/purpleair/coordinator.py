@@ -20,7 +20,7 @@ from .const import CONF_SENSOR_INDEX, CONF_SENSOR_READ_KEY, LOGGER, SENSOR_FIELD
 
 type PurpleAirConfigEntry = ConfigEntry[PurpleAirDataUpdateCoordinator]
 
-UPDATE_INTERVAL: Final[int] = 2
+UPDATE_INTERVAL: Final[int] = 5
 
 
 class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
