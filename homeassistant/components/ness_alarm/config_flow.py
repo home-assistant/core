@@ -114,16 +114,10 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Required(
-                    CONF_MAX_SUPPORTED_ZONES, default=DEFAULT_MAX_SUPPORTED_ZONES
-                ): int,
-                vol.Required(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): vol.All(cv.positive_float, vol.Range(min=0.1, max=3600)),
                 vol.Optional(
                     CONF_INFER_ARMING_STATE, default=DEFAULT_INFER_ARMING_STATE
-                ): bool,
-                vol.Optional(
-                    CONF_SUPPORT_HOME_ARM, default=DEFAULT_SUPPORT_HOME_ARM
                 ): bool,
             }
         )
