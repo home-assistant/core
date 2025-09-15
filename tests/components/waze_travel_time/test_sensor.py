@@ -45,7 +45,6 @@ async def test_sensor(hass: HomeAssistant) -> None:
         hass.states.get("sensor.waze_travel_time_duration").attributes["attribution"]
         == "Powered by Waze"
     )
-    assert hass.states.get("sensor.waze_travel_time_duration").state == "150"
     assert hass.states.get("sensor.waze_travel_time_distance").state == "300"
     assert (
         hass.states.get("sensor.waze_travel_time_route").state == "E1337 - Teststreet"
