@@ -5,8 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 
-import ns_api
-from ns_api import RequestParametersError
 import requests
 import voluptuous as vol
 
@@ -14,13 +12,21 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt as dt_util
+from homeassistant.util.dt import parse_time
+
+from . import NSConfigEntry
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,57 +56,84 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the departure sensor."""
 
-    nsapi = ns_api.NSAPI(config[CONF_API_KEY])
-
-    try:
-        stations = nsapi.get_stations()
-    except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.HTTPError,
-    ) as error:
-        _LOGGER.error("Could not connect to the internet: %s", error)
-        raise PlatformNotReady from error
-    except RequestParametersError as error:
-        _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Nederlandse Spoorwegen",
+            },
+        )
         return
 
-    sensors = []
-    for departure in config.get(CONF_ROUTES, {}):
-        if not valid_stations(
-            stations,
-            [departure.get(CONF_FROM), departure.get(CONF_VIA), departure.get(CONF_TO)],
-        ):
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Nederlandse Spoorwegen",
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: NSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the departure sensor from a config entry."""
+
+    client = config_entry.runtime_data
+
+    for subentry in config_entry.subentries.values():
+        if subentry.subentry_type != "route":
             continue
-        sensors.append(
-            NSDepartureSensor(
-                nsapi,
-                departure.get(CONF_NAME),
-                departure.get(CONF_FROM),
-                departure.get(CONF_TO),
-                departure.get(CONF_VIA),
-                departure.get(CONF_TIME),
-            )
+
+        async_add_entities(
+            [
+                NSDepartureSensor(
+                    client,
+                    subentry.data[CONF_NAME],
+                    subentry.data[CONF_FROM],
+                    subentry.data[CONF_TO],
+                    subentry.data.get(CONF_VIA),
+                    parse_time(subentry.data[CONF_TIME])
+                    if CONF_TIME in subentry.data
+                    else None,
+                )
+            ],
+            config_subentry_id=subentry.subentry_id,
+            update_before_add=True,
         )
-    add_entities(sensors, True)
-
-
-def valid_stations(stations, given_stations):
-    """Verify the existence of the given station codes."""
-    for station in given_stations:
-        if station is None:
-            continue
-        if not any(s.code == station.upper() for s in stations):
-            _LOGGER.warning("Station '%s' is not a valid station", station)
-            return False
-    return True
 
 
 class NSDepartureSensor(SensorEntity):
