@@ -63,6 +63,7 @@ from .utils import (
     get_virtual_component_ids,
     get_virtual_component_unit,
     is_rpc_wifi_stations_disabled,
+    is_view_for_platform,
 )
 
 PARALLEL_UPDATES = 0
@@ -1385,10 +1386,16 @@ RPC_SENSORS: Final = {
     "text": RpcSensorDescription(
         key="text",
         sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, SENSOR_PLATFORM
+        ),
     ),
     "number": RpcSensorDescription(
         key="number",
         sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, SENSOR_PLATFORM
+        ),
         unit=get_virtual_component_unit,
         device_class_fn=lambda config: ROLE_TO_DEVICE_CLASS_MAP.get(config["role"])
         if "role" in config
@@ -1397,6 +1404,9 @@ RPC_SENSORS: Final = {
     "enum": RpcSensorDescription(
         key="enum",
         sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, SENSOR_PLATFORM
+        ),
         options_fn=lambda config: config["options"],
         device_class=SensorDeviceClass.ENUM,
     ),

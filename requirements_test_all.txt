@@ -235,7 +235,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==40.1.0
+aioesphomeapi==41.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -256,7 +256,7 @@ aiohasupervisor==0.3.2
 aiohomeconnect==0.19.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.15
+aiohomekit==3.2.17
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -560,7 +560,6 @@ beautifulsoup4==4.13.3
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.17.3
 
-# homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
 bleak-esphome==3.3.0
 
@@ -589,7 +588,7 @@ bluemaestro-ble==0.4.1
 bluetooth-adapters==2.1.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.5.2
+bluetooth-auto-recovery==1.5.3
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -787,7 +786,7 @@ epion==0.0.3
 epson-projector==0.5.1
 
 # homeassistant.components.eq3btsmart
-eq3btsmart==2.1.0
+eq3btsmart==2.2.0
 
 # homeassistant.components.esphome
 esphome-dashboard-api==1.3.0
@@ -953,7 +952,7 @@ gotailwind==0.3.0
 govee-ble==0.44.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==2.1.0
+govee-local-api==2.2.0
 
 # homeassistant.components.gpsd
 gps3==0.33.3
@@ -1027,7 +1026,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.79
+holidays==0.80
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250903.5
@@ -1078,7 +1077,7 @@ ifaddr==0.2.0
 igloohome-api==0.1.1
 
 # homeassistant.components.imeon_inverter
-imeon_inverter_api==0.3.16
+imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
 imgw_pib==1.5.4
@@ -1314,7 +1313,7 @@ nextdns==4.1.0
 nhc==0.4.12
 
 # homeassistant.components.nibe_heatpump
-nibe==2.17.0
+nibe==2.18.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.1
@@ -1324,6 +1323,9 @@ notifications-android-tv==0.1.5
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
+
+# homeassistant.components.nederlandse_spoorwegen
+nsapi==3.1.2
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.1.0
@@ -1706,7 +1708,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==1.0.0
+pyicloud==2.0.3
 
 # homeassistant.components.insteon
 pyinsteon==1.6.3
