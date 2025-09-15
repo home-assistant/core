@@ -464,6 +464,11 @@ ZEROCONF = {
             "domain": "daikin",
         },
     ],
+    "_droplet._tcp.local.": [
+        {
+            "domain": "droplet",
+        },
+    ],
     "_dvl-deviceapi._tcp.local.": [
         {
             "domain": "devolo_home_control",
@@ -534,6 +539,11 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_heos-audio._tcp.local.": [
+        {
+            "domain": "heos",
+        },
+    ],
     "_homeconnect._tcp.local.": [
         {
             "domain": "home_connect",
@@ -562,6 +572,10 @@ ZEROCONF = {
         {
             "domain": "bosch_shc",
             "name": "bosch shc*",
+        },
+        {
+            "domain": "bsblan",
+            "name": "bsb-lan*",
         },
         {
             "domain": "eheimdigital",
@@ -881,6 +895,10 @@ ZEROCONF = {
         },
     ],
     "_ssh._tcp.local.": [
+        {
+            "domain": "homee",
+            "name": "homee-*",
+        },
         {
             "domain": "smappee",
             "name": "smappee1*",

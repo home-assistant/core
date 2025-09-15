@@ -1138,6 +1138,7 @@ async def test_rpc_remove_text_virtual_sensor_when_orphaned(
     ("name", "entity_id", "original_unit", "expected_unit"),
     [
         ("Virtual number sensor", "sensor.test_name_virtual_number_sensor", "W", "W"),
+        ("Unit map", "sensor.test_name_unit_map", "m3/min", "m³/min"),
         (None, "sensor.test_name_number_203", "", None),
     ],
 )
@@ -1629,3 +1630,44 @@ async def test_block_friendly_name_sleeping_sensor(
 
     assert (state := hass.states.get(entity.entity_id))
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Test name Temperature"
+
+
+async def test_rpc_presence_component(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test RPC sensor entity for presence component."""
+    config = deepcopy(mock_rpc_device.config)
+    config["presence"] = {"enable": True}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["presence"] = {"num_objects": 2}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    mock_config_entry = await init_integration(hass, 4)
+
+    entity_id = f"{SENSOR_DOMAIN}.test_name_detected_objects"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2"
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-presence-presence_num_objects"
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "presence", "num_objects", 0)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "0"
+
+    config = deepcopy(mock_rpc_device.config)
+    config["presence"] = {"enable": False}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE

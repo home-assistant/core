@@ -69,10 +69,12 @@ class NoboGlobalSelector(SelectEntity):
         self._override_type = override_type
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, hub.hub_serial)},
+            serial_number=hub.hub_serial,
             name=hub.hub_info[ATTR_NAME],
             manufacturer=NOBO_MANUFACTURER,
-            model=f"Nobø Ecohub ({hub.hub_info[ATTR_HARDWARE_VERSION]})",
+            model="Nobø Ecohub",
             sw_version=hub.hub_info[ATTR_SOFTWARE_VERSION],
+            hw_version=hub.hub_info[ATTR_HARDWARE_VERSION],
         )
 
     async def async_added_to_hass(self) -> None:

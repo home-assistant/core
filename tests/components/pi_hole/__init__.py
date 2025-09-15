@@ -185,7 +185,6 @@ CONFIG_ENTRY_WITH_API_KEY = {
     CONF_API_KEY: API_KEY,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
-    CONF_API_VERSION: API_VERSION,
 }
 
 CONFIG_ENTRY_WITHOUT_API_KEY = {
@@ -194,7 +193,6 @@ CONFIG_ENTRY_WITHOUT_API_KEY = {
     CONF_NAME: NAME,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
-    CONF_API_VERSION: API_VERSION,
 }
 SWITCH_ENTITY_ID = "switch.pi_hole"
 
@@ -223,12 +221,16 @@ def _create_mocked_hole(
             if wrong_host:
                 raise HoleConnectionError("Cannot authenticate with Pi-hole: err")
             password = getattr(mocked_hole, "password", None)
+
             if (
                 raise_exception
                 or incorrect_app_password
+                or api_version == 5
                 or (api_version == 6 and password not in ["newkey", "apikey"])
             ):
-                if api_version == 6:
+                if api_version == 6 and (
+                    incorrect_app_password or password not in ["newkey", "apikey"]
+                ):
                     raise HoleError("Authentication failed: Invalid password")
                 raise HoleConnectionError
 

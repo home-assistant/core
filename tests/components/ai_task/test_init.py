@@ -1,16 +1,19 @@
 """Test initialization of the AI Task component."""
 
+from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.ai_task import AITaskPreferences
-from homeassistant.components.ai_task.const import DATA_PREFERENCES
+from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE, DATA_PREFERENCES
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
@@ -89,6 +92,7 @@ async def test_generate_data_service(
         return_value=media_source.PlayMedia(
             url="http://example.com/media.mp4",
             mime_type="video/mp4",
+            path=Path("media.mp4"),
         ),
     ):
         result = await hass.services.async_call(
@@ -115,12 +119,9 @@ async def test_generate_data_service(
     for msg_attachment, attachment in zip(
         msg_attachments, task.attachments or [], strict=False
     ):
-        assert attachment.url == "http://example.com/media.mp4"
         assert attachment.mime_type == "video/mp4"
         assert attachment.media_content_id == msg_attachment["media_content_id"]
-        assert (
-            str(attachment) == f"<PlayMediaWithId {msg_attachment['media_content_id']}>"
-        )
+        assert attachment.path == Path("media.mp4")
 
 
 async def test_generate_data_service_structure_fields(
@@ -274,6 +275,85 @@ async def test_generate_data_service_invalid_structure(
                 "instructions": "Please generate a profile for a new user",
                 "entity_id": TEST_ENTITY_ID,
                 "structure": structure,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("set_preferences", "msg_extra"),
+    [
+        ({}, {"entity_id": TEST_ENTITY_ID}),
+        ({"gen_image_entity_id": TEST_ENTITY_ID}, {}),
+        (
+            {"gen_image_entity_id": "ai_task.other_entity"},
+            {"entity_id": TEST_ENTITY_ID},
+        ),
+    ],
+)
+@freeze_time("2025-06-14 22:59:00")
+async def test_generate_image_service(
+    hass: HomeAssistant,
+    init_components: None,
+    set_preferences: dict[str, str | None],
+    msg_extra: dict[str, str],
+    mock_ai_task_entity: MockAITaskEntity,
+) -> None:
+    """Test the generate image service."""
+    preferences = hass.data[DATA_PREFERENCES]
+    preferences.async_set_preferences(**set_preferences)
+
+    with patch.object(
+        hass.data[DATA_MEDIA_SOURCE],
+        "async_upload_media",
+        return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
+    ) as mock_upload_media:
+        result = await hass.services.async_call(
+            "ai_task",
+            "generate_image",
+            {
+                "task_name": "Test Image",
+                "instructions": "Generate a test image",
+            }
+            | msg_extra,
+            blocking=True,
+            return_response=True,
+        )
+
+    mock_upload_media.assert_called_once()
+    assert "image_data" not in result
+    assert (
+        result["media_source_id"]
+        == "media-source://ai_task/image/2025-06-14_225900_test_task.png"
+    )
+    assert result["url"].startswith(
+        "/ai_task/image/2025-06-14_225900_test_task.png?authSig="
+    )
+    assert result["mime_type"] == "image/png"
+    assert result["model"] == "mock_model"
+    assert result["revised_prompt"] == "mock_revised_prompt"
+
+    assert len(mock_ai_task_entity.mock_generate_image_tasks) == 1
+    task = mock_ai_task_entity.mock_generate_image_tasks[0]
+    assert task.instructions == "Generate a test image"
+
+
+async def test_generate_image_service_no_entity(
+    hass: HomeAssistant,
+    init_components: None,
+) -> None:
+    """Test the generate image service with no entity specified."""
+    with pytest.raises(
+        HomeAssistantError,
+        match="No entity_id provided and no preferred entity set",
+    ):
+        await hass.services.async_call(
+            "ai_task",
+            "generate_image",
+            {
+                "task_name": "Test Image",
+                "instructions": "Generate a test image",
             },
             blocking=True,
             return_response=True,

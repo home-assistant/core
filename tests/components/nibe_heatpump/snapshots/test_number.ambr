@@ -5,7 +5,7 @@
       'friendly_name': 'F1155 Room sensor setpoint S1',
       'max': 30.0,
       'min': 5.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 0.1,
       'unit_of_measurement': '°C',
     }),
