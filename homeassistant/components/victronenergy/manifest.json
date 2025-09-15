@@ -3,6 +3,7 @@
   "name": "Victron Energy",
   "codeowners": ["@imval"],
   "config_flow": true,
+  "dependencies": ["ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/victronenergy",
   "integration_type": "hub",
   "iot_class": "local_push",
@@ -13,6 +14,5 @@
       "st": "urn:schemas-upnp-org:device:Basic:1",
       "manufacturer": "Victron Energy"
     }
-  ],
-  "zeroconf": []
+  ]
 }

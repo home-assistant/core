@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
+import ipaddress
 import logging
+import re
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.ssdp import SsdpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_BROKER, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, DOMAIN
+from .const import CONF_BROKER, CONF_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,22 +29,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self, host: str) -> None:
-        """Initialize."""
-        self.host = host
-
-    async def authenticate(self, username: str, password: str) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -52,6 +39,25 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # Broker and Port are required, username and password are optional.
     # If the data seems correct, we can proceed to set up the connection.
 
+    # Make sure the hostname is either an IP address or a valid hostname.
+    broker = data[CONF_BROKER]
+
+    # Check if broker is a valid IP address
+    try:
+        ipaddress.ip_address(broker)
+    except ValueError as err:
+        hostname_regex = re.compile(
+            r"^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*\.?$"
+        )
+        if not hostname_regex.match(broker):
+            raise CannotConnect(
+                "Broker is not a valid IP address or hostname."
+            ) from err
+
+    # Check if port is a valid integer
+    if not isinstance(data[CONF_PORT], int) or not (0 < data[CONF_PORT] < 65536):
+        raise CannotConnect("Port must be an integer between 1 and 65535.")
+
     #  TO-DO validate the data can be used to set up a connection.
 
     # If your PyPI package is not built with async, pass your methods
@@ -60,7 +66,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     your_validate_func, data[CONF_USERNAME], data[CONF_PASSWORD]
     # )
 
-    hub = PlaceholderHub(data[CONF_BROKER])
+    # hub = PlaceholderHub(data[CONF_BROKER])
 
     # if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
     #     raise InvalidAuth
@@ -78,7 +84,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Venus OS Hub", "host": data[CONF_BROKER]}
+    # Ensure all returned values are str for mypy compatibility
+    return {"title": "Venus OS Hub", "host": str(data[CONF_BROKER])}
 
 
 class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -103,7 +110,9 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=str(info["title"]), data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -113,6 +122,10 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle SSDP discovery."""
+
+        # Debug
+        _LOGGER.debug("Discovered SSDP info: %s", discovery_info)
+
         host = discovery_info.ssdp_headers.get("_host")
         friendly_name = discovery_info.upnp.get("friendlyName", "Victron Energy GX")
         unique_id = discovery_info.upnp.get("X_VrmPortalId")
@@ -122,28 +135,38 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
             updates={
-                CONF_HOST: host,
+                CONF_BROKER: host,
             }
         )
 
         self.context["title_placeholders"] = {
             "name": friendly_name,
-            "host": host,
+            "host": str(host or ""),
         }
-        self.context["host"] = host
-        return await self.async_step_confirm()
+        return self.async_show_form(
+            step_id="validate",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_BROKER, default=host): str,
+                    vol.Required(CONF_PORT, default=1883): int,
+                    vol.Optional(CONF_USERNAME): str,
+                    vol.Optional(CONF_PASSWORD): str,
+                }
+            ),
+            description_placeholders=self.context["title_placeholders"],
+        )
 
-    async def async_step_confirm(
+    async def async_step_validate(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Allow the user to confirm adding the device."""
+        """Handle submission of the SSDP discovery form."""
         errors: dict[str, str] = {}
-        host = self.context.get("host", "")
+        host = self.context.get("title_placeholders", {}).get("host", "")
         if user_input is not None:
             # Merge discovered host with user input
-            user_input = {**user_input, CONF_HOST: host}
+            user_input = {**user_input, CONF_BROKER: host}
             try:
-                info = await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -152,7 +175,60 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return
+                return self.async_create_entry(
+                    title=host or "Victron Energy", data=user_input
+                )
+
+        return self.async_show_form(
+            step_id="validate",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_BROKER, default=host): str,
+                    vol.Required(CONF_PORT, default=1883): int,
+                    vol.Optional(CONF_USERNAME): str,
+                    vol.Optional(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders=self.context.get("title_placeholders", {}),
+        )
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Allow the user to confirm adding the device."""
+        errors: dict[str, str] = {}
+        host = self.context.get("title_placeholders", {}).get("host", "")
+        if user_input is not None:
+            # Merge discovered host with user input
+            user_input = {**user_input, CONF_BROKER: host}
+            try:
+                await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=host or "Victron Energy", data=user_input
+                )
+
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_BROKER, default=host): str,
+                    vol.Required(CONF_PORT, default=1883): int,
+                    vol.Optional(CONF_USERNAME): str,
+                    vol.Optional(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders=self.context.get("title_placeholders", {}),
+        )
 
 
 class CannotConnect(HomeAssistantError):
