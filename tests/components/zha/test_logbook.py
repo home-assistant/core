@@ -1,9 +1,11 @@
 """ZHA logbook describe events tests."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
 from zha.application.const import ZHA_EVENT
+from zigpy.device import Device
 import zigpy.profiles.zha
 from zigpy.zcl.clusters import general
 
@@ -46,7 +48,11 @@ def sensor_platform_only():
 
 
 @pytest.fixture
-async def mock_devices(hass: HomeAssistant, setup_zha, zigpy_device_mock):
+async def mock_devices(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+):
     """IAS device fixture."""
 
     await setup_zha()

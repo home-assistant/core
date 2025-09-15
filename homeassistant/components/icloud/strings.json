@@ -6,7 +6,7 @@
         "description": "Enter your credentials",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
-          "password": "Main Password (MFA)",
+          "password": "Main password (MFA)",
           "with_family": "With family"
         }
       },
@@ -40,7 +40,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "no_device": "None of your devices have \"Find my iPhone\" activated",
+      "no_device": "None of your devices have \"Find My\" activated",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
