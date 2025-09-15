@@ -123,13 +123,3 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
             self._attr_name = updated_device_data.name
             self._attr_icon = get_icon_from_type(updated_device_data.type)
             self.async_write_ha_state()
-
-    def __eq__(self, other):
-        """Return true if both entities are equal."""
-        return (
-            isinstance(other, FingTrackedDevice) and self.unique_id == other.unique_id
-        )
-
-    def __hash__(self):
-        """Return hash of the entity."""
-        return hash(self.unique_id)
