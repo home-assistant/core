@@ -25,7 +25,7 @@
     'name': 'MyUPS',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': 'XXXXXXXXXXXX',
     'sw_version': '3.14.14 (31 May 2016) unknown',
     'via_device_id': None,
   })
@@ -56,7 +56,7 @@
     'name': 'APC UPS',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': 'XXXX',
     'sw_version': None,
     'via_device_id': None,
   })
