@@ -82,7 +82,7 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
 
         try:
             data["battery_level"] = await self.mower.battery_level()
-            LOGGER.debug("battery_level" + str(data["battery_level"]))
+            LOGGER.debug("battery_level:" + str(data["battery_level"]))
             if data["battery_level"] is None:
                 await self._async_find_device()
                 raise UpdateFailed("Error getting data from device")
@@ -98,6 +98,17 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
             if data["state"] is None:
                 await self._async_find_device()
                 raise UpdateFailed("Error getting data from device")
+
+            stats = await self.mower.command("GetAllStatistics")
+            LOGGER.debug("statistics:" + str(stats))
+            if stats:
+                data["total_running_time"] = stats["totalRunningTime"]
+                data["total_cutting_time"] = stats["totalCuttingTime"]
+                data["total_charging_time"] = stats["totalChargingTime"]
+                data["total_searching_time"] = stats["totalSearchingTime"]
+                data["number_of_collisions"] = stats["numberOfCollisions"]
+                data["number_of_charging_cycles"] = stats["numberOfChargingCycles"]
+                data["cutting_blade_usage_time"] = stats["cuttingBladeUsageTime"]
 
         except BleakError as err:
             LOGGER.error("Error getting data from device")
