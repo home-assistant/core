@@ -150,5 +150,16 @@
         "default": "mdi:ev-station"
       }
     }
+  },
+  "services": {
+    "clean_areas": {
+      "service": "mdi:robot-vacuum"
+    },
+    "get_areas": {
+      "service": "mdi:map"
+    },
+    "select_areas": {
+      "service": "mdi:map"
+    }
   }
 }
