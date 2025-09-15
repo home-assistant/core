@@ -10,7 +10,7 @@
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "url": "The URL to the Lunatone gateway device."
+          "url": "The URL of the Lunatone gateway device."
         }
       },
       "reconfigure": {
