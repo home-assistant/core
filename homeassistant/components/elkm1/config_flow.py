@@ -245,18 +245,22 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(dr.format_mac(device.mac_address))
                     self._abort_if_unique_id_mismatch()  # aborts if user tried to switch devices
                 else:
-                    # If we cannot confirm identity, keep existing behavior (don’t block reconfigure)
+                    # If we cannot confirm identity, keep existing behavior (don't block reconfigure)
                     await self.async_set_unique_id(reconfigure_entry.unique_id)
 
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    data_updates={
+                # Start with a copy of the existing data, then update only the changed fields
+                updated_data = dict(reconfigure_entry.data)
+                updated_data.update(
+                    {
                         CONF_HOST: info[CONF_HOST],
                         CONF_USERNAME: validate_input_data[CONF_USERNAME],
                         CONF_PASSWORD: validate_input_data[CONF_PASSWORD],
                         CONF_PREFIX: info[CONF_PREFIX],
-                        CONF_AUTO_CONFIGURE: True,
-                    },
+                    }
+                )
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates=updated_data,
                 )
 
         # Build defaults for the form from current entry
@@ -274,7 +278,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): str,
                     vol.Optional(
                         CONF_PASSWORD,
-                        default=existing_data.get(CONF_PASSWORD, ""),
+                        default="",
                     ): str,
                     vol.Required(
                         CONF_ADDRESS,
