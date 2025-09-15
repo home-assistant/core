@@ -553,6 +553,57 @@ async def test_rpc_click_event(
     }
 
 
+async def test_rpc_ignore_virtual_click_event(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+    events: list[Event],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC virtual click events are ignored as they are triggered by the integration."""
+    await init_integration(hass, 2)
+
+    # Generate a virtual button event
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "button:200",
+                    "id": 200,
+                    "event": "single_push",
+                    "ts": 1757358109.89,
+                }
+            ],
+            "ts": 757358109.89,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+
+    # Generate valid event
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "data": [],
+                    "event": "single_push",
+                    "id": 0,
+                    "ts": 1668522399.2,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+
 async def test_rpc_update_entry_sleep_period(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

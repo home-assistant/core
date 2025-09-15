@@ -1,5 +1,9 @@
 """Platform for sensor integration."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
 from switchbot_api import Device, SwitchBotAPI
 
 from homeassistant.components.sensor import (
@@ -14,6 +18,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
 )
@@ -32,8 +37,25 @@ SENSOR_TYPE_CO2 = "CO2"
 SENSOR_TYPE_POWER = "power"
 SENSOR_TYPE_VOLTAGE = "voltage"
 SENSOR_TYPE_CURRENT = "electricCurrent"
+SENSOR_TYPE_USED_ELECTRICITY = "usedElectricity"
 SENSOR_TYPE_LIGHTLEVEL = "lightLevel"
 
+
+@dataclass(frozen=True, kw_only=True)
+class SwitchbotCloudSensorEntityDescription(SensorEntityDescription):
+    """Plug Mini Eu UsedElectricity Sensor EntityDescription."""
+
+    value_fn: Callable[[Any], Any] = lambda value: value
+
+
+USED_ELECTRICITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
+    key=SENSOR_TYPE_USED_ELECTRICITY,
+    device_class=SensorDeviceClass.ENERGY,
+    state_class=SensorStateClass.TOTAL_INCREASING,
+    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    suggested_display_precision=2,
+    value_fn=lambda data: (data.get(SENSOR_TYPE_USED_ELECTRICITY) or 0) / 60000,
+)
 
 TEMPERATURE_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
@@ -129,6 +151,12 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_MA,
     ),
+    "Plug Mini (EU)": (
+        POWER_DESCRIPTION,
+        VOLTAGE_DESCRIPTION,
+        CURRENT_DESCRIPTION_IN_MA,
+        USED_ELECTRICITY_DESCRIPTION,
+    ),
     "Hub 2": (
         TEMPERATURE_DESCRIPTION,
         HUMIDITY_DESCRIPTION,
@@ -160,6 +188,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Motion Sensor": (BATTERY_DESCRIPTION,),
     "Contact Sensor": (BATTERY_DESCRIPTION,),
     "Water Detector": (BATTERY_DESCRIPTION,),
+    "Humidifier": (TEMPERATURE_DESCRIPTION,),
 }
 
 
@@ -197,4 +226,15 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-        self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+
+        if isinstance(
+            self.entity_description,
+            SwitchbotCloudSensorEntityDescription,
+        ):
+            self._attr_native_value = self.entity_description.value_fn(
+                self.coordinator.data
+            )
+        else:
+            self._attr_native_value = self.coordinator.data.get(
+                self.entity_description.key
+            )
