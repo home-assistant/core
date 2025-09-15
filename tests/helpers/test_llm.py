@@ -1161,6 +1161,7 @@ async def test_selector_serializer(
             "name": {"type": "string"},
             "percentage": {"type": "number", "minimum": 30, "maximum": 100},
         },
+        "required": ["name"],
     }
     assert selector_serializer(
         selector.ObjectSelector(
@@ -1190,6 +1191,7 @@ async def test_selector_serializer(
                     "maximum": 100,
                 },
             },
+            "required": ["name"],
         },
     }
     assert selector_serializer(
@@ -1214,43 +1216,14 @@ async def test_selector_serializer(
         selector.StateSelector({"entity_id": "sensor.test"})
     ) == {"type": "string"}
     target_schema = selector_serializer(selector.TargetSelector())
-    target_schema["properties"]["entity_id"]["anyOf"][0][
-        "enum"
-    ].sort()  # Order is not deterministic
     assert target_schema == {
         "type": "object",
         "properties": {
-            "area_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["none"]},
-                    {"type": "array", "items": {"type": "string", "nullable": True}},
-                ]
-            },
-            "device_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["none"]},
-                    {"type": "array", "items": {"type": "string", "nullable": True}},
-                ]
-            },
-            "entity_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["all", "none"], "format": "lower"},
-                    {"type": "string", "nullable": True},
-                    {"type": "array", "items": {"type": "string"}},
-                ]
-            },
-            "floor_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["none"]},
-                    {"type": "array", "items": {"type": "string", "nullable": True}},
-                ]
-            },
-            "label_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["none"]},
-                    {"type": "array", "items": {"type": "string", "nullable": True}},
-                ]
-            },
+            "area_id": {"items": {"type": "string"}, "type": "array"},
+            "device_id": {"items": {"type": "string"}, "type": "array"},
+            "entity_id": {"items": {"type": "string"}, "type": "array"},
+            "floor_id": {"items": {"type": "string"}, "type": "array"},
+            "label_id": {"items": {"type": "string"}, "type": "array"},
         },
         "required": [],
     }
@@ -1542,18 +1515,85 @@ This is prompt 2
 """
     )
     assert [(tool.name, tool.description) for tool in instance.tools] == [
-        ("api-1.Tool_1", "Description 1"),
-        ("api-2.Tool_2", "Description 2"),
+        ("api-1__Tool_1", "Description 1"),
+        ("api-2__Tool_2", "Description 2"),
     ]
 
     # The test tool returns back the provided arguments so we can verify
     # the original tool is invoked with the correct tool name and args.
     result = await instance.async_call_tool(
-        llm.ToolInput(tool_name="api-1.Tool_1", tool_args={"arg1": "value1"})
+        llm.ToolInput(tool_name="api-1__Tool_1", tool_args={"arg1": "value1"})
     )
     assert result == {"result": {"Tool_1": {"arg1": "value1"}}}
 
     result = await instance.async_call_tool(
-        llm.ToolInput(tool_name="api-2.Tool_2", tool_args={"arg2": "value2"})
+        llm.ToolInput(tool_name="api-2__Tool_2", tool_args={"arg2": "value2"})
     )
     assert result == {"result": {"Tool_2": {"arg2": "value2"}}}
+
+
+async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) -> None:
+    """Test that _get_exposed_entities converts timestamp states to local time."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    # Set the timezone to something other than UTC to ensure conversion is tested
+    await hass.config.async_set_time_zone("America/New_York")
+
+    # Set up a timestamp sensor with UTC time
+    utc_timestamp = "2024-01-15T10:30:00+00:00"
+    hass.states.async_set(
+        "sensor.test_timestamp",
+        utc_timestamp,
+        {"device_class": "timestamp", "friendly_name": "Test Timestamp"},
+    )
+
+    # Also test with a non-timestamp sensor to ensure it's not affected
+    hass.states.async_set(
+        "sensor.regular_sensor",
+        "2024-01-15T10:30:00+00:00",
+        {"friendly_name": "Regular Sensor"},  # No device_class
+    )
+
+    # And test with invalid/empty timestamp
+    hass.states.async_set(
+        "sensor.invalid_timestamp",
+        "not-a-timestamp",
+        {"device_class": "timestamp", "friendly_name": "Invalid Timestamp"},
+    )
+
+    hass.states.async_set(
+        "sensor.empty_timestamp",
+        "",
+        {"device_class": "timestamp", "friendly_name": "Empty Timestamp"},
+    )
+
+    # Expose the entities
+    async_expose_entity(hass, "conversation", "sensor.test_timestamp", True)
+    async_expose_entity(hass, "conversation", "sensor.regular_sensor", True)
+    async_expose_entity(hass, "conversation", "sensor.invalid_timestamp", True)
+    async_expose_entity(hass, "conversation", "sensor.empty_timestamp", True)
+
+    # Call _get_exposed_entities
+    exposed = llm._get_exposed_entities(hass, "conversation", include_state=True)
+
+    # Check the converted timestamp
+    sensor_info = exposed["entities"]["sensor.test_timestamp"]
+
+    assert sensor_info["state"] == "2024-01-15T05:30:00-05:00"
+    # Regular sensor without device_class should keep original value
+    regular_info = exposed["entities"]["sensor.regular_sensor"]
+    assert regular_info["state"] == "2024-01-15T10:30:00+00:00"  # Unchanged
+
+    # Invalid timestamp should remain as-is
+    invalid_info = exposed["entities"]["sensor.invalid_timestamp"]
+    assert invalid_info["state"] == "not-a-timestamp"
+
+    # Empty timestamp should remain empty
+    empty_info = exposed["entities"]["sensor.empty_timestamp"]
+    assert empty_info["state"] == ""
+
+    # Test with include_state=False to ensure no conversion happens
+    exposed_no_state = llm._get_exposed_entities(
+        hass, "conversation", include_state=False
+    )
+    assert "state" not in exposed_no_state["entities"]["sensor.test_timestamp"]

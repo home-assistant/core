@@ -142,7 +142,7 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     progress_task: asyncio.Task[Any] | None
     reason: str
     required: bool
-    result: Any
+    sort: bool
     step_id: str
     title: str
     translation_domain: str
@@ -677,9 +677,10 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 and key in suggested_values
             ):
                 new_section_key = copy.copy(key)
-                schema[new_section_key] = val
-                val.schema = self.add_suggested_values_to_schema(
-                    val.schema, suggested_values[key]
+                new_val = copy.copy(val)
+                schema[new_section_key] = new_val
+                new_val.schema = self.add_suggested_values_to_schema(
+                    new_val.schema, suggested_values[key]
                 )
                 continue
 
@@ -706,10 +707,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> _FlowResultT:
-        """Return the definition of a form to gather user input.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Return the definition of a form to gather user input."""
         flow_result = self._flow_result(
             type=FlowResultType.FORM,
             flow_id=self.flow_id,
@@ -771,10 +769,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         url: str,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> _FlowResultT:
-        """Return the definition of an external step for the user to take.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Return the definition of an external step for the user to take."""
         flow_result = self._flow_result(
             type=FlowResultType.EXTERNAL_STEP,
             flow_id=self.flow_id,
@@ -805,10 +800,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         description_placeholders: Mapping[str, str] | None = None,
         progress_task: asyncio.Task[Any] | None = None,
     ) -> _FlowResultT:
-        """Show a progress message to the user, without user input allowed.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Show a progress message to the user, without user input allowed."""
         if progress_task is None and not self.__no_progress_task_reported:
             self.__no_progress_task_reported = True
             cls = self.__class__
@@ -863,12 +855,12 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         *,
         step_id: str | None = None,
         menu_options: Container[str],
+        sort: bool = False,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> _FlowResultT:
         """Show a navigation menu to the user.
 
         Options dict maps step_id => i18n label
-        The step_id parameter is deprecated and will be removed in a future release.
         """
         flow_result = self._flow_result(
             type=FlowResultType.MENU,
@@ -878,6 +870,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
+        if sort:
+            flow_result["sort"] = sort
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
