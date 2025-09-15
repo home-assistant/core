@@ -243,6 +243,7 @@ def _async_handle_state_change(
 
     entry = hass.config_entries.async_get_entry(entry_id)
     if not entry or not hasattr(entry, "runtime_data"):
+        # Entry is being unloaded or not yet fully initialized
         return
 
     runtime_data = entry.runtime_data
