@@ -17,6 +17,7 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
         DOMAIN,
         "AI Generated Images",
         {IMAGE_DIR: media_dir},
+        False,
         f"/{DOMAIN}",
     )
     return source

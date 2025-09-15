@@ -432,6 +432,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         await hac.async_set_time_zone(config[CONF_TIME_ZONE])
 
     if CONF_MEDIA_DIRS not in config:
+        hac.media_dirs_set_default = True
         if is_docker_env():
             hac.media_dirs = {"local": "/media"}
         else:
@@ -594,6 +595,7 @@ class Config:
         self.allowlist_external_urls: set[str] = set()
 
         # Dictionary of Media folders that integrations may use
+        self.media_dirs_set_default = False
         self.media_dirs: dict[str, str] = {}
 
         # If Home Assistant is running in recovery mode
