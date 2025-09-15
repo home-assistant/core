@@ -549,6 +549,15 @@
           "time_of_use": "Time of use",
           "manual": "Manual mode"
         }
+      },
+      "alarm_state": {
+        "name": "Alarm state",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "alarm_light": "Light",
+          "alarm_sound": "Sound",
+          "alarm_sound_light": "Sound & light"
+        }
       }
     },
     "sensor": {
