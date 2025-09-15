@@ -260,11 +260,6 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                     reason="reconfigure_successful",
                 )
 
-        # Build defaults for the form from current entry
-        current_host = hostname_from_url(existing_data[CONF_HOST])
-        current_proto = _get_protocol_from_url(existing_data[CONF_HOST])
-        current_address = current_host
-
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=vol.Schema(
@@ -279,11 +274,11 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): str,
                     vol.Required(
                         CONF_ADDRESS,
-                        default=current_address,
+                        default=hostname_from_url(existing_data[CONF_HOST]),
                     ): str,
                     vol.Required(
                         CONF_PROTOCOL,
-                        default=current_proto,
+                        default=_get_protocol_from_url(existing_data[CONF_HOST]),
                     ): vol.In(ALL_PROTOCOLS),
                 }
             ),
