@@ -166,6 +166,38 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[TadoData]):
         except TadoConnectionError as err:
             raise UpdateFailed(f"Error updating Tado zones: {err}") from err
 
+    async def _update_zone(self, zone_id: int) -> dict[str, str]:
+        """Update the internal data of a zone."""
+
+        _LOGGER.debug("Updating zone %s", zone_id)
+        try:
+            data = await self._tado.get_zone_state(zone_id)
+        except TadoError as err:
+            _LOGGER.error("Error updating Tado zone %s: %s", zone_id, err)
+            raise UpdateFailed(f"Error updating Tado zone {zone_id}: {err}") from err
+
+        _LOGGER.debug("Zone %s updated, with data: %s", zone_id, data)
+        return data
+
+    async def _async_update_home(self) -> dict[str, dict]:
+        """Update the home data from Tado."""
+        # TODO: this should be removed
+
+        try:
+            weather = await self.hass.async_add_executor_job(self._tado.get_weather)
+            geofence = await self.hass.async_add_executor_job(self._tado.get_home_state)
+        except TadoError as err:
+            _LOGGER.error("Error updating Tado home: %s", err)
+            raise UpdateFailed(f"Error updating Tado home: {err}") from err
+
+        _LOGGER.debug(
+            "Home data updated, with weather and geofence data: %s, %s",
+            weather,
+            geofence,
+        )
+
+        return {"weather": weather, "geofence": geofence}
+
     async def get_capabilities(self, zone_id: int) -> Capabilities:
         """Fetch the capabilities from Tado."""
 

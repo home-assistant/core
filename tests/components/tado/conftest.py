@@ -73,6 +73,8 @@ async def mock_tado_api(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
         client.get_mobile_devices.return_value = ORJSONDecoder(
             list[MobileDevice]
         ).decode(await async_load_fixture(hass, "mobile_devices.json", DOMAIN))
+
+        client.refresh_token = "new_refresh_token"
         yield client
 
 

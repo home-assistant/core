@@ -1,8 +1,10 @@
 """The climate tests for the tado platform."""
 
 from collections.abc import AsyncGenerator
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tadoasync.models import ZoneState
@@ -14,14 +16,13 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.tado import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .util import async_init_integration
+from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -31,31 +32,51 @@ def setup_platforms() -> AsyncGenerator[None]:
         yield
 
 
+async def trigger_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Trigger an update of the Tado integration.
+
+    Since the binary sensor platform doesn't infer a state immediately without extra requests,
+    so adding this here to remove in a follow-up PR.
+    """
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_tado_api")
 async def test_entities(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test creation of climate entities."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
+    await trigger_update(hass, freezer)
 
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_tado_api")
 async def test_heater_set_temperature(
-    hass: HomeAssistant, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the set temperature of the heater."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
+    await trigger_update(hass, freezer)
 
     with (
         patch(
-            "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_overlay"
+            "homeassistant.components.tado.coordinator.TadoDataUpdateCoordinator.set_zone_overlay"
         ) as mock_set_state,
         patch(
-            "homeassistant.components.tado.PyTado.interface.api.Tado.get_zone_state",
+            "homeassistant.components.tado.coordinator.Tado.get_zone_state",
             return_value={"setting": {"temperature": {"celsius": 22.0}}},
         ),
     ):
@@ -85,17 +106,22 @@ async def test_aircon_set_hvac_mode(
     snapshot: SnapshotAssertion,
     hvac_mode: HVACMode,
     set_hvac_mode: str,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the set hvac mode of the air conditioning."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
+    await trigger_update(hass, freezer)
+
+    # TODO: @ERWIN: continue here
 
     with (
         patch(
-            "homeassistant.components.tado.__init__.PyTado.interface.api.Tado.set_zone_overlay"
+            "homeassistant.components.tado.coordinator.TadoDataUpdateCoordinator.set_zone_overlay"
         ) as mock_set_state,
         patch(
-            "homeassistant.components.tado.__init__.PyTado.interface.api.Tado.get_zone_state",
+            "homeassistant.components.tado.coordinator.Tado.get_zone_state",
             return_value=ZoneState(
                 zone_id=1,
                 current_temp=18.7,
