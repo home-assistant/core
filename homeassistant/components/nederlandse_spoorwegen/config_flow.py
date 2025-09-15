@@ -100,10 +100,8 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             for key in (CONF_FROM, CONF_TO, CONF_VIA):
                 if key in route:
                     route[key] = route[key].upper()
-
-            for key in (CONF_FROM, CONF_TO, CONF_VIA):
-                if key in route and route[key] not in station_codes:
-                    return self.async_abort(reason="invalid_station")
+                    if route[key] not in station_codes:
+                        return self.async_abort(reason="invalid_station")
 
             subentries.append(
                 ConfigSubentryData(
