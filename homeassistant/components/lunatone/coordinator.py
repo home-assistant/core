@@ -35,10 +35,7 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
     config_entry: LunatoneConfigEntry
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: LunatoneConfigEntry,
-        info: Info,
+        self, hass: HomeAssistant, config_entry: LunatoneConfigEntry, info: Info
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -70,10 +67,7 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[DevicesData]):
     config_entry: LunatoneConfigEntry
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: LunatoneConfigEntry,
-        devices: Devices,
+        self, hass: HomeAssistant, config_entry: LunatoneConfigEntry, devices: Devices
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
