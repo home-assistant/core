@@ -11,7 +11,7 @@ from .const import DOMAIN
 from .coordinator import BackupDataUpdateCoordinator
 
 
-class BackupManagerEntity(CoordinatorEntity[BackupDataUpdateCoordinator]):
+class BackupManagerBaseEntity(CoordinatorEntity[BackupDataUpdateCoordinator]):
     """Base entity for backup manager."""
 
     _attr_has_entity_name = True
@@ -19,12 +19,9 @@ class BackupManagerEntity(CoordinatorEntity[BackupDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: BackupDataUpdateCoordinator,
-        entity_description: EntityDescription,
     ) -> None:
         """Initialize base entity."""
         super().__init__(coordinator)
-        self.entity_description = entity_description
-        self._attr_unique_id = entity_description.key
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, "backup_manager")},
             manufacturer="Home Assistant",
@@ -34,3 +31,17 @@ class BackupManagerEntity(CoordinatorEntity[BackupDataUpdateCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
             configuration_url="homeassistant://config/backup",
         )
+
+
+class BackupManagerEntity(BackupManagerBaseEntity):
+    """Entity for backup manager."""
+
+    def __init__(
+        self,
+        coordinator: BackupDataUpdateCoordinator,
+        entity_description: EntityDescription,
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = entity_description.key

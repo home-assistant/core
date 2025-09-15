@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import BLU_TRV_IDENTIFIER, BLU_TRV_MODEL_NAME, RPC_GENERATIONS
+from aioshelly.const import BLU_TRV_IDENTIFIER, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.climate import (
@@ -22,11 +22,6 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.device_registry import (
-    CONNECTION_BLUETOOTH,
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
@@ -43,9 +38,11 @@ from .const import (
     SHTRV_01_TEMPERATURE_SETTINGS,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .entity import ShellyRpcEntity, rpc_call
+from .entity import ShellyRpcEntity, get_entity_block_device_info, rpc_call
 from .utils import (
     async_remove_shelly_entity,
+    get_block_entity_name,
+    get_blu_trv_device_info,
     get_device_entry_gen,
     get_rpc_key_ids,
     is_rpc_thermostat_internal_actuator,
@@ -181,6 +178,7 @@ class BlockSleepingClimate(
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -199,7 +197,6 @@ class BlockSleepingClimate(
         self.last_state_attributes: Mapping[str, Any]
         self._preset_modes: list[str] = []
         self._last_target_temp = SHTRV_01_TEMPERATURE_SETTINGS["default"]
-        self._attr_name = coordinator.name
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.coordinator.mac}-{self.block.description}"
@@ -212,8 +209,9 @@ class BlockSleepingClimate(
             ]
         elif entry is not None:
             self._unique_id = entry.unique_id
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},
+        self._attr_device_info = get_entity_block_device_info(coordinator, sensor_block)
+        self._attr_name = get_block_entity_name(
+            self.coordinator.device, sensor_block, None
         )
 
         self._channel = cast(int, self._unique_id.split("_")[1])
@@ -553,29 +551,19 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_target_temperature_step = BLU_TRV_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_has_entity_name = True
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
 
         super().__init__(coordinator, f"{BLU_TRV_IDENTIFIER}:{id_}")
         self._id = id_
-        self._config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
+        self._config = coordinator.device.config[self.key]
         ble_addr: str = self._config["addr"]
         self._attr_unique_id = f"{ble_addr}-{self.key}"
-        name = self._config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}"
-        model_id = self._config.get("local_name")
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, ble_addr)},
-            identifiers={(DOMAIN, ble_addr)},
-            via_device=(DOMAIN, self.coordinator.mac),
-            manufacturer="Shelly",
-            model=BLU_TRV_MODEL_NAME.get(model_id),
-            model_id=model_id,
-            name=name,
+        fw_ver = coordinator.device.status[self.key].get("fw_ver")
+        self._attr_device_info = get_blu_trv_device_info(
+            self._config, ble_addr, self.coordinator.mac, fw_ver
         )
-        # Added intentionally to the constructor to avoid double name from base class
-        self._attr_name = None
 
     @property
     def target_temperature(self) -> float | None:

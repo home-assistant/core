@@ -24,6 +24,7 @@ from .const import (
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
+    DOMAIN,
     ENCRYPTED_MODELS,
     HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL,
     SupportedModels,
@@ -78,6 +79,25 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.K10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_PRO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_PRO_COMBO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.HUB3.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
+    SupportedModels.LOCK_LITE.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.LOCK_ULTRA.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.AIR_PURIFIER.value: [Platform.FAN, Platform.SENSOR],
+    SupportedModels.AIR_PURIFIER_TABLE.value: [Platform.FAN, Platform.SENSOR],
+    SupportedModels.EVAPORATIVE_HUMIDIFIER: [Platform.HUMIDIFIER, Platform.SENSOR],
+    SupportedModels.FLOOR_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.STRIP_LIGHT_3.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.RGBICWW_FLOOR_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.RGBICWW_STRIP_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.PLUG_MINI_EU.value: [Platform.SWITCH, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -99,6 +119,16 @@ CLASS_BY_DEVICE = {
     SupportedModels.K10_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_PRO_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_PRO_COMBO_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.LOCK_LITE.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_ULTRA.value: switchbot.SwitchbotLock,
+    SupportedModels.AIR_PURIFIER.value: switchbot.SwitchbotAirPurifier,
+    SupportedModels.AIR_PURIFIER_TABLE.value: switchbot.SwitchbotAirPurifier,
+    SupportedModels.EVAPORATIVE_HUMIDIFIER: switchbot.SwitchbotEvaporativeHumidifier,
+    SupportedModels.FLOOR_LAMP.value: switchbot.SwitchbotStripLight3,
+    SupportedModels.STRIP_LIGHT_3.value: switchbot.SwitchbotStripLight3,
+    SupportedModels.RGBICWW_FLOOR_LAMP.value: switchbot.SwitchbotRgbicLight,
+    SupportedModels.RGBICWW_STRIP_LIGHT.value: switchbot.SwitchbotRgbicLight,
+    SupportedModels.PLUG_MINI_EU.value: switchbot.SwitchbotRelaySwitch,
 }
 
 
@@ -138,7 +168,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
     )
     if not ble_device:
         raise ConfigEntryNotReady(
-            f"Could not find Switchbot {sensor_type} with address {address}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found_error",
+            translation_placeholders={"sensor_type": sensor_type, "address": address},
         )
 
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
@@ -153,7 +185,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
             )
         except ValueError as error:
             raise ConfigEntryNotReady(
-                "Invalid encryption configuration provided"
+                translation_domain=DOMAIN,
+                translation_key="value_error",
+                translation_placeholders={"error": str(error)},
             ) from error
     else:
         device = cls(
@@ -174,7 +208,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
-        raise ConfigEntryNotReady(f"{address} is not advertising state")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="advertising_state_error",
+            translation_placeholders={"address": address},
+        )
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(

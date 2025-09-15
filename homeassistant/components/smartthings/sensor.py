@@ -26,6 +26,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfMass,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
 )
@@ -149,7 +150,8 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     component_fn: Callable[[str], bool] | None = None
     exists_fn: Callable[[Status], bool] | None = None
     use_temperature_unit: bool = False
-    deprecated: Callable[[ComponentStatus], str | None] | None = None
+    deprecated: Callable[[ComponentStatus], tuple[str, str] | None] | None = None
+    component_translation_key: dict[str, str] | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -200,6 +202,15 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.ATMOSPHERIC_PRESSURE_MEASUREMENT: {
+        Attribute.ATMOSPHERIC_PRESSURE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ATMOSPHERIC_PRESSURE,
+                device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
     Capability.AUDIO_VOLUME: {
         Attribute.VOLUME: [
             SmartThingsSensorEntityDescription(
@@ -207,7 +218,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="audio_volume",
                 native_unit_of_measurement=PERCENTAGE,
                 deprecated=(
-                    lambda status: "media_player"
+                    lambda status: ("2025.10.0", "media_player")
                     if Capability.AUDIO_MUTE in status
                     else None
                 ),
@@ -311,6 +322,16 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="cooktop_operating_state",
                 device_class=SensorDeviceClass.ENUM,
                 options_attribute=Attribute.SUPPORTED_COOKTOP_OPERATING_STATE,
+            )
+        ]
+    },
+    Capability.CUSTOM_WATER_FILTER: {
+        Attribute.WATER_FILTER_USAGE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WATER_FILTER_USAGE,
+                translation_key="water_filter_usage",
+                native_unit_of_measurement=PERCENTAGE,
+                state_class=SensorStateClass.MEASUREMENT,
             )
         ]
     },
@@ -423,6 +444,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.SAMSUNG_CE_EHS_DIVERTER_VALVE: {
+        Attribute.POSITION: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.POSITION,
+                translation_key="diverter_valve_position",
+                device_class=SensorDeviceClass.ENUM,
+                options=["room", "tank"],
+            )
+        ]
+    },
     Capability.ENERGY_METER: {
         Attribute.ENERGY: [
             SmartThingsSensorEntityDescription(
@@ -442,6 +473,16 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO2,
                 state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.FINE_DUST_SENSOR: {
+        Attribute.FINE_DUST_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.FINE_DUST_LEVEL,
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                state_class=SensorStateClass.MEASUREMENT,
+                device_class=SensorDeviceClass.PM25,
             )
         ]
     },
@@ -519,7 +560,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENUM,
                 options_attribute=Attribute.SUPPORTED_INPUT_SOURCES,
                 value_fn=lambda value: value.lower() if value else None,
-                deprecated=lambda _: "media_player",
+                deprecated=lambda _: ("2025.10.0", "media_player"),
             )
         ]
     },
@@ -528,7 +569,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.PLAYBACK_REPEAT_MODE,
                 translation_key="media_playback_repeat",
-                deprecated=lambda _: "media_player",
+                deprecated=lambda _: ("2025.10.0", "media_player"),
             )
         ]
     },
@@ -537,7 +578,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.PLAYBACK_SHUFFLE,
                 translation_key="media_playback_shuffle",
-                deprecated=lambda _: "media_player",
+                deprecated=lambda _: ("2025.10.0", "media_player"),
             )
         ]
     },
@@ -556,7 +597,7 @@ CAPABILITY_TO_SENSORS: dict[
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: MEDIA_PLAYBACK_STATE_MAP.get(value, value),
-                deprecated=lambda _: "media_player",
+                deprecated=lambda _: ("2025.10.0", "media_player"),
             )
         ]
     },
@@ -633,7 +674,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.TEMPERATURE,
                 use_temperature_unit=True,
                 # Set the value to None if it is 0 F (-17 C)
-                value_fn=lambda value: None if value in {0, -17} else value,
+                value_fn=lambda value: None if value in {-17, 0, 1} else value,
             )
         ]
     },
@@ -837,6 +878,16 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.TEMPERATURE,
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
+                deprecated=(
+                    lambda status: ("2025.12.0", "dhw")
+                    if Capability.CUSTOM_OUTING_MODE in status
+                    else None
+                ),
+                component_fn=lambda component: component in {"freezer", "cooler"},
+                component_translation_key={
+                    "freezer": "freezer_temperature",
+                    "cooler": "cooler_temperature",
+                },
             )
         ]
     },
@@ -854,6 +905,11 @@ CAPABILITY_TO_SENSORS: dict[
                     },
                     THERMOSTAT_CAPABILITIES,
                 ],
+                deprecated=(
+                    lambda status: ("2025.12.0", "dhw")
+                    if Capability.CUSTOM_OUTING_MODE in status
+                    else None
+                ),
             )
         ]
     },
@@ -1061,6 +1117,7 @@ UNITS = {
     "lux": LIGHT_LUX,
     "mG": None,
     "μg/m^3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "kPa": UnitOfPressure.KPA,
 }
 
 
@@ -1109,18 +1166,20 @@ async def async_setup_entry(
                                 if (
                                     description.deprecated
                                     and (
-                                        reason := description.deprecated(
+                                        deprecation_info := description.deprecated(
                                             device.status[MAIN]
                                         )
                                     )
                                     is not None
                                 ):
+                                    version, reason = deprecation_info
                                     if deprecate_entity(
                                         hass,
                                         entity_registry,
                                         SENSOR_DOMAIN,
                                         f"{device.device.device_id}_{MAIN}_{capability}_{attribute}_{description.key}",
                                         f"deprecated_{reason}",
+                                        version,
                                     ):
                                         entities.append(
                                             SmartThingsSensor(
@@ -1173,6 +1232,10 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         if self.entity_description.translation_placeholders_fn:
             self._attr_translation_placeholders = (
                 self.entity_description.translation_placeholders_fn(component)
+            )
+        if self.entity_description.component_translation_key and component != MAIN:
+            self._attr_translation_key = (
+                self.entity_description.component_translation_key[component]
             )
 
     @property

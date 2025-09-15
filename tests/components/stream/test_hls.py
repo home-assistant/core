@@ -230,8 +230,8 @@ async def test_stream_timeout(
     playlist_response = await http_client.get(parsed_url.path)
     assert playlist_response.status == HTTPStatus.OK
 
-    # Wait a minute
-    future = dt_util.utcnow() + timedelta(minutes=1)
+    # Wait 40 seconds
+    future = dt_util.utcnow() + timedelta(seconds=40)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
@@ -241,8 +241,8 @@ async def test_stream_timeout(
 
     stream_worker_sync.resume()
 
-    # Wait 5 minutes
-    future = dt_util.utcnow() + timedelta(minutes=5)
+    # Wait 2 minutes
+    future = dt_util.utcnow() + timedelta(minutes=2)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 

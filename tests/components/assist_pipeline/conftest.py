@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components import stt, tts, wake_word
+from homeassistant.components import conversation, stt, tts, wake_word
 from homeassistant.components.assist_pipeline import DOMAIN, select as assist_select
 from homeassistant.components.assist_pipeline.const import (
     BYTES_PER_CHUNK,
@@ -295,6 +295,11 @@ async def init_supporting_components(
     assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
     assert await async_setup_component(hass, stt.DOMAIN, {"stt": {"platform": "test"}})
     assert await async_setup_component(hass, "media_source", {})
+    assert await async_setup_component(hass, "conversation", {"conversation": {}})
+
+    # Disable fuzzy matching by default for tests
+    agent = hass.data[conversation.DATA_DEFAULT_ENTITY]
+    agent.fuzzy_matching = False
 
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)

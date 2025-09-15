@@ -6,6 +6,7 @@ ATTR_AFTER_SUNSET = "after_sunset"
 ATTR_DATE = "date"
 ATTR_NUSACH = "nusach"
 
+CONF_ALTITUDE = "altitude"  # The name used by the hdate library for elevation
 CONF_DIASPORA = "diaspora"
 CONF_CANDLE_LIGHT_MINUTES = "candle_lighting_minutes_before_sunset"
 CONF_HAVDALAH_OFFSET_MINUTES = "havdalah_minutes_after_sunset"

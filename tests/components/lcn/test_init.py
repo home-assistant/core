@@ -178,8 +178,8 @@ async def test_migrate_2_1(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
 @pytest.mark.parametrize(
     ("entity_id", "replace"),
     [
-        ("climate.climate1", ("-r1varsetpoint", "-var1.r1varsetpoint")),
-        ("scene.romantic", ("-00", "-0.0")),
+        ("climate.testmodule_climate1", ("-r1varsetpoint", "-var1.r1varsetpoint")),
+        ("scene.testmodule_romantic", ("-00", "-0.0")),
     ],
 )
 @patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)

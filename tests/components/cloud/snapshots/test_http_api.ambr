@@ -9,6 +9,7 @@
   dev | False
   hassio | False
   docker | False
+  container_arch | None
   user | hass
   virtualenv | False
   python_version | 3.13.1
@@ -36,7 +37,7 @@
   google_enabled | False
   cloud_ice_servers_enabled | True
   remote_server | us-west-1
-  certificate_status | CertificateStatus.READY
+  certificate_status | ready
   instance_id | 12345678901234567890
   can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable

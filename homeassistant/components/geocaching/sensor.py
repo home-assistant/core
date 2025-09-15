@@ -93,6 +93,7 @@ class GeocachingSensor(
         self._attr_unique_id = (
             f"{coordinator.data.user.reference_code}_{description.key}"
         )
+
         self._attr_device_info = DeviceInfo(
             name=f"Geocaching {coordinator.data.user.username}",
             identifiers={(DOMAIN, cast(str, coordinator.data.user.reference_code))},

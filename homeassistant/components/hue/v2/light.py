@@ -26,13 +26,12 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import color as color_util
 
-from ..bridge import HueBridge
+from ..bridge import HueBridge, HueConfigEntry
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 from .helpers import (
@@ -51,11 +50,11 @@ DEPRECATED_EFFECT_NONE = "None"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HueConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hue Light from Config Entry."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
     controller: LightsController = api.lights
     make_light_entity = partial(HueLight, bridge, controller)

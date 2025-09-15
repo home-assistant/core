@@ -1,6 +1,6 @@
 """Tests for the habitica component."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID
 
@@ -10,6 +10,7 @@ from habiticalib import (
     HabiticaContentResponse,
     HabiticaErrorResponse,
     HabiticaGroupMembersResponse,
+    HabiticaGroupsResponse,
     HabiticaLoginResponse,
     HabiticaQuestResponse,
     HabiticaResponse,
@@ -32,7 +33,7 @@ from homeassistant.components.habitica.const import CONF_API_USER, DEFAULT_URL, 
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture, load_fixture
 
 ERROR_RESPONSE = HabiticaErrorResponse(success=False, error="error", message="reason")
 ERROR_NOT_AUTHORIZED = NotAuthorizedError(error=ERROR_RESPONSE, headers={})
@@ -75,7 +76,7 @@ def mock_get_tasks(task_type: TaskFilter | None = None) -> HabiticaTasksResponse
 
 
 @pytest.fixture(name="habitica")
-async def mock_habiticalib() -> Generator[AsyncMock]:
+async def mock_habiticalib(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
     """Mock habiticalib."""
 
     with (
@@ -89,24 +90,24 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
         client = mock_client.return_value
 
         client.login.return_value = HabiticaLoginResponse.from_json(
-            load_fixture("login.json", DOMAIN)
+            await async_load_fixture(hass, "login.json", DOMAIN)
         )
 
         client.get_user.return_value = HabiticaUserResponse.from_json(
-            load_fixture("user.json", DOMAIN)
+            await async_load_fixture(hass, "user.json", DOMAIN)
         )
 
         client.cast_skill.return_value = HabiticaCastSkillResponse.from_json(
-            load_fixture("cast_skill_response.json", DOMAIN)
+            await async_load_fixture(hass, "cast_skill_response.json", DOMAIN)
         )
         client.toggle_sleep.return_value = HabiticaSleepResponse(
             success=True, data=True
         )
         client.update_score.return_value = HabiticaUserResponse.from_json(
-            load_fixture("score_with_drop.json", DOMAIN)
+            await async_load_fixture(hass, "score_with_drop.json", DOMAIN)
         )
         client.get_group_members.return_value = HabiticaGroupMembersResponse.from_json(
-            load_fixture("party_members.json", DOMAIN)
+            await async_load_fixture(hass, "party_members.json", DOMAIN)
         )
         for func in (
             "leave_quest",
@@ -117,20 +118,20 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
             "accept_quest",
         ):
             getattr(client, func).return_value = HabiticaQuestResponse.from_json(
-                load_fixture("party_quest.json", DOMAIN)
+                await async_load_fixture(hass, "party_quest.json", DOMAIN)
             )
         client.get_content.return_value = HabiticaContentResponse.from_json(
-            load_fixture("content.json", DOMAIN)
+            await async_load_fixture(hass, "content.json", DOMAIN)
         )
         client.get_tasks.side_effect = mock_get_tasks
         client.update_score.return_value = HabiticaScoreResponse.from_json(
-            load_fixture("score_with_drop.json", DOMAIN)
+            await async_load_fixture(hass, "score_with_drop.json", DOMAIN)
         )
         client.update_task.return_value = HabiticaTaskResponse.from_json(
-            load_fixture("task.json", DOMAIN)
+            await async_load_fixture(hass, "task.json", DOMAIN)
         )
         client.create_task.return_value = HabiticaTaskResponse.from_json(
-            load_fixture("task.json", DOMAIN)
+            await async_load_fixture(hass, "task.json", DOMAIN)
         )
         client.delete_task.return_value = HabiticaResponse.from_dict(
             {"data": {}, "success": True}
@@ -143,30 +144,21 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
         )
         client.get_user_anonymized.return_value = (
             HabiticaUserAnonymizedResponse.from_json(
-                load_fixture("anonymized.json", DOMAIN)
+                await async_load_fixture(hass, "anonymized.json", DOMAIN)
             )
         )
         client.update_task.return_value = HabiticaTaskResponse.from_json(
-            load_fixture("task.json", DOMAIN)
+            await async_load_fixture(hass, "task.json", DOMAIN)
         )
         client.create_tag.return_value = HabiticaTagResponse.from_json(
-            load_fixture("create_tag.json", DOMAIN)
+            await async_load_fixture(hass, "create_tag.json", DOMAIN)
         )
         client.create_task.return_value = HabiticaTaskResponse.from_json(
-            load_fixture("task.json", DOMAIN)
+            await async_load_fixture(hass, "task.json", DOMAIN)
         )
-        client.habitipy.return_value = {
-            "tasks": {
-                "user": {
-                    "post": AsyncMock(
-                        return_value={
-                            "text": "Use API from Home Assistant",
-                            "type": "todo",
-                        }
-                    )
-                }
-            }
-        }
+        client.get_group.return_value = HabiticaGroupsResponse.from_json(
+            await async_load_fixture(hass, "party.json", DOMAIN)
+        )
         yield client
 
 

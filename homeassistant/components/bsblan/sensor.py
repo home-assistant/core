@@ -20,12 +20,15 @@ from . import BSBLanConfigEntry, BSBLanData
 from .coordinator import BSBLanCoordinatorData
 from .entity import BSBLanEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class BSBLanSensorEntityDescription(SensorEntityDescription):
     """Describes BSB-Lan sensor entity."""
 
     value_fn: Callable[[BSBLanCoordinatorData], StateType]
+    exists_fn: Callable[[BSBLanCoordinatorData], bool] = lambda data: True
 
 
 SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
@@ -35,7 +38,12 @@ SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.sensor.current_temperature.value,
+        value_fn=lambda data: (
+            data.sensor.current_temperature.value
+            if data.sensor.current_temperature is not None
+            else None
+        ),
+        exists_fn=lambda data: data.sensor.current_temperature is not None,
     ),
     BSBLanSensorEntityDescription(
         key="outside_temperature",
@@ -43,7 +51,12 @@ SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.sensor.outside_temperature.value,
+        value_fn=lambda data: (
+            data.sensor.outside_temperature.value
+            if data.sensor.outside_temperature is not None
+            else None
+        ),
+        exists_fn=lambda data: data.sensor.outside_temperature is not None,
     ),
 )
 
@@ -55,7 +68,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up BSB-Lan sensor based on a config entry."""
     data = entry.runtime_data
-    async_add_entities(BSBLanSensor(data, description) for description in SENSOR_TYPES)
+
+    # Only create sensors for available data points
+    entities = [
+        BSBLanSensor(data, description)
+        for description in SENSOR_TYPES
+        if description.exists_fn(data.coordinator.data)
+    ]
+
+    if entities:
+        async_add_entities(entities)
 
 
 class BSBLanSensor(BSBLanEntity, SensorEntity):

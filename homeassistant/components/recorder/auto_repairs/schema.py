@@ -242,7 +242,7 @@ def correct_db_schema_utf8(
         f"{table_name}.4-byte UTF-8" in schema_errors
         or f"{table_name}.utf8mb4_unicode_ci" in schema_errors
     ):
-        from ..migration import (  # pylint: disable=import-outside-toplevel
+        from ..migration import (  # noqa: PLC0415
             _correct_table_character_set_and_collation,
         )
 
@@ -258,12 +258,10 @@ def correct_db_schema_precision(
     table_name = table_object.__tablename__
 
     if f"{table_name}.double precision" in schema_errors:
-        from ..migration import (  # pylint: disable=import-outside-toplevel
-            _modify_columns,
-        )
+        from ..migration import _modify_columns  # noqa: PLC0415
 
         precision_columns = _get_precision_column_types(table_object)
-        # Attempt to convert timestamp columns to µs precision
+        # Attempt to convert timestamp columns to μs precision
         session_maker = instance.get_session
         engine = instance.engine
         assert engine is not None, "Engine should be set"

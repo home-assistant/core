@@ -99,7 +99,7 @@ def test_regex_a_or_b(
     "code",
     [
         """
-    async def setup( #@
+    async def async_turn_on( #@
         arg1, arg2
     ):
         pass
@@ -115,7 +115,7 @@ def test_ignore_no_annotations(
 
     func_node = astroid.extract_node(
         code,
-        "homeassistant.components.pylint_test",
+        "homeassistant.components.pylint_test.light",
     )
     type_hint_checker.visit_module(func_node.parent)
 
@@ -1161,18 +1161,16 @@ def test_vacuum_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -
     class Entity():
         pass
 
-    class ToggleEntity(Entity):
-        pass
-
-    class _BaseVacuum(Entity):
-        pass
-
-    class VacuumEntity(_BaseVacuum, ToggleEntity):
+    class StateVacuumEntity(Entity):
         pass
 
     class MyVacuum( #@
-        VacuumEntity
+        StateVacuumEntity
     ):
+        @property
+        def activity(self) -> VacuumActivity | None:
+            pass
+
         def send_command(
             self,
             command: str,
@@ -1496,6 +1494,42 @@ def test_invalid_generic(
             col_offset=4,
             end_line=4,
             end_col_offset=end_col_offset,
+        ),
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+def test_missing_argument(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+) -> None:
+    """Ensure missing arg raises an error."""
+    func_node = astroid.extract_node(
+        """
+    async def async_setup_entry( #@
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+    ) -> None:
+        pass
+    """,
+        "homeassistant.components.pylint_test.sensor",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=func_node,
+            args=(
+                3,
+                "AddConfigEntryEntitiesCallback",
+                "async_setup_entry",
+            ),
+            line=2,
+            col_offset=0,
+            end_line=2,
+            end_col_offset=27,
         ),
     ):
         type_hint_checker.visit_asyncfunctiondef(func_node)

@@ -1,5 +1,6 @@
 """Test the Z-Wave JS Websocket API."""
 
+import asyncio
 from copy import deepcopy
 from http import HTTPStatus
 from io import BytesIO
@@ -7,6 +8,7 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
+from aiohttp import ClientError
 import pytest
 from zwave_js_server.const import (
     ExclusionStrategy,
@@ -31,7 +33,7 @@ from zwave_js_server.model.controller import (
     ProvisioningEntry,
     QRProvisioningInformation,
 )
-from zwave_js_server.model.controller.firmware import ControllerFirmwareUpdateData
+from zwave_js_server.model.driver.firmware import DriverFirmwareUpdateData
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.node.firmware import NodeFirmwareUpdateData
 from zwave_js_server.model.value import ConfigurationValue, get_value_id_str
@@ -2519,7 +2521,7 @@ async def test_subscribe_rebuild_routes_progress(
         {
             "source": "controller",
             "event": "rebuild routes progress",
-            "progress": {67: "pending"},
+            "progress": {"67": "pending"},
         },
     )
     client.driver.controller.receive_event(event)
@@ -2563,7 +2565,7 @@ async def test_subscribe_rebuild_routes_progress_initial_value(
         {
             "source": "controller",
             "event": "rebuild routes progress",
-            "progress": {67: "pending"},
+            "progress": {"67": "pending"},
         },
     )
     client.driver.controller.receive_event(event)
@@ -3500,7 +3502,7 @@ async def test_firmware_upload_view(
             "homeassistant.components.zwave_js.api.update_firmware",
         ) as mock_node_cmd,
         patch(
-            "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+            "homeassistant.components.zwave_js.api.driver_firmware_update_otw",
         ) as mock_controller_cmd,
         patch.dict(
             "homeassistant.components.zwave_js.api.USER_AGENT",
@@ -3543,7 +3545,7 @@ async def test_firmware_upload_view_controller(
             "homeassistant.components.zwave_js.api.update_firmware",
         ) as mock_node_cmd,
         patch(
-            "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+            "homeassistant.components.zwave_js.api.driver_firmware_update_otw",
         ) as mock_controller_cmd,
         patch.dict(
             "homeassistant.components.zwave_js.api.USER_AGENT",
@@ -3556,7 +3558,7 @@ async def test_firmware_upload_view_controller(
         )
         mock_node_cmd.assert_not_called()
         assert mock_controller_cmd.call_args[0][1:2] == (
-            ControllerFirmwareUpdateData(
+            DriverFirmwareUpdateData(
                 "file", b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
             ),
         )
@@ -4414,7 +4416,7 @@ async def test_subscribe_controller_firmware_update_status(
     event = Event(
         type="firmware update progress",
         data={
-            "source": "controller",
+            "source": "driver",
             "event": "firmware update progress",
             "progress": {
                 "sentFragments": 1,
@@ -4423,7 +4425,7 @@ async def test_subscribe_controller_firmware_update_status(
             },
         },
     )
-    client.driver.controller.receive_event(event)
+    client.driver.receive_event(event)
 
     msg = await ws_client.receive_json()
     assert msg["event"] == {
@@ -4438,7 +4440,7 @@ async def test_subscribe_controller_firmware_update_status(
     event = Event(
         type="firmware update finished",
         data={
-            "source": "controller",
+            "source": "driver",
             "event": "firmware update finished",
             "result": {
                 "status": 255,
@@ -4446,7 +4448,7 @@ async def test_subscribe_controller_firmware_update_status(
             },
         },
     )
-    client.driver.controller.receive_event(event)
+    client.driver.receive_event(event)
 
     msg = await ws_client.receive_json()
     assert msg["event"] == {
@@ -4463,13 +4465,13 @@ async def test_subscribe_controller_firmware_update_status_initial_value(
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, client.driver.controller.nodes[1])
 
-    assert client.driver.controller.firmware_update_progress is None
+    assert client.driver.firmware_update_progress is None
 
     # Send a firmware update progress event before the WS command
     event = Event(
         type="firmware update progress",
         data={
-            "source": "controller",
+            "source": "driver",
             "event": "firmware update progress",
             "progress": {
                 "sentFragments": 1,
@@ -4478,7 +4480,7 @@ async def test_subscribe_controller_firmware_update_status_initial_value(
             },
         },
     )
-    client.driver.controller.receive_event(event)
+    client.driver.receive_event(event)
 
     client.async_send_command_no_wait.return_value = {}
 
@@ -5096,26 +5098,24 @@ async def test_subscribe_node_statistics(
 
 async def test_hard_reset_controller(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
+    get_server_version: AsyncMock,
     integration: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that the hard_reset_controller WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
+    assert entry.unique_id == "3245146787"
 
-    async def async_send_command_driver_ready(
-        message: dict[str, Any],
-        require_schema: int | None = None,
-    ) -> dict:
-        """Send a command and get a response."""
+    async def mock_driver_hard_reset() -> None:
         client.driver.emit(
             "driver ready", {"event": "driver ready", "source": "driver"}
         )
-        return {}
 
-    client.async_send_command.side_effect = async_send_command_driver_ready
+    client.driver.async_hard_reset = AsyncMock(side_effect=mock_driver_hard_reset)
 
     await ws_client.send_json_auto_id(
         {
@@ -5124,6 +5124,7 @@ async def test_hard_reset_controller(
         }
     )
     msg = await ws_client.receive_json()
+    await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
@@ -5131,29 +5132,49 @@ async def test_hard_reset_controller(
     assert device is not None
     assert msg["result"] == device.id
     assert msg["success"]
+    assert client.driver.async_hard_reset.call_count == 1
+    assert entry.unique_id == "1234"
 
-    assert client.async_send_command.call_count == 3
-    # The first call is the relevant hard reset command.
-    # 25 is the require_schema parameter.
-    assert client.async_send_command.call_args_list[0] == call(
-        {"command": "driver.hard_reset"}, 25
+    client.driver.async_hard_reset.reset_mock()
+
+    # Test client connect error when getting the server version.
+
+    get_server_version.side_effect = ClientError("Boom!")
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/hard_reset_controller",
+            ENTRY_ID: entry.entry_id,
+        }
     )
 
-    client.async_send_command.reset_mock()
+    msg = await ws_client.receive_json()
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    )
+    assert device is not None
+    assert msg["result"] == device.id
+    assert msg["success"]
+    assert client.driver.async_hard_reset.call_count == 1
+    assert (
+        "Failed to get server version, cannot update config entry "
+        "unique id with new home id, after controller reset"
+    ) in caplog.text
+
+    client.driver.async_hard_reset.reset_mock()
+    get_server_version.side_effect = None
 
     # Test sending command with driver not ready and timeout.
 
-    async def async_send_command_no_driver_ready(
-        message: dict[str, Any],
-        require_schema: int | None = None,
-    ) -> dict:
-        """Send a command and get a response."""
-        return {}
+    async def mock_driver_hard_reset_no_driver_ready() -> None:
+        pass
 
-    client.async_send_command.side_effect = async_send_command_no_driver_ready
+    client.driver.async_hard_reset.side_effect = mock_driver_hard_reset_no_driver_ready
 
     with patch(
-        "homeassistant.components.zwave_js.api.HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT",
+        "homeassistant.components.zwave_js.helpers.DRIVER_READY_EVENT_TIMEOUT",
         new=0,
     ):
         await ws_client.send_json_auto_id(
@@ -5163,6 +5184,7 @@ async def test_hard_reset_controller(
             }
         )
         msg = await ws_client.receive_json()
+        await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
@@ -5170,30 +5192,29 @@ async def test_hard_reset_controller(
     assert device is not None
     assert msg["result"] == device.id
     assert msg["success"]
+    assert client.driver.async_hard_reset.call_count == 1
 
-    assert client.async_send_command.call_count == 3
-    # The first call is the relevant hard reset command.
-    # 25 is the require_schema parameter.
-    assert client.async_send_command.call_args_list[0] == call(
-        {"command": "driver.hard_reset"}, 25
-    )
+    client.driver.async_hard_reset.reset_mock()
 
     # Test FailedZWaveCommand is caught
-    with patch(
-        "zwave_js_server.model.driver.Driver.async_hard_reset",
-        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
-    ):
-        await ws_client.send_json_auto_id(
-            {
-                TYPE: "zwave_js/hard_reset_controller",
-                ENTRY_ID: entry.entry_id,
-            }
-        )
-        msg = await ws_client.receive_json()
+    client.driver.async_hard_reset.side_effect = FailedZWaveCommand(
+        "failed_command", 1, "error message"
+    )
 
-        assert not msg["success"]
-        assert msg["error"]["code"] == "zwave_error"
-        assert msg["error"]["message"] == "zwave_error: Z-Wave error 1 - error message"
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/hard_reset_controller",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "zwave_error"
+    assert msg["error"]["message"] == "zwave_error: Z-Wave error 1 - error message"
+    assert client.driver.async_hard_reset.call_count == 1
+
+    client.driver.async_hard_reset.side_effect = None
 
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
@@ -5527,24 +5548,35 @@ async def test_restore_nvm(
     integration,
     client,
     hass_ws_client: WebSocketGenerator,
+    get_server_version: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the restore NVM websocket command."""
+    entry = integration
+    assert entry.unique_id == "3245146787"
     ws_client = await hass_ws_client(hass)
 
     # Set up mocks for the controller events
     controller = client.driver.controller
 
-    async def async_send_command_driver_ready(
-        message: dict[str, Any],
-        require_schema: int | None = None,
-    ) -> dict:
-        """Send a command and get a response."""
+    async def mock_restore_nvm_base64(
+        self, base64_data: str, options: dict[str, bool] | None = None
+    ) -> None:
+        controller.emit(
+            "nvm convert progress",
+            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
+        )
+        await asyncio.sleep(0)
+        controller.emit(
+            "nvm restore progress",
+            {"event": "nvm restore progress", "bytesWritten": 150, "total": 200},
+        )
+        controller.data["homeId"] = 3245146787
         client.driver.emit(
             "driver ready", {"event": "driver ready", "source": "driver"}
         )
-        return {}
 
-    client.async_send_command.side_effect = async_send_command_driver_ready
+    controller.async_restore_nvm_base64 = AsyncMock(side_effect=mock_restore_nvm_base64)
 
     # Send the subscription request
     await ws_client.send_json_auto_id(
@@ -5555,7 +5587,19 @@ async def test_restore_nvm(
         }
     )
 
-    # Verify the finished event first
+    # Verify the convert progress event
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "nvm convert progress"
+    assert msg["event"]["bytesRead"] == 100
+    assert msg["event"]["total"] == 200
+
+    # Verify the restore progress event
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "nvm restore progress"
+    assert msg["event"]["bytesWritten"] == 150
+    assert msg["event"]["total"] == 200
+
+    # Verify the finished event
     msg = await ws_client.receive_json()
     assert msg["type"] == "event"
     assert msg["event"]["event"] == "finished"
@@ -5565,77 +5609,94 @@ async def test_restore_nvm(
     assert msg["type"] == "result"
     assert msg["success"] is True
 
-    # Simulate progress events
-    event = Event(
-        "nvm restore progress",
-        {
-            "source": "controller",
-            "event": "nvm restore progress",
-            "bytesWritten": 25,
-            "total": 100,
-        },
-    )
-    controller.receive_event(event)
-    msg = await ws_client.receive_json()
-    assert msg["event"]["event"] == "nvm restore progress"
-    assert msg["event"]["bytesWritten"] == 25
-    assert msg["event"]["total"] == 100
-
-    event = Event(
-        "nvm restore progress",
-        {
-            "source": "controller",
-            "event": "nvm restore progress",
-            "bytesWritten": 50,
-            "total": 100,
-        },
-    )
-    controller.receive_event(event)
-    msg = await ws_client.receive_json()
-    assert msg["event"]["event"] == "nvm restore progress"
-    assert msg["event"]["bytesWritten"] == 50
-    assert msg["event"]["total"] == 100
-
     await hass.async_block_till_done()
 
     # Verify the restore was called
     # The first call is the relevant one for nvm restore.
-    assert client.async_send_command.call_count == 3
-    assert client.async_send_command.call_args_list[0] == call(
+    assert controller.async_restore_nvm_base64.call_count == 1
+    assert controller.async_restore_nvm_base64.call_args == call(
+        "dGVzdA==",
+        {"preserveRoutes": False},
+    )
+    assert entry.unique_id == "1234"
+
+    controller.async_restore_nvm_base64.reset_mock()
+
+    # Test client connect error when getting the server version.
+
+    get_server_version.side_effect = ClientError("Boom!")
+
+    # Send the subscription request
+    await ws_client.send_json_auto_id(
         {
-            "command": "controller.restore_nvm",
-            "nvmData": "dGVzdA==",
-        },
-        require_schema=14,
+            "type": "zwave_js/restore_nvm",
+            "entry_id": entry.entry_id,
+            "data": "dGVzdA==",  # base64 encoded "test"
+        }
     )
 
-    client.async_send_command.reset_mock()
+    # Verify the convert progress event
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "nvm convert progress"
+    assert msg["event"]["bytesRead"] == 100
+    assert msg["event"]["total"] == 200
 
-    # Test sending command with driver not ready and timeout.
+    # Verify the restore progress event
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "nvm restore progress"
+    assert msg["event"]["bytesWritten"] == 150
+    assert msg["event"]["total"] == 200
 
-    async def async_send_command_no_driver_ready(
-        message: dict[str, Any],
-        require_schema: int | None = None,
-    ) -> dict:
-        """Send a command and get a response."""
-        return {}
+    # Verify the finished event
+    msg = await ws_client.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"]["event"] == "finished"
 
-    client.async_send_command.side_effect = async_send_command_no_driver_ready
+    # Verify subscription success
+    msg = await ws_client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"] is True
+
+    await hass.async_block_till_done()
+
+    assert controller.async_restore_nvm_base64.call_count == 1
+    assert controller.async_restore_nvm_base64.call_args == call(
+        "dGVzdA==",
+        {"preserveRoutes": False},
+    )
+    assert (
+        "Failed to get server version, cannot update config entry "
+        "unique id with new home id, after controller NVM restore"
+    ) in caplog.text
+
+    controller.async_restore_nvm_base64.reset_mock()
+    get_server_version.side_effect = None
+
+    # Test sending command without driver ready event causing timeout.
+
+    async def mock_restore_nvm_without_driver_ready(
+        data: bytes, options: dict[str, bool] | None = None
+    ):
+        controller.data["homeId"] = 3245146787
+
+    controller.async_restore_nvm_base64.side_effect = (
+        mock_restore_nvm_without_driver_ready
+    )
 
     with patch(
-        "homeassistant.components.zwave_js.api.RESTORE_NVM_DRIVER_READY_TIMEOUT",
+        "homeassistant.components.zwave_js.helpers.DRIVER_READY_EVENT_TIMEOUT",
         new=0,
     ):
         # Send the subscription request
         await ws_client.send_json_auto_id(
             {
                 "type": "zwave_js/restore_nvm",
-                "entry_id": integration.entry_id,
+                "entry_id": entry.entry_id,
                 "data": "dGVzdA==",  # base64 encoded "test"
             }
         )
 
-        # Verify the finished event first
+        # Verify the finished event
         msg = await ws_client.receive_json()
 
         assert msg["type"] == "event"
@@ -5649,36 +5710,41 @@ async def test_restore_nvm(
         await hass.async_block_till_done()
 
     # Verify the restore was called
-    # The first call is the relevant one for nvm restore.
-    assert client.async_send_command.call_count == 3
-    assert client.async_send_command.call_args_list[0] == call(
-        {
-            "command": "controller.restore_nvm",
-            "nvmData": "dGVzdA==",
-        },
-        require_schema=14,
+    assert controller.async_restore_nvm_base64.call_count == 1
+    assert controller.async_restore_nvm_base64.call_args == call(
+        "dGVzdA==",
+        {"preserveRoutes": False},
     )
 
-    client.async_send_command.reset_mock()
+    controller.async_restore_nvm_base64.reset_mock()
 
     # Test restore failure
-    with patch(
-        f"{CONTROLLER_PATCH_PREFIX}.async_restore_nvm_base64",
-        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
-    ):
-        # Send the subscription request
-        await ws_client.send_json_auto_id(
-            {
-                "type": "zwave_js/restore_nvm",
-                "entry_id": integration.entry_id,
-                "data": "dGVzdA==",  # base64 encoded "test"
-            }
-        )
+    controller.async_restore_nvm_base64.side_effect = FailedZWaveCommand(
+        "failed_command", 1, "error message"
+    )
 
-        # Verify error response
-        msg = await ws_client.receive_json()
-        assert not msg["success"]
-        assert msg["error"]["code"] == "zwave_error"
+    # Send the subscription request
+    await ws_client.send_json_auto_id(
+        {
+            "type": "zwave_js/restore_nvm",
+            "entry_id": entry.entry_id,
+            "data": "dGVzdA==",  # base64 encoded "test"
+        }
+    )
+
+    # Verify error response
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "zwave_error"
+
+    await hass.async_block_till_done()
+
+    # Verify the restore was called
+    assert controller.async_restore_nvm_base64.call_count == 1
+    assert controller.async_restore_nvm_base64.call_args == call(
+        "dGVzdA==",
+        {"preserveRoutes": False},
+    )
 
     # Test entry_id not found
     await ws_client.send_json_auto_id(
@@ -5693,13 +5759,13 @@ async def test_restore_nvm(
     assert msg["error"]["code"] == "not_found"
 
     # Test config entry not loaded
-    await hass.config_entries.async_unload(integration.entry_id)
+    await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json_auto_id(
         {
             "type": "zwave_js/restore_nvm",
-            "entry_id": integration.entry_id,
+            "entry_id": entry.entry_id,
             "data": "dGVzdA==",  # base64 encoded "test"
         }
     )

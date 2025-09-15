@@ -157,6 +157,7 @@ async def _async_get_handle_dhcp_packet(
         hass,
         DHCPData(integration_matchers, set(), address_data),
     )
+
     with patch("aiodhcpwatcher.async_start"):
         await dhcp_watcher.async_start()
 
@@ -169,6 +170,53 @@ async def _async_get_handle_dhcp_packet(
         handler(packet)
 
     return cast("Callable[[Any], Awaitable[None]]", _async_handle_dhcp_packet)
+
+
+async def test_dhcp_start_using_multiple_interfaces(
+    hass: HomeAssistant,
+) -> None:
+    """Test start using multiple interfaces."""
+
+    def _generate_mock_adapters():
+        return [
+            {
+                "index": 1,
+                "auto": False,
+                "default": False,
+                "enabled": True,
+                "ipv4": [{"address": "192.168.0.1", "network_prefix": 24}],
+                "ipv6": [],
+                "name": "eth0",
+            },
+            {
+                "index": 2,
+                "auto": True,
+                "default": True,
+                "enabled": True,
+                "ipv4": [{"address": "192.168.1.1", "network_prefix": 24}],
+                "ipv6": [],
+                "name": "eth1",
+            },
+        ]
+
+    integration_matchers = dhcp.async_index_integration_matchers(
+        [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}]
+    )
+    dhcp_watcher = dhcp.DHCPWatcher(
+        hass,
+        DHCPData(integration_matchers, set(), {}),
+    )
+
+    with (
+        patch("aiodhcpwatcher.async_start") as mock_start,
+        patch(
+            "homeassistant.components.dhcp.network.async_get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
+    ):
+        await dhcp_watcher.async_start()
+
+    mock_start.assert_called_with(dhcp_watcher._async_process_dhcp_request, [1, 2])
 
 
 async def test_dhcp_match_hostname_and_macaddress(hass: HomeAssistant) -> None:

@@ -1,8 +1,11 @@
 """Intents for the media_player integration."""
 
+import asyncio
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+import logging
 import time
+from typing import cast
 
 import voluptuous as vol
 
@@ -12,18 +15,35 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_VOLUME_SET,
+    STATE_PLAYING,
 )
 from homeassistant.core import Context, HomeAssistant, State
-from homeassistant.helpers import intent
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers.entity_component import EntityComponent
 
-from . import ATTR_MEDIA_VOLUME_LEVEL, DOMAIN, MediaPlayerDeviceClass
-from .const import MediaPlayerEntityFeature, MediaPlayerState
+from . import MediaPlayerDeviceClass, MediaPlayerEntity
+from .browse_media import SearchMedia
+from .const import (
+    ATTR_MEDIA_FILTER_CLASSES,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    DOMAIN,
+    SERVICE_PLAY_MEDIA,
+    SERVICE_SEARCH_MEDIA,
+    MediaClass,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+)
 
 INTENT_MEDIA_PAUSE = "HassMediaPause"
 INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
 INTENT_MEDIA_NEXT = "HassMediaNext"
 INTENT_MEDIA_PREVIOUS = "HassMediaPrevious"
 INTENT_SET_VOLUME = "HassSetVolume"
+INTENT_SET_VOLUME_RELATIVE = "HassSetVolumeRelative"
+INTENT_MEDIA_SEARCH_AND_PLAY = "HassMediaSearchAndPlay"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -109,6 +129,8 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             device_classes={MediaPlayerDeviceClass},
         ),
     )
+    intent.async_register(hass, MediaSetVolumeRelativeHandler())
+    intent.async_register(hass, MediaSearchAndPlayHandler())
 
 
 class MediaPauseHandler(intent.ServiceIntentHandler):
@@ -207,3 +229,246 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
         return await super().async_handle_states(
             intent_obj, match_result, match_constraints
         )
+
+
+class MediaSearchAndPlayHandler(intent.IntentHandler):
+    """Handle HassMediaSearchAndPlay intents."""
+
+    description = "Searches for media and plays the first result"
+
+    intent_type = INTENT_MEDIA_SEARCH_AND_PLAY
+    slot_schema = {
+        vol.Required("search_query"): cv.string,
+        vol.Optional("media_class"): vol.In([cls.value for cls in MediaClass]),
+        # Optional name/area/floor slots handled by intent matcher
+        vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
+        vol.Optional("floor"): cv.string,
+        vol.Optional("preferred_area_id"): cv.string,
+        vol.Optional("preferred_floor_id"): cv.string,
+    }
+    platforms = {DOMAIN}
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Handle the intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        search_query = slots["search_query"]["value"]
+
+        # Entity name to match
+        name_slot = slots.get("name", {})
+        entity_name: str | None = name_slot.get("value")
+
+        # Get area/floor info
+        area_slot = slots.get("area", {})
+        area_id = area_slot.get("value")
+
+        floor_slot = slots.get("floor", {})
+        floor_id = floor_slot.get("value")
+
+        # Find matching entities
+        match_constraints = intent.MatchTargetsConstraints(
+            name=entity_name,
+            area_name=area_id,
+            floor_name=floor_id,
+            domains={DOMAIN},
+            assistant=intent_obj.assistant,
+            features=MediaPlayerEntityFeature.SEARCH_MEDIA
+            | MediaPlayerEntityFeature.PLAY_MEDIA,
+            single_target=True,
+        )
+        match_result = intent.async_match_targets(
+            hass,
+            match_constraints,
+            intent.MatchTargetsPreferences(
+                area_id=slots.get("preferred_area_id", {}).get("value"),
+                floor_id=slots.get("preferred_floor_id", {}).get("value"),
+            ),
+        )
+
+        if not match_result.is_match:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
+
+        target_entity = match_result.states[0]
+        target_entity_id = target_entity.entity_id
+
+        # Get media class if provided
+        media_class_slot = slots.get("media_class", {})
+        media_class_value = media_class_slot.get("value")
+
+        # Build search service data
+        search_data = {"search_query": search_query}
+
+        # Add media_filter_classes if media_class is provided
+        if media_class_value:
+            search_data[ATTR_MEDIA_FILTER_CLASSES] = [media_class_value]
+
+        # 1. Search Media
+        try:
+            search_response = await hass.services.async_call(
+                DOMAIN,
+                SERVICE_SEARCH_MEDIA,
+                search_data,
+                target={
+                    "entity_id": target_entity_id,
+                },
+                blocking=True,
+                context=intent_obj.context,
+                return_response=True,
+            )
+        except HomeAssistantError as err:
+            _LOGGER.error("Error calling search_media: %s", err)
+            raise intent.IntentHandleError(f"Error searching media: {err}") from err
+
+        if (
+            not search_response
+            or not (
+                entity_response := cast(
+                    SearchMedia, search_response.get(target_entity_id)
+                )
+            )
+            or not (results := entity_response.result)
+        ):
+            # No results found
+            return intent_obj.create_response()
+
+        # 2. Play Media (first result)
+        first_result = results[0]
+        try:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_PLAY_MEDIA,
+                {
+                    "entity_id": target_entity_id,
+                    "media_content_id": first_result.media_content_id,
+                    "media_content_type": first_result.media_content_type,
+                },
+                blocking=True,
+                context=intent_obj.context,
+            )
+        except HomeAssistantError as err:
+            _LOGGER.error("Error calling play_media: %s", err)
+            raise intent.IntentHandleError(f"Error playing media: {err}") from err
+
+        # Success
+        response = intent_obj.create_response()
+        response.async_set_speech_slots({"media": first_result.as_dict()})
+        return response
+
+
+class MediaSetVolumeRelativeHandler(intent.IntentHandler):
+    """Handler for setting relative volume."""
+
+    description = "Increases or decreases the volume of a media player"
+
+    intent_type = INTENT_SET_VOLUME_RELATIVE
+    slot_schema = {
+        vol.Required("volume_step"): vol.Any(
+            "up",
+            "down",
+            vol.All(
+                vol.Coerce(int),
+                vol.Range(min=-100, max=100),
+                lambda val: val / 100,
+            ),
+        ),
+        # Optional name/area/floor slots handled by intent matcher
+        vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
+        vol.Optional("floor"): cv.string,
+        vol.Optional("preferred_area_id"): cv.string,
+        vol.Optional("preferred_floor_id"): cv.string,
+    }
+    platforms = {DOMAIN}
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Handle the intent."""
+        hass = intent_obj.hass
+        component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
+
+        slots = self.async_validate_slots(intent_obj.slots)
+        volume_step = slots["volume_step"]["value"]
+
+        # Entity name to match
+        name_slot = slots.get("name", {})
+        entity_name: str | None = name_slot.get("value")
+
+        # Get area/floor info
+        area_slot = slots.get("area", {})
+        area_id = area_slot.get("value")
+
+        floor_slot = slots.get("floor", {})
+        floor_id = floor_slot.get("value")
+
+        # Find matching entities
+        match_constraints = intent.MatchTargetsConstraints(
+            name=entity_name,
+            area_name=area_id,
+            floor_name=floor_id,
+            domains={DOMAIN},
+            assistant=intent_obj.assistant,
+            features=MediaPlayerEntityFeature.VOLUME_SET,
+        )
+        match_preferences = intent.MatchTargetsPreferences(
+            area_id=slots.get("preferred_area_id", {}).get("value"),
+            floor_id=slots.get("preferred_floor_id", {}).get("value"),
+        )
+        match_result = intent.async_match_targets(
+            hass, match_constraints, match_preferences
+        )
+
+        if not match_result.is_match:
+            # No targets
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
+
+        if (
+            match_result.is_match
+            and (len(match_result.states) > 1)
+            and ("name" not in intent_obj.slots)
+        ):
+            # Multiple targets not by name, so we need to check state
+            match_result.states = [
+                s for s in match_result.states if s.state == STATE_PLAYING
+            ]
+            if not match_result.states:
+                # No media players are playing
+                raise intent.MatchFailedError(
+                    result=intent.MatchTargetsResult(
+                        is_match=False, no_match_reason=intent.MatchFailedReason.STATE
+                    ),
+                    constraints=match_constraints,
+                    preferences=match_preferences,
+                )
+
+        target_entity_ids = {s.entity_id for s in match_result.states}
+        target_entities = [
+            e for e in component.entities if e.entity_id in target_entity_ids
+        ]
+
+        if volume_step == "up":
+            coros = [e.async_volume_up() for e in target_entities]
+        elif volume_step == "down":
+            coros = [e.async_volume_down() for e in target_entities]
+        else:
+            coros = [
+                e.async_set_volume_level(
+                    max(0.0, min(1.0, e.volume_level + volume_step))
+                )
+                for e in target_entities
+            ]
+
+        try:
+            await asyncio.gather(*coros)
+        except HomeAssistantError as err:
+            _LOGGER.error("Error setting relative volume: %s", err)
+            raise intent.IntentHandleError(
+                f"Error setting relative volume: {err}"
+            ) from err
+
+        response = intent_obj.create_response()
+        response.async_set_states(match_result.states)
+        return response

@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from ipaddress import ip_address
+import socket
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
@@ -17,7 +18,10 @@ from websockets import frames
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from homeassistant import config_entries
-from homeassistant.components.samsungtv.config_flow import SamsungTVConfigFlow
+from homeassistant.components.samsungtv.config_flow import (
+    SamsungTVConfigFlow,
+    _strip_uuid,
+)
 from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
     CONF_SESSION_ID,
@@ -45,6 +49,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
@@ -63,7 +68,7 @@ from .const import (
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
 )
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 RESULT_ALREADY_CONFIGURED = "already_configured"
 RESULT_ALREADY_IN_PROGRESS = "already_in_progress"
@@ -102,33 +107,20 @@ AUTODETECT_LEGACY = {
     "id": "ha.component.samsung",
     "method": METHOD_LEGACY,
     "port": LEGACY_PORT,
-    "host": "fake_host",
+    "host": "10.20.43.21",
     "timeout": TIMEOUT_REQUEST,
-}
-AUTODETECT_WEBSOCKET_PLAIN = {
-    "host": "fake_host",
-    "name": "HomeAssistant",
-    "port": 8001,
-    "timeout": TIMEOUT_REQUEST,
-    "token": None,
 }
 AUTODETECT_WEBSOCKET_SSL = {
-    "host": "fake_host",
+    "host": "10.20.43.21",
     "name": "HomeAssistant",
     "port": 8002,
     "timeout": TIMEOUT_REQUEST,
     "token": None,
 }
 DEVICEINFO_WEBSOCKET_SSL = {
-    "host": "fake_host",
+    "host": "10.20.43.21",
     "session": ANY,
     "port": 8002,
-    "timeout": TIMEOUT_WEBSOCKET,
-}
-DEVICEINFO_WEBSOCKET_NO_SSL = {
-    "host": "fake_host",
-    "session": ANY,
-    "port": 8001,
     "timeout": TIMEOUT_WEBSOCKET,
 }
 
@@ -145,17 +137,31 @@ async def test_user_legacy(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # entry was added
+    # Wrong host allow to retry
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        side_effect=socket.gaierror("[Error -2] Name or Service not known"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_host"}
+
+    # Good host creates entry
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_DATA
     )
     # legacy tv entry created
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "fake_host"
-    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["title"] == "10.20.43.21"
+    assert result["data"][CONF_HOST] == "10.20.43.21"
     assert result["data"][CONF_METHOD] == METHOD_LEGACY
     assert result["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result["data"][CONF_MODEL] is None
+    assert result["data"][CONF_PORT] == 55000
     assert result["result"].unique_id is None
 
 
@@ -185,11 +191,12 @@ async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
 
     # legacy tv entry created
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "fake_host"
-    assert result3["data"][CONF_HOST] == "fake_host"
+    assert result3["title"] == "10.20.43.21"
+    assert result3["data"][CONF_HOST] == "10.20.43.21"
     assert result3["data"][CONF_METHOD] == METHOD_LEGACY
     assert result3["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result3["data"][CONF_MODEL] is None
+    assert result3["data"][CONF_PORT] == 55000
     assert result3["result"].unique_id is None
 
 
@@ -215,10 +222,11 @@ async def test_user_websocket(hass: HomeAssistant) -> None:
         # websocket tv entry created
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "Living Room (82GXARRS)"
-        assert result["data"][CONF_HOST] == "fake_host"
+        assert result["data"][CONF_HOST] == "10.20.43.21"
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_MANUFACTURER] == "Samsung"
         assert result["data"][CONF_MODEL] == "82GXARRS"
+        assert result["data"][CONF_PORT] == 8002
         assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -263,10 +271,11 @@ async def test_user_encrypted_websocket(
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "TV-UE48JU6470 (UE48JU6400)"
-    assert result4["data"][CONF_HOST] == "fake_host"
+    assert result4["data"][CONF_HOST] == "10.20.43.21"
     assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung"
     assert result4["data"][CONF_MODEL] == "UE48JU6400"
+    assert result4["data"][CONF_PORT] == 8000
     assert result4["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION] is None
     assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
     assert result4["data"][CONF_SESSION_ID] == "1"
@@ -394,9 +403,10 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Living Room (82GXARRS)"
-    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_HOST] == "10.20.43.21"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["data"][CONF_PORT] == 8002
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -459,6 +469,7 @@ async def test_ssdp(hass: HomeAssistant) -> None:
     assert result["data"][CONF_HOST] == "10.10.12.34"
     assert result["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result["data"][CONF_MODEL] == "UE55H6400"
+    assert result["data"][CONF_PORT] == 55000
     assert result["result"].unique_id == "068e7781-006e-1000-bbbf-84a4668d8423"
 
 
@@ -517,6 +528,7 @@ async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
     assert result["data"][CONF_HOST] == "10.10.12.34"
     assert result["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result["data"][CONF_MODEL] == "UE55H6400"
+    assert result["data"][CONF_PORT] == 55000
     assert result["result"].unique_id == "068e7781-006e-1000-bbbf-84a4668d8423"
 
 
@@ -552,6 +564,7 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
     assert result["data"][CONF_HOST] == "10.10.12.34"
     assert result["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result["data"][CONF_MODEL] == "UE55H6400"
+    assert result["data"][CONF_PORT] == 55000
     assert result["result"].unique_id == "068e7781-006e-1000-bbbf-84a4668d8423"
 
 
@@ -594,6 +607,7 @@ async def test_ssdp_websocket_success_populates_mac_address_and_ssdp_location(
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["data"][CONF_PORT] == 8002
     assert (
         result["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION]
         == "http://10.10.12.34:7676/smp_15_"
@@ -625,6 +639,7 @@ async def test_ssdp_websocket_success_populates_mac_address_and_main_tv_ssdp_loc
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["data"][CONF_PORT] == 8002
     assert (
         result["data"][CONF_SSDP_MAIN_TV_AGENT_LOCATION]
         == "http://10.10.12.34:7676/smp_2_"
@@ -676,6 +691,7 @@ async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_l
     assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result4["data"][CONF_MODEL] == "UE48JU6400"
+    assert result4["data"][CONF_PORT] == 8000
     assert (
         result4["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION]
         == "http://10.10.12.34:7676/smp_15_"
@@ -882,6 +898,7 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "UE48JU6400"
+    assert result["data"][CONF_PORT] == 8002
     assert result["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
 
 
@@ -891,8 +908,8 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
 async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from dhcp."""
     # Even though it is named "wifiMac", it matches the mac of the wired connection
-    rest_api.rest_device_info.return_value = load_json_object_fixture(
-        "device_info_UE43LS003.json", DOMAIN
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UE43LS003.json", DOMAIN
     )
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
@@ -914,6 +931,7 @@ async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     assert result["data"][CONF_MAC] == "aa:ee:tt:hh:ee:rr"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "UE43LS003"
+    assert result["data"][CONF_PORT] == 8002
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1015,6 +1033,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["data"][CONF_PORT] == 8002
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1124,6 +1143,7 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_TOKEN] == "123456789"
+        assert result["data"][CONF_PORT] == 8002
         remote_websocket.assert_called_once_with(**AUTODETECT_WEBSOCKET_SSL)
         rest_api_class.assert_called_once_with(**DEVICEINFO_WEBSOCKET_SSL)
         await hass.async_block_till_done()
@@ -1175,6 +1195,7 @@ async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_TOKEN] == "123456789"
         assert result["data"][CONF_MAC] == "gg:ee:tt:mm:aa:cc"
+        assert result["data"][CONF_PORT] == 8002
         remote_websocket.assert_called_once_with(**AUTODETECT_WEBSOCKET_SSL)
         rest_api_class.assert_called_once_with(**DEVICEINFO_WEBSOCKET_SSL)
         await hass.async_block_till_done()
@@ -1296,14 +1317,15 @@ async def test_update_old_entry(hass: HomeAssistant) -> None:
     assert entry2.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures(
-    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
-)
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_update_missing_mac_unique_id_added_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac and unique id added."""
-    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY, unique_id=None)
+    # Incorrect MAC cleanup introduced in #110599, can be removed in 2026.3
+    entry_data = deepcopy(ENTRYDATA_WEBSOCKET)
+    del entry_data[CONF_MAC]
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id=None)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -2001,11 +2023,9 @@ async def test_update_incorrect_udn_matching_mac_unique_id_added_from_ssdp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures(
-    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
-)
+@pytest.mark.usefixtures("remote_websocket")
 async def test_update_incorrect_udn_matching_mac_from_dhcp(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, rest_api: Mock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test that DHCP updates the wrong udn from ssdp via mac match."""
     entry = MockConfigEntry(
@@ -2015,6 +2035,12 @@ async def test_update_incorrect_udn_matching_mac_from_dhcp(
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)
+
+    assert entry.data[CONF_HOST] == MOCK_DHCP_DATA.ip
+    assert entry.data[CONF_MAC] == dr.format_mac(
+        rest_api.rest_device_info.return_value["device"]["wifiMac"]
+    )
+    assert entry.unique_id != _strip_uuid(rest_api.rest_device_info.return_value["id"])
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -2026,15 +2052,14 @@ async def test_update_incorrect_udn_matching_mac_from_dhcp(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
+
+    # Same IP + same MAC => unique id updated
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures(
-    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
-)
+@pytest.mark.usefixtures("remote_websocket")
 async def test_no_update_incorrect_udn_not_matching_mac_from_dhcp(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, rest_api: Mock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test that DHCP does not update the wrong udn from ssdp via host match."""
     entry = MockConfigEntry(
@@ -2044,6 +2069,12 @@ async def test_no_update_incorrect_udn_not_matching_mac_from_dhcp(
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)
+
+    assert entry.data[CONF_HOST] == MOCK_DHCP_DATA.ip
+    assert entry.data[CONF_MAC] != dr.format_mac(
+        rest_api.rest_device_info.return_value["device"]["wifiMac"]
+    )
+    assert entry.unique_id != _strip_uuid(rest_api.rest_device_info.return_value["id"])
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -2055,7 +2086,8 @@ async def test_no_update_incorrect_udn_not_matching_mac_from_dhcp(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
-    assert entry.data[CONF_MAC] == "aa:bb:ss:ss:dd:pp"
+
+    # Same IP + different MAC => unique id not updated
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
@@ -2075,6 +2107,7 @@ async def test_ssdp_update_mac(hass: HomeAssistant) -> None:
         assert entry.data[CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
         assert entry.data[CONF_MODEL] == "fake_model"
         assert entry.data[CONF_MAC] is None
+        assert entry.data[CONF_PORT] == 8002
         assert entry.unique_id == "123"
 
     device_info = deepcopy(MOCK_DEVICE_INFO)

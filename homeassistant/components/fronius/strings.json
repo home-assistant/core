@@ -52,8 +52,8 @@
       "current_dc": {
         "name": "DC current"
       },
-      "current_dc_2": {
-        "name": "DC current 2"
+      "current_dc_mppt_no": {
+        "name": "DC current {mppt_no}"
       },
       "power_ac": {
         "name": "AC power"
@@ -64,8 +64,8 @@
       "voltage_dc": {
         "name": "DC voltage"
       },
-      "voltage_dc_2": {
-        "name": "DC voltage 2"
+      "voltage_dc_mppt_no": {
+        "name": "DC voltage {mppt_no}"
       },
       "inverter_state": {
         "name": "Inverter state"
