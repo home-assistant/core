@@ -2,6 +2,9 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.nederlandse_spoorwegen.const import (
     CONF_FROM,
     CONF_ROUTES,
@@ -15,7 +18,10 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 
+from . import setup_integration
 from .const import API_KEY
+
+from tests.common import MockConfigEntry
 
 
 async def test_config_import(
@@ -51,3 +57,16 @@ async def test_config_import(
     assert len(issue_registry.issues) == 1
     assert (HOMEASSISTANT_DOMAIN, "deprecated_yaml") in issue_registry.issues
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+async def test_sensor(
+    hass: HomeAssistant,
+    mock_nsapi,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test sensor initialization."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.to_work") == snapshot

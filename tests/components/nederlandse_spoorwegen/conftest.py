@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from ns_api import Station
+from ns_api import Station, Trip
 import pytest
 
 from homeassistant.components.nederlandse_spoorwegen.const import (
@@ -33,15 +33,23 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_nsapi() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.nederlandse_spoorwegen.config_flow.NSAPI",
-        autospec=True,
-    ) as mock_nsapi:
+    with (
+        patch(
+            "homeassistant.components.nederlandse_spoorwegen.config_flow.NSAPI",
+            autospec=True,
+        ) as mock_nsapi,
+        patch(
+            "homeassistant.components.nederlandse_spoorwegen.NSAPI",
+            new=mock_nsapi,
+        ),
+    ):
         client = mock_nsapi.return_value
         stations = load_json_object_fixture("stations.json", DOMAIN)
         client.get_stations.return_value = [
             Station(station) for station in stations["payload"]
         ]
+        trips = load_json_object_fixture("trip.json", DOMAIN)
+        client.get_trips.return_value = [Trip(trip) for trip in trips["trips"]]
         yield client
 
 
