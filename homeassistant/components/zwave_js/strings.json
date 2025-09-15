@@ -14,7 +14,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "config_entry_not_loaded": "The Z-Wave configuration entry is not loaded. Please try again when the configuration entry is loaded.",
       "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device.",
-      "discovery_requires_supervisor": "Discovery requires the supervisor.",
+      "discovery_requires_supervisor": "Discovery requires the Z-Wave Supervisor add-on.",
       "migration_low_sdk_version": "The SDK version of the old adapter is lower than {ok_sdk_version}. This means it's not possible to migrate the non-volatile memory (NVM) of the old adapter to another adapter.\n\nCheck the documentation on the manufacturer support pages of the old adapter, if it's possible to upgrade the firmware of the old adapter to a version that is built with SDK version {ok_sdk_version} or higher.",
       "migration_successful": "Migration successful.",
       "not_zwave_device": "Discovered device is not a Z-Wave device.",
