@@ -39,8 +39,9 @@ ROBOT_4_DATA = {
     "cleanCycleWaitTime": 15,
     "isKeypadLockout": False,
     "nightLightMode": "OFF",
-    "nightLightBrightness": 85,
+    "nightLightBrightness": 50,
     "isPanelSleepMode": False,
+    "panelBrightnessHigh": 50,
     "panelSleepTime": 0,
     "panelWakeTime": 0,
     "weekdaySleepModeEnabled": {
