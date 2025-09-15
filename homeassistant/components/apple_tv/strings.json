@@ -62,6 +62,17 @@
       "inconsistent_device": "Expected protocols were not found during discovery. This normally indicates a problem with multicast DNS (Zeroconf). Please try adding the device again."
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "keyboard_focused": {
+        "name": "Keyboard focused",
+        "state": {
+          "on": "Focused",
+          "off": "Not focused"
+        }
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
