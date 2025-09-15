@@ -33,7 +33,6 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._url: str | None = None
         self._name: str | None = None
         self._serial_number: int | None = None
 
@@ -47,12 +46,12 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._url = user_input[CONF_URL]
-            data = {CONF_URL: self._url}
+            url = user_input[CONF_URL]
+            data = {CONF_URL: url}
             self._async_abort_entries_match(data)
             auth = Auth(
                 session=async_get_clientsession(self.hass),
-                base_url=self._url,
+                base_url=url,
             )
             info = Info(auth)
             try:
@@ -78,13 +77,12 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=self._title,
-                        data={CONF_URL: self._url},
+                        data={CONF_URL: url},
                     )
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,
             errors=errors,
-            last_step=bool(self.source == SOURCE_RECONFIGURE),
         )
 
     async def async_step_reconfigure(
