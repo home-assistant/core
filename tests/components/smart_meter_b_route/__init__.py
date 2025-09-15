@@ -16,7 +16,10 @@ user_input = {
 def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Configure the integration."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data=user_input, entry_id="123456", unique_id="123456"
+        domain=DOMAIN,
+        data=user_input,
+        entry_id="01234567890123456789012345F789",
+        unique_id="123456",
     )
     entry.add_to_hass(hass)
 

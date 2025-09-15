@@ -2,46 +2,17 @@
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 from .coordinator import BRouteConfigEntry, BRouteUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-def is_duplicate(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-) -> bool:
-    """Filter duplicate entries."""
-    existing_entries = hass.config_entries.async_entries(
-        DOMAIN, include_disabled=False, include_ignore=False
-    )
-    entry_bid = entry.data[CONF_ID]
-    for existing_entry in existing_entries:
-        existing_entry_bid = existing_entry.data[CONF_ID]
-        if (
-            existing_entry_bid == entry_bid
-            and existing_entry.unique_id != entry.unique_id
-        ):
-            _LOGGER.warning(
-                "Duplicate entry found (Skipping): existing_entry.unique_id=%s, entry.unique_id=%s, entry.runtime_data.bid=%s",
-                existing_entry.unique_id,
-                entry.unique_id,
-                entry_bid,
-            )
-            return True
-    return False
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: BRouteConfigEntry) -> bool:
     """Set up Smart Meter B Route from a config entry."""
-    if is_duplicate(hass, entry):
-        return False
 
     coordinator = BRouteUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
