@@ -53,7 +53,7 @@ def user_input() -> dict[str, str]:
     """Return test user input data."""
     return {
         CONF_DEVICE: "/dev/ttyUSB42",
-        CONF_ID: "B_ROUTE_ID",
+        CONF_ID: "01234567890123456789012345F789",
         CONF_PASSWORD: "B_ROUTE_PASSWORD",
     }
 
