@@ -39,14 +39,14 @@ USER_SCHEMA = vol.Schema(
         vol.Optional(CONF_LATITUDE): cv.latitude,
         vol.Optional(CONF_LONGITUDE): cv.longitude,
         vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
-        vol.Optional(CONF_LANGUAGE): vol.In(LANGUAGES),
+        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(LANGUAGES),
     }
 )
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_MODE): vol.In(OWM_MODES),
-        vol.Optional(CONF_LANGUAGE): vol.In(LANGUAGES),
+        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
+        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(LANGUAGES),
     }
 )
 
@@ -111,22 +111,12 @@ class OpenWeatherMapOptionsFlow(OptionsFlow):
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""
-        default_data = {
-            CONF_MODE: DEFAULT_OWM_MODE,
-            CONF_LANGUAGE: DEFAULT_LANGUAGE,
-        }
-        schema_data = {
-            **default_data,
-            **self.config_entry.data,
-            **self.config_entry.options,
-        }
-
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, schema_data
+                OPTIONS_SCHEMA, self.config_entry.options
             ),
         )
