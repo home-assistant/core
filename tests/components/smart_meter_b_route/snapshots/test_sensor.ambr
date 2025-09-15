@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_broute_update_coordinator[sensor.smart_meter_b_route_b_route_id_instantaneous_current_r_phase-entry]
+# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_b_route_id_instantaneous_current_r_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -39,7 +39,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_broute_update_coordinator[sensor.smart_meter_b_route_b_route_id_instantaneous_current_r_phase-state]
+# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_b_route_id_instantaneous_current_r_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -55,7 +55,7 @@
     'state': '1',
   })
 # ---
-# name: test_broute_update_coordinator[sensor.smart_meter_b_route_b_route_id_instantaneous_current_t_phase-entry]
+# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_b_route_id_instantaneous_current_t_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -95,7 +95,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_broute_update_coordinator[sensor.smart_meter_b_route_b_route_id_instantaneous_current_t_phase-state]
+# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_b_route_id_instantaneous_current_t_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -111,7 +111,7 @@
     'state': '2',
   })
 # ---
-# name: test_broute_update_coordinator[sensor.smart_meter_b_route_b_route_id_instantaneous_power-entry]
+# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_b_route_id_instantaneous_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -151,7 +151,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_broute_update_coordinator[sensor.smart_meter_b_route_b_route_id_instantaneous_power-state]
+# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_b_route_id_instantaneous_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -167,7 +167,7 @@
     'state': '3',
   })
 # ---
-# name: test_broute_update_coordinator[sensor.smart_meter_b_route_b_route_id_total_consumption-entry]
+# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_b_route_id_total_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -207,7 +207,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_broute_update_coordinator[sensor.smart_meter_b_route_b_route_id_total_consumption-state]
+# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_b_route_id_total_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',

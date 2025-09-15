@@ -98,7 +98,7 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
                     _generate_unique_id(device), raise_on_progress=False
                 )
                 self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=ENTRY_TITLE, data=user_input)
+                return self.async_create_entry(title=ENTRY_TITLE, data=user_input)
 
         discovered_device_id, discovered_device_name = (
             self._get_discovered_device_id_and_name(device_options)
