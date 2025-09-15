@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 
