@@ -171,9 +171,8 @@ class NSDepartureSensor(SensorEntity):
         if not self._trips or self._first_trip is None:
             return None
 
-        # Initialize route with departure, extend with trip parts if they exist
-        route = [self._first_trip.departure]
         if self._first_trip.trip_parts:
+            route = [self._first_trip.departure]
             route.extend(k.destination for k in self._first_trip.trip_parts)
 
         # Static attributes
