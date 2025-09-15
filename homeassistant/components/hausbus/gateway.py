@@ -226,7 +226,6 @@ class HausbusGateway(IBusDataListener):
                       name = f"{className} {instanceObjectId.getInstanceId()}"
                       LOGGER.debug("specialName %s", name)
 
-                    # automatische Namen für dynamische Elemente, die nicht alle in den Template stehen sollen
                     if name is None:
                         className = ProxyFactory.getBusClassNameForClass(
                             instanceObjectId.getClassId()
@@ -347,7 +346,6 @@ class HausbusGateway(IBusDataListener):
                 LOGGER.debug("resetting device %s", device_id_int)
                 Controller.create(device_id_int, 1).reset()
                 return True
-            LOGGER.debug("passt nicht %s", hausBusDevice.hass_device_entry_id)
         return False
 
 
