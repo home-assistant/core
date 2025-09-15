@@ -31,7 +31,7 @@ from .coordinator import NtfyConfigEntry
 from .entity import NtfyBaseEntity
 
 PARALLEL_UPDATES = 0
-MAX_ACTIONS_ALLOWED = 3
+MAX_ACTIONS_ALLOWED = 3  # ntfy only supports up to 3 actions per notification
 
 SERVICE_PUBLISH = "publish"
 ATTR_ATTACH = "attach"
