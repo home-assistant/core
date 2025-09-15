@@ -258,7 +258,10 @@ async def test_agents_delete(
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
     # Should delete both the tar and the metadata file
-    assert mock_client.delete_object.call_count == 2
+    assert mock_client.delete_objects.call_count == 1
+    kwargs = mock_client.delete_objects.call_args.kwargs
+    assert "Delete" in kwargs and "Objects" in kwargs["Delete"]
+    assert len(kwargs["Delete"]["Objects"]) == 2
 
 
 async def test_agents_delete_not_throwing_on_not_found(
@@ -392,7 +395,7 @@ async def test_error_during_delete(
     test_backup: AgentBackup,
 ) -> None:
     """Test the error wrapper."""
-    mock_client.delete_object.side_effect = BotoCoreError
+    mock_client.delete_objects.side_effect = BotoCoreError
 
     client = await hass_ws_client(hass)
 
