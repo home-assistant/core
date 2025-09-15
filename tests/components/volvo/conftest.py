@@ -9,7 +9,7 @@ from volvocarsapi.auth import TOKEN_URL
 from volvocarsapi.models import (
     VolvoCarsAvailableCommand,
     VolvoCarsLocation,
-    VolvoCarsValueField,
+    VolvoCarsValueStatusField,
     VolvoCarsVehicle,
 )
 
@@ -98,7 +98,7 @@ async def mock_api(hass: HomeAssistant, full_model: str) -> AsyncGenerator[Async
             hass, "energy_state", full_model
         )
         energy_state = {
-            key: VolvoCarsValueField.from_dict(value)
+            key: VolvoCarsValueStatusField.from_dict(value)
             for key, value in energy_state_data.items()
         }
         engine_status = await async_load_fixture_as_value_field(
