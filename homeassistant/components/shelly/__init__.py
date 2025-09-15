@@ -67,6 +67,7 @@ from .utils import (
     get_http_port,
     get_rpc_scripts_event_types,
     get_ws_context,
+    remove_empty_sub_devices,
     remove_stale_blu_trv_devices,
 )
 
@@ -223,6 +224,7 @@ async def _async_setup_block_entry(
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
+        remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None
         or device_entry is None
@@ -334,6 +336,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             hass,
             entry,
         )
+        remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None
         or device_entry is None
