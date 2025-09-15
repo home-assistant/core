@@ -13,14 +13,20 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_SSL = False                         
+DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
 CONF_DHCP_SOFTWARE = "dhcp_software"
@@ -197,16 +203,16 @@ class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
             return
 
 
-class EthersUbusDeviceScanner(UbusDeviceScanner):                             
-    """Implement the Ubus device scanning for /etc/ethers"""                                   
-                                                                               
-    def _generate_mac2name(self):                                                      
-        result = self.ubus.file_read("/etc/ethers")                          
-        if result:                                                               
-            self.mac2name = {}                                             
-            for line in result["data"].splitlines():                            
-                hosts = line.split(" ")               
-                self.mac2name[hosts[0].upper()] = hosts[1]                     
-        else:                                                                          
-            # Error, handled in the ubus.file_read()                          
-             return
+class EthersUbusDeviceScanner(UbusDeviceScanner):
+    """Implement the Ubus device scanning for /etc/ethers"""
+
+    def _generate_mac2name(self):
+        result = self.ubus.file_read("/etc/ethers")
+        if result:
+            self.mac2name = {}
+            for line in result["data"].splitlines():
+                hosts = line.split(" ")
+                self.mac2name[hosts[0].upper()] = hosts[1]
+        else:
+            # Error, handled in the ubus.file_read()
+            return
