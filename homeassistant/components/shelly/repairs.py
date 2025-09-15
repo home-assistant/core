@@ -82,7 +82,7 @@ def async_manage_wall_display_firmware_unsupported_issue(
 
     device = entry.runtime_data.rpc.device
 
-    if device.model == MODEL_WALL_DISPLAY:
+    if entry.data["model"] == MODEL_WALL_DISPLAY:
         firmware = AwesomeVersion(device.shelly["ver"])
         if firmware < WALL_DISPLAY_MIN_FIRMWARE:
             ir.async_create_issue(
