@@ -13,11 +13,20 @@ from energyid_webhooks.client_v2 import WebhookClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_entity_registry_updated_event,
+    async_track_state_change_event,
+)
 
 from .const import (
     CONF_DEVICE_ID,
@@ -74,6 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
             f"Timeout authenticating with EnergyID: {err}"
         ) from err
     except Exception as err:
+        _LOGGER.exception("Unexpected error during EnergyID authentication")
         raise ConfigEntryAuthFailed(
             f"Failed to authenticate with EnergyID: {err}"
         ) from err
@@ -130,12 +140,20 @@ async def async_update_listeners(
     runtime_data = entry.runtime_data
     client = runtime_data.client
 
-    if old_state_listener := runtime_data.listeners.pop(LISTENER_KEY_STATE, None):
-        _LOGGER.debug("Removing old state listener for %s", entry.entry_id)
-        if isinstance(old_state_listener, asyncio.Task):
-            old_state_listener.cancel()
+    # Clean up old listeners (except background_sync and registry tracking)
+    listeners_to_remove = [
+        k
+        for k in runtime_data.listeners
+        if k not in ("background_sync", "entity_registry_tracking")
+    ]
+
+    for listener_key in listeners_to_remove:
+        old_listener = runtime_data.listeners.pop(listener_key)
+        _LOGGER.debug("Removing old listener %s for %s", listener_key, entry.entry_id)
+        if isinstance(old_listener, asyncio.Task):
+            old_listener.cancel()
         else:
-            old_state_listener()
+            old_listener()
 
     mappings: dict[str, str] = {}
     entities_to_track: list[str] = []
@@ -150,6 +168,8 @@ async def async_update_listeners(
         [s.data for s in subentries],
     )
 
+    # Build current entity mappings
+    tracked_entity_ids = []
     for subentry in subentries:
         entity_uuid = subentry.data.get(CONF_HA_ENTITY_UUID)
         energyid_key = subentry.data.get(CONF_ENERGYID_KEY)
@@ -167,8 +187,10 @@ async def async_update_listeners(
             continue
 
         ha_entity_id = entity_entry.entity_id
+        tracked_entity_ids.append(ha_entity_id)
 
         if not hass.states.get(ha_entity_id):
+            # Entity exists in registry but not yet in state machine (common during boot)
             _LOGGER.warning(
                 "Entity %s does not exist in state machine, skipping mapping to %s",
                 ha_entity_id,
@@ -202,6 +224,45 @@ async def async_update_listeners(
                         current_state.state,
                     )
 
+    # Set up entity registry tracking for the specific entities we care about
+    if tracked_entity_ids and "entity_registry_tracking" not in runtime_data.listeners:
+        _LOGGER.debug("Setting up entity registry tracking for: %s", tracked_entity_ids)
+
+        def _handle_entity_registry_change(
+            event: Event[er.EventEntityRegistryUpdatedData],
+        ) -> None:
+            """Handle entity registry changes for our tracked entities."""
+            _LOGGER.info("REGISTRY EVENT: %s", event)
+
+            action = getattr(event, "action", None)
+            changed_entity_id = getattr(event, "entity_id", None)
+            changes = getattr(event, "changes", {})
+
+            if action == "update" and changed_entity_id and "entity_id" in changes:
+                old_entity_id = changes["entity_id"]
+                new_entity_id = changed_entity_id
+
+                _LOGGER.info(
+                    "Entity ID changed: %s -> %s", old_entity_id, new_entity_id
+                )
+
+                # Check if this was one of our tracked entities
+                if old_entity_id in runtime_data.mappings:
+                    _LOGGER.info("Tracked entity renamed, reloading listeners")
+                    hass.async_create_task(async_update_listeners(hass, entry))
+                    return
+
+            elif action == "remove" and changed_entity_id:
+                if changed_entity_id in runtime_data.mappings:
+                    _LOGGER.info("Tracked entity removed: %s", changed_entity_id)
+                    hass.async_create_task(async_update_listeners(hass, entry))
+
+        # Track the specific entity IDs we care about
+        unsub_entity_registry = async_track_entity_registry_updated_event(
+            hass, tracked_entity_ids, _handle_entity_registry_change
+        )
+        runtime_data.listeners["entity_registry_tracking"] = unsub_entity_registry
+
     if removed_mappings := old_mappings - new_mappings:
         _LOGGER.debug("Removed mappings: %s", ", ".join(removed_mappings))
 
@@ -221,22 +282,26 @@ async def async_update_listeners(
     runtime_data.listeners[LISTENER_KEY_STATE] = unsub_state_change
 
     _LOGGER.debug(
-        "Now tracking state changes for %d entities for '%s' (interval: %ss)",
+        "Now tracking state changes for %d entities for '%s': %s",
         len(entities_to_track),
         client.device_name,
-        client.webhook_policy.get("uploadInterval", DEFAULT_UPLOAD_INTERVAL_SECONDS)
-        if client.webhook_policy
-        else DEFAULT_UPLOAD_INTERVAL_SECONDS,
+        entities_to_track,
     )
 
 
 @callback
 def _async_handle_state_change(
-    hass: HomeAssistant, entry_id: str, event: Event
+    hass: HomeAssistant, entry_id: str, event: Event[EventStateChangedData]
 ) -> None:
     """Handle state changes for tracked entities."""
     entity_id = event.data["entity_id"]
-    new_state = event.data.get("new_state")
+    new_state = event.data["new_state"]
+
+    _LOGGER.debug(
+        "State change detected for entity: %s, new value: %s",
+        entity_id,
+        new_state.state if new_state else "None",
+    )
 
     if not new_state or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
         return
@@ -249,6 +314,10 @@ def _async_handle_state_change(
     runtime_data = entry.runtime_data
     if not (energyid_key := runtime_data.mappings.get(entity_id)):
         return
+
+    _LOGGER.debug(
+        "Updating EnergyID sensor %s with value %s", energyid_key, new_state.state
+    )
 
     try:
         value = float(new_state.state)
@@ -280,7 +349,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) ->
             for listener in entry.runtime_data.listeners.values():
                 if hasattr(listener, "cancel"):
                     listener.cancel()  # It's a task
-                else:
+                elif callable(listener):
                     listener()  # It's a callable
 
             try:
