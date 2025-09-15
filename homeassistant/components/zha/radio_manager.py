@@ -285,6 +285,15 @@ class ZhaRadioManager:
         """
         assert self.chosen_backup is not None
 
+        async with self.connect_zigpy_app() as app:
+            await app.connect()
+
+            # Raises CannotWriteNetworkSettings, DestructiveWriteNetworkSettings
+            await app.can_write_network_settings(
+                network_info=self.chosen_backup.network_info,
+                node_info=self.chosen_backup.node_info,
+            )
+
         if self.radio_type != RadioType.ezsp:
             await self.restore_backup(self.chosen_backup)
             return False

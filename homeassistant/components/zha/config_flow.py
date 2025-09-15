@@ -51,6 +51,9 @@ from .radio_manager import (
 CONF_MANUAL_PATH = "Enter Manually"
 DECONZ_DOMAIN = "deconz"
 
+MIGRATION_STRATEGY_RECOMMENDED = "migration_strategy_recommended"
+MIGRATION_STRATEGY_ADVANCED = "migration_strategy_advanced"
+
 FORMATION_STRATEGY = "formation_strategy"
 FORMATION_FORM_NEW_NETWORK = "form_new_network"
 FORMATION_FORM_INITIAL_NETWORK = "form_initial_network"
@@ -330,7 +333,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         # Skip this step if we are using a recommended radio
         if user_input is not None or self._radio_mgr.radio_type in RECOMMENDED_RADIOS:
-            return await self.async_step_choose_formation_strategy()
+            return await self.async_step_choose_migration_strategy()
 
         return self.async_show_form(
             step_id="verify_radio",
@@ -341,6 +344,33 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 ),
             },
         )
+
+    async def async_step_choose_migration_strategy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Choose how to deal with the current radio's settings during migration."""
+        return self.async_show_menu(
+            step_id="choose_migration_strategy",
+            menu_options=[
+                MIGRATION_STRATEGY_RECOMMENDED,
+                MIGRATION_STRATEGY_ADVANCED,
+            ],
+        )
+
+    async def async_step_migration_strategy_recommended(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Recommended migration strategy: automatically migrate everything."""
+
+        # Assume the most recent backup is the correct one
+        self._radio_mgr.chosen_backup = self._radio_mgr.backups[0]
+        return await self.async_step_maybe_confirm_ezsp_restore()
+
+    async def async_step_migration_strategy_advanced(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Advanced migration strategy: let the user choose."""
+        return await self.async_step_choose_formation_strategy()
 
     async def async_step_choose_formation_strategy(
         self, user_input: dict[str, Any] | None = None
@@ -548,9 +578,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a ZHA config flow start."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return await self.async_step_choose_serial_port(user_input)
 
     async def async_step_confirm(
@@ -558,10 +585,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm a discovery."""
         self._set_confirm_only()
-
-        # Don't permit discovery if ZHA is already set up
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         # Without confirmation, discovery can automatically progress into parts of the
         # config flow logic that interacts with hardware.

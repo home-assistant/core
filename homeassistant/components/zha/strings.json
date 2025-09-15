@@ -24,7 +24,7 @@
       },
       "manual_port_config": {
         "title": "Serial port settings",
-        "description": "Enter the serial port settings",
+        "description": "ZHA was not able to automatically detect serial port settings for your radio. This usually is an issue with the firmware or permissions.\n\nIf you are using firmware with nonstandard settings, enter the serial port settings",
         "data": {
           "path": "Serial device path",
           "baudrate": "Port speed",
@@ -34,6 +34,18 @@
       "verify_radio": {
         "title": "Radio is not recommended",
         "description": "The radio you are using ({name}) is not recommended and support for it may be removed in the future. Please see the Zigbee Home Automation integration's documentation for [a list of recommended adapters]({docs_recommended_adapters_url})."
+      },
+      "choose_migration_strategy": {
+        "title": "Migrate to a new adapter",
+        "description": "Choose how you want to migrate your Zigbee network backup from your old adapter to a new one.",
+        "menu_options": {
+          "migration_strategy_recommended": "Migrate automatically (recommended)",
+          "migration_strategy_advanced": "Advanced migration"
+        },
+        "menu_option_descriptions": {
+          "migration_strategy_recommended": "This is the quickest option to migrate to a new adapter",
+          "migration_strategy_advanced": "This will let you restore a specific network backup or upload your own"
+        }
       },
       "choose_formation_strategy": {
         "title": "Network formation",
@@ -80,7 +92,6 @@
       "invalid_backup_json": "Invalid backup JSON"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_zha_device": "This device is not a ZHA device",
       "usb_probe_failed": "Failed to probe the USB device",
       "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this.",
@@ -93,7 +104,7 @@
     "step": {
       "init": {
         "title": "Reconfigure ZHA",
-        "description": "ZHA will be stopped. Do you wish to continue?"
+        "description": "A backup will be performed and ZHA will be stopped. Do you wish to continue?"
       },
       "prompt_migrate_or_reconfigure": {
         "title": "Migrate or re-configure",
@@ -187,7 +198,6 @@
       "invalid_backup_json": "[%key:component::zha::config::error::invalid_backup_json%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_zha_device": "[%key:component::zha::config::abort::not_zha_device%]",
       "usb_probe_failed": "[%key:component::zha::config::abort::usb_probe_failed%]",
       "wrong_firmware_installed": "[%key:component::zha::config::abort::wrong_firmware_installed%]",
