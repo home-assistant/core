@@ -1458,6 +1458,14 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_class=RpcPresenceSensor,
     ),
+    "presencezone_num_objects": RpcSensorDescription(
+        key="presencezone",
+        sub_key="num_objects",
+        translation_key="detected_objects",
+        name="Detected objects",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_class=RpcPresenceSensor,
+    ),
 }
 
 
