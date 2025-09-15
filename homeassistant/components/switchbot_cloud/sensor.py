@@ -1,12 +1,10 @@
 """Platform for sensor integration."""
 
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
 from switchbot_api import Device, Remote, SwitchBotAPI
-
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -44,11 +42,11 @@ SENSOR_TYPE_USED_ELECTRICITY = "usedElectricity"
 SENSOR_TYPE_LIGHTLEVEL = "lightLevel"
 
 
-
 RELAY_SWITCH_2PM_SENSOR_TYPE_POWER = "Power"
 RELAY_SWITCH_2PM_SENSOR_TYPE_VOLTAGE = "Voltage"
 RELAY_SWITCH_2PM_SENSOR_TYPE_CURRENT = "ElectricCurrent"
 RELAY_SWITCH_2PM_SENSOR_TYPE_ELECTRICITY = "UsedElectricity"
+
 
 @dataclass(frozen=True, kw_only=True)
 class SwitchbotCloudSensorEntityDescription(SensorEntityDescription):
@@ -328,15 +326,3 @@ def _async_make_entity(
 ) -> SwitchBotCloudSensor:
     """Make a SwitchBotCloudSensor or SwitchBotCloudRelaySwitch2PMSensor."""
     return SwitchBotCloudSensor(api, device, coordinator, description)
-
-        if isinstance(
-            self.entity_description,
-            SwitchbotCloudSensorEntityDescription,
-        ):
-            self._attr_native_value = self.entity_description.value_fn(
-                self.coordinator.data
-            )
-        else:
-            self._attr_native_value = self.coordinator.data.get(
-                self.entity_description.key
-            )
