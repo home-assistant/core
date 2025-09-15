@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import uuid
 
 from packaging import version
 from pylamarzocco import (
@@ -11,6 +12,7 @@ from pylamarzocco import (
 )
 from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.util import SecretData, generate_secret_data
 
 from homeassistant.components.bluetooth import async_discovered_service_info
 from homeassistant.const import (
@@ -25,7 +27,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_USE_BLUETOOTH, DOMAIN
+from .const import CONF_SECRET_DATA, CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import (
     LaMarzoccoConfigEntry,
     LaMarzoccoConfigUpdateCoordinator,
@@ -60,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     cloud_client = LaMarzoccoCloudClient(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
+        secret_data=SecretData.from_json(entry.data[CONF_SECRET_DATA]),
         client=async_create_clientsession(hass),
     )
 
@@ -166,45 +169,37 @@ async def async_migrate_entry(
     hass: HomeAssistant, entry: LaMarzoccoConfigEntry
 ) -> bool:
     """Migrate config entry."""
-    if entry.version > 3:
+    if entry.version > 4:
         # guard against downgrade from a future version
         return False
 
-    if entry.version == 1:
+    if entry.version in (1, 2):
         _LOGGER.error(
-            "Migration from version 1 is no longer supported, please remove and re-add the integration"
+            "Migration from version 1 or 2 is no longer supported, please remove and re-add the integration"
         )
         return False
 
-    if entry.version == 2:
+    if entry.version == 3:
+        secret_data = generate_secret_data(str(uuid.uuid4()).lower())
         cloud_client = LaMarzoccoCloudClient(
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
+            secret_data=secret_data,
         )
         try:
-            things = await cloud_client.list_things()
+            await cloud_client.async_register_client()
         except (AuthFail, RequestNotSuccessful) as exc:
             _LOGGER.error("Migration failed with error %s", exc)
             return False
-        v3_data = {
-            CONF_USERNAME: entry.data[CONF_USERNAME],
-            CONF_PASSWORD: entry.data[CONF_PASSWORD],
-            CONF_TOKEN: next(
-                (
-                    thing.ble_auth_token
-                    for thing in things
-                    if thing.serial_number == entry.unique_id
-                ),
-                None,
-            ),
-        }
-        if CONF_MAC in entry.data:
-            v3_data[CONF_MAC] = entry.data[CONF_MAC]
+
         hass.config_entries.async_update_entry(
             entry,
-            data=v3_data,
-            version=3,
+            data={
+                **entry.data,
+                CONF_SECRET_DATA: secret_data.to_json(),
+            },
+            version=4,
         )
-        _LOGGER.debug("Migrated La Marzocco config entry to version 2")
+        _LOGGER.debug("Migrated La Marzocco config entry to version 4")
 
     return True

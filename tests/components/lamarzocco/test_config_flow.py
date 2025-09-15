@@ -9,7 +9,11 @@ from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
-from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH, DOMAIN
+from homeassistant.components.lamarzocco.const import (
+    CONF_SECRET_DATA,
+    CONF_USE_BLUETOOTH,
+    DOMAIN,
+)
 from homeassistant.config_entries import (
     SOURCE_BLUETOOTH,
     SOURCE_DHCP,
@@ -23,7 +27,12 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import USER_INPUT, async_init_integration, get_bluetooth_service_info
+from . import (
+    MOCK_SECRET_DATA,
+    USER_INPUT,
+    async_init_integration,
+    get_bluetooth_service_info,
+)
 
 from tests.common import MockConfigEntry
 
@@ -68,6 +77,7 @@ async def __do_sucessful_machine_selection_step(
     assert result["data"] == {
         **USER_INPUT,
         CONF_TOKEN: None,
+        CONF_SECRET_DATA: MOCK_SECRET_DATA,
     }
     assert result["result"].unique_id == "GS012345"
 
@@ -344,6 +354,7 @@ async def test_bluetooth_discovery(
         **USER_INPUT,
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
         CONF_TOKEN: "dummyToken",
+        CONF_SECRET_DATA: MOCK_SECRET_DATA,
     }
 
 
@@ -407,6 +418,7 @@ async def test_bluetooth_discovery_errors(
         **USER_INPUT,
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
         CONF_TOKEN: None,
+        CONF_SECRET_DATA: MOCK_SECRET_DATA,
     }
 
 
@@ -438,6 +450,7 @@ async def test_dhcp_discovery(
         **USER_INPUT,
         CONF_ADDRESS: "aabbccddeeff",
         CONF_TOKEN: None,
+        CONF_SECRET_DATA: MOCK_SECRET_DATA,
     }
 
 
