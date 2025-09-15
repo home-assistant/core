@@ -1920,7 +1920,7 @@ pyrail==0.4.1
 pyrainbird==6.0.1
 
 # homeassistant.components.playstation_network
-pyrate-limiter==3.7.0
+pyrate-limiter==3.9.0
 
 # homeassistant.components.risco
 pyrisco==0.6.7
