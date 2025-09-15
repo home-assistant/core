@@ -86,9 +86,7 @@ class MatterNumber(MatterEntity, NumberEntity):
                 value=sendvalue,
             )
         except:
-            raise HomeAssistantError(
-                "The device does not allow to change this value."
-            )
+            raise HomeAssistantError("The device does not allow to change this value.")
 
     @callback
     def _update_from_device(self) -> None:
