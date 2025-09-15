@@ -56,4 +56,4 @@ def get_bluetooth_service_info(model: ModelName, serial: str) -> BluetoothServic
     )
 
 
-MOCK_SECRET_DATA = '{"secret": "K9ZW2vlMSb3QXmhySx4pxAbTHujWj3VZ01Jn3D/sO98=", "private_key": "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg8iotE8El786F6kHuEL8GyYhjDB7oo06vNhQwtewF37yhRANCAAQCLb9lHskiavvfkI4H2B+WsdkusfgBBFuFNRrGV8bqPMra1TK5myb/ecdZfHJBBJrcbdt90QMDmXQm5L3muXXe", "installation_id": "4e966f3f-2abc-49c4-a362-3cd3346f1a87"}'
+MOCK_INSTALLATION_KEY = '{"secret": "K9ZW2vlMSb3QXmhySx4pxAbTHujWj3VZ01Jn3D/sO98=", "private_key": "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg8iotE8El786F6kHuEL8GyYhjDB7oo06vNhQwtewF37yhRANCAAQCLb9lHskiavvfkI4H2B+WsdkusfgBBFuFNRrGV8bqPMra1TK5myb/ecdZfHJBBJrcbdt90QMDmXQm5L3muXXe", "installation_id": "4e966f3f-2abc-49c4-a362-3cd3346f1a87"}'

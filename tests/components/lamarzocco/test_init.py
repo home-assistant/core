@@ -8,7 +8,7 @@ from pylamarzocco.models import WebSocketDetails
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lamarzocco.const import CONF_SECRET_DATA, DOMAIN
+from homeassistant.components.lamarzocco.const import CONF_INSTALLATION_KEY, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -24,7 +24,7 @@ from homeassistant.helpers import (
 )
 
 from . import (
-    MOCK_SECRET_DATA,
+    MOCK_INSTALLATION_KEY,
     USER_INPUT,
     async_init_integration,
     get_bluetooth_service_info,
@@ -155,7 +155,7 @@ async def test_v4_migration(
         **USER_INPUT,
         CONF_ADDRESS: "000000000000",
         CONF_TOKEN: "token",
-        CONF_SECRET_DATA: MOCK_SECRET_DATA,
+        CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
 
 

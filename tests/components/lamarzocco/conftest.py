@@ -12,14 +12,14 @@ from pylamarzocco.models import (
     ThingSettings,
     ThingStatistics,
 )
-from pylamarzocco.util import SecretData
+from pylamarzocco.util import InstallationKey
 import pytest
 
-from homeassistant.components.lamarzocco.const import CONF_SECRET_DATA, DOMAIN
+from homeassistant.components.lamarzocco.const import CONF_INSTALLATION_KEY, DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_SECRET_DATA, SERIAL_DICT, USER_INPUT, async_init_integration
+from . import MOCK_INSTALLATION_KEY, SERIAL_DICT, USER_INPUT, async_init_integration
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -37,7 +37,7 @@ def mock_config_entry(
         | {
             CONF_ADDRESS: "000000000000",
             CONF_TOKEN: "token",
-            CONF_SECRET_DATA: MOCK_SECRET_DATA,
+            CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
         },
         unique_id=mock_lamarzocco.serial_number,
     )
@@ -54,15 +54,15 @@ async def init_integration(
 
 
 @pytest.fixture(autouse=True)
-def mock_generate_secret_data() -> Generator[MagicMock]:
-    """Return a mocked generate_secret_data."""
+def mock_generate_installation_key() -> Generator[MagicMock]:
+    """Return a mocked generate_installation_key."""
     with (
         patch(
-            "homeassistant.components.lamarzocco.generate_secret_data",
-            return_value=SecretData.from_json(MOCK_SECRET_DATA),
+            "homeassistant.components.lamarzocco.generate_installation_key",
+            return_value=InstallationKey.from_json(MOCK_INSTALLATION_KEY),
         ) as mock_generate,
         patch(
-            "homeassistant.components.lamarzocco.config_flow.generate_secret_data",
+            "homeassistant.components.lamarzocco.config_flow.generate_installation_key",
             new=mock_generate,
         ),
     ):

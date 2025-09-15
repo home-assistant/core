@@ -5,4 +5,4 @@ from typing import Final
 DOMAIN: Final = "lamarzocco"
 
 CONF_USE_BLUETOOTH: Final = "use_bluetooth"
-CONF_SECRET_DATA: Final = "secret_data"
+CONF_INSTALLATION_KEY: Final = "installation_key"

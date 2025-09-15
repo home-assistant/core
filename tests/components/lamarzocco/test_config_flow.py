@@ -10,7 +10,7 @@ import pytest
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import (
-    CONF_SECRET_DATA,
+    CONF_INSTALLATION_KEY,
     CONF_USE_BLUETOOTH,
     DOMAIN,
 )
@@ -28,7 +28,7 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import (
-    MOCK_SECRET_DATA,
+    MOCK_INSTALLATION_KEY,
     USER_INPUT,
     async_init_integration,
     get_bluetooth_service_info,
@@ -77,7 +77,7 @@ async def __do_sucessful_machine_selection_step(
     assert result["data"] == {
         **USER_INPUT,
         CONF_TOKEN: None,
-        CONF_SECRET_DATA: MOCK_SECRET_DATA,
+        CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
     assert result["result"].unique_id == "GS012345"
 
@@ -354,7 +354,7 @@ async def test_bluetooth_discovery(
         **USER_INPUT,
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
         CONF_TOKEN: "dummyToken",
-        CONF_SECRET_DATA: MOCK_SECRET_DATA,
+        CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
 
 
@@ -418,7 +418,7 @@ async def test_bluetooth_discovery_errors(
         **USER_INPUT,
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
         CONF_TOKEN: None,
-        CONF_SECRET_DATA: MOCK_SECRET_DATA,
+        CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
 
 
@@ -450,7 +450,7 @@ async def test_dhcp_discovery(
         **USER_INPUT,
         CONF_ADDRESS: "aabbccddeeff",
         CONF_TOKEN: None,
-        CONF_SECRET_DATA: MOCK_SECRET_DATA,
+        CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
 
 

@@ -11,7 +11,7 @@ from aiohttp import ClientSession
 from pylamarzocco import LaMarzoccoCloudClient
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import Thing
-from pylamarzocco.util import SecretData, generate_secret_data
+from pylamarzocco.util import InstallationKey, generate_installation_key
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -47,7 +47,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_SECRET_DATA, CONF_USE_BLUETOOTH, DOMAIN
+from .const import CONF_INSTALLATION_KEY, CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
 
 CONF_MACHINE = "machine"
@@ -62,7 +62,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 4
 
     _client: ClientSession
-    _secret_data: SecretData
+    _installation_key: InstallationKey
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -87,12 +87,14 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             }
 
             self._client = async_create_clientsession(self.hass)
-            self._secret_data = generate_secret_data(str(uuid.uuid4()).lower())
+            self._installation_key = generate_installation_key(
+                str(uuid.uuid4()).lower()
+            )
             cloud_client = LaMarzoccoCloudClient(
                 username=data[CONF_USERNAME],
                 password=data[CONF_PASSWORD],
                 client=self._client,
-                secret_data=self._secret_data,
+                installation_key=self._installation_key,
             )
             try:
                 await cloud_client.async_register_client()
@@ -190,7 +192,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=selected_device.name,
                     data={
                         **self._config,
-                        CONF_SECRET_DATA: self._secret_data.to_json(),
+                        CONF_INSTALLATION_KEY: self._installation_key.to_json(),
                         CONF_TOKEN: self._things[serial_number].ble_auth_token,
                     },
                 )

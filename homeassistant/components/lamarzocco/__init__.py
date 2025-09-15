@@ -12,7 +12,7 @@ from pylamarzocco import (
 )
 from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
-from pylamarzocco.util import SecretData, generate_secret_data
+from pylamarzocco.util import InstallationKey, generate_installation_key
 
 from homeassistant.components.bluetooth import async_discovered_service_info
 from homeassistant.const import (
@@ -27,7 +27,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_SECRET_DATA, CONF_USE_BLUETOOTH, DOMAIN
+from .const import CONF_INSTALLATION_KEY, CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import (
     LaMarzoccoConfigEntry,
     LaMarzoccoConfigUpdateCoordinator,
@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     cloud_client = LaMarzoccoCloudClient(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        secret_data=SecretData.from_json(entry.data[CONF_SECRET_DATA]),
+        installation_key=InstallationKey.from_json(entry.data[CONF_INSTALLATION_KEY]),
         client=async_create_clientsession(hass),
     )
 
@@ -180,11 +180,11 @@ async def async_migrate_entry(
         return False
 
     if entry.version == 3:
-        secret_data = generate_secret_data(str(uuid.uuid4()).lower())
+        installation_key = generate_installation_key(str(uuid.uuid4()).lower())
         cloud_client = LaMarzoccoCloudClient(
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
-            secret_data=secret_data,
+            installation_key=installation_key,
         )
         try:
             await cloud_client.async_register_client()
@@ -196,7 +196,7 @@ async def async_migrate_entry(
             entry,
             data={
                 **entry.data,
-                CONF_SECRET_DATA: secret_data.to_json(),
+                CONF_INSTALLATION_KEY: installation_key.to_json(),
             },
             version=4,
         )
