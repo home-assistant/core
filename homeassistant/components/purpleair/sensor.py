@@ -179,7 +179,7 @@ async def async_setup_entry(
         ]
         async_add_entities(
             new_entities=new_entities,
-            update_before_add=True,
+            update_before_add=False,
             config_subentry_id=subentry.subentry_id,
         )
 
