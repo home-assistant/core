@@ -257,6 +257,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_PASSWORD: validate_input_data[CONF_PASSWORD],
                         CONF_PREFIX: info[CONF_PREFIX],
                     },
+                    reason="reconfigure_successful",
                 )
 
         # Build defaults for the form from current entry
