@@ -259,5 +259,10 @@
         }
       }
     }
+  },
+  "services": {
+    "share": {
+      "service": "mdi:share"
+    }
   }
 }
