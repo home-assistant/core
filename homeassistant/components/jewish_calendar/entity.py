@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 from dataclasses import dataclass
+from functools import lru_cache
 import datetime as dt
 import logging
 
@@ -28,6 +29,31 @@ class JewishCalendarDataResults:
 
     dateinfo: HDateInfo
     zmanim: Zmanim
+
+
+@lru_cache(maxsize=1)
+def _make_zmanim(
+    date: dt.date,
+    location: Location,
+    candle_lighting_offset: int,
+    havdalah_offset: int,
+) -> Zmanim:
+    """Create a Zmanim object."""
+    return Zmanim(date, location, candle_lighting_offset, havdalah_offset)
+
+
+@lru_cache(maxsize=1)
+def _create_results(
+    date: dt.date,
+    diaspora: bool,
+    location: Location,
+    candle_lighting_offset: int,
+    havdalah_offset: int,
+) -> None:
+    """Create results object."""
+    zmanim = _make_zmanim(date, location, candle_lighting_offset, havdalah_offset)
+    dateinfo = HDateInfo(date, diaspora)
+    return JewishCalendarDataResults(dateinfo, zmanim)
 
 
 @dataclass
@@ -66,7 +92,7 @@ class JewishCalendarEntity(Entity):
 
     def make_zmanim(self, date: dt.date) -> Zmanim:
         """Create a Zmanim object."""
-        return Zmanim(
+        return _make_zmanim(
             date=date,
             location=self.data.location,
             candle_lighting_offset=self.data.candle_lighting_offset,
@@ -120,7 +146,10 @@ class JewishCalendarEntity(Entity):
 
         _LOGGER.debug("Now: %s Location: %r", now, self.data.location)
 
-        today = now.date()
-        zmanim = self.make_zmanim(today)
-        dateinfo = HDateInfo(today, diaspora=self.data.diaspora)
-        self.data.results = JewishCalendarDataResults(dateinfo, zmanim)
+        self.data.results = _create_results(
+            now.date(),
+            self.data.diaspora,
+            self.data.location,
+            self.data.candle_lighting_offset,
+            self.data.havdalah_offset,
+        )
