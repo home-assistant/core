@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
-from chip.clusters.Objects import NullValue
 from matter_server.client.models import device_types
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -18,24 +16,13 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SERVICE_CLEAN_AREAS, SERVICE_GET_AREAS, SERVICE_SELECT_AREAS
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
-
-ATTR_CURRENT_AREA = "current_area"
-ATTR_CURRENT_AREA_NAME = "current_area_name"
-ATTR_SELECTED_AREAS = "selected_areas"
 
 
 class OperationalState(IntEnum):
@@ -69,33 +56,6 @@ async def async_setup_entry(
     """Set up Matter vacuum platform from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.VACUUM, async_add_entities)
-    platform = entity_platform.async_get_current_platform()
-
-    # This will call Entity.async_handle_get_areas
-    platform.async_register_entity_service(
-        SERVICE_GET_AREAS,
-        schema=None,
-        func="async_handle_get_areas",
-        supports_response=SupportsResponse.ONLY,
-    )
-    # This will call Entity.async_handle_clean_areas
-    platform.async_register_entity_service(
-        SERVICE_CLEAN_AREAS,
-        schema={
-            vol.Required("areas"): vol.All(cv.ensure_list, [cv.positive_int]),
-        },
-        func="async_handle_clean_areas",
-        supports_response=SupportsResponse.ONLY,
-    )
-    # This will call Entity.async_handle_select_areas
-    platform.async_register_entity_service(
-        SERVICE_SELECT_AREAS,
-        schema={
-            vol.Required("areas"): vol.All(cv.ensure_list, [cv.positive_int]),
-        },
-        func="async_handle_select_areas",
-        supports_response=SupportsResponse.ONLY,
-    )
 
 
 class MatterVacuum(MatterEntity, StateVacuumEntity):
@@ -105,22 +65,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     _supported_run_modes: (
         dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
-    _attr_matter_areas: dict[str, Any] | None = None
-    _attr_current_area: int | None = None
-    _attr_current_area_name: str | None = None
-    _attr_selected_areas: list[int] | None = None
-    _attr_supported_maps: list[dict[str, Any]] | None = None
     entity_description: StateVacuumEntityDescription
     _platform_translation_key = "vacuum"
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the entity."""
-        return {
-            ATTR_CURRENT_AREA: self._attr_current_area,
-            ATTR_CURRENT_AREA_NAME: self._attr_current_area_name,
-            ATTR_SELECTED_AREAS: self._attr_selected_areas,
-        }
 
     def _get_run_mode_by_tag(
         self, tag: ModeTag
@@ -190,160 +136,10 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Pause the cleaning task."""
         await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
 
-    def async_get_areas(self, **kwargs: Any) -> dict[str, Any]:
-        """Get available area and map IDs from vacuum appliance."""
-
-        supported_areas = self.get_matter_attribute_value(
-            clusters.ServiceArea.Attributes.SupportedAreas
-        )
-        if not supported_areas:
-            raise HomeAssistantError("Can't get areas from the device.")
-
-        # Group by area_id: {area_id: {"map_id": ..., "name": ...}}
-        areas = {}
-        for area in supported_areas:
-            area_id = getattr(area, "areaID", None)
-            map_id = getattr(area, "mapID", None)
-            location_name = None
-            area_info = getattr(area, "areaInfo", None)
-            if area_info is not None:
-                location_info = getattr(area_info, "locationInfo", None)
-                if location_info is not None:
-                    location_name = getattr(location_info, "locationName", None)
-            if area_id is not None:
-                areas[area_id] = {"map_id": map_id, "name": location_name}
-
-        # Optionally, also extract supported maps if available
-        supported_maps = self.get_matter_attribute_value(
-            clusters.ServiceArea.Attributes.SupportedMaps
-        )
-        maps = []
-        if supported_maps:
-            maps = [
-                {
-                    "map_id": getattr(m, "mapID", None),
-                    "name": getattr(m, "name", None),
-                }
-                for m in supported_maps
-            ]
-
-        return {
-            "areas": areas,
-            "maps": maps,
-        }
-
-    async def async_handle_get_areas(self, **kwargs: Any) -> ServiceResponse:
-        """Get available area and map IDs from vacuum appliance."""
-        # Group by area_id: {area_id: {"map_id": ..., "name": ...}}
-        areas = {}
-        if self._attr_matter_areas is not None:
-            for area in self._attr_matter_areas:
-                area_id = getattr(area, "areaID", None)
-                map_id = getattr(area, "mapID", None)
-                location_name = None
-                area_info = getattr(area, "areaInfo", None)
-                if area_info is not None:
-                    location_info = getattr(area_info, "locationInfo", None)
-                    if location_info is not None:
-                        location_name = getattr(location_info, "locationName", None)
-                if area_id is not None:
-                    if map_id is NullValue:
-                        areas[area_id] = {"name": location_name}
-                    else:
-                        areas[area_id] = {"map_id": map_id, "name": location_name}
-
-            # Optionally, also extract supported maps if available
-            supported_maps = self.get_matter_attribute_value(
-                clusters.ServiceArea.Attributes.SupportedMaps
-            )
-            maps = []
-            if supported_maps != NullValue:  # chip.clusters.Types.Nullable
-                maps = [
-                    {
-                        "map_id": getattr(m, "mapID", None)
-                        if getattr(m, "mapID", None) != NullValue
-                        else None,
-                        "name": getattr(m, "name", None),
-                    }
-                    for m in supported_maps
-                ]
-
-            return cast(
-                ServiceResponse,
-                {
-                    "areas": areas,
-                    "maps": maps,
-                },
-            )
-        return None
-
-    async def async_handle_select_areas(
-        self, areas: list[int], **kwargs: Any
-    ) -> ServiceResponse:
-        """Select areas to clean."""
-        selected_areas = areas
-        # Matter command to the vacuum cleaner to select the areas.
-        await self.send_device_command(
-            clusters.ServiceArea.Commands.SelectAreas(newAreas=selected_areas)
-        )
-        # Return response indicating selected areas.
-        return cast(
-            ServiceResponse, {"status": "areas selected", "areas": selected_areas}
-        )
-
-    async def async_handle_clean_areas(
-        self, areas: list[int], **kwargs: Any
-    ) -> ServiceResponse:
-        """Start cleaning the specified areas."""
-        # Matter command to the vacuum cleaner to select the areas.
-        await self.send_device_command(
-            clusters.ServiceArea.Commands.SelectAreas(newAreas=areas)
-        )
-        # Start the vacuum cleaner after selecting areas.
-        await self.async_start()
-        # Return response indicating selected areas.
-        return cast(
-            ServiceResponse, {"status": "cleaning areas selected", "areas": areas}
-        )
-
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
-        # ServiceArea: get areas from the device
-        self._attr_matter_areas = self.get_matter_attribute_value(
-            clusters.ServiceArea.Attributes.SupportedAreas
-        )
-        # optional CurrentArea attribute
-        # pylint: disable=too-many-nested-blocks
-        if self.get_matter_attribute_value(clusters.ServiceArea.Attributes.CurrentArea):
-            current_area = self.get_matter_attribute_value(
-                clusters.ServiceArea.Attributes.CurrentArea
-            )
-            # get areaInfo.locationInfo.locationName for current_area in SupportedAreas list
-            area_name = None
-            if self._attr_matter_areas:
-                for area in self._attr_matter_areas:
-                    if getattr(area, "areaID", None) == current_area:
-                        area_info = getattr(area, "areaInfo", None)
-                        if area_info is not None:
-                            location_info = getattr(area_info, "locationInfo", None)
-                            if location_info is not None:
-                                area_name = getattr(location_info, "locationName", None)
-                        break
-            self._attr_current_area = current_area
-            self._attr_current_area_name = area_name
-        else:
-            self._attr_current_area = None
-            self._attr_current_area_name = None
-
-        # optional SelectedAreas attribute
-        if self.get_matter_attribute_value(
-            clusters.ServiceArea.Attributes.SelectedAreas
-        ):
-            self._attr_selected_areas = self.get_matter_attribute_value(
-                clusters.ServiceArea.Attributes.SelectedAreas
-            )
         # derive state from the run mode + operational state
         run_mode_raw: int = self.get_matter_attribute_value(
             clusters.RvcRunMode.Attributes.CurrentMode
@@ -423,10 +219,6 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.RvcRunMode.Attributes.CurrentMode,
             clusters.RvcOperationalState.Attributes.OperationalState,
-        ),
-        optional_attributes=(
-            clusters.ServiceArea.Attributes.SelectedAreas,
-            clusters.ServiceArea.Attributes.CurrentArea,
         ),
         device_type=(device_types.RoboticVacuumCleaner,),
         allow_none_value=True,
