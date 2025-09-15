@@ -50,7 +50,7 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
         if self.sensor_data.latitude is None or self.sensor_data.longitude is None:
             return attrs
 
-        if self._entry.options.get(CONF_SHOW_ON_MAP) is True:
+        if self._entry.options.get(CONF_SHOW_ON_MAP, False):
             attrs[ATTR_LATITUDE] = self.sensor_data.latitude
             attrs[ATTR_LONGITUDE] = self.sensor_data.longitude
 
