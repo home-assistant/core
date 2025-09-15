@@ -25,7 +25,7 @@ async def test_sensor_values(
 
 
 @pytest.mark.parametrize(
-    ("get_sensors_mock"),
+    "get_sensors_mock",
     [
         AsyncMock(side_effect=Exception),
         AsyncMock(side_effect=PurpleAirError),
