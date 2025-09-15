@@ -40,18 +40,6 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
     entity_description: MediaPlayerEntityDescription
     _platform_translation_key = "mediaplayer"
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the media player."""
-        await self.send_device_command(
-            clusters.OnOff.Commands.On(),
-        )
-
-    async def async_turn_off(self) -> None:
-        """Turn off the media player."""
-        await self.send_device_command(
-            clusters.OnOff.Commands.Off(),
-        )
-
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
         if volume == 0:
@@ -116,8 +104,6 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
             MediaPlayerEntityFeature.VOLUME_SET
             | MediaPlayerEntityFeature.VOLUME_MUTE
             | MediaPlayerEntityFeature.VOLUME_STEP
-            # | MediaPlayerEntityFeature.TURN_ON    # Uncomment if you want to support turning on
-            # | MediaPlayerEntityFeature.TURN_OFF   # Uncomment if you want to support turning off
         )
         self._attr_supported_features = supported_features
         self._attr_volume_step = 0.01  # Matter uses 1-254, so step can be small
