@@ -22,7 +22,7 @@ async def test_flow_aborts_with_existing_config_entry(hass: HomeAssistant) -> No
     # Create an existing config entry
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Volvo On Call will be removed ❌",
+        title="Volvo On Call",
         data={},
     )
     entry.add_to_hass(hass)

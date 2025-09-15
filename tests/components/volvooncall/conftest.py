@@ -12,6 +12,6 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Volvo On Call will be removed ❌",
+        title="Volvo On Call",
         data={},
     )

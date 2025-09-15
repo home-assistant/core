@@ -6,13 +6,13 @@
       }
     },
     "abort": {
-      "deprecated": "Volvo On Call has been replaced by the Volvo integration. Please use the Volvo integration instead for improved functionality and security."
+      "deprecated": "Volvo On Call has been replaced by the Volvo integration. Please use the Volvo integration instead."
     }
   },
   "issues": {
     "volvooncall_deprecated": {
       "title": "Volvo On Call has been replaced",
-      "description": "The Volvo On Call integration is deprecated and will be removed in 2026.3. Please use the Volvo integration instead.\n\nSteps:\n1. Remove this Volvo On Call integration from your configuration\n2. Add the Volvo integration through Settings > Devices & services > Add integration > Volvo\n3. Follow the setup instructions to authenticate with your Volvo account using the official Volvo Cars API."
+      "description": "The Volvo On Call integration is deprecated and will be removed in 2026.3. Please use the Volvo integration instead.\n\nSteps:\n1. Remove this Volvo On Call integration.\n2. Add the Volvo integration through Settings > Devices & services > Add integration > Volvo.\n3. Follow the setup instructions to authenticate with your Volvo account."
     }
   }
 }
