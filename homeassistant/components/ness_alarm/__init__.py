@@ -72,9 +72,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_INFER_ARMING_STATE, default=DEFAULT_INFER_ARMING_STATE
                 ): cv.boolean,
-                vol.Optional(
-                    CONF_SUPPORT_HOME_ARM, default=DEFAULT_SUPPORT_HOME_ARM
-                ): cv.boolean,
                 vol.Optional(CONF_ZONES, default=[]): vol.All(
                     cv.ensure_list, [ZONE_SCHEMA]
                 ),
