@@ -30,6 +30,9 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
+# remove when #151314 is merged
+CONF_OPTIONS: Final = "options"
+
 ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_FIRST: Final = "first"
 BEHAVIOR_LAST: Final = "last"
@@ -39,10 +42,12 @@ STATE_PLATFORM_TYPE: Final = "state"
 STATE_TRIGGER_SCHEMA = vol.All(
     cv.TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_STATE): vol.In([STATE_ON, STATE_OFF]),
-            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
-            ),
+            vol.Required(CONF_OPTIONS): {
+                vol.Required(CONF_STATE): vol.In([STATE_ON, STATE_OFF]),
+                vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+                    [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
+                ),
+            },
             vol.Required(CONF_TARGET): selector.TargetSelector.TARGET_SELECTION_SCHEMA,
         },
     )
@@ -72,8 +77,9 @@ class StateTrigger(Trigger):
         """Attach the trigger."""
         job = HassJob(action, f"light state trigger {trigger_info}")
         trigger_data = trigger_info["trigger_data"]
+        config_options = self.config[CONF_OPTIONS]
 
-        match_config_state = process_state_match(self.config.get(CONF_STATE))
+        match_config_state = process_state_match(config_options.get(CONF_STATE))
 
         def check_all_match(entity_ids: set[str]) -> bool:
             """Check if all entity states match."""
@@ -94,7 +100,7 @@ class StateTrigger(Trigger):
                 == 1
             )
 
-        behavior = self.config.get(ATTR_BEHAVIOR)
+        behavior = config_options.get(ATTR_BEHAVIOR)
 
         @callback
         def state_change_listener(

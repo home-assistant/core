@@ -27,6 +27,9 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_device_registry
 
+# remove when #151314 is merged
+CONF_OPTIONS = "options"
+
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
@@ -127,8 +130,8 @@ async def test_light_state_trigger_behavior_any(
             automation.DOMAIN: {
                 "trigger": {
                     CONF_PLATFORM: "light.state",
-                    CONF_STATE: state,
                     CONF_TARGET: {**trigger_target_config},
+                    CONF_OPTIONS: {CONF_STATE: state},
                 },
                 "action": {
                     "service": "test.automation",
@@ -188,9 +191,8 @@ async def test_light_state_trigger_behavior_first(
             automation.DOMAIN: {
                 "trigger": {
                     CONF_PLATFORM: "light.state",
-                    CONF_STATE: state,
-                    "behavior": "first",
                     CONF_TARGET: {**trigger_target_config},
+                    CONF_OPTIONS: {CONF_STATE: state, "behavior": "first"},
                 },
                 "action": {
                     "service": "test.automation",
@@ -259,9 +261,8 @@ async def test_light_state_trigger_behavior_last(
             automation.DOMAIN: {
                 "trigger": {
                     CONF_PLATFORM: "light.state",
-                    CONF_STATE: state,
-                    "behavior": "last",
                     CONF_TARGET: {**trigger_target_config},
+                    CONF_OPTIONS: {CONF_STATE: state, "behavior": "last"},
                 },
                 "action": {
                     "service": "test.automation",
