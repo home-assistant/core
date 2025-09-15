@@ -64,15 +64,6 @@ class HausbusGateway(IBusDataListener):
             self.hass.async_add_executor_job(self.home_server.searchDevices)
 
         await discovery_callback()
-        
-    async def createDiscoveryButton(self):
-        """Creates a Button to manually start device discovery."""
-
-        async def discovery_callback():
-            LOGGER.debug("Search devices")
-            self.hass.async_add_executor_job(self.home_server.searchDevices)
-
-        await discovery_callback()
 
     def add_device(self, device_id: str, module: ModuleId) -> None:
         """Add a new Haus-Bus Device to this gateway's device list."""
