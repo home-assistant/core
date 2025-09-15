@@ -8,6 +8,7 @@ from typing import Any
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
+from chip.core.exceptions import ChipStackError
 from matter_server.client.models import device_types
 from matter_server.common import custom_clusters
 
@@ -85,7 +86,7 @@ class MatterNumber(MatterEntity, NumberEntity):
             await self.write_attribute(
                 value=sendvalue,
             )
-        except:
+        except ChipStackError:
             raise HomeAssistantError("The device does not allow to change this value.")
 
     @callback
