@@ -1652,7 +1652,7 @@ ourgroceries==1.5.4
 ovoenergy==2.0.1
 
 # homeassistant.components.p1_monitor
-p1monitor==3.1.0
+p1monitor==3.2.0
 
 # homeassistant.components.mqtt
 paho-mqtt==2.1.0
