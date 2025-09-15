@@ -126,8 +126,8 @@ class UbusDeviceScanner(DeviceScanner):
         return self.mac2name.get(device.upper(), None)
 
     async def async_get_extra_attributes(self, device: str) -> dict[str, str]:
-        """Return the host to distinguish between multiple routers."""
-        return {"host": self.host}
+        """Return the host to distinguish between multiple routers and the MAC address."""
+        return {"host": self.host, "mac": device.upper()}
 
     @_refresh_on_access_denied
     def _update_info(self):
