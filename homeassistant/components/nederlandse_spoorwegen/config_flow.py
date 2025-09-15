@@ -96,14 +96,24 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         subentries: list[ConfigSubentryData] = []
         for route in import_data.get(CONF_ROUTES, []):
+            # Convert station codes to uppercase for validation (legacy compatibility)
+            normalized_route = route.copy()
             for key in (CONF_FROM, CONF_TO, CONF_VIA):
-                if key in route and route[key] not in station_codes:
+                if key in normalized_route:
+                    normalized_route[key] = normalized_route[key].upper()
+
+            for key in (CONF_FROM, CONF_TO, CONF_VIA):
+                if (
+                    key in normalized_route
+                    and normalized_route[key] not in station_codes
+                ):
                     return self.async_abort(reason="invalid_station")
+
             subentries.append(
                 ConfigSubentryData(
                     title=route[CONF_NAME],
                     subentry_type="route",
-                    data=route,
+                    data=route,  # Keep original route data with original casing
                     unique_id=None,
                 )
             )
