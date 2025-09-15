@@ -48,7 +48,7 @@ class DeviceAutomationTriggerProtocol(Protocol):
     ) -> dict[str, vol.Schema]:
         """List trigger capabilities."""
 
-    async def async_get_triggers(  # type: ignore[override]
+    async def async_get_triggers(
         self, hass: HomeAssistant, device_id: str
     ) -> list[dict[str, Any]]:
         """List triggers."""

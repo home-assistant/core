@@ -20,7 +20,12 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import Trigger, TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionType,
+    TriggerData,
+    TriggerInfo,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from ..const import (
@@ -139,54 +144,51 @@ async def async_validate_trigger_config(
 class EventTrigger(Trigger):
     """Z-Wave JS event trigger."""
 
+    _event_source: str
+    _event_name: str
+    _event_data_filter: dict
+    _job: HassJob
+    _trigger_data: TriggerData
+    _unsubs: list[Callable]
+
     _platform_type = PLATFORM_TYPE
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        action: TriggerActionType,
-        trigger_info: TriggerInfo,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize trigger."""
         self._config = config
         self._hass = hass
-        self._event_source = config[ATTR_EVENT_SOURCE]
-        self._event_name = config[ATTR_EVENT]
-        self._event_data_filter = config.get(ATTR_EVENT_DATA, {})
-
-        self._unsubs: list[Callable] = []
-        self._job = HassJob(action)
-
-        self._trigger_data = trigger_info["trigger_data"]
 
     @classmethod
-    async def async_validate_trigger_config(
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
         return await async_validate_trigger_config(hass, config)
 
-    @classmethod
-    async def async_attach_trigger(
-        cls,
-        hass: HomeAssistant,
-        config: ConfigType,
+    async def async_attach(
+        self,
         action: TriggerActionType,
         trigger_info: TriggerInfo,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
-        dev_reg = dr.async_get(hass)
+        dev_reg = dr.async_get(self._hass)
+        config = self._config
         if config[ATTR_EVENT_SOURCE] == "node" and not async_get_nodes_from_targets(
-            hass, config, dev_reg=dev_reg
+            self._hass, config, dev_reg=dev_reg
         ):
             raise ValueError(
                 f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
             )
 
-        trigger = cls(hass, config, action, trigger_info)
-        trigger._create_zwave_listeners()
-        return trigger._async_remove
+        self._event_source = config[ATTR_EVENT_SOURCE]
+        self._event_name = config[ATTR_EVENT]
+        self._event_data_filter = config.get(ATTR_EVENT_DATA, {})
+        self._job = HassJob(action)
+        self._trigger_data = trigger_info["trigger_data"]
+        self._unsubs: list[Callable] = []
+
+        self._create_zwave_listeners()
+        return self._async_remove
 
     @callback
     def _async_on_event(
@@ -199,9 +201,9 @@ class EventTrigger(Trigger):
             if (
                 self._config[ATTR_PARTIAL_DICT_MATCH]
                 and isinstance(event_data[key], dict)
-                and isinstance(self._event_data_filter[key], dict)
+                and isinstance(val, dict)
             ):
-                for key2, val2 in self._event_data_filter[key].items():
+                for key2, val2 in val.items():
                     if key2 not in event_data[key] or event_data[key][key2] != val2:
                         return
                 continue
@@ -259,7 +261,7 @@ class EventTrigger(Trigger):
             entry_id = self._config[ATTR_CONFIG_ENTRY_ID]
             entry = self._hass.config_entries.async_get_entry(entry_id)
             assert entry
-            client: Client = entry.runtime_data[DATA_CLIENT]
+            client = entry.runtime_data.client
             driver = client.driver
             assert driver
             drivers.add(driver)
