@@ -20,26 +20,26 @@ audioop-lts==0.2.1
 av==13.1.0
 awesomeversion==25.5.0
 bcrypt==4.3.0
-bleak-retry-connector==4.4.1
+bleak-retry-connector==4.4.3
 bleak==1.0.1
-bluetooth-adapters==2.0.0
-bluetooth-auto-recovery==1.5.2
+bluetooth-adapters==2.1.0
+bluetooth-auto-recovery==1.5.3
 bluetooth-data-tools==1.28.2
 cached-ipaddress==0.10.0
 certifi>=2021.5.30
-ciso8601==2.3.2
+ciso8601==2.3.3
 cronsim==2.6
-cryptography==45.0.3
+cryptography==45.0.7
 dbus-fast==2.44.3
 fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
-habluetooth==5.1.0
-hass-nabucasa==1.0.0
+habluetooth==5.6.4
+hass-nabucasa==1.1.1
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20250827.0
-home-assistant-intents==2025.8.27
+home-assistant-frontend==20250903.5
+home-assistant-intents==2025.9.3
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -53,14 +53,14 @@ propcache==0.3.2
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
 pymicro-vad==1.0.1
-PyNaCl==1.5.0
+PyNaCl==1.6.0
 pyOpenSSL==25.1.0
 pyserial==3.5
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.8.0
 PyYAML==6.0.2
-requests==2.32.4
+requests==2.32.5
 securetar==2025.2.1
 SQLAlchemy==2.0.41
 standard-aifc==3.13.0
@@ -74,7 +74,7 @@ voluptuous-serialize==2.7.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
 yarl==1.20.1
-zeroconf==0.147.0
+zeroconf==0.147.2
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -109,7 +109,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.9.0
+anyio==4.10.0
 h11==0.16.0
 httpcore==1.0.9
 
@@ -129,7 +129,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.7
+pydantic==2.11.9
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -219,7 +219,10 @@ num2words==0.5.14
 # pymodbus does not follow SemVer, and it keeps getting
 # downgraded or upgraded by custom components
 # This ensures all use the same version
-pymodbus==3.11.1
+pymodbus==3.11.2
 
 # Some packages don't support gql 4.0.0 yet
 gql<4.0.0
+
+# Pin pytest-rerunfailures to prevent accidental breaks
+pytest-rerunfailures==16.0.1

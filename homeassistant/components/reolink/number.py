@@ -158,9 +158,9 @@ NUMBER_ENTITIES = (
         native_step=1,
         native_min_value=0,
         native_max_value=100,
-        supported=lambda api, ch: api.supported(ch, "volume_speek"),
-        value=lambda api, ch: api.volume_speek(ch),
-        method=lambda api, ch, value: api.set_volume(ch, volume_speek=int(value)),
+        supported=lambda api, ch: api.supported(ch, "volume_speak"),
+        value=lambda api, ch: api.volume_speak(ch),
+        method=lambda api, ch, value: api.set_volume(ch, volume_speak=int(value)),
     ),
     ReolinkNumberEntityDescription(
         key="volume_doorbell",

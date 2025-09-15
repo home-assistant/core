@@ -1,6 +1,6 @@
 {
   "domain": "fritz",
-  "name": "AVM FRITZ!Box Tools",
+  "name": "FRITZ!Box Tools",
   "codeowners": ["@AaronDavidSchneider", "@chemelli74", "@mib1185"],
   "config_flow": true,
   "dependencies": ["network"],
