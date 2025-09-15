@@ -14,10 +14,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -60,7 +59,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the departure sensor."""
@@ -92,7 +91,7 @@ async def async_setup_platform(
 
     ir.async_create_issue(
         hass,
-        DOMAIN,
+        HOMEASSISTANT_DOMAIN,
         "deprecated_yaml",
         breaks_in_ha_version="2026.4.0",
         is_fixable=False,
@@ -142,7 +141,6 @@ class NSDepartureSensor(SensorEntity):
 
     _attr_attribution = "Data provided by NS"
     _attr_icon = "mdi:train"
-    _attr_has_entity_name = True
 
     def __init__(self, nsapi, name, departure, heading, via, time):
         """Initialize the sensor."""
@@ -157,27 +155,10 @@ class NSDepartureSensor(SensorEntity):
         self._first_trip = None
         self._next_trip = None
 
-        # Set unique_id for entity registry
-        route_parts = [departure, heading]
-        if via:
-            route_parts.insert(1, via)
-        route_key = "_".join(route_parts).lower().replace(" ", "_")
-        self._attr_unique_id = f"{route_key}_departure"
-
-        # Set device info to group entities under a device
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, route_key)},
-            name=name,
-            manufacturer="Nederlandse Spoorwegen",
-            model="NS Route",
-            sw_version="1.0.0",
-            configuration_url="https://www.ns.nl/",
-        )
-
     @property
     def name(self):
         """Return the name of the sensor."""
-        return None  # Use device name when has_entity_name = True
+        return self._name
 
     @property
     def native_value(self):
@@ -190,9 +171,8 @@ class NSDepartureSensor(SensorEntity):
         if not self._trips or self._first_trip is None:
             return None
 
-        # Initialize route with departure, extend with trip parts if they exist
-        route = [self._first_trip.departure]
         if self._first_trip.trip_parts:
+            route = [self._first_trip.departure]
             route.extend(k.destination for k in self._first_trip.trip_parts)
 
         # Static attributes
@@ -257,9 +237,9 @@ class NSDepartureSensor(SensorEntity):
             attributes["arrival_delay"] = True
 
         # Next attributes
-        if self._next_trip and self._next_trip.departure_time_actual is not None:
+        if self._next_trip.departure_time_actual is not None:
             attributes["next"] = self._next_trip.departure_time_actual.strftime("%H:%M")
-        elif self._next_trip and self._next_trip.departure_time_planned is not None:
+        elif self._next_trip.departure_time_planned is not None:
             attributes["next"] = self._next_trip.departure_time_planned.strftime(
                 "%H:%M"
             )
