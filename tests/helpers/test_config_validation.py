@@ -1465,7 +1465,7 @@ def test_key_value_schemas_with_default() -> None:
         (
             {"condition": 123},
             "Unexpected value for condition: '123'. Expected and, device, not, "
-            "numeric_state, or, state, template, time, trigger, zone, a list of "
+            "numeric_state, or, state, template, time, trigger, a list of "
             "conditions or a valid template",
         ),
         (

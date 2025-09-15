@@ -88,7 +88,7 @@ def assert_condition_trace(expected):
         (
             {"condition": 123},
             "Unexpected value for condition: '123'. Expected and, device, not, "
-            "numeric_state, or, state, template, time, trigger, zone",
+            "numeric_state, or, state, template, time, trigger",
         )
     ],
 )
