@@ -366,7 +366,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         because a unit converter supports both.
         """
         # No need to check the unit converter if the units are the same
-        if self.native_unit_of_measurement == suggested_unit_of_measurement:
+        if self.__native_unit_of_measurement_compat == suggested_unit_of_measurement:
             return True
 
         # Make sure there is a unit converter and it supports both units
