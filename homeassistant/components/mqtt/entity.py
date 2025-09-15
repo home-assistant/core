@@ -33,7 +33,13 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import Event, HassJobType, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
@@ -476,11 +482,40 @@ class MqttAttributesMixin(Entity):
         [MessageCallbackType, set[str] | None, ReceiveMessage], None
     ]
     _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
+    _monitor_member_updates_callback: CALLBACK_TYPE
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
         self._attributes_config = config
+
+    def _monitor_member_updates(self) -> None:
+        """Update the group members if the entity registry is updated."""
+        entity_registry = er.async_get(self.hass)
+
+        async def _handle_entity_registry_updated(event: Event[Any]) -> None:
+            """Handle registry update event."""
+            if (
+                event.data["action"] in {"create", "update"}
+                and (entry := entity_registry.async_get(event.data["entity_id"]))
+                and entry.unique_id in self._attributes_config[CONF_GROUP]
+            ) or (
+                event.data["action"] == "remove"
+                and self._group_entity_ids is not None
+                and event.data["entity_id"] in self._group_entity_ids
+            ):
+                self._update_group_entity_ids()
+                self._attr_extra_state_attributes[ATTR_ENTITY_ID] = (
+                    self._group_entity_ids
+                )
+                self.async_write_ha_state()
+
+        self.async_on_remove(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                _handle_entity_registry_updated,
+            )
+        )
 
     def _update_group_entity_ids(self) -> None:
         """Set the entity_id property if the entity represents a group of entities.
@@ -506,6 +541,7 @@ class MqttAttributesMixin(Entity):
         await super().async_added_to_hass()
         self._update_group_entity_ids()
         if self._group_entity_ids is not None:
+            self._monitor_member_updates()
             self._attr_extra_state_attributes = {ATTR_ENTITY_ID: self._group_entity_ids}
 
         self._attributes_prepare_subscribe_topics()
