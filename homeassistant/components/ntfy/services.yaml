@@ -89,101 +89,57 @@ publish:
           autocomplete: url
       example: https://example.org/logo.png
     actions:
-      collapsed: true
-      fields:
-        view:
-          selector:
-            object:
-              label_field: "label"
-              description_field: "url"
-              multiple: true
-              translation_key: view
-              fields:
-                label:
-                  selector:
-                    text:
-                url:
-                  selector:
-                    text:
-                      type: url
-                clear:
-                  selector:
-                    boolean:
-                position:
-                  selector:
-                    select:
-                      options:
-                        - 1
-                        - 2
-                        - 3
-                      mode: dropdown
-        broadcast:
-          selector:
-            object:
-              label_field: "label"
-              description_field: "intent"
-              multiple: true
-              translation_key: broadcast
-              fields:
-                label:
-                  selector:
-                    text:
-                intent:
-                  selector:
-                    text:
-                extras:
-                  selector:
-                    object:
-                clear:
-                  selector:
-                    boolean:
-                position:
-                  selector:
-                    select:
-                      options:
-                        - 1
-                        - 2
-                        - 3
-                      mode: dropdown
-        http:
-          selector:
-            object:
-              label_field: "label"
-              description_field: "url"
-              multiple: true
-              translation_key: http
-              fields:
-                label:
-                  selector:
-                    text:
-                url:
-                  selector:
-                    text:
-                      type: url
-                method:
-                  selector:
-                    select:
-                      options:
-                        - GET
-                        - POST
-                        - PUT
-                        - DELETE
-                      custom_value: true
-                headers:
-                  selector:
-                    object:
-                body:
-                  selector:
-                    text:
-                      multiline: true
-                clear:
-                  selector:
-                    boolean:
-                position:
-                  selector:
-                    select:
-                      options:
-                        - 1
-                        - 2
-                        - 3
-                      mode: dropdown
+      selector:
+        object:
+          label_field: "label"
+          description_field: "url"
+          multiple: true
+          translation_key: actions
+          fields:
+            action:
+              selector:
+                select:
+                  options:
+                    - value: view
+                      label: Open website/app
+                    - value: broadcast
+                      label: Send Android broadcast
+                    - value: http
+                      label: Send HTTP request
+                  translation_key: action_type
+                  mode: dropdown
+            label:
+              selector:
+                text:
+              required: true
+            url:
+              selector:
+                text:
+                  type: url
+              required: true
+            intent:
+              selector:
+                text:
+              required: true
+            extras:
+              selector:
+                object:
+            method:
+              selector:
+                select:
+                  options:
+                    - GET
+                    - POST
+                    - PUT
+                    - DELETE
+                  custom_value: true
+            headers:
+              selector:
+                object:
+            body:
+              selector:
+                text:
+                  multiline: true
+            clear:
+              selector:
+                boolean:

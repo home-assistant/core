@@ -14,18 +14,16 @@ from yarl import URL
 from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.components.ntfy.const import DOMAIN
 from homeassistant.components.ntfy.notify import (
+    ATTR_ACTIONS,
     ATTR_ATTACH,
-    ATTR_BROADCAST,
     ATTR_CALL,
     ATTR_CLICK,
     ATTR_DELAY,
     ATTR_EMAIL,
-    ATTR_HTTP,
     ATTR_ICON,
     ATTR_MARKDOWN,
     ATTR_PRIORITY,
     ATTR_TAGS,
-    ATTR_VIEW,
     SERVICE_PUBLISH,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -63,31 +61,28 @@ async def test_ntfy_publish(
             ATTR_MARKDOWN: True,
             ATTR_PRIORITY: "5",
             ATTR_TAGS: ["partying_face", "grin"],
-            ATTR_HTTP: [
+            ATTR_ACTIONS: [
                 {
+                    "action": "broadcast",
+                    "label": "Take picture",
+                    "intent": "com.example.AN_INTENT",
+                    "extras": {"cmd": "pic"},
+                    "clear": True,
+                },
+                {
+                    "action": "view",
+                    "label": "Open website",
+                    "url": "https://example.com",
+                    "clear": False,
+                },
+                {
+                    "action": "http",
                     "label": "Close door",
                     "url": "https://api.example.local/",
                     "method": "PUT",
                     "headers": {"Authorization": "Bearer ..."},
                     "clear": False,
-                }
-            ],
-            ATTR_VIEW: [
-                {
-                    "label": "Open website",
-                    "url": "https://example.com",
-                    "position": 3,
-                    "clear": False,
-                }
-            ],
-            ATTR_BROADCAST: [
-                {
-                    "label": "Take picture",
-                    "intent": "com.example.AN_INTENT",
-                    "extras": {"cmd": "pic"},
-                    "position": 1,
-                    "clear": True,
-                }
+                },
             ],
         },
         blocking=True,
@@ -194,11 +189,11 @@ async def test_send_message_exception(
         ),
         (
             {
-                ATTR_BROADCAST: [
-                    {"label": "1"},
-                    {"label": "2"},
-                    {"label": "3"},
-                    {"label": "4"},
+                ATTR_ACTIONS: [
+                    {"action": "broadcast", "label": "1"},
+                    {"action": "broadcast", "label": "2"},
+                    {"action": "broadcast", "label": "3"},
+                    {"action": "broadcast", "label": "4"},
                 ],
             },
             "Too many actions defined. Only 3 allowed",
