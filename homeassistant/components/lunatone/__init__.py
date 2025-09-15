@@ -22,8 +22,6 @@ PLATFORMS: Final[list[Platform]] = [Platform.LIGHT]
 
 async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
     """Set up Lunatone from a config entry."""
-    assert entry.unique_id
-
     auth = Auth(async_get_clientsession(hass), entry.data[CONF_URL])
     info = Info(auth)
     devices = Devices(auth)
@@ -34,10 +32,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices)
     await coordinator_devices.async_config_entry_first_refresh()
 
+    assert info.serial_number
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id)},
+        identifiers={(DOMAIN, info.serial_number)},
         name=info.name,
         manufacturer="Lunatone",
         sw_version=info.version,
