@@ -45,7 +45,11 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
         self.api = Momonga(dev=self.device, rbid=self.bid, pwd=password)
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            config_entry=entry,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
     async def _async_setup(self) -> None:
