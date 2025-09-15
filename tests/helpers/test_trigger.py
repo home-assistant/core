@@ -499,7 +499,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
     mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
 
     config_1 = [{"platform": "test"}]
-    config_2 = [{"platform": "test.trig_2", "data": {"x": 1}}]
+    config_2 = [{"platform": "test.trig_2", "options": {"x": 1}}]
     config_3 = [{"platform": "test.unknown_trig"}]
     assert await async_validate_trigger_config(hass, config_1) == config_1
     assert await async_validate_trigger_config(hass, config_2) == config_2

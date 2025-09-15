@@ -9,7 +9,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DATA, CONF_PAYLOAD, CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_OPTIONS, CONF_PAYLOAD, CONF_VALUE_TEMPLATE
 from homeassistant.core import (
     CALLBACK_TYPE,
     HassJob,
@@ -53,7 +53,7 @@ _DATA_SCHEMA_DICT = {
     ),
 }
 
-_CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_DATA): _DATA_SCHEMA_DICT})
+_CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_OPTIONS): _DATA_SCHEMA_DICT})
 
 
 class MqttTrigger(Trigger):
@@ -67,29 +67,29 @@ class MqttTrigger(Trigger):
     ) -> ConfigType:
         """Validate complete config."""
         config = config.copy()
-        data = config.setdefault(CONF_DATA, {})
-        # Move top-level keys to data
+        options = config.setdefault(CONF_OPTIONS, {})
+        # Move top-level keys to options
         for key_marked in _DATA_SCHEMA_DICT:
             key = key_marked.schema
             if key in config:
-                if key in data:
+                if key in options:
                     raise vol.Invalid(
-                        f"'{key}' cannot be specified in both top-level and data"
+                        f"'{key}' cannot be specified in both top-level and options"
                     )
-                data[key] = config.pop(key)
+                options[key] = config.pop(key)
         return await super().async_validate_complete_config(hass, config)
 
     @classmethod
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
-        """Validate data."""
+        """Validate config."""
         return cast(ConfigType, _CONFIG_SCHEMA(config))
 
     def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize trigger."""
         self._hass = hass
-        self._data = config[CONF_DATA]
+        self._options = config[CONF_OPTIONS]
 
     async def async_attach(
         self,
@@ -100,13 +100,13 @@ class MqttTrigger(Trigger):
         trigger_data: TriggerData = trigger_info["trigger_data"]
         command_template: Callable[
             [PublishPayloadType, TemplateVarsType], PublishPayloadType
-        ] = MqttCommandTemplate(self._data.get(CONF_PAYLOAD)).async_render
+        ] = MqttCommandTemplate(self._options.get(CONF_PAYLOAD)).async_render
         value_template: Callable[[ReceivePayloadType, str], ReceivePayloadType]
         value_template = MqttValueTemplate(
-            self._data.get(CONF_VALUE_TEMPLATE)
+            self._options.get(CONF_VALUE_TEMPLATE)
         ).async_render_with_possible_json_value
-        encoding: str | None = self._data[CONF_ENCODING] or None
-        qos: int = self._data[CONF_QOS]
+        encoding: str | None = self._options[CONF_ENCODING] or None
+        qos: int = self._options[CONF_QOS]
         job = HassJob(action)
         variables: TemplateVarsType | None = None
         if trigger_info:
@@ -114,7 +114,7 @@ class MqttTrigger(Trigger):
 
         wanted_payload = command_template(None, variables)
 
-        topic_template: Template = self._data[CONF_TOPIC]
+        topic_template: Template = self._options[CONF_TOPIC]
         topic = topic_template.async_render(variables, limited=True, parse_result=False)
         valid_subscribe_topic(topic)
 

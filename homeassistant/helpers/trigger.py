@@ -16,9 +16,9 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_ALIAS,
-    CONF_DATA,
     CONF_ENABLED,
     CONF_ID,
+    CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_SELECTOR,
     CONF_TARGET,
@@ -169,7 +169,7 @@ async def _register_trigger_platform(
 
 _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_DATA): object,
+        vol.Optional(CONF_OPTIONS): object,
         vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
@@ -188,15 +188,15 @@ class Trigger(abc.ABC):
         """
         config = _TRIGGER_SCHEMA(config)
 
-        partial_config: ConfigType = {}
-        for key in (CONF_DATA, CONF_TARGET):
+        specific_config: ConfigType = {}
+        for key in (CONF_OPTIONS, CONF_TARGET):
             if key in config:
-                partial_config[key] = config.pop(key)
-        partial_config = await cls.async_validate_config(hass, partial_config)
+                specific_config[key] = config.pop(key)
+        specific_config = await cls.async_validate_config(hass, specific_config)
 
-        for key in (CONF_DATA, CONF_TARGET):
-            if key in partial_config:
-                config[key] = partial_config[key]
+        for key in (CONF_OPTIONS, CONF_TARGET):
+            if key in specific_config:
+                config[key] = specific_config[key]
 
         return config
 
