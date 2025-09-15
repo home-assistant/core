@@ -129,7 +129,7 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
 
 
 class DurationSensor(WazeTravelTimeSensor):
-    """Sensor holding information about the route origin."""
+    """Sensor holding information about the route duration."""
 
     def __init__(
         self,
