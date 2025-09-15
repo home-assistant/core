@@ -9,14 +9,16 @@ import requests
 from homeassistant.components.nederlandse_spoorwegen.const import DOMAIN
 from homeassistant.components.nederlandse_spoorwegen.sensor import (
     NSDepartureSensor,
-    async_setup_platform,
+    async_setup_entry,
 )
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from .const import API_KEY
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -55,32 +57,52 @@ def mock_nsapi():
     return api_mock
 
 
-async def test_yaml_platform_setup_creates_repair_issue(hass: HomeAssistant) -> None:
-    """Test that YAML platform setup creates repair issue."""
-    config = {
-        CONF_API_KEY: API_KEY,
-        "routes": [
-            {
-                CONF_NAME: "test route",
-                "from": "RTD",
-                "to": "AMC",
-            }
+async def test_config_entry_setup_creates_sensors(
+    hass: HomeAssistant, mock_nsapi
+) -> None:
+    """Test that config entry setup creates sensors for route subentries."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"api_key": API_KEY},
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_NAME: "Test Route",
+                    "from": "RTD",
+                    "to": "AMC",
+                },
+                subentry_type="route",
+                title="Test Route",
+                unique_id="rtd_amc",
+            )
         ],
-    }
+    )
+    # Set runtime_data after creation
+    entry.runtime_data = mock_nsapi
 
-    # Mock add_entities
-    add_entities = Mock()
+    # Mock async_add_entities to capture created entities
+    added_entities = []
 
-    # Call the platform setup
-    await async_setup_platform(hass, config, add_entities, None)
+    def mock_async_add_entities(
+        new_entities, update_before_add=False, *, config_subentry_id=None
+    ):
+        added_entities.extend(new_entities)
 
-    # Check repair issue was created
-    issue_registry = ir.async_get(hass)
-    issues = [
-        issue for issue in issue_registry.issues.values() if issue.domain == DOMAIN
-    ]
-    assert len(issues) == 1
-    assert issues[0].issue_id == "deprecated_yaml_import_issue_unknown"
+    # Call the setup function
+    await async_setup_entry(hass, entry, mock_async_add_entities)
+
+    # Verify that a sensor was created
+    assert len(added_entities) == 1
+    sensor = added_entities[0]
+    assert isinstance(sensor, NSDepartureSensor)
+    assert sensor.name is None  # Uses device name when has_entity_name = True
+    assert sensor.unique_id == "rtd_amc_departure"
+
+    # Verify device info is set correctly
+    device_info = sensor.device_info
+    assert device_info is not None
+    assert (DOMAIN, "rtd_amc") in device_info.get("identifiers", set())
+    assert device_info.get("name") == "Test Route"
 
 
 async def test_sensor_initialization(hass: HomeAssistant, mock_nsapi) -> None:
@@ -102,8 +124,8 @@ async def test_sensor_initialization(hass: HomeAssistant, mock_nsapi) -> None:
     # Check device info is set
     assert sensor.device_info is not None
     device_info = sensor.device_info
-    assert (DOMAIN, "rtd_amc") in device_info["identifiers"]
-    assert device_info["name"] == "test route"
+    assert (DOMAIN, "rtd_amc") in device_info.get("identifiers", set())
+    assert device_info.get("name") == "test route"
 
 
 async def test_sensor_update_filters_past_trips(
