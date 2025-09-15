@@ -700,7 +700,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==3.13.1
+bthome-ble==3.14.2
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
