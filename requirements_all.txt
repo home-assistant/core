@@ -3030,7 +3030,7 @@ unifi_ap==0.0.2
 unifiled==0.11
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.0.31
+universal-silabs-flasher==0.0.32
 
 # homeassistant.components.upb
 upb-lib==0.6.1
