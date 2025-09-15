@@ -1,5 +1,6 @@
 """Tests for Synology DSM USB."""
 
+from itertools import chain
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
