@@ -130,7 +130,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
 
         read_key: str | None = self._flow_data[CONF_SENSOR_READ_KEY]
         read_key_list: list[str] | None = None
-        if read_key is not None and type(read_key) is str and len(read_key) > 0:
+        if read_key is not None and isinstance(read_key, str) and len(read_key) > 0:
             read_key_list = [read_key]
 
         api = API(
