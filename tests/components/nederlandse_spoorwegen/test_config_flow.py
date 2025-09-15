@@ -32,16 +32,16 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
-    assert not result.get("errors")
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_KEY: API_KEY}
     )
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Nederlandse Spoorwegen"
-    assert result.get("data") == {CONF_API_KEY: API_KEY}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Nederlandse Spoorwegen"
+    assert result["data"] == {CONF_API_KEY: API_KEY}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -57,12 +57,12 @@ async def test_creating_route(
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "route"), context={"source": SOURCE_USER}
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
-    assert not result.get("errors")
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
 
     result = await hass.config_entries.subentries.async_configure(
-        result.get("flow_id"),
+        result["flow_id"],
         user_input={
             CONF_FROM: "ASD",
             CONF_TO: "RTD",
@@ -71,9 +71,9 @@ async def test_creating_route(
             CONF_TIME: "08:30",
         },
     )
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Home to Work"
-    assert result.get("data") == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Home to Work"
+    assert result["data"] == {
         CONF_FROM: "ASD",
         CONF_TO: "RTD",
         CONF_VIA: "HT",
@@ -103,28 +103,28 @@ async def test_flow_exceptions(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
-    assert not result.get("errors")
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
 
     mock_nsapi.get_stations.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"), user_input={CONF_API_KEY: API_KEY}
+        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
-    assert result.get("errors") == {"base": expected_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": expected_error}
 
     mock_nsapi.get_stations.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"), user_input={CONF_API_KEY: API_KEY}
+        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
     )
 
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Nederlandse Spoorwegen"
-    assert result.get("data") == {CONF_API_KEY: API_KEY}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Nederlandse Spoorwegen"
+    assert result["data"] == {CONF_API_KEY: API_KEY}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -141,8 +141,8 @@ async def test_fetching_stations_failed(
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "route"), context={"source": SOURCE_USER}
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "cannot_connect"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_already_configured(
@@ -153,16 +153,16 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
-    assert not result.get("errors")
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"), user_input={CONF_API_KEY: API_KEY}
+        result["flow_id"], user_input={CONF_API_KEY: API_KEY}
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_config_flow_import_success(
@@ -175,12 +175,10 @@ async def test_config_flow_import_success(
         data={CONF_API_KEY: API_KEY},
     )
 
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Nederlandse Spoorwegen"
-    assert result.get("data") == {CONF_API_KEY: API_KEY}
-    result_obj = result.get("result")
-    assert result_obj is not None, "Result object is None"
-    assert not getattr(result_obj, "subentries", None)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Nederlandse Spoorwegen"
+    assert result["data"] == {CONF_API_KEY: API_KEY}
+    assert not result["result"].subentries
 
 
 @pytest.mark.parametrize(
@@ -255,17 +253,12 @@ async def test_config_flow_import_with_routes(
         },
     )
 
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Nederlandse Spoorwegen"
-    assert result.get("data") == {CONF_API_KEY: API_KEY}
-    result_obj = result.get("result")
-    assert result_obj is not None, "Result object is None"
-    assert hasattr(result_obj, "subentries"), (
-        "Result object has no 'subentries' attribute"
-    )
-    assert len(result_obj.subentries) == len(expected_routes_data)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Nederlandse Spoorwegen"
+    assert result["data"] == {CONF_API_KEY: API_KEY}
+    assert len(result["result"].subentries) == len(expected_routes_data)
 
-    subentries = list(result_obj.subentries.values())
+    subentries = list(result["result"].subentries.values())
     for expected_route in expected_routes_data:
         route_entry = next(
             entry for entry in subentries if entry.title == expected_route[CONF_NAME]
@@ -295,8 +288,8 @@ async def test_config_flow_import_with_unknown_station(
         },
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "invalid_station"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_station"
 
 
 async def test_config_flow_import_already_configured(
@@ -311,8 +304,8 @@ async def test_config_flow_import_already_configured(
         data={CONF_API_KEY: API_KEY},
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -336,5 +329,5 @@ async def test_import_flow_exceptions(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_API_KEY: API_KEY}
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == expected_error
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_error
