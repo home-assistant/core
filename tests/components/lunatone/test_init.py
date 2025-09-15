@@ -122,8 +122,10 @@ async def test_unique_id_missing(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test device registry integration."""
+    mock_lunatone_info.serial_number = None
+
     mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(mock_config_entry, unique_id=None)
+    hass.config_entries.async_update_entry(mock_config_entry)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
