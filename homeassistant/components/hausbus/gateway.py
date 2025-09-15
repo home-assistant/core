@@ -220,11 +220,11 @@ class HausbusGateway(IBusDataListener):
                     )
 
                     if deviceId in (29725, 22784):
-                      className = ProxyFactory.getBusClassNameForClass(
-                        instanceObjectId.getClassId()
-                      ).rsplit(".", 1)[-1]
-                      name = f"{className} {instanceObjectId.getInstanceId()}"
-                      LOGGER.debug("specialName %s", name)
+                        className = ProxyFactory.getBusClassNameForClass(
+                            instanceObjectId.getClassId()
+                        ).rsplit(".", 1)[-1]
+                        name = f"{className} {instanceObjectId.getInstanceId()}"
+                        LOGGER.debug("specialName %s", name)
 
                     if name is None:
                         className = ProxyFactory.getBusClassNameForClass(

@@ -622,6 +622,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
 /homeassistant/components/hausbus/ @hausbus
+/tests/components/hausbus/ @hausbus
 /homeassistant/components/hdmi_cec/ @inytar
 /tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
