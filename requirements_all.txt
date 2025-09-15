@@ -904,7 +904,7 @@ epion==0.0.3
 epson-projector==0.5.1
 
 # homeassistant.components.eq3btsmart
-eq3btsmart==2.2.0
+eq3btsmart==2.3.0
 
 # homeassistant.components.esphome
 esphome-dashboard-api==1.3.0
