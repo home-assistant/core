@@ -23,6 +23,7 @@ from homeassistant.components.waze_travel_time.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .const import MOCK_CONFIG
 
@@ -86,7 +87,7 @@ async def test_migrate_entry_v1_v2(hass: HomeAssistant) -> None:
     updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
 
     assert updated_entry.state is ConfigEntryState.LOADED
-    assert updated_entry.version == 2
+    assert updated_entry.version == 3
     assert updated_entry.options[CONF_INCL_FILTER] == DEFAULT_FILTER
     assert updated_entry.options[CONF_EXCL_FILTER] == DEFAULT_FILTER
 
@@ -113,6 +114,54 @@ async def test_migrate_entry_v1_v2(hass: HomeAssistant) -> None:
     updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
 
     assert updated_entry.state is ConfigEntryState.LOADED
-    assert updated_entry.version == 2
+    assert updated_entry.version == 3
     assert updated_entry.options[CONF_INCL_FILTER] == ["IncludeThis"]
     assert updated_entry.options[CONF_EXCL_FILTER] == ["ExcludeThis"]
+
+
+@pytest.mark.usefixtures("mock_update")
+async def test_migrate_entry_v2_v3(hass: HomeAssistant) -> None:
+    """Test v2->v3 migration renames main sensor with '_duration' suffix."""
+    entry_id = "waze_entry_id"
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        entry_id=entry_id,
+        unique_id=entry_id,
+        data=MOCK_CONFIG,
+        options={
+            CONF_REALTIME: DEFAULT_REALTIME,
+            CONF_VEHICLE_TYPE: DEFAULT_VEHICLE_TYPE,
+            CONF_UNITS: METRIC_UNITS,
+            CONF_AVOID_FERRIES: DEFAULT_AVOID_FERRIES,
+            CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
+            CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
+            CONF_INCL_FILTER: None,
+            CONF_EXCL_FILTER: None,
+        },
+    )
+
+    mock_entry.add_to_hass(hass)
+    entity_registry = er.async_get(hass)
+
+    old_entity = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        mock_entry.unique_id,
+        suggested_object_id="waze_travel_time",
+        config_entry=mock_entry,
+    )
+    assert old_entity.entity_id == "sensor.waze_travel_time"
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert updated_entry.state is ConfigEntryState.LOADED
+    assert updated_entry.version == 3
+
+    old_unique_id = mock_entry.unique_id
+    new_unique_id = f"{old_unique_id}_duration"
+
+    new_entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, new_unique_id)
+    assert new_entity_id == f"{old_entity.entity_id}_duration"
