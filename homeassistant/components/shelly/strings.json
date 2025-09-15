@@ -300,7 +300,7 @@
         },
         "abort": {
           "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-          "update_not_available": "Device does not offer firmware update. Check internet connectivity (gateway, DNS, time) and restart the device."
+          "update_not_available": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::fix_flow::abort::update_not_available]"
         }
       }
     }
