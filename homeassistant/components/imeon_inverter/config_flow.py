@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_MODEL_NUMBER,
     ATTR_UPNP_SERIAL,
@@ -36,8 +37,9 @@ class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # User have to provide the hostname if device is not discovered
             host = self._host or user_input[CONF_HOST]
+            websession = async_get_clientsession(self.hass)
 
-            async with Inverter(host) as client:
+            async with Inverter(host, websession) as client:
                 try:
                     # Check connection
                     if await client.login(

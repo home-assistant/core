@@ -10,7 +10,7 @@ from aiohttp import ClientError
 from imeon_inverter_api.inverter import Inverter
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -38,6 +38,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
         self,
         hass: HomeAssistant,
         entry: InverterConfigEntry,
+        inverter: Inverter,
     ) -> None:
         """Initialize data update coordinator."""
         super().__init__(
@@ -48,7 +49,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
             config_entry=entry,
         )
 
-        self._api = Inverter(entry.data[CONF_HOST])
+        self._api = inverter
 
     @property
     def api(self) -> Inverter:
