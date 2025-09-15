@@ -52,7 +52,6 @@ class HomeWizardSensorEntityDescription(SensorEntityDescription):
     enabled_fn: Callable[[CombinedModels], bool] = lambda x: True
     has_fn: Callable[[CombinedModels], bool]
     value_fn: Callable[[CombinedModels], StateType | datetime]
-    available_fn: Callable[[CombinedModels], bool] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -68,16 +67,12 @@ def to_percentage(value: float | None) -> float | None:
     return value * 100 if value is not None else None
 
 
-def time_to_datetime(value: int | None) -> datetime:
-    """Convert seconds to datetime when value is not None."""
-    if value is None:
-        # Return a default datetime if value is None, to satisfy type checker
-        return utcnow().replace(microsecond=0)
-
+def uptime_to_datetime(value: int) -> datetime:
+    """Convert seconds to datetime timestamp."""
     return utcnow().replace(microsecond=0) - timedelta(seconds=value)
 
 
-stable_time_to_datetime = ignore_variance(time_to_datetime, timedelta(minutes=5))
+uptime_to_stable_datetime = ignore_variance(uptime_to_datetime, timedelta(minutes=5))
 
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
@@ -651,12 +646,11 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
             lambda data: data.system is not None and data.system.uptime_s is not None
         ),
         value_fn=(
-            lambda data: stable_time_to_datetime(data.system.uptime_s)
-            if data.system
-            else None
-        ),
-        available_fn=(
-            lambda data: data.system is not None and data.system.uptime_s is not None
+            lambda data: (
+                uptime_to_stable_datetime(data.system.uptime_s)
+                if data.system is not None and data.system.uptime_s is not None
+                else None
+            )
         ),
     ),
 )
@@ -752,13 +746,7 @@ class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return availability of meter."""
-        if not super().available:
-            return False
-
-        if self.entity_description.available_fn is not None:
-            return self.entity_description.available_fn(self.coordinator.data)
-
-        return self.native_value is not None
+        return super().available and self.native_value is not None
 
 
 class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
