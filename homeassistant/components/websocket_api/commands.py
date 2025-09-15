@@ -839,7 +839,7 @@ def handle_entity_source(
 @decorators.websocket_command(
     {
         vol.Required("type"): "extract_from_target",
-        vol.Required("target"): cv.ENTITY_SERVICE_FIELDS,
+        vol.Required("target"): cv.TARGET_FIELDS,
         vol.Optional("expand_group", default=False): bool,
     }
 )
