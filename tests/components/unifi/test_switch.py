@@ -1897,7 +1897,7 @@ async def test_port_control_switches(
     }
     assert aioclient_mock.mock_calls[2][2] == {
         "port_overrides": [
-            {"port_idx": 1, "port_security_enabled": True, "portconf_id": "1a2"},
+            {"port_idx": 2, "port_security_enabled": True, "portconf_id": "1a2"},
         ]
     }
     # Device gets disabled
