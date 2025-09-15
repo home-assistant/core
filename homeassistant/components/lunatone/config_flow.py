@@ -25,20 +25,16 @@ DATA_SCHEMA: Final[vol.Schema] = vol.Schema(
 )
 
 
+def compose_title(name: str | None, serial_number: int) -> str:
+    """Compose a title string from a given name and serial number."""
+    return f"{name or 'DALI Gateway'} {serial_number}"
+
+
 class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
     """Lunatone config flow."""
 
     VERSION = 1
     MINOR_VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._name: str | None = None
-        self._serial_number: int | None = None
-
-    @property
-    def _title(self) -> str:
-        return f"{self._name or 'DALI Gateway'} {self._serial_number}"
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -64,19 +60,17 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 if info.data is None or info.serial_number is None:
                     errors["base"] = "missing_device_info"
                 else:
-                    self._name = info.name
-                    self._serial_number = info.serial_number
-                    await self.async_set_unique_id(str(self._serial_number))
+                    await self.async_set_unique_id(str(info.serial_number))
                     if self.source == SOURCE_RECONFIGURE:
                         self._abort_if_unique_id_mismatch()
                         return self.async_update_reload_and_abort(
                             self._get_reconfigure_entry(),
                             data_updates=data,
-                            title=self._title,
+                            title=compose_title(info.name, info.serial_number),
                         )
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
-                        title=self._title,
+                        title=compose_title(info.name, info.serial_number),
                         data={CONF_URL: url},
                     )
         return self.async_show_form(
