@@ -242,8 +242,8 @@
               "washing_is_complete": "Washing is completed",
               "water_is_full": "Water is full",
               "water_leak_has_occurred": "The dishwasher has detected a water leak",
-              "filter_reset_complete": "Reset the air filter",
-              "water_filter_reset_complete": "Reset water filter"
+              "filter_reset_complete": "The filter has been reset",
+              "water_filter_reset_complete": "The water filter has been reset"
             }
           }
         }
