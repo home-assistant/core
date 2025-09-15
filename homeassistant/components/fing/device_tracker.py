@@ -20,28 +20,33 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for passed config_entry in HA."""
     coordinator = config_entry.runtime_data
-    tracked_devices: set[FingTrackedDevice] = set()
-
     entity_registry = er.async_get(hass)
+    tracked_devices: set[str] = set()
 
     @callback
     def add_entities() -> None:
-        new_entities = [
-            FingTrackedDevice(coordinator, device)
-            for device in coordinator.data.devices.values()
+        latest_devices = set(coordinator.data.devices.keys())
+
+        devices_to_remove = tracked_devices - set(latest_devices)
+        devices_to_add = set(latest_devices) - tracked_devices
+
+        entities_to_remove = [
+            entity_entry.entity_id
+            for entity_entry in entity_registry.entities.values()
+            if (entity_entry.unique_id in devices_to_remove)
         ]
 
-        entities_to_remove = tracked_devices - set(new_entities)
-        entities_to_add = set(new_entities) - tracked_devices
+        for entity_id in entities_to_remove:
+            entity_registry.async_remove(entity_id)
 
-        # Removes all the entities that are no more tracked by the agent
-        for entity in entities_to_remove:
-            entity_registry.async_remove(entity.entity_id)
-            tracked_devices.discard(entity)
+        entities_to_add = []
+        for unique_id in devices_to_add:
+            device = coordinator.data.devices[unique_id]
+            entities_to_add.append(FingTrackedDevice(coordinator, unique_id, device))
 
-        # Adds all the new entities tracked by the agent
+        tracked_devices.clear()
+        tracked_devices.update(latest_devices)
         async_add_entities(entities_to_add)
-        tracked_devices.update(entities_to_add)
 
     add_entities()
     config_entry.async_on_unload(coordinator.async_add_listener(add_entities))
@@ -52,18 +57,16 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: FingDataUpdateCoordinator, device: Device) -> None:
+    def __init__(
+        self, coordinator: FingDataUpdateCoordinator, unique_id: str, device: Device
+    ) -> None:
         """Set up FingDevice entity."""
         super().__init__(coordinator)
         self._mac = device.mac
-        self._device = coordinator.data.devices[device.mac]
+        self._device = coordinator.data.devices[unique_id]
 
-        agent_id = coordinator.data.network_id
-        if coordinator.data.agent_info is not None:
-            agent_id = coordinator.data.agent_info.agent_id
-
+        self._attr_unique_id = unique_id
         self._attr_mac_address = self._mac
-        self._attr_unique_id = f"{agent_id}-{self.mac_address}"
         self._attr_name = self._device.name
         self._attr_icon = get_icon_from_type(self._device.type)
 
@@ -88,6 +91,11 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         if self._device.model:
             attrs["model"] = self._device.model
         return attrs
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique ID of the entity."""
+        return self._attr_unique_id
 
     def check_for_updates(self, new_device: Device) -> bool:
         """Return true if the device has updates."""

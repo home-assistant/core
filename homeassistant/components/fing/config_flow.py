@@ -36,7 +36,11 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
             )
 
-            fing_api = FingAgent(user_input)
+            fing_api = FingAgent(
+                ip=user_input[CONF_IP_ADDRESS],
+                port=int(user_input[CONF_PORT]),
+                key=user_input[CONF_API_KEY],
+            )
 
             try:
                 devices_response = await fing_api.get_devices()
@@ -63,7 +67,6 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 httpx.HTTPError,
                 httpx.CookieConflict,
                 httpx.StreamError,
-                Exception,
             ) as ex:
                 _LOGGER.error("Unexpected exception: %s", ex)
                 errors["base"] = "unknown"
@@ -78,10 +81,10 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                         await self.async_set_unique_id(agent_info_response.agent_id)
                         self._abort_if_unique_id_configured()
 
-                        return self.async_create_entry(
-                            title=f"Fing Agent {agent_name}",
-                            data=user_input,
-                        )
+                    return self.async_create_entry(
+                        title=f"Fing Agent {agent_name}",
+                        data=user_input,
+                    )
 
                 return self.async_abort(reason="api_version_error")
 
