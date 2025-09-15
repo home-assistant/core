@@ -271,7 +271,10 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Rotational speed (rpm)
-    (BTHomeExtendedSensorDeviceClass.ROTATIONAL_SPEED, Units.REVOLUTIONS_PER_MINUTE): SensorEntityDescription(
+    (
+        BTHomeExtendedSensorDeviceClass.ROTATIONAL_SPEED,
+        Units.REVOLUTIONS_PER_MINUTE,
+    ): SensorEntityDescription(
         key=f"{BTHomeExtendedSensorDeviceClass.ROTATIONAL_SPEED}_{Units.REVOLUTIONS_PER_MINUTE}",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
