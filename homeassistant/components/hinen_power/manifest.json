@@ -8,5 +8,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": []
+  "requirements": ["hinen-open-api==1.0.0"]
 }

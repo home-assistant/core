@@ -1164,6 +1164,9 @@ here-transit==1.2.1
 # homeassistant.components.hikvisioncam
 hikvision==0.4
 
+# homeassistant.components.hinen_power
+hinen-open-api==1.0.0
+
 # homeassistant.components.harman_kardon_avr
 hkavr==0.0.5
 

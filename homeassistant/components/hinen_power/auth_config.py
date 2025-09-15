@@ -6,6 +6,8 @@ import secrets
 from typing import Any, cast
 
 from aiohttp import ClientError, web
+from hinen_open_api import HinenOpen
+from hinen_open_api.utils import RespUtil
 import jwt
 from yarl import URL
 
@@ -24,8 +26,6 @@ from .const import (
     HOST,
     REGION_CODE,
 )
-from .hinen import HinenOpen
-from .util import RespUtil
 
 _LOGGER = logging.getLogger(__name__)
 

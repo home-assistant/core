@@ -6,6 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from hinen_open_api import HinenOpen
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -32,7 +34,6 @@ from .const import (
 from .coordinator import HinenDataUpdateCoordinator
 from .entity import HinenDeviceEntity
 from .enum import DeviceAlertStatus, DeviceStatus
-from .hinen import HinenOpen
 
 
 @dataclass(frozen=True, kw_only=True)

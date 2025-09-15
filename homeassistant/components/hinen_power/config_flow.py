@@ -6,6 +6,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from hinen_open_api import HinenOpen
+from hinen_open_api.exceptions import ForbiddenError
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import ClientCredential
@@ -37,8 +39,6 @@ from .const import (
     LOGGER,
     SUPPORTED_LANGUAGES,
 )
-from .hinen import HinenOpen
-from .hinen_exception import ForbiddenError
 
 
 class OAuth2FlowHandler(

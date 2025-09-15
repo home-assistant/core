@@ -4,12 +4,9 @@ from collections.abc import AsyncGenerator
 import json
 from typing import Any
 
+from hinen_open_api.models import HinenDeviceControl, HinenDeviceDetail, HinenDeviceInfo
+
 from homeassistant.components.hinen_power.const import DOMAIN, PROPERTIES
-from homeassistant.components.hinen_power.models import (
-    HinenDeviceControl,
-    HinenDeviceDetail,
-    HinenDeviceInfo,
-)
 from homeassistant.core import HomeAssistant
 
 from tests.common import async_load_fixture

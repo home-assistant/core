@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from hinen_open_api import HinenOpen
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_DEVICE_NAME, DOMAIN, MANUFACTURER
 from .coordinator import HinenDataUpdateCoordinator
-from .hinen import HinenOpen
 
 
 class HinenDeviceEntity(CoordinatorEntity[HinenDataUpdateCoordinator]):

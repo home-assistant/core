@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+from hinen_open_api.exceptions import HinenBackendError, UnauthorizedError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, ATTR_SERIAL_NUMBER
 from homeassistant.core import HomeAssistant
@@ -21,7 +23,6 @@ from .const import (
     LOGGER,
     PROPERTIES,
 )
-from .hinen_exception import HinenBackendError, UnauthorizedError
 
 
 class HinenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):

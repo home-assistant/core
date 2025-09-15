@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from hinen_open_api.exceptions import ForbiddenError, HinenAPIError
 import pytest
 
 from homeassistant import config_entries
@@ -10,10 +11,6 @@ from homeassistant.components.hinen_power.const import (
     ATTR_REDIRECTION_URL,
     CONF_DEVICES,
     DOMAIN,
-)
-from homeassistant.components.hinen_power.hinen_exception import (
-    ForbiddenError,
-    HinenAPIError,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

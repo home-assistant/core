@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from aiohttp.client_exceptions import ClientError, ClientResponseError
+from openai import BaseModel
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.config_entries import ConfigEntry
@@ -21,7 +22,6 @@ from . import application_credentials
 from .auth_config import AsyncConfigEntryAuth
 from .const import AUTH, CLIENT_ID, COORDINATOR, DOMAIN
 from .coordinator import HinenDataUpdateCoordinator
-from .models import HinenClient, HinenIntegrationConfigEntry
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -92,3 +92,10 @@ async def delete_devices(
             device_registry.async_update_device(
                 dev_entry.id, remove_config_entry_id=entry.entry_id
             )
+
+
+class HinenClient(BaseModel):
+    """hinen client."""
+
+
+type HinenIntegrationConfigEntry = ConfigEntry[HinenClient]
