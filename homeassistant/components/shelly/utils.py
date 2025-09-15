@@ -389,7 +389,7 @@ def get_shelly_model_name(
 
 
 def get_rpc_component_role(config: dict[str, Any], key: str) -> str:
-    """Get RPC component role from config."""
+    """Get RPC component role from device config."""
     return config[key].get("role", "") if key in config else ""
 
 
@@ -815,10 +815,11 @@ def get_rpc_device_info(
             configuration_url=configuration_url,
         )
 
+    is_zone_component = get_rpc_component_role(device.config, key).startswith("zone")
     if (
         (
             component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
-            and not get_rpc_component_role(device.config, key).startswith("zone")
+            and not is_zone_component
         )
         or idx is None
         or len(get_rpc_key_instances(device.status, component, all_lights=True)) < 2
