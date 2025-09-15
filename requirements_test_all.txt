@@ -1077,7 +1077,7 @@ ifaddr==0.2.0
 igloohome-api==0.1.1
 
 # homeassistant.components.imeon_inverter
-imeon_inverter_api==0.4.0
+imeon_inverter_api==0.4.1
 
 # homeassistant.components.imgw_pib
 imgw_pib==1.5.4
