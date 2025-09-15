@@ -12,13 +12,19 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .analytics import Analytics, DeviceAnalytics, EntityAnalytics
+from .analytics import (
+    Analytics,
+    AnalyticsConfig,
+    DeviceAnalyticsConfig,
+    EntityAnalyticsConfig,
+)
 from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
 from .http import AnalyticsDevicesView
 
 __all__ = [
-    "DeviceAnalytics",
-    "EntityAnalytics",
+    "AnalyticsConfig",
+    "DeviceAnalyticsConfig",
+    "EntityAnalyticsConfig",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

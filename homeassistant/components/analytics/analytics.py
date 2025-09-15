@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import timeout
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterable, Mapping
 from dataclasses import asdict as dataclass_asdict, dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Protocol
@@ -88,10 +88,7 @@ from .const import (
 
 DATA_ANALYTICS_MODIFIERS = "analytics_modifiers"
 
-type AnalyticsModifier = Callable[
-    [HomeAssistant, dict[str, DeviceAnalytics], dict[str, EntityAnalytics]],
-    Awaitable[None],
-]
+type AnalyticsModifier = Callable[[HomeAssistant, AnalyticsConfig], Awaitable[None]]
 
 
 @singleton(DATA_ANALYTICS_MODIFIERS)
@@ -103,20 +100,33 @@ def _async_get_modifiers(
 
 
 @dataclass
-class DeviceAnalytics:
-    """Modifiable analytics for a single device.
+class AnalyticsConfig:
+    """Analytics config for a single integration.
 
-    These are just the analytics that are sent to integrations to potentially modify.
+    This is modified by integrations that implement the platform.
+    """
+
+    devices: Mapping[str, DeviceAnalyticsConfig]
+    entities: Mapping[str, EntityAnalyticsConfig]
+    devices_to_remove: Iterable[str] | None = None
+    entities_to_remove: Iterable[str] | None = None
+
+
+@dataclass
+class DeviceAnalyticsConfig:
+    """Analytics config for a single device.
+
+    This is modified by integrations that implement the platform.
     """
 
     extra: dict[str, Any] | None = None
 
 
 @dataclass
-class EntityAnalytics:
-    """Modifiable analytics for a single entity.
+class EntityAnalyticsConfig:
+    """Analytics config for a single entity.
 
-    These are just the analytics that are sent to integrations to potentially modify.
+    This is modified by integrations that implement the platform.
     """
 
     capabilities: dict[str, Any] | None
@@ -129,8 +139,7 @@ class AnalyticsPlatformProtocol(Protocol):
     async def async_modify_analytics(
         self,
         hass: HomeAssistant,
-        devices_analytics: dict[str, DeviceAnalytics],
-        entities_analytics: dict[str, EntityAnalytics],
+        config: AnalyticsConfig,
     ) -> None:
         """Modify the analytics."""
 
@@ -480,13 +489,20 @@ def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
     return domains
 
 
-async def async_devices_payload(hass: HomeAssistant) -> dict:
+async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
     """Return detailed information about entities and devices."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
 
     modifiable_infos: dict[
-        str, tuple[dict[str, DeviceAnalytics], dict[str, EntityAnalytics]] | None
+        str,  # integration domain
+        tuple[
+            list[str],  # list of device ids
+            dict[str, DeviceAnalyticsConfig],
+            list[str],  # list of entity ids
+            dict[str, EntityAnalyticsConfig],
+        ]
+        | None,
     ] = {}
 
     # Get modifiable device infos
@@ -503,21 +519,27 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
 
         integration_domain = config_entry.domain
 
-        modifiable_info = modifiable_infos.setdefault(integration_domain, ({}, {}))
+        modifiable_info = modifiable_infos.setdefault(
+            integration_domain, ([], {}, [], {})
+        )
         if TYPE_CHECKING:
             assert modifiable_info is not None
-        modifiable_devices_info = modifiable_info[0]
-        modifiable_devices_info[device_entry.id] = DeviceAnalytics()
+
+        modifiable_info[0].append(device_entry.id)
+        modifiable_info[1][device_entry.id] = DeviceAnalyticsConfig()
 
     # Get modifiable entity infos
     for entity_entry in ent_reg.entities.values():
         integration_domain = entity_entry.platform
 
-        modifiable_info = modifiable_infos.setdefault(integration_domain, ({}, {}))
+        modifiable_info = modifiable_infos.setdefault(
+            integration_domain, ([], {}, [], {})
+        )
         if TYPE_CHECKING:
             assert modifiable_info is not None
-        modifiable_entities_info = modifiable_info[1]
-        modifiable_entities_info[entity_entry.entity_id] = EntityAnalytics(
+
+        modifiable_info[2].append(entity_entry.entity_id)
+        modifiable_info[3][entity_entry.entity_id] = EntityAnalyticsConfig(
             capabilities=dict(entity_entry.capabilities)
             if entity_entry.capabilities is not None
             else None,
@@ -530,8 +552,12 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
         if (
             modifier := await _async_get_modifier(hass, integration_domain)
         ) is not None:
+            config = AnalyticsConfig(
+                devices=modifiable_info[1],
+                entities=modifiable_info[3],
+            )
             try:
-                await modifier(hass, modifiable_info[0], modifiable_info[1])
+                await modifier(hass, config)
             except Exception as err:  # noqa: BLE001
                 LOGGER.exception(
                     "Calling async_modify_analytics for integration '%s' failed: %s",
@@ -539,6 +565,19 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
                     err,
                 )
                 modifiable_infos[integration_domain] = None
+            else:
+                if config.devices_to_remove is not None:
+                    modifiable_info[0][:] = [
+                        device_id
+                        for device_id in modifiable_info[0]
+                        if device_id not in config.devices_to_remove
+                    ]
+                if config.entities_to_remove is not None:
+                    modifiable_info[2][:] = [
+                        entity_id
+                        for entity_id in modifiable_info[2]
+                        if entity_id not in config.entities_to_remove
+                    ]
 
     integrations_info: dict[str, dict[str, Any]] = {}
 
@@ -552,15 +591,15 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
         if modifiable_info is None:
             continue
 
-        modifiable_devices_info = modifiable_info[0]
-
         integration_info = integrations_info.setdefault(
             integration_domain, {"devices": [], "entities": []}
         )
 
         devices_info = integration_info["devices"]
 
-        for device_id, modifiable_device_info in modifiable_devices_info.items():
+        for device_id in modifiable_info[0]:
+            modifiable_device_info = modifiable_info[1][device_id]
+
             device_entry = dev_reg.devices[device_id]
 
             device_id_mapping[device_entry.id] = (integration_domain, len(devices_info))
@@ -592,8 +631,6 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
         if modifiable_info is None:
             continue
 
-        modifiable_entities_info = modifiable_info[1]
-
         integration_info = integrations_info.setdefault(
             integration_domain, {"devices": [], "entities": []}
         )
@@ -601,7 +638,9 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
         devices_info = integration_info["devices"]
         entities_info = integration_info["entities"]
 
-        for entity_id, modifiable_entity_info in modifiable_entities_info.items():
+        for entity_id in modifiable_info[2]:
+            modifiable_entity_info = modifiable_info[3][entity_id]
+
             entity_entry = ent_reg.entities[entity_id]
 
             entity_state = hass.states.get(entity_entry.entity_id)

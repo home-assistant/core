@@ -13,6 +13,7 @@ from syrupy.matchers import path_type
 
 from homeassistant.components.analytics.analytics import (
     Analytics,
+    AnalyticsConfig,
     async_devices_payload,
 )
 from homeassistant.components.analytics.const import (
@@ -1365,31 +1366,26 @@ async def test_analytics_platforms(
 
     async def async_modify_analytics(
         hass: HomeAssistant,
-        devices_analytics,
-        entities_analytics,
+        config: AnalyticsConfig,
     ) -> None:
         first = True
-        devices_to_remove = []
-        for device_id, device in devices_analytics.items():
+        devices_to_remove = config.devices_to_remove = []
+        for device_id, device in config.devices.items():
             if first:
                 first = False
                 device.extra = {"device_test_key": "device_test_value"}
             else:
                 devices_to_remove.append(device_id)
-        for device_id in devices_to_remove:
-            devices_analytics.pop(device_id)
 
         first = True
-        entities_to_remove = []
-        for entity_id, entity in entities_analytics.items():
+        entities_to_remove = config.entities_to_remove = []
+        for entity_id, entity in config.entities.items():
             if first:
                 first = False
                 entity.capabilities["options"] = len(entity.capabilities["options"])
                 entity.extra = {"entity_test_key": "entity_test_value"}
             else:
                 entities_to_remove.append(entity_id)
-        for entity_id in entities_to_remove:
-            entities_analytics.pop(entity_id)
 
     platform_mock = Mock(async_modify_analytics=async_modify_analytics)
     mock_platform(hass, "test.analytics", platform_mock)
