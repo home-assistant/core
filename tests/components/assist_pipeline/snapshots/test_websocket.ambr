@@ -73,6 +73,7 @@
 # ---
 # name: test_audio_pipeline.5
   dict({
+    'acknowledge_override': False,
     'engine': 'tts.test',
     'language': 'en_US',
     'tts_input': "Sorry, I couldn't understand that",
@@ -166,6 +167,7 @@
 # ---
 # name: test_audio_pipeline_debug.5
   dict({
+    'acknowledge_override': False,
     'engine': 'tts.test',
     'language': 'en_US',
     'tts_input': "Sorry, I couldn't understand that",
@@ -271,6 +273,7 @@
 # ---
 # name: test_audio_pipeline_with_enhancements.5
   dict({
+    'acknowledge_override': False,
     'engine': 'tts.test',
     'language': 'en_US',
     'tts_input': "Sorry, I couldn't understand that",
@@ -386,6 +389,7 @@
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.7
   dict({
+    'acknowledge_override': False,
     'engine': 'tts.test',
     'language': 'en_US',
     'tts_input': "Sorry, I couldn't understand that",

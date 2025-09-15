@@ -106,7 +106,10 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
                 return
             except NtfyForbiddenError:
                 if self._attr_available:
-                    _LOGGER.error("Failed to subscribe to topic. Topic is protected")
+                    _LOGGER.error(
+                        "Failed to subscribe to topic %s. Topic is protected",
+                        self.topic,
+                    )
                 self._attr_available = False
                 ir.async_create_issue(
                     self.hass,
@@ -146,20 +149,20 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
                     )
                 self._attr_available = False
             finally:
-                if self._ws is None or self._ws.done():
-                    self._ws = self.config_entry.async_create_background_task(
-                        self.hass,
-                        target=self.ntfy.subscribe(
-                            topics=[self.topic],
-                            callback=self._async_handle_event,
-                            title=self.subentry.data.get(CONF_TITLE),
-                            message=self.subentry.data.get(CONF_MESSAGE),
-                            priority=self.subentry.data.get(CONF_PRIORITY),
-                            tags=self.subentry.data.get(CONF_TAGS),
-                        ),
-                        name="ntfy_websocket",
-                    )
                 self.async_write_ha_state()
+            if self._ws is None or self._ws.done():
+                self._ws = self.config_entry.async_create_background_task(
+                    self.hass,
+                    target=self.ntfy.subscribe(
+                        topics=[self.topic],
+                        callback=self._async_handle_event,
+                        title=self.subentry.data.get(CONF_TITLE),
+                        message=self.subentry.data.get(CONF_MESSAGE),
+                        priority=self.subentry.data.get(CONF_PRIORITY),
+                        tags=self.subentry.data.get(CONF_TAGS),
+                    ),
+                    name="ntfy_websocket",
+                )
             await asyncio.sleep(RECONNECT_INTERVAL)
 
     @property

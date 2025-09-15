@@ -8,19 +8,19 @@ from typing import TYPE_CHECKING, Final
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
+    from homeassistant.components.media_source import local_source
     from homeassistant.helpers.entity_component import EntityComponent
 
     from . import AITaskPreferences
     from .entity import AITaskEntity
-    from .task import ImageData
 
 DOMAIN = "ai_task"
 DATA_COMPONENT: HassKey[EntityComponent[AITaskEntity]] = HassKey(DOMAIN)
 DATA_PREFERENCES: HassKey[AITaskPreferences] = HassKey(f"{DOMAIN}_preferences")
-DATA_IMAGES: HassKey[dict[str, ImageData]] = HassKey(f"{DOMAIN}_images")
+DATA_MEDIA_SOURCE: HassKey[local_source.LocalSource] = HassKey(f"{DOMAIN}_media_source")
 
+IMAGE_DIR: Final = "image"
 IMAGE_EXPIRY_TIME = 60 * 60  # 1 hour
-MAX_IMAGES = 20
 
 SERVICE_GENERATE_DATA = "generate_data"
 SERVICE_GENERATE_IMAGE = "generate_image"
