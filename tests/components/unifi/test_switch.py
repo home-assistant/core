@@ -1869,7 +1869,9 @@ async def test_port_control_switches(
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[0][2] == {
-        "port_overrides": [{"enable": False, "port_idx": 1, "portconf_id": "1a1"}]
+        "port_overrides": [
+            {"port_idx": 1, "port_security_enabled": True, "portconf_id": "1a1"}
+        ]
     }
 
     # Turn on port
@@ -1890,12 +1892,12 @@ async def test_port_control_switches(
     assert aioclient_mock.call_count == 3
     assert aioclient_mock.mock_calls[1][2] == {
         "port_overrides": [
-            {"port_idx": 1, "enable": True, "portconf_id": "1a1"},
+            {"port_idx": 1, "port_security_enabled": False, "portconf_id": "1a1"},
         ]
     }
     assert aioclient_mock.mock_calls[2][2] == {
         "port_overrides": [
-            {"port_idx": 2, "enable": False, "portconf_id": "1a2"},
+            {"port_idx": 1, "port_security_enabled": True, "portconf_id": "1a2"},
         ]
     }
     # Device gets disabled
