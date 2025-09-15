@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Volvo on Call is depreceated, use Volvo integration"
+        "description": "Volvo on Call is deprecated, use the Volvo integration"
       }
     },
     "abort": {
