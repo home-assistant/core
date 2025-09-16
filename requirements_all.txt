@@ -349,7 +349,7 @@ aiopulse==0.4.6
 aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==3.1.1
+aiopvapi==3.2.1
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==4.2.2
@@ -369,7 +369,7 @@ aioraven==0.7.1
 aiorecollect==2023.09.0
 
 # homeassistant.components.ridwell
-aioridwell==2024.01.0
+aioridwell==2025.09.0
 
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.42
@@ -1727,6 +1727,9 @@ proliphix==0.4.1
 
 # homeassistant.components.prometheus
 prometheus-client==0.21.0
+
+# homeassistant.components.prowl
+prowlpy==1.0.2
 
 # homeassistant.components.proxmoxve
 proxmoxer==2.0.1
