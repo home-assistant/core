@@ -351,7 +351,7 @@ aioraven==0.7.1
 aiorecollect==2023.09.0
 
 # homeassistant.components.ridwell
-aioridwell==2024.01.0
+aioridwell==2025.09.0
 
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.42
