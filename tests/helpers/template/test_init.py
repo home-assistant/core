@@ -1202,46 +1202,6 @@ def test_from_hex(hass: HomeAssistant) -> None:
     )
 
 
-def test_slugify(hass: HomeAssistant) -> None:
-    """Test the slugify filter."""
-    assert (
-        template.Template('{{ slugify("Home Assistant") }}', hass).async_render()
-        == "home_assistant"
-    )
-    assert (
-        template.Template('{{ "Home Assistant" | slugify }}', hass).async_render()
-        == "home_assistant"
-    )
-    assert (
-        template.Template('{{ slugify("Home Assistant", "-") }}', hass).async_render()
-        == "home-assistant"
-    )
-    assert (
-        template.Template('{{ "Home Assistant" | slugify("-") }}', hass).async_render()
-        == "home-assistant"
-    )
-
-
-def test_ordinal(hass: HomeAssistant) -> None:
-    """Test the ordinal filter."""
-    tests = [
-        (1, "1st"),
-        (2, "2nd"),
-        (3, "3rd"),
-        (4, "4th"),
-        (5, "5th"),
-        (12, "12th"),
-        (100, "100th"),
-        (101, "101st"),
-    ]
-
-    for value, expected in tests:
-        assert (
-            template.Template(f"{{{{ {value} | ordinal }}}}", hass).async_render()
-            == expected
-        )
-
-
 def test_timestamp_utc(hass: HomeAssistant) -> None:
     """Test the timestamps to local filter."""
     now = dt_util.utcnow()
@@ -2391,155 +2351,6 @@ def test_version(hass: HomeAssistant) -> None:
             "{{ version(None) < '2099.9.10' }}",
             hass,
         ).async_render()
-
-
-def test_regex_match(hass: HomeAssistant) -> None:
-    """Test regex_match method."""
-    tpl = template.Template(
-        r"""
-{{ '123-456-7890' | regex_match('(\\d{3})-(\\d{3})-(\\d{4})') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-{{ 'Home Assistant test' | regex_match('home', True) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-    {{ 'Another Home Assistant test' | regex_match('Home') }}
-                    """,
-        hass,
-    )
-    assert tpl.async_render() is False
-
-    tpl = template.Template(
-        """
-{{ ['Home Assistant test'] | regex_match('.*Assist') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-
-def test_match_test(hass: HomeAssistant) -> None:
-    """Test match test."""
-    tpl = template.Template(
-        r"""
-{{ '123-456-7890' is match('(\\d{3})-(\\d{3})-(\\d{4})') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-
-def test_regex_search(hass: HomeAssistant) -> None:
-    """Test regex_search method."""
-    tpl = template.Template(
-        r"""
-{{ '123-456-7890' | regex_search('(\\d{3})-(\\d{3})-(\\d{4})') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-{{ 'Home Assistant test' | regex_search('home', True) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-    {{ 'Another Home Assistant test' | regex_search('Home') }}
-                    """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-{{ ['Home Assistant test'] | regex_search('Assist') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-
-def test_search_test(hass: HomeAssistant) -> None:
-    """Test search test."""
-    tpl = template.Template(
-        r"""
-{{ '123-456-7890' is search('(\\d{3})-(\\d{3})-(\\d{4})') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-
-def test_regex_replace(hass: HomeAssistant) -> None:
-    """Test regex_replace method."""
-    tpl = template.Template(
-        r"""
-{{ 'Hello World' | regex_replace('(Hello\\s)',) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() == "World"
-
-    tpl = template.Template(
-        """
-{{ ['Home hinderant test'] | regex_replace('hinder', 'Assist') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() == ["Home Assistant test"]
-
-
-def test_regex_findall(hass: HomeAssistant) -> None:
-    """Test regex_findall method."""
-    tpl = template.Template(
-        """
-{{ 'Flight from JFK to LHR' | regex_findall('([A-Z]{3})') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() == ["JFK", "LHR"]
-
-
-def test_regex_findall_index(hass: HomeAssistant) -> None:
-    """Test regex_findall_index method."""
-    tpl = template.Template(
-        """
-{{ 'Flight from JFK to LHR' | regex_findall_index('([A-Z]{3})', 0) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() == "JFK"
-
-    tpl = template.Template(
-        """
-{{ 'Flight from JFK to LHR' | regex_findall_index('([A-Z]{3})', 1) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() == "LHR"
-
-    tpl = template.Template(
-        """
-{{ ['JFK', 'LHR'] | regex_findall_index('([A-Z]{3})', 1) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() == "LHR"
 
 
 def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
@@ -4070,7 +3881,7 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(
     template_complex_str = r"""
 
 {% for state in states.cover %}
-  {% if state.entity_id | regex_match('.*\\.office_') %}
+  {% if 'office_' in state.entity_id %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}
@@ -4094,7 +3905,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(
     template_complex_str = """
 
 {% for state in states %}
-  {% if state.state | regex_match('ope.*') %}
+  {% if state.state.startswith('ope') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}
@@ -4125,7 +3936,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(
     template_cover_str = """
 
 {% for state in states.cover %}
-  {% if state.state | regex_match('ope.*') %}
+  {% if state.state.startswith('ope') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}
@@ -4642,20 +4453,6 @@ def test_render_complex_handling_non_template_values(hass: HomeAssistant) -> Non
     assert template.render_complex(
         {True: 1, False: template.Template("{{ hello }}", hass)}, {"hello": 2}
     ) == {True: 1, False: 2}
-
-
-def test_urlencode(hass: HomeAssistant) -> None:
-    """Test the urlencode method."""
-    tpl = template.Template(
-        "{% set dict = {'foo': 'x&y', 'bar': 42} %}{{ dict | urlencode }}",
-        hass,
-    )
-    assert tpl.async_render() == "foo=x%26y&bar=42"
-    tpl = template.Template(
-        "{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}",
-        hass,
-    )
-    assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
 
 
 def test_as_timedelta(hass: HomeAssistant) -> None:

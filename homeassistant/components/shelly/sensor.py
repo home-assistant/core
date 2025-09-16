@@ -1445,7 +1445,7 @@ RPC_SENSORS: Final = {
     "illuminance_illumination": RpcSensorDescription(
         key="illuminance",
         sub_key="illumination",
-        name="Illuminance Level",
+        name="Illuminance level",
         translation_key="illuminance_level",
         device_class=SensorDeviceClass.ENUM,
         options=["dark", "twilight", "bright"],
