@@ -392,6 +392,29 @@ class PluggableAction:
                 await task
 
 
+def move_top_level_schema_fields_to_options(
+    config: ConfigType, options_schema_dict: dict[vol.Marker, Any]
+) -> ConfigType:
+    """Move top-level fields to options.
+
+    This function is used to help migrating old-style configs to new-style configs.
+    """
+    config = config.copy()
+    options = config.setdefault(CONF_OPTIONS, {})
+
+    # Move top-level fields to options
+    for key_marked in options_schema_dict:
+        key = key_marked.schema
+        if key in config:
+            if key in options:
+                raise vol.Invalid(
+                    f"'{key}' cannot be specified in both top-level and options"
+                )
+            options[key] = config.pop(key)
+
+    return config
+
+
 async def _async_get_trigger_platform(
     hass: HomeAssistant, trigger_key: str
 ) -> tuple[str, TriggerProtocol]:
