@@ -2286,46 +2286,6 @@ def _is_string_like(value: Any) -> bool:
     return isinstance(value, (str, bytes, bytearray))
 
 
-def regex_match(value, find="", ignorecase=False):
-    """Match value using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return bool(_regex_cache(find, flags).match(value))
-
-
-_regex_cache = lru_cache(maxsize=128)(re.compile)
-
-
-def regex_replace(value="", find="", replace="", ignorecase=False):
-    """Replace using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return _regex_cache(find, flags).sub(replace, value)
-
-
-def regex_search(value, find="", ignorecase=False):
-    """Search using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return bool(_regex_cache(find, flags).search(value))
-
-
-def regex_findall_index(value, find="", index=0, ignorecase=False):
-    """Find all matches using regex and then pick specific match index."""
-    return regex_findall(value, find, ignorecase)[index]
-
-
-def regex_findall(value, find="", ignorecase=False):
-    """Find all matches using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return _regex_cache(find, flags).findall(value)
-
-
 def struct_pack(value: Any | None, format_string: str) -> bytes | None:
     """Pack an object into a bytes object."""
     try:
@@ -2828,6 +2788,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension("homeassistant.helpers.template.extensions.Base64Extension")
         self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
         self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
 
         self.globals["as_datetime"] = as_datetime
         self.globals["as_function"] = as_function
@@ -2884,11 +2845,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["ordinal"] = ordinal
         self.filters["pack"] = struct_pack
         self.filters["random"] = random_every_time
-        self.filters["regex_findall_index"] = regex_findall_index
-        self.filters["regex_findall"] = regex_findall
-        self.filters["regex_match"] = regex_match
-        self.filters["regex_replace"] = regex_replace
-        self.filters["regex_search"] = regex_search
         self.filters["round"] = forgiving_round
         self.filters["shuffle"] = shuffle
         self.filters["slugify"] = slugify
@@ -2907,8 +2863,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
-        self.tests["match"] = regex_match
-        self.tests["search"] = regex_search
         self.tests["set"] = _is_set
         self.tests["string_like"] = _is_string_like
         self.tests["tuple"] = _is_tuple
