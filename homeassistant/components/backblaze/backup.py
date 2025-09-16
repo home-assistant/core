@@ -299,7 +299,7 @@ class BackblazeBackupAgent(BackupAgent):
 
             content_type, _ = mimetypes.guess_type(filename)
             file_version = await self._hass.async_add_executor_job(
-                lambda: self._bucket.upload_file_obj(
+                lambda: self._bucket.upload_unbound_stream(
                     reader,
                     filename,
                     content_type=content_type or "application/x-tar",
