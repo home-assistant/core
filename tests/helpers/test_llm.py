@@ -22,6 +22,7 @@ from homeassistant.helpers import (
     intent,
     llm,
     selector,
+    service,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -828,13 +829,14 @@ async def test_script_tool(
     }
     assert tool.parameters.schema == schema
 
-    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
-        "test_script": (
-            "This is a test script. Aliases: ['script name', 'script alias']",
-            vol.Schema(schema),
-        ),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
-    }
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE][("script", "test_script")] == (
+        "This is a test script. Aliases: ['script name', 'script alias']",
+        vol.Schema(schema),
+        None,
+    )
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE][
+        ("script", "script_with_no_fields")
+    ] == ("This is another test script", vol.Schema({}), None)
 
     # Test script with response
     tool_input = llm.ToolInput(
@@ -925,7 +927,7 @@ async def test_script_tool(
     ):
         await hass.services.async_call("script", "reload", blocking=True)
 
-    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {}
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE] == {}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
@@ -941,13 +943,28 @@ async def test_script_tool(
     schema = {vol.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
-    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
-        "test_script": (
-            "This is a new test script. Aliases: ['script name', 'script alias']",
-            vol.Schema(schema),
-        ),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
-    }
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE][("script", "test_script")] == (
+        "This is a new test script. Aliases: ['script name', 'script alias']",
+        vol.Schema(schema),
+        None,
+    )
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE][
+        ("script", "script_with_no_fields")
+    ] == ("This is another test script", vol.Schema({}), None)
+
+    # Modify the cache to make sure the cached value is used
+    hass.data[llm.ACTION_PARAMETERS_CACHE][("script", "test_script")] = (
+        "This is a modified test script",
+        vol.Schema({}),
+        None,
+    )
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
+    tool = tools[0]
+    assert tool.name == "test_script"
+    assert tool.description == "This is a modified test script"
+    assert tool.parameters.schema == {}
 
 
 async def test_script_tool_name(hass: HomeAssistant) -> None:
@@ -987,6 +1004,156 @@ async def test_script_tool_name(hass: HomeAssistant) -> None:
 
     tool = tools[0]
     assert tool.name == "_123456"
+
+
+async def test_action_tool(hass: HomeAssistant) -> None:
+    """Test ActionTool can be created for each action (service) without exceptions."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "demo", {})
+    hass.states.async_set(
+        "calendar.test_calendar",
+        "on",
+        {"friendly_name": "Mock Calendar Name", "supported_features": 1},
+    )
+    hass.states.async_set(
+        "valve.test_valve",
+        "on",
+        {"friendly_name": "Mock Valve Name", "supported_features": 8 + 4},
+    )
+    await service.async_get_all_descriptions(hass)
+    for state in hass.states.async_all():
+        async_expose_entity(hass, "conversation", state.entity_id, True)
+
+    exposed_entities = llm._get_exposed_entities(hass, "conversation")
+    for domain, actions in hass.services.async_services().items():
+        for action in actions:
+            tool = llm.ActionTool(
+                hass,
+                domain,
+                action,
+                exposed_entities.get(domain, exposed_entities["entities"]),
+            )
+            assert tool.name == f"{domain}__{action}"
+
+
+@pytest.mark.parametrize(
+    ("target", "expected_entities", "unexpected_entities"),
+    [
+        (  # Entities from `demo` integration with device class `outlet`
+            {"entity": [{"integration": "demo", "device_class": "outlet"}]},
+            ["switch.ac"],
+            ["light.kitchen_lights"],
+        ),
+        (  # Entities from `demo` integration from devices that also have entities with domain `light`
+            {
+                "entity": [{}],
+                "device": [{"integration": "demo", "domain": "light", "entity": [{}]}],
+            },
+            ["light.kitchen_lights"],
+            ["switch.ac"],
+        ),
+        (  # Light entities from a device that also has a switch
+            {
+                "entity": [{"domain": "light"}],
+                "device": [{"entity": [{"domain": "switch"}]}],
+            },
+            [],
+            [],
+        ),
+        (
+            {"entity": [{}], "device": [{"manufacturer": "Unknown manufacturer"}]},
+            [],
+            [],
+        ),
+        (
+            {"entity": [{}], "device": [{"integration": "test"}]},
+            [],
+            [],
+        ),
+        (
+            {"entity": [{}], "device": [{"model": "Unknown model"}]},
+            [],
+            [],
+        ),
+        (
+            {"entity": [{}], "device": [{"model_id": "Unknown model ID"}]},
+            [],
+            [],
+        ),
+        (  # Light entities from an area that also have a switch
+            {
+                "entity": [{"domain": "light"}],
+                "area": [{"entity": [{"domain": "switch"}]}],
+            },
+            [],
+            [],
+        ),
+        (  # Light entities from an area that also have a switch that belongs to a device
+            {
+                "entity": [{"domain": "light"}],
+                "area": [{"device": [{"entity": [{"domain": "switch"}]}]}],
+            },
+            [],
+            [],
+        ),
+        (  # Light entities from a floor that also have a switch
+            {
+                "entity": [{"domain": "light"}],
+                "floor": [{"entity": [{"domain": "switch"}]}],
+            },
+            [],
+            [],
+        ),
+        (  # Light entities from a floor that also have a switch that belongs to a device
+            {
+                "entity": [{"domain": "light"}],
+                "floor": [{"device": [{"entity": [{"domain": "switch"}]}]}],
+            },
+            [],
+            [],
+        ),
+    ],
+)
+async def test_action_tool_targets(
+    hass: HomeAssistant, target, expected_entities, unexpected_entities
+) -> None:
+    """Test ActionTool with different targets."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "demo", {})
+    await service.async_get_all_descriptions(hass)
+    for state in hass.states.async_all():
+        async_expose_entity(hass, "conversation", state.entity_id, True)
+
+    exposed_entities = llm._get_exposed_entities(hass, "conversation")
+
+    async_mock_service(
+        hass,
+        domain="demo",
+        service="mock_action",
+        schema=cv.make_entity_service_schema({}),
+        response={"success": True},
+    )
+    service.async_set_service_schema(hass, "demo", "mock_action", {"target": target})
+    if expected_entities:
+        tool = llm.ActionTool(
+            hass,
+            "demo",
+            "mock_action",
+            exposed_entities["entities"],
+        )
+        assert all(entity in tool.target_entities for entity in expected_entities)
+        assert all(entity not in tool.target_entities for entity in unexpected_entities)
+    else:
+        with pytest.raises(
+            HomeAssistantError,
+            match="Action demo.mock_action has no exposed entities to target.",
+        ):
+            llm.ActionTool(
+                hass,
+                "demo",
+                "mock_action",
+                exposed_entities["entities"],
+            )
 
 
 async def test_selector_serializer(
