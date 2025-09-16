@@ -664,6 +664,7 @@ _CONVERTED_VALUE: dict[
         (10, UnitOfPower.TERA_WATT, 10e12, UnitOfPower.WATT),
         (10, UnitOfPower.WATT, 0.01, UnitOfPower.KILO_WATT),
         (10, UnitOfPower.MILLIWATT, 0.01, UnitOfPower.WATT),
+        (10, UnitOfPower.BTU_PER_HOUR, 2.9307107, UnitOfPower.WATT),
     ],
     PressureConverter: [
         (1000, UnitOfPressure.HPA, 14.5037743897, UnitOfPressure.PSI),
@@ -750,6 +751,20 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfSpeed.KILOMETERS_PER_HOUR, 3.106856, UnitOfSpeed.MILES_PER_HOUR),
         # 5 mi/h * 1.609 km/mi = 8.04672 km/h
         (5, UnitOfSpeed.MILES_PER_HOUR, 8.04672, UnitOfSpeed.KILOMETERS_PER_HOUR),
+        # 300 m/min / 60 s/min = 5 m/s
+        (
+            300,
+            UnitOfSpeed.METERS_PER_MINUTE,
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+        ),
+        # 5 m/s * 60 s/min = 300 m/min
+        (
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+            300,
+            UnitOfSpeed.METERS_PER_MINUTE,
+        ),
         # 5 in/day * 25.4 mm/in = 127 mm/day
         (
             5,
