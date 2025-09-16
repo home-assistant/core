@@ -11,7 +11,7 @@ from typing import Any
 
 from aiohttp.web import Request, Response
 from webio_api import WebioAPI
-from webio_api.const import KEY_DEVICE_SERIAL, KEY_TYPE, TYPE_STATUS_UPDATE
+from webio_api.const import KEY_DEVICE_SERIAL, KEY_TYPE, KEY_ZONES, TYPE_STATUS_UPDATE
 
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import event
@@ -103,6 +103,7 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
             KEY_OUTPUTS: self.webio_api.outputs,
             KEY_INPUTS: self.webio_api.inputs,
             KEY_TEMP_SENSOR: self.webio_api.temp_sensor,
+            KEY_ZONES: self.webio_api.zones,
         }
         self.async_set_updated_data(data)
 
@@ -197,5 +198,6 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
             KEY_OUTPUTS: self.webio_api.outputs,
             KEY_INPUTS: self.webio_api.inputs,
             KEY_TEMP_SENSOR: self.webio_api.temp_sensor,
+            KEY_ZONES: self.webio_api.zones,
         }
         self.async_set_updated_data(new_data)
