@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+import json
 import logging
 import sys
 from typing import Any
@@ -114,6 +115,9 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.list()
         except (TimeoutError, httpx.ConnectError):
             errors["base"] = "cannot_connect"
+        except (json.JSONDecodeError, httpx.HTTPError):
+            _LOGGER.exception("Failed to get valid response from Ollama server")
+            errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -182,7 +186,12 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
                 downloaded_models: set[str] = {
                     model_info["model"] for model_info in response.get("models", [])
                 }
-            except (TimeoutError, httpx.ConnectError, httpx.HTTPError):
+            except (
+                TimeoutError,
+                httpx.ConnectError,
+                httpx.HTTPError,
+                json.JSONDecodeError,
+            ):
                 _LOGGER.exception("Failed to get models from Ollama server")
                 return self.async_abort(reason="cannot_connect")
 
@@ -233,8 +242,16 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
                 self._config_data = user_input
                 # Ollama server needs to download model first
                 return await self.async_step_download()
-        except Exception:
+        except (
+            TimeoutError,
+            httpx.ConnectError,
+            httpx.HTTPError,
+            json.JSONDecodeError,
+        ):
             _LOGGER.exception("Failed to check model availability")
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected error checking model availability")
             return self.async_abort(reason="cannot_connect")
 
         # Model is already downloaded, create/update the entry
