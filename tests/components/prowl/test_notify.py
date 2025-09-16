@@ -13,189 +13,87 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import TEST_API_KEY
 
+SERVICE_DATA = {"message": "Test Notification", "title": "Test Title"}
 
-@pytest.mark.parametrize(
-    ("service_data", "expected_send_parameters"),
-    [
-        (
-            {"message": "Test Notification", "title": "Test Title"},
-            {
-                "application": "Home-Assistant",
-                "event": "Test Title",
-                "description": "Test Notification",
-                "priority": 0,
-                "url": None,
-            },
-        )
-    ],
-)
+EXPECTED_SEND_PARAMETERS = {
+    "application": "Home-Assistant",
+    "event": "Test Title",
+    "description": "Test Notification",
+    "priority": 0,
+    "url": None,
+}
+
+
 @pytest.mark.usefixtures("configure_prowl_through_yaml")
 async def test_send_notification_service(
     hass: HomeAssistant,
     mock_prowlpy: Mock,
-    service_data: dict[str, Any],
-    expected_send_parameters: dict[str, Any],
 ) -> None:
     """Set up Prowl, call notify service, and check API call."""
     assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         DOMAIN,
-        service_data,
+        SERVICE_DATA,
         blocking=True,
     )
 
-    mock_prowlpy.send.assert_called_once_with(**expected_send_parameters)
+    mock_prowlpy.send.assert_called_once_with(**EXPECTED_SEND_PARAMETERS)
 
 
 @pytest.mark.parametrize(
-    ("service_data", "expected_send_parameters"),
+    ("prowlpy_side_effect", "raised_exception", "exception_message"),
     [
         (
-            {"message": "Test Notification", "title": "Test Title"},
-            {
-                "application": "Home-Assistant",
-                "event": "Test Title",
-                "description": "Test Notification",
-                "priority": 0,
-                "url": None,
-            },
-        )
+            prowlpy.APIError("Internal server error"),
+            HomeAssistantError,
+            "Unexpected error when calling Prowl API",
+        ),
+        (
+            TimeoutError,
+            HomeAssistantError,
+            "Timeout accessing Prowl API",
+        ),
+        (
+            prowlpy.APIError(f"Invalid API key: {TEST_API_KEY}"),
+            HomeAssistantError,
+            "Invalid API key for Prowl service",
+        ),
+        (
+            prowlpy.APIError(
+                "Not accepted: Your IP address has exceeded the API limit"
+            ),
+            HomeAssistantError,
+            "Prowl service reported: exceeded rate limit",
+        ),
+        (
+            SyntaxError(),
+            SyntaxError,
+            "",
+        ),
     ],
 )
 @pytest.mark.usefixtures("configure_prowl_through_yaml")
 async def test_fail_send_notification(
     hass: HomeAssistant,
     mock_prowlpy: Mock,
-    service_data: dict[str, Any],
-    expected_send_parameters: dict[str, Any],
+    prowlpy_side_effect: Exception,
+    raised_exception: type[Exception],
+    exception_message: str,
 ) -> None:
     """Sending a message via Prowl with a failure."""
-    mock_prowlpy.send.side_effect = prowlpy.APIError("Internal server error")
+    mock_prowlpy.send.side_effect = prowlpy_side_effect
 
     assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(raised_exception, match=exception_message):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             DOMAIN,
-            service_data,
+            SERVICE_DATA,
             blocking=True,
         )
 
-    mock_prowlpy.send.assert_called_once_with(**expected_send_parameters)
-
-
-@pytest.mark.parametrize(
-    ("service_data", "expected_send_parameters"),
-    [
-        (
-            {"message": "Test Notification", "title": "Test Title"},
-            {
-                "application": "Home-Assistant",
-                "event": "Test Title",
-                "description": "Test Notification",
-                "priority": 0,
-                "url": None,
-            },
-        )
-    ],
-)
-@pytest.mark.usefixtures("configure_prowl_through_yaml")
-async def test_send_notification_timeout(
-    hass: HomeAssistant,
-    mock_prowlpy: Mock,
-    service_data: dict[str, Any],
-    expected_send_parameters: dict[str, Any],
-) -> None:
-    """Sending a message via Prowl with a timeout."""
-    mock_prowlpy.send.side_effect = TimeoutError
-
-    assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
-    with pytest.raises(HomeAssistantError, match="Timeout accessing Prowl API"):
-        await hass.services.async_call(
-            NOTIFY_DOMAIN,
-            DOMAIN,
-            service_data,
-            blocking=True,
-        )
-
-    mock_prowlpy.send.assert_called_once_with(**expected_send_parameters)
-
-
-@pytest.mark.parametrize(
-    ("service_data", "expected_send_parameters"),
-    [
-        (
-            {"message": "Test Notification", "title": "Test Title"},
-            {
-                "application": "Home-Assistant",
-                "event": "Test Title",
-                "description": "Test Notification",
-                "priority": 0,
-                "url": None,
-            },
-        )
-    ],
-)
-@pytest.mark.usefixtures("configure_prowl_through_yaml")
-async def test_forbidden_send_notification(
-    hass: HomeAssistant,
-    mock_prowlpy: Mock,
-    service_data: dict[str, Any],
-    expected_send_parameters: dict[str, Any],
-) -> None:
-    """Sending a message via Prowl with a forbidden error."""
-    mock_prowlpy.send.side_effect = prowlpy.APIError(f"Invalid API key: {TEST_API_KEY}")
-
-    assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
-    with pytest.raises(HomeAssistantError, match="Invalid API key for Prowl service"):
-        await hass.services.async_call(
-            NOTIFY_DOMAIN,
-            DOMAIN,
-            service_data,
-            blocking=True,
-        )
-
-    mock_prowlpy.send.assert_called_once_with(**expected_send_parameters)
-
-
-@pytest.mark.parametrize(
-    ("service_data", "expected_send_parameters"),
-    [
-        (
-            {"message": "Test Notification", "title": "Test Title"},
-            {
-                "application": "Home-Assistant",
-                "event": "Test Title",
-                "description": "Test Notification",
-                "priority": 0,
-                "url": None,
-            },
-        )
-    ],
-)
-@pytest.mark.usefixtures("configure_prowl_through_yaml")
-async def test_rate_limited_send_notification(
-    hass: HomeAssistant,
-    mock_prowlpy: Mock,
-    service_data: dict[str, Any],
-    expected_send_parameters: dict[str, Any],
-) -> None:
-    """Sending a message via Prowl with a forbidden error."""
-    mock_prowlpy.send.side_effect = prowlpy.APIError(
-        "Not accepted: Your IP address has exceeded the API limit"
-    )
-
-    assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
-    with pytest.raises(HomeAssistantError, match="Prowl service reported: exceeded rate limit"):
-        await hass.services.async_call(
-            NOTIFY_DOMAIN,
-            DOMAIN,
-            service_data,
-            blocking=True,
-        )
-
-    mock_prowlpy.send.assert_called_once_with(**expected_send_parameters)
+    mock_prowlpy.send.assert_called_once_with(**EXPECTED_SEND_PARAMETERS)
 
 
 @pytest.mark.parametrize(
@@ -228,8 +126,8 @@ async def test_other_exception_send_notification(
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             DOMAIN,
-            service_data,
+            SERVICE_DATA,
             blocking=True,
         )
 
-    mock_prowlpy.send.assert_called_once_with(**expected_send_parameters)
+    mock_prowlpy.send.assert_called_once_with(**EXPECTED_SEND_PARAMETERS)
