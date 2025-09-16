@@ -423,7 +423,6 @@ SENSOR_DESCRIPTIONS = (
         translation_key="forecast_cons_remaining_today",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -431,7 +430,6 @@ SENSOR_DESCRIPTIONS = (
         translation_key="forecast_prod_remaining_today",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
     ),
 )
