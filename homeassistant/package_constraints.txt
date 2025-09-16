@@ -23,7 +23,7 @@ bcrypt==4.3.0
 bleak-retry-connector==4.4.3
 bleak==1.0.1
 bluetooth-adapters==2.1.0
-bluetooth-auto-recovery==1.5.2
+bluetooth-auto-recovery==1.5.3
 bluetooth-data-tools==1.28.2
 cached-ipaddress==0.10.0
 certifi>=2021.5.30
@@ -34,7 +34,7 @@ dbus-fast==2.44.3
 fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
-habluetooth==5.6.2
+habluetooth==5.6.4
 hass-nabucasa==1.1.1
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1
@@ -129,7 +129,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.7
+pydantic==2.11.9
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1

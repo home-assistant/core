@@ -5,7 +5,6 @@ from collections.abc import Iterable
 from copy import deepcopy
 import dataclasses
 import io
-import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -39,6 +38,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -2761,7 +2761,7 @@ async def test_register_platform_entity_service_none_schema(
 
 
 async def test_register_platform_entity_service_non_entity_service_schema(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
 ) -> None:
     """Test attempting to register a service with a non entity service schema."""
     expected_message = "registers an entity service with a non entity service schema"
@@ -2773,16 +2773,15 @@ async def test_register_platform_entity_service_non_entity_service_schema(
             vol.Any(vol.Schema({"some": str})),
         )
     ):
-        service.async_register_platform_entity_service(
-            hass,
-            "mock_platform",
-            f"hello_{idx}",
-            entity_domain="mock_integration",
-            schema=schema,
-            func=Mock(),
-        )
-        assert expected_message in caplog.text
-        caplog.clear()
+        with pytest.raises(HomeAssistantError, match=expected_message):
+            service.async_register_platform_entity_service(
+                hass,
+                "mock_platform",
+                f"hello_{idx}",
+                entity_domain="mock_integration",
+                schema=schema,
+                func=Mock(),
+            )
 
     for idx, schema in enumerate(
         (
@@ -2799,5 +2798,3 @@ async def test_register_platform_entity_service_non_entity_service_schema(
             schema=schema,
             func=Mock(),
         )
-        assert expected_message not in caplog.text
-        assert not any(x.levelno > logging.DEBUG for x in caplog.records)

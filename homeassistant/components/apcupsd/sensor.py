@@ -395,6 +395,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "upsmode": SensorEntityDescription(
         key="upsmode",
         translation_key="ups_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "upsname": SensorEntityDescription(
         key="upsname",
