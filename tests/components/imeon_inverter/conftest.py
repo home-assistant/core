@@ -55,10 +55,6 @@ def mock_imeon_inverter() -> Generator[MagicMock]:
             "homeassistant.components.imeon_inverter.config_flow.Inverter",
             new=inverter_mock,
         ),
-        patch(
-            "homeassistant.components.imeon_inverter.Inverter",
-            new=inverter_mock,
-        ),
     ):
         inverter = inverter_mock.return_value
         inverter.__aenter__.return_value = inverter

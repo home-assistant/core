@@ -37,9 +37,8 @@ class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # User have to provide the hostname if device is not discovered
             host = self._host or user_input[CONF_HOST]
-            websession = async_get_clientsession(self.hass)
 
-            async with Inverter(host, websession) as client:
+            async with Inverter(host, async_get_clientsession(self.hass)) as client:
                 try:
                     # Check connection
                     if await client.login(
