@@ -73,6 +73,8 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_EMAIL], data=user_input
                 )
 
+            errors["base"] = "unknown"
+
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )

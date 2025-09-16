@@ -26,8 +26,9 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -39,8 +40,6 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 # Device class for climate devices in Compit system
 CLIMATE_DEVICE_CLASS = 10
-
-# Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 COMPIT_MODE_MAP = {
@@ -69,8 +68,6 @@ HVAC_MODE_TO_COMPIT_MODE = {v: k for k, v in COMPIT_MODE_MAP.items()}
 FAN_MODE_TO_COMPIT_FAN_MODE = {v: k for k, v in COMPIT_FANSPEED_MAP.items()}
 PRESET_MODE_TO_COMPIT_PRESET_MODE = {v: k for k, v in COMPIT_PRESET_MAP.items()}
 
-ATTR_TEMPERATURE = "temperature"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -79,8 +76,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the CompitClimate platform from a config entry."""
 
-    coordinator: CompitDataUpdateCoordinator = entry.runtime_data
-
+    coordinator = entry.runtime_data
     climate_entities = []
     for device_id in coordinator.connector.devices:
         device = coordinator.connector.devices[device_id]
@@ -105,7 +101,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
     """Representation of a Compit climate device."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF]
+    _attr_hvac_modes = [*COMPIT_MODE_MAP.values()]
     _attr_name = None
     _attr_has_entity_name = True
     _attr_supported_features = (
@@ -225,14 +221,14 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
-            raise ValueError("Temperature argument missing")
+            raise ServiceValidationError("Temperature argument missing")
         await self.set_parameter_value(CompitParameter.SET_TARGET_TEMPERATURE, temp)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
 
         if not (mode := HVAC_MODE_TO_COMPIT_MODE.get(hvac_mode)):
-            raise ValueError(f"Invalid hvac mode {hvac_mode}")
+            raise ServiceValidationError(f"Invalid hvac mode {hvac_mode}")
 
         await self.set_parameter_value(CompitParameter.HVAC_MODE, mode.value)
 
@@ -241,7 +237,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
 
         compit_preset = PRESET_MODE_TO_COMPIT_PRESET_MODE.get(preset_mode)
         if compit_preset is None:
-            raise ValueError(f"Invalid preset mode: {preset_mode}")
+            raise ServiceValidationError(f"Invalid preset mode: {preset_mode}")
 
         await self.set_parameter_value(CompitParameter.PRESET_MODE, compit_preset.value)
 
@@ -250,7 +246,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
 
         compit_fan_mode = FAN_MODE_TO_COMPIT_FAN_MODE.get(fan_mode)
         if compit_fan_mode is None:
-            raise ValueError(f"Invalid fan mode: {fan_mode}")
+            raise ServiceValidationError(f"Invalid fan mode: {fan_mode}")
 
         await self.set_parameter_value(CompitParameter.FAN_MODE, compit_fan_mode.value)
 

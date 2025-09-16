@@ -30,14 +30,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bo
             f"Invalid credentials for {entry.data[CONF_EMAIL]}"
         ) from e
 
-    if connected:
-        coordinator = CompitDataUpdateCoordinator(hass, entry, connector)
-        await coordinator.async_config_entry_first_refresh()
-        entry.runtime_data = coordinator
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-        return True
+    if not connected:
+        raise ConfigEntryAuthFailed("Authentication API error")
 
-    raise ConfigEntryAuthFailed("Authentication API error")
+    coordinator = CompitDataUpdateCoordinator(hass, entry, connector)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bool:
