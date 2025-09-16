@@ -5,7 +5,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from enum import StrEnum
-import json
 import logging
 from typing import Any
 
@@ -354,7 +353,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
     async def _async_continue_picked_firmware(self) -> ConfigFlowResult:
         """Continue to the picked firmware step."""
-        _LOGGER.debug("Probing all firmwares for: %s", self._picked_firmware_type)
         if not await self._probe_firmware_info():
             return self.async_abort(
                 reason="unsupported_firmware",
@@ -362,7 +360,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             )
 
         if self._picked_firmware_type == PickedFirmwareType.ZIGBEE:
-            _LOGGER.debug("Installing firmware for: %s", self._picked_firmware_type)
             return await self.async_step_install_zigbee_firmware()
 
         if result := await self._ensure_thread_addon_setup():
@@ -410,14 +407,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._device is not None
         assert self._hardware_name is not None
 
-        _LOGGER.debug(
-            "Continuing Zigbee setup with integration %s", self._zigbee_integration
-        )
-        _LOGGER.debug(
-            "Probing Zigbee: %s, firmware for: %s",
-            ApplicationType.EZSP,
-            self._picked_firmware_type,
-        )
         if not await self._probe_firmware_info(probe_methods=(ApplicationType.EZSP,)):
             return self.async_abort(
                 reason="unsupported_firmware",
@@ -427,7 +416,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         if self._zigbee_integration == ZigbeeIntegration.OTHER:
             return self._async_flow_finished()
 
-        _LOGGER.debug("Starting ZHA config flow")
         result = await self.hass.config_entries.flow.async_init(
             ZHA_DOMAIN,
             context={"source": "hardware"},
@@ -441,7 +429,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 "radio_type": "ezsp",
             },
         )
-        _LOGGER.debug("ZHA flow result: %s", json.dumps(result))
         return self._continue_zha_flow(result)
 
     @callback
@@ -673,7 +660,6 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
             )
             | result  # update all items with the child result
         )
-        _LOGGER.debug("Flow result: %s", json.dumps(result))
         return result
 
 
