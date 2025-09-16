@@ -153,6 +153,16 @@ class ZhaRadioManager:
 
         return mgr
 
+    @property
+    def zigpy_database_path(self) -> str:
+        """Path to `zigbee.db`."""
+        config = get_zha_data(self.hass).yaml_config
+
+        return config.get(
+            CONF_DATABASE,
+            self.hass.config.path(DEFAULT_DATABASE_NAME),
+        )
+
     @contextlib.asynccontextmanager
     async def connect_zigpy_app(self) -> AsyncIterator[ControllerApplication]:
         """Connect to the radio with the current config and then clean up."""
@@ -161,10 +171,7 @@ class ZhaRadioManager:
         config = get_zha_data(self.hass).yaml_config
         app_config = config.get(CONF_ZIGPY, {}).copy()
 
-        database_path = config.get(
-            CONF_DATABASE,
-            self.hass.config.path(DEFAULT_DATABASE_NAME),
-        )
+        database_path = self.zigpy_database_path
 
         # Don't create `zigbee.db` if it doesn't already exist
         if not await self.hass.async_add_executor_job(os.path.exists, database_path):
@@ -274,6 +281,12 @@ class ZhaRadioManager:
 
     async def async_form_network(self) -> None:
         """Form a brand-new network."""
+
+        # When forming a new network, we delete the ZHA database to prevent old devices
+        # from appearing in an unusable state
+        with suppress(OSError):
+            await self.hass.async_add_executor_job(os.remove, self.zigpy_database_path)
+
         async with self.connect_zigpy_app() as app:
             await app.connect()
             await app.form_network()
