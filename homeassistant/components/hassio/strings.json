@@ -185,7 +185,7 @@
     },
     "unsupported_docker_version": {
       "title": "Unsupported system - Docker version",
-      "description": "System is unsupported because the Docker version is out of date. For information about the correct version and how to fix this, select Learn more."
+      "description": "System is unsupported because the Docker version is out of date. For information about the required version and how to fix this, select Learn more."
     },
     "unsupported_job_conditions": {
       "title": "Unsupported system - Protections disabled",
