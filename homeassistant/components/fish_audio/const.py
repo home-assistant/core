@@ -49,5 +49,5 @@ STT_SUPPORTED_LANGUAGES = [
     "zh",
 ]
 
-BACKEND_MODELS = ["s1", "s1-mini", "speech-1.5", "speech-1.6"]
+BACKEND_MODELS = ["s1", "speech-1.5", "speech-1.6"]
 SORT_BY_OPTIONS = ["score", "task_count", "created_at"]
