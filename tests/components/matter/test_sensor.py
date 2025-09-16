@@ -662,10 +662,26 @@ async def test_vacuum_operational_error_sensor(
         "brush_jammed",
         "navigation_sensor_obscured",
     ]
-
+    # test Rvc error
     set_node_attribute(matter_node, 1, 97, 5, {0: 66})
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.mock_vacuum_operational_error")
     assert state
     assert state.state == "dust_bin_missing"
+
+    # test manufacturer range error
+    set_node_attribute(matter_node, 1, 97, 5, {0: 128, 1: "low_battery"})
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_vacuum_operational_error")
+    assert state
+    assert state.state == "low_battery"
+
+    # test unknown error
+    set_node_attribute(matter_node, 1, 97, 5, {0: 255})
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_vacuum_operational_error")
+    assert state
+    assert state.state == "unknown"
