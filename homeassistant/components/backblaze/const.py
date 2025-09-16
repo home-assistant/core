@@ -22,5 +22,4 @@ METADATA_VERSION = "1"
 BACKBLAZE_REALM = "production"
 
 # Safety limits
-MAX_SIMPLE_UPLOAD_SIZE = 100 * 1024 * 1024  # 100MB - reasonable memory limit
 MAX_BACKUP_SIZE = 10 * 1024 * 1024 * 1024  # 10GB - reasonable backup size limit

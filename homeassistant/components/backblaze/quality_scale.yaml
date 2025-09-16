@@ -117,4 +117,8 @@ rules:
     comment: |
       The b2sdk library does not support custom HTTP session injection.
       It manages HTTP connections internally through its own session management.
-  strict-typing: done
+  strict-typing:
+    status: exempt
+    comment: |
+      The b2sdk dependency does not include a py.typed file and is not PEP 561 compliant.
+      This is outside the integration's control as it's a third-party library requirement.
