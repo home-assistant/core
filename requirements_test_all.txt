@@ -2272,6 +2272,9 @@ samsungtvws[async,encrypted]==2.7.2
 # homeassistant.components.sanix
 sanix==1.0.6
 
+# homeassistant.components.satel_integra
+satel-integra==0.3.7
+
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
 
