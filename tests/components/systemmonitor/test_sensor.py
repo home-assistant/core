@@ -453,7 +453,7 @@ async def test_remove_obsolete_entities(
                 mock_added_config_entry.entry_id
             )
         )
-        == 37
+        == 39
     )
 
     entity_registry.async_update_entity(
@@ -494,7 +494,7 @@ async def test_remove_obsolete_entities(
                 mock_added_config_entry.entry_id
             )
         )
-        == 38
+        == 40
     )
 
     assert (

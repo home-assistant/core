@@ -273,6 +273,24 @@
 # name: test_sensor[System Monitor None - state]
   '15'
 # ---
+# name: test_sensor[System Monitor Open file descriptors pip - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor Open file descriptors pip',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+  })
+# ---
+# name: test_sensor[System Monitor Open file descriptors pip - state]
+  '15'
+# ---
+# name: test_sensor[System Monitor Open file descriptors python3 - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor Open file descriptors python3',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+  })
+# ---
+# name: test_sensor[System Monitor Open file descriptors python3 - state]
+  '42'
+# ---
 # name: test_sensor[System Monitor Packets in eth0 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Packets in eth0',
