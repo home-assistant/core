@@ -652,7 +652,7 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
         next_flow_id = zha_result["flow_id"]
 
         result = self._async_flow_finished()
-        result = (
+        return (
             self.async_create_entry(
                 title=result["title"] or self._hardware_name,
                 data=result["data"],
@@ -660,7 +660,6 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
             )
             | result  # update all items with the child result
         )
-        return result
 
 
 class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlow):
