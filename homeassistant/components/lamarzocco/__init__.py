@@ -4,6 +4,7 @@ import asyncio
 import logging
 import uuid
 
+from aiohttp import ClientSession
 from packaging import version
 from pylamarzocco import (
     LaMarzoccoBluetoothClient,
@@ -21,6 +22,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     Platform,
+    __version__,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -63,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
         installation_key=InstallationKey.from_json(entry.data[CONF_INSTALLATION_KEY]),
-        client=async_create_clientsession(hass),
+        client=create_client_session(hass),
     )
 
     try:
@@ -185,6 +187,7 @@ async def async_migrate_entry(
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
             installation_key=installation_key,
+            client=create_client_session(hass),
         )
         try:
             await cloud_client.async_register_client()
@@ -203,3 +206,15 @@ async def async_migrate_entry(
         _LOGGER.debug("Migrated La Marzocco config entry to version 4")
 
     return True
+
+
+def create_client_session(hass: HomeAssistant) -> ClientSession:
+    """Create a ClientSession with La Marzocco specific headers."""
+
+    return async_create_clientsession(
+        hass,
+        headers={
+            "X-Client": "HOME_ASSISTANT",
+            "X-Client-Build": __version__,
+        },
+    )
