@@ -35,7 +35,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -47,6 +46,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from . import create_client_session
 from .const import CONF_INSTALLATION_KEY, CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
 
@@ -86,7 +86,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 **user_input,
             }
 
-            self._client = async_create_clientsession(self.hass)
+            self._client = create_client_session(self.hass)
             self._installation_key = generate_installation_key(
                 str(uuid.uuid4()).lower()
             )
