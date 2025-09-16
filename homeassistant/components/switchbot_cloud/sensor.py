@@ -39,7 +39,6 @@ SENSOR_TYPE_VOLTAGE = "voltage"
 SENSOR_TYPE_CURRENT = "electricCurrent"
 SENSOR_TYPE_USED_ELECTRICITY = "usedElectricity"
 SENSOR_TYPE_LIGHTLEVEL = "lightLevel"
-SENSOR_TYPE_BRIGHTNESS = "brightness"
 
 
 @dataclass(frozen=True, kw_only=True)
