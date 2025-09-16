@@ -300,7 +300,7 @@
         },
         "abort": {
           "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-          "update_not_available": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::fix_flow::abort::update_not_available]"
+          "update_not_available": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::fix_flow::abort::update_not_available%]"
         }
       }
     }
