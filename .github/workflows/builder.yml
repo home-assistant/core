@@ -198,7 +198,7 @@ jobs:
 
       # home-assistant/builder doesn't support sha pinning
       - name: Build base image
-        uses: home-assistant/builder@2025.03.0
+        uses: home-assistant/builder@2025.09.0
         with:
           args: |
             $BUILD_ARGS \
@@ -265,7 +265,7 @@ jobs:
 
       # home-assistant/builder doesn't support sha pinning
       - name: Build base image
-        uses: home-assistant/builder@2025.03.0
+        uses: home-assistant/builder@2025.09.0
         with:
           args: |
             $BUILD_ARGS \
