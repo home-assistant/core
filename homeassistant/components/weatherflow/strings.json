@@ -84,8 +84,8 @@
       "lightning_strike_event": {
         "name": "Lightning strike"
       },
-      "rain_start_event": {
-        "name": "Rain start"
+      "precip_start_event": {
+        "name": "Precipitation start"
       }
     }
   }
