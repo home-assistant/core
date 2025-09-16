@@ -34,7 +34,7 @@ EVENT_DESCRIPTIONS: list[WeatherFlowEventEntityDescription] = [
     WeatherFlowEventEntityDescription(
         key="lightning_strike_event",
         translation_key="lightning_strike_event",
-        event_types=["strike"],
+        event_types=["lightning_strike"],
         wf_event=EVENT_STRIKE,
     ),
 ]
