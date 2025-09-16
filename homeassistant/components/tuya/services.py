@@ -35,8 +35,8 @@ SEND_TEXT_COMMAND_SCHEMA = vol.Schema(
 @callback
 def _async_get_device(
     call: ServiceCall,
-) -> tuple[dr.DeviceEntry, TuyaConfigEntry]:
-    """Get the registry device and config entry related to a service call."""
+) -> tuple[str, TuyaConfigEntry]:
+    """Get the tuya device ID and config entry related to a service call."""
     device_registry = dr.async_get(call.hass)
     device_id = call.data[ATTR_DEVICE_ID]
     if (device_entry := device_registry.async_get(device_id)) is None:
@@ -57,8 +57,21 @@ def _async_get_device(
                     translation_key="entry_not_loaded",
                     translation_placeholders={"entry": entry.title},
                 )
-
-            return device_entry, entry
+            tuya_device_id = next(
+                (
+                    key
+                    for key in entry.runtime_data.manager.device_map
+                    if (DOMAIN, key) in device_entry.identifiers
+                ),
+                None,
+            )
+            if tuya_device_id is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="tuya_device_not_found",
+                    translation_placeholders={"device_id": device_entry.id},
+                )
+            return tuya_device_id, entry
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,
@@ -69,22 +82,8 @@ def _async_get_device(
 
 async def _async_send_device_command(call: ServiceCall) -> None:
     """Send Tuya device command."""
-    device_entry, config_entry = _async_get_device(call)
-    manager = config_entry.runtime_data.manager
-    tuya_device_id = next(
-        (
-            key
-            for key in manager.device_map
-            if (DOMAIN, key) in device_entry.identifiers
-        ),
-        None,
-    )
-    if tuya_device_id is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="tuya_device_not_found",
-            translation_placeholders={"device_id": device_entry.id},
-        )
+    tuya_device_id, config_entry = _async_get_device(call)
+
     commands = [
         {
             "code": call.data[ATTR_CODE],
