@@ -239,6 +239,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
     EcoWittSensorTypes.HEAT_COUNT: SensorEntityDescription(
         key="HEAT_COUNT",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcoWittSensorTypes.PM1: SensorEntityDescription(
         key="PM1",
