@@ -61,7 +61,9 @@ from .utils import (
     get_device_uptime,
     get_shelly_air_lamp_life,
     get_virtual_component_ids,
+    get_virtual_component_unit,
     is_rpc_wifi_stations_disabled,
+    is_view_for_platform,
 )
 
 PARALLEL_UPDATES = 0
@@ -123,6 +125,17 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         return self.option_map[attribute_value]
 
 
+class RpcPresenceSensor(RpcSensor):
+    """Represent a RPC presence sensor."""
+
+    @property
+    def available(self) -> bool:
+        """Available."""
+        available = super().available
+
+        return available and self.coordinator.device.config[self.key]["enable"]
+
+
 class RpcEmeterPhaseSensor(RpcSensor):
     """Represent a RPC energy meter phase sensor."""
 
@@ -157,8 +170,9 @@ class RpcBluTrvSensor(RpcSensor):
 
         super().__init__(coordinator, key, attribute, description)
         ble_addr: str = coordinator.device.config[key]["addr"]
+        fw_ver = coordinator.device.status[key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            coordinator.device.config[key], ble_addr, coordinator.mac
+            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
         )
 
 
@@ -382,10 +396,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         translation_key="lamp_life",
         value=get_shelly_air_lamp_life,
         suggested_display_precision=1,
-        # Deprecated, remove in 2025.10
-        extra_state_attributes=lambda block: {
-            "Operational hours": round(cast(int, block.totalWorkTime) / 3600, 1)
-        },
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ("adc", "adc"): BlockSensorDescription(
@@ -403,8 +413,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         options=["warmup", "normal", "fault"],
         translation_key="operation",
         value=lambda value: None if value == "unknown" else value,
-        # Deprecated, remove in 2025.10
-        extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
     ("valve", "valve"): BlockSensorDescription(
         key="valve|valve",
@@ -1378,13 +1386,17 @@ RPC_SENSORS: Final = {
     "text": RpcSensorDescription(
         key="text",
         sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, SENSOR_PLATFORM
+        ),
     ),
     "number": RpcSensorDescription(
         key="number",
         sub_key="value",
-        unit=lambda config: config["meta"]["ui"]["unit"]
-        if config["meta"]["ui"]["unit"]
-        else None,
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, SENSOR_PLATFORM
+        ),
+        unit=get_virtual_component_unit,
         device_class_fn=lambda config: ROLE_TO_DEVICE_CLASS_MAP.get(config["role"])
         if "role" in config
         else None,
@@ -1392,6 +1404,9 @@ RPC_SENSORS: Final = {
     "enum": RpcSensorDescription(
         key="enum",
         sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, SENSOR_PLATFORM
+        ),
         options_fn=lambda config: config["options"],
         device_class=SensorDeviceClass.ENUM,
     ),
@@ -1426,6 +1441,22 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_class=RpcBluTrvSensor,
+    ),
+    "illuminance_illumination": RpcSensorDescription(
+        key="illuminance",
+        sub_key="illumination",
+        name="Illuminance Level",
+        translation_key="illuminance_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["dark", "twilight", "bright"],
+    ),
+    "presence_num_objects": RpcSensorDescription(
+        key="presence",
+        sub_key="num_objects",
+        translation_key="detected_objects",
+        name="Detected objects",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_class=RpcPresenceSensor,
     ),
 }
 

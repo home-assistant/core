@@ -98,6 +98,7 @@ class DPCode(StrEnum):
     https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
     """
 
+    ADD_ELE = "add_ele"  # energy
     AIR_QUALITY = "air_quality"
     AIR_QUALITY_INDEX = "air_quality_index"
     ALARM_DELAY_TIME = "alarm_delay_time"
@@ -112,6 +113,7 @@ class DPCode(StrEnum):
     ARM_DOWN_PERCENT = "arm_down_percent"
     ARM_UP_PERCENT = "arm_up_percent"
     ATMOSPHERIC_PRESSTURE = "atmospheric_pressture"  # Typo is in Tuya API
+    BACKUP_RESERVE = "backup_reserve"
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
     BASIC_FLIP = "basic_flip"
@@ -138,10 +140,12 @@ class DPCode(StrEnum):
     BRIGHTNESS_MIN_2 = "brightness_min_2"
     BRIGHTNESS_MIN_3 = "brightness_min_3"
     C_F = "c_f"  # Temperature unit switching
+    CAT_WEIGHT = "cat_weight"
     CH2O_STATE = "ch2o_state"
     CH2O_VALUE = "ch2o_value"
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
+    CHARGE_STATE = "charge_state"
     CHILD_LOCK = "child_lock"  # Child lock
     CISTERN = "cistern"
     CLEAN_AREA = "clean_area"
@@ -166,6 +170,7 @@ class DPCode(StrEnum):
     CONTROL_BACK = "control_back"
     CONTROL_BACK_MODE = "control_back_mode"
     COOK_TEMPERATURE = "cook_temperature"
+    COOK_TEMPERATURE_2 = "cook_temperature_2"
     COOK_TIME = "cook_time"
     COUNTDOWN = "countdown"  # Countdown
     COUNTDOWN_1 = "countdown_1"
@@ -212,6 +217,7 @@ class DPCode(StrEnum):
     FAULT = "fault"
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
+    FEEDIN_POWER_LIMIT_ENABLE = "feedin_power_limit_enable"
     FILTER = "filter"
     FILTER_DURATION = "filter_life"  # Filter duration (hours)
     FILTER_LIFE = "filter"  # Filter life (percentage)
@@ -266,6 +272,7 @@ class DPCode(StrEnum):
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
     OPPOSITE = "opposite"
+    OUTPUT_POWER_LIMIT = "output_power_limit"
     OXYGEN = "oxygen"  # Oxygen bar
     PAUSE = "pause"
     PERCENT_CONTROL = "percent_control"
@@ -294,6 +301,7 @@ class DPCode(StrEnum):
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
     PRESSURE_VALUE = "pressure_value"
+    PRO_ADD_ELE = "pro_add_ele"  # Produce energy
     PUMP = "pump"
     PUMP_RESET = "pump_reset"  # Water pump reset
     PUMP_TIME = "pump_time"  # Water pump duration
@@ -323,6 +331,7 @@ class DPCode(StrEnum):
     SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
     SMOKE_SENSOR_VALUE = "smoke_sensor_value"
+    SNOOZE = "snooze"
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
@@ -363,6 +372,7 @@ class DPCode(StrEnum):
     SWITCH_MODE7 = "switch_mode7"
     SWITCH_MODE8 = "switch_mode8"
     SWITCH_MODE9 = "switch_mode9"
+    SWITCH_MUSIC = "switch_music"
     SWITCH_NIGHT_LIGHT = "switch_night_light"
     SWITCH_SAVE_ENERGY = "switch_save_energy"
     SWITCH_SOUND = "switch_sound"  # Voice switch
@@ -376,12 +386,14 @@ class DPCode(StrEnum):
     SWITCH_VERTICAL = "switch_vertical"  # Vertical swing flap switch
     SWITCH_VOICE = "switch_voice"  # Voice switch
     TARGET_DIS_CLOSEST = "target_dis_closest"  # Closest target distance
+    TDS_IN = "tds_in"  # Total dissolved solids
     TEMP = "temp"  # Temperature setting
     TEMP_BOILING_C = "temp_boiling_c"
     TEMP_BOILING_F = "temp_boiling_f"
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CORRECTION = "temp_correction"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
+    TEMP_CURRENT_2 = "temp_current_2"
     TEMP_CURRENT_EXTERNAL = (
         "temp_current_external"  # Current external temperature in Celsius
     )
@@ -415,6 +427,7 @@ class DPCode(StrEnum):
     TOTAL_POWER = "total_power"
     TOTAL_TIME = "total_time"
     TVOC = "tvoc"
+    UP_DOWN = "up_down"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization

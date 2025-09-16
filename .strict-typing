@@ -169,6 +169,7 @@ homeassistant.components.dnsip.*
 homeassistant.components.doorbird.*
 homeassistant.components.dormakaba_dkey.*
 homeassistant.components.downloader.*
+homeassistant.components.droplet.*
 homeassistant.components.dsmr.*
 homeassistant.components.duckdns.*
 homeassistant.components.dunehd.*
@@ -307,6 +308,7 @@ homeassistant.components.ld2410_ble.*
 homeassistant.components.led_ble.*
 homeassistant.components.lektrico.*
 homeassistant.components.letpot.*
+homeassistant.components.libre_hardware_monitor.*
 homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
@@ -383,6 +385,7 @@ homeassistant.components.openai_conversation.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
 homeassistant.components.openuv.*
+homeassistant.components.opnsense.*
 homeassistant.components.opower.*
 homeassistant.components.oralb.*
 homeassistant.components.otbr.*
@@ -400,6 +403,7 @@ homeassistant.components.person.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
+homeassistant.components.portainer.*
 homeassistant.components.powerfox.*
 homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
@@ -459,6 +463,7 @@ homeassistant.components.sensorpush_cloud.*
 homeassistant.components.sensoterra.*
 homeassistant.components.senz.*
 homeassistant.components.sfr_box.*
+homeassistant.components.sftp_storage.*
 homeassistant.components.shell_command.*
 homeassistant.components.shelly.*
 homeassistant.components.shopping_list.*

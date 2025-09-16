@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import Room, Zone
-from aiohue.v2.models.device import Device, DeviceArchetypes
+from aiohue.v2.models.device import Device
 from aiohue.v2.models.resource import ResourceTypes
 
 from homeassistant.const import (
@@ -66,7 +66,7 @@ async def async_setup_devices(bridge: HueBridge):
         }
         if room := dev_controller.get_room(hue_resource.id):
             params[ATTR_SUGGESTED_AREA] = room.metadata.name
-        if hue_resource.metadata.archetype == DeviceArchetypes.BRIDGE_V2:
+        if hue_resource.id == api.config.bridge_device.id:
             params[ATTR_IDENTIFIERS].add((DOMAIN, api.config.bridge_id))
         else:
             params[ATTR_VIA_DEVICE] = (DOMAIN, api.config.bridge_device.id)
@@ -97,9 +97,7 @@ async def async_setup_devices(bridge: HueBridge):
     # create/update all current devices found in controllers
     # sort the devices to ensure bridges are added first
     hue_devices = list(dev_controller)
-    hue_devices.sort(
-        key=lambda dev: dev.metadata.archetype != DeviceArchetypes.BRIDGE_V2
-    )
+    hue_devices.sort(key=lambda dev: dev.id != api.config.bridge_device.id)
     known_devices = [add_device(hue_device) for hue_device in hue_devices]
     known_devices += [add_device(hue_room) for hue_room in api.groups.room]
     known_devices += [add_device(hue_zone) for hue_zone in api.groups.zone]
