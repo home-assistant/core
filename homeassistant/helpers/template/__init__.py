@@ -5,7 +5,7 @@ from __future__ import annotations
 from ast import literal_eval
 import asyncio
 import collections.abc
-from collections.abc import Callable, Generator, Iterable, MutableSequence
+from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from copy import deepcopy
@@ -2245,31 +2245,6 @@ def is_number(value):
     return True
 
 
-def _is_list(value: Any) -> bool:
-    """Return whether a value is a list."""
-    return isinstance(value, list)
-
-
-def _is_set(value: Any) -> bool:
-    """Return whether a value is a set."""
-    return isinstance(value, set)
-
-
-def _is_tuple(value: Any) -> bool:
-    """Return whether a value is a tuple."""
-    return isinstance(value, tuple)
-
-
-def _to_set(value: Any) -> set[Any]:
-    """Convert value to set."""
-    return set(value)
-
-
-def _to_tuple(value):
-    """Convert value to tuple."""
-    return tuple(value)
-
-
 def _is_datetime(value: Any) -> bool:
     """Return whether a value is a datetime."""
     return isinstance(value, datetime)
@@ -2487,96 +2462,9 @@ def iif(
     return if_false
 
 
-def shuffle(*args: Any, seed: Any = None) -> MutableSequence[Any]:
-    """Shuffle a list, either with a seed or without."""
-    if not args:
-        raise TypeError("shuffle expected at least 1 argument, got 0")
-
-    # If first argument is iterable and more than 1 argument provided
-    # but not a named seed, then use 2nd argument as seed.
-    if isinstance(args[0], Iterable):
-        items = list(args[0])
-        if len(args) > 1 and seed is None:
-            seed = args[1]
-    elif len(args) == 1:
-        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
-    else:
-        items = list(args)
-
-    if seed:
-        r = random.Random(seed)
-        r.shuffle(items)
-    else:
-        random.shuffle(items)
-    return items
-
-
 def typeof(value: Any) -> Any:
     """Return the type of value passed to debug types."""
     return value.__class__.__name__
-
-
-def flatten(value: Iterable[Any], levels: int | None = None) -> list[Any]:
-    """Flattens list of lists."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"flatten expected a list, got {type(value).__name__}")
-
-    flattened: list[Any] = []
-    for item in value:
-        if isinstance(item, Iterable) and not isinstance(item, str):
-            if levels is None:
-                flattened.extend(flatten(item))
-            elif levels >= 1:
-                flattened.extend(flatten(item, levels=(levels - 1)))
-            else:
-                flattened.append(item)
-        else:
-            flattened.append(item)
-    return flattened
-
-
-def intersect(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return the common elements between two lists."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"intersect expected a list, got {type(value).__name__}")
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(f"intersect expected a list, got {type(other).__name__}")
-
-    return list(set(value) & set(other))
-
-
-def difference(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return elements in first list that are not in second list."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"difference expected a list, got {type(value).__name__}")
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(f"difference expected a list, got {type(other).__name__}")
-
-    return list(set(value) - set(other))
-
-
-def union(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return all unique elements from both lists combined."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"union expected a list, got {type(value).__name__}")
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(f"union expected a list, got {type(other).__name__}")
-
-    return list(set(value) | set(other))
-
-
-def symmetric_difference(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return elements that are in either list but not in both."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(
-            f"symmetric_difference expected a list, got {type(value).__name__}"
-        )
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(
-            f"symmetric_difference expected a list, got {type(other).__name__}"
-        )
-
-    return list(set(value) ^ set(other))
 
 
 def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
@@ -2760,11 +2648,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
         self.add_extension("homeassistant.helpers.template.extensions.Base64Extension")
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.CollectionExtension"
+        )
         self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
         self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
         self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
         self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
 
+        self.globals["apply"] = apply
         self.globals["as_datetime"] = as_datetime
         self.globals["as_function"] = as_function
         self.globals["as_local"] = dt_util.as_local
@@ -2772,23 +2664,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["bool"] = forgiving_boolean
         self.globals["combine"] = combine
-        self.globals["difference"] = difference
-        self.globals["flatten"] = flatten
         self.globals["float"] = forgiving_float
         self.globals["iif"] = iif
         self.globals["int"] = forgiving_int
-        self.globals["intersect"] = intersect
         self.globals["is_number"] = is_number
         self.globals["merge_response"] = merge_response
         self.globals["pack"] = struct_pack
-        self.globals["set"] = _to_set
-        self.globals["shuffle"] = shuffle
         self.globals["strptime"] = strptime
-        self.globals["symmetric_difference"] = symmetric_difference
         self.globals["timedelta"] = timedelta
-        self.globals["tuple"] = _to_tuple
         self.globals["typeof"] = typeof
-        self.globals["union"] = union
         self.globals["unpack"] = struct_unpack
         self.globals["version"] = version
         self.globals["zip"] = zip
@@ -2803,14 +2687,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bool"] = forgiving_boolean
         self.filters["combine"] = combine
         self.filters["contains"] = contains
-        self.filters["difference"] = difference
-        self.filters["flatten"] = flatten
         self.filters["float"] = forgiving_float_filter
         self.filters["from_json"] = from_json
         self.filters["from_hex"] = from_hex
         self.filters["iif"] = iif
         self.filters["int"] = forgiving_int_filter
-        self.filters["intersect"] = intersect
         self.filters["is_defined"] = fail_when_undefined
         self.filters["is_number"] = is_number
         self.filters["multiply"] = multiply
@@ -2818,14 +2699,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["pack"] = struct_pack
         self.filters["random"] = random_every_time
         self.filters["round"] = forgiving_round
-        self.filters["shuffle"] = shuffle
-        self.filters["symmetric_difference"] = symmetric_difference
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
         self.filters["to_json"] = to_json
         self.filters["typeof"] = typeof
-        self.filters["union"] = union
         self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
 
@@ -2833,10 +2711,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["contains"] = contains
         self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number
-        self.tests["list"] = _is_list
-        self.tests["set"] = _is_set
         self.tests["string_like"] = _is_string_like
-        self.tests["tuple"] = _is_tuple
 
         if hass is None:
             return
