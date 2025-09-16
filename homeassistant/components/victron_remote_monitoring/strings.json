@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "description": "Enter your VRM API token. We will then fetch your available sites.",
+        "description": "Enter your VRM API access token. We will then fetch your available sites.",
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         },
         "data_description": {
-          "api_key": "The API key for your VRM account"
+          "api_token": "The API access token for your VRM account"
         }
       },
       "select_site": {

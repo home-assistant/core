@@ -21,11 +21,11 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_API_KEY, CONF_SITE_ID, DOMAIN
+from .const import CONF_API_TOKEN, CONF_SITE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 
 
 class CannotConnect(HomeAssistantError):
@@ -43,10 +43,10 @@ class SiteNotFound(HomeAssistantError):
 class VRMClientHolder:
     """Holds the VRM client."""
 
-    def __init__(self, hass: HomeAssistant, api_key: str) -> None:
+    def __init__(self, hass: HomeAssistant, api_token: str) -> None:
         """Initialize the VRM client holder."""
         self.client = VictronVRMClient(
-            token=api_key,
+            token=api_token,
             client_session=get_async_client(hass),
         )
 
@@ -66,7 +66,7 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow state."""
-        self._api_key: str | None = None
+        self._api_token: str | None = None
         self._sites: list[Site] = []
 
     def _build_site_options(self) -> list[SelectOptionDict]:
@@ -78,12 +78,12 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
             for site in self._sites
         ]
 
-    async def _async_validate_token_and_fetch_sites(self, api_key: str) -> list[Site]:
+    async def _async_validate_token_and_fetch_sites(self, api_token: str) -> list[Site]:
         """Validate the API token and return available sites.
 
         Raises InvalidAuth on bad/unauthorized token; CannotConnect on other errors.
         """
-        client = VRMClientHolder(self.hass, api_key)
+        client = VRMClientHolder(self.hass, api_token)
         try:
             sites = await client.list_sites()
         except AuthenticationError as err:
@@ -95,9 +95,9 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             return sites
 
-    async def _async_validate_selected_site(self, api_key: str, site_id: int) -> Site:
+    async def _async_validate_selected_site(self, api_token: str, site_id: int) -> Site:
         """Validate access to the selected site and return its data."""
-        client = VRMClientHolder(self.hass, api_key)
+        client = VRMClientHolder(self.hass, api_token)
         try:
             site_data = await client.get_site(site_id)
         except AuthenticationError as err:
@@ -116,9 +116,9 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
         """First step: ask for API token and validate it."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            api_key: str = user_input[CONF_API_KEY]
+            api_token: str = user_input[CONF_API_TOKEN]
             try:
-                sites = await self._async_validate_token_and_fetch_sites(api_key)
+                sites = await self._async_validate_token_and_fetch_sites(api_token)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -133,7 +133,7 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
                         data_schema=STEP_USER_DATA_SCHEMA,
                         errors={"base": "no_sites"},
                     )
-                self._api_key = api_key
+                self._api_token = api_token
                 # Sort sites by name then id for stable order
                 self._sites = sorted(sites, key=lambda s: (s.name or "", s.id))
                 if len(self._sites) == 1:
@@ -145,7 +145,7 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=f"VRM for {site.name}",
-                        data={CONF_API_KEY: self._api_key, CONF_SITE_ID: site.id},
+                        data={CONF_API_TOKEN: self._api_token, CONF_SITE_ID: site.id},
                     )
                 return await self.async_step_select_site()
 
@@ -157,7 +157,7 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Second step: present sites and validate selection."""
-        assert self._api_key is not None
+        assert self._api_token is not None
 
         if user_input is None:
             site_options = self._build_site_options()
@@ -181,7 +181,7 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         try:
-            site = await self._async_validate_selected_site(self._api_key, site_id)
+            site = await self._async_validate_selected_site(self._api_token, site_id)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -197,7 +197,7 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=f"VRM for {site.name}",
-                data={CONF_API_KEY: self._api_key, CONF_SITE_ID: site_id},
+                data={CONF_API_TOKEN: self._api_token, CONF_SITE_ID: site_id},
             )
 
         # If we reach here, show the selection form again with errors

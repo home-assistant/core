@@ -14,7 +14,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_API_KEY, CONF_SITE_ID, DOMAIN, LOGGER
+from .const import CONF_API_TOKEN, CONF_SITE_ID, DOMAIN, LOGGER
 
 type VictronRemoteMonitoringConfigEntry = ConfigEntry[
     VictronRemoteMonitoringDataUpdateCoordinator
@@ -75,7 +75,7 @@ class VictronRemoteMonitoringDataUpdateCoordinator(
         """Initialize."""
         self.config_entry = config_entry
         self.client = VictronVRMClient(
-            token=config_entry.data[CONF_API_KEY],
+            token=config_entry.data[CONF_API_TOKEN],
             client_session=get_async_client(hass),
         )
         self.site_id = config_entry.data[CONF_SITE_ID]

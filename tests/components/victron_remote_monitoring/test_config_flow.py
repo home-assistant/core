@@ -8,7 +8,7 @@ from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 
 from homeassistant import config_entries
 from homeassistant.components.victron_remote_monitoring.const import (
-    CONF_API_KEY,
+    CONF_API_TOKEN,
     CONF_SITE_ID,
     DOMAIN,
 )
@@ -46,7 +46,7 @@ async def test_full_flow_success(
     ):
         result = await hass.config_entries.flow.async_configure(
             res["flow_id"],
-            {CONF_API_KEY: "test_token"},
+            {CONF_API_TOKEN: "test_token"},
         )
     res = cast(dict[str, Any], result)
     assert res["type"] is FlowResultType.FORM
@@ -63,8 +63,8 @@ async def test_full_flow_success(
         )
     res = cast(dict[str, Any], result)
     assert res["type"] is FlowResultType.CREATE_ENTRY
-    assert res["title"] == f"VRM Forecast for {site1.name}"
-    assert res["data"] == {CONF_API_KEY: "test_token", CONF_SITE_ID: site1.id}
+    assert res["title"] == f"VRM for {site1.name}"
+    assert res["data"] == {CONF_API_TOKEN: "test_token", CONF_SITE_ID: site1.id}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -90,12 +90,12 @@ async def test_user_step_one_site_creates_entry_immediately(
     ):
         result = await hass.config_entries.flow.async_configure(
             res["flow_id"],
-            {CONF_API_KEY: "test_token"},
+            {CONF_API_TOKEN: "test_token"},
         )
     res = cast(dict[str, Any], result)
     assert res["type"] is FlowResultType.CREATE_ENTRY
-    assert res["title"] == f"VRM Forecast for {site.name}"
-    assert res["data"] == {CONF_API_KEY: "test_token", CONF_SITE_ID: site.id}
+    assert res["title"] == f"VRM for {site.name}"
+    assert res["data"] == {CONF_API_TOKEN: "test_token", CONF_SITE_ID: site.id}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -110,7 +110,7 @@ async def test_user_step_invalid_auth(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             cast(dict[str, Any], result)["flow_id"],
-            {CONF_API_KEY: "invalid"},
+            {CONF_API_TOKEN: "invalid"},
         )
     res = cast(dict[str, Any], result)
     assert res["type"] is FlowResultType.FORM
@@ -129,7 +129,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             cast(dict[str, Any], result)["flow_id"],
-            {CONF_API_KEY: "token"},
+            {CONF_API_TOKEN: "token"},
         )
     res = cast(dict[str, Any], result)
     assert res["type"] is FlowResultType.FORM
@@ -148,7 +148,7 @@ async def test_user_step_no_sites(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             cast(dict[str, Any], result)["flow_id"],
-            {CONF_API_KEY: "token"},
+            {CONF_API_TOKEN: "token"},
         )
     res = cast(dict[str, Any], result)
     assert res["type"] is FlowResultType.FORM
@@ -169,7 +169,7 @@ async def _start_flow_to_select_site(
         return_value=sites,
     ):
         result = await hass.config_entries.flow.async_configure(
-            cast(dict[str, Any], result)["flow_id"], {CONF_API_KEY: "token"}
+            cast(dict[str, Any], result)["flow_id"], {CONF_API_TOKEN: "token"}
         )
     res = cast(dict[str, Any], result)
     assert res["type"] is FlowResultType.FORM
@@ -248,7 +248,7 @@ async def test_select_site_duplicate_aborts(hass: HomeAssistant) -> None:
 
     existing = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_KEY: "token", CONF_SITE_ID: site_id},
+        data={CONF_API_TOKEN: "token", CONF_SITE_ID: site_id},
         unique_id=str(site_id),
         title="Existing",
     )
@@ -264,7 +264,7 @@ async def test_select_site_duplicate_aborts(hass: HomeAssistant) -> None:
         return_value=[_make_site(site_id, "Dup"), _make_site(777, "Other")],
     ):
         result = await hass.config_entries.flow.async_configure(
-            cast(dict[str, Any], result)["flow_id"], {CONF_API_KEY: "token2"}
+            cast(dict[str, Any], result)["flow_id"], {CONF_API_TOKEN: "token2"}
         )
     res = cast(dict[str, Any], result)
     assert res["type"] is FlowResultType.FORM
