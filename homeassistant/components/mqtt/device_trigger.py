@@ -105,15 +105,13 @@ class TriggerInstance:
             mqtt_config[CONF_PAYLOAD] = self.trigger.payload
         if self.trigger.value_template:
             mqtt_config[CONF_VALUE_TEMPLATE] = self.trigger.value_template
-        mqtt_config = await mqtt_trigger.MqttTrigger.async_validate_complete_config(
-            self.trigger.hass, mqtt_config
-        )
+        mqtt_config = mqtt_trigger.TRIGGER_SCHEMA(mqtt_config)
 
         if self.remove:
             self.remove()
-        self.remove = await mqtt_trigger.MqttTrigger(
-            self.trigger.hass, mqtt_config
-        ).async_attach(
+        self.remove = await mqtt_trigger.async_attach_trigger(
+            self.trigger.hass,
+            mqtt_config,
             self.action,
             self.trigger_info,
         )
