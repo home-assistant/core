@@ -151,25 +151,19 @@ async def test_migrate_future_return(
 
 
 async def test_load_unload_entry(
-    hass: HomeAssistant, mock_airos_client: MagicMock
+    hass: HomeAssistant,
+    mock_airos_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup and unload config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG_V1_2,
-        entry_id="1",
-        unique_id="airos_device",
-        version=1,
-        minor_version=2,
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
