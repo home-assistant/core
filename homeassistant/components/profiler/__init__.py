@@ -68,6 +68,7 @@ SERVICES = (
 )
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+DEFAULT_SUMMARY_INTERVAL = timedelta(seconds=30)
 
 DEFAULT_MAX_OBJECTS = 5
 
@@ -76,11 +77,14 @@ CONF_SECONDS = "seconds"
 CONF_MAX_OBJECTS = "max_objects"
 CONF_EVENTS = "events"
 CONF_FILTER = "filter"
+CONF_SUMMARY_INTERVAL = "summary_interval"
 CONF_VERBOSE = "verbose"
 
 LOG_INTERVAL_SUB = "log_interval_subscription"
 AUDITING_HOOK_ADDED = "auditing_hook_added"
 AUDITED_EVENTS = "audited_events"
+AUDIT_INTERVAL_SUB = "audit_interval_subscription"
+AUDIT_SUMMARY = "audit_summary"
 
 
 class AuditConfig(NamedTuple):
@@ -88,6 +92,10 @@ class AuditConfig(NamedTuple):
 
     verbose: bool
     filter: str | None = None
+
+
+type SummaryByArgs = dict[str, int]
+type SummaryByTraceback = dict[str, SummaryByArgs]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -296,7 +304,11 @@ async def async_setup_entry(  # noqa: C901
         events = call.data[CONF_EVENTS]
         verbose = call.data.get(CONF_VERBOSE, False)
         filter_ = call.data.get(CONF_FILTER)
+        summary_interval = call.data.get(CONF_SUMMARY_INTERVAL, None)
         audited_events: dict[str, AuditConfig] = domain_data[AUDITED_EVENTS]
+
+        if summary_interval and AUDIT_INTERVAL_SUB in domain_data:
+            raise HomeAssistantError("Already summarizing events")
 
         for event in events:
             # Always log this at critical level so we know when
@@ -311,25 +323,29 @@ async def async_setup_entry(  # noqa: C901
 
         if not domain_data[AUDITING_HOOK_ADDED]:
             _LOGGER.info("Adding Python audit hook function")
-            sys.addaudithook(_make_audit_hook(audited_events))
+            sys.addaudithook(_make_audit_hook(domain_data))
             domain_data[AUDITING_HOOK_ADDED] = True
 
         # Force this module's logger at least to DEBUG to see the events
         if _LOGGER.getEffectiveLevel() > logging.DEBUG:
             _LOGGER.setLevel(logging.DEBUG)
 
+        if summary_interval:
+            domain_data[AUDIT_SUMMARY] = {}
+
+            async def _log_events_summary_job(*_: Any) -> None:
+                await hass.async_add_executor_job(_log_events_summary, domain_data)
+
+            domain_data[AUDIT_INTERVAL_SUB] = async_track_time_interval(
+                hass, _log_events_summary_job, summary_interval
+            )
+
     async def _async_stop_auditing_events(call: ServiceCall) -> None:
-        """Stop auditing certain Python events."""
-        events = call.data[CONF_EVENTS]
-        audited_events = domain_data[AUDITED_EVENTS]
-        for event in events:
-            if event not in audited_events:
-                _LOGGER.warning("Event %s is not being audited", event)
-            else:
-                # Always log this at critical level so we know when
-                # it's been changed when reviewing logs
-                _LOGGER.critical("Disabling auditing for event %s", event)
-                audited_events.pop(event)
+        """Stop auditing all Python events."""
+        domain_data[AUDITED_EVENTS].clear()
+        if AUDIT_INTERVAL_SUB in domain_data:
+            domain_data.pop(AUDIT_INTERVAL_SUB)()
+            domain_data.pop(AUDIT_SUMMARY)
 
     async_register_admin_service(
         hass,
@@ -450,6 +466,7 @@ async def async_setup_entry(  # noqa: C901
                 vol.Required(CONF_EVENTS): vol.All(cv.ensure_list, [cv.string]),
                 vol.Optional(CONF_VERBOSE, default=False): cv.boolean,
                 vol.Optional(CONF_FILTER): cv.string,
+                vol.Optional(CONF_SUMMARY_INTERVAL): cv.time_period,
             }
         ),
     )
@@ -459,11 +476,6 @@ async def async_setup_entry(  # noqa: C901
         DOMAIN,
         SERVICE_STOP_AUDITING_EVENTS,
         _async_stop_auditing_events,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_EVENTS): vol.All(cv.ensure_list, [cv.string]),
-            }
-        ),
     )
 
     return True
@@ -480,6 +492,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Python auditing hook cannot be removed, only suppressing logging"
         )
         hass.data[DOMAIN][AUDITED_EVENTS].clear()
+    if AUDIT_INTERVAL_SUB in hass.data[DOMAIN]:
+        hass.data[DOMAIN].pop(AUDIT_INTERVAL_SUB)()
     hass.data.pop(DOMAIN)
     return True
 
@@ -689,27 +703,64 @@ def _increase_repr_limit() -> Generator[None]:
         arepr.maxother = original_maxother
 
 
-def _make_audit_hook(audited_events: dict[str, AuditConfig]) -> Callable:
+def _make_audit_hook(domain_data: dict[str, Any]) -> Callable:
     """Create an audit hook function that logs events in audited_events."""
 
     def _audit_hook(event, args):
+        audited_events: dict[str, AuditConfig] = domain_data.get(AUDITED_EVENTS, {})
+        summary: SummaryByTraceback | None = domain_data.get(AUDIT_SUMMARY)
+
         if event in audited_events:
             filter_ = audited_events[event].filter
             args_repr = repr(args)
             if filter_ and filter_ not in args_repr:
                 return
-            if audited_events[event].verbose:
+
+            summarized = summary is not None
+            if summarized or audited_events[event].verbose:
                 stack = reversed(
                     traceback.format_stack()[:-1]
                 )  # exclude this function call
                 tb = "".join(stack).strip()
-                _LOGGER.debug(
-                    "Audited event: %s %s, traceback (most recent call first):\n  %s",
-                    event,
-                    args_repr,
-                    tb,
-                )
+
+                if summarized:
+                    event_info = f"{event} {args_repr}"
+                    event_traceback_summary: SummaryByArgs = summary.setdefault(tb, {})
+                    event_traceback_summary.setdefault(event_info, 0)
+                    event_traceback_summary[event_info] += 1
+                    return
+
+                if audited_events[event].verbose:
+                    _LOGGER.debug(
+                        "Audited event: %s %s, traceback (most recent call first):\n  %s",
+                        event,
+                        args_repr,
+                        tb,
+                    )
             else:
                 _LOGGER.debug("Audited event: %s %s", event, args_repr)
 
     return _audit_hook
+
+
+def _log_events_summary(domain_data: dict[str, Any]) -> None:
+    """Log a summary of audited events."""
+    summary: SummaryByTraceback | None = domain_data.get(AUDIT_SUMMARY)
+
+    if not summary:
+        _LOGGER.debug("No audited events in the last period")
+        return
+
+    old_summary, domain_data[AUDIT_SUMMARY] = summary, {}
+
+    for tb, events in summary.items():
+        _LOGGER.debug(
+            "Audited events summary for traceback (most recent call first):"
+            "\n  %s"
+            "\nEvent arguments:"
+            "\n%s",
+            tb,
+            "\n".join(f"  - {count}×: {event}" for event, count in events.items()),
+        )
+
+    old_summary.clear()

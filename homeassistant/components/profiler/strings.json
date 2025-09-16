@@ -110,18 +110,16 @@
         "filter": {
           "name": "Filter",
           "description": "Text that must be contained in the string representation of event's arguments (e.g. an IP address)."
+        },
+        "summary_interval": {
+          "name": "Summary interval",
+          "description": "If set, print aggregated list of events (per traceback and arguments) that occurred between the specified time interval."
         }
       }
     },
     "stop_auditing_events": {
-      "name": "Remove audited events",
-      "description": "Remove events from auditing.",
-      "fields": {
-        "events": {
-          "name": "Events",
-          "description": "List of Python events to remove."
-        }
-      }
+      "name": "Stop auditing events",
+      "description": "Stop Python events auditing."
     }
   }
 }

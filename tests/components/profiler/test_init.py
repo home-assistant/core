@@ -21,6 +21,7 @@ from homeassistant.components.profiler import (
     CONF_EVENTS,
     CONF_FILTER,
     CONF_SECONDS,
+    CONF_SUMMARY_INTERVAL,
     CONF_VERBOSE,
     SERVICE_DUMP_LOG_OBJECTS,
     SERVICE_LOG_CURRENT_TASKS,
@@ -549,12 +550,9 @@ async def test_auditing_events_mocked(
     caplog.clear()
 
     # Remove 'exec' from audited events
-    await hass.services.async_call(
-        DOMAIN, SERVICE_STOP_AUDITING_EVENTS, {CONF_EVENTS: ["exec"]}, blocking=True
-    )
+    await hass.services.async_call(DOMAIN, SERVICE_STOP_AUDITING_EVENTS, blocking=True)
     assert "exec" not in hass.data[DOMAIN][AUDITED_EVENTS]
-    assert len(hass.data[DOMAIN][AUDITED_EVENTS]) == 2
-    assert "Disabling auditing for event exec" in caplog.text
+    assert len(hass.data[DOMAIN][AUDITED_EVENTS]) == 0
 
     caplog.clear()
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -590,6 +588,12 @@ async def test_auditing_events(
     exec("1+1")  # noqa: S102
     assert "Audited event: exec" in caplog.text
     assert "traceback" not in caplog.text
+
+    # Nothing should be logged after stopping
+    await hass.services.async_call(DOMAIN, SERVICE_STOP_AUDITING_EVENTS, blocking=True)
+    caplog.clear()
+    exec("1+1")  # noqa: S102
+    assert "Audited event" not in caplog.text
 
     # Test verbose capture
     await hass.services.async_call(
@@ -640,4 +644,44 @@ async def test_auditing_events(
     # Nothing should be captured after unloading the integration
     caplog.clear()
     exec("1+1")  # noqa: S102
+    assert "Audited event" not in caplog.text
+
+
+async def test_auditing_events_summarized(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test actual Python events auditing with summarization enabled."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_START_AUDITING_EVENTS)
+
+    assert hass.data[DOMAIN][AUDITING_HOOK_ADDED] is False
+
+    # Capture 'exec' summarized every second
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_START_AUDITING_EVENTS,
+        {CONF_EVENTS: ["exec"], CONF_SUMMARY_INTERVAL: timedelta(seconds=1)},
+        blocking=True,
+    )
+    assert hass.data[DOMAIN][AUDITING_HOOK_ADDED] is True
+    assert "Enabling auditing for event exec" in caplog.text
+
+    caplog.clear()
+    exec("1+1")  # noqa: S102
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert "Audited events summary" in caplog.text
+    assert "1×: exec" in caplog.text
+
+    # Nothing should be logged after stopping
+    await hass.services.async_call(DOMAIN, SERVICE_STOP_AUDITING_EVENTS, blocking=True)
+    caplog.clear()
+    exec("1+1")  # noqa: S102
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "Audited event" not in caplog.text
