@@ -7,7 +7,7 @@ from typing import cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_CONDITION, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
+from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import (
@@ -25,7 +25,6 @@ _CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
             **cv.CONDITION_BASE_SCHEMA,
-            vol.Required(CONF_CONDITION): "sun",
             vol.Optional("before"): cv.sun_event,
             vol.Optional("before_offset"): cv.time_period,
             vol.Optional("after"): vol.All(
