@@ -31,11 +31,11 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
-from .template_entity import (
+from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    TemplateEntity,
     make_template_entity_common_modern_attributes_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +56,9 @@ EVENT_COMMON_SCHEMA = vol.Schema(
 )
 
 EVENT_YAML_SCHEMA = EVENT_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema
+    make_template_entity_common_modern_attributes_schema(
+        EVENT_DOMAIN, DEFAULT_NAME
+    ).schema
 )
 
 

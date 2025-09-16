@@ -74,7 +74,8 @@
     },
     "extra_fields": {
       "brightness_pct": "Brightness",
-      "flash": "Flash"
+      "flash": "Flash",
+      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
   "entity_component": {
