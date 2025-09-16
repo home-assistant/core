@@ -1080,7 +1080,7 @@ igloohome-api==0.1.1
 imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.5.4
+imgw_pib==1.5.5
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.9
