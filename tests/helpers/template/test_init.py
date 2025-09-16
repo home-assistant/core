@@ -1202,46 +1202,6 @@ def test_from_hex(hass: HomeAssistant) -> None:
     )
 
 
-def test_slugify(hass: HomeAssistant) -> None:
-    """Test the slugify filter."""
-    assert (
-        template.Template('{{ slugify("Home Assistant") }}', hass).async_render()
-        == "home_assistant"
-    )
-    assert (
-        template.Template('{{ "Home Assistant" | slugify }}', hass).async_render()
-        == "home_assistant"
-    )
-    assert (
-        template.Template('{{ slugify("Home Assistant", "-") }}', hass).async_render()
-        == "home-assistant"
-    )
-    assert (
-        template.Template('{{ "Home Assistant" | slugify("-") }}', hass).async_render()
-        == "home-assistant"
-    )
-
-
-def test_ordinal(hass: HomeAssistant) -> None:
-    """Test the ordinal filter."""
-    tests = [
-        (1, "1st"),
-        (2, "2nd"),
-        (3, "3rd"),
-        (4, "4th"),
-        (5, "5th"),
-        (12, "12th"),
-        (100, "100th"),
-        (101, "101st"),
-    ]
-
-    for value, expected in tests:
-        assert (
-            template.Template(f"{{{{ {value} | ordinal }}}}", hass).async_render()
-            == expected
-        )
-
-
 def test_timestamp_utc(hass: HomeAssistant) -> None:
     """Test the timestamps to local filter."""
     now = dt_util.utcnow()
@@ -4493,20 +4453,6 @@ def test_render_complex_handling_non_template_values(hass: HomeAssistant) -> Non
     assert template.render_complex(
         {True: 1, False: template.Template("{{ hello }}", hass)}, {"hello": 2}
     ) == {True: 1, False: 2}
-
-
-def test_urlencode(hass: HomeAssistant) -> None:
-    """Test the urlencode method."""
-    tpl = template.Template(
-        "{% set dict = {'foo': 'x&y', 'bar': 42} %}{{ dict | urlencode }}",
-        hass,
-    )
-    assert tpl.async_render() == "foo=x%26y&bar=42"
-    tpl = template.Template(
-        "{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}",
-        hass,
-    )
-    assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
 
 
 def test_as_timedelta(hass: HomeAssistant) -> None:
