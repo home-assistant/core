@@ -24,7 +24,7 @@
   Built-in integrations: 15
   Custom integrations: 1
   
-  <details><summary>Built-in Integrations</summary>
+  <details><summary>Built-in integrations</summary>
   
   Domain | Name
   --- | ---
@@ -46,7 +46,7 @@
   
   </details>
   
-  <details><summary>Custom Integrations</summary>
+  <details><summary>Custom integrations</summary>
   
   Domain | Name | Version | Documentation
   --- | --- | --- | ---
@@ -119,7 +119,7 @@
   Built-in integrations: 15
   Custom integrations: 0
   
-  <details><summary>Built-in Integrations</summary>
+  <details><summary>Built-in integrations</summary>
   
   Domain | Name
   --- | ---
@@ -202,7 +202,7 @@
   timezone | US/Pacific
   config_dir | config
   
-  ## Active Integrations
+  ## Active integrations
   
   Unable to collect integration information
   
