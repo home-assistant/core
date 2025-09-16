@@ -43,7 +43,7 @@
       "lightning_strike_event": {
         "default": "mdi:weather-lightning"
       },
-      "rain_start_event": {
+      "precip_start_event": {
         "default": "mdi:weather-rainy"
       }
     }
