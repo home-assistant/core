@@ -69,7 +69,7 @@ async def test_send_notification_service(
         (
             SyntaxError(),
             SyntaxError,
-            "",
+            None,
         ),
     ],
 )
@@ -79,7 +79,7 @@ async def test_fail_send_notification(
     mock_prowlpy: Mock,
     prowlpy_side_effect: Exception,
     raised_exception: type[Exception],
-    exception_message: str,
+    exception_message: str | None,
 ) -> None:
     """Sending a message via Prowl with a failure."""
     mock_prowlpy.send.side_effect = prowlpy_side_effect
