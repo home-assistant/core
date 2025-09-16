@@ -70,6 +70,7 @@ class ZigbeeIntegration(StrEnum):
 class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
+    BAUDRATE = 115200  # Default, subclasses may override
     _failed_addon_name: str
     _failed_addon_reason: str
     _picked_firmware_type: PickedFirmwareType
@@ -430,17 +431,15 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         result = await self.hass.config_entries.flow.async_init(
             ZHA_DOMAIN,
             context={"source": "hardware"},
-            data=(
-                {
-                    "name": self._hardware_name,
-                    "port": {
-                        "path": self._device,
-                        "baudrate": 115200,
-                        "flow_control": "hardware",
-                    },
-                    "radio_type": "ezsp",
-                }
-            ),
+            data={
+                "name": self._hardware_name,
+                "port": {
+                    "path": self._device,
+                    "baudrate": self.BAUDRATE,
+                    "flow_control": "hardware",
+                },
+                "radio_type": "ezsp",
+            },
         )
         _LOGGER.debug("ZHA flow result: %s", json.dumps(result))
         return self._continue_zha_flow(result)
