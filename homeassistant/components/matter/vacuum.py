@@ -78,6 +78,7 @@ async def async_setup_entry(
         func="async_handle_get_areas",
         supports_response=SupportsResponse.ONLY,
     )
+
     # This will call Entity.async_handle_clean_areas
     platform.async_register_entity_service(
         SERVICE_CLEAN_AREAS,
