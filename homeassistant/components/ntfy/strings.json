@@ -292,7 +292,7 @@
       "message": "Delayed call notifications are not supported"
     },
     "only_local_attachments_supported": {
-      "message": "Only local attachments are currently supported"
+      "message": "Only local attachments are currently supported for this media source"
     },
     "attach_url_xor_local": {
       "message": "Only one attachment source is allowed: URL or local file"

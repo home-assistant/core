@@ -91,7 +91,7 @@ async def test_send_message(
     assert state.state == "2025-01-09T12:00:00+00:00"
 
     mock_aiontfy.publish.assert_called_once_with(
-        Message(topic="mytopic", message="triggered", title="test")
+        Message(topic="mytopic", message="triggered", title="test"), None
     )
 
 
@@ -142,7 +142,7 @@ async def test_send_message_exception(
         )
 
     mock_aiontfy.publish.assert_called_once_with(
-        Message(topic="mytopic", message="triggered", title="test")
+        Message(topic="mytopic", message="triggered", title="test"), None
     )
 
 

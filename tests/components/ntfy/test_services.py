@@ -76,7 +76,8 @@ async def test_ntfy_publish(
             markdown=True,
             icon=URL("https://example.org/logo.png"),
             delay="86430.0s",
-        )
+        ),
+        None,
     )
 
 
@@ -127,7 +128,7 @@ async def test_send_message_exception(
         )
 
     mock_aiontfy.publish.assert_called_once_with(
-        Message(topic="mytopic", message="triggered", title="test")
+        Message(topic="mytopic", message="triggered", title="test"), None
     )
 
 
