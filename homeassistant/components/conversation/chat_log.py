@@ -569,15 +569,6 @@ class ChatLog:
         if llm_api:
             prompt_parts.append(llm_api.api_prompt)
 
-        prompt_parts.append(
-            await self._async_expand_prompt_template(
-                llm_context,
-                llm.BASE_PROMPT,
-                llm_context.language,
-                user_name,
-            )
-        )
-
         if extra_system_prompt := (
             # Take new system prompt if one was given
             user_extra_system_prompt or self.extra_system_prompt
