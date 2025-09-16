@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "emoncms_history"
 CONF_INPUTNODE = "inputnode"
+CONF_LEGACY_MODE = "legacy_mode"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -36,6 +37,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_INPUTNODE): cv.positive_int,
                 vol.Required(CONF_WHITELIST): cv.entity_ids,
                 vol.Optional(CONF_SCAN_INTERVAL, default=30): cv.positive_int,
+                vol.Optional(CONF_LEGACY_MODE, default=0): cv.positive_int,
             }
         )
     },
@@ -48,6 +50,7 @@ async def async_send_to_emoncms(
     emoncms_client: EmoncmsClient,
     whitelist: list[str],
     node: str | int,
+    legacy_mode: bool,
     _: datetime,
 ) -> None:
     """Send data to Emoncms."""
@@ -64,7 +67,11 @@ async def async_send_to_emoncms(
 
     if payload_dict:
         try:
-            await emoncms_client.async_input_post(data=payload_dict, node=node)
+            if legacy_mode:
+                payload = ",".join(f"{key}:{val}" for key, val in payload_dict.items())
+                await emoncms_client.async_input_post(f"{{{payload}}}", node=node)
+            else:
+                await emoncms_client.async_input_post(data=payload_dict, node=node)
         except (aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.warning("Network error when sending data to Emoncms: %s", err)
         except ValueError as err:
@@ -78,6 +85,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     whitelist = conf.get(CONF_WHITELIST)
     input_node = str(conf.get(CONF_INPUTNODE))
+    legacy_mode = conf.get(CONF_LEGACY_MODE)
 
     emoncms_client = EmoncmsClient(
         url=conf.get(CONF_URL),
@@ -86,7 +94,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     async_track_time_interval(
         hass,
-        partial(async_send_to_emoncms, hass, emoncms_client, whitelist, input_node),
+        partial(
+            async_send_to_emoncms,
+            hass,
+            emoncms_client,
+            whitelist,
+            input_node,
+            legacy_mode,
+        ),
         timedelta(seconds=conf.get(CONF_SCAN_INTERVAL)),
     )
 

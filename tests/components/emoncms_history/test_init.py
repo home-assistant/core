@@ -123,3 +123,41 @@ async def test_emoncms_send_data(
         "Value error when preparing data for Emoncms" in message
         for message in caplog.text.splitlines()
     )
+
+
+async def test_emoncms_send_data_legacy_mode(
+    hass: HomeAssistant,
+    emoncms_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sending data to Emoncms in legacy mode (string payload)."""
+
+    config = {
+        "emoncms_history": {
+            "api_key": "dummy",
+            "url": "http://fake-url",
+            "inputnode": 99,
+            "whitelist": ["sensor.temp"],
+            "legacy_mode": 1,
+        }
+    }
+
+    assert await async_setup_component(hass, "emoncms_history", config)
+    await hass.async_block_till_done()
+
+    # Set valid state
+    hass.states.async_set("sensor.temp", "42.0", {"unit_of_measurement": "°C"})
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    emoncms_client.async_input_post.assert_called_once()
+
+    args, kwargs = emoncms_client.async_input_post.call_args
+    # Legacy mode → payload string wrapped in {}
+    assert args[0] == "{sensor.temp:42.0}"
+    assert kwargs["node"] == "99"
