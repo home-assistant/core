@@ -1,4 +1,4 @@
-"""Support for the Abode Security System."""
+"""Support for Tuya services."""
 
 from __future__ import annotations
 
