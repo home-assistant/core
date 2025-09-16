@@ -487,7 +487,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_remove(domain=DOMAIN, service=service)
     if LOG_INTERVAL_SUB in hass.data[DOMAIN]:
         hass.data[DOMAIN][LOG_INTERVAL_SUB]()
-    if AUDITING_HOOK_ADDED in hass.data[DOMAIN]:
+    if hass.data[DOMAIN].get(AUDITING_HOOK_ADDED, False):
         _LOGGER.warning(
             "Python auditing hook cannot be removed, only suppressing logging"
         )
