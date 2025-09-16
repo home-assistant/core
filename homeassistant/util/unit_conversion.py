@@ -412,6 +412,7 @@ class PowerConverter(BaseUnitConverter):
         UnitOfPower.MEGA_WATT: 1 / 1e6,
         UnitOfPower.GIGA_WATT: 1 / 1e9,
         UnitOfPower.TERA_WATT: 1 / 1e12,
+        UnitOfPower.BTU_PER_HOUR: 1 / 0.29307107,
     }
     VALID_UNITS = {
         UnitOfPower.MILLIWATT,
@@ -420,6 +421,7 @@ class PowerConverter(BaseUnitConverter):
         UnitOfPower.MEGA_WATT,
         UnitOfPower.GIGA_WATT,
         UnitOfPower.TERA_WATT,
+        UnitOfPower.BTU_PER_HOUR,
     }
 
 
@@ -495,6 +497,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.INCHES_PER_SECOND: 1 / _IN_TO_M,
         UnitOfSpeed.KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
         UnitOfSpeed.KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
+        UnitOfSpeed.METERS_PER_MINUTE: _MIN_TO_SEC,
         UnitOfSpeed.METERS_PER_SECOND: 1,
         UnitOfSpeed.MILLIMETERS_PER_SECOND: 1 / _MM_TO_M,
         UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
@@ -509,6 +512,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.FEET_PER_SECOND,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.KNOTS,
+        UnitOfSpeed.METERS_PER_MINUTE,
         UnitOfSpeed.METERS_PER_SECOND,
         UnitOfSpeed.MILES_PER_HOUR,
         UnitOfSpeed.MILLIMETERS_PER_SECOND,
