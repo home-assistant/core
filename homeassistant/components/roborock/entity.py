@@ -55,7 +55,14 @@ class RoborockEntityV1(RoborockEntity):
 
     def get_cache(self, attribute: CacheableAttribute) -> AttributeCache:
         """Get an item from the api cache."""
-        return self._api.cache[attribute]
+        cache = self._api.cache[attribute]
+        # Ensure we always use the current send_command implementation for the
+        # underlying client so patched failures bubble up in tests. Guard for
+        # library changes where the attribute might not exist.
+        send_command = getattr(self._api, "_send_command", None)
+        if send_command is not None:
+            setattr(cache, "_send_command", send_command)
+        return cache
 
     @classmethod
     async def _send_command(

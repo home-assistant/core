@@ -1,6 +1,7 @@
 """Global fixtures for Roborock integration."""
 
 from collections.abc import Generator
+from contextlib import ExitStack
 from copy import deepcopy
 import pathlib
 import tempfile
@@ -89,86 +90,139 @@ def bypass_api_client_fixture() -> None:
 @pytest.fixture(name="bypass_api_fixture")
 def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
     """Skip calls to the API."""
-    with (
-        patch("homeassistant.components.roborock.RoborockMqttClientV1.async_connect"),
-        patch("homeassistant.components.roborock.RoborockMqttClientV1._send_command"),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1._send_command"
-        ),
-        patch(
-            "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
-            return_value=NETWORK_INFO,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
-            return_value=PROP,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_multi_maps_list",
-            return_value=MULTI_MAP_LIST,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_multi_maps_list",
-            return_value=MULTI_MAP_LIST,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-            return_value=MAP_DATA,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_message"
-        ),
-        patch("homeassistant.components.roborock.RoborockMqttClientV1._wait_response"),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._wait_response"
-        ),
-        patch(
-            "roborock.version_1_apis.AttributeCache.async_value",
-        ),
-        patch(
-            "roborock.version_1_apis.AttributeCache.value",
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.MAP_SLEEP",
-            0,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_room_mapping",
-            return_value=[
-                RoomMapping(16, "2362048"),
-                RoomMapping(17, "2362044"),
-                RoomMapping(18, "2362041"),
-            ],
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_room_mapping",
-            return_value=[
-                RoomMapping(16, "2362048"),
-                RoomMapping(17, "2362044"),
-                RoomMapping(18, "2362041"),
-            ],
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
-            return_value=b"123",
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockClientA01",
-            A01Mock,
-        ),
-        patch("homeassistant.components.roborock.RoborockMqttClientA01", A01Mock),
-    ):
+    with ExitStack() as stack:
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.RoborockMqttClientV1.async_connect"
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.RoborockMqttClientV1._send_command"
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.RoborockMqttClientV1._send_command"
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.RoborockMqttClientV1.get_prop",
+                return_value=PROP,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
+                return_value=NETWORK_INFO,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
+                return_value=PROP,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_multi_maps_list",
+                return_value=MULTI_MAP_LIST,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_multi_maps_list",
+                return_value=MULTI_MAP_LIST,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
+                return_value=MAP_DATA,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._send_command"
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.RoborockMqttClientV1._wait_response"
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._wait_response"
+            )
+        )
+        stack.enter_context(patch("roborock.version_1_apis.AttributeCache.async_value"))
+        stack.enter_context(patch("roborock.version_1_apis.AttributeCache.value"))
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.MAP_SLEEP",
+                0,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_room_mapping",
+                return_value=[
+                    RoomMapping(16, "2362048"),
+                    RoomMapping(17, "2362044"),
+                    RoomMapping(18, "2362041"),
+                ],
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_room_mapping",
+                return_value=[
+                    RoomMapping(16, "2362048"),
+                    RoomMapping(17, "2362044"),
+                    RoomMapping(18, "2362041"),
+                ],
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
+                return_value=b"123",
+            )
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.RoborockClientA01",
+                A01Mock,
+            )
+        )
+        stack.enter_context(
+            patch("homeassistant.components.roborock.RoborockMqttClientA01", A01Mock)
+        )
+        stack.enter_context(
+            patch(
+                "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.ping"
+            )
+        )
         yield
 
 
 @pytest.fixture(name="send_message_side_effect")
 def send_message_side_effect_fixture() -> Any:
-    """Fixture to return a side effect for the send_message method."""
+    """Side effect for low-level command method (_send_command).
+
+    Name kept for backward compatibility with older tests that referred to
+    `send_message` in older library versions.
+    """
     return None
 
 
 @pytest.fixture(name="mock_send_message")
-def mock_send_message_fixture(send_message_side_effect: Any) -> Mock:
+def mock_send_message_fixture(
+    send_message_side_effect: Any,
+    bypass_api_fixture: None,
+) -> Mock:
     """Fixture to mock the send_message method."""
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._send_command",

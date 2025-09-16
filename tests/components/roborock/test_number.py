@@ -36,7 +36,7 @@ async def test_update_success(
     # Ensure that the entity exist, as these test can pass even if there is no entity.
     assert hass.states.get(entity_id) is not None
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_message"
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._send_command"
     ) as mock_send_message:
         await hass.services.async_call(
             "number",
@@ -66,7 +66,7 @@ async def test_update_failed(
     assert hass.states.get(entity_id) is not None
     with (
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_message",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._send_command",
             side_effect=roborock.exceptions.RoborockTimeout,
         ) as mock_send_message,
         pytest.raises(HomeAssistantError, match="Failed to update Roborock options"),
