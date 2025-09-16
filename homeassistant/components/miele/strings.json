@@ -1075,6 +1075,9 @@
     "config_entry_not_ready": {
       "message": "Error while loading the integration."
     },
+    "incorrect_oauth2_scope": {
+      "message": "The OAuth2 scope is incorrect. Please re-authenticate."
+    },
     "invalid_target": {
       "message": "Invalid device targeted."
     },

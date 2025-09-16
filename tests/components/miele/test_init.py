@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
-from pymiele import OAUTH2_TOKEN
+from pymiele import OAUTH2_TOKEN_NEW as OAUTH2_TOKEN
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -236,3 +236,16 @@ async def test_load_entry_with_action_error(
 
     assert entry.state is ConfigEntryState.LOADED
     assert mock_miele_client.get_actions.call_count == 5
+
+
+async def test_oauth2_scope_failure(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an incorrect OAuth2 scope fails."""
+
+    mock_config_entry.data["token"]["scope"] = "wrong_scope"
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

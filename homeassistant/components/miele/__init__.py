@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from aiohttp import ClientError, ClientResponseError
-from pymiele import MieleAPI
+from pymiele import OAUTH2_SCOPE_NEW as OAUTH2_SCOPE, MieleAPI
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -65,6 +65,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
             translation_domain=DOMAIN,
             translation_key="config_entry_not_ready",
         ) from err
+
+    if not (set(entry.data["token"].get("scope", "").split(" ")) >= set(OAUTH2_SCOPE)):
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="incorrect_oauth2_scope",
+        )
 
     # Setup MieleAPI and coordinator for data fetch
     api = MieleAPI(auth)
