@@ -99,7 +99,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
                 CONF_MAX_SUPPORTED_ZONES: 16,
                 CONF_SCAN_INTERVAL: 60,
                 CONF_INFER_ARMING_STATE: False,
-                CONF_SUPPORT_HOME_ARM: True,
             },
         )
 
