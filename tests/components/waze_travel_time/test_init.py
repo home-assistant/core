@@ -66,7 +66,7 @@ async def test_service_get_travel_times(hass: HomeAssistant) -> None:
     ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
-@pytest.mark.usefixtures("mock_config")
+@pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_service_get_travel_times_empty_response(
     hass: HomeAssistant, mock_update
 ) -> None:
