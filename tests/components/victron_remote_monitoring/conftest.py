@@ -5,14 +5,14 @@ import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from victron_vrm.models.aggregations import ForecastAggregations
 
-from homeassistant.components.vrm_forecasts.const import (
+from homeassistant.components.victron_remote_monitoring.const import (
     CONF_API_KEY,
     CONF_SITE_ID,
     DOMAIN,
 )
-from homeassistant.components.vrm_forecasts.coordinator import (
-    ForecastEstimates,
+from homeassistant.components.victron_remote_monitoring.coordinator import (
     VRMForecastStore,
 )
 from homeassistant.core import HomeAssistant
@@ -41,7 +41,8 @@ CONST_FORECAST_RECORDS = [
 def mock_setup_entry(patch_forecast_fn) -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.vrm_forecasts.async_setup_entry", return_value=True
+        "homeassistant.components.victron_remote_monitoring.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -74,14 +75,14 @@ def patch_forecast_fn(monkeypatch: pytest.MonkeyPatch):
 
     async def fake(client, site_id):
         return VRMForecastStore(
-            solar=ForecastEstimates(
+            solar=ForecastAggregations(
                 start=CONST_FORECAST_START / 1000,
                 end=CONST_FORECAST_END / 1000,
                 records=[(x / 1000, y) for x, y in CONST_FORECAST_RECORDS],
                 custom_dt_now=fake_dt_now,
                 site_id=123456,
             ),  # your ForecastEstimates
-            consumption=ForecastEstimates(
+            consumption=ForecastAggregations(
                 start=CONST_FORECAST_START / 1000,
                 end=CONST_FORECAST_END / 1000,
                 records=[(x / 1000, y) for x, y in CONST_FORECAST_RECORDS],
@@ -92,7 +93,7 @@ def patch_forecast_fn(monkeypatch: pytest.MonkeyPatch):
         )
 
     monkeypatch.setattr(
-        "homeassistant.components.vrm_forecasts.coordinator.get_forecast",
+        "homeassistant.components.victron_remote_monitoring.coordinator.get_forecast",
         fake,
     )
 

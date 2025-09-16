@@ -7105,6 +7105,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "victron_remote_monitoring": {
+      "name": "Victron Remote Monitoring",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "vilfo": {
       "name": "Vilfo Router",
       "integration_type": "hub",
@@ -7173,12 +7179,6 @@
     "volvooncall": {
       "name": "Volvo On Call",
       "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "vrm_forecasts": {
-      "name": "Victron VRM Forecasts",
-      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },

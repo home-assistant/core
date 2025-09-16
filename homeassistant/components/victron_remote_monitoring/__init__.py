@@ -5,16 +5,19 @@ from __future__ import annotations
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import VRMForecastsConfigEntry, VRMForecastsDataUpdateCoordinator
+from .coordinator import (
+    VictronRemoteMonitoringConfigEntry,
+    VictronRemoteMonitoringDataUpdateCoordinator,
+)
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: VRMForecastsConfigEntry
+    hass: HomeAssistant, entry: VictronRemoteMonitoringConfigEntry
 ) -> bool:
     """Set up VRM Forecasts from a config entry."""
-    coordinator = VRMForecastsDataUpdateCoordinator(hass, entry)
+    coordinator = VictronRemoteMonitoringDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -27,14 +30,14 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, entry: VRMForecastsConfigEntry
+    hass: HomeAssistant, entry: VictronRemoteMonitoringConfigEntry
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
 
 async def async_update_options(
-    hass: HomeAssistant, entry: VRMForecastsConfigEntry
+    hass: HomeAssistant, entry: VictronRemoteMonitoringConfigEntry
 ) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)

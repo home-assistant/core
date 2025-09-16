@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -22,17 +21,17 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
-    VRMForecastsConfigEntry,
-    VRMForecastsDataUpdateCoordinator,
+    VictronRemoteMonitoringConfigEntry,
+    VictronRemoteMonitoringDataUpdateCoordinator,
     VRMForecastStore,
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class VRMForecastsSensorEntityDescription(SensorEntityDescription):
     """Describes a VRM Forecast Sensor."""
 
-    state: Callable[[VRMForecastStore], Any] | None = None
+    state: Callable[[VRMForecastStore], Any]
 
 
 SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
@@ -187,7 +186,7 @@ SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: VRMForecastsConfigEntry,
+    entry: VictronRemoteMonitoringConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
@@ -197,14 +196,14 @@ async def async_setup_entry(
         VRMForecastsSensorEntity(
             entry_id=entry.entry_id,
             coordinator=coordinator,
-            entity_description=entity_description,
+            description=entity_description,
         )
         for entity_description in SENSORS
     )
 
 
 class VRMForecastsSensorEntity(
-    CoordinatorEntity[VRMForecastsDataUpdateCoordinator], SensorEntity
+    CoordinatorEntity[VictronRemoteMonitoringDataUpdateCoordinator], SensorEntity
 ):
     """Defines a VRM Solar Forecast sensor."""
 
@@ -215,34 +214,24 @@ class VRMForecastsSensorEntity(
         self,
         *,
         entry_id: str,
-        coordinator: VRMForecastsDataUpdateCoordinator,
-        entity_description: VRMForecastsSensorEntityDescription,
+        coordinator: VictronRemoteMonitoringDataUpdateCoordinator,
+        description: VRMForecastsSensorEntityDescription,
     ) -> None:
         """Initialize VRM Solar Forecast sensor."""
         super().__init__(coordinator=coordinator)
-        self.entity_description = entity_description
-        self.entity_id = f"{SENSOR_DOMAIN}.{entity_description.key}"
-        self._attr_unique_id = (
-            f"{entry_id}_{entity_description.key}_{coordinator.data.site_id}"
-        )
+        self.entity_description = description
+        self._attr_unique_id = f"{description.key}_{coordinator.data.site_id}"
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry_id)},
+            identifiers={(DOMAIN, str(coordinator.data.site_id))},
             manufacturer="Victron Energy",
             model=f"VRM - {coordinator.data.site_id}",
-            name="VRM Forecast",
+            name="Victron Remote Monitoring",
             configuration_url="https://vrm.victronenergy.com",
         )
 
     @property
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
-        if self.entity_description.state is None:
-            state: StateType | datetime = getattr(
-                self.coordinator.data, self.entity_description.key
-            )
-        else:
-            state = self.entity_description.state(self.coordinator.data)
-
-        return state
+        return self.entity_description.state(self.coordinator.data)

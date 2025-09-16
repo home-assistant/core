@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -21,12 +22,22 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_API_KEY, CONF_SITE_ID, DOMAIN
-from .coordinator import is_jwt
-from .errors import CannotConnect, InvalidAuth, SiteNotFound
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(HomeAssistantError):
+    """Error to indicate there is invalid auth."""
+
+
+class SiteNotFound(HomeAssistantError):
+    """Error to indicate the site was not found."""
 
 
 class VRMClientHolder:
@@ -36,7 +47,6 @@ class VRMClientHolder:
         """Initialize the VRM client holder."""
         self.client = VictronVRMClient(
             token=api_key,
-            token_type="Bearer" if is_jwt(api_key) else "Token",
             client_session=get_async_client(hass),
         )
 
@@ -49,8 +59,8 @@ class VRMClientHolder:
         return await self.client.users.list_sites()
 
 
-class VRMForecastsFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Victron VRM Solar Forecast."""
+class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Victron Remote Monitoring."""
 
     VERSION = 1
 
@@ -126,6 +136,17 @@ class VRMForecastsFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._api_key = api_key
                 # Sort sites by name then id for stable order
                 self._sites = sorted(sites, key=lambda s: (s.name or "", s.id))
+                if len(self._sites) == 1:
+                    # Only one site available, skip site selection step
+                    site = self._sites[0]
+                    await self.async_set_unique_id(
+                        str(site.id), raise_on_progress=False
+                    )
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=f"VRM Forecast for {site.name}",
+                        data={CONF_API_KEY: self._api_key, CONF_SITE_ID: site.id},
+                    )
                 return await self.async_step_select_site()
 
         return self.async_show_form(

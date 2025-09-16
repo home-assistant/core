@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from homeassistant.components.victron_remote_monitoring.const import DOMAIN
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -23,19 +24,24 @@ async def test_sensors_states_and_units(
     today_remaining = CONST_FORECAST_RECORDS[3][1]
     # Tomorrow total: two "tomorrow" records
     tomorrow_total = CONST_FORECAST_RECORDS[4][1] + CONST_FORECAST_RECORDS[5][1]
+    ent_reg = er.async_get(hass)
+    site_id = mock_config_entry.data["site_id"]
 
     # Sensors expose Wh as native with suggested kWh; HA may convert to kWh in state
     # Verify state is reported in kWh and values divided by 1000
-    for entity_id, expected in (
-        ("sensor.energy_production_estimate_yesterday", yesterday_total),
-        ("sensor.energy_production_estimate_today", today_total),
-        ("sensor.energy_production_estimate_today_remaining", today_remaining),
-        ("sensor.energy_production_estimate_tomorrow", tomorrow_total),
-        ("sensor.energy_consumption_estimate_yesterday", yesterday_total),
-        ("sensor.energy_consumption_estimate_today", today_total),
-        ("sensor.energy_consumption_estimate_today_remaining", today_remaining),
-        ("sensor.energy_consumption_estimate_tomorrow", tomorrow_total),
+    for key, expected in (
+        ("energy_production_estimate_yesterday", yesterday_total),
+        ("energy_production_estimate_today", today_total),
+        ("energy_production_estimate_today_remaining", today_remaining),
+        ("energy_production_estimate_tomorrow", tomorrow_total),
+        ("energy_consumption_estimate_yesterday", yesterday_total),
+        ("energy_consumption_estimate_today", today_total),
+        ("energy_consumption_estimate_today_remaining", today_remaining),
+        ("energy_consumption_estimate_tomorrow", tomorrow_total),
     ):
+        unique_id = f"{key}_{site_id}"
+        entity_id = ent_reg.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entity_id is not None, key
         state = hass.states.get(entity_id)
         assert state is not None, entity_id
         assert (
@@ -44,17 +50,25 @@ async def test_sensors_states_and_units(
         assert float(state.state) == pytest.approx(expected / 1000.0)
 
 
-async def test_sensors_timestamps(hass: HomeAssistant, init_integration) -> None:
+async def test_sensors_timestamps(
+    hass: HomeAssistant, init_integration, mock_config_entry
+) -> None:
     """Verify timestamp sensors expose ISO-formatted times in state."""
+    ent_reg = er.async_get(hass)
+    site_id = mock_config_entry.data["site_id"]
+
     # Peak times are at 12:00 for each day per fixture data
-    for entity_id in (
-        "sensor.power_highest_peak_time_yesterday",
-        "sensor.power_highest_peak_time_today",
-        "sensor.power_highest_peak_time_tomorrow",
-        "sensor.consumption_highest_peak_time_yesterday",
-        "sensor.consumption_highest_peak_time_today",
-        "sensor.consumption_highest_peak_time_tomorrow",
+    for key in (
+        "power_highest_peak_time_yesterday",
+        "power_highest_peak_time_today",
+        "power_highest_peak_time_tomorrow",
+        "consumption_highest_peak_time_yesterday",
+        "consumption_highest_peak_time_today",
+        "consumption_highest_peak_time_tomorrow",
     ):
+        unique_id = f"{key}_{site_id}"
+        entity_id = ent_reg.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entity_id is not None, key
         state = hass.states.get(entity_id)
         assert state is not None, entity_id
         # Basic shape check
@@ -64,17 +78,18 @@ async def test_sensors_timestamps(hass: HomeAssistant, init_integration) -> None
 async def test_unique_ids(
     hass: HomeAssistant, init_integration, mock_config_entry
 ) -> None:
-    """Ensure unique_id format includes entry_id, key, and site id."""
+    """Ensure unique_id format includes key and site id."""
     ent_reg = er.async_get(hass)
     site_id = mock_config_entry.data["site_id"]
-    entry_id = mock_config_entry.entry_id
 
     # Check a couple of representative sensors
     for key in (
         "energy_production_estimate_today",
         "consumption_highest_peak_time_today",
     ):
-        entity_id = f"sensor.{key}"
+        unique_id = f"{key}_{site_id}"
+        entity_id = ent_reg.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entity_id is not None, key
         entity = ent_reg.async_get(entity_id)
         assert entity is not None, entity_id
-        assert entity.unique_id == f"{entry_id}_{key}_{site_id}"
+        assert entity.unique_id == unique_id

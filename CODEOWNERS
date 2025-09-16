@@ -1666,6 +1666,8 @@ build.json @home-assistant/supervisor
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak
 /homeassistant/components/vicare/ @CFenner
 /tests/components/vicare/ @CFenner
+/homeassistant/components/victron_remote_monitoring/ @AndyTempel
+/tests/components/victron_remote_monitoring/ @AndyTempel
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
 /homeassistant/components/vivotek/ @HarlemSquirrel
@@ -1681,8 +1683,6 @@ build.json @home-assistant/supervisor
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvooncall/ @molobrakos
 /tests/components/volvooncall/ @molobrakos
-/homeassistant/components/vrm_forecasts/ @AndyTempel
-/tests/components/vrm_forecasts/ @AndyTempel
 /homeassistant/components/vulcan/ @Antoni-Czaplicki
 /tests/components/vulcan/ @Antoni-Czaplicki
 /homeassistant/components/wake_on_lan/ @ntilley905
