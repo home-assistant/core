@@ -1113,6 +1113,11 @@ def key_value_schemas(
     """Create a validator that validates based on a value for specific key.
 
     This gives better error messages.
+
+    default_schema: An optional schema to use if the key value is not in value_schemas.
+    default_description: A description of what is expected by the default schema, this
+    will be added to the error message.
+    list_alternatives: If True, list the keys in `value_schemas` in the error message.
     """
     if not list_alternatives and not default_description:
         raise ValueError(
