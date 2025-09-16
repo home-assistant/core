@@ -77,7 +77,14 @@ async def _async_send_device_command(call: ServiceCall) -> None:
             for key in manager.device_map
             if (DOMAIN, key) in device_entry.identifiers
         ),
+        None,
     )
+    if tuya_device_id is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="tuya_device_not_found",
+            translation_placeholders={"device_id": device_entry.id},
+        )
     commands = [
         {
             "code": call.data[ATTR_CODE],
