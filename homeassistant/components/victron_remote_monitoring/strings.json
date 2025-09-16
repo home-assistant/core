@@ -11,7 +11,7 @@
         }
       },
       "select_site": {
-        "description": "Select the VRM site to use for forecasts",
+        "description": "Select the VRM site",
         "data": {
           "site_id": "VRM site"
         },
