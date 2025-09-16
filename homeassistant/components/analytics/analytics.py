@@ -5,9 +5,9 @@ from __future__ import annotations
 import asyncio
 from asyncio import timeout
 from collections.abc import Awaitable, Callable, Iterable, Mapping
-from dataclasses import asdict as dataclass_asdict, dataclass
+from dataclasses import asdict as dataclass_asdict, dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import Any, Protocol
 import uuid
 
 import aiohttp
@@ -39,7 +39,7 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -88,7 +88,9 @@ from .const import (
 
 DATA_ANALYTICS_MODIFIERS = "analytics_modifiers"
 
-type AnalyticsModifier = Callable[[HomeAssistant, AnalyticsConfig], Awaitable[None]]
+type AnalyticsModifier = Callable[
+    [HomeAssistant, AnalyticsInput], Awaitable[AnalyticsConfig]
+]
 
 
 @singleton(DATA_ANALYTICS_MODIFIERS)
@@ -100,25 +102,36 @@ def _async_get_modifiers(
 
 
 @dataclass
+class AnalyticsInput:
+    """Analytics input for a single integration.
+
+    This is sent to integrations that implement the platform.
+    """
+
+    devices: Iterable[str] = field(default_factory=list)
+    entities: Iterable[str] = field(default_factory=list)
+
+
+@dataclass
 class AnalyticsConfig:
     """Analytics config for a single integration.
 
-    This is modified by integrations that implement the platform.
+    This is used by integrations that implement the platform.
     """
 
-    devices: Mapping[str, DeviceAnalyticsConfig]
-    entities: Mapping[str, EntityAnalyticsConfig]
-    devices_to_remove: Iterable[str] | None = None
-    entities_to_remove: Iterable[str] | None = None
+    remove: bool = False
+    devices: Mapping[str, DeviceAnalyticsConfig] | None = None
+    entities: Mapping[str, EntityAnalyticsConfig] | None = None
 
 
 @dataclass
 class DeviceAnalyticsConfig:
     """Analytics config for a single device.
 
-    This is modified by integrations that implement the platform.
+    This is used by integrations that implement the platform.
     """
 
+    remove: bool = False
     extra: dict[str, Any] | None = None
 
 
@@ -126,10 +139,11 @@ class DeviceAnalyticsConfig:
 class EntityAnalyticsConfig:
     """Analytics config for a single entity.
 
-    This is modified by integrations that implement the platform.
+    This is used by integrations that implement the platform.
     """
 
-    capabilities: dict[str, Any] | None
+    remove: bool = False
+    capabilities: dict[str, Any] | None | UndefinedType = UNDEFINED
     extra: dict[str, Any] | None = None
 
 
@@ -139,8 +153,8 @@ class AnalyticsPlatformProtocol(Protocol):
     async def async_modify_analytics(
         self,
         hass: HomeAssistant,
-        config: AnalyticsConfig,
-    ) -> None:
+        analytics_input: AnalyticsInput,
+    ) -> AnalyticsConfig:
         """Modify the analytics."""
 
 
@@ -489,23 +503,20 @@ def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
     return domains
 
 
+DEFAULT_ANALYTICS_CONFIG = AnalyticsConfig()
+DEFAULT_DEVICE_ANALYTICS_CONFIG = DeviceAnalyticsConfig()
+DEFAULT_ENTITY_ANALYTICS_CONFIG = EntityAnalyticsConfig()
+
+
 async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
     """Return detailed information about entities and devices."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
 
-    modifiable_infos: dict[
-        str,  # integration domain
-        tuple[
-            list[str],  # list of device ids
-            dict[str, DeviceAnalyticsConfig],
-            list[str],  # list of entity ids
-            dict[str, EntityAnalyticsConfig],
-        ]
-        | None,
-    ] = {}
+    integration_inputs: dict[str, tuple[list[str], list[str]]] = {}
+    integration_configs: dict[str, AnalyticsConfig] = {}
 
-    # Get modifiable device infos
+    # Get device list
     for device_entry in dev_reg.devices.values():
         if not device_entry.primary_config_entry:
             continue
@@ -519,65 +530,43 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
         integration_domain = config_entry.domain
 
-        modifiable_info = modifiable_infos.setdefault(
-            integration_domain, ([], {}, [], {})
-        )
-        if TYPE_CHECKING:
-            assert modifiable_info is not None
+        integration_input = integration_inputs.setdefault(integration_domain, ([], []))
+        integration_input[0].append(device_entry.id)
 
-        modifiable_info[0].append(device_entry.id)
-        modifiable_info[1][device_entry.id] = DeviceAnalyticsConfig()
-
-    # Get modifiable entity infos
+    # Get entity list
     for entity_entry in ent_reg.entities.values():
         integration_domain = entity_entry.platform
 
-        modifiable_info = modifiable_infos.setdefault(
-            integration_domain, ([], {}, [], {})
-        )
-        if TYPE_CHECKING:
-            assert modifiable_info is not None
+        integration_input = integration_inputs.setdefault(integration_domain, ([], []))
+        integration_input[1].append(entity_entry.entity_id)
 
-        modifiable_info[2].append(entity_entry.entity_id)
-        modifiable_info[3][entity_entry.entity_id] = EntityAnalyticsConfig(
-            capabilities=dict(entity_entry.capabilities)
-            if entity_entry.capabilities is not None
-            else None,
-        )
-
-    # Pass modifiable infos to integrations
-    for integration_domain, modifiable_info in modifiable_infos.items():
-        if TYPE_CHECKING:
-            assert modifiable_info is not None
+    # Call integrations that implement the analytics platform
+    for integration_domain, integration_input in integration_inputs.items():
         if (
             modifier := await _async_get_modifier(hass, integration_domain)
         ) is not None:
-            config = AnalyticsConfig(
-                devices=modifiable_info[1],
-                entities=modifiable_info[3],
-            )
             try:
-                await modifier(hass, config)
+                integration_config = await modifier(
+                    hass, AnalyticsInput(*integration_input)
+                )
             except Exception as err:  # noqa: BLE001
                 LOGGER.exception(
                     "Calling async_modify_analytics for integration '%s' failed: %s",
                     integration_domain,
                     err,
                 )
-                modifiable_infos[integration_domain] = None
-            else:
-                if config.devices_to_remove is not None:
-                    modifiable_info[0][:] = [
-                        device_id
-                        for device_id in modifiable_info[0]
-                        if device_id not in config.devices_to_remove
-                    ]
-                if config.entities_to_remove is not None:
-                    modifiable_info[2][:] = [
-                        entity_id
-                        for entity_id in modifiable_info[2]
-                        if entity_id not in config.entities_to_remove
-                    ]
+                integration_configs[integration_domain] = AnalyticsConfig(remove=True)
+                continue
+
+            if not isinstance(integration_config, AnalyticsConfig):
+                LOGGER.error(  # type: ignore[unreachable]
+                    "Calling async_modify_analytics for integration '%s' did not return an AnalyticsConfig",
+                    integration_domain,
+                )
+                integration_configs[integration_domain] = AnalyticsConfig(remove=True)
+                continue
+
+            integration_configs[integration_domain] = integration_config
 
     integrations_info: dict[str, dict[str, Any]] = {}
 
@@ -586,9 +575,13 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
     # instead we refer to devices by (integration_domain, index_in_integration_device_list).
     device_id_mapping: dict[str, tuple[str, int]] = {}
 
-    # Fill out remaining information about devices
-    for integration_domain, modifiable_info in modifiable_infos.items():
-        if modifiable_info is None:
+    # Fill out information about devices
+    for integration_domain, integration_input in integration_inputs.items():
+        integration_config = integration_configs.get(
+            integration_domain, DEFAULT_ANALYTICS_CONFIG
+        )
+
+        if integration_config.remove:
             continue
 
         integration_info = integrations_info.setdefault(
@@ -597,8 +590,13 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
         devices_info = integration_info["devices"]
 
-        for device_id in modifiable_info[0]:
-            modifiable_device_info = modifiable_info[1][device_id]
+        for device_id in integration_input[0]:
+            device_config = DEFAULT_DEVICE_ANALYTICS_CONFIG
+            if integration_config.devices is not None:
+                device_config = integration_config.devices.get(device_id, device_config)
+
+            if device_config.remove:
+                continue
 
             device_entry = dev_reg.devices[device_id]
 
@@ -608,7 +606,7 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                 {
                     "entities": [],
                     "entry_type": device_entry.entry_type,
-                    "extra": modifiable_device_info.extra,
+                    "extra": device_config.extra,
                     "has_configuration_url": device_entry.configuration_url is not None,
                     "hw_version": device_entry.hw_version,
                     "manufacturer": device_entry.manufacturer,
@@ -626,9 +624,13 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                 continue
             device_info["via_device"] = device_id_mapping.get(device_info["via_device"])
 
-    # Fill out remaining information about entities
-    for integration_domain, modifiable_info in modifiable_infos.items():
-        if modifiable_info is None:
+    # Fill out information about entities
+    for integration_domain, integration_input in integration_inputs.items():
+        integration_config = integration_configs.get(
+            integration_domain, DEFAULT_ANALYTICS_CONFIG
+        )
+
+        if integration_config.remove:
             continue
 
         integration_info = integrations_info.setdefault(
@@ -638,8 +640,15 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
         devices_info = integration_info["devices"]
         entities_info = integration_info["entities"]
 
-        for entity_id in modifiable_info[2]:
-            modifiable_entity_info = modifiable_info[3][entity_id]
+        for entity_id in integration_input[1]:
+            entity_config = DEFAULT_ENTITY_ANALYTICS_CONFIG
+            if integration_config.entities is not None:
+                entity_config = integration_config.entities.get(
+                    entity_id, entity_config
+                )
+
+            if entity_config.remove:
+                continue
 
             entity_entry = ent_reg.entities[entity_id]
 
@@ -653,11 +662,16 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                 "assumed_state": entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
                 if entity_state is not None
                 else None,
-                "capabilities": modifiable_entity_info.capabilities,
+                "capabilities": entity_config.capabilities
+                if entity_config.capabilities is not UNDEFINED
+                else entity_entry.capabilities,
                 "domain": entity_entry.domain,
                 "entity_category": entity_entry.entity_category,
-                "extra": modifiable_entity_info.extra,
+                "extra": entity_config.extra,
                 "has_entity_name": entity_entry.has_entity_name,
+                "modified_by_integration": ["capabilities"]
+                if entity_config.capabilities is not UNDEFINED
+                else None,
                 "original_device_class": entity_entry.original_device_class,
                 # LIMITATION: `unit_of_measurement` can be overridden by users;
                 # we should replace it with the original value in the future.

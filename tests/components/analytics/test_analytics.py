@@ -14,6 +14,9 @@ from syrupy.matchers import path_type
 from homeassistant.components.analytics.analytics import (
     Analytics,
     AnalyticsConfig,
+    AnalyticsInput,
+    DeviceAnalyticsConfig,
+    EntityAnalyticsConfig,
     async_devices_payload,
 )
 from homeassistant.components.analytics.const import (
@@ -1244,6 +1247,7 @@ async def test_devices_payload_with_entities(
                                 "entity_category": None,
                                 "extra": None,
                                 "has_entity_name": True,
+                                "modified_by_integration": None,
                                 "original_device_class": None,
                                 "unit_of_measurement": None,
                             },
@@ -1254,6 +1258,7 @@ async def test_devices_payload_with_entities(
                                 "entity_category": "config",
                                 "extra": None,
                                 "has_entity_name": True,
+                                "modified_by_integration": None,
                                 "original_device_class": "temperature",
                                 "unit_of_measurement": None,
                             },
@@ -1277,6 +1282,7 @@ async def test_devices_payload_with_entities(
                                 "entity_category": None,
                                 "extra": None,
                                 "has_entity_name": False,
+                                "modified_by_integration": None,
                                 "original_device_class": None,
                                 "unit_of_measurement": None,
                             },
@@ -1300,6 +1306,7 @@ async def test_devices_payload_with_entities(
                         "entity_category": None,
                         "extra": None,
                         "has_entity_name": False,
+                        "modified_by_integration": None,
                         "original_device_class": "temperature",
                         "unit_of_measurement": "°C",
                     },
@@ -1316,6 +1323,7 @@ async def test_devices_payload_with_entities(
                         "entity_category": None,
                         "extra": None,
                         "has_entity_name": True,
+                        "modified_by_integration": None,
                         "original_device_class": None,
                         "unit_of_measurement": None,
                     },
@@ -1366,26 +1374,39 @@ async def test_analytics_platforms(
 
     async def async_modify_analytics(
         hass: HomeAssistant,
-        config: AnalyticsConfig,
-    ) -> None:
+        analytics_input: AnalyticsInput,
+    ) -> AnalyticsConfig:
         first = True
-        devices_to_remove = config.devices_to_remove = []
-        for device_id, device in config.devices.items():
+        devices_configs = {}
+        for device_id in analytics_input.devices:
+            device_config = DeviceAnalyticsConfig()
+            devices_configs[device_id] = device_config
             if first:
                 first = False
-                device.extra = {"device_test_key": "device_test_value"}
+                device_config.extra = {"device_test_key": "device_test_value"}
             else:
-                devices_to_remove.append(device_id)
+                device_config.remove = True
 
         first = True
-        entities_to_remove = config.entities_to_remove = []
-        for entity_id, entity in config.entities.items():
+        entities_configs = {}
+        for entity_id in analytics_input.entities:
+            entity_entry = entity_registry.async_get(entity_id)
+            entity_config = EntityAnalyticsConfig()
+            entities_configs[entity_id] = entity_config
             if first:
                 first = False
-                entity.capabilities["options"] = len(entity.capabilities["options"])
-                entity.extra = {"entity_test_key": "entity_test_value"}
+                entity_config.capabilities = dict(entity_entry.capabilities)
+                entity_config.capabilities["options"] = len(
+                    entity_config.capabilities["options"]
+                )
+                entity_config.extra = {"entity_test_key": "entity_test_value"}
             else:
-                entities_to_remove.append(entity_id)
+                entity_config.remove = True
+
+        return AnalyticsConfig(
+            devices=devices_configs,
+            entities=entities_configs,
+        )
 
     platform_mock = Mock(async_modify_analytics=async_modify_analytics)
     mock_platform(hass, "test.analytics", platform_mock)
@@ -1420,6 +1441,7 @@ async def test_analytics_platforms(
                         "entity_category": None,
                         "extra": {"entity_test_key": "entity_test_value"},
                         "has_entity_name": False,
+                        "modified_by_integration": ["capabilities"],
                         "original_device_class": None,
                         "unit_of_measurement": None,
                     },

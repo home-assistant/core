@@ -15,6 +15,7 @@ from homeassistant.util.hass_dict import HassKey
 from .analytics import (
     Analytics,
     AnalyticsConfig,
+    AnalyticsInput,
     DeviceAnalyticsConfig,
     EntityAnalyticsConfig,
 )
@@ -23,6 +24,7 @@ from .http import AnalyticsDevicesView
 
 __all__ = [
     "AnalyticsConfig",
+    "AnalyticsInput",
     "DeviceAnalyticsConfig",
     "EntityAnalyticsConfig",
 ]
