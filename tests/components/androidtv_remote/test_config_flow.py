@@ -436,10 +436,9 @@ async def test_user_flow_already_configured_host_changed_reloads_entry(
             "mac": mac,
         },
         unique_id=unique_id,
-        state=ConfigEntryState.LOADED,
     )
     mock_config_entry.add_to_hass(hass)
-    hass.config.components.add(DOMAIN)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -465,8 +464,8 @@ async def test_user_flow_already_configured_host_changed_reloads_entry(
 
     await hass.async_block_till_done()
     assert len(mock_unload_entry.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert hass.config_entries.async_entries(DOMAIN)[0].data == {
+    assert len(mock_setup_entry.mock_calls) == 2
+    assert mock_config_entry.data == {
         "host": host,
         "name": name_existing,
         "mac": mac,
@@ -763,10 +762,10 @@ async def test_zeroconf_flow_already_configured_host_changed_reloads_entry(
             "mac": mac,
         },
         unique_id=unique_id,
-        state=ConfigEntryState.LOADED,
     )
     mock_config_entry.add_to_hass(hass)
-    hass.config.components.add(DOMAIN)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -785,13 +784,13 @@ async def test_zeroconf_flow_already_configured_host_changed_reloads_entry(
     assert result["reason"] == "already_configured"
 
     await hass.async_block_till_done()
-    assert hass.config_entries.async_entries(DOMAIN)[0].data == {
+    assert mock_config_entry.data == {
         "host": host,
         "name": name,
         "mac": mac,
     }
     assert len(mock_unload_entry.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_zeroconf_flow_already_configured_host_not_changed_no_reload_entry(
@@ -946,10 +945,10 @@ async def test_reauth_flow_success(
             "mac": mac,
         },
         unique_id=unique_id,
-        state=ConfigEntryState.LOADED,
     )
     mock_config_entry.add_to_hass(hass)
-    hass.config.components.add(DOMAIN)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
@@ -992,7 +991,7 @@ async def test_reauth_flow_success(
         "mac": mac,
     }
     assert len(mock_unload_entry.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_reauth_flow_cannot_connect(

@@ -23,6 +23,7 @@
         'intent_input': 'Set a timer',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -130,6 +131,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': 'hello, how are you?',
@@ -178,6 +180,7 @@
         'intent_input': 'Set a timer',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -363,6 +366,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': "hello, how are you? I'm doing well, thank you. What about you?!",
@@ -411,6 +415,7 @@
         'intent_input': 'Set a timer',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -592,6 +597,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': "I'm doing well, thank you.",
@@ -634,6 +640,7 @@
         'intent_input': 'test input',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -687,6 +694,7 @@
         'intent_input': 'test input',
         'language': 'en-US',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -740,6 +748,7 @@
         'intent_input': 'test input',
         'language': 'en-us',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),

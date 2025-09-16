@@ -3,13 +3,17 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+from freezegun import freeze_time
+import httpx
+from openai import PermissionDeniedError
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
+from homeassistant.components.openai_conversation import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers import entity_registry as er, issue_registry as ir, selector
 
 from . import create_image_gen_call_item, create_message_item
 
@@ -209,11 +213,13 @@ async def test_generate_data_with_attachments(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+@freeze_time("2025-06-14 22:59:00")
 async def test_generate_image(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_stream: AsyncMock,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test AI Task image generation."""
     entity_id = "ai_task.openai_ai_task"
@@ -237,14 +243,17 @@ async def test_generate_image(
         create_message_item(id="msg_A", text="", output_index=1),
     ]
 
-    assert hass.data[ai_task.DATA_IMAGES] == {}
-
-    result = await ai_task.async_generate_image(
-        hass,
-        task_name="Test Task",
-        entity_id="ai_task.openai_ai_task",
-        instructions="Generate test image",
-    )
+    with patch.object(
+        media_source.local_source.LocalSource,
+        "async_upload_media",
+        return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
+    ) as mock_upload_media:
+        result = await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.openai_ai_task",
+            instructions="Generate test image",
+        )
 
     assert result["height"] == 1024
     assert result["width"] == 1536
@@ -252,8 +261,44 @@ async def test_generate_image(
     assert result["mime_type"] == "image/png"
     assert result["model"] == "gpt-image-1"
 
-    assert len(hass.data[ai_task.DATA_IMAGES]) == 1
-    image_data = next(iter(hass.data[ai_task.DATA_IMAGES].values()))
-    assert image_data.data == b"A"
-    assert image_data.mime_type == "image/png"
-    assert image_data.title == "Mock revised prompt."
+    mock_upload_media.assert_called_once()
+    image_data = mock_upload_media.call_args[0][1]
+    assert image_data.file.getvalue() == b"A"
+    assert image_data.content_type == "image/png"
+    assert image_data.filename == "2025-06-14_225900_test_task.png"
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "organization_verification_required")
+        is None
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_repair_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that repair issue is raised when verification is required."""
+    with (
+        patch(
+            "openai.resources.responses.AsyncResponses.create",
+            side_effect=PermissionDeniedError(
+                response=httpx.Response(
+                    status_code=403, request=httpx.Request(method="GET", url="")
+                ),
+                body=None,
+                message="Please click on Verify Organization.",
+            ),
+        ),
+        pytest.raises(HomeAssistantError, match="Error talking to OpenAI"),
+    ):
+        await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.openai_ai_task",
+            instructions="Generate test image",
+        )
+
+    assert issue_registry.async_get_issue(DOMAIN, "organization_verification_required")

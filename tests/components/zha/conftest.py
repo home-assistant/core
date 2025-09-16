@@ -1,6 +1,6 @@
 """Test configuration for the ZHA component."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Coroutine, Generator
 import itertools
 import time
 from typing import Any
@@ -241,11 +241,11 @@ def setup_zha(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_zigpy_connect: ControllerApplication,
-):
+) -> Callable[..., Coroutine[None]]:
     """Set up ZHA component."""
     zha_config = {zha_const.CONF_ENABLE_QUIRKS: False}
 
-    async def _setup(config=None):
+    async def _setup(config=None) -> None:
         config_entry.add_to_hass(hass)
         config = config or {}
 
@@ -353,7 +353,7 @@ def network_backup() -> zigpy.backups.NetworkBackup:
 
 
 @pytest.fixture
-def zigpy_device_mock(zigpy_app_controller):
+def zigpy_device_mock(zigpy_app_controller) -> Callable[..., zigpy.device.Device]:
     """Make a fake device using the specified cluster classes."""
 
     def _mock_dev(

@@ -13,6 +13,6 @@
   "integration_type": "system",
   "iot_class": "cloud_push",
   "loggers": ["acme", "hass_nabucasa", "snitun"],
-  "requirements": ["hass-nabucasa==1.1.0"],
+  "requirements": ["hass-nabucasa==1.1.1"],
   "single_config_entry": true
 }

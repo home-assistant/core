@@ -60,7 +60,7 @@ from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, llm
+from homeassistant.helpers import device_registry as dr, issue_registry as ir, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -578,6 +578,20 @@ class OpenAIBaseLLMEntity(Entity):
                 ):
                     LOGGER.error("Insufficient funds for OpenAI: %s", err)
                     raise HomeAssistantError("Insufficient funds for OpenAI") from err
+                if "Verify Organization" in str(err):
+                    ir.async_create_issue(
+                        self.hass,
+                        DOMAIN,
+                        "organization_verification_required",
+                        is_fixable=False,
+                        is_persistent=False,
+                        learn_more_url="https://help.openai.com/en/articles/10910291-api-organization-verification",
+                        severity=ir.IssueSeverity.WARNING,
+                        translation_key="organization_verification_required",
+                        translation_placeholders={
+                            "platform_settings": "https://platform.openai.com/settings/organization/general"
+                        },
+                    )
 
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err

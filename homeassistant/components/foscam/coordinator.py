@@ -30,10 +30,11 @@ class FoscamDeviceInfo:
     is_open_white_light: bool
     is_siren_alarm: bool
 
-    volume: int
+    device_volume: int
     speak_volume: int
     is_turn_off_volume: bool
     is_turn_off_light: bool
+    supports_speak_volume_adjustment: bool
 
     is_open_wdr: bool | None = None
     is_open_hdr: bool | None = None
@@ -118,6 +119,14 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
             mode = is_open_hdr_data["mode"] if ret_hdr == 0 and is_open_hdr_data else 0
             is_open_hdr = bool(int(mode))
 
+        ret_sw, software_capabilities = self.session.getSWCapabilities()
+
+        supports_speak_volume_adjustment_val = (
+            bool(int(software_capabilities.get("swCapabilities1")) & 32)
+            if ret_sw == 0
+            else False
+        )
+
         return FoscamDeviceInfo(
             dev_info=dev_info,
             product_info=product_info,
@@ -127,10 +136,11 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
             is_asleep=is_asleep,
             is_open_white_light=is_open_white_light_val,
             is_siren_alarm=is_siren_alarm_val,
-            volume=volume_val,
+            device_volume=volume_val,
             speak_volume=speak_volume_val,
             is_turn_off_volume=is_turn_off_volume_val,
             is_turn_off_light=is_turn_off_light_val,
+            supports_speak_volume_adjustment=supports_speak_volume_adjustment_val,
             is_open_wdr=is_open_wdr,
             is_open_hdr=is_open_hdr,
         )

@@ -33,11 +33,36 @@
   },
   "entity": {
     "sensor": {
-      "find_count": { "name": "Total finds" },
-      "hide_count": { "name": "Total hides" },
-      "favorite_points": { "name": "Favorite points" },
-      "souvenir_count": { "name": "Total souvenirs" },
-      "awarded_favorite_points": { "name": "Awarded favorite points" }
+      "find_count": {
+        "name": "Total finds",
+        "unit_of_measurement": "caches"
+      },
+      "hide_count": {
+        "name": "Total hides",
+        "unit_of_measurement": "caches"
+      },
+      "favorite_points": {
+        "name": "Favorite points",
+        "unit_of_measurement": "points"
+      },
+      "souvenir_count": {
+        "name": "Total souvenirs",
+        "unit_of_measurement": "souvenirs"
+      },
+      "awarded_favorite_points": {
+        "name": "Awarded favorite points",
+        "unit_of_measurement": "points"
+      },
+      "cache_found_date": {
+        "name": "Found date"
+      },
+      "cache_favorite_points": {
+        "name": "Favorite points",
+        "unit_of_measurement": "points"
+      },
+      "cache_hidden_date": {
+        "name": "Hidden date"
+      }
     }
   }
 }

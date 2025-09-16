@@ -158,6 +158,31 @@ VALIDATE_AS_CUSTOM_INTEGRATION = {
 }
 
 
+def check_extraneous_translation_fields(
+    integration: Integration,
+    service_name: str,
+    strings: dict[str, Any],
+    service_schema: dict[str, Any],
+) -> None:
+    """Check for extraneous translation fields."""
+    if integration.core and "services" in strings:
+        section_fields = set()
+        for field in service_schema.get("fields", {}).values():
+            if "fields" in field:
+                # This is a section
+                section_fields.update(field["fields"].keys())
+        translation_fields = {
+            field
+            for field in strings["services"][service_name].get("fields", {})
+            if field not in service_schema.get("fields", {})
+        }
+        for field in translation_fields - section_fields:
+            integration.add_error(
+                "services",
+                f"Service {service_name} has a field {field} in the translations file that is not in the schema",
+            )
+
+
 def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> bool:
     """Recursively go through a dir and it's children and find the regex."""
     pattern = re.compile(search_pattern)
@@ -261,6 +286,10 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
                     "services",
                     f"Service {service_name} has no description {error_msg_suffix}",
                 )
+
+        check_extraneous_translation_fields(
+            integration, service_name, strings, service_schema
+        )
 
         # The same check is done for the description in each of the fields of the
         # service schema.

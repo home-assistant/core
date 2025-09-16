@@ -146,6 +146,8 @@ async def async_send_message(  # noqa: C901
 
             self.enable_starttls = use_tls
             self.enable_direct_tls = use_tls
+            self.enable_plaintext = not use_tls
+            self["feature_mechanisms"].unencrypted_scram = not use_tls
             self.use_ipv6 = False
             self.add_event_handler("failed_all_auth", self.disconnect_on_login_fail)
             self.add_event_handler("session_start", self.start)

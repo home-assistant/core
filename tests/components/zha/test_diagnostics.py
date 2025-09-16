@@ -1,10 +1,12 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.types import EUI64, NWK
 from zigpy.zcl.clusters import security
@@ -42,8 +44,8 @@ async def test_diagnostics_for_config_entry(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for config entry."""
@@ -90,8 +92,8 @@ async def test_diagnostics_for_device(
     hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for device."""

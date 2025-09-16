@@ -30,7 +30,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -72,18 +71,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def generate_content(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
 
-        if call.data[CONF_IMAGE_FILENAME]:
-            # Deprecated in 2025.3, to remove in 2025.9
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_image_filename_parameter",
-                breaks_in_ha_version="2025.9.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_image_filename_parameter",
-            )
-
         prompt_parts = [call.data[CONF_PROMPT]]
 
         config_entry: GoogleGenerativeAIConfigEntry = (
@@ -92,7 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         client = config_entry.runtime_data
 
-        files = call.data[CONF_IMAGE_FILENAME] + call.data[CONF_FILENAMES]
+        files = call.data[CONF_FILENAMES]
 
         if files:
             for filename in files:
@@ -105,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             prompt_parts.extend(
                 await async_prepare_files_for_prompt(
-                    hass, client, [Path(filename) for filename in files]
+                    hass, client, [(Path(filename), None) for filename in files]
                 )
             )
 
@@ -140,9 +127,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema(
             {
                 vol.Required(CONF_PROMPT): cv.string,
-                vol.Optional(CONF_IMAGE_FILENAME, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
                 vol.Optional(CONF_FILENAMES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),

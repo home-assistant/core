@@ -129,6 +129,9 @@
     },
     "appliances_fetch_failed": {
       "message": "Failed to fetch appliances"
+    },
+    "request_failed": {
+      "message": "Request failed"
     }
   }
 }

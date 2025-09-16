@@ -253,7 +253,6 @@ class ModbusHub:
         self._client: (
             AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None
         ) = None
-        self._lock = asyncio.Lock()
         self.event_connected = asyncio.Event()
         self.hass = hass
         self.name = client_config[CONF_NAME]
@@ -362,16 +361,13 @@ class ModbusHub:
         if not self._connect_task.done():
             self._connect_task.cancel()
 
-        async with self._lock:
-            if self._client:
-                try:
-                    self._client.close()
-                except ModbusException as exception_error:
-                    self._log_error(str(exception_error))
-                del self._client
-                self._client = None
-                message = f"modbus {self.name} communication closed"
-                _LOGGER.info(message)
+        if self._client:
+            try:
+                self._client.close()
+            except ModbusException as exception_error:
+                self._log_error(str(exception_error))
+            self._client = None
+            _LOGGER.info(f"modbus {self.name} communication closed")
 
     async def low_level_pb_call(
         self, slave: int | None, address: int, value: int | list[int], use_call: str
@@ -417,11 +413,9 @@ class ModbusHub:
         use_call: str,
     ) -> ModbusPDU | None:
         """Convert async to sync pymodbus call."""
-        async with self._lock:
-            if not self._client:
-                return None
-            result = await self.low_level_pb_call(unit, address, value, use_call)
-            if self._msg_wait:
-                # small delay until next request/response
-                await asyncio.sleep(self._msg_wait)
-            return result
+        if not self._client:
+            return None
+        result = await self.low_level_pb_call(unit, address, value, use_call)
+        if self._msg_wait:
+            await asyncio.sleep(self._msg_wait)
+        return result

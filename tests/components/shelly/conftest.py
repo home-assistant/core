@@ -324,6 +324,7 @@ MOCK_BLU_TRV_REMOTE_STATUS = {
         "rssi": -60,
         "battery": 100,
         "errors": [],
+        "fw_ver": "v1.2.10",
     },
     "blutrv:201": {
         "id": 0,
@@ -761,3 +762,16 @@ def mock_setup() -> Generator[AsyncMock]:
         "homeassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+def disable_async_remove_shelly_rpc_entities() -> Generator[None]:
+    """Patch out async_remove_shelly_rpc_entities.
+
+    This is used by virtual components tests that should not create entities,
+    without it async_remove_shelly_rpc_entities will clean up the entities.
+    """
+    with patch(
+        "homeassistant.components.shelly.utils.async_remove_shelly_rpc_entities"
+    ):
+        yield

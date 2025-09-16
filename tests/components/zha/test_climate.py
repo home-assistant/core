@@ -1,5 +1,6 @@
 """Test ZHA climate."""
 
+from collections.abc import Callable, Coroutine
 from typing import Literal
 from unittest.mock import patch
 
@@ -7,6 +8,7 @@ import pytest
 from zha.application.platforms.climate.const import HVAC_MODE_2_SYSTEM, SEQ_OF_OPERATION
 import zhaquirks.sinope.thermostat
 import zhaquirks.tuya.ts0601_trv
+from zigpy.device import Device
 import zigpy.profiles
 from zigpy.profiles import zha
 import zigpy.types
@@ -147,7 +149,11 @@ def climate_platform_only():
 
 
 @pytest.fixture
-def device_climate_mock(hass: HomeAssistant, setup_zha, zigpy_device_mock):
+def device_climate_mock(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+):
     """Test regular thermostat device."""
 
     async def _dev(clusters, plug=None, manuf=None, quirk=None):

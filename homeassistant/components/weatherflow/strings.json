@@ -79,6 +79,14 @@
       "wind_lull": {
         "name": "Wind lull"
       }
+    },
+    "event": {
+      "lightning_strike_event": {
+        "name": "Lightning strike"
+      },
+      "precip_start_event": {
+        "name": "Precipitation start"
+      }
     }
   }
 }

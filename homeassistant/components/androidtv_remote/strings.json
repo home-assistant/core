@@ -92,5 +92,12 @@
     "invalid_media_type": {
       "message": "Invalid media type: {media_type}"
     }
+  },
+  "selector": {
+    "apps": {
+      "options": {
+        "add_new": "Add new"
+      }
+    }
   }
 }

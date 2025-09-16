@@ -299,11 +299,20 @@ class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
     """Typed result dict for config flow."""
 
     # Extra keys, only present if type is CREATE_ENTRY
+    next_flow: tuple[FlowType, str]  # (flow type, flow id)
     minor_version: int
     options: Mapping[str, Any]
     result: ConfigEntry
     subentries: Iterable[ConfigSubentryData]
     version: int
+
+
+class FlowType(StrEnum):
+    """Flow type."""
+
+    CONFIG_FLOW = "config_flow"
+    # Add other flow types here as needed in the future,
+    # if we want to support them in the `next_flow` parameter.
 
 
 def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
@@ -2786,7 +2795,9 @@ def _async_abort_entries_match(
     Requires `already_configured` in strings.json in user visible flows.
     """
     if match_dict is None:
-        match_dict = {}  # Match any entry
+        if other_entries:
+            raise data_entry_flow.AbortFlow("already_configured")  # Match any entry
+        return
     for entry in other_entries:
         options_items = entry.options.items()
         data_items = entry.data.items()
@@ -3136,6 +3147,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
+        next_flow: tuple[FlowType, str] | None = None,
         options: Mapping[str, Any] | None = None,
         subentries: Iterable[ConfigSubentryData] | None = None,
     ) -> ConfigFlowResult:
@@ -3156,6 +3168,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
 
         result["minor_version"] = self.MINOR_VERSION
+        if next_flow is not None:
+            flow_type, flow_id = next_flow
+            if flow_type != FlowType.CONFIG_FLOW:
+                raise HomeAssistantError("Invalid next_flow type")
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.flow.async_get(flow_id)
+            result["next_flow"] = next_flow
         result["options"] = options or {}
         result["subentries"] = subentries or ()
         result["version"] = self.VERSION

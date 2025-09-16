@@ -33,16 +33,18 @@ from homeassistant.components.sonos.const import (
     SOURCE_TV,
 )
 from homeassistant.components.sonos.media_player import (
+    LONG_SERVICE_TIMEOUT,
+    VOLUME_INCREMENT,
+)
+from homeassistant.components.sonos.services import (
     ATTR_ALARM_ID,
     ATTR_ENABLED,
     ATTR_INCLUDE_LINKED_ZONES,
     ATTR_VOLUME,
-    LONG_SERVICE_TIMEOUT,
     SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
     SERVICE_UPDATE_ALARM,
-    VOLUME_INCREMENT,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,

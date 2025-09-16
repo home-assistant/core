@@ -371,7 +371,6 @@ class DefaultAgent(ConversationEntity):
             response = intent.IntentResponse(
                 language=user_input.language or self.hass.config.language
             )
-            response.response_type = intent.IntentResponseType.ACTION_DONE
             response.async_set_speech(response_text)
 
         if response is None:
@@ -471,6 +470,7 @@ class DefaultAgent(ConversationEntity):
                 language,
                 assistant=DOMAIN,
                 device_id=user_input.device_id,
+                satellite_id=user_input.satellite_id,
                 conversation_agent_id=user_input.agent_id,
             )
         except intent.MatchFailedError as match_error:
