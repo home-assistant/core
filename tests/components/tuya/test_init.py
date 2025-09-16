@@ -18,7 +18,7 @@ async def test_device_registry(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
-    mock_devices: CustomerDevice,
+    mock_devices: list[CustomerDevice],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,

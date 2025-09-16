@@ -1,0 +1,17 @@
+send_text_command:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tuya
+    code:
+      required: true
+      example: "up_down"
+      selector:
+        text:
+    value:
+      required: true
+      example: "up"
+      selector:
+        text:

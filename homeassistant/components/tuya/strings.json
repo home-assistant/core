@@ -1002,5 +1002,25 @@
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
     }
+  },
+  "services": {
+    "send_text_command": {
+      "name": "Send text command",
+      "description": "Send a text command to a device.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The ID of the device to send the command to."
+        },
+        "code": {
+          "name": "Code",
+          "description": "The name of the data point."
+        },
+        "value": {
+          "name": "Value",
+          "description": "The new value of the data point."
+        }
+      }
+    }
   }
 }
