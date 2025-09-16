@@ -237,6 +237,12 @@ class ZhaRadioManager:
 
         return ProbeResult.PROBING_FAILED
 
+    async def async_read_backups_from_database(self) -> None:
+        """Read the list of backups from the database."""
+        async with self.connect_zigpy_app() as app:
+            self.backups = app.backups.backups.copy()
+            self.backups.sort(reverse=True, key=lambda b: b.backup_time)
+
     async def async_load_network_settings(
         self, *, create_backup: bool = False
     ) -> zigpy.backups.NetworkBackup | None:

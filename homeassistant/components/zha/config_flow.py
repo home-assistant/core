@@ -362,6 +362,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Recommended migration strategy: automatically migrate everything."""
 
+        await self._radio_mgr.async_read_backups_from_database()
+
         # Assume the most recent backup is the correct one
         self._radio_mgr.chosen_backup = self._radio_mgr.backups[0]
         return await self.async_step_maybe_confirm_ezsp_restore()
