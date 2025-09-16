@@ -358,6 +358,18 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             ],
         )
 
+    async def async_step_setup_strategy_recommended(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Recommended setup strategy: form a brand-new network."""
+        return await self.async_step_form_new_network()
+
+    async def async_step_setup_strategy_advanced(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Advanced setup strategy: let the user choose."""
+        return await self.async_step_choose_formation_strategy()
+
     async def async_step_choose_migration_strategy(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -37,7 +37,7 @@
       },
       "choose_setup_strategy": {
         "title": "Set up Zigbee",
-        "description": "Choose how you want to set up Zigbee.",
+        "description": "Choose how you want to set up Zigbee. Automatic setup is recommended unless you are restoring your network from a backup or setting up an adapter with nonstandard settings.",
         "menu_options": {
           "setup_strategy_recommended": "Set up automatically (recommended)",
           "setup_strategy_advanced": "Advanced setup"
