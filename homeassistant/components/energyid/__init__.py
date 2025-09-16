@@ -7,7 +7,6 @@ from dataclasses import dataclass
 import datetime as dt
 import functools
 import logging
-from typing import Final
 
 from energyid_webhooks.client_v2 import WebhookClient
 
@@ -41,11 +40,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 type EnergyIDConfigEntry = ConfigEntry[EnergyIDRuntimeData]
-LISTENER_KEY_STATE: Final = "state_listener"
-LISTENER_KEY_STOP: Final = "stop_listener"
-LISTENER_KEY_CONFIG_UPDATE: Final = "config_update_listener"
 
-DEFAULT_UPLOAD_INTERVAL_SECONDS: Final = 60
+DEFAULT_UPLOAD_INTERVAL_SECONDS = 60
 
 
 @dataclass
@@ -53,8 +49,10 @@ class EnergyIDRuntimeData:
     """Runtime data for the EnergyID integration."""
 
     client: WebhookClient
-    listeners: dict[str, CALLBACK_TYPE | asyncio.Task[None]]
     mappings: dict[str, str]
+    state_listener: CALLBACK_TYPE | None = None
+    background_sync_task: asyncio.Task[None] | None = None
+    registry_tracking_listener: CALLBACK_TYPE | None = None
     unavailable_logged: bool = False
 
 
@@ -71,7 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
 
     entry.runtime_data = EnergyIDRuntimeData(
         client=client,
-        listeners={},
         mappings={},
     )
 
@@ -112,10 +109,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
             await asyncio.sleep(upload_interval)
 
     sync_task = hass.async_create_task(_async_background_sync())
-    entry.runtime_data.listeners["background_sync"] = sync_task
-    entry.async_on_unload(entry.add_update_listener(async_config_entry_update_listener))
+    entry.runtime_data.background_sync_task = sync_task
+    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
 
-    await async_update_listeners(hass, entry)
+    update_listeners(hass, entry)
 
     _LOGGER.debug(
         "Starting EnergyID background sync for '%s'",
@@ -125,35 +122,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
     return True
 
 
-async def async_config_entry_update_listener(
+async def config_entry_update_listener(
     hass: HomeAssistant, entry: EnergyIDConfigEntry
 ) -> None:
     """Handle config entry updates, including subentry changes."""
     _LOGGER.debug("Config entry updated for %s, reloading listeners", entry.entry_id)
-    await async_update_listeners(hass, entry)
+    update_listeners(hass, entry)  # Call the sync function
 
 
-async def async_update_listeners(
-    hass: HomeAssistant, entry: EnergyIDConfigEntry
-) -> None:
+@callback
+def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
     """Set up or update state listeners and queue initial states."""
     runtime_data = entry.runtime_data
     client = runtime_data.client
 
-    # Clean up old listeners (except background_sync and registry tracking)
-    listeners_to_remove = [
-        k
-        for k in runtime_data.listeners
-        if k not in ("background_sync", "entity_registry_tracking")
-    ]
-
-    for listener_key in listeners_to_remove:
-        old_listener = runtime_data.listeners.pop(listener_key)
-        _LOGGER.debug("Removing old listener %s for %s", listener_key, entry.entry_id)
-        if isinstance(old_listener, asyncio.Task):
-            old_listener.cancel()
-        else:
-            old_listener()
+    # Clean up old state listener
+    if runtime_data.state_listener:
+        runtime_data.state_listener()
+        runtime_data.state_listener = None
 
     mappings: dict[str, str] = {}
     entities_to_track: list[str] = []
@@ -191,8 +177,8 @@ async def async_update_listeners(
 
         if not hass.states.get(ha_entity_id):
             # Entity exists in registry but not yet in state machine (common during boot)
-            _LOGGER.warning(
-                "Entity %s does not exist in state machine, skipping mapping to %s",
+            _LOGGER.debug(
+                "Entity %s does not exist in state machine yet, will track when available (mapping to %s)",
                 ha_entity_id,
                 energyid_key,
             )
@@ -224,8 +210,13 @@ async def async_update_listeners(
                         current_state.state,
                     )
 
-    # Set up entity registry tracking for the specific entities we care about
-    if tracked_entity_ids and "entity_registry_tracking" not in runtime_data.listeners:
+    # Update entity registry tracking listener if tracked entities changed
+    if runtime_data.registry_tracking_listener:
+        # Remove old listener
+        runtime_data.registry_tracking_listener()
+        runtime_data.registry_tracking_listener = None
+
+    if tracked_entity_ids:
         _LOGGER.debug("Setting up entity registry tracking for: %s", tracked_entity_ids)
 
         def _handle_entity_registry_change(
@@ -249,19 +240,19 @@ async def async_update_listeners(
                 # Check if this was one of our tracked entities
                 if old_entity_id in runtime_data.mappings:
                     _LOGGER.info("Tracked entity renamed, reloading listeners")
-                    hass.async_create_task(async_update_listeners(hass, entry))
+                    update_listeners(hass, entry)
                     return
 
             elif action == "remove" and changed_entity_id:
                 if changed_entity_id in runtime_data.mappings:
                     _LOGGER.info("Tracked entity removed: %s", changed_entity_id)
-                    hass.async_create_task(async_update_listeners(hass, entry))
+                    update_listeners(hass, entry)
 
         # Track the specific entity IDs we care about
         unsub_entity_registry = async_track_entity_registry_updated_event(
             hass, tracked_entity_ids, _handle_entity_registry_change
         )
-        runtime_data.listeners["entity_registry_tracking"] = unsub_entity_registry
+        runtime_data.registry_tracking_listener = unsub_entity_registry
 
     if removed_mappings := old_mappings - new_mappings:
         _LOGGER.debug("Removed mappings: %s", ", ".join(removed_mappings))
@@ -279,7 +270,7 @@ async def async_update_listeners(
         entities_to_track,
         functools.partial(_async_handle_state_change, hass, entry.entry_id),
     )
-    runtime_data.listeners[LISTENER_KEY_STATE] = unsub_state_change
+    runtime_data.state_listener = unsub_state_change
 
     _LOGGER.debug(
         "Now tracking state changes for %d entities for '%s': %s",
@@ -303,15 +294,21 @@ def _async_handle_state_change(
         new_state.state if new_state else "None",
     )
 
-    if not new_state or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+    # Skip if entity was removed (new_state=None) or event data incomplete
+    if not entity_id or not new_state:
+        return
+
+    if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
         return
 
     entry = hass.config_entries.async_get_entry(entry_id)
+    # Guard against race condition: state change events may be processed
+    # after config entry starts unloading or during reload
     if not entry or not hasattr(entry, "runtime_data"):
-        # Entry is being unloaded or not yet fully initialized
         return
 
     runtime_data = entry.runtime_data
+    # Skip if entity is no longer mapped (e.g., options just changed)
     if not (energyid_key := runtime_data.mappings.get(entity_id)):
         return
 
@@ -346,14 +343,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) ->
 
         # Only clean up listeners and client if runtime_data is present
         if hasattr(entry, "runtime_data"):
-            for listener in entry.runtime_data.listeners.values():
-                if hasattr(listener, "cancel"):
-                    listener.cancel()  # It's a task
-                elif callable(listener):
-                    listener()  # It's a callable
+            runtime_data = entry.runtime_data
+
+            # Cancel background sync task
+            if runtime_data.background_sync_task:
+                runtime_data.background_sync_task.cancel()
+
+            # Remove state listener
+            if runtime_data.state_listener:
+                runtime_data.state_listener()
+
+            # Remove registry tracking listener
+            if runtime_data.registry_tracking_listener:
+                runtime_data.registry_tracking_listener()
 
             try:
-                await entry.runtime_data.client.close()
+                await runtime_data.client.close()
             except Exception:
                 _LOGGER.exception("Error closing EnergyID client for %s", entry.title)
             del entry.runtime_data
