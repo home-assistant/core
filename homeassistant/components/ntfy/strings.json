@@ -292,7 +292,7 @@
       "message": "Delayed call notifications are not supported"
     },
     "too_many_actions": {
-      "message": "Too many actions defined. Only 3 allowed"
+      "message": "Too many actions defined. A maximum of 3 is supported"
     }
   },
   "services": {
