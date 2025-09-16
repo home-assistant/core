@@ -331,7 +331,7 @@ aiopulse==0.4.6
 aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==3.1.1
+aiopvapi==3.2.1
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==4.2.2
@@ -351,7 +351,7 @@ aioraven==0.7.1
 aiorecollect==2023.09.0
 
 # homeassistant.components.ridwell
-aioridwell==2024.01.0
+aioridwell==2025.09.0
 
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.42
@@ -399,7 +399,7 @@ aiotedee==0.2.25
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==86
+aiounifi==87
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.1
@@ -624,7 +624,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.13.1
+bthome-ble==3.14.2
 
 # homeassistant.components.buienradar
 buienradar==1.0.6
@@ -786,7 +786,7 @@ epion==0.0.3
 epson-projector==0.5.1
 
 # homeassistant.components.eq3btsmart
-eq3btsmart==2.2.0
+eq3btsmart==2.3.0
 
 # homeassistant.components.esphome
 esphome-dashboard-api==1.3.0
@@ -1324,6 +1324,9 @@ notifications-android-tv==0.1.5
 # homeassistant.components.notify_events
 notify-events==1.0.4
 
+# homeassistant.components.nederlandse_spoorwegen
+nsapi==3.1.2
+
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.1.0
 
@@ -1402,7 +1405,7 @@ ourgroceries==1.5.4
 ovoenergy==2.0.1
 
 # homeassistant.components.p1_monitor
-p1monitor==3.1.0
+p1monitor==3.2.0
 
 # homeassistant.components.mqtt
 paho-mqtt==2.1.0
@@ -1459,6 +1462,9 @@ prayer-times-calculator-offline==1.0.3
 
 # homeassistant.components.prometheus
 prometheus-client==0.21.0
+
+# homeassistant.components.prowl
+prowlpy==1.0.2
 
 # homeassistant.components.hardware
 # homeassistant.components.recorder
@@ -1756,7 +1762,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.11
+pylamarzocco==2.1.0
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1917,7 +1923,7 @@ pyrail==0.4.1
 pyrainbird==6.0.1
 
 # homeassistant.components.playstation_network
-pyrate-limiter==3.7.0
+pyrate-limiter==3.9.0
 
 # homeassistant.components.risco
 pyrisco==0.6.7
@@ -2500,7 +2506,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.0.31
+universal-silabs-flasher==0.0.32
 
 # homeassistant.components.upb
 upb-lib==0.6.1
