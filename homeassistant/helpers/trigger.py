@@ -184,7 +184,10 @@ class Trigger(abc.ABC):
     ) -> ConfigType:
         """Validate complete config.
 
-        Should be overridden by triggers that need to migrate from old-style.
+        The complete config includes fields that are generic to all triggers,
+        such as the alias or the ID.
+        This method should be overridden by triggers that need to migrate
+        from the old-style config.
         """
         config = _TRIGGER_SCHEMA(config)
 
