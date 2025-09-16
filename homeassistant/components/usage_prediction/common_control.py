@@ -232,7 +232,9 @@ def _fetch_and_process_data(session: Session, user_id: str) -> EntityUsagePredic
 
 
 def _fetch_with_session(
-    hass: HomeAssistant, fetch_func: Callable[[Session], EntityUsagePredictions], *args: object
+    hass: HomeAssistant,
+    fetch_func: Callable[[Session], EntityUsagePredictions],
+    *args: object,
 ) -> EntityUsagePredictions:
     """Execute a fetch function with a database session."""
     with session_scope(hass=hass, read_only=True) as session:
