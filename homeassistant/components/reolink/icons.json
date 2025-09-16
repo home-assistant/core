@@ -181,6 +181,18 @@
           "0": "mdi:volume-off"
         }
       },
+      "volume_speak": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      },
+      "volume_doorbell": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      },
       "alarm_volume": {
         "default": "mdi:volume-high",
         "state": {
@@ -300,6 +312,15 @@
       },
       "image_hue": {
         "default": "mdi:image-edit"
+      },
+      "pre_record_time": {
+        "default": "mdi:history"
+      },
+      "pre_record_battery_stop": {
+        "default": "mdi:history"
+      },
+      "silent_time": {
+        "default": "mdi:volume-off"
       }
     },
     "select": {
@@ -384,10 +405,22 @@
       "sub_bit_rate": {
         "default": "mdi:play-speed"
       },
+      "main_encoding": {
+        "default": "mdi:video-image"
+      },
+      "sub_encoding": {
+        "default": "mdi:video-image"
+      },
       "scene_mode": {
         "default": "mdi:view-list"
       },
       "packing_time": {
+        "default": "mdi:record-rec"
+      },
+      "pre_record_fps": {
+        "default": "mdi:history"
+      },
+      "post_rec_time": {
         "default": "mdi:record-rec"
       }
     },
@@ -402,7 +435,12 @@
         "default": "mdi:thermometer"
       },
       "battery_state": {
-        "default": "mdi:battery-charging"
+        "default": "mdi:battery-unknown",
+        "state": {
+          "discharging": "mdi:battery-minus-variant",
+          "charging": "mdi:battery-charging",
+          "chargecomplete": "mdi:battery-check"
+        }
       },
       "day_night_state": {
         "default": "mdi:theme-light-dark"
@@ -461,6 +499,9 @@
       },
       "manual_record": {
         "default": "mdi:record-rec"
+      },
+      "pre_record": {
+        "default": "mdi:history"
       },
       "hub_ringtone_on_event": {
         "default": "mdi:music-note"

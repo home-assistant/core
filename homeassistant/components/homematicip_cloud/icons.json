@@ -1,4 +1,15 @@
 {
+  "entity": {
+    "sensor": {
+      "tilt_state": {
+        "state": {
+          "neutral": "mdi:garage",
+          "non_neutral": "mdi:garage-open",
+          "tilted": "mdi:garage-alert"
+        }
+      }
+    }
+  },
   "services": {
     "activate_eco_mode_with_duration": {
       "service": "mdi:leaf"

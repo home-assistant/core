@@ -1,0 +1,19 @@
+{
+  "device_id": "2960000001",
+  "name": "Living Room",
+  "is_active": true,
+  "device_type": "VIEW_PLUS",
+  "product_name": "View Plus",
+  "location_name": "Home",
+  "sensors": {
+    "battery": 1.1,
+    "co2": 2.2,
+    "humidity": 3.3,
+    "pm1": 4.4,
+    "pm25": 5.5,
+    "pressure": 6.6,
+    "radonShortTermAvg": 7.7,
+    "temp": 8.8,
+    "voc": 9.9
+  }
+}

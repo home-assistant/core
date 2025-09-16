@@ -170,6 +170,15 @@ SWITCH_ENTITIES = (
         method=lambda api, ch, value: api.set_manual_record(ch, value),
     ),
     ReolinkSwitchEntityDescription(
+        key="pre_record",
+        cmd_key="594",
+        translation_key="pre_record",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "pre_record"),
+        value=lambda api, ch: api.baichuan.pre_record_enabled(ch),
+        method=lambda api, ch, value: api.baichuan.set_pre_recording(ch, enabled=value),
+    ),
+    ReolinkSwitchEntityDescription(
         key="buzzer",
         cmd_key="GetBuzzerAlarmV20",
         translation_key="hub_ringtone_on_event",
@@ -372,6 +381,7 @@ async def async_setup_entry(
         ReolinkChimeSwitchEntity(reolink_data, chime, entity_description)
         for entity_description in CHIME_SWITCH_ENTITIES
         for chime in reolink_data.host.api.chime_list
+        if chime.channel is not None
     )
 
     # Can be removed in HA 2025.4.0

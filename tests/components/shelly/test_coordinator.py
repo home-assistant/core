@@ -553,6 +553,57 @@ async def test_rpc_click_event(
     }
 
 
+async def test_rpc_ignore_virtual_click_event(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+    events: list[Event],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC virtual click events are ignored as they are triggered by the integration."""
+    await init_integration(hass, 2)
+
+    # Generate a virtual button event
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "button:200",
+                    "id": 200,
+                    "event": "single_push",
+                    "ts": 1757358109.89,
+                }
+            ],
+            "ts": 757358109.89,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+
+    # Generate valid event
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "data": [],
+                    "event": "single_push",
+                    "id": 0,
+                    "ts": 1668522399.2,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+
 async def test_rpc_update_entry_sleep_period(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -864,7 +915,7 @@ async def test_rpc_update_entry_fw_ver(
 
 
 @pytest.mark.parametrize(
-    ("supports_scripts", "zigbee_enabled", "result"),
+    ("supports_scripts", "zigbee_firmware", "result"),
     [
         (True, False, True),
         (True, True, False),
@@ -877,14 +928,14 @@ async def test_rpc_runs_connected_events_when_initialized(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     supports_scripts: bool,
-    zigbee_enabled: bool,
+    zigbee_firmware: bool,
     result: bool,
 ) -> None:
     """Test RPC runs connected events when initialized."""
     monkeypatch.setattr(
         mock_rpc_device, "supports_scripts", AsyncMock(return_value=supports_scripts)
     )
-    monkeypatch.setattr(mock_rpc_device, "zigbee_enabled", zigbee_enabled)
+    monkeypatch.setattr(mock_rpc_device, "zigbee_firmware", zigbee_firmware)
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
     await init_integration(hass, 2)
 

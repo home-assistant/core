@@ -32,7 +32,7 @@ async def test_button_event_creation(
     # Add Button Event entity ids
     entity_ids = [
         f"event.beosound_balance_11111111_{underscore(button_type)}".replace(
-            "preset", "favourite_"
+            "preset", "favorite_"
         )
         for button_type in DEVICE_BUTTONS
     ]

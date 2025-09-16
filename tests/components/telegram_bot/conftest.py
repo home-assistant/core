@@ -96,7 +96,7 @@ def mock_external_calls() -> Generator[None]:
         max_reaction_count=100,
         accent_color_id=AccentColor.COLOR_000,
     )
-    test_user = User(123456, "Testbot", True)
+    test_user = User(123456, "Testbot", True, "mock last name", "mock username")
     message = Message(
         message_id=12345,
         date=datetime.now(),

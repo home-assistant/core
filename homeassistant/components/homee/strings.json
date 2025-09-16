@@ -3,8 +3,9 @@
     "flow_title": "homee {name} ({host})",
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "wrong_hub": "Address belongs to a different homee."
+      "wrong_hub": "IP address belongs to a different homee than the configured one."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -25,6 +26,17 @@
           "password": "The password for your homee."
         }
       },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::homee::config::step::user::data_description::username%]",
+          "password": "[%key:component::homee::config::step::user::data_description::password%]"
+        }
+      },
       "reconfigure": {
         "title": "Reconfigure homee {name}",
         "description": "Reconfigure the IP address of your homee.",
@@ -32,7 +44,18 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The IP address of your homee."
+          "host": "[%key:component::homee::config::step::user::data_description::host%]"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Configure discovered homee {host}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::homee::config::step::user::data_description::username%]",
+          "password": "[%key:component::homee::config::step::user::data_description::password%]"
         }
       }
     }

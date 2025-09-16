@@ -713,8 +713,11 @@ async def test_reauth_confirm_form(hass: HomeAssistant) -> None:
     ("domain", "expected_valid"),
     [
         ("example.com", True),
+        ("exa-mple.com", True),
         ("test.example.com", True),
+        ("tes-t.example.com", True),
         ("sub.domain.example.org", True),
+        ("su-b.dom-ain.exam-ple.org", True),
         ("https://example.com", False),
         ("invalid-domain", False),
         ("", False),
@@ -722,6 +725,8 @@ async def test_reauth_confirm_form(hass: HomeAssistant) -> None:
         ("example.", False),
         (".example.com", False),
         ("exam ple.com", False),
+        ("-example.com", False),
+        ("domain-.example.com", False),
     ],
 )
 def test_is_valid_domain(domain: str, expected_valid: bool) -> None:

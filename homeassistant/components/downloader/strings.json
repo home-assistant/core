@@ -12,6 +12,14 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
+  "exceptions": {
+    "subdir_invalid": {
+      "message": "Invalid subdirectory, got: {subdir}"
+    },
+    "subdir_not_relative": {
+      "message": "Subdirectory must be relative, got: {subdir}"
+    }
+  },
   "services": {
     "download_file": {
       "name": "Download file",

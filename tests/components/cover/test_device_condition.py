@@ -254,6 +254,7 @@ async def test_get_condition_capabilities_set_pos(
             {
                 "name": "above",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 0,
                 "valueMax": 100,
@@ -262,6 +263,7 @@ async def test_get_condition_capabilities_set_pos(
             {
                 "name": "below",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 100,
                 "valueMax": 100,
@@ -311,6 +313,7 @@ async def test_get_condition_capabilities_set_tilt_pos(
             {
                 "name": "above",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 0,
                 "valueMax": 100,
@@ -319,6 +322,7 @@ async def test_get_condition_capabilities_set_tilt_pos(
             {
                 "name": "below",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 100,
                 "valueMax": 100,

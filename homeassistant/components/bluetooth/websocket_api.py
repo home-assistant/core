@@ -8,8 +8,10 @@ import time
 from typing import Any
 
 from habluetooth import (
+    BaseHaScanner,
     BluetoothScanningMode,
     HaBluetoothSlotAllocations,
+    HaScannerModeChange,
     HaScannerRegistration,
     HaScannerRegistrationEvent,
 )
@@ -28,18 +30,66 @@ from .util import InvalidConfigEntryID, InvalidSource, config_entry_id_to_source
 
 
 @callback
+def _async_get_source_from_config_entry(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg_id: int,
+    config_entry_id: str | None,
+    validate_source: bool = True,
+) -> str | None:
+    """Get source from config entry id.
+
+    Returns None if no config_entry_id provided or on error (after sending error response).
+    If validate_source is True, also validates that the scanner exists.
+    """
+    if not config_entry_id:
+        return None
+
+    if validate_source:
+        # Use the full validation that checks if scanner exists
+        try:
+            return config_entry_id_to_source(hass, config_entry_id)
+        except InvalidConfigEntryID as err:
+            connection.send_error(msg_id, "invalid_config_entry_id", str(err))
+            return None
+        except InvalidSource as err:
+            connection.send_error(msg_id, "invalid_source", str(err))
+            return None
+
+    # Just check if config entry exists and belongs to bluetooth
+    if (
+        not (entry := hass.config_entries.async_get_entry(config_entry_id))
+        or entry.domain != DOMAIN
+    ):
+        connection.send_error(
+            msg_id,
+            "invalid_config_entry_id",
+            f"Config entry {config_entry_id} not found",
+        )
+        return None
+    return entry.unique_id
+
+
+@callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the bluetooth websocket API."""
     websocket_api.async_register_command(hass, ws_subscribe_advertisements)
     websocket_api.async_register_command(hass, ws_subscribe_connection_allocations)
     websocket_api.async_register_command(hass, ws_subscribe_scanner_details)
+    websocket_api.async_register_command(hass, ws_subscribe_scanner_state)
 
 
 @lru_cache(maxsize=1024)
 def serialize_service_info(
     service_info: BluetoothServiceInfoBleak, time_diff: float
 ) -> dict[str, Any]:
-    """Serialize a BluetoothServiceInfoBleak object."""
+    """Serialize a BluetoothServiceInfoBleak object.
+
+    The raw field is included for:
+    1. Debugging - to see the actual advertisement packet
+    2. Data freshness - manufacturer_data and service_data are aggregated
+       across multiple advertisements, raw shows the latest packet only
+    """
     return {
         "name": service_info.name,
         "address": service_info.address,
@@ -57,6 +107,7 @@ def serialize_service_info(
         "connectable": service_info.connectable,
         "time": service_info.time + time_diff,
         "tx_power": service_info.tx_power,
+        "raw": service_info.raw.hex() if service_info.raw else None,
     }
 
 
@@ -173,16 +224,12 @@ async def ws_subscribe_connection_allocations(
 ) -> None:
     """Handle subscribe advertisements websocket command."""
     ws_msg_id = msg["id"]
-    source: str | None = None
-    if config_entry_id := msg.get("config_entry_id"):
-        try:
-            source = config_entry_id_to_source(hass, config_entry_id)
-        except InvalidConfigEntryID as err:
-            connection.send_error(ws_msg_id, "invalid_config_entry_id", str(err))
-            return
-        except InvalidSource as err:
-            connection.send_error(ws_msg_id, "invalid_source", str(err))
-            return
+    config_entry_id = msg.get("config_entry_id")
+    source = _async_get_source_from_config_entry(
+        hass, connection, ws_msg_id, config_entry_id
+    )
+    if config_entry_id and source is None:
+        return  # Error already sent by helper
 
     def _async_allocations_changed(allocations: HaBluetoothSlotAllocations) -> None:
         connection.send_message(
@@ -213,20 +260,12 @@ async def ws_subscribe_scanner_details(
 ) -> None:
     """Handle subscribe scanner details websocket command."""
     ws_msg_id = msg["id"]
-    source: str | None = None
-    if config_entry_id := msg.get("config_entry_id"):
-        if (
-            not (entry := hass.config_entries.async_get_entry(config_entry_id))
-            or entry.domain != DOMAIN
-        ):
-            connection.send_error(
-                ws_msg_id,
-                "invalid_config_entry_id",
-                f"Invalid config entry id: {config_entry_id}",
-            )
-            return
-        source = entry.unique_id
-        assert source is not None
+    config_entry_id = msg.get("config_entry_id")
+    source = _async_get_source_from_config_entry(
+        hass, connection, ws_msg_id, config_entry_id, validate_source=False
+    )
+    if config_entry_id and source is None:
+        return  # Error already sent by helper
 
     def _async_event_message(message: dict[str, Any]) -> None:
         connection.send_message(
@@ -253,3 +292,70 @@ async def ws_subscribe_scanner_details(
         ]
     ):
         _async_event_message({"add": matching_scanners})
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "bluetooth/subscribe_scanner_state",
+        vol.Optional("config_entry_id"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_subscribe_scanner_state(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe scanner state websocket command."""
+    ws_msg_id = msg["id"]
+    config_entry_id = msg.get("config_entry_id")
+    source = _async_get_source_from_config_entry(
+        hass, connection, ws_msg_id, config_entry_id, validate_source=False
+    )
+    if config_entry_id and source is None:
+        return  # Error already sent by helper
+
+    @callback
+    def _async_send_scanner_state(
+        scanner: BaseHaScanner,
+        current_mode: BluetoothScanningMode | None,
+        requested_mode: BluetoothScanningMode | None,
+    ) -> None:
+        payload = {
+            "source": scanner.source,
+            "adapter": scanner.adapter,
+            "current_mode": current_mode.value if current_mode else None,
+            "requested_mode": requested_mode.value if requested_mode else None,
+        }
+        connection.send_message(
+            json_bytes(
+                websocket_api.event_message(
+                    ws_msg_id,
+                    payload,
+                )
+            )
+        )
+
+    @callback
+    def _async_scanner_state_changed(mode_change: HaScannerModeChange) -> None:
+        _async_send_scanner_state(
+            mode_change.scanner,
+            mode_change.current_mode,
+            mode_change.requested_mode,
+        )
+
+    manager = _get_manager(hass)
+    connection.subscriptions[ws_msg_id] = (
+        manager.async_register_scanner_mode_change_callback(
+            _async_scanner_state_changed, source
+        )
+    )
+    connection.send_message(json_bytes(websocket_api.result_message(ws_msg_id)))
+
+    # Send initial state for all matching scanners
+    for scanner in manager.async_current_scanners():
+        if source is None or scanner.source == source:
+            _async_send_scanner_state(
+                scanner,
+                scanner.current_mode,
+                scanner.requested_mode,
+            )

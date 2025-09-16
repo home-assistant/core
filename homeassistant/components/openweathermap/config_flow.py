@@ -32,6 +32,24 @@ from .const import (
 )
 from .utils import build_data_and_options, validate_api_key
 
+USER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(LANGUAGES),
+        vol.Required(CONF_API_KEY): str,
+        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
+    }
+)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(LANGUAGES),
+        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
+    }
+)
+
 
 class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for OpenWeatherMap."""
@@ -68,27 +86,21 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=data, options=options
                 )
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): str,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-                vol.Optional(
-                    CONF_LATITUDE, default=self.hass.config.latitude
-                ): cv.latitude,
-                vol.Optional(
-                    CONF_LONGITUDE, default=self.hass.config.longitude
-                ): cv.longitude,
-                vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
-                vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
-                    LANGUAGES
-                ),
+            schema_data = user_input
+        else:
+            schema_data = {
+                CONF_LATITUDE: self.hass.config.latitude,
+                CONF_LONGITUDE: self.hass.config.longitude,
+                CONF_LANGUAGE: self.hass.config.language,
             }
+
+        description_placeholders["doc_url"] = (
+            "https://www.home-assistant.io/integrations/openweathermap/"
         )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=schema,
+            data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, schema_data),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -104,25 +116,7 @@ class OpenWeatherMapOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self._get_options_schema(),
-        )
-
-    def _get_options_schema(self):
-        return vol.Schema(
-            {
-                vol.Optional(
-                    CONF_MODE,
-                    default=self.config_entry.options.get(
-                        CONF_MODE,
-                        self.config_entry.data.get(CONF_MODE, DEFAULT_OWM_MODE),
-                    ),
-                ): vol.In(OWM_MODES),
-                vol.Optional(
-                    CONF_LANGUAGE,
-                    default=self.config_entry.options.get(
-                        CONF_LANGUAGE,
-                        self.config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE),
-                    ),
-                ): vol.In(LANGUAGES),
-            }
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
         )

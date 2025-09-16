@@ -16,5 +16,42 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "fan": {
+      "air_purifier": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "normal": "[%key:common::state::normal%]",
+              "auto": "[%key:common::state::auto%]",
+              "pet": "Pet",
+              "sleep": "Sleep"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "light_level": {
+        "name": "Light level"
+      }
+    },
+    "humidifier": {
+      "evaporative_humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "high": "[%key:common::state::high%]",
+              "medium": "[%key:common::state::medium%]",
+              "low": "[%key:common::state::low%]",
+              "quiet": "Quiet",
+              "target_humidity": "Target humidity",
+              "drying_filter": "Drying filter"
+            }
+          }
+        }
+      }
+    }
   }
 }

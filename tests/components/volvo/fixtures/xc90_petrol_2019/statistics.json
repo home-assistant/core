@@ -1,0 +1,32 @@
+{
+  "averageFuelConsumption": {
+    "value": 9.59,
+    "unit": "l/100km",
+    "timestamp": "2024-12-30T14:53:44.785Z"
+  },
+  "averageSpeed": {
+    "value": 66,
+    "unit": "km/h",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "averageSpeedAutomatic": {
+    "value": 77,
+    "unit": "km/h",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "distanceToEmptyTank": {
+    "value": 253,
+    "unit": "km",
+    "timestamp": "2024-12-30T14:30:08.338Z"
+  },
+  "tripMeterManual": {
+    "value": 178.9,
+    "unit": "km",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "tripMeterAutomatic": {
+    "value": 4.2,
+    "unit": "km",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  }
+}

@@ -35,7 +35,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
+from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -173,7 +173,7 @@ class MoldIndicator(SensorEntity):
         self._indoor_hum: float | None = None
         self._crit_temp: float | None = None
         if indoor_humidity_sensor:
-            self._attr_device_info = async_device_info_to_link_from_entity(
+            self.device_entry = async_entity_id_to_device(
                 hass,
                 indoor_humidity_sensor,
             )

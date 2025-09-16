@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import area_registry as ar, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .util import _get_mock_nutclient, async_init_integration
@@ -247,6 +247,7 @@ async def test_serial_number(
 
 async def test_device_location(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for suggested location on device."""
@@ -269,7 +270,10 @@ async def test_device_location(
     )
 
     assert device_entry is not None
-    assert device_entry.suggested_area == mock_device_location
+    assert (
+        device_entry.area_id
+        == area_registry.async_get_area_by_name(mock_device_location).id
+    )
 
 
 async def test_update_options(hass: HomeAssistant) -> None:

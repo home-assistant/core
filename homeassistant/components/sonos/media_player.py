@@ -17,7 +17,6 @@ from soco.core import (
 from soco.data_structures import DidlFavorite, DidlMusicTrack
 from soco.ms_data_structures import MusicServiceItem
 from sonos_websocket.exception import SonosWebsocketError
-import voluptuous as vol
 
 from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import (
@@ -40,21 +39,16 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import process_plex_payload
-from homeassistant.const import ATTR_TIME
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    entity_registry as er,
-    service,
-)
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import media_browser
 from .const import (
+    ATTR_QUEUE_POSITION,
     DOMAIN,
     MEDIA_TYPE_DIRECTORY,
     MEDIA_TYPES_TO_SONOS,
@@ -93,24 +87,6 @@ SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
 ANNOUNCE_NOT_SUPPORTED_ERRORS: list[str] = ["globalError"]
 
-SERVICE_SNAPSHOT = "snapshot"
-SERVICE_RESTORE = "restore"
-SERVICE_SET_TIMER = "set_sleep_timer"
-SERVICE_CLEAR_TIMER = "clear_sleep_timer"
-SERVICE_UPDATE_ALARM = "update_alarm"
-SERVICE_PLAY_QUEUE = "play_queue"
-SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
-SERVICE_GET_QUEUE = "get_queue"
-
-ATTR_SLEEP_TIME = "sleep_time"
-ATTR_ALARM_ID = "alarm_id"
-ATTR_VOLUME = "volume"
-ATTR_ENABLED = "enabled"
-ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
-ATTR_MASTER = "master"
-ATTR_WITH_GROUP = "with_group"
-ATTR_QUEUE_POSITION = "queue_position"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -118,7 +94,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonos from a config entry."""
-    platform = entity_platform.async_get_current_platform()
 
     @callback
     def async_create_entities(speaker: SonosSpeaker) -> None:
@@ -126,88 +101,8 @@ async def async_setup_entry(
         _LOGGER.debug("Creating media_player on %s", speaker.zone_name)
         async_add_entities([SonosMediaPlayerEntity(speaker, config_entry)])
 
-    @service.verify_domain_control(hass, DOMAIN)
-    async def async_service_handle(service_call: ServiceCall) -> None:
-        """Handle dispatched services."""
-        assert platform is not None
-        entities = await platform.async_extract_from_service(service_call)
-
-        if not entities:
-            return
-
-        speakers = []
-        for entity in entities:
-            assert isinstance(entity, SonosMediaPlayerEntity)
-            speakers.append(entity.speaker)
-
-        if service_call.service == SERVICE_SNAPSHOT:
-            await SonosSpeaker.snapshot_multi(
-                hass, config_entry, speakers, service_call.data[ATTR_WITH_GROUP]
-            )
-        elif service_call.service == SERVICE_RESTORE:
-            await SonosSpeaker.restore_multi(
-                hass, config_entry, speakers, service_call.data[ATTR_WITH_GROUP]
-            )
-
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SONOS_CREATE_MEDIA_PLAYER, async_create_entities)
-    )
-
-    join_unjoin_schema = cv.make_entity_service_schema(
-        {vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean}
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SNAPSHOT, async_service_handle, join_unjoin_schema
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_RESTORE, async_service_handle, join_unjoin_schema
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_TIMER,
-        {
-            vol.Required(ATTR_SLEEP_TIME): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=86399)
-            )
-        },
-        "set_sleep_timer",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_CLEAR_TIMER, None, "clear_sleep_timer"
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_UPDATE_ALARM,
-        {
-            vol.Required(ATTR_ALARM_ID): cv.positive_int,
-            vol.Optional(ATTR_TIME): cv.time,
-            vol.Optional(ATTR_VOLUME): cv.small_float,
-            vol.Optional(ATTR_ENABLED): cv.boolean,
-            vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
-        },
-        "set_alarm",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_PLAY_QUEUE,
-        {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
-        "play_queue",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_REMOVE_FROM_QUEUE,
-        {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
-        "remove_from_queue",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_GET_QUEUE,
-        None,
-        "get_queue",
-        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -793,8 +688,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             if one_alarm.alarm_id == str(alarm_id):
                 alarm = one_alarm
         if alarm is None:
-            _LOGGER.warning("Did not find alarm with id %s", alarm_id)
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_alarm_id",
+                translation_placeholders={
+                    "alarm_id": str(alarm_id),
+                },
+            )
         if time is not None:
             alarm.start_time = time
         if volume is not None:

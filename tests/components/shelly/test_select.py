@@ -92,6 +92,7 @@ async def test_rpc_device_virtual_enum(
     assert state.state == "Title 1"
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_virtual_enum_when_mode_label(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,

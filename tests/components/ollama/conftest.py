@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
-from . import TEST_OPTIONS, TEST_USER_DATA
+from . import TEST_AI_TASK_OPTIONS, TEST_OPTIONS, TEST_USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -31,14 +31,20 @@ def mock_config_entry(
         domain=ollama.DOMAIN,
         data=TEST_USER_DATA,
         version=3,
-        minor_version=1,
+        minor_version=2,
         subentries_data=[
             {
                 "data": {**TEST_OPTIONS, **mock_config_entry_options},
                 "subentry_type": "conversation",
                 "title": "Ollama Conversation",
                 "unique_id": None,
-            }
+            },
+            {
+                "data": TEST_AI_TASK_OPTIONS,
+                "subentry_type": "ai_task_data",
+                "title": "Ollama AI Task",
+                "unique_id": None,
+            },
         ],
     )
     entry.add_to_hass(hass)

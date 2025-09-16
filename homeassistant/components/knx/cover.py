@@ -1,4 +1,4 @@
-"""Support for KNX/IP covers."""
+"""Support for KNX cover entities."""
 
 from __future__ import annotations
 
@@ -28,9 +28,9 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_MODULE_KEY, CoverConf
 from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import CoverSchema
 from .storage.const import (
     CONF_ENTITY,

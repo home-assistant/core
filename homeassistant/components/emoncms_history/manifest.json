@@ -1,8 +1,9 @@
 {
   "domain": "emoncms_history",
   "name": "Emoncms History",
-  "codeowners": [],
+  "codeowners": ["@alexandrecuer"],
   "documentation": "https://www.home-assistant.io/integrations/emoncms_history",
   "iot_class": "local_polling",
-  "quality_scale": "legacy"
+  "quality_scale": "legacy",
+  "requirements": ["pyemoncms==0.1.2"]
 }

@@ -1,7 +1,6 @@
 """Tests for the Sonos config flow."""
 
 import asyncio
-from datetime import timedelta
 import logging
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -330,29 +329,24 @@ async def test_async_poll_manual_hosts_5(
     soco_2.renderingControl = Mock()
     soco_2.renderingControl.GetVolume = Mock()
     speaker_2_activity = SpeakerActivity(hass, soco_2)
-    with patch(
-        "homeassistant.components.sonos.DISCOVERY_INTERVAL"
-    ) as mock_discovery_interval:
-        # Speed up manual discovery interval so second iteration runs sooner
-        mock_discovery_interval.total_seconds = Mock(side_effect=[0.5, 60])
 
-        with caplog.at_level(logging.DEBUG):
-            caplog.clear()
+    with caplog.at_level(logging.DEBUG):
+        caplog.clear()
 
-            await _setup_hass(hass)
+        await _setup_hass(hass)
 
-            assert "media_player.bedroom" in entity_registry.entities
-            assert "media_player.living_room" in entity_registry.entities
+        assert "media_player.bedroom" in entity_registry.entities
+        assert "media_player.living_room" in entity_registry.entities
 
-            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=0.5))
-            await hass.async_block_till_done()
-            await asyncio.gather(
-                *[speaker_1_activity.event.wait(), speaker_2_activity.event.wait()]
-            )
-            assert speaker_1_activity.call_count == 1
-            assert speaker_2_activity.call_count == 1
-            assert "Activity on Living Room" in caplog.text
-            assert "Activity on Bedroom" in caplog.text
+        async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
+        await hass.async_block_till_done()
+        await asyncio.gather(
+            *[speaker_1_activity.event.wait(), speaker_2_activity.event.wait()]
+        )
+        assert speaker_1_activity.call_count == 1
+        assert speaker_2_activity.call_count == 1
+        assert "Activity on Living Room" in caplog.text
+        assert "Activity on Bedroom" in caplog.text
 
     await hass.async_block_till_done(wait_background_tasks=True)
 

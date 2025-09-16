@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 from typing import Any
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -22,13 +20,11 @@ class FreeboxHomeEntity(Entity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         router: FreeboxRouter,
         node: dict[str, Any],
         sub_node: dict[str, Any] | None = None,
     ) -> None:
         """Initialize a Freebox Home entity."""
-        self._hass = hass
         self._router = router
         self._node = node
         self._sub_node = sub_node
@@ -44,7 +40,6 @@ class FreeboxHomeEntity(Entity):
         self._available = True
         self._firmware = node["props"].get("FwVersion")
         self._manufacturer = "Freebox SAS"
-        self._remove_signal_update: Callable[[], None] | None = None
 
         self._model = CATEGORY_TO_MODEL.get(node["category"])
         if self._model is None:
@@ -61,10 +56,7 @@ class FreeboxHomeEntity(Entity):
             model=self._model,
             name=self._device_name,
             sw_version=self._firmware,
-            via_device=(
-                DOMAIN,
-                router.mac,
-            ),
+            via_device=(DOMAIN, router.mac),
         )
 
     async def async_update_signal(self) -> None:
@@ -116,22 +108,13 @@ class FreeboxHomeEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
-        self.remove_signal_update(
+        self.async_on_remove(
             async_dispatcher_connect(
-                self._hass,
+                self.hass,
                 self._router.signal_home_device_update,
                 self.async_update_signal,
             )
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """When entity will be removed from hass."""
-        if self._remove_signal_update is not None:
-            self._remove_signal_update()
-
-    def remove_signal_update(self, dispatcher: Callable[[], None]) -> None:
-        """Register state update callback."""
-        self._remove_signal_update = dispatcher
 
     def get_value(self, ep_type: str, name: str):
         """Get the value."""

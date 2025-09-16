@@ -67,6 +67,22 @@ def async_scanner_count(hass: HomeAssistant, connectable: bool = True) -> int:
 
 
 @hass_callback
+def async_current_scanners(hass: HomeAssistant) -> list[BaseHaScanner]:
+    """Return the list of currently active scanners.
+
+    This method returns a list of all active Bluetooth scanners registered
+    with Home Assistant, including both connectable and non-connectable scanners.
+
+    Args:
+        hass: Home Assistant instance
+
+    Returns:
+        List of all active scanner instances
+    """
+    return _get_manager(hass).async_current_scanners()
+
+
+@hass_callback
 def async_discovered_service_info(
     hass: HomeAssistant, connectable: bool = True
 ) -> Iterable[BluetoothServiceInfoBleak]:

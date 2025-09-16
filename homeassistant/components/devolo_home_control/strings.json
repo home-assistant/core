@@ -61,7 +61,7 @@
       "message": "Failed to connect to devolo Home Control central unit {gateway_id}."
     },
     "invalid_auth": {
-      "message": "Authentication failed. Please re-authenticaticate with your mydevolo account."
+      "message": "Authentication failed. Please re-authenticate with your mydevolo account."
     },
     "maintenance": {
       "message": "devolo Home Control is currently in maintenance mode."

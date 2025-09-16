@@ -1,0 +1,110 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Master Bedroom AC",
+  "category": "kt",
+  "product_id": "ibmmirhhq62mmf1g",
+  "product_name": "T platform model-USB ",
+  "online": true,
+  "sub": false,
+  "time_zone": "-07:00",
+  "active_time": "2025-07-16T14:12:18+00:00",
+  "create_time": "2025-07-16T14:12:18+00:00",
+  "update_time": "2025-07-16T14:12:18+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 160,
+        "max": 880,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["cold", "hot", "wet", "wind", "auto"]
+      }
+    },
+    "temp_set_f": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2109",
+        "min": 61,
+        "max": 88,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 160,
+        "max": 880,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -20,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["cold", "hot", "wet", "wind", "auto"]
+      }
+    },
+    "humidity_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_set_f": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2109",
+        "min": 61,
+        "max": 88,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch": true,
+    "temp_set": 750,
+    "temp_current": 26,
+    "mode": "cold",
+    "humidity_current": 0,
+    "temp_set_f": 61
+  },
+  "set_up": true,
+  "support_local": true
+}

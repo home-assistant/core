@@ -23,5 +23,39 @@
     "error": {
       "wrong_location": "Location Sweden only"
     }
+  },
+  "entity": {
+    "sensor": {
+      "thunder": {
+        "name": "Thunder probability"
+      },
+      "total_cloud": {
+        "name": "Total cloud coverage"
+      },
+      "low_cloud": {
+        "name": "Low cloud coverage"
+      },
+      "medium_cloud": {
+        "name": "Medium cloud coverage"
+      },
+      "high_cloud": {
+        "name": "High cloud coverage"
+      },
+      "precipitation_category": {
+        "name": "Precipitation category",
+        "state": {
+          "0": "No precipitation",
+          "1": "Snow",
+          "2": "Snow and rain",
+          "3": "Rain",
+          "4": "Drizzle",
+          "5": "Freezing rain",
+          "6": "Freezing drizzle"
+        }
+      },
+      "frozen_precipitation": {
+        "name": "Frozen precipitation"
+      }
+    }
   }
 }

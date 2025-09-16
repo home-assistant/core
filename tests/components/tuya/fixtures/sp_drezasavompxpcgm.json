@@ -1,0 +1,180 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "CAM GARAGE",
+  "category": "sp",
+  "product_id": "drezasavompxpcgm",
+  "product_name": "Indoor camera ",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2021-07-26T13:26:21+00:00",
+  "create_time": "2021-07-26T13:26:21+00:00",
+  "update_time": "2021-07-26T13:26:21+00:00",
+  "function": {
+    "basic_indicator": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_flip": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_sensitivity": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "basic_nightvision": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "decibel_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "decibel_sensitivity": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1"]
+      }
+    },
+    "record_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "record_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2"]
+      }
+    }
+  },
+  "status_range": {
+    "basic_indicator": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_flip": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_sensitivity": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "basic_nightvision": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "sd_storge": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "sd_status": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 1,
+        "max": 5,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "movement_detect_pic": {
+      "type": "Raw",
+      "value": {}
+    },
+    "sd_format_state": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -20000,
+        "max": 20000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "motion_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "decibel_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "decibel_sensitivity": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1"]
+      }
+    },
+    "decibel_upload": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "record_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "record_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2"]
+      }
+    }
+  },
+  "status": {
+    "basic_indicator": true,
+    "basic_flip": false,
+    "basic_osd": false,
+    "motion_sensitivity": 0,
+    "basic_nightvision": 0,
+    "sd_storge": "0|0|0",
+    "sd_status": 5,
+    "sd_format": false,
+    "movement_detect_pic": "**REDACTED**",
+    "sd_format_state": -20000,
+    "motion_switch": true,
+    "decibel_switch": false,
+    "decibel_sensitivity": 0,
+    "decibel_upload": 1696802404,
+    "record_switch": false,
+    "record_mode": 1
+  },
+  "set_up": true,
+  "support_local": false
+}

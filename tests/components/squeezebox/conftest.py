@@ -271,6 +271,7 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         "homeassistant.components.squeezebox.Player", autospec=True
     ) as mock_player:
         mock_player.async_browse = AsyncMock(side_effect=mock_async_browse)
+        mock_player.async_query = AsyncMock(return_value=MagicMock())
         mock_player.generate_image_url_from_track_id = MagicMock(
             return_value="http://lms.internal:9000/html/images/favorites.png"
         )

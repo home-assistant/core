@@ -58,6 +58,11 @@
         "quarterly": "Quarterly",
         "yearly": "Yearly"
       }
+    },
+    "offset": {
+      "unit_of_measurement": {
+        "days": "days"
+      }
     }
   },
   "services": {

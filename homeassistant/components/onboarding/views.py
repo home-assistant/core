@@ -317,7 +317,7 @@ class IntegrationOnboardingView(_BaseOnboardingStepView):
 
 
 class WaitIntegrationOnboardingView(NoAuthBaseOnboardingView):
-    """Get backup info view."""
+    """View to wait for an integration."""
 
     url = "/api/onboarding/integration/wait"
     name = "api:onboarding:integration:wait"

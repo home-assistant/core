@@ -977,7 +977,7 @@ async def test_zwave_js_event_invalid_config_entry_id(
 async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
     """Test invalid trigger configs."""
     with pytest.raises(vol.Invalid):
-        await TRIGGERS[f"{DOMAIN}.event"].async_validate_trigger_config(
+        await TRIGGERS["event"].async_validate_config(
             hass,
             {
                 "platform": f"{DOMAIN}.event",
@@ -988,7 +988,7 @@ async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
         )
 
     with pytest.raises(vol.Invalid):
-        await TRIGGERS[f"{DOMAIN}.value_updated"].async_validate_trigger_config(
+        await TRIGGERS["value_updated"].async_validate_config(
             hass,
             {
                 "platform": f"{DOMAIN}.value_updated",
@@ -1026,7 +1026,7 @@ async def test_zwave_js_trigger_config_entry_unloaded(
     await hass.config_entries.async_unload(integration.entry_id)
 
     # Test full validation for both events
-    assert await TRIGGERS[f"{DOMAIN}.value_updated"].async_validate_trigger_config(
+    assert await TRIGGERS["value_updated"].async_validate_config(
         hass,
         {
             "platform": f"{DOMAIN}.value_updated",
@@ -1036,7 +1036,7 @@ async def test_zwave_js_trigger_config_entry_unloaded(
         },
     )
 
-    assert await TRIGGERS[f"{DOMAIN}.event"].async_validate_trigger_config(
+    assert await TRIGGERS["event"].async_validate_config(
         hass,
         {
             "platform": f"{DOMAIN}.event",

@@ -1,0 +1,66 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "IFS-STD002",
+  "category": "wsdcg",
+  "product_id": "krlcihrpzpc8olw9",
+  "product_name": "IFS-STD002",
+  "online": true,
+  "sub": false,
+  "time_zone": "+03:00",
+  "active_time": "2025-06-28T13:33:51+00:00",
+  "create_time": "2025-06-28T13:33:51+00:00",
+  "update_time": "2025-06-28T13:33:51+00:00",
+  "function": {
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    }
+  },
+  "status_range": {
+    "va_temperature": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -99,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "va_humidity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    }
+  },
+  "status": {
+    "va_temperature": 289,
+    "va_humidity": 61,
+    "battery_state": "high",
+    "temp_unit_convert": "c"
+  },
+  "set_up": true,
+  "support_local": true
+}

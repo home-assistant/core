@@ -55,7 +55,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.684',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_battery_charged-statealt]
@@ -130,7 +130,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.036',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_battery_discharged-statealt]
@@ -205,7 +205,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.036',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_battery_exported-statealt]
@@ -280,7 +280,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_battery_imported_from_generator-statealt]
@@ -355,7 +355,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_battery_imported_from_grid-statealt]
@@ -430,7 +430,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.684',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_battery_imported_from_solar-statealt]
@@ -580,7 +580,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.036',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_consumer_imported_from_battery-statealt]
@@ -655,7 +655,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_consumer_imported_from_generator-statealt]
@@ -730,7 +730,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_consumer_imported_from_grid-statealt]
@@ -805,7 +805,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.038',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_consumer_imported_from_solar-statealt]
@@ -955,7 +955,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_generator_exported-statealt]
@@ -1105,7 +1105,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.002',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_exported-statealt]
@@ -1180,7 +1180,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_exported_from_battery-statealt]
@@ -1255,7 +1255,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_exported_from_generator-statealt]
@@ -1330,7 +1330,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.002',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_exported_from_solar-statealt]
@@ -1405,7 +1405,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_imported-statealt]
@@ -1555,7 +1555,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_services_exported-statealt]
@@ -1630,7 +1630,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_services_imported-statealt]
@@ -1780,7 +1780,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.074',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_home_usage-statealt]
@@ -2087,7 +2087,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.724',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_solar_exported-statealt]
@@ -2162,7 +2162,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.724',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_solar_generated-statealt]

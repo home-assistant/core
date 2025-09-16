@@ -140,11 +140,6 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
-        # optional battery level
-        if VacuumEntityFeature.BATTERY & self._attr_supported_features:
-            self._attr_battery_level = self.get_matter_attribute_value(
-                clusters.PowerSource.Attributes.BatPercentRemaining
-            )
         # derive state from the run mode + operational state
         run_mode_raw: int = self.get_matter_attribute_value(
             clusters.RvcRunMode.Attributes.CurrentMode
@@ -188,11 +183,6 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         supported_features |= VacuumEntityFeature.STATE
         supported_features |= VacuumEntityFeature.STOP
 
-        # optional battery attribute = battery feature
-        if self.get_matter_attribute_value(
-            clusters.PowerSource.Attributes.BatPercentRemaining
-        ):
-            supported_features |= VacuumEntityFeature.BATTERY
         # optional identify cluster = locate feature (value must be not None or 0)
         if self.get_matter_attribute_value(clusters.Identify.Attributes.IdentifyType):
             supported_features |= VacuumEntityFeature.LOCATE
@@ -230,7 +220,6 @@ DISCOVERY_SCHEMAS = [
             clusters.RvcRunMode.Attributes.CurrentMode,
             clusters.RvcOperationalState.Attributes.OperationalState,
         ),
-        optional_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
         device_type=(device_types.RoboticVacuumCleaner,),
         allow_none_value=True,
     ),

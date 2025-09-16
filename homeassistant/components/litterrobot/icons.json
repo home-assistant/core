@@ -31,11 +31,29 @@
       "cycle_delay": {
         "default": "mdi:timer-outline"
       },
+      "globe_brightness": {
+        "default": "mdi:lightbulb-question",
+        "state": {
+          "low": "mdi:lightbulb-on-30",
+          "medium": "mdi:lightbulb-on-50",
+          "high": "mdi:lightbulb-on"
+        }
+      },
+      "globe_light": {
+        "state": {
+          "off": "mdi:lightbulb-off",
+          "on": "mdi:lightbulb-on",
+          "auto": "mdi:lightbulb-auto"
+        }
+      },
       "meal_insert_size": {
         "default": "mdi:scale"
       }
     },
     "sensor": {
+      "food_dispensed_today": {
+        "default": "mdi:counter"
+      },
       "hopper_status": {
         "default": "mdi:filter",
         "state": {
@@ -48,6 +66,9 @@
         }
       },
       "total_cycles": {
+        "default": "mdi:counter"
+      },
+      "visits_today": {
         "default": "mdi:counter"
       }
     },

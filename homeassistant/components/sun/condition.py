@@ -131,13 +131,13 @@ class SunCondition(Condition):
         self._hass = hass
 
     @classmethod
-    async def async_validate_condition_config(
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
         return _CONDITION_SCHEMA(config)  # type: ignore[no-any-return]
 
-    async def async_condition_from_config(self) -> ConditionCheckerType:
+    async def async_get_checker(self) -> ConditionCheckerType:
         """Wrap action method with sun based condition."""
         before = self._config.get("before")
         after = self._config.get("after")
@@ -153,7 +153,7 @@ class SunCondition(Condition):
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "sun": SunCondition,
+    "_": SunCondition,
 }
 
 

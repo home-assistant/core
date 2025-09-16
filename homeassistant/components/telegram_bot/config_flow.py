@@ -7,7 +7,7 @@ from types import MappingProxyType
 from typing import Any
 
 from telegram import Bot, ChatFullInfo
-from telegram.error import BadRequest, InvalidToken, NetworkError
+from telegram.error import BadRequest, InvalidToken, TelegramError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -159,8 +159,6 @@ class OptionsFlowHandler(OptionsFlow):
         """Manage the options."""
 
         if user_input is not None:
-            if user_input[ATTR_PARSER] == PARSER_PLAIN_TEXT:
-                user_input[ATTR_PARSER] = None
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
@@ -401,11 +399,15 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             placeholders[ERROR_FIELD] = "API key"
             placeholders[ERROR_MESSAGE] = str(err)
             return "Unknown bot"
-        except (ValueError, NetworkError) as err:
+        except ValueError as err:
             _LOGGER.warning("Invalid proxy")
             errors["base"] = "invalid_proxy_url"
             placeholders["proxy_url_error"] = str(err)
             placeholders[ERROR_FIELD] = "proxy url"
+            placeholders[ERROR_MESSAGE] = str(err)
+            return "Unknown bot"
+        except TelegramError as err:
+            errors["base"] = "telegram_error"
             placeholders[ERROR_MESSAGE] = str(err)
             return "Unknown bot"
         else:

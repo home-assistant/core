@@ -24,6 +24,7 @@ from homeassistant.util.dt import utcnow
 from . import WhirlpoolConfigEntry
 from .entity import WhirlpoolEntity
 
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(minutes=5)
 
 WASHER_TANK_FILL = {
@@ -86,14 +87,10 @@ STATE_CYCLE_SENSING = "cycle_sensing"
 STATE_CYCLE_SOAKING = "cycle_soaking"
 STATE_CYCLE_SPINNING = "cycle_spinning"
 STATE_CYCLE_WASHING = "cycle_washing"
-STATE_DOOR_OPEN = "door_open"
 
 
 def washer_state(washer: Washer) -> str | None:
     """Determine correct states for a washer."""
-
-    if washer.get_door_open():
-        return STATE_DOOR_OPEN
 
     machine_state = washer.get_machine_state()
 
@@ -116,9 +113,6 @@ def washer_state(washer: Washer) -> str | None:
 
 def dryer_state(dryer: Dryer) -> str | None:
     """Determine correct states for a dryer."""
-
-    if dryer.get_door_open():
-        return STATE_DOOR_OPEN
 
     machine_state = dryer.get_machine_state()
 
@@ -144,13 +138,11 @@ WASHER_STATE_OPTIONS = [
     STATE_CYCLE_SOAKING,
     STATE_CYCLE_SPINNING,
     STATE_CYCLE_WASHING,
-    STATE_DOOR_OPEN,
 ]
 
 DRYER_STATE_OPTIONS = [
     *DRYER_MACHINE_STATE.values(),
     STATE_CYCLE_SENSING,
-    STATE_DOOR_OPEN,
 ]
 
 WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (

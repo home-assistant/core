@@ -140,8 +140,6 @@ IGNORE_VIOLATIONS = {
     ("websocket_api", "lovelace"),
     ("websocket_api", "shopping_list"),
     "logbook",
-    # Temporary needed for migration until 2024.10
-    ("conversation", "assist_pipeline"),
 }
 
 

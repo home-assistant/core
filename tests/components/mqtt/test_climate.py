@@ -29,9 +29,11 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.mqtt.climate import (
-    DEFAULT_INITIAL_TEMPERATURE,
     MQTT_CLIMATE_ATTRIBUTES_BLOCKED,
     VALUE_TEMPLATE_KEYS,
+)
+from homeassistant.components.mqtt.const import (
+    DEFAULT_CLIMATE_INITIAL_TEMPERATURE as DEFAULT_INITIAL_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant

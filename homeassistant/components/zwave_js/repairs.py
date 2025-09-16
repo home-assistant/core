@@ -90,6 +90,7 @@ class MigrateUniqueIDFlow(RepairsFlow):
                     config_entry,
                     unique_id=self.description_placeholders["new_unique_id"],
                 )
+                self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
             return self.async_create_entry(data={})
 
         return self.async_show_form(

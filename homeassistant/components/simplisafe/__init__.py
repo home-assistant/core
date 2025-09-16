@@ -573,6 +573,7 @@ class SimpliSafe:
             self._hass,
             LOGGER,
             name=self.entry.title,
+            config_entry=self.entry,
             update_interval=DEFAULT_SCAN_INTERVAL,
             update_method=self.async_update,
         )

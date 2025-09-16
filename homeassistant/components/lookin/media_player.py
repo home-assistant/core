@@ -136,7 +136,7 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._async_send_command(self._power_off_command)
-        self._attr_state = MediaPlayerState.STANDBY
+        self._attr_state = MediaPlayerState.OFF
         self.async_write_ha_state()
 
     async def async_turn_on(self) -> None:
@@ -159,7 +159,5 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         state = status[0]
         mute = status[2]
 
-        self._attr_state = (
-            MediaPlayerState.ON if state == "1" else MediaPlayerState.STANDBY
-        )
+        self._attr_state = MediaPlayerState.ON if state == "1" else MediaPlayerState.OFF
         self._attr_is_volume_muted = mute == "0"

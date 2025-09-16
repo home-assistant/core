@@ -17,14 +17,16 @@ from .const import ATTR_POWER, ATTR_POWER_P3, ATTR_TARIFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type PVPCConfigEntry = ConfigEntry[ElecPricesDataUpdateCoordinator]
+
 
 class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
     """Class to manage fetching Electricity prices data from API."""
 
-    config_entry: ConfigEntry
+    config_entry: PVPCConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, sensor_keys: set[str]
+        self, hass: HomeAssistant, entry: PVPCConfigEntry, sensor_keys: set[str]
     ) -> None:
         """Initialize."""
         self.api = PVPCData(

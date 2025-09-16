@@ -37,8 +37,11 @@ from ..const import (
 from ..helpers import async_get_nodes_from_targets, get_device_id
 from .trigger_helpers import async_bypass_dynamic_config_validation
 
+# Relative platform type should be <SUBMODULE_NAME>
+RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
+
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
-PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
+PLATFORM_TYPE = f"{DOMAIN}.{RELATIVE_PLATFORM_TYPE}"
 
 ATTR_FROM = "from"
 ATTR_TO = "to"
@@ -213,13 +216,13 @@ class ValueUpdatedTrigger(Trigger):
         self._hass = hass
 
     @classmethod
-    async def async_validate_trigger_config(
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
         return await async_validate_trigger_config(hass, config)
 
-    async def async_attach_trigger(
+    async def async_attach(
         self,
         action: TriggerActionType,
         trigger_info: TriggerInfo,

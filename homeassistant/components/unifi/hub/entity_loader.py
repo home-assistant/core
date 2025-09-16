@@ -25,6 +25,7 @@ from ..const import LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..entity import UnifiEntity, UnifiEntityDescription
 
 if TYPE_CHECKING:
+    from .. import UnifiConfigEntry
     from .hub import UnifiHub
 
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
@@ -34,7 +35,7 @@ POLL_INTERVAL = timedelta(seconds=10)
 class UnifiEntityLoader:
     """UniFi Network integration handling platforms for entity registration."""
 
-    def __init__(self, hub: UnifiHub) -> None:
+    def __init__(self, hub: UnifiHub, config_entry: UnifiConfigEntry) -> None:
         """Initialize the UniFi entity loader."""
         self.hub = hub
         self.api_updaters = (
@@ -57,15 +58,16 @@ class UnifiEntityLoader:
         )
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
-        self._dataUpdateCoordinator = DataUpdateCoordinator(
+        self._data_update_coordinator = DataUpdateCoordinator(
             hub.hass,
             LOGGER,
             name="Unifi entity poller",
+            config_entry=config_entry,
             update_method=self._update_pollable_api_data,
             update_interval=POLL_INTERVAL,
         )
 
-        self._update_listener = self._dataUpdateCoordinator.async_add_listener(
+        self._update_listener = self._data_update_coordinator.async_add_listener(
             update_callback=lambda: None
         )
 

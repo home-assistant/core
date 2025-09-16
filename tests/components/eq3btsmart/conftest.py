@@ -28,7 +28,7 @@ def fake_service_info():
         source="local",
         connectable=False,
         time=0,
-        device=generate_ble_device(address=MAC, name="CC-RT-BLE", rssi=0),
+        device=generate_ble_device(address=MAC, name="CC-RT-BLE"),
         advertisement=AdvertisementData(
             local_name="CC-RT-BLE",
             manufacturer_data={},

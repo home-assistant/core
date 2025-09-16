@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import QbusConfigEntry
-from .entity import QbusEntity, add_new_outputs
+from .entity import QbusEntity, create_new_entities
 
 PARALLEL_UPDATES = 0
 
@@ -26,13 +26,13 @@ async def async_setup_entry(
     added_outputs: list[QbusMqttOutput] = []
 
     def _check_outputs() -> None:
-        add_new_outputs(
+        entities = create_new_entities(
             coordinator,
             added_outputs,
             lambda output: output.type == "onoff",
             QbusSwitch,
-            async_add_entities,
         )
+        async_add_entities(entities)
 
     _check_outputs()
     entry.async_on_unload(coordinator.async_add_listener(_check_outputs))

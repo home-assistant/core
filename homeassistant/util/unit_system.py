@@ -281,6 +281,7 @@ METRIC_SYSTEM = UnitSystem(
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        ("gas", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert non-metric precipitation
         ("precipitation", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
         # Convert non-metric precipitation intensity
@@ -295,6 +296,7 @@ METRIC_SYSTEM = UnitSystem(
         # Convert non-metric pressure
         ("pressure", UnitOfPressure.PSI): UnitOfPressure.KPA,
         ("pressure", UnitOfPressure.INHG): UnitOfPressure.HPA,
+        ("pressure", UnitOfPressure.INH2O): UnitOfPressure.KPA,
         # Convert non-metric speeds except knots to km/h
         ("speed", UnitOfSpeed.FEET_PER_SECOND): UnitOfSpeed.KILOMETERS_PER_HOUR,
         ("speed", UnitOfSpeed.INCHES_PER_SECOND): UnitOfSpeed.MILLIMETERS_PER_SECOND,
@@ -312,10 +314,12 @@ METRIC_SYSTEM = UnitSystem(
         ("volume", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("volume", UnitOfVolume.FLUID_OUNCES): UnitOfVolume.MILLILITERS,
         ("volume", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
+        ("volume", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert non-metric volumes of water meters
         ("water", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
+        ("water", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert wind speeds except knots to km/h
         **{
             ("wind_speed", unit): UnitOfSpeed.KILOMETERS_PER_HOUR
@@ -376,6 +380,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("pressure", UnitOfPressure.HPA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.KPA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.MMHG): UnitOfPressure.INHG,
+        ("pressure", UnitOfPressure.INH2O): UnitOfPressure.PSI,
         # Convert non-USCS speeds, except knots, to mph
         ("speed", UnitOfSpeed.METERS_PER_SECOND): UnitOfSpeed.MILES_PER_HOUR,
         ("speed", UnitOfSpeed.MILLIMETERS_PER_SECOND): UnitOfSpeed.INCHES_PER_SECOND,

@@ -101,6 +101,8 @@ CONFIG_SCHEMA = vol.Schema(
 class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Trend."""
 
+    MINOR_VERSION = 2
+
     config_flow = {
         "user": SchemaFlowFormStep(schema=CONFIG_SCHEMA, next_step="settings"),
         "settings": SchemaFlowFormStep(get_base_options_schema),

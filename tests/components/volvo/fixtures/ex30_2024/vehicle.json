@@ -1,0 +1,17 @@
+{
+  "vin": "YV1ABCDEFG1234567",
+  "modelYear": 2024,
+  "gearbox": "AUTOMATIC",
+  "fuelType": "NONE",
+  "externalColour": "Crystal White Pearl",
+  "batteryCapacityKWH": 66.0,
+  "images": {
+    "exteriorImageUrl": "https://wizz.volvocars.com/images/2024/123/v2/exterior/studio/right/transparent_exterior-studio-right_0000000000000000000000000000000000000000.png?client=public-api-engineering&w=1920",
+    "internalImageUrl": "https://wizz.volvocars.com/images/2024/123/v2/interior/studio/side/interior-studio-side_0000000000000000000000000000000000000000.png?client=public-api-engineering&w=1920"
+  },
+  "descriptions": {
+    "model": "EX30",
+    "upholstery": "R310",
+    "steering": "LEFT"
+  }
+}

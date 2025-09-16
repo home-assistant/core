@@ -45,6 +45,7 @@ from .coordinator import (
     AccuWeatherConfigEntry,
     AccuWeatherDailyForecastDataUpdateCoordinator,
     AccuWeatherData,
+    AccuWeatherHourlyForecastDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
 
@@ -64,6 +65,7 @@ class AccuWeatherEntity(
     CoordinatorWeatherEntity[
         AccuWeatherObservationDataUpdateCoordinator,
         AccuWeatherDailyForecastDataUpdateCoordinator,
+        AccuWeatherHourlyForecastDataUpdateCoordinator,
     ]
 ):
     """Define an AccuWeather entity."""
@@ -76,6 +78,7 @@ class AccuWeatherEntity(
         super().__init__(
             observation_coordinator=accuweather_data.coordinator_observation,
             daily_coordinator=accuweather_data.coordinator_daily_forecast,
+            hourly_coordinator=accuweather_data.coordinator_hourly_forecast,
         )
 
         self._attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
@@ -86,10 +89,13 @@ class AccuWeatherEntity(
         self._attr_unique_id = accuweather_data.coordinator_observation.location_key
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = accuweather_data.coordinator_observation.device_info
-        self._attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
+        self._attr_supported_features = (
+            WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+        )
 
         self.observation_coordinator = accuweather_data.coordinator_observation
         self.daily_coordinator = accuweather_data.coordinator_daily_forecast
+        self.hourly_coordinator = accuweather_data.coordinator_hourly_forecast
 
     @property
     def condition(self) -> str | None:
@@ -206,4 +212,33 @@ class AccuWeatherEntity(
                 ATTR_FORECAST_CONDITION: CONDITION_MAP.get(item["IconDay"]),
             }
             for item in self.daily_coordinator.data
+        ]
+
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
+        """Return the hourly forecast in native units."""
+        return [
+            {
+                ATTR_FORECAST_TIME: utc_from_timestamp(
+                    item["EpochDateTime"]
+                ).isoformat(),
+                ATTR_FORECAST_CLOUD_COVERAGE: item["CloudCover"],
+                ATTR_FORECAST_HUMIDITY: item["RelativeHumidity"],
+                ATTR_FORECAST_NATIVE_TEMP: item["Temperature"][ATTR_VALUE],
+                ATTR_FORECAST_NATIVE_APPARENT_TEMP: item["RealFeelTemperature"][
+                    ATTR_VALUE
+                ],
+                ATTR_FORECAST_NATIVE_PRECIPITATION: item["TotalLiquid"][ATTR_VALUE],
+                ATTR_FORECAST_PRECIPITATION_PROBABILITY: item[
+                    "PrecipitationProbability"
+                ],
+                ATTR_FORECAST_NATIVE_WIND_SPEED: item["Wind"][ATTR_SPEED][ATTR_VALUE],
+                ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: item["WindGust"][ATTR_SPEED][
+                    ATTR_VALUE
+                ],
+                ATTR_FORECAST_UV_INDEX: item["UVIndex"],
+                ATTR_FORECAST_WIND_BEARING: item["Wind"][ATTR_DIRECTION]["Degrees"],
+                ATTR_FORECAST_CONDITION: CONDITION_MAP.get(item["WeatherIcon"]),
+            }
+            for item in self.hourly_coordinator.data
         ]

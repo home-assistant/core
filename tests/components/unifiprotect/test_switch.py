@@ -135,8 +135,8 @@ async def test_switch_setup_light(
 
     description = LIGHT_SWITCHES[1]
 
-    unique_id, entity_id = ids_from_device_description(
-        Platform.SWITCH, light, description
+    unique_id, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, light, description
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -178,8 +178,8 @@ async def test_switch_setup_camera_all(
     assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     for description in CAMERA_SWITCHES_BASIC:
-        unique_id, entity_id = ids_from_device_description(
-            Platform.SWITCH, doorbell, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.SWITCH, doorbell, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -224,8 +224,8 @@ async def test_switch_setup_camera_none(
         if description.ufp_required_field is not None:
             continue
 
-        unique_id, entity_id = ids_from_device_description(
-            Platform.SWITCH, camera, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.SWITCH, camera, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -268,7 +268,9 @@ async def test_switch_light_status(
     light.__pydantic_fields__["set_status_light"] = Mock(final=False, frozen=False)
     light.set_status_light = AsyncMock()
 
-    _, entity_id = ids_from_device_description(Platform.SWITCH, light, description)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, light, description
+    )
 
     await hass.services.async_call(
         "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -296,7 +298,9 @@ async def test_switch_camera_ssh(
     doorbell.__pydantic_fields__["set_ssh"] = Mock(final=False, frozen=False)
     doorbell.set_ssh = AsyncMock()
 
-    _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
     await enable_entity(hass, ufp.entry.entry_id, entity_id)
 
     await hass.services.async_call(
@@ -332,7 +336,9 @@ async def test_switch_camera_simple(
     setattr(doorbell, description.ufp_set_method, AsyncMock())
     set_method = getattr(doorbell, description.ufp_set_method)
 
-    _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
 
     await hass.services.async_call(
         "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -360,7 +366,9 @@ async def test_switch_camera_highfps(
     doorbell.__pydantic_fields__["set_video_mode"] = Mock(final=False, frozen=False)
     doorbell.set_video_mode = AsyncMock()
 
-    _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
 
     await hass.services.async_call(
         "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -391,7 +399,9 @@ async def test_switch_camera_privacy(
     doorbell.__pydantic_fields__["set_privacy"] = Mock(final=False, frozen=False)
     doorbell.set_privacy = AsyncMock()
 
-    _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
 
     state = hass.states.get(entity_id)
     assert state and state.state == "off"
@@ -443,7 +453,9 @@ async def test_switch_camera_privacy_already_on(
     doorbell.__pydantic_fields__["set_privacy"] = Mock(final=False, frozen=False)
     doorbell.set_privacy = AsyncMock()
 
-    _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
 
     await hass.services.async_call(
         "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True

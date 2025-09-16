@@ -1,0 +1,77 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "humid pelargonia",
+  "category": "zwjcy",
+  "product_id": "gvygg3m8",
+  "product_name": "SGS01",
+  "online": false,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-06-08T09:13:18+00:00",
+  "create_time": "2025-06-08T09:13:18+00:00",
+  "update_time": "2025-06-08T09:13:18+00:00",
+  "function": {
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    }
+  },
+  "status_range": {
+    "humidity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 1400,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "humidity": 100,
+    "temp_current": 175,
+    "temp_unit_convert": "c",
+    "battery_state": "middle",
+    "battery_percentage": 37
+  },
+  "set_up": true,
+  "support_local": true
+}

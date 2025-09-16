@@ -49,7 +49,7 @@ from homeassistant.helpers.trigger_template_entity import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
+from .const import CONF_ADVANCED_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from .models import SQLData
 from .util import redact_credentials, resolve_db_url
 
@@ -111,10 +111,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SQL sensor from config entry."""
 
-    db_url: str = resolve_db_url(hass, entry.options.get(CONF_DB_URL))
-    name: str = entry.options[CONF_NAME]
+    db_url: str = resolve_db_url(hass, entry.data.get(CONF_DB_URL))
+    name: str = entry.title
     query_str: str = entry.options[CONF_QUERY]
-    template: str | None = entry.options.get(CONF_VALUE_TEMPLATE)
+    template: str | None = entry.options[CONF_ADVANCED_OPTIONS].get(CONF_VALUE_TEMPLATE)
     column_name: str = entry.options[CONF_COLUMN_NAME]
 
     value_template: ValueTemplate | None = None
@@ -128,9 +128,9 @@ async def async_setup_entry(
     name_template = Template(name, hass)
     trigger_entity_config = {CONF_NAME: name_template, CONF_UNIQUE_ID: entry.entry_id}
     for key in TRIGGER_ENTITY_OPTIONS:
-        if key not in entry.options:
+        if key not in entry.options[CONF_ADVANCED_OPTIONS]:
             continue
-        trigger_entity_config[key] = entry.options[key]
+        trigger_entity_config[key] = entry.options[CONF_ADVANCED_OPTIONS][key]
 
     await async_setup_sensor(
         hass,
@@ -401,9 +401,10 @@ class SQLSensor(ManualTriggerSensorEntity):
         if data is not None and self._template is not None:
             variables = self._template_variables_with_value(data)
             if self._render_availability_template(variables):
-                self._attr_native_value = self._template.async_render_as_value_template(
+                _value = self._template.async_render_as_value_template(
                     self.entity_id, variables, None
                 )
+                self._set_native_value_with_possible_timestamp(_value)
                 self._process_manual_data(variables)
         else:
             self._attr_native_value = data

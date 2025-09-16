@@ -7,20 +7,17 @@ import logging
 
 from airthings import Airthings
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SECRET
-from .coordinator import AirthingsDataUpdateCoordinator
+from .coordinator import AirthingsConfigEntry, AirthingsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 SCAN_INTERVAL = timedelta(minutes=6)
-
-type AirthingsConfigEntry = ConfigEntry[AirthingsDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirthingsConfigEntry) -> bool:
@@ -31,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirthingsConfigEntry) ->
         async_get_clientsession(hass),
     )
 
-    coordinator = AirthingsDataUpdateCoordinator(hass, airthings)
+    coordinator = AirthingsDataUpdateCoordinator(hass, airthings, entry)
 
     await coordinator.async_config_entry_first_refresh()
 

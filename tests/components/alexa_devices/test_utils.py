@@ -21,8 +21,8 @@ ENTITY_ID = "switch.echo_test_do_not_disturb"
 @pytest.mark.parametrize(
     ("side_effect", "key", "error"),
     [
-        (CannotConnect, "cannot_connect", "CannotConnect()"),
-        (CannotRetrieveData, "cannot_retrieve_data", "CannotRetrieveData()"),
+        (CannotConnect, "cannot_connect_with_error", "CannotConnect()"),
+        (CannotRetrieveData, "cannot_retrieve_data_with_error", "CannotRetrieveData()"),
     ],
 )
 async def test_alexa_api_call_exceptions(

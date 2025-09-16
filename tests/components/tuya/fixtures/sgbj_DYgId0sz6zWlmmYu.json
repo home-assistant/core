@@ -1,0 +1,74 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Siren",
+  "category": "sgbj",
+  "product_id": "DYgId0sz6zWlmmYu",
+  "product_name": "Siren",
+  "online": false,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-03-08T20:44:34+00:00",
+  "create_time": "2025-03-08T20:44:34+00:00",
+  "update_time": "2025-03-08T20:44:34+00:00",
+  "function": {
+    "Alarmtype": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+      }
+    },
+    "AlarmPeriod": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 60,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "AlarmSwitch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "Alarmtype": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+      }
+    },
+    "BatteryStatus": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2", "3", "4"]
+      }
+    },
+    "AlarmSwitch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "AlarmPeriod": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 60,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "BatteryStatus": 4,
+    "Alarmtype": 9,
+    "AlarmPeriod": 10,
+    "AlarmSwitch": false
+  },
+  "set_up": false,
+  "support_local": true
+}

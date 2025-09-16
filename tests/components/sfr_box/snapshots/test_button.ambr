@@ -18,7 +18,6 @@
           'e4:5d:51:00:11:22',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': None,
@@ -28,7 +27,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': 'NB6VAC-MAIN-R4.0.44k',
       'via_device_id': None,
     }),

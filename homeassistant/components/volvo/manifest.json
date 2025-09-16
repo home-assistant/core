@@ -1,0 +1,13 @@
+{
+  "domain": "volvo",
+  "name": "Volvo",
+  "codeowners": ["@thomasddn"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/volvo",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "loggers": ["volvocarsapi"],
+  "quality_scale": "silver",
+  "requirements": ["volvocarsapi==0.4.2"]
+}

@@ -28,7 +28,13 @@ from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN, EntityCategory
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -98,6 +104,20 @@ async def test_ge_12730(hass: HomeAssistant, client, ge_12730, integration) -> N
     assert state
 
 
+async def test_enbrighten_58446_zwa4013(
+    hass: HomeAssistant, client, enbrighten_58446_zwa4013, integration
+) -> None:
+    """Test GE 12730 Fan Controller v2.0 multilevel switch is discovered as a fan."""
+    node = enbrighten_58446_zwa4013
+    assert node.device_class.specific.label == "Multilevel Power Switch"
+
+    state = hass.states.get("light.zwa4013_fan")
+    assert not state
+
+    state = hass.states.get("fan.zwa4013_fan")
+    assert state
+
+
 async def test_inovelli_lzw36(
     hass: HomeAssistant, client, inovelli_lzw36, integration
 ) -> None:
@@ -135,6 +155,16 @@ async def test_lock_popp_electric_strike_lock_control(
         is not None
     )
     assert hass.states.get("select.node_62_current_lock_mode") is not None
+
+
+async def test_fortrez_ssa2_siren(
+    hass: HomeAssistant,
+    client: MagicMock,
+    fortrezz_ssa2_siren: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test Fortrezz SSA2 siren gets discovered correctly."""
+    assert hass.states.get("select.siren_and_strobe_alarm") is not None
 
 
 async def test_fortrez_ssa3_siren(
@@ -239,6 +269,7 @@ async def test_merten_507801_disabled_enitites(
         assert updated_entry.disabled is False
 
 
+@pytest.mark.parametrize("platforms", [[Platform.BUTTON, Platform.NUMBER]])
 async def test_zooz_zen72(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -310,6 +341,9 @@ async def test_zooz_zen72(
     assert args["value"] is True
 
 
+@pytest.mark.parametrize(
+    "platforms", [[Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]]
+)
 async def test_indicator_test(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -481,3 +515,67 @@ async def test_aeotec_smart_switch_7(
     entity_entry = entity_registry.async_get(state.entity_id)
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.CONFIG
+
+
+async def test_nabu_casa_zwa2(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    nabu_casa_zwa2: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test ZWA-2 discovery."""
+    state = hass.states.get("light.home_assistant_connect_zwa_2_led")
+    assert state, "The LED indicator should be enabled by default"
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry, "Entity for the LED indicator not found"
+
+    assert entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES) == [
+        ColorMode.ONOFF,
+    ], "The LED indicator should be an ON/OFF light"
+
+    assert not entry.disabled, "The entity should be enabled by default"
+
+    assert entry.entity_category is EntityCategory.CONFIG, (
+        "The LED indicator should be configuration"
+    )
+
+    # Test that the entity name is properly set to "LED"
+    assert entry.original_name == "LED", (
+        "The LED entity should have the original name 'LED'"
+    )
+    assert state.attributes["friendly_name"] == "Home Assistant Connect ZWA-2 LED", (
+        "The LED should have the correct friendly name"
+    )
+
+
+async def test_nabu_casa_zwa2_legacy(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    nabu_casa_zwa2_legacy: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test ZWA-2 discovery with legacy firmware."""
+    state = hass.states.get("light.home_assistant_connect_zwa_2_led")
+    assert state, "The LED indicator should be enabled by default"
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry, "Entity for the LED indicator not found"
+
+    assert entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES) == [
+        ColorMode.HS,
+    ], "The LED indicator should be a color light"
+
+    assert not entry.disabled, "The entity should be enabled by default"
+
+    assert entry.entity_category is EntityCategory.CONFIG, (
+        "The LED indicator should be configuration"
+    )
+
+    # Test that the entity name is properly set to "LED"
+    assert entry.original_name == "LED", (
+        "The LED entity should have the original name 'LED'"
+    )
+    assert state.attributes["friendly_name"] == "Home Assistant Connect ZWA-2 LED", (
+        "The LED should have the correct friendly name"
+    )

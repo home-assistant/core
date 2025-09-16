@@ -9,7 +9,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "ip_address": "IP address of your devolo Home Network device. This can be found in the devolo Home Network App on the device dashboard.",
+          "ip_address": "IP address of your devolo Home Network device. This can be found in the devolo Home Network app on the device dashboard.",
           "password": "Password you protected the device with."
         }
       },
@@ -22,8 +22,8 @@
         }
       },
       "zeroconf_confirm": {
-        "description": "Do you want to add the devolo home network device with the hostname `{host_name}` to Home Assistant?",
-        "title": "Discovered devolo home network device",
+        "description": "Do you want to add the devolo Home Network device with the hostname `{host_name}` to Home Assistant?",
+        "title": "Discovered devolo Home Network device",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
@@ -105,7 +105,7 @@
       "message": "Device {title} did not respond"
     },
     "password_protected": {
-      "message": "Device {title} requires re-authenticatication to set or change the password"
+      "message": "Device {title} requires re-authentication to set or change the password"
     },
     "password_wrong": {
       "message": "The used password is wrong"

@@ -13,6 +13,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -289,7 +290,6 @@ class BlockEntityDescription(EntityDescription):
     available: Callable[[Block], bool] | None = None
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
-    extra_state_attributes: Callable[[Block], dict | None] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -368,12 +368,7 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         super().__init__(coordinator)
         self.block = block
         self._attr_name = get_block_entity_name(coordinator.device, block)
-        self._attr_device_info = get_block_device_info(
-            coordinator.device,
-            coordinator.mac,
-            block,
-            suggested_area=coordinator.suggested_area,
-        )
+        self._attr_device_info = get_entity_block_device_info(coordinator, block)
         self._attr_unique_id = f"{coordinator.mac}-{block.description}"
 
     # pylint: disable-next=hass-missing-super-call
@@ -414,12 +409,7 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
-        self._attr_device_info = get_rpc_device_info(
-            coordinator.device,
-            coordinator.mac,
-            key,
-            suggested_area=coordinator.suggested_area,
-        )
+        self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
 
@@ -503,14 +493,6 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
 
         return self.entity_description.available(self.block)
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        if self.entity_description.extra_state_attributes is None:
-            return None
-
-        return self.entity_description.extra_state_attributes(self.block)
-
 
 class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     """Class to load info from REST."""
@@ -533,11 +515,7 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
             coordinator.device, None, description.name
         )
         self._attr_unique_id = f"{coordinator.mac}-{attribute}"
-        self._attr_device_info = get_block_device_info(
-            coordinator.device,
-            coordinator.mac,
-            suggested_area=coordinator.suggested_area,
-        )
+        self._attr_device_info = get_entity_block_device_info(coordinator)
         self._last_value = None
 
     @property
@@ -644,12 +622,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
         self.block: Block | None = block  # type: ignore[assignment]
         self.entity_description = description
 
-        self._attr_device_info = get_block_device_info(
-            coordinator.device,
-            coordinator.mac,
-            block,
-            suggested_area=coordinator.suggested_area,
-        )
+        self._attr_device_info = get_entity_block_device_info(coordinator, block)
 
         if block is not None:
             self._attr_unique_id = (
@@ -714,15 +687,8 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self.attribute = attribute
         self.entity_description = description
 
-        self._attr_device_info = get_rpc_device_info(
-            coordinator.device,
-            coordinator.mac,
-            key,
-            suggested_area=coordinator.suggested_area,
-        )
-        self._attr_unique_id = self._attr_unique_id = (
-            f"{coordinator.mac}-{key}-{attribute}"
-        )
+        self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
+        self._attr_unique_id = f"{coordinator.mac}-{key}-{attribute}"
         self._last_value = None
 
         if coordinator.device.initialized:
@@ -748,3 +714,37 @@ def get_entity_class(
         return description.entity_class
 
     return sensor_class
+
+
+def get_entity_block_device_info(
+    coordinator: ShellyBlockCoordinator,
+    block: Block | None = None,
+) -> DeviceInfo:
+    """Get device info for block entities."""
+    return get_block_device_info(
+        coordinator.device,
+        coordinator.mac,
+        coordinator.configuration_url,
+        coordinator.model,
+        coordinator.model_name,
+        block,
+        suggested_area=coordinator.suggested_area,
+    )
+
+
+def get_entity_rpc_device_info(
+    coordinator: ShellyRpcCoordinator,
+    key: str | None = None,
+    emeter_phase: str | None = None,
+) -> DeviceInfo:
+    """Get device info for RPC entities."""
+    return get_rpc_device_info(
+        coordinator.device,
+        coordinator.mac,
+        coordinator.configuration_url,
+        coordinator.model,
+        coordinator.model_name,
+        key,
+        emeter_phase=emeter_phase,
+        suggested_area=coordinator.suggested_area,
+    )

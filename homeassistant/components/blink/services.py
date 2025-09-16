@@ -5,12 +5,12 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PIN
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_PIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
-from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN, SERVICE_SEND_PIN
+from .const import DOMAIN, SERVICE_SEND_PIN
 from .coordinator import BlinkConfigEntry
 
 SERVICE_SEND_PIN_SCHEMA = vol.Schema(

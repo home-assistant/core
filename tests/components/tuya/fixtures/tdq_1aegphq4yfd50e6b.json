@@ -1,0 +1,137 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "jardin Fraises",
+  "category": "tdq",
+  "product_id": "1aegphq4yfd50e6b",
+  "product_name": "1-433",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2024-09-13T12:26:55+00:00",
+  "create_time": "2024-09-13T12:26:55+00:00",
+  "update_time": "2024-09-13T12:26:55+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "relay_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "random_time": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_inching": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_type": {
+      "type": "Enum",
+      "value": {
+        "range": ["flip", "sync", "button"]
+      }
+    },
+    "remote_add": {
+      "type": "Raw",
+      "value": {}
+    },
+    "remote_list": {
+      "type": "Raw",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "relay_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "random_time": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_inching": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_type": {
+      "type": "Enum",
+      "value": {
+        "range": ["flip", "sync", "button"]
+      }
+    },
+    "remote_add": {
+      "type": "Raw",
+      "value": {}
+    },
+    "remote_list": {
+      "type": "Raw",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_1": false,
+    "countdown_1": 0,
+    "relay_status": 2,
+    "random_time": "",
+    "cycle_time": "",
+    "switch_inching": "AAAC",
+    "switch_type": "button",
+    "remote_add": "",
+    "remote_list": "AA=="
+  },
+  "set_up": true,
+  "support_local": true
+}

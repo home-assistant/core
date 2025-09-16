@@ -40,10 +40,11 @@ from .prefs import CloudPreferences
 _LOGGER = logging.getLogger(__name__)
 
 VALID_REPAIR_TRANSLATION_KEYS = {
+    "connection_error",
     "no_subscription",
-    "warn_bad_custom_domain_configuration",
     "reset_bad_custom_domain_configuration",
     "subscription_expired",
+    "warn_bad_custom_domain_configuration",
 }
 
 

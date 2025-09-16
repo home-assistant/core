@@ -14,14 +14,23 @@
           "host": "The hostname or IP address of your Traccar Server",
           "username": "The username (email) you use to log in to your Traccar Server"
         }
+      },
+      "reauth_confirm": {
+        "description": "The authentication credentials for {host}:{port} need to be updated.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {

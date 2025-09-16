@@ -6,6 +6,7 @@ from letpot.models import (
     AuthenticationInfo,
     LetPotDeviceErrors,
     LetPotDeviceStatus,
+    LightMode,
     TemperatureUnit,
 )
 
@@ -32,8 +33,8 @@ AUTHENTICATION = AuthenticationInfo(
 
 MAX_STATUS = LetPotDeviceStatus(
     errors=LetPotDeviceErrors(low_water=True, low_nutrients=False, refill_error=False),
-    light_brightness=500,
-    light_mode=1,
+    light_brightness=750,
+    light_mode=LightMode.VEGETABLE,
     light_schedule_end=datetime.time(18, 0),
     light_schedule_start=datetime.time(8, 0),
     online=True,
@@ -53,7 +54,7 @@ MAX_STATUS = LetPotDeviceStatus(
 SE_STATUS = LetPotDeviceStatus(
     errors=LetPotDeviceErrors(low_water=True, pump_malfunction=True),
     light_brightness=500,
-    light_mode=1,
+    light_mode=LightMode.VEGETABLE,
     light_schedule_end=datetime.time(18, 0),
     light_schedule_start=datetime.time(8, 0),
     online=True,

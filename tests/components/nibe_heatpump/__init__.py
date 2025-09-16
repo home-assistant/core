@@ -24,6 +24,8 @@ MOCK_ENTRY_DATA = {
     "connection_type": "nibegw",
 }
 
+MOCK_UNIQUE_ID = "mock_entry_unique_id"
+
 
 class MockConnection(Connection):
     """A mock connection class."""
@@ -59,7 +61,9 @@ class MockConnection(Connection):
 
 async def async_add_entry(hass: HomeAssistant, data: dict[str, Any]) -> MockConfigEntry:
     """Add entry and get the coordinator."""
-    entry = MockConfigEntry(domain=DOMAIN, title="Dummy", data=data)
+    entry = MockConfigEntry(
+        domain=DOMAIN, title="Dummy", data=data, unique_id=MOCK_UNIQUE_ID
+    )
 
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

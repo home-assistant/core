@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> bool
     coordinators: dict[str, SnooCoordinator] = {}
     tasks = []
     for device in devices:
-        coordinators[device.serialNumber] = SnooCoordinator(hass, device, snoo)
+        coordinators[device.serialNumber] = SnooCoordinator(hass, entry, device, snoo)
         tasks.append(coordinators[device.serialNumber].setup())
     await asyncio.gather(*tasks)
     entry.runtime_data = coordinators

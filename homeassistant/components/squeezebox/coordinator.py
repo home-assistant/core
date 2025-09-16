@@ -30,7 +30,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
+class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """LMS Status custom coordinator."""
 
     config_entry: SqueezeboxConfigEntry
@@ -59,13 +59,13 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             _LOGGER.warning("Can't query server capabilities %s", self.lms.name)
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from LMS status call.
 
         Then we process only a subset to make then nice for HA
         """
         async with timeout(STATUS_API_TIMEOUT):
-            data: dict | None = await self.lms.async_prepared_status()
+            data: dict[str, Any] | None = await self.lms.async_prepared_status()
 
         if not data:
             raise UpdateFailed(
@@ -111,7 +111,7 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Only update players available at last update, unavailable players are rediscovered instead
             await self.player.async_update()
 
-            if self.player.connected is False:
+            if not self.player.connected:
                 _LOGGER.info("Player %s is not available", self.name)
                 self.available = False
 

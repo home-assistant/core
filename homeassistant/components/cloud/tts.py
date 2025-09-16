@@ -17,6 +17,8 @@ from homeassistant.components.tts import (
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
     TextToSpeechEntity,
+    TTSAudioRequest,
+    TTSAudioResponse,
     TtsAudioType,
     Voice,
 )
@@ -332,7 +334,7 @@ class CloudTTSEntity(TextToSpeechEntity):
     def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
-            ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
+            ATTR_AUDIO_OUTPUT: AudioOutput.MP3.value,
         }
 
     @property
@@ -433,6 +435,29 @@ class CloudTTSEntity(TextToSpeechEntity):
 
         return (options[ATTR_AUDIO_OUTPUT], data)
 
+    async def async_stream_tts_audio(
+        self, request: TTSAudioRequest
+    ) -> TTSAudioResponse:
+        """Generate speech from an incoming message."""
+        data_gen = self.cloud.voice.process_tts_stream(
+            text_stream=request.message_gen,
+            **_prepare_voice_args(
+                hass=self.hass,
+                language=request.language,
+                voice=request.options.get(
+                    ATTR_VOICE,
+                    (
+                        self._voice
+                        if request.language == self._language
+                        else DEFAULT_VOICES[request.language]
+                    ),
+                ),
+                gender=request.options.get(ATTR_GENDER),
+            ),
+        )
+
+        return TTSAudioResponse(AudioOutput.WAV.value, data_gen)
+
 
 class CloudProvider(Provider):
     """Home Assistant Cloud speech API provider."""
@@ -526,9 +551,11 @@ class CloudProvider(Provider):
                     language=language,
                     voice=options.get(
                         ATTR_VOICE,
-                        self._voice
-                        if language == self._language
-                        else DEFAULT_VOICES[language],
+                        (
+                            self._voice
+                            if language == self._language
+                            else DEFAULT_VOICES[language]
+                        ),
                     ),
                     gender=options.get(ATTR_GENDER),
                 ),

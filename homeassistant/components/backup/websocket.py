@@ -331,9 +331,6 @@ async def handle_config_info(
     """Send the stored backup config."""
     manager = hass.data[DATA_MANAGER]
     config = manager.config.data.to_dict()
-    # Remove state from schedule, it's not needed in the frontend
-    # mypy doesn't like deleting from TypedDict, ignore it
-    del config["schedule"]["state"]  # type: ignore[misc]
     connection.send_result(
         msg["id"],
         {

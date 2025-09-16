@@ -1,0 +1,68 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Smoke Alarm",
+  "category": "ywbj",
+  "product_id": "rccxox8p",
+  "product_name": "Smoke Alarm",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2024-08-05T13:47:04+00:00",
+  "create_time": "2024-08-05T13:47:04+00:00",
+  "update_time": "2024-08-05T13:47:04+00:00",
+  "function": {
+    "muffling": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "smoke_sensor_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["alarm", "normal"]
+      }
+    },
+    "smoke_sensor_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "muffling": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "smoke_sensor_status": "normal",
+    "smoke_sensor_value": 0,
+    "battery_state": "low",
+    "battery_percentage": 100,
+    "muffling": false
+  },
+  "set_up": true,
+  "support_local": true
+}

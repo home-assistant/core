@@ -2,16 +2,24 @@
 
 from unittest.mock import AsyncMock
 
-from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect, WrongCountry
+from aioamazondevices.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+)
 import pytest
 
-from homeassistant.components.alexa_devices.const import CONF_LOGIN_DATA, DOMAIN
+from homeassistant.components.alexa_devices.const import (
+    CONF_LOGIN_DATA,
+    CONF_SITE,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_CODE, CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import TEST_CODE, TEST_COUNTRY, TEST_PASSWORD, TEST_USERNAME
+from .const import TEST_CODE, TEST_PASSWORD, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -32,7 +40,6 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_CODE: TEST_CODE,
@@ -41,11 +48,11 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USERNAME
     assert result["data"] == {
-        CONF_COUNTRY: TEST_COUNTRY,
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_LOGIN_DATA: {
             "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
         },
     }
     assert result["result"].unique_id == TEST_USERNAME
@@ -57,7 +64,7 @@ async def test_full_flow(
     [
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
-        (WrongCountry, "wrong_country"),
+        (CannotRetrieveData, "cannot_retrieve_data"),
     ],
 )
 async def test_flow_errors(
@@ -81,7 +88,6 @@ async def test_flow_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_CODE: TEST_CODE,
@@ -96,7 +102,6 @@ async def test_flow_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_CODE: TEST_CODE,
@@ -125,7 +130,6 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_CODE: TEST_CODE,
@@ -159,12 +163,23 @@ async def test_reauth_successful(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
+    assert mock_config_entry.data == {
+        CONF_CODE: "000000",
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: "other_fake_password",
+        CONF_LOGIN_DATA: {
+            "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
+        },
+    }
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
+        (CannotRetrieveData, "cannot_retrieve_data"),
     ],
 )
 async def test_reauth_not_successful(
@@ -206,5 +221,111 @@ async def test_reauth_not_successful(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_PASSWORD] == "fake_password"
-    assert mock_config_entry.data[CONF_CODE] == "111111"
+    assert mock_config_entry.data == {
+        CONF_CODE: "111111",
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: "fake_password",
+        CONF_LOGIN_DATA: {
+            "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
+        },
+    }
+
+
+async def test_reconfigure_successful(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the entry can be reconfigured."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # original entry
+    assert mock_config_entry.data[CONF_USERNAME] == TEST_USERNAME
+
+    new_password = "new_fake_password"
+
+    reconfigure_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSWORD: new_password,
+            CONF_CODE: TEST_CODE,
+        },
+    )
+
+    assert reconfigure_result["type"] is FlowResultType.ABORT
+    assert reconfigure_result["reason"] == "reconfigure_successful"
+
+    # changed entry
+    assert mock_config_entry.data == {
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: new_password,
+        CONF_LOGIN_DATA: {
+            "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (CannotConnect, "cannot_connect"),
+        (CannotAuthenticate, "invalid_auth"),
+        (CannotRetrieveData, "cannot_retrieve_data"),
+    ],
+)
+async def test_reconfigure_fails(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test that the host can be reconfigured."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_amazon_devices_client.login_mode_interactive.side_effect = side_effect
+
+    reconfigure_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_CODE: TEST_CODE,
+        },
+    )
+
+    assert reconfigure_result["type"] is FlowResultType.FORM
+    assert reconfigure_result["step_id"] == "reconfigure"
+    assert reconfigure_result["errors"] == {"base": error}
+
+    mock_amazon_devices_client.login_mode_interactive.side_effect = None
+
+    reconfigure_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_CODE: TEST_CODE,
+        },
+    )
+
+    assert reconfigure_result["type"] is FlowResultType.ABORT
+    assert reconfigure_result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_LOGIN_DATA: {
+            "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
+        },
+    }

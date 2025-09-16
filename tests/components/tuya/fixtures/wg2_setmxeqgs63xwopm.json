@@ -1,0 +1,68 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Gateway",
+  "category": "wg2",
+  "product_id": "setmxeqgs63xwopm",
+  "product_name": "",
+  "online": true,
+  "sub": true,
+  "time_zone": "+00:00",
+  "active_time": "2021-11-26T13:33:58+00:00",
+  "create_time": "2021-11-26T13:33:58+00:00",
+  "update_time": "2021-11-26T13:33:58+00:00",
+  "function": {
+    "switch_alarm_sound": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "master_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["normal", "alarm"]
+      }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_active": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    }
+  },
+  "status_range": {
+    "switch_alarm_sound": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "master_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["normal", "alarm"]
+      }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_active": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    }
+  },
+  "status": {
+    "switch_alarm_sound": false,
+    "master_state": "normal",
+    "factory_reset": false,
+    "alarm_active": ""
+  },
+  "set_up": false,
+  "support_local": true
+}

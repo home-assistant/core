@@ -16,13 +16,14 @@ _LOGGER = logging.getLogger(__name__)
 class SignalCoordinator(DataUpdateCoordinator):
     """Signal strength coordinator."""
 
-    def __init__(self, hass, gateway):
+    def __init__(self, hass, entry, gateway):
         """Initialize signal strength coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name="Device signal state",
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            config_entry=entry,
         )
         self._gateway = gateway
 
@@ -38,13 +39,14 @@ class SignalCoordinator(DataUpdateCoordinator):
 class NetworkCoordinator(DataUpdateCoordinator):
     """Network info coordinator."""
 
-    def __init__(self, hass, gateway):
+    def __init__(self, hass, entry, gateway):
         """Initialize network info coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name="Device network state",
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            config_entry=entry,
         )
         self._gateway = gateway
 

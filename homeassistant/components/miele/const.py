@@ -431,6 +431,16 @@ DISHWASHER_PROGRAM_ID: dict[int, str] = {
     38: "quick_power_wash",
     42: "tall_items",
     44: "power_wash",
+    200: "eco",
+    202: "automatic",
+    203: "comfort_wash",
+    204: "power_wash",
+    205: "intensive",
+    207: "extra_quiet",
+    209: "comfort_wash_plus",
+    210: "gentle",
+    214: "maintenance",
+    215: "rinse_salt",
 }
 TUMBLE_DRYER_PROGRAM_ID: dict[int, str] = {
     -1: "no_program",  # Extrapolated from other device types.
@@ -838,6 +848,14 @@ COFFEE_SYSTEM_PROGRAM_ID: dict[int, str] = {
     24800: "appliance_settings",  # add profile
     24801: "appliance_settings",  # ask profile settings
     24813: "appliance_settings",  # modify profile name
+}
+
+COFFEE_SYSTEM_PROFILE: dict[range, str] = {
+    range(24000, 24032): "profile_1",
+    range(24032, 24064): "profile_2",
+    range(24064, 24096): "profile_3",
+    range(24096, 24128): "profile_4",
+    range(24128, 24160): "profile_5",
 }
 
 STEAM_OVEN_MICRO_PROGRAM_ID: dict[int, str] = {
@@ -1314,10 +1332,11 @@ class PlatePowerStep(MieleEnum):
     plate_step_11 = 11
     plate_step_12 = 12
     plate_step_13 = 13
-    plate_step_14 = 4
+    plate_step_14 = 14
     plate_step_15 = 15
     plate_step_16 = 16
     plate_step_17 = 17
     plate_step_18 = 18
     plate_step_boost = 117, 118, 218
+    plate_step_boost_2 = 217
     missing2none = -9999

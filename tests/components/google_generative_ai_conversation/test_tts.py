@@ -37,7 +37,7 @@ from tests.common import MockConfigEntry, async_mock_service
 from tests.components.tts.common import retrieve_media
 from tests.typing import ClientSessionGenerator
 
-API_ERROR_500 = APIError("test", response=MagicMock())
+API_ERROR_500 = APIError("test", response_json={})
 TEST_CHAT_MODEL = "models/some-tts-model"
 
 
@@ -208,6 +208,7 @@ async def test_tts_service_speak(
                     threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 ),
             ],
+            thinking_config=types.ThinkingConfig(include_thoughts=True),
         ),
     )
 
@@ -276,5 +277,6 @@ async def test_tts_service_speak_error(
                     threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 ),
             ],
+            thinking_config=types.ThinkingConfig(include_thoughts=True),
         ),
     )

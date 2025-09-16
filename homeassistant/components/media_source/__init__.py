@@ -30,6 +30,7 @@ from .const import (
     DOMAIN,
     MEDIA_CLASS_MAP,
     MEDIA_MIME_TYPES,
+    MEDIA_SOURCE_DATA,
     URI_SCHEME,
     URI_SCHEME_REGEX,
 )
@@ -78,13 +79,18 @@ def generate_media_source_id(domain: str, identifier: str) -> str:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the media_source component."""
-    hass.data[DOMAIN] = {}
+    hass.data[MEDIA_SOURCE_DATA] = {}
     websocket_api.async_register_command(hass, websocket_browse_media)
     websocket_api.async_register_command(hass, websocket_resolve_media)
     frontend.async_register_built_in_panel(
         hass, "media-browser", "media_browser", "hass:play-box-multiple"
     )
-    local_source.async_setup(hass)
+
+    # Local sources support
+    await _process_media_source_platform(hass, DOMAIN, local_source)
+    hass.http.register_view(local_source.UploadMediaView)
+    websocket_api.async_register_command(hass, local_source.websocket_remove_media)
+
     await async_process_integration_platforms(
         hass, DOMAIN, _process_media_source_platform
     )
@@ -97,7 +103,10 @@ async def _process_media_source_platform(
     platform: MediaSourceProtocol,
 ) -> None:
     """Process a media source platform."""
-    hass.data[DOMAIN][domain] = await platform.async_get_media_source(hass)
+    source = await platform.async_get_media_source(hass)
+    hass.data[MEDIA_SOURCE_DATA][domain] = source
+    if isinstance(source, local_source.LocalSource):
+        hass.http.register_view(local_source.LocalMediaView(hass, source))
 
 
 @callback
@@ -109,10 +118,10 @@ def _get_media_item(
         item = MediaSourceItem.from_uri(hass, media_content_id, target_media_player)
     else:
         # We default to our own domain if its only one registered
-        domain = None if len(hass.data[DOMAIN]) > 1 else DOMAIN
+        domain = None if len(hass.data[MEDIA_SOURCE_DATA]) > 1 else DOMAIN
         return MediaSourceItem(hass, domain, "", target_media_player)
 
-    if item.domain is not None and item.domain not in hass.data[DOMAIN]:
+    if item.domain is not None and item.domain not in hass.data[MEDIA_SOURCE_DATA]:
         raise UnknownMediaSource(
             translation_domain=DOMAIN,
             translation_key="unknown_media_source",

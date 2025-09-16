@@ -1,0 +1,85 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Bathroom radiator",
+  "category": "wk",
+  "product_id": "cpmgn2cf",
+  "product_name": "SmartTRV",
+  "online": true,
+  "sub": true,
+  "time_zone": "+00:00",
+  "active_time": "2025-07-20T12:12:03+00:00",
+  "create_time": "2025-07-20T12:12:03+00:00",
+  "update_time": "2025-07-20T12:12:03+00:00",
+  "function": {
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u00b0C",
+        "min": 10,
+        "max": 700,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["holiday", "auto", "manual", "eco"]
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u00b0C",
+        "min": 10,
+        "max": 700,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u00b0C",
+        "min": 0,
+        "max": 700,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["holiday", "auto", "manual", "eco"]
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["1", "2", "3", "4", "5"]
+      }
+    }
+  },
+  "status": {
+    "temp_set": 120,
+    "temp_current": 195,
+    "mode": "manual",
+    "child_lock": false,
+    "fault": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

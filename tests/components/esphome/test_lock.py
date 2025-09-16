@@ -17,7 +17,7 @@ from homeassistant.components.lock import (
     SERVICE_UNLOCK,
     LockState,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockGenericDeviceEntryType
@@ -34,7 +34,6 @@ async def test_lock_entity_no_open(
             object_id="mylock",
             key=1,
             name="my lock",
-            unique_id="my_lock",
             supports_open=False,
             requires_code=False,
         )
@@ -57,7 +56,7 @@ async def test_lock_entity_no_open(
         {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
-    mock_client.lock_command.assert_has_calls([call(1, LockCommand.LOCK)])
+    mock_client.lock_command.assert_has_calls([call(1, LockCommand.LOCK, device_id=0)])
     mock_client.lock_command.reset_mock()
 
 
@@ -72,7 +71,6 @@ async def test_lock_entity_start_locked(
             object_id="mylock",
             key=1,
             name="my lock",
-            unique_id="my_lock",
         )
     ]
     states = [LockEntityState(key=1, state=ESPHomeLockState.LOCKED)]
@@ -99,7 +97,6 @@ async def test_lock_entity_supports_open(
             object_id="mylock",
             key=1,
             name="my lock",
-            unique_id="my_lock",
             supports_open=True,
             requires_code=True,
         )
@@ -122,7 +119,7 @@ async def test_lock_entity_supports_open(
         {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
-    mock_client.lock_command.assert_has_calls([call(1, LockCommand.LOCK)])
+    mock_client.lock_command.assert_has_calls([call(1, LockCommand.LOCK, device_id=0)])
     mock_client.lock_command.reset_mock()
 
     await hass.services.async_call(
@@ -131,7 +128,9 @@ async def test_lock_entity_supports_open(
         {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
-    mock_client.lock_command.assert_has_calls([call(1, LockCommand.UNLOCK, None)])
+    mock_client.lock_command.assert_has_calls(
+        [call(1, LockCommand.UNLOCK, None, device_id=0)]
+    )
 
     mock_client.lock_command.reset_mock()
     await hass.services.async_call(
@@ -140,4 +139,30 @@ async def test_lock_entity_supports_open(
         {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
-    mock_client.lock_command.assert_has_calls([call(1, LockCommand.OPEN)])
+    mock_client.lock_command.assert_has_calls([call(1, LockCommand.OPEN, device_id=0)])
+
+
+async def test_lock_entity_none_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a generic lock entity with NONE state shows as unknown."""
+    entity_info = [
+        LockInfo(
+            object_id="mylock",
+            key=1,
+            name="my lock",
+            supports_open=False,
+            requires_code=False,
+        )
+    ]
+    states = [LockEntityState(key=1, state=ESPHomeLockState.NONE)]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("lock.test_my_lock")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN  # Should be unknown when ESPHome reports NONE

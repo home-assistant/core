@@ -10,10 +10,50 @@ generate_data:
       required: true
       selector:
         text:
+          multiline: true
     entity_id:
       required: false
       selector:
         entity:
-          domain: ai_task
-          supported_features:
-            - ai_task.AITaskEntityFeature.GENERATE_DATA
+          filter:
+            domain: ai_task
+            supported_features:
+              - ai_task.AITaskEntityFeature.GENERATE_DATA
+    structure:
+      required: false
+      example: '{ "name": { "selector": { "text": }, "description": "Name of the user", "required": "True" } } }, "age": { "selector": { "number": }, "description": "Age of the user" } }'
+      selector:
+        object:
+    attachments:
+      required: false
+      selector:
+        media:
+          accept:
+            - "*"
+generate_image:
+  fields:
+    task_name:
+      example: "picture of a dog"
+      required: true
+      selector:
+        text:
+    instructions:
+      example: "Generate a high quality square image of a dog on transparent background"
+      required: true
+      selector:
+        text:
+          multiline: true
+    entity_id:
+      required: true
+      selector:
+        entity:
+          filter:
+            domain: ai_task
+            supported_features:
+              - ai_task.AITaskEntityFeature.GENERATE_IMAGE
+    attachments:
+      required: false
+      selector:
+        media:
+          accept:
+            - "*"

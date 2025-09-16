@@ -3425,6 +3425,14 @@ class HassTypeHintChecker(BaseChecker):
         # Check that all positional arguments are correctly annotated.
         if match.arg_types:
             for key, expected_type in match.arg_types.items():
+                if key > len(node.args.args) - 1:
+                    # The number of arguments is less than expected
+                    self.add_message(
+                        "hass-argument-type",
+                        node=node,
+                        args=(key + 1, expected_type, node.name),
+                    )
+                    continue
                 if node.args.args[key].name in _COMMON_ARGUMENTS:
                     # It has already been checked, avoid double-message
                     continue

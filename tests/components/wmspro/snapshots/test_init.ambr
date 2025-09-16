@@ -17,7 +17,6 @@
         '19239',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -27,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '19239',
-    'suggested_area': 'Terrasse',
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -50,7 +48,6 @@
         '58717',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -60,7 +57,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '58717',
-    'suggested_area': 'Terrasse',
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -83,7 +79,6 @@
         '97358',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -93,7 +88,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '97358',
-    'suggested_area': 'Terrasse',
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -116,7 +110,6 @@
         '19239',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -126,7 +119,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '19239',
-    'suggested_area': 'Terrasse',
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -149,7 +141,6 @@
         '58717',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -159,7 +150,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '58717',
-    'suggested_area': 'Terrasse',
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -182,7 +172,6 @@
         '97358',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -192,7 +181,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '97358',
-    'suggested_area': 'Terrasse',
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -215,7 +203,6 @@
         '116682',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -225,7 +212,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '116682',
-    'suggested_area': 'Wohnbereich',
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -248,7 +234,6 @@
         '172555',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -258,7 +243,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '172555',
-    'suggested_area': 'Wohnbereich',
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -281,7 +265,6 @@
         '18894',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -291,7 +274,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '18894',
-    'suggested_area': 'Wohnbereich',
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -314,7 +296,6 @@
         '230952',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -324,7 +305,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '230952',
-    'suggested_area': 'Wohnbereich',
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -347,7 +327,6 @@
         '284942',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -357,7 +336,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '284942',
-    'suggested_area': 'Terrasse',
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -380,7 +358,6 @@
         '328518',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -390,7 +367,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '328518',
-    'suggested_area': 'Alle',
     'sw_version': None,
     'via_device_id': <ANY>,
   })

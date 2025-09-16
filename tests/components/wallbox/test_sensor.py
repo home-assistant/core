@@ -3,7 +3,7 @@
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, UnitOfPower
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration
+from .conftest import setup_integration
 from .const import (
     MOCK_SENSOR_CHARGING_POWER_ID,
     MOCK_SENSOR_CHARGING_SPEED_ID,
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_wallbox_sensor_class(
-    hass: HomeAssistant, entry: MockConfigEntry
+    hass: HomeAssistant, entry: MockConfigEntry, mock_wallbox
 ) -> None:
     """Test wallbox sensor class."""
 

@@ -15,7 +15,7 @@ from homeassistant.components.emulated_roku.binding import (
     ROKU_COMMAND_LAUNCH,
     EmulatedRoku,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 
 
 async def test_events_fired_properly(hass: HomeAssistant) -> None:
@@ -43,6 +43,7 @@ async def test_events_fired_properly(hass: HomeAssistant) -> None:
 
         return Mock(start=AsyncMock(), close=AsyncMock())
 
+    @callback
     def listener(event: Event) -> None:
         if event.data[ATTR_SOURCE_NAME] == random_name:
             events.append(event)

@@ -79,6 +79,11 @@ DEFAULT_NAME = "Vacuum cleaner robot"
 _DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumActivity.IDLE, "2026.1")
 _DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumActivity.PAUSED, "2026.1")
 
+_BATTERY_DEPRECATION_IGNORED_PLATFORMS = (
+    "mqtt",
+    "template",
+)
+
 
 class VacuumEntityFeature(IntFlag):
     """Supported features of the vacuum entity."""
@@ -321,16 +326,22 @@ class StateVacuumEntity(
 
         Integrations should implement a sensor instead.
         """
-        report_usage(
-            f"is setting the {property} which has been deprecated."
-            f" Integration {self.platform.platform_name} should implement a sensor"
-            " instead with a correct device class and link it to the same device",
-            core_integration_behavior=ReportBehavior.LOG,
-            custom_integration_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2026.8",
-            integration_domain=self.platform.platform_name if self.platform else None,
-            exclude_integrations={DOMAIN},
-        )
+        if (
+            self.platform
+            and self.platform.platform_name
+            not in _BATTERY_DEPRECATION_IGNORED_PLATFORMS
+        ):
+            # Don't report usage until after entity added to hass, after init
+            report_usage(
+                f"is setting the {property} which has been deprecated."
+                f" Integration {self.platform.platform_name} should implement a sensor"
+                " instead with a correct device class and link it to the same device",
+                core_integration_behavior=ReportBehavior.IGNORE,
+                custom_integration_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2026.8",
+                integration_domain=self.platform.platform_name,
+                exclude_integrations={DOMAIN},
+            )
 
     @callback
     def _report_deprecated_battery_feature(self) -> None:
@@ -339,17 +350,23 @@ class StateVacuumEntity(
         Integrations should remove the battery supported feature when migrating
         battery level and icon to a sensor.
         """
-        report_usage(
-            f"is setting the battery supported feature which has been deprecated."
-            f" Integration {self.platform.platform_name} should remove this as part of migrating"
-            " the battery level and icon to a sensor",
-            core_behavior=ReportBehavior.LOG,
-            core_integration_behavior=ReportBehavior.LOG,
-            custom_integration_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2026.8",
-            integration_domain=self.platform.platform_name if self.platform else None,
-            exclude_integrations={DOMAIN},
-        )
+        if (
+            self.platform
+            and self.platform.platform_name
+            not in _BATTERY_DEPRECATION_IGNORED_PLATFORMS
+        ):
+            # Don't report usage until after entity added to hass, after init
+            report_usage(
+                f"is setting the battery supported feature which has been deprecated."
+                f" Integration {self.platform.platform_name} should remove this as part of migrating"
+                " the battery level and icon to a sensor",
+                core_behavior=ReportBehavior.LOG,
+                core_integration_behavior=ReportBehavior.IGNORE,
+                custom_integration_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2026.8",
+                integration_domain=self.platform.platform_name,
+                exclude_integrations={DOMAIN},
+            )
 
     @cached_property
     def battery_level(self) -> int | None:

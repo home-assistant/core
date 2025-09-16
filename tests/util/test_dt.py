@@ -121,8 +121,8 @@ def test_timestamp_to_utc(caplog: pytest.LogCaptureFixture) -> None:
     utc_now = dt_util.utcnow()
     assert dt_util.utc_to_timestamp(utc_now) == utc_now.timestamp()
     assert (
-        "utc_to_timestamp is a deprecated function which will be removed "
-        "in HA Core 2026.1. Use datetime.timestamp instead" in caplog.text
+        "The deprecated function utc_to_timestamp was called. It will be "
+        "removed in HA Core 2026.1. Use datetime.timestamp instead" in caplog.text
     )
 
 

@@ -2,71 +2,85 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+import asyncio
+from unittest.mock import AsyncMock
 
+from aioonkyo import Status
 import pytest
 
-from homeassistant.components.onkyo import async_setup_entry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from . import create_empty_config_entry, create_receiver_info, setup_integration
+from . import mock_discovery, setup_integration
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_receiver")
 async def test_load_unload_entry(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test load and unload entry."""
+    await setup_integration(hass, mock_config_entry)
 
-    config_entry = create_empty_config_entry()
-    receiver_info = create_receiver_info(1)
-    await setup_integration(hass, config_entry, receiver_info)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_update_entry(
+@pytest.mark.parametrize(
+    "receiver_infos",
+    [
+        None,
+        [],
+    ],
+)
+async def test_initialization_failure(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
+    receiver_infos,
 ) -> None:
-    """Test update options."""
+    """Test initialization failure."""
+    with mock_discovery(receiver_infos):
+        await setup_integration(hass, mock_config_entry)
 
-    with patch.object(hass.config_entries, "async_reload", return_value=True):
-        config_entry = create_empty_config_entry()
-        receiver_info = create_receiver_info(1)
-        await setup_integration(hass, config_entry, receiver_info)
-
-        # Force option change
-        assert hass.config_entries.async_update_entry(
-            config_entry, options={"option": "new_value"}
-        )
-        await hass.async_block_till_done()
-
-        hass.config_entries.async_reload.assert_called_with(config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_no_connection(
+async def test_connection_failure(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
+    mock_connect: AsyncMock,
 ) -> None:
-    """Test update options."""
+    """Test connection failure."""
+    mock_connect.side_effect = OSError
 
-    config_entry = create_empty_config_entry()
-    config_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
 
-    with (
-        patch(
-            "homeassistant.components.onkyo.async_interview",
-            return_value=None,
-        ),
-        pytest.raises(ConfigEntryNotReady),
-    ):
-        await async_setup_entry(hass, config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_receiver")
+async def test_reconnect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connect: AsyncMock,
+    read_queue: asyncio.Queue[Status | None],
+) -> None:
+    """Test reconnect."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_connect.reset_mock()
+
+    assert mock_connect.call_count == 0
+
+    read_queue.put_nowait(None)  # Simulate a disconnect
+    await asyncio.sleep(0)
+
+    assert mock_connect.call_count == 1
