@@ -758,6 +758,7 @@ FLOWS = {
         "zerproc",
         "zeversolar",
         "zha",
+        "zhong_hong",
         "zimi",
         "zodiac",
         "zwave_js",
