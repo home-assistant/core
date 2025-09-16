@@ -4,8 +4,6 @@ rules:
     status: done
   appropriate-polling:
     status: done
-    comment: |
-      This integration has a default polling interval of 5 minutes. This is coherent with the HannaCloud that pulls data every 15 minutes.
   brands:
     status: done
     comment: |
