@@ -35,6 +35,8 @@ CONF_PRODUCTS = "products"
 CONF_TIMEOFFSET = "timeoffset"
 CONF_NUMBER = "number"
 
+DEFAULT_PRODUCT = ["U-Bahn", "Tram", "Bus", "ExpressBus", "S-Bahn", "Nachteule"]
+
 NONE_ICON = "mdi:clock"
 
 ATTRIBUTION = "Data provided by mvg.de"
@@ -49,9 +51,11 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
                 vol.Optional(CONF_DESTINATIONS, default=[""]): cv.ensure_list_csv,
                 vol.Optional(CONF_DIRECTIONS, default=[""]): cv.ensure_list_csv,
                 vol.Optional(CONF_LINES, default=[""]): cv.ensure_list_csv,
-                vol.Optional(CONF_PRODUCTS, default=None): cv.ensure_list_csv,
+                vol.Optional(
+                    CONF_PRODUCTS, default=DEFAULT_PRODUCT
+                ): cv.ensure_list_csv,
                 vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
-                vol.Optional(CONF_NUMBER, default=5): cv.positive_int,
+                vol.Optional(CONF_NUMBER, default=1): cv.positive_int,
                 vol.Optional(CONF_NAME): cv.string,
             }
         ]
@@ -70,16 +74,19 @@ async def async_setup_platform(
     for nextdeparture in config[CONF_NEXT_DEPARTURE]:
         station_name = nextdeparture.get(CONF_STATION)
 
-        station_metadata = await hass.async_add_executor_job(
-            MvgApi.station, station_name
-        )
-        if station_metadata is None:
+        def setup_sensor(station_name: str) -> tuple[dict, MvgApi] | None:
+            """Set up station metadata and API in a single executor job."""
+            station_metadata = MvgApi.station(station_name)
+            if station_metadata is None:
+                return None
+            api = MvgApi(station_metadata["id"])
+            return station_metadata, api
+
+        result = await hass.async_add_executor_job(setup_sensor, station_name)
+        if result is None:
             raise ConfigEntryError(f"Invalid station name: {station_name}")
 
-        def create_api(station_id: str) -> MvgApi:
-            return MvgApi(station_id)
-
-        api = await hass.async_add_executor_job(create_api, station_metadata["id"])
+        station_metadata, api = result
         sensors.append(
             MVGSensor(
                 hass,
@@ -205,8 +212,16 @@ class MVGData:
         """Update the connection data."""
         try:
 
-            def departures_async():
-                return asyncio.run(
+            def get_departures():
+                """Get departures synchronously in executor."""
+                # Create a new event loop for this thread if needed
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+
+                return loop.run_until_complete(
                     self.mvg.departures_async(
                         station_id=self.mvg.station_id,
                         offset=self._timeoffset,
@@ -221,7 +236,7 @@ class MVGData:
                     )
                 )
 
-            _departures = await self._hass.async_add_executor_job(departures_async)
+            _departures = await self._hass.async_add_executor_job(get_departures)
         except ValueError:
             self.departures = []
             _LOGGER.warning("Returned data not understood")
