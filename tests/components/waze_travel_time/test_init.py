@@ -62,6 +62,33 @@ async def test_service_get_travel_times(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+@pytest.mark.usefixtures("mock_config")
+async def test_service_get_travel_times_empty_response(
+    hass: HomeAssistant, mock_update
+) -> None:
+    """Test service get_travel_times."""
+    mock_update.return_value = []
+    response_data = await hass.services.async_call(
+        "waze_travel_time",
+        "get_travel_times",
+        {
+            "origin": "location1",
+            "destination": "location2",
+            "vehicle_type": "car",
+            "region": "us",
+            "units": "imperial",
+            "incl_filter": ["IncludeThis"],
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response_data == {"routes": []}
+
+
 @pytest.mark.usefixtures("mock_update")
 async def test_migrate_entry_v1_v2(hass: HomeAssistant) -> None:
     """Test successful migration of entry data."""
