@@ -5,6 +5,29 @@
         "default": "mdi:hand-wave"
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "smart": "mdi:fan-auto"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "colorloop": "mdi:looks"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "timer_duration": {
         "default": "mdi:timer"
@@ -43,6 +66,15 @@
         "default": "mdi:brightness-percent"
       },
       "maximum_level": {
+        "default": "mdi:brightness-percent"
+      },
+      "default_level_local": {
+        "default": "mdi:brightness-percent"
+      },
+      "default_level_remote": {
+        "default": "mdi:brightness-percent"
+      },
+      "state_after_power_restored": {
         "default": "mdi:brightness-percent"
       },
       "auto_off_timer": {
@@ -109,6 +141,18 @@
       },
       "exercise_day_of_week": {
         "default": "mdi:wrench-clock"
+      },
+      "off_led_color": {
+        "default": "mdi:palette-outline"
+      },
+      "on_led_color": {
+        "default": "mdi:palette"
+      },
+      "device_mode": {
+        "default": "mdi:cogs"
+      },
+      "pilot_wire_mode": {
+        "default": "mdi:radiator"
       }
     },
     "sensor": {
@@ -197,6 +241,9 @@
       },
       "use_load_balancing": {
         "default": "mdi:scale-balance"
+      },
+      "double_up_full": {
+        "default": "mdi:gesture-double-tap"
       }
     }
   },

@@ -12,7 +12,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DOMAIN,
@@ -22,27 +21,26 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
     CONF_LOCKABLE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_SETPOINT,
-    DOMAIN,
+    CONF_TARGET_VALUE_LOCKED,
 )
 from .entity import LcnEntity
-from .helpers import InputType
+from .helpers import InputType, LcnConfigEntry
 
 PARALLEL_UPDATES = 0
 
 
 def add_lcn_entities(
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LcnConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     entity_configs: Iterable[ConfigType],
 ) -> None:
     """Add entities for this domain."""
@@ -55,8 +53,8 @@ def add_lcn_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LcnConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
     add_entities = partial(
@@ -65,7 +63,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data.add_entities_callbacks.update(
         {DOMAIN_CLIMATE: add_entities}
     )
 
@@ -81,9 +79,7 @@ async def async_setup_entry(
 class LcnClimate(LcnEntity, ClimateEntity):
     """Representation of a LCN climate device."""
 
-    _enable_turn_on_off_backwards_compatibility = False
-
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize of a LCN climate device."""
         super().__init__(config, config_entry)
 
@@ -95,6 +91,9 @@ class LcnClimate(LcnEntity, ClimateEntity):
 
         self.regulator_id = pypck.lcn_defs.Var.to_set_point_id(self.setpoint)
         self.is_lockable = config[CONF_DOMAIN_DATA][CONF_LOCKABLE]
+        self.target_value_locked = config[CONF_DOMAIN_DATA].get(
+            CONF_TARGET_VALUE_LOCKED, -1
+        )
         self._max_temp = config[CONF_DOMAIN_DATA][CONF_MAX_TEMP]
         self._min_temp = config[CONF_DOMAIN_DATA][CONF_MIN_TEMP]
 
@@ -173,7 +172,9 @@ class LcnClimate(LcnEntity, ClimateEntity):
             self._is_on = True
             self.async_write_ha_state()
         elif hvac_mode == HVACMode.OFF:
-            if not await self.device_connection.lock_regulator(self.regulator_id, True):
+            if not await self.device_connection.lock_regulator(
+                self.regulator_id, True, self.target_value_locked
+            ):
                 return
             self._is_on = False
             self._target_temperature = None

@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from devolo_plc_api.device_api import ConnectedStationInfo, NeighborAPInfo
 from devolo_plc_api.plcnet_api import REMOTE, DataRate, LogicalNetwork
@@ -19,11 +19,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, UnitOfDataRate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import (
     CONNECTED_PLC_DEVICES,
     CONNECTED_WIFI_CLIENTS,
@@ -32,9 +30,10 @@ from .const import (
     PLC_RX_RATE,
     PLC_TX_RATE,
 )
+from .coordinator import DevoloDataUpdateCoordinator, DevoloHomeNetworkConfigEntry
 from .entity import DevoloCoordinatorEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 def _last_restart(runtime: int) -> datetime:
@@ -47,26 +46,14 @@ def _last_restart(runtime: int) -> datetime:
     )
 
 
-_CoordinatorDataT = TypeVar(
-    "_CoordinatorDataT",
-    bound=LogicalNetwork
+type _CoordinatorDataType = (
+    LogicalNetwork
     | DataRate
-    | list[ConnectedStationInfo]
+    | dict[str, ConnectedStationInfo]
     | list[NeighborAPInfo]
-    | int,
+    | int
 )
-_ValueDataT = TypeVar(
-    "_ValueDataT",
-    bound=LogicalNetwork
-    | DataRate
-    | list[ConnectedStationInfo]
-    | list[NeighborAPInfo]
-    | int,
-)
-_SensorDataT = TypeVar(
-    "_SensorDataT",
-    bound=int | float | datetime,
-)
+type _SensorDataType = int | float | datetime
 
 
 class DataRateDirection(StrEnum):
@@ -77,9 +64,10 @@ class DataRateDirection(StrEnum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class DevoloSensorEntityDescription(
-    SensorEntityDescription, Generic[_CoordinatorDataT, _SensorDataT]
-):
+class DevoloSensorEntityDescription[
+    _CoordinatorDataT: _CoordinatorDataType,
+    _SensorDataT: _SensorDataType,
+](SensorEntityDescription):
     """Describes devolo sensor entity."""
 
     value_func: Callable[[_CoordinatorDataT], _SensorDataT]
@@ -95,7 +83,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any, Any]] = {
         ),
     ),
     CONNECTED_WIFI_CLIENTS: DevoloSensorEntityDescription[
-        list[ConnectedStationInfo], int
+        dict[str, ConnectedStationInfo], int
     ](
         key=CONNECTED_WIFI_CLIENTS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -138,7 +126,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any, Any]] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DevoloHomeNetworkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
     device = entry.runtime_data.device
@@ -153,7 +141,7 @@ async def async_setup_entry(
                 SENSOR_TYPES[CONNECTED_PLC_DEVICES],
             )
         )
-        network = await device.plcnet.async_get_network_overview()
+        network: LogicalNetwork = coordinators[CONNECTED_PLC_DEVICES].data
         peers = [
             peer.mac_address for peer in network.devices if peer.topology == REMOTE
         ]
@@ -200,8 +188,11 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class BaseDevoloSensorEntity(
-    Generic[_CoordinatorDataT, _ValueDataT, _SensorDataT],
+class BaseDevoloSensorEntity[
+    _CoordinatorDataT: _CoordinatorDataType,
+    _ValueDataT: _CoordinatorDataType,
+    _SensorDataT: _SensorDataType,
+](
     DevoloCoordinatorEntity[_CoordinatorDataT],
     SensorEntity,
 ):
@@ -210,7 +201,7 @@ class BaseDevoloSensorEntity(
     def __init__(
         self,
         entry: DevoloHomeNetworkConfigEntry,
-        coordinator: DataUpdateCoordinator[_CoordinatorDataT],
+        coordinator: DevoloDataUpdateCoordinator[_CoordinatorDataT],
         description: DevoloSensorEntityDescription[_ValueDataT, _SensorDataT],
     ) -> None:
         """Initialize entity."""
@@ -218,9 +209,11 @@ class BaseDevoloSensorEntity(
         super().__init__(entry, coordinator)
 
 
-class DevoloSensorEntity(
-    BaseDevoloSensorEntity[_CoordinatorDataT, _CoordinatorDataT, _SensorDataT]
-):
+class DevoloSensorEntity[
+    _CoordinatorDataT: _CoordinatorDataType,
+    _ValueDataT: _CoordinatorDataType,
+    _SensorDataT: _SensorDataType,
+](BaseDevoloSensorEntity[_CoordinatorDataT, _ValueDataT, _SensorDataT]):
     """Representation of a generic devolo sensor."""
 
     entity_description: DevoloSensorEntityDescription[_CoordinatorDataT, _SensorDataT]
@@ -241,7 +234,7 @@ class DevoloPlcDataRateSensorEntity(
     def __init__(
         self,
         entry: DevoloHomeNetworkConfigEntry,
-        coordinator: DataUpdateCoordinator[LogicalNetwork],
+        coordinator: DevoloDataUpdateCoordinator[LogicalNetwork],
         description: DevoloSensorEntityDescription[DataRate, float],
         peer: str,
     ) -> None:

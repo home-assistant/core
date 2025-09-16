@@ -1,5 +1,7 @@
 """Tests for the Rainforest RAVEn component."""
 
+from unittest.mock import AsyncMock
+
 from homeassistant.components.rainforest_raven.const import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_MAC
 
@@ -14,7 +16,7 @@ from .const import (
     SUMMATION,
 )
 
-from tests.common import AsyncMock, MockConfigEntry
+from tests.common import MockConfigEntry
 
 
 def create_mock_device() -> AsyncMock:
@@ -42,4 +44,5 @@ def create_mock_entry(no_meters: bool = False) -> MockConfigEntry:
             CONF_DEVICE: DISCOVERY_INFO.device,
             CONF_MAC: [] if no_meters else [METER_INFO[None].meter_mac_id.hex()],
         },
+        entry_id="01JADXBJSPYEBAFPKGXDJWZBQ8",
     )

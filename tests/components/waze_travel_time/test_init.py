@@ -44,6 +44,8 @@ async def test_service_get_travel_times(hass: HomeAssistant) -> None:
             "destination": "location2",
             "vehicle_type": "car",
             "region": "us",
+            "units": "imperial",
+            "incl_filter": ["IncludeThis"],
         },
         blocking=True,
         return_response=True,
@@ -51,16 +53,10 @@ async def test_service_get_travel_times(hass: HomeAssistant) -> None:
     assert response_data == {
         "routes": [
             {
-                "distance": 300,
+                "distance": pytest.approx(186.4113),
                 "duration": 150,
                 "name": "E1337 - Teststreet",
                 "street_names": ["E1337", "IncludeThis", "Teststreet"],
-            },
-            {
-                "distance": 500,
-                "duration": 600,
-                "name": "E0815 - Otherstreet",
-                "street_names": ["E0815", "ExcludeThis", "Otherstreet"],
             },
         ]
     }
@@ -105,8 +101,8 @@ async def test_migrate_entry_v1_v2(hass: HomeAssistant) -> None:
             CONF_AVOID_FERRIES: DEFAULT_AVOID_FERRIES,
             CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
             CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
-            CONF_INCL_FILTER: "include",
-            CONF_EXCL_FILTER: "exclude",
+            CONF_INCL_FILTER: "IncludeThis",
+            CONF_EXCL_FILTER: "ExcludeThis",
         },
     )
 
@@ -118,5 +114,5 @@ async def test_migrate_entry_v1_v2(hass: HomeAssistant) -> None:
 
     assert updated_entry.state is ConfigEntryState.LOADED
     assert updated_entry.version == 2
-    assert updated_entry.options[CONF_INCL_FILTER] == ["include"]
-    assert updated_entry.options[CONF_EXCL_FILTER] == ["exclude"]
+    assert updated_entry.options[CONF_INCL_FILTER] == ["IncludeThis"]
+    assert updated_entry.options[CONF_EXCL_FILTER] == ["ExcludeThis"]

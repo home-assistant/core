@@ -8,33 +8,44 @@ import logging
 from rokuecp import Roku, RokuError
 from rokuecp.models import Device
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN
+from .const import CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID, DOMAIN
 
 REQUEST_REFRESH_DELAY = 0.35
 
 SCAN_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
+type RokuConfigEntry = ConfigEntry[RokuDataUpdateCoordinator]
+
 
 class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Class to manage fetching Roku data."""
 
+    config_entry: RokuConfigEntry
     last_full_update: datetime | None
     roku: Roku
 
     def __init__(
-        self, hass: HomeAssistant, *, host: str, device_id: str, play_media_app_id: str
+        self,
+        hass: HomeAssistant,
+        config_entry: RokuConfigEntry,
     ) -> None:
         """Initialize global Roku data updater."""
-        self.device_id = device_id
-        self.roku = Roku(host=host, session=async_get_clientsession(hass))
-        self.play_media_app_id = play_media_app_id
+        self.device_id = config_entry.unique_id or config_entry.entry_id
+        self.roku = Roku(
+            host=config_entry.data[CONF_HOST], session=async_get_clientsession(hass)
+        )
+        self.play_media_app_id = config_entry.options.get(
+            CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID
+        )
 
         self.full_update_interval = timedelta(minutes=15)
         self.last_full_update = None
@@ -42,6 +53,7 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
             # We don't want an immediate refresh since the device

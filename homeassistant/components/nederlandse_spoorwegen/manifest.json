@@ -1,8 +1,11 @@
 {
   "domain": "nederlandse_spoorwegen",
   "name": "Nederlandse Spoorwegen (NS)",
-  "codeowners": ["@YarmoM"],
+  "codeowners": ["@YarmoM", "@heindrichpaul"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nederlandse_spoorwegen",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["nsapi==3.0.5"]
+  "quality_scale": "legacy",
+  "requirements": ["nsapi==3.1.2"]
 }

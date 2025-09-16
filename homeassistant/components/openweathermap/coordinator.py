@@ -1,12 +1,17 @@
-"""Weather data coordinator for the OpenWeatherMap (OWM) service."""
+"""Data coordinator for the OpenWeatherMap (OWM) service."""
+
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING, Any
 
 from pyopenweathermap import (
+    CurrentAirPollution,
     CurrentWeather,
     DailyWeatherForecast,
     HourlyWeatherForecast,
+    MinutelyWeatherForecast,
     OWMClient,
     RequestError,
     WeatherReport,
@@ -17,20 +22,37 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     Forecast,
 )
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+if TYPE_CHECKING:
+    from . import OpenweathermapConfigEntry
+
 from .const import (
+    ATTR_API_AIRPOLLUTION_AQI,
+    ATTR_API_AIRPOLLUTION_CO,
+    ATTR_API_AIRPOLLUTION_NH3,
+    ATTR_API_AIRPOLLUTION_NO,
+    ATTR_API_AIRPOLLUTION_NO2,
+    ATTR_API_AIRPOLLUTION_O3,
+    ATTR_API_AIRPOLLUTION_PM2_5,
+    ATTR_API_AIRPOLLUTION_PM10,
+    ATTR_API_AIRPOLLUTION_SO2,
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
     ATTR_API_CURRENT,
     ATTR_API_DAILY_FORECAST,
+    ATTR_API_DATETIME,
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
+    ATTR_API_FORECAST,
     ATTR_API_HOURLY_FORECAST,
     ATTR_API_HUMIDITY,
+    ATTR_API_MINUTE_FORECAST,
+    ATTR_API_PRECIPITATION,
     ATTR_API_PRECIPITATION_KIND,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
@@ -45,32 +67,45 @@ from .const import (
     ATTR_API_WIND_SPEED,
     CONDITION_MAP,
     DOMAIN,
+    OWM_MODE_AIRPOLLUTION,
+    OWM_MODE_FREE_CURRENT,
+    OWM_MODE_FREE_FORECAST,
+    OWM_MODE_V30,
     WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
+OWM_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
-class WeatherUpdateCoordinator(DataUpdateCoordinator):
-    """Weather data update coordinator."""
+class OWMUpdateCoordinator(DataUpdateCoordinator):
+    """OWM data update coordinator."""
+
+    config_entry: OpenweathermapConfigEntry
 
     def __init__(
         self,
-        owm_client: OWMClient,
-        latitude,
-        longitude,
         hass: HomeAssistant,
+        config_entry: OpenweathermapConfigEntry,
+        owm_client: OWMClient,
     ) -> None:
         """Initialize coordinator."""
         self._owm_client = owm_client
-        self._latitude = latitude
-        self._longitude = longitude
+        self._latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
+        self._longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=WEATHER_UPDATE_INTERVAL
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=OWM_UPDATE_INTERVAL,
         )
+
+
+class WeatherUpdateCoordinator(OWMUpdateCoordinator):
+    """Weather data update coordinator."""
 
     async def _async_update_data(self):
         """Update the data."""
@@ -94,6 +129,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         return {
             ATTR_API_CURRENT: current_weather,
+            ATTR_API_MINUTE_FORECAST: (
+                self._get_minute_weather_data(weather_report.minutely_forecast)
+                if weather_report.minutely_forecast is not None
+                else {}
+            ),
             ATTR_API_HOURLY_FORECAST: [
                 self._get_hourly_forecast_weather_data(item)
                 for item in weather_report.hourly_forecast
@@ -102,6 +142,20 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 self._get_daily_forecast_weather_data(item)
                 for item in weather_report.daily_forecast
             ],
+        }
+
+    def _get_minute_weather_data(
+        self, minute_forecast: list[MinutelyWeatherForecast]
+    ) -> dict:
+        """Get minute weather data from the forecast."""
+        return {
+            ATTR_API_FORECAST: [
+                {
+                    ATTR_API_DATETIME: item.date_time,
+                    ATTR_API_PRECIPITATION: round(item.precipitation, 2),
+                }
+                for item in minute_forecast
+            ]
         }
 
     def _get_current_weather_data(self, current_weather: CurrentWeather):
@@ -192,12 +246,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_precipitation_value(precipitation):
         """Get precipitation value from weather data."""
-        if "all" in precipitation:
-            return round(precipitation["all"], 2)
-        if "3h" in precipitation:
-            return round(precipitation["3h"], 2)
-        if "1h" in precipitation:
-            return round(precipitation["1h"], 2)
+        if precipitation is not None:
+            if "all" in precipitation:
+                return round(precipitation["all"], 2)
+            if "3h" in precipitation:
+                return round(precipitation["3h"], 2)
+            if "1h" in precipitation:
+                return round(precipitation["1h"], 2)
         return 0
 
     def _get_condition(self, weather_code, timestamp=None):
@@ -211,3 +266,52 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             return ATTR_CONDITION_CLEAR_NIGHT
 
         return CONDITION_MAP.get(weather_code)
+
+
+class AirPollutionUpdateCoordinator(OWMUpdateCoordinator):
+    """Air Pollution data update coordinator."""
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update the data."""
+        try:
+            air_pollution_report = await self._owm_client.get_air_pollution(
+                self._latitude, self._longitude
+            )
+        except RequestError as error:
+            raise UpdateFailed(error) from error
+        current_air_pollution = (
+            self._get_current_air_pollution_data(air_pollution_report.current)
+            if air_pollution_report.current is not None
+            else {}
+        )
+
+        return {
+            ATTR_API_CURRENT: current_air_pollution,
+        }
+
+    def _get_current_air_pollution_data(
+        self, current_air_pollution: CurrentAirPollution
+    ) -> dict[str, Any]:
+        return {
+            ATTR_API_AIRPOLLUTION_AQI: current_air_pollution.aqi,
+            ATTR_API_AIRPOLLUTION_CO: current_air_pollution.co,
+            ATTR_API_AIRPOLLUTION_NO: current_air_pollution.no,
+            ATTR_API_AIRPOLLUTION_NO2: current_air_pollution.no2,
+            ATTR_API_AIRPOLLUTION_O3: current_air_pollution.o3,
+            ATTR_API_AIRPOLLUTION_SO2: current_air_pollution.so2,
+            ATTR_API_AIRPOLLUTION_PM2_5: current_air_pollution.pm2_5,
+            ATTR_API_AIRPOLLUTION_PM10: current_air_pollution.pm10,
+            ATTR_API_AIRPOLLUTION_NH3: current_air_pollution.nh3,
+        }
+
+
+def get_owm_update_coordinator(mode: str) -> type[OWMUpdateCoordinator]:
+    """Create coordinator with a factory."""
+    coordinators = {
+        OWM_MODE_V30: WeatherUpdateCoordinator,
+        OWM_MODE_FREE_CURRENT: WeatherUpdateCoordinator,
+        OWM_MODE_FREE_FORECAST: WeatherUpdateCoordinator,
+        OWM_MODE_AIRPOLLUTION: AirPollutionUpdateCoordinator,
+    }
+
+    return coordinators[mode]

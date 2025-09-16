@@ -15,26 +15,37 @@ from bluecurrent_api.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, CONF_API_TOKEN, Platform
+from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, EVSE_ID, LOGGER, MODEL_TYPE
+from .const import (
+    CHARGEPOINT_SETTINGS,
+    CHARGEPOINT_STATUS,
+    DOMAIN,
+    EVSE_ID,
+    LOGGER,
+    PLUG_AND_CHARGE,
+    VALUE,
+)
 
-PLATFORMS = [Platform.SENSOR]
+type BlueCurrentConfigEntry = ConfigEntry[Connector]
+
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 CHARGE_POINTS = "CHARGE_POINTS"
 DATA = "data"
 DELAY = 5
 
 GRID = "GRID"
 OBJECT = "object"
-VALUE_TYPES = ["CH_STATUS"]
+VALUE_TYPES = [CHARGEPOINT_STATUS, CHARGEPOINT_SETTINGS]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: BlueCurrentConfigEntry
+) -> bool:
     """Set up Blue Current as a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     client = Client()
     api_token = config_entry.data[CONF_API_TOKEN]
     connector = Connector(hass, config_entry, client)
@@ -50,29 +61,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     await client.wait_for_charge_points()
-    hass.data[DOMAIN][config_entry.entry_id] = connector
+    config_entry.runtime_data = connector
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: BlueCurrentConfigEntry
+) -> bool:
     """Unload the Blue Current config entry."""
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 class Connector:
     """Define a class that connects to the Blue Current websocket API."""
 
     def __init__(
-        self, hass: HomeAssistant, config: ConfigEntry, client: Client
+        self, hass: HomeAssistant, config: BlueCurrentConfigEntry, client: Client
     ) -> None:
         """Initialize."""
         self.config = config
@@ -95,7 +102,7 @@ class Connector:
         elif object_name in VALUE_TYPES:
             value_data: dict = message[DATA]
             evse_id = value_data.pop(EVSE_ID)
-            self.update_charge_point(evse_id, value_data)
+            self.update_charge_point(evse_id, object_name, value_data)
 
         # gets grid key / values
         elif GRID in object_name:
@@ -107,26 +114,37 @@ class Connector:
         """Handle incoming chargepoint data."""
         await asyncio.gather(
             *(
-                self.handle_charge_point(
-                    entry[EVSE_ID], entry[MODEL_TYPE], entry[ATTR_NAME]
-                )
+                self.handle_charge_point(entry[EVSE_ID], entry)
                 for entry in charge_points_data
             ),
             self.client.get_grid_status(charge_points_data[0][EVSE_ID]),
         )
 
-    async def handle_charge_point(self, evse_id: str, model: str, name: str) -> None:
+    async def handle_charge_point(
+        self, evse_id: str, charge_point: dict[str, Any]
+    ) -> None:
         """Add the chargepoint and request their data."""
-        self.add_charge_point(evse_id, model, name)
+        self.add_charge_point(evse_id, charge_point)
         await self.client.get_status(evse_id)
 
-    def add_charge_point(self, evse_id: str, model: str, name: str) -> None:
+    def add_charge_point(self, evse_id: str, charge_point: dict[str, Any]) -> None:
         """Add a charge point to charge_points."""
-        self.charge_points[evse_id] = {MODEL_TYPE: model, ATTR_NAME: name}
+        self.charge_points[evse_id] = charge_point
 
-    def update_charge_point(self, evse_id: str, data: dict) -> None:
+    def update_charge_point(self, evse_id: str, update_type: str, data: dict) -> None:
         """Update the charge point data."""
-        self.charge_points[evse_id].update(data)
+        charge_point = self.charge_points[evse_id]
+        if update_type == CHARGEPOINT_SETTINGS:
+            # Update the plug and charge object. The library parses this object to a bool instead of an object.
+            plug_and_charge = charge_point.get(PLUG_AND_CHARGE)
+            if plug_and_charge is not None:
+                plug_and_charge[VALUE] = data[PLUG_AND_CHARGE]
+
+            # Remove the plug and charge object from the data list before updating.
+            del data[PLUG_AND_CHARGE]
+
+        charge_point.update(data)
+
         self.dispatch_charge_point_update_signal(evse_id)
 
     def dispatch_charge_point_update_signal(self, evse_id: str) -> None:

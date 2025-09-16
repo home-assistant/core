@@ -3,22 +3,36 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from pathlib import Path
+import sqlite3
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from sqlalchemy import text as sql_text
 from sqlalchemy.exc import SQLAlchemyError
 
-from homeassistant.components.recorder import Recorder
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.components.sql.const import CONF_QUERY, DOMAIN
+from homeassistant.components.recorder import CONF_DB_URL, Recorder
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.components.sql.const import (
+    CONF_ADVANCED_OPTIONS,
+    CONF_COLUMN_NAME,
+    CONF_QUERY,
+    DOMAIN,
+)
 from homeassistant.components.sql.sensor import _generate_lambda_stmt
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_ICON,
+    CONF_NAME,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfInformation,
@@ -36,7 +50,6 @@ from . import (
     YAML_CONFIG_FULL_TABLE_SCAN,
     YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID,
     YAML_CONFIG_FULL_TABLE_SCAN_WITH_MULTIPLE_COLUMNS,
-    YAML_CONFIG_WITH_VIEW_THAT_CONTAINS_ENTITY_ID,
     init_integration,
 )
 
@@ -45,14 +58,11 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_query_basic(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the SQL sensor."""
-    config = {
-        "db_url": "sqlite://",
-        "query": "SELECT 5 as value",
-        "column": "value",
-        "name": "Select value SQL query",
-        "unique_id": "very_unique_id",
+    options = {
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
     }
-    await init_integration(hass, config)
+    await init_integration(hass, title="Select value SQL query", options=options)
 
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
@@ -61,14 +71,11 @@ async def test_query_basic(recorder_mock: Recorder, hass: HomeAssistant) -> None
 
 async def test_query_cte(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the SQL sensor with CTE."""
-    config = {
-        "db_url": "sqlite://",
-        "query": "WITH test AS (SELECT 1 AS row_num, 10 AS state) SELECT state FROM test WHERE row_num = 1 LIMIT 1;",
-        "column": "state",
-        "name": "Select value SQL query CTE",
-        "unique_id": "very_unique_id",
+    options = {
+        CONF_QUERY: "WITH test AS (SELECT 1 AS row_num, 10 AS state) SELECT state FROM test WHERE row_num = 1 LIMIT 1;",
+        CONF_COLUMN_NAME: "state",
     }
-    await init_integration(hass, config)
+    await init_integration(hass, title="Select value SQL query CTE", options=options)
 
     state = hass.states.get("sensor.select_value_sql_query_cte")
     assert state.state == "10"
@@ -79,31 +86,39 @@ async def test_query_value_template(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test the SQL sensor."""
-    config = {
-        "db_url": "sqlite://",
-        "query": "SELECT 5.01 as value",
-        "column": "value",
-        "name": "count_tables",
-        "value_template": "{{ value | int }}",
+    options = {
+        CONF_QUERY: "SELECT 5.01 as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_ADVANCED_OPTIONS: {
+            CONF_VALUE_TEMPLATE: "{{ value | int }}",
+            CONF_UNIT_OF_MEASUREMENT: "MiB",
+            CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+            CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
     }
-    await init_integration(hass, config)
+    await init_integration(hass, title="count_tables", options=options)
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == "5"
+    assert state.attributes == {
+        "device_class": "data_size",
+        "friendly_name": "count_tables",
+        "state_class": "measurement",
+        "unit_of_measurement": "MiB",
+        "value": 5.01,
+    }
 
 
 async def test_query_value_template_invalid(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test the SQL sensor."""
-    config = {
-        "db_url": "sqlite://",
-        "query": "SELECT 5.01 as value",
-        "column": "value",
-        "name": "count_tables",
-        "value_template": "{{ value | dontwork }}",
+    options = {
+        CONF_QUERY: "SELECT 5.01 as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_VALUE_TEMPLATE: "{{ value | dontwork }}",
     }
-    await init_integration(hass, config)
+    await init_integration(hass, title="count_tables", options=options)
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == "5.01"
@@ -111,13 +126,11 @@ async def test_query_value_template_invalid(
 
 async def test_query_limit(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the SQL sensor with a query containing 'LIMIT' in lowercase."""
-    config = {
-        "db_url": "sqlite://",
-        "query": "SELECT 5 as value limit 1",
-        "column": "value",
-        "name": "Select value SQL query",
+    options = {
+        CONF_QUERY: "SELECT 5 as value limit 1",
+        CONF_COLUMN_NAME: "value",
     }
-    await init_integration(hass, config)
+    await init_integration(hass, options=options)
 
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
@@ -128,13 +141,11 @@ async def test_query_no_value(
     recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the SQL sensor with a query that returns no value."""
-    config = {
-        "db_url": "sqlite://",
-        "query": "SELECT 5 as value where 1=2",
-        "column": "value",
-        "name": "count_tables",
+    options = {
+        CONF_QUERY: "SELECT 5 as value where 1=2",
+        CONF_COLUMN_NAME: "value",
     }
-    await init_integration(hass, config)
+    await init_integration(hass, title="count_tables", options=options)
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == STATE_UNKNOWN
@@ -143,29 +154,37 @@ async def test_query_no_value(
     assert text in caplog.text
 
 
-async def test_query_mssql_no_result(
-    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+async def test_query_on_disk_sqlite_no_result(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
 ) -> None:
     """Test the SQL sensor with a query that returns no value."""
-    config = {
-        "db_url": "mssql://",
-        "query": "SELECT 5 as value where 1=2",
-        "column": "value",
-        "name": "count_tables",
-    }
-    with (
-        patch("homeassistant.components.sql.sensor.sqlalchemy"),
-        patch(
-            "homeassistant.components.sql.sensor.sqlalchemy.text",
-            return_value=sql_text("SELECT TOP 1 5 as value where 1=2"),
-        ),
-    ):
-        await init_integration(hass, config)
+    db_path = tmp_path / "test.db"
+    db_path_str = f"sqlite:///{db_path}"
 
-    state = hass.states.get("sensor.count_tables")
+    def make_test_db():
+        """Create a test database."""
+        conn = sqlite3.connect(db_path)
+        conn.execute("CREATE TABLE users (value INTEGER)")
+        conn.commit()
+        conn.close()
+
+    await hass.async_add_executor_job(make_test_db)
+
+    config = {CONF_DB_URL: db_path_str}
+    options = {
+        CONF_QUERY: "SELECT value from users",
+        CONF_COLUMN_NAME: "value",
+        CONF_NAME: "count_users",
+    }
+    await init_integration(hass, title="count_users", options=options, config=config)
+
+    state = hass.states.get("sensor.count_users")
     assert state.state == STATE_UNKNOWN
 
-    text = "SELECT TOP 1 5 AS VALUE WHERE 1=2 returned no results"
+    text = "SELECT value from users LIMIT 1; returned no results"
     assert text in caplog.text
 
 
@@ -194,17 +213,17 @@ async def test_invalid_url_setup(
 ) -> None:
     """Test invalid db url with redacted credentials."""
     config = {
-        "db_url": url,
-        "query": "SELECT 5 as value",
-        "column": "value",
-        "name": "count_tables",
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
     }
     entry = MockConfigEntry(
+        title="count_tables",
         domain=DOMAIN,
         source=SOURCE_USER,
-        data={},
+        data={CONF_DB_URL: url},
         options=config,
         entry_id="1",
+        version=2,
     )
 
     entry.add_to_hass(hass)
@@ -228,11 +247,9 @@ async def test_invalid_url_on_update(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test invalid db url with redacted credentials on retry."""
-    config = {
-        "db_url": "sqlite://",
-        "query": "SELECT 5 as value",
-        "column": "value",
-        "name": "count_tables",
+    options = {
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
     }
 
     class MockSession:
@@ -246,7 +263,7 @@ async def test_invalid_url_on_update(
         "homeassistant.components.sql.sensor.scoped_session",
         return_value=MockSession,
     ):
-        await init_integration(hass, config)
+        await init_integration(hass, title="count_tables", options=options)
         async_fire_time_changed(
             hass,
             dt_util.utcnow() + timedelta(minutes=1),
@@ -308,6 +325,8 @@ async def test_templates_with_yaml(
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == STATE_UNAVAILABLE
+    assert CONF_ICON not in state.attributes
+    assert "entity_picture" not in state.attributes
 
     hass.states.async_set("sensor.input1", "on")
     hass.states.async_set("sensor.input2", "on")
@@ -332,12 +351,12 @@ async def test_config_from_old_yaml(
     config = {
         "sensor": {
             "platform": "sql",
-            "db_url": "sqlite://",
+            CONF_DB_URL: "sqlite://",
             "queries": [
                 {
-                    "name": "count_tables",
-                    "query": "SELECT 5 as value",
-                    "column": "value",
+                    CONF_NAME: "count_tables",
+                    CONF_QUERY: "SELECT 5 as value",
+                    CONF_COLUMN_NAME: "value",
                 }
             ],
         }
@@ -375,10 +394,10 @@ async def test_invalid_url_setup_from_yaml(
     """Test invalid db url with redacted credentials from yaml setup."""
     config = {
         "sql": {
-            "db_url": url,
-            "query": "SELECT 5 as value",
-            "column": "value",
-            "name": "count_tables",
+            CONF_DB_URL: url,
+            CONF_QUERY: "SELECT 5 as value",
+            CONF_COLUMN_NAME: "value",
+            CONF_NAME: "count_tables",
         }
     }
 
@@ -406,9 +425,9 @@ async def test_attributes_from_yaml_setup(
     state = hass.states.get("sensor.get_value")
 
     assert state.state == "5"
-    assert state.attributes["device_class"] == SensorDeviceClass.DATA_SIZE
-    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
-    assert state.attributes["unit_of_measurement"] == UnitOfInformation.MEBIBYTES
+    assert state.attributes[CONF_DEVICE_CLASS] == SensorDeviceClass.DATA_SIZE
+    assert state.attributes[CONF_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == UnitOfInformation.MEBIBYTES
 
 
 async def test_binary_data_from_yaml_setup(
@@ -444,7 +463,7 @@ async def test_issue_when_using_old_query(
     issue = issue_registry.async_get_issue(
         DOMAIN, f"entity_id_query_does_full_table_scan_{unique_id}"
     )
-    assert issue.translation_placeholders == {"query": config[CONF_QUERY]}
+    assert issue.translation_placeholders == {CONF_QUERY: config[CONF_QUERY]}
 
 
 @pytest.mark.parametrize(
@@ -475,7 +494,7 @@ async def test_issue_when_using_old_query_without_unique_id(
     issue = issue_registry.async_get_issue(
         DOMAIN, f"entity_id_query_does_full_table_scan_{query}"
     )
-    assert issue.translation_placeholders == {"query": query}
+    assert issue.translation_placeholders == {CONF_QUERY: query}
 
 
 async def test_no_issue_when_view_has_the_text_entity_id_in_it(
@@ -487,7 +506,12 @@ async def test_no_issue_when_view_has_the_text_entity_id_in_it(
         "homeassistant.components.sql.sensor.scoped_session",
     ):
         await init_integration(
-            hass, YAML_CONFIG_WITH_VIEW_THAT_CONTAINS_ENTITY_ID["sql"]
+            hass,
+            title="Get entity_id",
+            options={
+                CONF_QUERY: "SELECT value from view_sensor_db_unique_entity_ids;",
+                CONF_COLUMN_NAME: "value",
+            },
         )
         async_fire_time_changed(
             hass,
@@ -505,20 +529,18 @@ async def test_multiple_sensors_using_same_db(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test multiple sensors using the same db."""
-    config = {
-        "db_url": "sqlite:///",
-        "query": "SELECT 5 as value",
-        "column": "value",
-        "name": "Select value SQL query",
+    options = {
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
     }
-    config2 = {
-        "db_url": "sqlite:///",
-        "query": "SELECT 5 as value",
-        "column": "value",
-        "name": "Select value SQL query 2",
+    options2 = {
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
     }
-    await init_integration(hass, config)
-    await init_integration(hass, config2, entry_id="2")
+    await init_integration(hass, title="Select value SQL query", options=options)
+    await init_integration(
+        hass, title="Select value SQL query 2", options=options2, entry_id="2"
+    )
 
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
@@ -536,13 +558,14 @@ async def test_engine_is_disposed_at_stop(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test we dispose of the engine at stop."""
-    config = {
-        "db_url": "sqlite:///",
-        "query": "SELECT 5 as value",
-        "column": "value",
-        "name": "Select value SQL query",
+    config = {CONF_DB_URL: "sqlite:///"}
+    options = {
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
     }
-    await init_integration(hass, config)
+    await init_integration(
+        hass, title="Select value SQL query", config=config, options=options
+    )
 
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
@@ -561,13 +584,15 @@ async def test_attributes_from_entry_config(
 
     await init_integration(
         hass,
-        config={
-            "name": "Get Value - With",
-            "query": "SELECT 5 as value",
-            "column": "value",
-            "unit_of_measurement": "MiB",
-            "device_class": SensorDeviceClass.DATA_SIZE,
-            "state_class": SensorStateClass.TOTAL,
+        title="Get Value - With",
+        options={
+            CONF_QUERY: "SELECT 5 as value",
+            CONF_COLUMN_NAME: "value",
+            CONF_ADVANCED_OPTIONS: {
+                CONF_UNIT_OF_MEASUREMENT: "MiB",
+                CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+                CONF_STATE_CLASS: SensorStateClass.TOTAL,
+            },
         },
         entry_id="8693d4782ced4fb1ecca4743f29ab8f1",
     )
@@ -575,27 +600,29 @@ async def test_attributes_from_entry_config(
     state = hass.states.get("sensor.get_value_with")
     assert state.state == "5"
     assert state.attributes["value"] == 5
-    assert state.attributes["unit_of_measurement"] == "MiB"
-    assert state.attributes["device_class"] == SensorDeviceClass.DATA_SIZE
-    assert state.attributes["state_class"] == SensorStateClass.TOTAL
+    assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == "MiB"
+    assert state.attributes[CONF_DEVICE_CLASS] == SensorDeviceClass.DATA_SIZE
+    assert state.attributes[CONF_STATE_CLASS] == SensorStateClass.TOTAL
 
     await init_integration(
         hass,
-        config={
-            "name": "Get Value - Without",
-            "query": "SELECT 5 as value",
-            "column": "value",
-            "unit_of_measurement": "MiB",
+        title="Get Value - Without",
+        options={
+            CONF_QUERY: "SELECT 6 as value",
+            CONF_COLUMN_NAME: "value",
+            CONF_ADVANCED_OPTIONS: {
+                CONF_UNIT_OF_MEASUREMENT: "MiB",
+            },
         },
         entry_id="7aec7cd8045fba4778bb0621469e3cd9",
     )
 
     state = hass.states.get("sensor.get_value_without")
-    assert state.state == "5"
-    assert state.attributes["value"] == 5
-    assert state.attributes["unit_of_measurement"] == "MiB"
-    assert "device_class" not in state.attributes
-    assert "state_class" not in state.attributes
+    assert state.state == "6"
+    assert state.attributes["value"] == 6
+    assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == "MiB"
+    assert CONF_DEVICE_CLASS not in state.attributes
+    assert CONF_STATE_CLASS not in state.attributes
 
 
 async def test_query_recover_from_rollback(
@@ -605,14 +632,12 @@ async def test_query_recover_from_rollback(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the SQL sensor."""
-    config = {
-        "db_url": "sqlite://",
-        "query": "SELECT 5 as value",
-        "column": "value",
-        "name": "Select value SQL query",
-        "unique_id": "very_unique_id",
+    options = {
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_UNIQUE_ID: "very_unique_id",
     }
-    await init_integration(hass, config)
+    await init_integration(hass, title="Select value SQL query", options=options)
     platforms = async_get_platforms(hass, "sql")
     sql_entity = platforms[0].entities["sensor.select_value_sql_query"]
 
@@ -651,3 +676,37 @@ async def test_setup_without_recorder(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.get_value")
     assert state.state == "5"
+
+
+async def test_availability_blocks_value_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test availability blocks value_template from rendering."""
+    error = "Error parsing value for sensor.get_value: 'x' is undefined"
+    config = YAML_CONFIG
+    config["sql"][CONF_VALUE_TEMPLATE] = "{{ x - 0 }}"
+    config["sql"]["availability"] = '{{ states("sensor.input1")=="on" }}'
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert error not in caplog.text
+
+    state = hass.states.get("sensor.get_value")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set("sensor.input1", "on")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=1),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert error in caplog.text

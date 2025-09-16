@@ -17,22 +17,20 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass: HomeAssistant) -> None:
+async def setup_comp(hass: HomeAssistant) -> None:
     """Initialize components."""
     mock_component(hass, "group")
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            zone.DOMAIN,
-            {
-                "zone": {
-                    "name": "test",
-                    "latitude": 32.880837,
-                    "longitude": -117.237561,
-                    "radius": 250,
-                }
-            },
-        )
+    await async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": {
+                "name": "test",
+                "latitude": 32.880837,
+                "longitude": -117.237561,
+                "radius": 250,
+            }
+        },
     )
 
 

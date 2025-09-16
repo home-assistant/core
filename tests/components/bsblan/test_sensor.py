@@ -1,19 +1,17 @@
 """Tests for the BSB-Lan sensor platform."""
 
-from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_CURRENT_TEMP = "sensor.bsb_lan_current_temperature"
 ENTITY_OUTSIDE_TEMP = "sensor.bsb_lan_outside_temperature"
@@ -32,35 +30,43 @@ async def test_sensor_entity_properties(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize(
-    ("value", "expected_state"),
-    [
-        (18.6, "18.6"),
-        (None, STATE_UNKNOWN),
-        ("---", STATE_UNKNOWN),
-    ],
-)
-async def test_current_temperature_scenarios(
+async def test_sensors_not_created_when_data_unavailable(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    value,
-    expected_state,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test various scenarios for current temperature sensor."""
+    """Test sensors are not created when sensor data is not available."""
+    # Set all sensor data to None to simulate no sensors available
+    mock_bsblan.sensor.return_value.current_temperature = None
+    mock_bsblan.sensor.return_value.outside_temperature = None
+
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 
-    # Set up the mock value
-    mock_current_temp = MagicMock()
-    mock_current_temp.value = value
-    mock_bsblan.sensor.return_value.current_temperature = mock_current_temp
+    # Should not create any sensor entities
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    sensor_entities = [entry for entry in entity_entries if entry.domain == "sensor"]
+    assert len(sensor_entities) == 0
 
-    # Trigger an update
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
 
-    # Check the state
-    state = hass.states.get(ENTITY_CURRENT_TEMP)
-    assert state.state == expected_state
+async def test_partial_sensors_created_when_some_data_available(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test only available sensors are created when some sensor data is available."""
+    # Only current temperature available, outside temperature not
+    mock_bsblan.sensor.return_value.outside_temperature = None
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
+
+    # Should create only the current temperature sensor
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    sensor_entities = [entry for entry in entity_entries if entry.domain == "sensor"]
+    assert len(sensor_entities) == 1
+    assert sensor_entities[0].entity_id == ENTITY_CURRENT_TEMP

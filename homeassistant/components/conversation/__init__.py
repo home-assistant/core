@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-import re
 from typing import Literal
 
+from hassil.recognize import RecognizeResult
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -30,6 +31,19 @@ from .agent_manager import (
     async_get_agent,
     get_agent_manager,
 )
+from .chat_log import (
+    AssistantContent,
+    AssistantContentDeltaDict,
+    Attachment,
+    ChatLog,
+    Content,
+    ConverseError,
+    SystemContent,
+    ToolResultContent,
+    ToolResultContentDeltaDict,
+    UserContent,
+    async_get_chat_log,
+)
 from .const import (
     ATTR_AGENT_ID,
     ATTR_CONVERSATION_ID,
@@ -39,37 +53,46 @@ from .const import (
     DATA_DEFAULT_ENTITY,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
-    OLD_HOME_ASSISTANT_AGENT,
     SERVICE_PROCESS,
     SERVICE_RELOAD,
     ConversationEntityFeature,
 )
-from .default_agent import async_setup_default_agent
+from .default_agent import DefaultAgent, async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
+from .util import async_get_result_from_chat_log
 
 __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
-    "OLD_HOME_ASSISTANT_AGENT",
+    "AssistantContent",
+    "AssistantContentDeltaDict",
+    "Attachment",
+    "ChatLog",
+    "Content",
     "ConversationEntity",
     "ConversationEntityFeature",
     "ConversationInput",
     "ConversationResult",
     "ConversationTraceEventType",
+    "ConverseError",
+    "SystemContent",
+    "ToolResultContent",
+    "ToolResultContentDeltaDict",
+    "UserContent",
     "async_conversation_trace_append",
     "async_converse",
     "async_get_agent_info",
+    "async_get_chat_log",
+    "async_get_result_from_chat_log",
     "async_set_agent",
     "async_setup",
     "async_unset_agent",
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
-REGEX_TYPE = type(re.compile(""))
 
 SERVICE_PROCESS_SCHEMA = vol.Schema(
     {
@@ -96,7 +119,7 @@ CONFIG_SCHEMA = vol.Schema(
                     {cv.string: vol.All(cv.ensure_list, [cv.string])}
                 )
             }
-        )
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -184,7 +207,11 @@ def async_get_agent_info(
         name = agent.name
         if not isinstance(name, str):
             name = agent.entity_id
-        return AgentInfo(id=agent.entity_id, name=name)
+        return AgentInfo(
+            id=agent.entity_id,
+            name=name,
+            supports_streaming=agent.supports_streaming,
+        )
 
     manager = get_agent_manager(hass)
 
@@ -207,22 +234,45 @@ async def async_prepare_agent(
     await agent.async_prepare(language)
 
 
+async def async_handle_sentence_triggers(
+    hass: HomeAssistant, user_input: ConversationInput
+) -> str | None:
+    """Try to match input against sentence triggers and return response text.
+
+    Returns None if no match occurred.
+    """
+    default_agent = async_get_agent(hass)
+    assert isinstance(default_agent, DefaultAgent)
+
+    return await default_agent.async_handle_sentence_triggers(user_input)
+
+
+async def async_handle_intents(
+    hass: HomeAssistant,
+    user_input: ConversationInput,
+    *,
+    intent_filter: Callable[[RecognizeResult], bool] | None = None,
+) -> intent.IntentResponse | None:
+    """Try to match input against registered intents and return response.
+
+    Returns None if no match occurred.
+    """
+    default_agent = async_get_agent(hass)
+    assert isinstance(default_agent, DefaultAgent)
+
+    return await default_agent.async_handle_intents(
+        user_input, intent_filter=intent_filter
+    )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
     entity_component = EntityComponent[ConversationEntity](_LOGGER, DOMAIN, hass)
     hass.data[DATA_COMPONENT] = entity_component
 
+    agent_config = config.get(DOMAIN, {})
     await async_setup_default_agent(
-        hass, entity_component, config.get(DOMAIN, {}).get("intents", {})
-    )
-
-    # Temporary migration. We can remove this in 2024.10
-    from homeassistant.components.assist_pipeline import (  # pylint: disable=import-outside-toplevel
-        async_migrate_engine,
-    )
-
-    async_migrate_engine(
-        hass, "conversation", OLD_HOME_ASSISTANT_AGENT, HOME_ASSISTANT_AGENT
+        hass, entity_component, config_intents=agent_config.get("intents", {})
     )
 
     async def handle_process(service: ServiceCall) -> ServiceResponse:

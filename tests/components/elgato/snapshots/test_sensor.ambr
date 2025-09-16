@@ -24,6 +24,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -47,6 +48,7 @@
     'original_name': 'Battery',
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'GW24L1A02987_battery',
@@ -57,6 +59,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -74,7 +77,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -84,7 +86,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -114,6 +115,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -140,6 +142,7 @@
     'original_name': 'Battery voltage',
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
     'unique_id': 'GW24L1A02987_voltage',
@@ -150,6 +153,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -167,7 +171,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -177,7 +180,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -207,6 +209,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -233,6 +236,7 @@
     'original_name': 'Charging current',
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'input_charge_current',
     'unique_id': 'GW24L1A02987_input_charge_current',
@@ -243,6 +247,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -260,7 +265,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -270,7 +274,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -300,6 +303,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -323,6 +327,7 @@
     'original_name': 'Charging power',
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_power',
     'unique_id': 'GW24L1A02987_charge_power',
@@ -333,6 +338,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -350,7 +356,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -360,7 +365,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -390,6 +394,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -416,6 +421,7 @@
     'original_name': 'Charging voltage',
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'input_charge_voltage',
     'unique_id': 'GW24L1A02987_input_charge_voltage',
@@ -426,6 +432,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -443,7 +450,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -453,7 +459,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })

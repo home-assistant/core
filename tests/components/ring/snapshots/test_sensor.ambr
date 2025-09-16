@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -26,6 +27,7 @@
     'original_name': 'Volume',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'downstairs_volume',
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '123456-volume',
@@ -53,6 +55,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -73,6 +76,7 @@
     'original_name': 'Wi-Fi signal category',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'downstairs_wifi_signal_category',
     'supported_features': 0,
     'translation_key': 'wifi_signal_category',
     'unique_id': '123456-wifi_signal_category',
@@ -100,6 +104,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -117,11 +122,12 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'Wi-Fi signal strength',
+    'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'downstairs_wifi_signal_strength',
     'supported_features': 0,
-    'translation_key': 'wifi_signal_strength',
+    'translation_key': None,
     'unique_id': '123456-wifi_signal_strength',
     'unit_of_measurement': 'dBm',
   })
@@ -131,7 +137,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'signal_strength',
-      'friendly_name': 'Downstairs Wi-Fi signal strength',
+      'friendly_name': 'Downstairs Signal strength',
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
@@ -151,6 +157,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -171,6 +178,7 @@
     'original_name': 'Battery',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '765432-battery',
@@ -203,6 +211,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -223,6 +232,7 @@
     'original_name': 'Battery',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '987654-battery',
@@ -253,6 +263,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -273,6 +284,7 @@
     'original_name': 'Last activity',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_activity',
     'unique_id': '987654-last_activity',
@@ -294,6 +306,106 @@
     'state': 'unknown',
   })
 # ---
+# name: test_states[sensor.front_door_last_ding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.front_door_last_ding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last ding',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'suggested_object_id': 'front_door_last_ding',
+    'supported_features': 0,
+    'translation_key': 'last_ding',
+    'unique_id': '987654-last_ding',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.front_door_last_ding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Front Door Last ding',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.front_door_last_ding',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_states[sensor.front_door_last_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.front_door_last_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last motion',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'suggested_object_id': 'front_door_last_motion',
+    'supported_features': 0,
+    'translation_key': 'last_motion',
+    'unique_id': '987654-last_motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.front_door_last_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Front Door Last motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.front_door_last_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_states[sensor.front_door_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -301,6 +413,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -321,6 +434,7 @@
     'original_name': 'Volume',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'front_door_volume',
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '765432-volume',
@@ -341,39 +455,6 @@
     'state': '11',
   })
 # ---
-# name: test_states[sensor.front_door_wi_fi_signal_category-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.front_door_wi_fi_signal_category',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Wi-Fi signal category',
-    'platform': 'ring',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'wifi_signal_category',
-    'unique_id': '987654-wifi_signal_category',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_states[sensor.front_door_wifi_signal_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -381,6 +462,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -401,6 +483,7 @@
     'original_name': 'Wi-Fi signal category',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'front_door_wifi_signal_category',
     'supported_features': 0,
     'translation_key': 'wifi_signal_category',
     'unique_id': '987654-wifi_signal_category',
@@ -428,6 +511,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -445,11 +529,12 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'Wi-Fi signal strength',
+    'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'front_door_wifi_signal_strength',
     'supported_features': 0,
-    'translation_key': 'wifi_signal_strength',
+    'translation_key': None,
     'unique_id': '987654-wifi_signal_strength',
     'unit_of_measurement': 'dBm',
   })
@@ -459,7 +544,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'signal_strength',
-      'friendly_name': 'Front Door Wi-Fi signal strength',
+      'friendly_name': 'Front Door Signal strength',
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
@@ -477,6 +562,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -497,6 +583,7 @@
     'original_name': 'Last activity',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_activity',
     'unique_id': '765432-last_activity',
@@ -518,6 +605,106 @@
     'state': 'unknown',
   })
 # ---
+# name: test_states[sensor.front_last_ding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.front_last_ding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last ding',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'suggested_object_id': 'front_last_ding',
+    'supported_features': 0,
+    'translation_key': 'last_ding',
+    'unique_id': '765432-last_ding',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.front_last_ding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Front Last ding',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.front_last_ding',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_states[sensor.front_last_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.front_last_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last motion',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'suggested_object_id': 'front_last_motion',
+    'supported_features': 0,
+    'translation_key': 'last_motion',
+    'unique_id': '765432-last_motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.front_last_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Front Last motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.front_last_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_states[sensor.front_wifi_signal_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -525,6 +712,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -545,6 +733,7 @@
     'original_name': 'Wi-Fi signal category',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'front_wifi_signal_category',
     'supported_features': 0,
     'translation_key': 'wifi_signal_category',
     'unique_id': '765432-wifi_signal_category',
@@ -572,6 +761,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -589,11 +779,12 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'Wi-Fi signal strength',
+    'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'front_wifi_signal_strength',
     'supported_features': 0,
-    'translation_key': 'wifi_signal_strength',
+    'translation_key': None,
     'unique_id': '765432-wifi_signal_strength',
     'unit_of_measurement': 'dBm',
   })
@@ -603,7 +794,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'signal_strength',
-      'friendly_name': 'Front Wi-Fi signal strength',
+      'friendly_name': 'Front Signal strength',
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
@@ -623,6 +814,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -643,6 +835,7 @@
     'original_name': 'Battery',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '185036587-battery',
@@ -673,6 +866,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -693,6 +887,7 @@
     'original_name': 'Doorbell volume',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'ingress_doorbell_volume',
     'supported_features': 0,
     'translation_key': 'doorbell_volume',
     'unique_id': '185036587-doorbell_volume',
@@ -720,6 +915,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -740,6 +936,7 @@
     'original_name': 'Last activity',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_activity',
     'unique_id': '185036587-last_activity',
@@ -768,6 +965,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -788,6 +986,7 @@
     'original_name': 'Mic volume',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'ingress_mic_volume',
     'supported_features': 0,
     'translation_key': 'mic_volume',
     'unique_id': '185036587-mic_volume',
@@ -815,6 +1014,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -835,6 +1035,7 @@
     'original_name': 'Voice volume',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'ingress_voice_volume',
     'supported_features': 0,
     'translation_key': 'voice_volume',
     'unique_id': '185036587-voice_volume',
@@ -862,6 +1063,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -882,6 +1084,7 @@
     'original_name': 'Wi-Fi signal category',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'ingress_wifi_signal_category',
     'supported_features': 0,
     'translation_key': 'wifi_signal_category',
     'unique_id': '185036587-wifi_signal_category',
@@ -909,6 +1112,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -926,11 +1130,12 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'Wi-Fi signal strength',
+    'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'ingress_wifi_signal_strength',
     'supported_features': 0,
-    'translation_key': 'wifi_signal_strength',
+    'translation_key': None,
     'unique_id': '185036587-wifi_signal_strength',
     'unit_of_measurement': 'dBm',
   })
@@ -940,7 +1145,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'signal_strength',
-      'friendly_name': 'Ingress Wi-Fi signal strength',
+      'friendly_name': 'Ingress Signal strength',
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
@@ -960,6 +1165,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -980,6 +1186,7 @@
     'original_name': 'Battery',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '345678-battery',
@@ -1010,6 +1217,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1030,6 +1238,7 @@
     'original_name': 'Last activity',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_activity',
     'unique_id': '345678-last_activity',
@@ -1051,6 +1260,106 @@
     'state': 'unknown',
   })
 # ---
+# name: test_states[sensor.internal_last_ding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.internal_last_ding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last ding',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'suggested_object_id': 'internal_last_ding',
+    'supported_features': 0,
+    'translation_key': 'last_ding',
+    'unique_id': '345678-last_ding',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.internal_last_ding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Internal Last ding',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.internal_last_ding',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_states[sensor.internal_last_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.internal_last_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last motion',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'suggested_object_id': 'internal_last_motion',
+    'supported_features': 0,
+    'translation_key': 'last_motion',
+    'unique_id': '345678-last_motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.internal_last_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Internal Last motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.internal_last_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_states[sensor.internal_wifi_signal_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1058,6 +1367,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1078,6 +1388,7 @@
     'original_name': 'Wi-Fi signal category',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'internal_wifi_signal_category',
     'supported_features': 0,
     'translation_key': 'wifi_signal_category',
     'unique_id': '345678-wifi_signal_category',
@@ -1105,6 +1416,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1122,11 +1434,12 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'Wi-Fi signal strength',
+    'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': 'internal_wifi_signal_strength',
     'supported_features': 0,
-    'translation_key': 'wifi_signal_strength',
+    'translation_key': None,
     'unique_id': '345678-wifi_signal_strength',
     'unit_of_measurement': 'dBm',
   })
@@ -1136,7 +1449,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'signal_strength',
-      'friendly_name': 'Internal Wi-Fi signal strength',
+      'friendly_name': 'Internal Signal strength',
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,

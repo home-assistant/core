@@ -4,17 +4,17 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from operator import attrgetter
 from typing import TYPE_CHECKING, Any
-from zoneinfo import ZoneInfo
 
 from aioautomower.model import (
+    ExternalReasons,
+    InactiveReasons,
     MowerAttributes,
     MowerModes,
-    MowerStates,
     RestrictedReasons,
     WorkArea,
 )
-from aioautomower.utils import naive_to_aware
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,11 +24,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import dt as dt_util
 
 from . import AutomowerConfigEntry
+from .const import ERROR_KEYS, ERROR_STATES
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import (
     AutomowerBaseEntity,
@@ -37,178 +37,62 @@ from .entity import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 ATTR_WORK_AREA_ID_ASSIGNMENT = "work_area_id_assignment"
 
-ERROR_KEY_LIST = [
-    "no_error",
-    "alarm_mower_in_motion",
-    "alarm_mower_lifted",
-    "alarm_mower_stopped",
-    "alarm_mower_switched_off",
-    "alarm_mower_tilted",
-    "alarm_outside_geofence",
-    "angular_sensor_problem",
-    "battery_problem",
-    "battery_problem",
-    "battery_restriction_due_to_ambient_temperature",
-    "can_error",
-    "charging_current_too_high",
-    "charging_station_blocked",
-    "charging_system_problem",
-    "charging_system_problem",
-    "collision_sensor_defect",
-    "collision_sensor_error",
-    "collision_sensor_problem_front",
-    "collision_sensor_problem_rear",
-    "com_board_not_available",
-    "communication_circuit_board_sw_must_be_updated",
-    "complex_working_area",
-    "connection_changed",
-    "connection_not_changed",
-    "connectivity_problem",
-    "connectivity_problem",
-    "connectivity_problem",
-    "connectivity_problem",
-    "connectivity_problem",
-    "connectivity_problem",
-    "connectivity_settings_restored",
-    "cutting_drive_motor_1_defect",
-    "cutting_drive_motor_2_defect",
-    "cutting_drive_motor_3_defect",
-    "cutting_height_blocked",
-    "cutting_height_problem",
-    "cutting_height_problem_curr",
-    "cutting_height_problem_dir",
-    "cutting_height_problem_drive",
-    "cutting_motor_problem",
-    "cutting_stopped_slope_too_steep",
-    "cutting_system_blocked",
-    "cutting_system_blocked",
-    "cutting_system_imbalance_warning",
-    "cutting_system_major_imbalance",
-    "destination_not_reachable",
-    "difficult_finding_home",
-    "docking_sensor_defect",
-    "electronic_problem",
-    "empty_battery",
-    MowerStates.ERROR.lower(),
-    MowerStates.ERROR_AT_POWER_UP.lower(),
-    MowerStates.FATAL_ERROR.lower(),
-    "folding_cutting_deck_sensor_defect",
-    "folding_sensor_activated",
-    "geofence_problem",
-    "geofence_problem",
-    "gps_navigation_problem",
-    "guide_1_not_found",
-    "guide_2_not_found",
-    "guide_3_not_found",
-    "guide_calibration_accomplished",
-    "guide_calibration_failed",
-    "high_charging_power_loss",
-    "high_internal_power_loss",
-    "high_internal_temperature",
-    "internal_voltage_error",
-    "invalid_battery_combination_invalid_combination_of_different_battery_types",
-    "invalid_sub_device_combination",
-    "invalid_system_configuration",
-    "left_brush_motor_overloaded",
-    "lift_sensor_defect",
-    "lifted",
-    "limited_cutting_height_range",
-    "limited_cutting_height_range",
-    "loop_sensor_defect",
-    "loop_sensor_problem_front",
-    "loop_sensor_problem_left",
-    "loop_sensor_problem_rear",
-    "loop_sensor_problem_right",
-    "low_battery",
-    "memory_circuit_problem",
-    "mower_lifted",
-    "mower_tilted",
-    "no_accurate_position_from_satellites",
-    "no_confirmed_position",
-    "no_drive",
-    "no_loop_signal",
-    "no_power_in_charging_station",
-    "no_response_from_charger",
-    "outside_working_area",
-    "poor_signal_quality",
-    "reference_station_communication_problem",
-    "right_brush_motor_overloaded",
-    "safety_function_faulty",
-    "settings_restored",
-    "sim_card_locked",
-    "sim_card_locked",
-    "sim_card_locked",
-    "sim_card_locked",
-    "sim_card_not_found",
-    "sim_card_requires_pin",
-    "slipped_mower_has_slipped_situation_not_solved_with_moving_pattern",
-    "slope_too_steep",
-    "sms_could_not_be_sent",
-    "stop_button_problem",
-    "stuck_in_charging_station",
-    "switch_cord_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
-    "tilt_sensor_problem",
-    "too_high_discharge_current",
-    "too_high_internal_current",
-    "trapped",
-    "ultrasonic_problem",
-    "ultrasonic_sensor_1_defect",
-    "ultrasonic_sensor_2_defect",
-    "ultrasonic_sensor_3_defect",
-    "ultrasonic_sensor_4_defect",
-    "unexpected_cutting_height_adj",
-    "unexpected_error",
-    "upside_down",
-    "weak_gps_signal",
-    "wheel_drive_problem_left",
-    "wheel_drive_problem_rear_left",
-    "wheel_drive_problem_rear_right",
-    "wheel_drive_problem_right",
-    "wheel_motor_blocked_left",
-    "wheel_motor_blocked_rear_left",
-    "wheel_motor_blocked_rear_right",
-    "wheel_motor_blocked_right",
-    "wheel_motor_overloaded_left",
-    "wheel_motor_overloaded_rear_left",
-    "wheel_motor_overloaded_rear_right",
-    "wheel_motor_overloaded_right",
-    "work_area_not_valid",
-    "wrong_loop_signal",
-    "wrong_pin_code",
-    "zone_generator_problem",
+ERROR_KEY_LIST = sorted(
+    set(ERROR_KEYS) | {state.lower() for state in ERROR_STATES} | {"no_error"}
+)
+
+INACTIVE_REASONS: list = [
+    InactiveReasons.NONE,
+    InactiveReasons.PLANNING,
+    InactiveReasons.SEARCHING_FOR_SATELLITES,
 ]
 
-ERROR_STATES = {
-    MowerStates.ERROR,
-    MowerStates.ERROR_AT_POWER_UP,
-    MowerStates.FATAL_ERROR,
-}
 
 RESTRICTED_REASONS: list = [
-    RestrictedReasons.ALL_WORK_AREAS_COMPLETED.lower(),
-    RestrictedReasons.DAILY_LIMIT.lower(),
-    RestrictedReasons.EXTERNAL.lower(),
-    RestrictedReasons.FOTA.lower(),
-    RestrictedReasons.FROST.lower(),
-    RestrictedReasons.NONE.lower(),
-    RestrictedReasons.NOT_APPLICABLE.lower(),
-    RestrictedReasons.PARK_OVERRIDE.lower(),
-    RestrictedReasons.SENSOR.lower(),
-    RestrictedReasons.WEEK_SCHEDULE.lower(),
+    RestrictedReasons.ALL_WORK_AREAS_COMPLETED,
+    RestrictedReasons.DAILY_LIMIT,
+    RestrictedReasons.EXTERNAL,
+    RestrictedReasons.FOTA,
+    RestrictedReasons.FROST,
+    RestrictedReasons.NONE,
+    RestrictedReasons.NOT_APPLICABLE,
+    RestrictedReasons.PARK_OVERRIDE,
+    RestrictedReasons.SENSOR,
+    RestrictedReasons.WEEK_SCHEDULE,
+    ExternalReasons.AMAZON_ALEXA,
+    ExternalReasons.DEVELOPER_PORTAL,
+    ExternalReasons.GARDENA_SMART_SYSTEM,
+    ExternalReasons.GOOGLE_ASSISTANT,
+    ExternalReasons.HOME_ASSISTANT,
+    ExternalReasons.IFTTT,
+    ExternalReasons.IFTTT_APPLETS,
+    ExternalReasons.IFTTT_CALENDAR_CONNECTION,
+    ExternalReasons.SMART_ROUTINE,
+    ExternalReasons.SMART_ROUTINE_FROST_GUARD,
+    ExternalReasons.SMART_ROUTINE_RAIN_GUARD,
+    ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION,
 ]
 
 STATE_NO_WORK_AREA_ACTIVE = "no_work_area_active"
+
+
+@callback
+def _get_restricted_reason(data: MowerAttributes) -> str:
+    """Return the restricted reason.
+
+    If there is an external reason, return that instead, if it's available.
+    """
+    if (
+        data.planner.restricted_reason == RestrictedReasons.EXTERNAL
+        and data.planner.external_reason is not None
+    ):
+        return data.planner.external_reason
+    return data.planner.restricted_reason
 
 
 @callback
@@ -227,12 +111,16 @@ def _get_work_area_names(data: MowerAttributes) -> list[str]:
 @callback
 def _get_current_work_area_name(data: MowerAttributes) -> str:
     """Return the name of the current work area."""
-    if data.mower.work_area_id is None:
-        return STATE_NO_WORK_AREA_ACTIVE
     if TYPE_CHECKING:
         # Sensor does not get created if values are None
         assert data.work_areas is not None
-    return data.work_areas[data.mower.work_area_id].name
+    if (
+        data.mower.work_area_id is not None
+        and data.mower.work_area_id in data.work_areas
+    ):
+        return data.work_areas[data.mower.work_area_id].name
+
+    return STATE_NO_WORK_AREA_ACTIVE
 
 
 @callback
@@ -272,15 +160,15 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: data.battery.battery_percent,
+        value_fn=attrgetter("battery.battery_percent"),
     ),
     AutomowerSensorEntityDescription(
         key="mode",
         translation_key="mode",
         device_class=SensorDeviceClass.ENUM,
-        option_fn=lambda data: [option.lower() for option in list(MowerModes)],
+        option_fn=lambda data: list(MowerModes),
         value_fn=(
-            lambda data: data.mower.mode.lower()
+            lambda data: data.mower.mode
             if data.mower.mode != MowerModes.UNKNOWN
             else None
         ),
@@ -288,12 +176,26 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="cutting_blade_usage_time",
         translation_key="cutting_blade_usage_time",
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         exists_fn=lambda data: data.statistics.cutting_blade_usage_time is not None,
-        value_fn=lambda data: data.statistics.cutting_blade_usage_time,
+        value_fn=attrgetter("statistics.cutting_blade_usage_time"),
+    ),
+    AutomowerSensorEntityDescription(
+        key="downtime",
+        translation_key="downtime",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_display_precision=0,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.downtime is not None,
+        value_fn=attrgetter("statistics.downtime"),
     ),
     AutomowerSensorEntityDescription(
         key="total_charging_time",
@@ -304,7 +206,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         exists_fn=lambda data: data.statistics.total_charging_time is not None,
-        value_fn=lambda data: data.statistics.total_charging_time,
+        value_fn=attrgetter("statistics.total_charging_time"),
     ),
     AutomowerSensorEntityDescription(
         key="total_cutting_time",
@@ -315,7 +217,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         exists_fn=lambda data: data.statistics.total_cutting_time is not None,
-        value_fn=lambda data: data.statistics.total_cutting_time,
+        value_fn=attrgetter("statistics.total_cutting_time"),
     ),
     AutomowerSensorEntityDescription(
         key="total_running_time",
@@ -326,7 +228,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         exists_fn=lambda data: data.statistics.total_running_time is not None,
-        value_fn=lambda data: data.statistics.total_running_time,
+        value_fn=attrgetter("statistics.total_running_time"),
     ),
     AutomowerSensorEntityDescription(
         key="total_searching_time",
@@ -337,7 +239,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         exists_fn=lambda data: data.statistics.total_searching_time is not None,
-        value_fn=lambda data: data.statistics.total_searching_time,
+        value_fn=attrgetter("statistics.total_searching_time"),
     ),
     AutomowerSensorEntityDescription(
         key="number_of_charging_cycles",
@@ -345,15 +247,16 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         exists_fn=lambda data: data.statistics.number_of_charging_cycles is not None,
-        value_fn=lambda data: data.statistics.number_of_charging_cycles,
+        value_fn=attrgetter("statistics.number_of_charging_cycles"),
     ),
     AutomowerSensorEntityDescription(
         key="number_of_collisions",
         translation_key="number_of_collisions",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL,
         exists_fn=lambda data: data.statistics.number_of_collisions is not None,
-        value_fn=lambda data: data.statistics.number_of_collisions,
+        value_fn=attrgetter("statistics.number_of_collisions"),
     ),
     AutomowerSensorEntityDescription(
         key="total_drive_distance",
@@ -364,16 +267,26 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.METERS,
         suggested_unit_of_measurement=UnitOfLength.KILOMETERS,
         exists_fn=lambda data: data.statistics.total_drive_distance is not None,
-        value_fn=lambda data: data.statistics.total_drive_distance,
+        value_fn=attrgetter("statistics.total_drive_distance"),
+    ),
+    AutomowerSensorEntityDescription(
+        key="uptime",
+        translation_key="uptime",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_display_precision=0,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.uptime is not None,
+        value_fn=attrgetter("statistics.uptime"),
     ),
     AutomowerSensorEntityDescription(
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: naive_to_aware(
-            data.planner.next_start_datetime_naive,
-            ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE)),
-        ),
+        value_fn=attrgetter("planner.next_start_datetime"),
     ),
     AutomowerSensorEntityDescription(
         key="error",
@@ -387,7 +300,15 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         translation_key="restricted_reason",
         device_class=SensorDeviceClass.ENUM,
         option_fn=lambda data: RESTRICTED_REASONS,
-        value_fn=lambda data: data.planner.restricted_reason.lower(),
+        value_fn=_get_restricted_reason,
+    ),
+    AutomowerSensorEntityDescription(
+        key="inactive_reason",
+        translation_key="inactive_reason",
+        exists_fn=lambda data: data.capabilities.work_areas,
+        device_class=SensorDeviceClass.ENUM,
+        option_fn=lambda data: INACTIVE_REASONS,
+        value_fn=attrgetter("mower.inactive_reason"),
     ),
     AutomowerSensorEntityDescription(
         key="work_area",
@@ -417,17 +338,14 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
         exists_fn=lambda data: data.progress is not None,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: data.progress,
+        value_fn=attrgetter("progress"),
     ),
     WorkAreaSensorEntityDescription(
         key="last_time_completed",
         translation_key_fn=_work_area_translation_key,
-        exists_fn=lambda data: data.last_time_completed_naive is not None,
+        exists_fn=lambda data: data.last_time_completed is not None,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: naive_to_aware(
-            data.last_time_completed_naive,
-            ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE)),
-        ),
+        value_fn=attrgetter("last_time_completed"),
     ),
 )
 
@@ -435,7 +353,7 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
     coordinator = entry.runtime_data
@@ -458,6 +376,37 @@ async def async_setup_entry(
             if description.exists_fn(coordinator.data[mower_id])
         )
     async_add_entities(entities)
+
+    def _async_add_new_work_areas(mower_id: str, work_area_ids: set[int]) -> None:
+        mower_data = coordinator.data[mower_id]
+        if mower_data.work_areas is None:
+            return
+
+        async_add_entities(
+            WorkAreaSensorEntity(mower_id, coordinator, description, work_area_id)
+            for description in WORK_AREA_SENSOR_TYPES
+            for work_area_id in work_area_ids
+            if work_area_id in mower_data.work_areas
+            and description.exists_fn(mower_data.work_areas[work_area_id])
+        )
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerSensorEntity(mower_id, coordinator, description)
+            for mower_id in mower_ids
+            for description in MOWER_SENSOR_TYPES
+            if description.exists_fn(coordinator.data[mower_id])
+        )
+        for mower_id in mower_ids:
+            mower_data = coordinator.data[mower_id]
+            if mower_data.capabilities.work_areas and mower_data.work_areas is not None:
+                _async_add_new_work_areas(
+                    mower_id,
+                    set(mower_data.work_areas.keys()),
+                )
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
+    coordinator.new_areas_callbacks.append(_async_add_new_work_areas)
 
 
 class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
@@ -491,6 +440,11 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return self.entity_description.extra_state_attributes_fn(self.mower_attributes)
+
+    @property
+    def available(self) -> bool:
+        """Return the available attribute of the entity."""
+        return super().available and self.native_value is not None
 
 
 class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):

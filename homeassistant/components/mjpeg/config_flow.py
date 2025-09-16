@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from http import HTTPStatus
-from types import MappingProxyType
 from typing import Any
 
 import requests
@@ -34,7 +34,7 @@ from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, LOGGER
 
 @callback
 def async_get_schema(
-    defaults: dict[str, Any] | MappingProxyType[str, Any], show_name: bool = False
+    defaults: Mapping[str, Any], show_name: bool = False
 ) -> vol.Schema:
     """Return MJPEG IP Camera schema."""
     schema = {
@@ -141,7 +141,7 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> MJPEGOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return MJPEGOptionsFlowHandler(config_entry)
+        return MJPEGOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -182,10 +182,6 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
 
 class MJPEGOptionsFlowHandler(OptionsFlow):
     """Handle MJPEG IP Camera options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize MJPEG IP Camera options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

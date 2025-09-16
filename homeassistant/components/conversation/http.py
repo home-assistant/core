@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import asdict
 from typing import Any
 
 from aiohttp import web
-from hassil.recognize import (
-    MISSING_ENTITY,
-    RecognizeResult,
-    UnmatchedRangeEntity,
-    UnmatchedTextEntity,
-)
+from hassil.recognize import MISSING_ENTITY, RecognizeResult
+from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
+from home_assistant_intents import get_language_scores
 import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
@@ -31,7 +29,7 @@ from .const import DATA_COMPONENT, DATA_DEFAULT_ENTITY
 from .default_agent import (
     METADATA_CUSTOM_FILE,
     METADATA_CUSTOM_SENTENCE,
-    SentenceTriggerResult,
+    METADATA_FUZZY_MATCH,
 )
 from .entity import ConversationEntity
 from .models import ConversationInput
@@ -44,7 +42,9 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_process)
     websocket_api.async_register_command(hass, websocket_prepare)
     websocket_api.async_register_command(hass, websocket_list_agents)
+    websocket_api.async_register_command(hass, websocket_list_sentences)
     websocket_api.async_register_command(hass, websocket_hass_agent_debug)
+    websocket_api.async_register_command(hass, websocket_hass_agent_language_scores)
 
 
 @websocket_api.websocket_command(
@@ -160,6 +160,26 @@ async def websocket_list_agents(
 
 @websocket_api.websocket_command(
     {
+        vol.Required("type"): "conversation/sentences/list",
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_list_sentences(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """List custom registered sentences."""
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+
+    sentences = []
+    for trigger_data in agent.trigger_sentences:
+        sentences.extend(trigger_data.sentences)
+
+    connection.send_result(msg["id"], {"trigger_sentences": sentences})
+
+
+@websocket_api.websocket_command(
+    {
         vol.Required("type"): "conversation/agent/homeassistant/debug",
         vol.Required("sentences"): [str],
         vol.Optional("language"): str,
@@ -171,44 +191,42 @@ async def websocket_hass_agent_debug(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Return intents that would be matched by the default agent for a list of sentences."""
-    results = [
-        await hass.data[DATA_DEFAULT_ENTITY].async_recognize(
-            ConversationInput(
-                text=sentence,
-                context=connection.context(msg),
-                conversation_id=None,
-                device_id=msg.get("device_id"),
-                language=msg.get("language", hass.config.language),
-                agent_id=None,
-            )
-        )
-        for sentence in msg["sentences"]
-    ]
+    agent = hass.data[DATA_DEFAULT_ENTITY]
 
     # Return results for each sentence in the same order as the input.
     result_dicts: list[dict[str, Any] | None] = []
-    for result in results:
+    for sentence in msg["sentences"]:
+        user_input = ConversationInput(
+            text=sentence,
+            context=connection.context(msg),
+            conversation_id=None,
+            device_id=msg.get("device_id"),
+            satellite_id=None,
+            language=msg.get("language", hass.config.language),
+            agent_id=agent.entity_id,
+        )
         result_dict: dict[str, Any] | None = None
-        if isinstance(result, SentenceTriggerResult):
+
+        if trigger_result := await agent.async_recognize_sentence_trigger(user_input):
             result_dict = {
                 # Matched a user-defined sentence trigger.
                 # We can't provide the response here without executing the
                 # trigger.
                 "match": True,
                 "source": "trigger",
-                "sentence_template": result.sentence_template or "",
+                "sentence_template": trigger_result.sentence_template or "",
             }
-        elif isinstance(result, RecognizeResult):
-            successful_match = not result.unmatched_entities
+        elif intent_result := await agent.async_recognize_intent(user_input):
+            successful_match = not intent_result.unmatched_entities
             result_dict = {
                 # Name of the matching intent (or the closest)
                 "intent": {
-                    "name": result.intent.name,
+                    "name": intent_result.intent.name,
                 },
                 # Slot values that would be received by the intent
                 "slots": {  # direct access to values
                     entity_key: entity.text or entity.value
-                    for entity_key, entity in result.entities.items()
+                    for entity_key, entity in intent_result.entities.items()
                 },
                 # Extra slot details, such as the originally matched text
                 "details": {
@@ -217,7 +235,7 @@ async def websocket_hass_agent_debug(
                         "value": entity.value,
                         "text": entity.text,
                     }
-                    for entity_key, entity in result.entities.items()
+                    for entity_key, entity in intent_result.entities.items()
                 },
                 # Entities/areas/etc. that would be targeted
                 "targets": {},
@@ -226,26 +244,33 @@ async def websocket_hass_agent_debug(
                 # Text of the sentence template that matched (or was closest)
                 "sentence_template": "",
                 # When match is incomplete, this will contain the best slot guesses
-                "unmatched_slots": _get_unmatched_slots(result),
+                "unmatched_slots": _get_unmatched_slots(intent_result),
+                # True if match was not exact
+                "fuzzy_match": False,
             }
 
             if successful_match:
                 result_dict["targets"] = {
                     state.entity_id: {"matched": is_matched}
-                    for state, is_matched in _get_debug_targets(hass, result)
+                    for state, is_matched in _get_debug_targets(hass, intent_result)
                 }
 
-            if result.intent_sentence is not None:
-                result_dict["sentence_template"] = result.intent_sentence.text
+            if intent_result.intent_sentence is not None:
+                result_dict["sentence_template"] = intent_result.intent_sentence.text
 
-            # Inspect metadata to determine if this matched a custom sentence
-            if result.intent_metadata and result.intent_metadata.get(
-                METADATA_CUSTOM_SENTENCE
-            ):
-                result_dict["source"] = "custom"
-                result_dict["file"] = result.intent_metadata.get(METADATA_CUSTOM_FILE)
-            else:
-                result_dict["source"] = "builtin"
+            if intent_result.intent_metadata:
+                # Inspect metadata to determine if this matched a custom sentence
+                if intent_result.intent_metadata.get(METADATA_CUSTOM_SENTENCE):
+                    result_dict["source"] = "custom"
+                    result_dict["file"] = intent_result.intent_metadata.get(
+                        METADATA_CUSTOM_FILE
+                    )
+                else:
+                    result_dict["source"] = "builtin"
+
+                result_dict["fuzzy_match"] = intent_result.intent_metadata.get(
+                    METADATA_FUZZY_MATCH, False
+                )
 
         result_dicts.append(result_dict)
 
@@ -322,6 +347,36 @@ def _get_unmatched_slots(
             unmatched_slots[entity.name] = entity.value
 
     return unmatched_slots
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "conversation/agent/homeassistant/language_scores",
+        vol.Optional("language"): str,
+        vol.Optional("country"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_hass_agent_language_scores(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get support scores per language."""
+    language = msg.get("language", hass.config.language)
+    country = msg.get("country", hass.config.country)
+
+    scores = await hass.async_add_executor_job(get_language_scores)
+    matching_langs = language_util.matches(language, scores.keys(), country=country)
+    preferred_lang = matching_langs[0] if matching_langs else language
+    result = {
+        "languages": {
+            lang_key: asdict(lang_scores) for lang_key, lang_scores in scores.items()
+        },
+        "preferred_language": preferred_lang,
+    }
+
+    connection.send_result(msg["id"], result)
 
 
 class ConversationProcessView(http.HomeAssistantView):

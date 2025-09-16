@@ -1,4 +1,4 @@
-"""Base class for KNX devices."""
+"""Base classes for KNX entities."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from .storage.config_store import PlatformControllerBase
 from .storage.const import CONF_DEVICE_INFO
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 
 class KnxUiEntityPlatformController(PlatformControllerBase):
@@ -69,7 +69,7 @@ class _KnxEntityBase(Entity):
         """Request a state update from KNX bus."""
         await self._device.sync()
 
-    def after_update_callback(self, _device: XknxDevice) -> None:
+    def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         self.async_write_ha_state()
 

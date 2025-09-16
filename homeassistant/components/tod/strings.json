@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add Times of the Day Sensor",
+        "title": "Create Times of the Day Sensor",
         "description": "Create a binary sensor that turns on or off depending on the time.",
         "data": {
           "after_time": "On time",

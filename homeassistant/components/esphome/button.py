@@ -16,6 +16,8 @@ from .entity import (
     platform_async_setup_entry,
 )
 
+PARALLEL_UPDATES = 0
+
 
 class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
     """A button implementation for ESPHome."""
@@ -46,7 +48,7 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
     @convert_api_error_ha_error
     async def async_press(self) -> None:
         """Press the button."""
-        self._client.button_command(self._key)
+        self._client.button_command(self._key, device_id=self._static_info.device_id)
 
 
 async_setup_entry = partial(

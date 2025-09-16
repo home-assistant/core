@@ -29,7 +29,7 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
         }
     )
 
-    async def get_account_info(self, email: str, password: str) -> dict:
+    async def get_account_info(self, email: str, password: str) -> dict[str, Any]:
         """Get account info from the mobile API and the web API."""
         aseko = Aseko(email, password)
         user = await aseko.login()
@@ -70,7 +70,9 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_store_credentials(self, info: dict[str, Any]) -> ConfigFlowResult:
         """Store validated credentials."""
 
+        await self.async_set_unique_id(info[CONF_UNIQUE_ID])
         if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),
                 title=info[CONF_EMAIL],
@@ -80,7 +82,6 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        await self.async_set_unique_id(info[CONF_UNIQUE_ID])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(

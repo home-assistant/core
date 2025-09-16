@@ -22,6 +22,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, BMWConfigEntry
 
+PARALLEL_UPDATES = 1
+
 ATTR_LOCATION_ATTRIBUTES = ["street", "city", "postal_code", "country"]
 
 POI_SCHEMA = vol.Schema(
@@ -51,7 +53,7 @@ def get_service(
     targets = {}
     if (
         config_entry
-        and (coordinator := config_entry.runtime_data.coordinator)
+        and (coordinator := config_entry.runtime_data)
         and not coordinator.read_only
     ):
         targets.update({v.name: v for v in coordinator.account.vehicles})
@@ -104,4 +106,8 @@ class BMWNotificationService(BaseNotificationService):
             try:
                 await vehicle.remote_services.trigger_send_poi(poi)
             except MyBMWAPIError as ex:
-                raise HomeAssistantError(ex) from ex
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="remote_service_error",
+                    translation_placeholders={"exception": str(ex)},
+                ) from ex

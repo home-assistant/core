@@ -105,11 +105,7 @@ class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
         else:
-            # Force the loading of locations using I/O
-            number_locations = await self.hass.async_add_executor_job(
-                self.client.get_number_locations,
-            )
-            if number_locations < 1:
+            if self.client.get_number_locations() < 1:
                 return self.async_abort(reason="no_locations")
             for location_id in self.client.locations:
                 self.usercodes[location_id] = None
@@ -193,15 +189,11 @@ class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> TotalConnectOptionsFlowHandler:
         """Get options flow."""
-        return TotalConnectOptionsFlowHandler(config_entry)
+        return TotalConnectOptionsFlowHandler()
 
 
 class TotalConnectOptionsFlowHandler(OptionsFlow):
     """TotalConnect options flow handler."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, bool] | None = None

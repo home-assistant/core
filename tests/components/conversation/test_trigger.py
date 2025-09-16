@@ -5,7 +5,7 @@ import logging
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.conversation import default_agent
+from homeassistant.components.conversation import HOME_ASSISTANT_AGENT, default_agent
 from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.core import Context, HomeAssistant, ServiceCall
@@ -40,18 +40,32 @@ async def test_if_fires_on_event(
                 },
                 "action": {
                     "service": "test.automation",
-                    "data_template": {"data": "{{ trigger }}"},
+                    "data": {
+                        "data": {
+                            "alias": "{{ trigger.alias }}",
+                            "id": "{{ trigger.id }}",
+                            "idx": "{{ trigger.idx }}",
+                            "platform": "{{ trigger.platform }}",
+                            "sentence": "{{ trigger.sentence }}",
+                            "slots": "{{ trigger.slots }}",
+                            "details": "{{ trigger.details }}",
+                            "device_id": "{{ trigger.device_id }}",
+                            "satellite_id": "{{ trigger.satellite_id }}",
+                            "user_input": "{{ trigger.user_input }}",
+                        }
+                    },
                 },
             }
         },
     )
-
+    context = Context()
     service_response = await hass.services.async_call(
         "conversation",
         "process",
         {"text": "Ha ha ha"},
         blocking=True,
         return_response=True,
+        context=context,
     )
     assert service_response["response"]["speech"]["plain"]["speech"] == "Done"
 
@@ -61,13 +75,24 @@ async def test_if_fires_on_event(
     assert service_calls[1].service == "automation"
     assert service_calls[1].data["data"] == {
         "alias": None,
-        "id": "0",
-        "idx": "0",
+        "id": 0,
+        "idx": 0,
         "platform": "conversation",
         "sentence": "Ha ha ha",
         "slots": {},
         "details": {},
         "device_id": None,
+        "satellite_id": None,
+        "user_input": {
+            "agent_id": HOME_ASSISTANT_AGENT,
+            "context": context.as_dict(),
+            "conversation_id": None,
+            "device_id": None,
+            "satellite_id": None,
+            "language": "en",
+            "text": "Ha ha ha",
+            "extra_system_prompt": None,
+        },
     }
 
 
@@ -82,6 +107,7 @@ async def test_response(hass: HomeAssistant) -> None:
                 "trigger": {
                     "platform": "conversation",
                     "command": ["Open the pod bay door Hal"],
+                    "variables": {"name": "Dr. David Bowman"},
                 },
                 "action": {
                     "set_conversation_response": response,
@@ -152,7 +178,20 @@ async def test_response_same_sentence(
                         {"delay": "0:0:0.100"},
                         {
                             "service": "test.automation",
-                            "data_template": {"data": "{{ trigger }}"},
+                            "data_template": {
+                                "data": {
+                                    "alias": "{{ trigger.alias }}",
+                                    "id": "{{ trigger.id }}",
+                                    "idx": "{{ trigger.idx }}",
+                                    "platform": "{{ trigger.platform }}",
+                                    "sentence": "{{ trigger.sentence }}",
+                                    "slots": "{{ trigger.slots }}",
+                                    "details": "{{ trigger.details }}",
+                                    "device_id": "{{ trigger.device_id }}",
+                                    "satellite_id": "{{ trigger.satellite_id }}",
+                                    "user_input": "{{ trigger.user_input }}",
+                                }
+                            },
                         },
                         {"set_conversation_response": "response 2"},
                     ],
@@ -168,13 +207,14 @@ async def test_response_same_sentence(
             ]
         },
     )
-
+    context = Context()
     service_response = await hass.services.async_call(
         "conversation",
         "process",
         {"text": "test sentence"},
         blocking=True,
         return_response=True,
+        context=context,
     )
     await hass.async_block_till_done()
 
@@ -188,12 +228,23 @@ async def test_response_same_sentence(
     assert service_calls[1].data["data"] == {
         "alias": None,
         "id": "trigger1",
-        "idx": "0",
+        "idx": 0,
         "platform": "conversation",
         "sentence": "test sentence",
         "slots": {},
         "details": {},
         "device_id": None,
+        "satellite_id": None,
+        "user_input": {
+            "agent_id": HOME_ASSISTANT_AGENT,
+            "context": context.as_dict(),
+            "conversation_id": None,
+            "device_id": None,
+            "satellite_id": None,
+            "language": "en",
+            "text": "test sentence",
+            "extra_system_prompt": None,
+        },
     }
 
 
@@ -231,13 +282,14 @@ async def test_response_same_sentence_with_error(
             ]
         },
     )
-
+    context = Context()
     service_response = await hass.services.async_call(
         "conversation",
         "process",
         {"text": "test sentence"},
         blocking=True,
         return_response=True,
+        context=context,
     )
     await hass.async_block_till_done()
 
@@ -320,12 +372,25 @@ async def test_same_trigger_multiple_sentences(
                 },
                 "action": {
                     "service": "test.automation",
-                    "data_template": {"data": "{{ trigger }}"},
+                    "data_template": {
+                        "data": {
+                            "alias": "{{ trigger.alias }}",
+                            "id": "{{ trigger.id }}",
+                            "idx": "{{ trigger.idx }}",
+                            "platform": "{{ trigger.platform }}",
+                            "sentence": "{{ trigger.sentence }}",
+                            "slots": "{{ trigger.slots }}",
+                            "details": "{{ trigger.details }}",
+                            "device_id": "{{ trigger.device_id }}",
+                            "satellite_id": "{{ trigger.satellite_id }}",
+                            "user_input": "{{ trigger.user_input }}",
+                        }
+                    },
                 },
             }
         },
     )
-
+    context = Context()
     await hass.services.async_call(
         "conversation",
         "process",
@@ -333,6 +398,7 @@ async def test_same_trigger_multiple_sentences(
             "text": "hello",
         },
         blocking=True,
+        context=context,
     )
 
     # Only triggers once
@@ -342,13 +408,24 @@ async def test_same_trigger_multiple_sentences(
     assert service_calls[1].service == "automation"
     assert service_calls[1].data["data"] == {
         "alias": None,
-        "id": "0",
-        "idx": "0",
+        "id": 0,
+        "idx": 0,
         "platform": "conversation",
         "sentence": "hello",
         "slots": {},
         "details": {},
         "device_id": None,
+        "satellite_id": None,
+        "user_input": {
+            "agent_id": HOME_ASSISTANT_AGENT,
+            "context": context.as_dict(),
+            "conversation_id": None,
+            "device_id": None,
+            "satellite_id": None,
+            "language": "en",
+            "text": "hello",
+            "extra_system_prompt": None,
+        },
     }
 
 
@@ -371,7 +448,20 @@ async def test_same_sentence_multiple_triggers(
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {"data": "{{ trigger }}"},
+                        "data_template": {
+                            "data": {
+                                "alias": "{{ trigger.alias }}",
+                                "id": "{{ trigger.id }}",
+                                "idx": "{{ trigger.idx }}",
+                                "platform": "{{ trigger.platform }}",
+                                "sentence": "{{ trigger.sentence }}",
+                                "slots": "{{ trigger.slots }}",
+                                "details": "{{ trigger.details }}",
+                                "device_id": "{{ trigger.device_id }}",
+                                "satellite_id": "{{ trigger.satellite_id }}",
+                                "user_input": "{{ trigger.user_input }}",
+                            }
+                        },
                     },
                 },
                 {
@@ -384,7 +474,20 @@ async def test_same_sentence_multiple_triggers(
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {"data": "{{ trigger }}"},
+                        "data_template": {
+                            "data": {
+                                "alias": "{{ trigger.alias }}",
+                                "id": "{{ trigger.id }}",
+                                "idx": "{{ trigger.idx }}",
+                                "platform": "{{ trigger.platform }}",
+                                "sentence": "{{ trigger.sentence }}",
+                                "slots": "{{ trigger.slots }}",
+                                "details": "{{ trigger.details }}",
+                                "device_id": "{{ trigger.device_id }}",
+                                "satellite_id": "{{ trigger.satellite_id }}",
+                                "user_input": "{{ trigger.user_input }}",
+                            }
+                        },
                     },
                 },
             ],
@@ -488,12 +591,26 @@ async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) 
                 },
                 "action": {
                     "service": "test.automation",
-                    "data_template": {"data": "{{ trigger }}"},
+                    "data_template": {
+                        "data": {
+                            "alias": "{{ trigger.alias }}",
+                            "id": "{{ trigger.id }}",
+                            "idx": "{{ trigger.idx }}",
+                            "platform": "{{ trigger.platform }}",
+                            "sentence": "{{ trigger.sentence }}",
+                            "slots": "{{ trigger.slots }}",
+                            "details": "{{ trigger.details }}",
+                            "device_id": "{{ trigger.device_id }}",
+                            "satellite_id": "{{ trigger.satellite_id }}",
+                            "user_input": "{{ trigger.user_input }}",
+                        }
+                    },
                 },
             }
         },
     )
 
+    context = Context()
     await hass.services.async_call(
         "conversation",
         "process",
@@ -501,6 +618,7 @@ async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) 
             "text": "play the white album by the beatles",
         },
         blocking=True,
+        context=context,
     )
 
     await hass.async_block_till_done()
@@ -509,8 +627,8 @@ async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) 
     assert service_calls[1].service == "automation"
     assert service_calls[1].data["data"] == {
         "alias": None,
-        "id": "0",
-        "idx": "0",
+        "id": 0,
+        "idx": 0,
         "platform": "conversation",
         "sentence": "play the white album by the beatles",
         "slots": {
@@ -530,6 +648,17 @@ async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) 
             },
         },
         "device_id": None,
+        "satellite_id": None,
+        "user_input": {
+            "agent_id": HOME_ASSISTANT_AGENT,
+            "context": context.as_dict(),
+            "conversation_id": None,
+            "device_id": None,
+            "satellite_id": None,
+            "language": "en",
+            "text": "play the white album by the beatles",
+            "extra_system_prompt": None,
+        },
     }
 
 
@@ -545,7 +674,7 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
                     "command": ["test sentence"],
                 },
                 "action": {
-                    "set_conversation_response": "{{ trigger.device_id }}",
+                    "set_conversation_response": "{{ trigger.device_id }} - {{ trigger.satellite_id }}",
                 },
             }
         },
@@ -560,8 +689,12 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
             context=Context(),
             conversation_id=None,
             device_id="my_device",
+            satellite_id="assist_satellite.my_satellite",
             language=hass.config.language,
             agent_id=None,
         )
     )
-    assert result.response.speech["plain"]["speech"] == "my_device"
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "my_device - assist_satellite.my_satellite"
+    )

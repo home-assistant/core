@@ -2,12 +2,14 @@
 
 import asyncio
 import base64
+from collections.abc import Generator
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import conversation
 from homeassistant.components.assist_pipeline.const import (
     DOMAIN,
     SAMPLE_CHANNELS,
@@ -18,10 +20,12 @@ from homeassistant.components.assist_pipeline.pipeline import (
     DeviceAudioQueue,
     Pipeline,
     PipelineData,
+    async_get_pipelines,
+    async_update_pipeline,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import chat_session, device_registry as dr
 
 from .conftest import (
     BYTES_ONE_SECOND,
@@ -33,6 +37,22 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture(autouse=True)
+def mock_chat_session_id() -> Generator[Mock]:
+    """Mock the conversation ID of chat sessions."""
+    with patch(
+        "homeassistant.helpers.chat_session.ulid_now", return_value="mock-ulid"
+    ) as mock_ulid_now:
+        yield mock_ulid_now
+
+
+@pytest.fixture(autouse=True)
+def mock_tts_token() -> Generator[None]:
+    """Mock the TTS token for URLs."""
+    with patch("secrets.token_urlsafe", return_value="mocked-token"):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -119,85 +139,88 @@ async def test_audio_pipeline(
     events = []
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id(
-        {
-            "type": "assist_pipeline/run",
-            "start_stage": "stt",
-            "end_stage": "tts",
-            "input": {
-                "sample_rate": 44100,
-            },
-        }
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "stt",
+                "end_stage": "tts",
+                "input": {
+                    "sample_rate": 44100,
+                },
+            }
+        )
 
-    # result
-    msg = await client.receive_json()
-    assert msg["success"]
+        # result
+        msg = await client.receive_json()
+        assert msg["success"]
 
-    # run start
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-start"
-    msg["event"]["data"]["pipeline"] = ANY
-    assert msg["event"]["data"] == snapshot
-    handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
-    events.append(msg["event"])
+        # run start
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-start"
+        msg["event"]["data"]["pipeline"] = ANY
+        assert msg["event"]["data"] == snapshot
+        handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
+        events.append(msg["event"])
 
-    # stt
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # stt
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "stt-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # End of audio stream (handler id + empty payload)
-    await client.send_bytes(bytes([handler_id]))
+        # End of audio stream (handler id + empty payload)
+        await client.send_bytes(bytes([handler_id]))
 
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "stt-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # intent
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "intent-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # intent
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "intent-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "intent-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "intent-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # text-to-speech
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "tts-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # text-to-speech
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "tts-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "tts-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "tts-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # run end
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # run end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_debug)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
+        pipeline_data: PipelineData = hass.data[DOMAIN]
+        pipeline_id = list(pipeline_data.pipeline_debug)[0]
+        pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
-    await client.send_json_auto_id(
-        {
-            "type": "assist_pipeline/pipeline_debug/get",
-            "pipeline_id": pipeline_id,
-            "pipeline_run_id": pipeline_run_id,
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {"events": events}
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/pipeline_debug/get",
+                "pipeline_id": pipeline_id,
+                "pipeline_run_id": pipeline_run_id,
+            }
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {"events": events}
 
 
 async def test_audio_pipeline_with_wake_word_timeout(
@@ -210,49 +233,52 @@ async def test_audio_pipeline_with_wake_word_timeout(
     events = []
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id(
-        {
-            "type": "assist_pipeline/run",
-            "start_stage": "wake_word",
-            "end_stage": "tts",
-            "input": {
-                "sample_rate": SAMPLE_RATE,
-                "timeout": 1,
-            },
-        }
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "wake_word",
+                "end_stage": "tts",
+                "input": {
+                    "sample_rate": SAMPLE_RATE,
+                    "timeout": 1,
+                },
+            }
+        )
 
-    # result
-    msg = await client.receive_json()
-    assert msg["success"], msg
+        # result
+        msg = await client.receive_json()
+        assert msg["success"], msg
 
-    # run start
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-start"
-    msg["event"]["data"]["pipeline"] = ANY
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # run start
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-start"
+        msg["event"]["data"]["pipeline"] = ANY
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # wake_word
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "wake_word-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # wake_word
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "wake_word-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # 2 seconds of silence
-    await client.send_bytes(bytes([1]) + bytes(2 * BYTES_ONE_SECOND))
+        # 2 seconds of silence
+        await client.send_bytes(bytes([1]) + bytes(2 * BYTES_ONE_SECOND))
 
-    # Time out error
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "error"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # Time out error
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "error"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # run end
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # run end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
 
 async def test_audio_pipeline_with_wake_word_no_timeout(
@@ -265,98 +291,101 @@ async def test_audio_pipeline_with_wake_word_no_timeout(
     events = []
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id(
-        {
-            "type": "assist_pipeline/run",
-            "start_stage": "wake_word",
-            "end_stage": "tts",
-            "input": {"sample_rate": SAMPLE_RATE, "timeout": 0, "no_vad": True},
-        }
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "wake_word",
+                "end_stage": "tts",
+                "input": {"sample_rate": SAMPLE_RATE, "timeout": 0, "no_vad": True},
+            }
+        )
 
-    # result
-    msg = await client.receive_json()
-    assert msg["success"], msg
-
-    # run start
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-start"
-    msg["event"]["data"]["pipeline"] = ANY
-    assert msg["event"]["data"] == snapshot
-    handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
-    events.append(msg["event"])
-
-    # wake_word
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "wake_word-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
-
-    # "audio"
-    await client.send_bytes(bytes([handler_id]) + make_10ms_chunk(b"wake word"))
-
-    async with asyncio.timeout(1):
+        # result
         msg = await client.receive_json()
-    assert msg["event"]["type"] == "wake_word-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        assert msg["success"], msg
 
-    # stt
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # run start
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-start"
+        msg["event"]["data"]["pipeline"] = ANY
+        assert msg["event"]["data"] == snapshot
+        handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
+        events.append(msg["event"])
 
-    # End of audio stream (handler id + empty payload)
-    await client.send_bytes(bytes([handler_id]))
+        # wake_word
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "wake_word-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # "audio"
+        await client.send_bytes(bytes([handler_id]) + make_10ms_chunk(b"wake word"))
 
-    # intent
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "intent-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        async with asyncio.timeout(1):
+            msg = await client.receive_json()
+        assert msg["event"]["type"] == "wake_word-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "intent-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # stt
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "stt-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # text-to-speech
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "tts-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # End of audio stream (handler id + empty payload)
+        await client.send_bytes(bytes([handler_id]))
 
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "tts-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "stt-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # run end
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # intent
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "intent-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_debug)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "intent-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    await client.send_json_auto_id(
-        {
-            "type": "assist_pipeline/pipeline_debug/get",
-            "pipeline_id": pipeline_id,
-            "pipeline_run_id": pipeline_run_id,
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {"events": events}
+        # text-to-speech
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "tts-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
+
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "tts-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
+
+        # run end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
+
+        pipeline_data: PipelineData = hass.data[DOMAIN]
+        pipeline_id = list(pipeline_data.pipeline_debug)[0]
+        pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
+
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/pipeline_debug/get",
+                "pipeline_id": pipeline_id,
+                "pipeline_run_id": pipeline_run_id,
+            }
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {"events": events}
 
 
 async def test_audio_pipeline_no_wake_word_engine(
@@ -806,74 +835,6 @@ async def test_stt_stream_failed(
     assert msg["result"] == {"events": events}
 
 
-async def test_tts_failed(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    init_components,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test pipeline run with text-to-speech error."""
-    events = []
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "homeassistant.components.media_source.async_resolve_media",
-        side_effect=RuntimeError,
-    ):
-        await client.send_json_auto_id(
-            {
-                "type": "assist_pipeline/run",
-                "start_stage": "tts",
-                "end_stage": "tts",
-                "input": {"text": "Lights are on."},
-            }
-        )
-
-        # result
-        msg = await client.receive_json()
-        assert msg["success"]
-
-        # run start
-        msg = await client.receive_json()
-        assert msg["event"]["type"] == "run-start"
-        msg["event"]["data"]["pipeline"] = ANY
-        assert msg["event"]["data"] == snapshot
-        events.append(msg["event"])
-
-        # tts start
-        msg = await client.receive_json()
-        assert msg["event"]["type"] == "tts-start"
-        assert msg["event"]["data"] == snapshot
-        events.append(msg["event"])
-
-        # tts error
-        msg = await client.receive_json()
-        assert msg["event"]["type"] == "error"
-        assert msg["event"]["data"]["code"] == "tts-failed"
-        events.append(msg["event"])
-
-        # run end
-        msg = await client.receive_json()
-        assert msg["event"]["type"] == "run-end"
-        assert msg["event"]["data"] == snapshot
-        events.append(msg["event"])
-
-    pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_debug)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
-
-    await client.send_json_auto_id(
-        {
-            "type": "assist_pipeline/pipeline_debug/get",
-            "pipeline_id": pipeline_id,
-            "pipeline_run_id": pipeline_run_id,
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {"events": events}
-
-
 async def test_tts_provider_missing(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -884,23 +845,22 @@ async def test_tts_provider_missing(
     """Test pipeline run with text-to-speech error."""
     client = await hass_ws_client(hass)
 
-    with patch(
-        "homeassistant.components.tts.async_support_options",
-        side_effect=HomeAssistantError,
-    ):
-        await client.send_json_auto_id(
-            {
-                "type": "assist_pipeline/run",
-                "start_stage": "tts",
-                "end_stage": "tts",
-                "input": {"text": "Lights are on."},
-            }
-        )
+    pipelines = async_get_pipelines(hass)
+    await async_update_pipeline(hass, pipelines[0], tts_engine="unavailable")
 
-        # result
-        msg = await client.receive_json()
-        assert not msg["success"]
-        assert msg["error"]["code"] == "tts-not-supported"
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "tts",
+            "end_stage": "tts",
+            "input": {"text": "Lights are on."},
+        }
+    )
+
+    # result
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "tts-not-supported"
 
 
 async def test_tts_provider_bad_options(
@@ -914,8 +874,8 @@ async def test_tts_provider_bad_options(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.tts.async_support_options",
-        return_value=False,
+        "homeassistant.components.tts.SpeechManager.process_options",
+        side_effect=HomeAssistantError("Language not supported"),
     ):
         await client.send_json_auto_id(
             {
@@ -974,6 +934,7 @@ async def test_add_pipeline(
             "tts_voice": "Arnold Schwarzenegger",
             "wake_word_entity": "wakeword_entity_1",
             "wake_word_id": "wakeword_id_1",
+            "prefer_local_intents": True,
         }
     )
     msg = await client.receive_json()
@@ -991,6 +952,7 @@ async def test_add_pipeline(
         "tts_voice": "Arnold Schwarzenegger",
         "wake_word_entity": "wakeword_entity_1",
         "wake_word_id": "wakeword_id_1",
+        "prefer_local_intents": True,
     }
 
     assert len(pipeline_store.data) == 2
@@ -1008,6 +970,7 @@ async def test_add_pipeline(
         tts_voice="Arnold Schwarzenegger",
         wake_word_entity="wakeword_entity_1",
         wake_word_id="wakeword_id_1",
+        prefer_local_intents=True,
     )
 
     await client.send_json_auto_id(
@@ -1190,11 +1153,12 @@ async def test_get_pipeline(
         "name": "Home Assistant",
         "stt_engine": "stt.mock_stt",
         "stt_language": "en-US",
-        "tts_engine": "test",
-        "tts_language": "en-US",
-        "tts_voice": "james_earl_jones",
+        "tts_engine": "tts.test",
+        "tts_language": "en_US",
+        "tts_voice": None,
         "wake_word_entity": None,
         "wake_word_id": None,
+        "prefer_local_intents": False,
     }
 
     # Get conversation agent as pipeline
@@ -1215,11 +1179,12 @@ async def test_get_pipeline(
         # It found these defaults
         "stt_engine": "stt.mock_stt",
         "stt_language": "en-US",
-        "tts_engine": "test",
-        "tts_language": "en-US",
-        "tts_voice": "james_earl_jones",
+        "tts_engine": "tts.test",
+        "tts_language": "en_US",
+        "tts_voice": None,
         "wake_word_entity": None,
         "wake_word_id": None,
+        "prefer_local_intents": False,
     }
 
     await client.send_json_auto_id(
@@ -1249,6 +1214,7 @@ async def test_get_pipeline(
             "tts_voice": "Arnold Schwarzenegger",
             "wake_word_entity": "wakeword_entity_1",
             "wake_word_id": "wakeword_id_1",
+            "prefer_local_intents": False,
         }
     )
     msg = await client.receive_json()
@@ -1277,6 +1243,7 @@ async def test_get_pipeline(
         "tts_voice": "Arnold Schwarzenegger",
         "wake_word_entity": "wakeword_entity_1",
         "wake_word_id": "wakeword_id_1",
+        "prefer_local_intents": False,
     }
 
 
@@ -1299,11 +1266,12 @@ async def test_list_pipelines(
                 "name": "Home Assistant",
                 "stt_engine": "stt.mock_stt",
                 "stt_language": "en-US",
-                "tts_engine": "test",
-                "tts_language": "en-US",
-                "tts_voice": "james_earl_jones",
+                "tts_engine": "tts.test",
+                "tts_language": "en_US",
+                "tts_voice": None,
                 "wake_word_entity": None,
                 "wake_word_id": None,
+                "prefer_local_intents": False,
             }
         ],
         "preferred_pipeline": ANY,
@@ -1395,6 +1363,7 @@ async def test_update_pipeline(
         "tts_voice": "new_tts_voice",
         "wake_word_entity": "new_wakeword_entity",
         "wake_word_id": "new_wakeword_id",
+        "prefer_local_intents": False,
     }
 
     assert len(pipeline_store.data) == 2
@@ -1446,6 +1415,7 @@ async def test_update_pipeline(
         "tts_voice": None,
         "wake_word_entity": None,
         "wake_word_id": None,
+        "prefer_local_intents": False,
     }
 
     pipeline = pipeline_store.data[pipeline_id]
@@ -1530,99 +1500,102 @@ async def test_audio_pipeline_debug(
     events = []
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id(
-        {
-            "type": "assist_pipeline/run",
-            "start_stage": "stt",
-            "end_stage": "tts",
-            "input": {
-                "sample_rate": 44100,
-            },
-        }
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "stt",
+                "end_stage": "tts",
+                "input": {
+                    "sample_rate": 44100,
+                },
+            }
+        )
 
-    # result
-    msg = await client.receive_json()
-    assert msg["success"]
+        # result
+        msg = await client.receive_json()
+        assert msg["success"]
 
-    # run start
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-start"
-    msg["event"]["data"]["pipeline"] = ANY
-    assert msg["event"]["data"] == snapshot
-    handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
-    events.append(msg["event"])
+        # run start
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-start"
+        msg["event"]["data"]["pipeline"] = ANY
+        assert msg["event"]["data"] == snapshot
+        handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
+        events.append(msg["event"])
 
-    # stt
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # stt
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "stt-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # End of audio stream (handler id + empty payload)
-    await client.send_bytes(bytes([handler_id]))
+        # End of audio stream (handler id + empty payload)
+        await client.send_bytes(bytes([handler_id]))
 
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "stt-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # intent
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "intent-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # intent
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "intent-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "intent-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "intent-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # text-to-speech
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "tts-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # text-to-speech
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "tts-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "tts-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "tts-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # run end
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # run end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # Get the id of the pipeline
-    await client.send_json_auto_id({"type": "assist_pipeline/pipeline/list"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["pipelines"]) == 1
+        # Get the id of the pipeline
+        await client.send_json_auto_id({"type": "assist_pipeline/pipeline/list"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert len(msg["result"]["pipelines"]) == 1
 
-    pipeline_id = msg["result"]["pipelines"][0]["id"]
+        pipeline_id = msg["result"]["pipelines"][0]["id"]
 
-    # Get the id for the run
-    await client.send_json_auto_id(
-        {"type": "assist_pipeline/pipeline_debug/list", "pipeline_id": pipeline_id}
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {"pipeline_runs": [ANY]}
+        # Get the id for the run
+        await client.send_json_auto_id(
+            {"type": "assist_pipeline/pipeline_debug/list", "pipeline_id": pipeline_id}
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {"pipeline_runs": [ANY]}
 
-    pipeline_run_id = msg["result"]["pipeline_runs"][0]["pipeline_run_id"]
+        pipeline_run_id = msg["result"]["pipeline_runs"][0]["pipeline_run_id"]
 
-    await client.send_json_auto_id(
-        {
-            "type": "assist_pipeline/pipeline_debug/get",
-            "pipeline_id": pipeline_id,
-            "pipeline_run_id": pipeline_run_id,
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {"events": events}
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/pipeline_debug/get",
+                "pipeline_id": pipeline_id,
+                "pipeline_run_id": pipeline_run_id,
+            }
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {"events": events}
 
 
 async def test_pipeline_debug_list_runs_wrong_pipeline(
@@ -1777,94 +1750,97 @@ async def test_audio_pipeline_with_enhancements(
     events = []
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id(
-        {
-            "type": "assist_pipeline/run",
-            "start_stage": "stt",
-            "end_stage": "tts",
-            "input": {
-                "sample_rate": SAMPLE_RATE,
-                # Enhancements
-                "noise_suppression_level": 2,
-                "auto_gain_dbfs": 15,
-                "volume_multiplier": 2.0,
-            },
-        }
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "stt",
+                "end_stage": "tts",
+                "input": {
+                    "sample_rate": SAMPLE_RATE,
+                    # Enhancements
+                    "noise_suppression_level": 2,
+                    "auto_gain_dbfs": 15,
+                    "volume_multiplier": 2.0,
+                },
+            }
+        )
 
-    # result
-    msg = await client.receive_json()
-    assert msg["success"]
+        # result
+        msg = await client.receive_json()
+        assert msg["success"]
 
-    # run start
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-start"
-    msg["event"]["data"]["pipeline"] = ANY
-    assert msg["event"]["data"] == snapshot
-    handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
-    events.append(msg["event"])
+        # run start
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-start"
+        msg["event"]["data"]["pipeline"] = ANY
+        assert msg["event"]["data"] == snapshot
+        handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
+        events.append(msg["event"])
 
-    # stt
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # stt
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "stt-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # One second of silence.
-    # This will pass through the audio enhancement pipeline, but we don't test
-    # the actual output.
-    await client.send_bytes(bytes([handler_id]) + bytes(BYTES_ONE_SECOND))
+        # One second of silence.
+        # This will pass through the audio enhancement pipeline, but we don't test
+        # the actual output.
+        await client.send_bytes(bytes([handler_id]) + bytes(BYTES_ONE_SECOND))
 
-    # End of audio stream (handler id + empty payload)
-    await client.send_bytes(bytes([handler_id]))
+        # End of audio stream (handler id + empty payload)
+        await client.send_bytes(bytes([handler_id]))
 
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "stt-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # intent
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "intent-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # intent
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "intent-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "intent-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "intent-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # text-to-speech
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "tts-start"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # text-to-speech
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "tts-start"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "tts-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "tts-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    # run end
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] == snapshot
-    events.append(msg["event"])
+        # run end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
-    pipeline_data: PipelineData = hass.data[DOMAIN]
-    pipeline_id = list(pipeline_data.pipeline_debug)[0]
-    pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
+        pipeline_data: PipelineData = hass.data[DOMAIN]
+        pipeline_id = list(pipeline_data.pipeline_debug)[0]
+        pipeline_run_id = list(pipeline_data.pipeline_debug[pipeline_id])[0]
 
-    await client.send_json_auto_id(
-        {
-            "type": "assist_pipeline/pipeline_debug/get",
-            "pipeline_id": pipeline_id,
-            "pipeline_run_id": pipeline_run_id,
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {"events": events}
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/pipeline_debug/get",
+                "pipeline_id": pipeline_id,
+                "pipeline_run_id": pipeline_run_id,
+            }
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {"events": events}
 
 
 async def test_wake_word_cooldown_same_id(
@@ -2693,3 +2669,62 @@ async def test_stt_cooldown_different_ids(
 
     # Both should start stt
     assert {event_type_1, event_type_2} == {"stt-start"}
+
+
+async def test_intent_progress_event(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+) -> None:
+    """Test intent-progress events from a pipeline are forwarded."""
+    client = await hass_ws_client(hass)
+
+    orig_converse = conversation.async_converse
+    expected_delta_events = [
+        {"chat_log_delta": {"role": "assistant"}},
+        {"chat_log_delta": {"content": "Hello"}},
+    ]
+
+    async def mock_delta_stream():
+        """Mock delta stream."""
+        for d in expected_delta_events:
+            yield d["chat_log_delta"]
+
+    async def mock_converse(**kwargs):
+        """Mock converse method."""
+        with (
+            chat_session.async_get_chat_session(
+                kwargs["hass"], kwargs["conversation_id"]
+            ) as session,
+            conversation.async_get_chat_log(hass, session) as chat_log,
+        ):
+            async for _content in chat_log.async_add_delta_content_stream(
+                "", mock_delta_stream()
+            ):
+                pass
+
+            return await orig_converse(**kwargs)
+
+    with patch("homeassistant.components.conversation.async_converse", mock_converse):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "intent",
+                "end_stage": "intent",
+                "input": {"text": "Are the lights on?"},
+                "conversation_id": "mock-conversation-id",
+                "device_id": "mock-device-id",
+            }
+        )
+
+        # result
+        msg = await client.receive_json()
+        assert msg["success"]
+
+        events = []
+        for _ in range(6):
+            msg = await client.receive_json()
+            if msg["event"]["type"] == "intent-progress":
+                events.append(msg["event"]["data"])
+
+    assert events == expected_delta_events

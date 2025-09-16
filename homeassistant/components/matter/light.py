@@ -5,14 +5,17 @@ from __future__ import annotations
 from typing import Any
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Objects import NullValue
 from matter_server.client.models import device_types
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -22,7 +25,8 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .const import LOGGER
 from .entity import MatterEntity
@@ -37,9 +41,9 @@ from .util import (
 )
 
 COLOR_MODE_MAP = {
-    clusters.ColorControl.Enums.ColorMode.kCurrentHueAndCurrentSaturation: ColorMode.HS,
-    clusters.ColorControl.Enums.ColorMode.kCurrentXAndCurrentY: ColorMode.XY,
-    clusters.ColorControl.Enums.ColorMode.kColorTemperature: ColorMode.COLOR_TEMP,
+    clusters.ColorControl.Enums.ColorModeEnum.kCurrentHueAndCurrentSaturation: ColorMode.HS,
+    clusters.ColorControl.Enums.ColorModeEnum.kCurrentXAndCurrentY: ColorMode.XY,
+    clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
 
 # there's a bug in (at least) Espressif's implementation of light transitions
@@ -74,7 +78,7 @@ TRANSITION_BLOCKLIST = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Light from Config Entry."""
     matter = get_matter(hass)
@@ -89,6 +93,9 @@ class MatterLight(MatterEntity, LightEntity):
     _supports_color = False
     _supports_color_temperature = False
     _transitions_disabled = False
+    _platform_translation_key = "light"
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
 
     async def _set_xy_color(
         self, xy_color: tuple[float, float], transition: float = 0.0
@@ -130,12 +137,16 @@ class MatterLight(MatterEntity, LightEntity):
             )
         )
 
-    async def _set_color_temp(self, color_temp: int, transition: float = 0.0) -> None:
+    async def _set_color_temp(
+        self, color_temp_kelvin: int, transition: float = 0.0
+    ) -> None:
         """Set color temperature."""
-
+        color_temp_mired = color_util.color_temperature_kelvin_to_mired(
+            color_temp_kelvin
+        )
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColorTemperature(
-                colorTemperatureMireds=color_temp,
+                colorTemperatureMireds=color_temp_mired,
                 # transition in matter is measured in tenths of a second
                 transitionTime=int(transition * 10),
                 # allow setting the color while the light is off,
@@ -152,7 +163,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         assert level_control is not None
 
-        level = round(  # type: ignore[unreachable]
+        level = round(
             renormalize(
                 brightness,
                 (0, 255),
@@ -231,7 +242,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         return int(color_temp)
 
-    def _get_brightness(self) -> int:
+    def _get_brightness(self) -> int | None:
         """Get brightness from matter."""
 
         level_control = self._endpoint.get_cluster(clusters.LevelControl)
@@ -239,11 +250,15 @@ class MatterLight(MatterEntity, LightEntity):
         # We should not get here if brightness is not supported.
         assert level_control is not None
 
-        LOGGER.debug(  # type: ignore[unreachable]
+        LOGGER.debug(
             "Got brightness %s for %s",
             level_control.currentLevel,
             self.entity_id,
         )
+
+        if level_control.currentLevel is NullValue:
+            # currentLevel is a nullable value.
+            return None
 
         return round(
             renormalize(
@@ -272,20 +287,12 @@ class MatterLight(MatterEntity, LightEntity):
 
         return ha_color_mode
 
-    async def send_device_command(self, command: Any) -> None:
-        """Send device command."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
-        )
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP)
+        color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         transition = kwargs.get(ATTR_TRANSITION, 0)
         if self._transitions_disabled:
@@ -297,10 +304,10 @@ class MatterLight(MatterEntity, LightEntity):
             elif xy_color is not None and ColorMode.XY in self.supported_color_modes:
                 await self._set_xy_color(xy_color, transition)
             elif (
-                color_temp is not None
+                color_temp_kelvin is not None
                 and ColorMode.COLOR_TEMP in self.supported_color_modes
             ):
-                await self._set_color_temp(color_temp, transition)
+                await self._set_color_temp(color_temp_kelvin, transition)
 
         if brightness is not None and self._supports_brightness:
             await self._set_brightness(brightness, transition)
@@ -345,21 +352,21 @@ class MatterLight(MatterEntity, LightEntity):
 
                 if (
                     capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kHueSaturationSupported
+                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kHueSaturation
                 ):
                     supported_color_modes.add(ColorMode.HS)
                     self._supports_color = True
 
                 if (
                     capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kXYAttributesSupported
+                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kXy
                 ):
                     supported_color_modes.add(ColorMode.XY)
                     self._supports_color = True
 
                 if (
                     capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kColorTemperatureSupported
+                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kColorTemperature
                 ):
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True
@@ -367,12 +374,16 @@ class MatterLight(MatterEntity, LightEntity):
                         clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
                     )
                     if min_mireds > 0:
-                        self._attr_min_mireds = min_mireds
+                        self._attr_max_color_temp_kelvin = (
+                            color_util.color_temperature_mired_to_kelvin(min_mireds)
+                        )
                     max_mireds = self.get_matter_attribute_value(
                         clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
                     )
-                    if min_mireds > 0:
-                        self._attr_max_mireds = max_mireds
+                    if max_mireds > 0:
+                        self._attr_min_color_temp_kelvin = (
+                            color_util.color_temperature_mired_to_kelvin(max_mireds)
+                        )
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
@@ -398,8 +409,13 @@ class MatterLight(MatterEntity, LightEntity):
         if self._supports_brightness:
             self._attr_brightness = self._get_brightness()
 
-        if self._supports_color_temperature:
-            self._attr_color_temp = self._get_color_temperature()
+        if (
+            self._supports_color_temperature
+            and (color_temperature := self._get_color_temperature()) > 0
+        ):
+            self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
+                color_temperature
+            )
 
         if self._supports_color:
             self._attr_color_mode = color_mode = self._get_color_mode()
@@ -413,7 +429,7 @@ class MatterLight(MatterEntity, LightEntity):
                 and color_mode == ColorMode.XY
             ):
                 self._attr_xy_color = self._get_xy_color()
-        elif self._attr_color_temp is not None:
+        elif self._attr_color_temp_kelvin is not None:
             self._attr_color_mode = ColorMode.COLOR_TEMP
         elif self._attr_brightness is not None:
             self._attr_color_mode = ColorMode.BRIGHTNESS
@@ -443,7 +459,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterLight", translation_key="light"
+            key="MatterLight",
+            name=None,
         ),
         entity_class=MatterLight,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
@@ -460,6 +477,7 @@ DISCOVERY_SCHEMAS = [
             device_types.ColorTemperatureLight,
             device_types.DimmableLight,
             device_types.DimmablePlugInUnit,
+            device_types.MountedDimmableLoadControl,
             device_types.ExtendedColorLight,
             device_types.OnOffLight,
             device_types.DimmerSwitch,
@@ -470,7 +488,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterHSColorLightFallback", translation_key="light"
+            key="MatterHSColorLightFallback",
+            name=None,
         ),
         entity_class=MatterLight,
         required_attributes=(
@@ -490,7 +509,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterXYColorLightFallback", translation_key="light"
+            key="MatterXYColorLightFallback",
+            name=None,
         ),
         entity_class=MatterLight,
         required_attributes=(
@@ -510,7 +530,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterColorTemperatureLightFallback", translation_key="light"
+            key="MatterColorTemperatureLightFallback",
+            name=None,
         ),
         entity_class=MatterLight,
         required_attributes=(

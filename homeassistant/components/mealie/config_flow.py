@@ -38,6 +38,10 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> tuple[dict[str, str], str | None]:
         """Check connection to the Mealie API."""
         assert self.host is not None
+
+        if "/hassio/ingress/" in self.host:
+            return {"base": "ingress_url"}, None
+
         client = MealieClient(
             self.host,
             token=api_token,
@@ -116,12 +120,6 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration confirmation."""
         errors: dict[str, str] = {}
         if user_input:
             self.host = user_input[CONF_HOST]
@@ -141,7 +139,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=USER_SCHEMA,
             errors=errors,
         )

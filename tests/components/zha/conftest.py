@@ -1,6 +1,6 @@
 """Test configuration for the ZHA component."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Coroutine, Generator
 import itertools
 import time
 from typing import Any
@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 import warnings
 
 import pytest
+import zhaquirks
 import zigpy
 from zigpy.application import ControllerApplication
 import zigpy.backups
@@ -16,6 +17,7 @@ from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.device
 import zigpy.group
 import zigpy.profiles
+from zigpy.profiles import zha
 import zigpy.quirks
 import zigpy.state
 import zigpy.types
@@ -24,7 +26,7 @@ from zigpy.zcl.clusters.general import Basic, Groups
 from zigpy.zcl.foundation import Status
 import zigpy.zdo.types as zdo_t
 
-import homeassistant.components.zha.const as zha_const
+from homeassistant.components.zha import const as zha_const
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -38,7 +40,7 @@ FIXTURE_GRP_NAME = "fixture group"
 COUNTER_NAMES = ["counter_1", "counter_2", "counter_3"]
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="package", autouse=True)
 def globally_load_quirks():
     """Load quirks automatically so that ZHA tests run deterministically in isolation.
 
@@ -46,8 +48,6 @@ def globally_load_quirks():
     independently, bugs can emerge that will show up only when more of the test suite is
     run.
     """
-
-    import zhaquirks  # pylint: disable=import-outside-toplevel
 
     zhaquirks.setup()
 
@@ -156,6 +156,7 @@ async def zigpy_app_controller():
     app.state.node_info.ieee = zigpy.types.EUI64.convert("00:15:8d:00:02:32:4f:32")
     app.state.node_info.manufacturer = "Coordinator Manufacturer"
     app.state.node_info.model = "Coordinator Model"
+    app.state.node_info.version = "7.1.4.0 build 389"
     app.state.network_info.pan_id = 0x1234
     app.state.network_info.extended_pan_id = app.state.node_info.ieee
     app.state.network_info.channel = 15
@@ -173,6 +174,7 @@ async def zigpy_app_controller():
     dev.model = "Coordinator Model"
 
     ep = dev.add_endpoint(1)
+    ep.profile_id = zha.PROFILE_ID
     ep.add_input_cluster(Basic.cluster_id)
     ep.add_input_cluster(Groups.cluster_id)
 
@@ -239,11 +241,11 @@ def setup_zha(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_zigpy_connect: ControllerApplication,
-):
+) -> Callable[..., Coroutine[None]]:
     """Set up ZHA component."""
     zha_config = {zha_const.CONF_ENABLE_QUIRKS: False}
 
-    async def _setup(config=None):
+    async def _setup(config=None) -> None:
         config_entry.add_to_hass(hass)
         config = config or {}
 
@@ -351,7 +353,7 @@ def network_backup() -> zigpy.backups.NetworkBackup:
 
 
 @pytest.fixture
-def zigpy_device_mock(zigpy_app_controller):
+def zigpy_device_mock(zigpy_app_controller) -> Callable[..., zigpy.device.Device]:
     """Make a fake device using the specified cluster classes."""
 
     def _mock_dev(

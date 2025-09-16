@@ -13,8 +13,8 @@ from freezegun.api import FrozenDateTimeFactory
 import jinja2
 import pytest
 
+from homeassistant import core as ha
 from homeassistant.const import MATCH_ALL
-import homeassistant.core as ha
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -30,6 +30,7 @@ from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
     async_call_later,
+    async_has_entity_registry_updated_listeners,
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
     async_track_point_in_time,
@@ -52,7 +53,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, async_fire_time_changed_exact
 
@@ -1892,10 +1893,10 @@ async def test_track_template_result_complex(hass: HomeAssistant) -> None:
         "time": False,
     }
 
-    hass.states.async_set("binary_sensor.single", "binary_sensor_on")
+    hass.states.async_set("binary_sensor.single", "on")
     await hass.async_block_till_done()
     assert len(specific_runs) == 9
-    assert specific_runs[8] == "binary_sensor_on"
+    assert specific_runs[8] == "on"
     assert info.listeners == {
         "all": False,
         "domains": set(),
@@ -3604,7 +3605,7 @@ async def test_track_time_interval_name(hass: HomeAssistant) -> None:
         timedelta(seconds=10),
         name=unique_string,
     )
-    scheduled = getattr(hass.loop, "_scheduled")
+    scheduled = hass.loop._scheduled
     assert any(handle for handle in scheduled if unique_string in str(handle))
     unsub()
 
@@ -4387,8 +4388,8 @@ async def test_call_later(hass: HomeAssistant) -> None:
     schedule_utctime = dt_util.utcnow()
 
     @callback
-    def action(__utcnow: datetime):
-        _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
+    def action(utcnow: datetime, /):
+        _current_delay = utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
 
     async_call_later(hass, delay, action)
@@ -4407,8 +4408,8 @@ async def test_async_call_later(hass: HomeAssistant) -> None:
     schedule_utctime = dt_util.utcnow()
 
     @callback
-    def action(__utcnow: datetime):
-        _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
+    def action(utcnow: datetime, /):
+        _current_delay = utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
 
     remove = async_call_later(hass, delay, action)
@@ -4429,8 +4430,8 @@ async def test_async_call_later_timedelta(hass: HomeAssistant) -> None:
     schedule_utctime = dt_util.utcnow()
 
     @callback
-    def action(__utcnow: datetime):
-        _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
+    def action(utcnow: datetime, /):
+        _current_delay = utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
 
     remove = async_call_later(hass, timedelta(seconds=delay), action)
@@ -4450,7 +4451,7 @@ async def test_async_call_later_cancel(hass: HomeAssistant) -> None:
     delay_tolerance = 0.1
 
     @callback
-    def action(__now: datetime):
+    def action(now: datetime, /):
         future.set_result(False)
 
     remove = async_call_later(hass, delay, action)
@@ -4682,12 +4683,17 @@ async def test_async_track_entity_registry_updated_event(hass: HomeAssistant) ->
     def run_callback(event):
         event_data.append(event.data)
 
+    assert async_has_entity_registry_updated_listeners(hass) is False
+
     unsub1 = async_track_entity_registry_updated_event(
         hass, entity_id, run_callback, job_type=ha.HassJobType.Callback
     )
     unsub2 = async_track_entity_registry_updated_event(
         hass, new_entity_id, run_callback
     )
+
+    assert async_has_entity_registry_updated_listeners(hass) is True
+
     hass.bus.async_fire(
         EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
     )
@@ -4895,7 +4901,7 @@ async def test_track_state_change_deprecated(
     assert (
         "Detected code that calls `async_track_state_change` instead "
         "of `async_track_state_change_event` which is deprecated and "
-        "will be removed in Home Assistant 2025.5. Please report this issue."
+        "will be removed in Home Assistant 2025.5. Please report this issue"
     ) in caplog.text
 
 
@@ -4940,13 +4946,43 @@ async def test_async_track_state_report_event(hass: HomeAssistant) -> None:
     unsub()
 
 
+async def test_async_track_state_report_change_event(hass: HomeAssistant) -> None:
+    """Test listen for both state change and state report events."""
+    tracker_called: dict[str, list[str]] = {"light.bowl": [], "light.top": []}
+
+    @ha.callback
+    def on_state_change(event: Event[EventStateChangedData]) -> None:
+        new_state = event.data["new_state"].state
+        tracker_called[event.data["entity_id"]].append(new_state)
+
+    @ha.callback
+    def on_state_report(event: Event[EventStateReportedData]) -> None:
+        new_state = event.data["new_state"].state
+        tracker_called[event.data["entity_id"]].append(new_state)
+
+    async_track_state_change_event(hass, ["light.bowl", "light.top"], on_state_change)
+    async_track_state_report_event(hass, ["light.bowl", "light.top"], on_state_report)
+    entity_ids = ["light.bowl", "light.top"]
+    state_sequence = ["on", "on", "off", "off"]
+    for state in state_sequence:
+        for entity_id in entity_ids:
+            hass.states.async_set(entity_id, state)
+    await hass.async_block_till_done()
+
+    assert tracker_called == {
+        "light.bowl": ["on", "on", "off", "off"],
+        "light.top": ["on", "on", "off", "off"],
+    }
+
+
 async def test_async_track_template_no_hass_deprecated(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test async_track_template with a template without hass is deprecated."""
     message = (
         "Detected code that calls async_track_template_result with template without "
-        "hass, which will stop working in HA Core 2025.10. Please report this issue."
+        "hass. This will stop working in Home Assistant 2025.10, please "
+        "report this issue"
     )
 
     async_track_template(hass, Template("blah"), lambda x, y, z: None)
@@ -4964,7 +5000,8 @@ async def test_async_track_template_result_no_hass_deprecated(
     """Test async_track_template_result with a template without hass is deprecated."""
     message = (
         "Detected code that calls async_track_template_result with template without "
-        "hass, which will stop working in HA Core 2025.10. Please report this issue."
+        "hass. This will stop working in Home Assistant 2025.10, please "
+        "report this issue"
     )
 
     async_track_template_result(

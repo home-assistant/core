@@ -21,7 +21,9 @@ from .const import (
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
+    CONF_MAX_TEMP,
     CONF_MIN_DUR,
+    CONF_MIN_TEMP,
     CONF_PRESETS,
     CONF_SENSOR,
     DEFAULT_TOLERANCE,
@@ -57,12 +59,22 @@ OPTIONS_SCHEMA = {
     vol.Optional(CONF_MIN_DUR): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)
     ),
+    vol.Optional(CONF_MIN_TEMP): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
+        )
+    ),
+    vol.Optional(CONF_MAX_TEMP): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
+        )
+    ),
 }
 
 PRESETS_SCHEMA = {
     vol.Optional(v): selector.NumberSelector(
         selector.NumberSelectorConfig(
-            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
     )
     for v in CONF_PRESETS.values()
@@ -87,6 +99,8 @@ OPTIONS_FLOW = {
 
 class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow."""
+
+    MINOR_VERSION = 2
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW

@@ -14,21 +14,20 @@ from homeassistant.components.valve import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 ValveConfigurationAndControl = clusters.ValveConfigurationAndControl
-
 ValveStateEnum = ValveConfigurationAndControl.Enums.ValveStateEnum
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter valve platform from Config Entry."""
     matter = get_matter(hass)
@@ -40,17 +39,7 @@ class MatterValve(MatterEntity, ValveEntity):
 
     _feature_map: int | None = None
     entity_description: ValveEntityDescription
-
-    async def send_device_command(
-        self,
-        command: clusters.ClusterCommand,
-    ) -> None:
-        """Send a command to the device."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
-        )
+    _platform_translation_key = "valve"
 
     async def async_open_valve(self) -> None:
         """Open the valve."""
@@ -62,9 +51,12 @@ class MatterValve(MatterEntity, ValveEntity):
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
-        await self.send_device_command(
-            ValveConfigurationAndControl.Commands.Open(targetLevel=position)
-        )
+        if position > 0:
+            await self.send_device_command(
+                ValveConfigurationAndControl.Commands.Open(targetLevel=position)
+            )
+            return
+        await self.send_device_command(ValveConfigurationAndControl.Commands.Close())
 
     @callback
     def _update_from_device(self) -> None:
@@ -139,7 +131,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=ValveEntityDescription(
             key="MatterValve",
             device_class=ValveDeviceClass.WATER,
-            translation_key="valve",
+            name=None,
         ),
         entity_class=MatterValve,
         required_attributes=(

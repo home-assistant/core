@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from plugwise import PlugwiseData
+from munch import Munch
+from packaging.version import Version
 import pytest
 
 from homeassistant.components.plugwise.const import DOMAIN
@@ -23,10 +24,63 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_fixture
 
 
+def build_smile(**attrs):
+    """Build smile Munch from provided attributes."""
+    smile = Munch()
+    for k, v in attrs.items():
+        setattr(smile, k, v)
+    return smile
+
+
 def _read_json(environment: str, call: str) -> dict[str, Any]:
     """Undecode the json data."""
     fixture = load_fixture(f"plugwise/{environment}/{call}.json")
     return json.loads(fixture)
+
+
+@pytest.fixture
+def cooling_present(request: pytest.FixtureRequest) -> str:
+    """Pass the cooling_present boolean.
+
+    Used with fixtures that require parametrization of the cooling capability.
+    """
+    return request.param
+
+
+@pytest.fixture
+def chosen_env(request: pytest.FixtureRequest) -> str:
+    """Pass the chosen_env string.
+
+    Used with fixtures that require parametrization of the user-data fixture.
+    """
+    return request.param
+
+
+@pytest.fixture
+def gateway_id(request: pytest.FixtureRequest) -> str:
+    """Pass the gateway_id string.
+
+    Used with fixtures that require parametrization of the gateway_id.
+    """
+    return request.param
+
+
+@pytest.fixture
+def heater_id(request: pytest.FixtureRequest) -> str:
+    """Pass the heater_idstring.
+
+    Used with fixtures that require parametrization of the heater_id.
+    """
+    return request.param
+
+
+@pytest.fixture
+def reboot(request: pytest.FixtureRequest) -> str:
+    """Pass the reboot boolean.
+
+    Used with fixtures that require parametrization of the reboot capability.
+    """
+    return request.param
 
 
 @pytest.fixture
@@ -61,306 +115,239 @@ def mock_smile_config_flow() -> Generator[MagicMock]:
     with patch(
         "homeassistant.components.plugwise.config_flow.Smile",
         autospec=True,
-    ) as smile_mock:
-        smile = smile_mock.return_value
-        smile.smile_hostname = "smile12345"
-        smile.smile_model = "Test Model"
-        smile.smile_model_id = "Test Model ID"
-        smile.smile_name = "Test Smile Name"
-        smile.connect.return_value = True
-        yield smile
+    ) as api_mock:
+        api = api_mock.return_value
+
+        api.connect.return_value = Version("4.3.2")
+        api.smile = build_smile(
+            hostname="smile12345",
+            model="Test Model",
+            model_id="Test Model ID",
+            name="Test Smile Name",
+            version="4.3.2",
+        )
+
+        yield api
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture for platforms."""
+    return []
+
+
+@pytest.fixture
+async def setup_platform(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    platforms,
+) -> AsyncGenerator[None]:
+    """Set up one or all platforms."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        yield mock_config_entry
 
 
 @pytest.fixture
 def mock_smile_adam() -> Generator[MagicMock]:
     """Create a Mock Adam environment for testing exceptions."""
     chosen_env = "m_adam_multiple_devices_per_zone"
+    data = _read_json(chosen_env, "data")
+    with (
+        patch(
+            "homeassistant.components.plugwise.coordinator.Smile", autospec=True
+        ) as api_mock,
+        patch(
+            "homeassistant.components.plugwise.config_flow.Smile",
+            new=api_mock,
+        ),
+    ):
+        api = api_mock.return_value
 
-    with patch(
-        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
-        smile = smile_mock.return_value
-
-        smile.gateway_id = "fe799307f1624099878210aa0b9f1475"
-        smile.heater_id = "90986d591dcd426cae3ec3e8111ff730"
-        smile.smile_version = "3.0.15"
-        smile.smile_type = "thermostat"
-        smile.smile_hostname = "smile98765"
-        smile.smile_model = "Gateway"
-        smile.smile_model_id = "smile_open_therm"
-        smile.smile_name = "Adam"
-        smile.connect.return_value = True
-        all_data = _read_json(chosen_env, "all_data")
-        smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+        api.async_update.return_value = data
+        api.cooling_present = False
+        api.connect.return_value = Version("3.0.15")
+        api.gateway_id = "fe799307f1624099878210aa0b9f1475"
+        api.heater_id = "90986d591dcd426cae3ec3e8111ff730"
+        api.reboot = True
+        api.smile = build_smile(
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile_open_therm",
+            name="Adam",
+            type="thermostat",
+            version="3.0.15",
         )
 
-        yield smile
+        yield api
 
 
 @pytest.fixture
-def mock_smile_adam_2() -> Generator[MagicMock]:
-    """Create a 2nd Mock Adam environment for testing exceptions."""
-    chosen_env = "m_adam_heating"
-
+def mock_smile_adam_heat_cool(
+    chosen_env: str, cooling_present: bool
+) -> Generator[MagicMock]:
+    """Create a special base Mock Adam type for testing with different datasets."""
+    data = _read_json(chosen_env, "data")
     with patch(
         "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
-        smile = smile_mock.return_value
+    ) as api_mock:
+        api = api_mock.return_value
 
-        smile.gateway_id = "da224107914542988a88561b4452b0f6"
-        smile.heater_id = "056ee145a816487eaa69243c3280f8bf"
-        smile.smile_version = "3.6.4"
-        smile.smile_type = "thermostat"
-        smile.smile_hostname = "smile98765"
-        smile.smile_model = "Gateway"
-        smile.smile_model_id = "smile_open_therm"
-        smile.smile_name = "Adam"
-        smile.connect.return_value = True
-        all_data = _read_json(chosen_env, "all_data")
-        smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+        api.async_update.return_value = data
+        api.connect.return_value = Version("3.6.4")
+        api.cooling_present = cooling_present
+        api.gateway_id = "da224107914542988a88561b4452b0f6"
+        api.heater_id = "056ee145a816487eaa69243c3280f8bf"
+        api.reboot = True
+        api.smile = build_smile(
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile_open_therm",
+            name="Adam",
+            type="thermostat",
+            version="3.6.4",
         )
 
-        yield smile
+        yield api
 
 
 @pytest.fixture
-def mock_smile_adam_3() -> Generator[MagicMock]:
-    """Create a 3rd Mock Adam environment for testing exceptions."""
-    chosen_env = "m_adam_cooling"
-
-    with patch(
-        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
-        smile = smile_mock.return_value
-
-        smile.gateway_id = "da224107914542988a88561b4452b0f6"
-        smile.heater_id = "056ee145a816487eaa69243c3280f8bf"
-        smile.smile_version = "3.6.4"
-        smile.smile_type = "thermostat"
-        smile.smile_hostname = "smile98765"
-        smile.smile_model = "Gateway"
-        smile.smile_model_id = "smile_open_therm"
-        smile.smile_name = "Adam"
-        smile.connect.return_value = True
-        all_data = _read_json(chosen_env, "all_data")
-        smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
-        )
-
-        yield smile
-
-
-@pytest.fixture
-def mock_smile_adam_4() -> Generator[MagicMock]:
-    """Create a 4th Mock Adam environment for testing exceptions."""
+def mock_smile_adam_jip() -> Generator[MagicMock]:
+    """Create a Mock adam-jip type for testing exceptions."""
     chosen_env = "m_adam_jip"
-
+    data = _read_json(chosen_env, "data")
     with patch(
         "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
-        smile = smile_mock.return_value
+    ) as api_mock:
+        api = api_mock.return_value
 
-        smile.gateway_id = "b5c2386c6f6342669e50fe49dd05b188"
-        smile.heater_id = "e4684553153b44afbef2200885f379dc"
-        smile.smile_version = "3.2.8"
-        smile.smile_type = "thermostat"
-        smile.smile_hostname = "smile98765"
-        smile.smile_model = "Gateway"
-        smile.smile_model_id = "smile_open_therm"
-        smile.smile_name = "Adam"
-        smile.connect.return_value = True
-        all_data = _read_json(chosen_env, "all_data")
-        smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+        api.async_update.return_value = data
+        api.connect.return_value = Version("3.2.8")
+        api.cooling_present = False
+        api.gateway_id = "b5c2386c6f6342669e50fe49dd05b188"
+        api.heater_id = "e4684553153b44afbef2200885f379dc"
+        api.reboot = True
+        api.smile = build_smile(
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile_open_therm",
+            name="Adam",
+            type="thermostat",
+            version="3.2.8",
         )
 
-        yield smile
+        yield api
 
 
 @pytest.fixture
-def mock_smile_anna() -> Generator[MagicMock]:
-    """Create a Mock Anna environment for testing exceptions."""
-    chosen_env = "anna_heatpump_heating"
+def mock_smile_anna(chosen_env: str, cooling_present: bool) -> Generator[MagicMock]:
+    """Create a Mock Anna type for testing."""
+    data = _read_json(chosen_env, "data")
     with patch(
         "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
-        smile = smile_mock.return_value
+    ) as api_mock:
+        api = api_mock.return_value
 
-        smile.gateway_id = "015ae9ea3f964e668e490fa39da3870b"
-        smile.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
-        smile.smile_version = "4.0.15"
-        smile.smile_type = "thermostat"
-        smile.smile_hostname = "smile98765"
-        smile.smile_model = "Gateway"
-        smile.smile_model_id = "smile_thermo"
-        smile.smile_name = "Smile Anna"
-        smile.connect.return_value = True
-        all_data = _read_json(chosen_env, "all_data")
-        smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+        api.async_update.return_value = data
+        api.connect.return_value = Version("4.0.15")
+        api.cooling_present = cooling_present
+        api.gateway_id = "015ae9ea3f964e668e490fa39da3870b"
+        api.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
+        api.reboot = True
+        api.smile = build_smile(
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile_thermo",
+            name="Smile Anna",
+            type="thermostat",
+            version="4.0.15",
         )
 
-        yield smile
+        yield api
 
 
 @pytest.fixture
-def mock_smile_anna_2() -> Generator[MagicMock]:
-    """Create a 2nd Mock Anna environment for testing exceptions."""
-    chosen_env = "m_anna_heatpump_cooling"
+def mock_smile_p1(chosen_env: str, gateway_id: str) -> Generator[MagicMock]:
+    """Create a base Mock P1 type for testing with different datasets and gateway-ids."""
+    data = _read_json(chosen_env, "data")
     with patch(
         "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
-        smile = smile_mock.return_value
+    ) as api_mock:
+        api = api_mock.return_value
 
-        smile.gateway_id = "015ae9ea3f964e668e490fa39da3870b"
-        smile.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
-        smile.smile_version = "4.0.15"
-        smile.smile_type = "thermostat"
-        smile.smile_hostname = "smile98765"
-        smile.smile_model = "Gateway"
-        smile.smile_model_id = "smile_thermo"
-        smile.smile_name = "Smile Anna"
-        smile.connect.return_value = True
-        all_data = _read_json(chosen_env, "all_data")
-        smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+        api.async_update.return_value = data
+        api.connect.return_value = Version("4.4.2")
+        api.gateway_id = gateway_id
+        api.heater_id = None
+        api.reboot = True
+        api.smile = build_smile(
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile",
+            name="Smile P1",
+            type="power",
+            version="4.4.2",
         )
 
-        yield smile
-
-
-@pytest.fixture
-def mock_smile_anna_3() -> Generator[MagicMock]:
-    """Create a 3rd Mock Anna environment for testing exceptions."""
-    chosen_env = "m_anna_heatpump_idle"
-    with patch(
-        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
-        smile = smile_mock.return_value
-
-        smile.gateway_id = "015ae9ea3f964e668e490fa39da3870b"
-        smile.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
-        smile.smile_version = "4.0.15"
-        smile.smile_type = "thermostat"
-        smile.smile_hostname = "smile98765"
-        smile.smile_model = "Gateway"
-        smile.smile_model_id = "smile_thermo"
-        smile.smile_name = "Smile Anna"
-        smile.connect.return_value = True
-        all_data = _read_json(chosen_env, "all_data")
-        smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
-        )
-
-        yield smile
-
-
-@pytest.fixture
-def mock_smile_p1() -> Generator[MagicMock]:
-    """Create a Mock P1 DSMR environment for testing exceptions."""
-    chosen_env = "p1v4_442_single"
-    with patch(
-        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
-        smile = smile_mock.return_value
-
-        smile.gateway_id = "a455b61e52394b2db5081ce025a430f3"
-        smile.heater_id = None
-        smile.smile_version = "4.4.2"
-        smile.smile_type = "power"
-        smile.smile_hostname = "smile98765"
-        smile.smile_model = "Gateway"
-        smile.smile_model_id = "smile"
-        smile.smile_name = "Smile P1"
-        smile.connect.return_value = True
-        all_data = _read_json(chosen_env, "all_data")
-        smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
-        )
-
-        yield smile
-
-
-@pytest.fixture
-def mock_smile_p1_2() -> Generator[MagicMock]:
-    """Create a Mock P1 3-phase DSMR environment for testing exceptions."""
-    chosen_env = "p1v4_442_triple"
-    with patch(
-        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
-        smile = smile_mock.return_value
-
-        smile.gateway_id = "03e65b16e4b247a29ae0d75a78cb492e"
-        smile.heater_id = None
-        smile.smile_version = "4.4.2"
-        smile.smile_type = "power"
-        smile.smile_hostname = "smile98765"
-        smile.smile_model = "Gateway"
-        smile.smile_model_id = "smile"
-        smile.smile_name = "Smile P1"
-        smile.connect.return_value = True
-        all_data = _read_json(chosen_env, "all_data")
-        smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
-        )
-
-        yield smile
+        yield api
 
 
 @pytest.fixture
 def mock_smile_legacy_anna() -> Generator[MagicMock]:
     """Create a Mock legacy Anna environment for testing exceptions."""
     chosen_env = "legacy_anna"
+    data = _read_json(chosen_env, "data")
     with patch(
         "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
-        smile = smile_mock.return_value
+    ) as api_mock:
+        api = api_mock.return_value
 
-        smile.gateway_id = "0000aaaa0000aaaa0000aaaa0000aa00"
-        smile.heater_id = "04e4cbfe7f4340f090f85ec3b9e6a950"
-        smile.smile_version = "1.8.22"
-        smile.smile_type = "thermostat"
-        smile.smile_hostname = "smile98765"
-        smile.smile_model = "Gateway"
-        smile.smile_model_id = None
-        smile.smile_name = "Smile Anna"
-
-        smile.connect.return_value = True
-
-        all_data = _read_json(chosen_env, "all_data")
-        smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+        api.async_update.return_value = data
+        api.connect.return_value = Version("1.8.22")
+        api.gateway_id = "0000aaaa0000aaaa0000aaaa0000aa00"
+        api.heater_id = "04e4cbfe7f4340f090f85ec3b9e6a950"
+        api.reboot = False
+        api.smile = build_smile(
+            hostname="smile98765",
+            model="Gateway",
+            model_id=None,
+            name="Smile Anna",
+            type="thermostat",
+            version="1.8.22",
         )
 
-        yield smile
+        yield api
 
 
 @pytest.fixture
 def mock_stretch() -> Generator[MagicMock]:
     """Create a Mock Stretch environment for testing exceptions."""
     chosen_env = "stretch_v31"
+    data = _read_json(chosen_env, "data")
     with patch(
         "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
-        smile = smile_mock.return_value
+    ) as api_mock:
+        api = api_mock.return_value
 
-        smile.gateway_id = "259882df3c05415b99c2d962534ce820"
-        smile.heater_id = None
-        smile.smile_version = "3.1.11"
-        smile.smile_type = "stretch"
-        smile.smile_hostname = "stretch98765"
-        smile.smile_model = "Gateway"
-        smile.smile_model_id = None
-        smile.smile_name = "Stretch"
-        smile.connect.return_value = True
-        all_data = _read_json(chosen_env, "all_data")
-        smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+        api.async_update.return_value = data
+        api.connect.return_value = Version("3.1.11")
+        api.gateway_id = "259882df3c05415b99c2d962534ce820"
+        api.heater_id = None
+        api.reboot = False
+        api.smile = build_smile(
+            hostname="stretch98765",
+            model="Gateway",
+            model_id=None,
+            name="Stretch",
+            type="stretch",
+            version="3.1.11",
         )
 
-        yield smile
+        yield api
 
 
 @pytest.fixture

@@ -8,12 +8,12 @@ from typing import Any
 import voluptuous as vol
 from wallbox import Wallbox
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_STATION, DOMAIN
-from .coordinator import InvalidAuth, WallboxCoordinator
+from .coordinator import InvalidAuth, async_validate_input
 
 COMPONENT_DOMAIN = DOMAIN
 
@@ -32,9 +32,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     wallbox = Wallbox(data["username"], data["password"])
-    wallbox_coordinator = WallboxCoordinator(data["station"], wallbox, hass)
 
-    await wallbox_coordinator.async_validate_input()
+    await async_validate_input(hass, wallbox)
 
     # Return info that you want to store in the config entry.
     return {"title": "Wallbox Portal"}
@@ -43,18 +42,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class WallboxConfigFlow(ConfigFlow, domain=COMPONENT_DOMAIN):
     """Handle a config flow for Wallbox."""
 
-    def __init__(self) -> None:
-        """Start the Wallbox config flow."""
-        self._reauth_entry: ConfigEntry | None = None
-
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-
         return await self.async_step_user()
 
     async def async_step_user(
@@ -71,18 +62,13 @@ class WallboxConfigFlow(ConfigFlow, domain=COMPONENT_DOMAIN):
 
         try:
             await self.async_set_unique_id(user_input["station"])
-            if not self._reauth_entry:
+            if self.source != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
                 info = await validate_input(self.hass, user_input)
                 return self.async_create_entry(title=info["title"], data=user_input)
-            if user_input["station"] == self._reauth_entry.data[CONF_STATION]:
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=user_input, unique_id=user_input["station"]
-                )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
+            reauth_entry = self._get_reauth_entry()
+            if user_input["station"] == reauth_entry.data[CONF_STATION]:
+                return self.async_update_reload_and_abort(reauth_entry, data=user_input)
             errors["base"] = "reauth_invalid"
         except ConnectionError:
             errors["base"] = "cannot_connect"

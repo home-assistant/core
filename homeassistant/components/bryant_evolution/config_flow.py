@@ -63,12 +63,6 @@ class BryantConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle integration reconfiguration."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle integration reconfiguration."""
         errors: dict[str, str] = {}
         if user_input is not None:
             system_zone = await _enumerate_sz(user_input[CONF_FILENAME])
@@ -82,7 +76,7 @@ class BryantConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             errors["base"] = "cannot_connect"
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )

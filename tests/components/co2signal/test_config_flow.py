@@ -44,7 +44,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "CO2 Signal"
+    assert result2["title"] == "Electricity Maps"
     assert result2["data"] == {
         "api_key": "api_key",
     }
@@ -157,8 +157,7 @@ async def test_form_error_handling(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = side_effect
-    electricity_maps.latest_carbon_intensity_by_country_code.side_effect = side_effect
+    electricity_maps.carbon_intensity_for_home_assistant.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -172,8 +171,7 @@ async def test_form_error_handling(
     assert result["errors"] == {"base": err_code}
 
     # reset mock and test if now succeeds
-    electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = None
-    electricity_maps.latest_carbon_intensity_by_country_code.side_effect = None
+    electricity_maps.carbon_intensity_for_home_assistant.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -185,7 +183,7 @@ async def test_form_error_handling(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "CO2 Signal"
+    assert result["title"] == "Electricity Maps"
     assert result["data"] == {
         "api_key": "api_key",
     }

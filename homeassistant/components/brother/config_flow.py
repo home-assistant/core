@@ -7,23 +7,67 @@ from typing import Any
 from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.components.snmp import async_get_snmp_engine
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_host_valid
 
-from .const import DOMAIN, PRINTER_TYPES
+from .const import (
+    CONF_COMMUNITY,
+    DEFAULT_COMMUNITY,
+    DEFAULT_PORT,
+    DOMAIN,
+    PRINTER_TYPES,
+    SECTION_ADVANCED_SETTINGS,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+                },
+            ),
+            {"collapsed": True},
+        ),
     }
 )
-RECONFIGURE_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+ZEROCONF_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+                },
+            ),
+            {"collapsed": True},
+        ),
+    }
+)
+RECONFIGURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+                },
+            ),
+            {"collapsed": True},
+        ),
+    }
+)
 
 
 async def validate_input(
@@ -35,7 +79,12 @@ async def validate_input(
 
     snmp_engine = await async_get_snmp_engine(hass)
 
-    brother = await Brother.create(user_input[CONF_HOST], snmp_engine=snmp_engine)
+    brother = await Brother.create(
+        user_input[CONF_HOST],
+        user_input[SECTION_ADVANCED_SETTINGS][CONF_PORT],
+        user_input[SECTION_ADVANCED_SETTINGS][CONF_COMMUNITY],
+        snmp_engine=snmp_engine,
+    )
     await brother.async_update()
 
     if expected_mac is not None and brother.serial.lower() != expected_mac:
@@ -48,6 +97,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Brother Printer."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize."""
@@ -83,7 +133,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info.host
@@ -126,13 +176,11 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             title = f"{self.brother.model} {self.brother.serial}"
             return self.async_create_entry(
                 title=title,
-                data={CONF_HOST: self.host, CONF_TYPE: user_input[CONF_TYPE]},
+                data={CONF_HOST: self.host, **user_input},
             )
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES)}
-            ),
+            data_schema=ZEROCONF_SCHEMA,
             description_placeholders={
                 "serial_number": self.brother.serial,
                 "model": self.brother.model,
@@ -140,12 +188,6 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
@@ -166,11 +208,11 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_update_reload_and_abort(
                     entry,
-                    data_updates={CONF_HOST: user_input[CONF_HOST]},
+                    data_updates=user_input,
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=RECONFIGURE_SCHEMA,
                 suggested_values=entry.data | (user_input or {}),

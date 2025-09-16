@@ -111,8 +111,8 @@ async def test_binary_sensor_setup_light(
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
 
     for description in LIGHT_SENSOR_WRITE:
-        unique_id, entity_id = ids_from_device_description(
-            Platform.BINARY_SENSOR, light, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.BINARY_SENSOR, light, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -139,8 +139,8 @@ async def test_binary_sensor_setup_camera_all(
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 6)
 
     description = EVENT_SENSORS[0]
-    unique_id, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, doorbell, description
+    unique_id, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, doorbell, description
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -154,8 +154,8 @@ async def test_binary_sensor_setup_camera_all(
 
     # Is Dark
     description = CAMERA_SENSORS[0]
-    unique_id, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, doorbell, description
+    unique_id, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, doorbell, description
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -169,8 +169,8 @@ async def test_binary_sensor_setup_camera_all(
 
     # Motion
     description = EVENT_SENSORS[1]
-    unique_id, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, doorbell, description
+    unique_id, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, doorbell, description
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -197,8 +197,8 @@ async def test_binary_sensor_setup_camera_none(
 
     description = CAMERA_SENSORS[0]
 
-    unique_id, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, camera, description
+    unique_id, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, camera, description
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -229,8 +229,8 @@ async def test_binary_sensor_setup_sensor(
         STATE_OFF,
     ]
     for index, description in enumerate(SENSE_SENSORS_WRITE):
-        unique_id, entity_id = ids_from_device_description(
-            Platform.BINARY_SENSOR, sensor_all, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.BINARY_SENSOR, sensor_all, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -262,8 +262,8 @@ async def test_binary_sensor_setup_sensor_leak(
         STATE_OFF,
     ]
     for index, description in enumerate(SENSE_SENSORS_WRITE):
-        unique_id, entity_id = ids_from_device_description(
-            Platform.BINARY_SENSOR, sensor, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.BINARY_SENSOR, sensor, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -288,8 +288,8 @@ async def test_binary_sensor_update_motion(
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 12)
 
-    _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[1]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[1]
     )
 
     event = Event(
@@ -305,7 +305,7 @@ async def test_binary_sensor_update_motion(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_motion_detected = True
     new_camera.last_motion_event_id = event.id
 
@@ -334,8 +334,8 @@ async def test_binary_sensor_update_light_motion(
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
 
-    _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, light, LIGHT_SENSOR_WRITE[1]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, light, LIGHT_SENSOR_WRITE[1]
     )
 
     event_metadata = EventMetadata(light_id=light.id)
@@ -352,7 +352,7 @@ async def test_binary_sensor_update_light_motion(
         api=ufp.api,
     )
 
-    new_light = light.copy()
+    new_light = light.model_copy()
     new_light.is_pir_motion_detected = True
     new_light.last_motion_event_id = event.id
 
@@ -378,15 +378,15 @@ async def test_binary_sensor_update_mount_type_window(
     await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
-    _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, sensor_all, MOUNTABLE_SENSE_SENSORS[0]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, MOUNTABLE_SENSE_SENSORS[0]
     )
 
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR.value
 
-    new_sensor = sensor_all.copy()
+    new_sensor = sensor_all.model_copy()
     new_sensor.mount_type = MountType.WINDOW
 
     mock_msg = Mock()
@@ -407,18 +407,18 @@ async def test_binary_sensor_update_mount_type_garage(
 ) -> None:
     """Test binary_sensor motion entity."""
 
-    await init_entry(hass, ufp, [sensor_all], debug=True)
+    await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
-    _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, sensor_all, MOUNTABLE_SENSE_SENSORS[0]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, MOUNTABLE_SENSE_SENSORS[0]
     )
 
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR.value
 
-    new_sensor = sensor_all.copy()
+    new_sensor = sensor_all.model_copy()
     new_sensor.mount_type = MountType.GARAGE
 
     mock_msg = Mock()
@@ -451,8 +451,8 @@ async def test_binary_sensor_package_detected(
 
     doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PACKAGE)
 
-    _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[6]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[6]
     )
 
     event = Event(
@@ -468,7 +468,7 @@ async def test_binary_sensor_package_detected(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PACKAGE] = event.id
 
@@ -501,7 +501,7 @@ async def test_binary_sensor_package_detected(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PACKAGE] = event.id
 
@@ -534,7 +534,7 @@ async def test_binary_sensor_package_detected(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PACKAGE] = event.id
 
@@ -592,8 +592,8 @@ async def test_binary_sensor_person_detected(
 
     doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PERSON)
 
-    _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[3]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[3]
     )
 
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
@@ -611,7 +611,7 @@ async def test_binary_sensor_person_detected(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_smart_detected = True
 
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
@@ -641,7 +641,7 @@ async def test_binary_sensor_person_detected(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PERSON] = event.id
 
@@ -680,7 +680,7 @@ async def test_binary_sensor_person_detected(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PERSON] = event.id
 

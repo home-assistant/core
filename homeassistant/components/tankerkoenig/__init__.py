@@ -17,17 +17,11 @@ async def async_setup_entry(
     """Set a tankerkoenig configuration entry up."""
     hass.data.setdefault(DOMAIN, {})
 
-    coordinator = TankerkoenigDataUpdateCoordinator(
-        hass,
-        name=entry.unique_id or DOMAIN,
-        update_interval=DEFAULT_SCAN_INTERVAL,
-    )
+    coordinator = TankerkoenigDataUpdateCoordinator(hass, entry, DEFAULT_SCAN_INTERVAL)
     await coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
-
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -39,10 +33,3 @@ async def async_unload_entry(
 ) -> bool:
     """Unload Tankerkoenig config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def _async_update_listener(
-    hass: HomeAssistant, entry: TankerkoenigConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)

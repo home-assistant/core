@@ -31,8 +31,9 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     EntitySelector,
     LocationSelector,
     TimeSelector,
@@ -50,6 +51,7 @@ from .const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
+    CONF_TRAFFIC_MODE,
     DEFAULT_NAME,
     DOMAIN,
     ROUTE_MODE_FASTEST,
@@ -65,6 +67,7 @@ DEFAULT_OPTIONS = {
     CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
     CONF_ARRIVAL_TIME: None,
     CONF_DEPARTURE_TIME: None,
+    CONF_TRAFFIC_MODE: True,
 }
 
 
@@ -102,6 +105,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HERE Travel Time."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Init Config Flow."""
@@ -113,7 +117,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> HERETravelTimeOptionsFlow:
         """Get the options flow."""
-        return HERETravelTimeOptionsFlow(config_entry)
+        return HERETravelTimeOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -297,9 +301,8 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 class HERETravelTimeOptionsFlow(OptionsFlow):
     """Handle HERE Travel Time options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize HERE Travel Time options flow."""
-        self.config_entry = config_entry
         self._config: dict[str, Any] = {}
 
     async def async_step_init(
@@ -308,7 +311,9 @@ class HERETravelTimeOptionsFlow(OptionsFlow):
         """Manage the HERE Travel Time options."""
         if user_input is not None:
             self._config = user_input
-            return await self.async_step_time_menu()
+            if self._config[CONF_TRAFFIC_MODE]:
+                return await self.async_step_time_menu()
+            return self.async_create_entry(title="", data=self._config)
 
         schema = self.add_suggested_values_to_schema(
             vol.Schema(
@@ -319,11 +324,20 @@ class HERETravelTimeOptionsFlow(OptionsFlow):
                             CONF_ROUTE_MODE, DEFAULT_OPTIONS[CONF_ROUTE_MODE]
                         ),
                     ): vol.In(ROUTE_MODES),
+                    vol.Optional(
+                        CONF_TRAFFIC_MODE,
+                        default=self.config_entry.options.get(
+                            CONF_TRAFFIC_MODE, DEFAULT_OPTIONS[CONF_TRAFFIC_MODE]
+                        ),
+                    ): BooleanSelector(),
                 }
             ),
             {
                 CONF_ROUTE_MODE: self.config_entry.options.get(
                     CONF_ROUTE_MODE, DEFAULT_OPTIONS[CONF_ROUTE_MODE]
+                ),
+                CONF_TRAFFIC_MODE: self.config_entry.options.get(
+                    CONF_TRAFFIC_MODE, DEFAULT_OPTIONS[CONF_TRAFFIC_MODE]
                 ),
             },
         )

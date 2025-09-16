@@ -4,11 +4,19 @@ from dataclasses import dataclass
 from datetime import timedelta
 from random import randint
 
-from bsblan import BSBLAN, BSBLANConnectionError, Sensor, State
+from bsblan import (
+    BSBLAN,
+    BSBLANAuthError,
+    BSBLANConnectionError,
+    HotWaterState,
+    Sensor,
+    State,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
@@ -20,6 +28,7 @@ class BSBLanCoordinatorData:
 
     state: State
     sensor: Sensor
+    dhw: HotWaterState
 
 
 class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
@@ -37,6 +46,7 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
         super().__init__(
             hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=f"{DOMAIN}_{config_entry.data[CONF_HOST]}",
             update_interval=self._get_update_interval(),
         )
@@ -54,8 +64,16 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
     async def _async_update_data(self) -> BSBLanCoordinatorData:
         """Get state and sensor data from BSB-Lan device."""
         try:
+            # initialize the client, this is cached and will only be called once
+            await self.client.initialize()
+
             state = await self.client.state()
             sensor = await self.client.sensor()
+            dhw = await self.client.hot_water_state()
+        except BSBLANAuthError as err:
+            raise ConfigEntryAuthFailed(
+                "Authentication failed for BSB-Lan device"
+            ) from err
         except BSBLANConnectionError as err:
             host = self.config_entry.data[CONF_HOST] if self.config_entry else "unknown"
             raise UpdateFailed(
@@ -63,4 +81,4 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
             ) from err
 
         self.update_interval = self._get_update_interval()
-        return BSBLanCoordinatorData(state=state, sensor=sensor)
+        return BSBLanCoordinatorData(state=state, sensor=sensor, dhw=dhw)

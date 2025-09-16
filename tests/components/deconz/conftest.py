@@ -10,7 +10,7 @@ from unittest.mock import patch
 from pydeconz.websocket import Signal
 import pytest
 
-from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
+from homeassistant.components.deconz.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
@@ -19,9 +19,14 @@ from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-type ConfigEntryFactoryType = Callable[
-    [MockConfigEntry], Coroutine[Any, Any, MockConfigEntry]
-]
+
+class ConfigEntryFactoryType(Protocol):
+    """Fixture factory that can set up deCONZ config entry."""
+
+    async def __call__(self, entry: MockConfigEntry = ..., /) -> MockConfigEntry:
+        """Set up a deCONZ config entry."""
+
+
 type WebsocketDataType = Callable[[dict[str, Any]], Coroutine[Any, Any, None]]
 type WebsocketStateType = Callable[[str], Coroutine[Any, Any, None]]
 
@@ -48,7 +53,7 @@ def fixture_config_entry(
 ) -> MockConfigEntry:
     """Define a config entry fixture."""
     return MockConfigEntry(
-        domain=DECONZ_DOMAIN,
+        domain=DOMAIN,
         entry_id="1",
         unique_id=BRIDGE_ID,
         data=config_entry_data,
@@ -203,10 +208,10 @@ async def fixture_config_entry_factory(
     config_entry: MockConfigEntry,
     mock_requests: Callable[[str], None],
 ) -> ConfigEntryFactoryType:
-    """Fixture factory that can set up UniFi network integration."""
+    """Fixture factory that can set up deCONZ integration."""
 
     async def __mock_setup_config_entry(
-        entry: MockConfigEntry = config_entry,
+        entry: MockConfigEntry = config_entry, /
     ) -> MockConfigEntry:
         entry.add_to_hass(hass)
         mock_requests(entry.data[CONF_HOST])

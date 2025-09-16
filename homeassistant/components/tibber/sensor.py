@@ -33,7 +33,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -41,7 +41,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import Throttle, dt as dt_util
 
-from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import TibberDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ ICON = "mdi:currency-usd"
 SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PARALLEL_UPDATES = 0
-
+TWENTY_MINUTES = 20 * 60
 
 RT_SENSORS_UNIQUE_ID_MIGRATION = {
     "accumulated_consumption_last_hour": "accumulated consumption current hour",
@@ -261,11 +261,13 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tibber sensor."""
 
-    tibber_connection = hass.data[TIBBER_DOMAIN]
+    tibber_connection = hass.data[DOMAIN]
 
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -278,14 +280,14 @@ async def async_setup_entry(
         except TimeoutError as err:
             _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
-        except aiohttp.ClientError as err:
+        except (tibber.RetryableHttpExceptionError, aiohttp.ClientError) as err:
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
 
         if home.has_active_subscription:
             entities.append(TibberSensorElPrice(home))
             if coordinator is None:
-                coordinator = TibberDataCoordinator(hass, tibber_connection)
+                coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
             entities.extend(
                 TibberDataSensor(home, coordinator, entity_description)
                 for entity_description in SENSORS
@@ -297,7 +299,10 @@ async def async_setup_entry(
             )
             await home.rt_subscribe(
                 TibberRtDataCoordinator(
-                    entity_creator.add_sensors, home, hass
+                    hass,
+                    entry,
+                    entity_creator.add_sensors,
+                    home,
                 ).async_set_updated_data
             )
 
@@ -307,21 +312,17 @@ async def async_setup_entry(
             continue
 
         # migrate to new device ids
-        old_entity_id = entity_registry.async_get_entity_id(
-            "sensor", TIBBER_DOMAIN, old_id
-        )
+        old_entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, old_id)
         if old_entity_id is not None:
             entity_registry.async_update_entity(
                 old_entity_id, new_unique_id=home.home_id
             )
 
         # migrate to new device ids
-        device_entry = device_registry.async_get_device(
-            identifiers={(TIBBER_DOMAIN, old_id)}
-        )
+        device_entry = device_registry.async_get_device(identifiers={(DOMAIN, old_id)})
         if device_entry and entry.entry_id in device_entry.config_entries:
             device_registry.async_update_device(
-                device_entry.id, new_identifiers={(TIBBER_DOMAIN, home.home_id)}
+                device_entry.id, new_identifiers={(DOMAIN, home.home_id)}
             )
 
     async_add_entities(entities, True)
@@ -350,7 +351,7 @@ class TibberSensor(SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         device_info = DeviceInfo(
-            identifiers={(TIBBER_DOMAIN, self._tibber_home.home_id)},
+            identifiers={(DOMAIN, self._tibber_home.home_id)},
             name=self._device_name,
             manufacturer=MANUFACTURER,
         )
@@ -369,14 +370,13 @@ class TibberSensorElPrice(TibberSensor):
         """Initialize the sensor."""
         super().__init__(tibber_home=tibber_home)
         self._last_updated: datetime.datetime | None = None
-        self._spread_load_constant = randrange(5000)
+        self._spread_load_constant = randrange(TWENTY_MINUTES)
 
         self._attr_available = False
         self._attr_extra_state_attributes = {
             "app_nickname": None,
             "grid_company": None,
             "estimated_annual_consumption": None,
-            "price_level": None,
             "max_price": None,
             "avg_price": None,
             "min_price": None,
@@ -397,23 +397,23 @@ class TibberSensorElPrice(TibberSensor):
         if (
             not self._tibber_home.last_data_timestamp
             or (self._tibber_home.last_data_timestamp - now).total_seconds()
-            < 5 * 3600 + self._spread_load_constant
+            < 10 * 3600 - self._spread_load_constant
             or not self.available
         ):
             _LOGGER.debug("Asking for new data")
             await self._fetch_data()
 
         elif (
-            self._tibber_home.current_price_total
+            self._tibber_home.price_total
             and self._last_updated
             and self._last_updated.hour == now.hour
+            and now - self._last_updated < timedelta(minutes=15)
             and self._tibber_home.last_data_timestamp
         ):
             return
 
         res = self._tibber_home.current_price_data()
-        self._attr_native_value, price_level, self._last_updated, price_rank = res
-        self._attr_extra_state_attributes["price_level"] = price_level
+        self._attr_native_value, self._last_updated, price_rank = res
         self._attr_extra_state_attributes["intraday_price_ranking"] = price_rank
 
         attrs = self._tibber_home.current_attributes()
@@ -531,7 +531,7 @@ class TibberRtEntityCreator:
 
     def __init__(
         self,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
         tibber_home: tibber.TibberHome,
         entity_registry: er.EntityRegistry,
     ) -> None:
@@ -551,19 +551,19 @@ class TibberRtEntityCreator:
         if translation_key in RT_SENSORS_UNIQUE_ID_MIGRATION_SIMPLE:
             entity_id = self._entity_registry.async_get_entity_id(
                 "sensor",
-                TIBBER_DOMAIN,
+                DOMAIN,
                 f"{home_id}_rt_{translation_key.replace('_', ' ')}",
             )
         elif translation_key in RT_SENSORS_UNIQUE_ID_MIGRATION:
             entity_id = self._entity_registry.async_get_entity_id(
                 "sensor",
-                TIBBER_DOMAIN,
+                DOMAIN,
                 f"{home_id}_rt_{RT_SENSORS_UNIQUE_ID_MIGRATION[translation_key]}",
             )
         elif translation_key != description_key:
             entity_id = self._entity_registry.async_get_entity_id(
                 "sensor",
-                TIBBER_DOMAIN,
+                DOMAIN,
                 f"{home_id}_rt_{translation_key}",
             )
 
@@ -615,15 +615,17 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-en
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
         add_sensor_callback: Callable[[TibberRtDataCoordinator, Any], None],
         tibber_home: tibber.TibberHome,
-        hass: HomeAssistant,
     ) -> None:
         """Initialize the data handler."""
         self._add_sensor_callback = add_sensor_callback
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=tibber_home.info["viewer"]["home"]["address"].get(
                 "address1", "Tibber"
             ),

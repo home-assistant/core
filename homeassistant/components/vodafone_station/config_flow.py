@@ -13,16 +13,16 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
-    OptionsFlowWithConfigEntry,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 
 from .const import _LOGGER, DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
+from .coordinator import VodafoneConfigEntry
+from .utils import async_client_session
 
 
 def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
@@ -43,15 +43,15 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
+    session = await async_client_session(hass)
     api = VodafoneStationSercommApi(
-        data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD]
+        data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD], session
     )
 
     try:
         await api.login()
     finally:
         await api.logout()
-        await api.close()
 
     return {"title": data[CONF_HOST]}
 
@@ -60,13 +60,14 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Vodafone Station."""
 
     VERSION = 1
-    entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: VodafoneConfigEntry,
+    ) -> VodafoneStationOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return VodafoneStationOptionsFlowHandler(config_entry)
+        return VodafoneStationOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -106,21 +107,19 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth flow."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert self.entry
-        self.context["title_placeholders"] = {"host": self.entry.data[CONF_HOST]}
+        self.context["title_placeholders"] = {"host": entry_data[CONF_HOST]}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reauth confirm."""
-        assert self.entry
         errors = {}
 
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
             try:
-                await validate_input(self.hass, {**self.entry.data, **user_input})
+                await validate_input(self.hass, {**reauth_entry.data, **user_input})
             except aiovodafone_exceptions.AlreadyLogged:
                 errors["base"] = "already_logged"
             except aiovodafone_exceptions.CannotConnect:
@@ -131,27 +130,61 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={
-                        **self.entry.data,
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={CONF_HOST: self.entry.data[CONF_HOST]},
+            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        if not user_input:
+            return self.async_show_form(
+                step_id="reconfigure", data_schema=user_form_schema(user_input)
+            )
 
-class VodafoneStationOptionsFlowHandler(OptionsFlowWithConfigEntry):
+        updated_host = user_input[CONF_HOST]
+
+        if reconfigure_entry.data[CONF_HOST] != updated_host:
+            self._async_abort_entries_match({CONF_HOST: updated_host})
+
+        errors: dict[str, str] = {}
+
+        try:
+            await validate_input(self.hass, user_input)
+        except aiovodafone_exceptions.AlreadyLogged:
+            errors["base"] = "already_logged"
+        except aiovodafone_exceptions.CannotConnect:
+            errors["base"] = "cannot_connect"
+        except aiovodafone_exceptions.CannotAuthenticate:
+            errors["base"] = "invalid_auth"
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            return self.async_update_reload_and_abort(
+                reconfigure_entry, data_updates={CONF_HOST: updated_host}
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=user_form_schema(user_input),
+            errors=errors,
+        )
+
+
+class VodafoneStationOptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow."""
 
     async def async_step_init(
@@ -166,7 +199,7 @@ class VodafoneStationOptionsFlowHandler(OptionsFlowWithConfigEntry):
             {
                 vol.Optional(
                     CONF_CONSIDER_HOME,
-                    default=self.options.get(
+                    default=self.config_entry.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))

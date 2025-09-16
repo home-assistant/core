@@ -12,19 +12,12 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_IMPORT,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 
 from .base import FritzBoxPhonebook
@@ -141,7 +134,7 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> FritzBoxCallMonitorOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return FritzBoxCallMonitorOptionsFlowHandler(config_entry)
+        return FritzBoxCallMonitorOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -170,16 +163,11 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         if result != ConnectResult.SUCCESS:
             return self.async_abort(reason=result)
 
-        if self.context["source"] == SOURCE_IMPORT:
-            self._phonebook_id = user_input[CONF_PHONEBOOK]
-            self._phonebook_name = user_input[CONF_NAME]
-
-        elif len(self._phonebook_ids) > 1:
+        if len(self._phonebook_ids) > 1:
             return await self.async_step_phonebook()
 
-        else:
-            self._phonebook_id = DEFAULT_PHONEBOOK
-            self._phonebook_name = await self._get_name_of_phonebook(self._phonebook_id)
+        self._phonebook_id = DEFAULT_PHONEBOOK
+        self._phonebook_name = await self._get_name_of_phonebook(self._phonebook_id)
 
         await self.async_set_unique_id(f"{self._serial_number}-{self._phonebook_id}")
         self._abort_if_unique_id_configured()
@@ -275,12 +263,8 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="reauth_successful")
 
 
-class FritzBoxCallMonitorOptionsFlowHandler(OptionsFlow):
+class FritzBoxCallMonitorOptionsFlowHandler(OptionsFlowWithReload):
     """Handle a fritzbox_callmonitor options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
 
     @classmethod
     def _are_prefixes_valid(cls, prefixes: str | None) -> bool:

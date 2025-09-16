@@ -14,12 +14,12 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import TessieConfigEntry
 from .const import DOMAIN
 
 TESSIE_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 DESCRIPTION_PLACEHOLDERS = {
-    "url": "[my.tessie.com/settings/api](https://my.tessie.com/settings/api)"
+    "name": "Tessie",
+    "url": "[my.tessie.com/settings/api](https://my.tessie.com/settings/api)",
 }
 
 
@@ -27,10 +27,6 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config Tessie API connection."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize."""
-        self._reauth_entry: TessieConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
@@ -69,9 +65,6 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-auth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -79,7 +72,7 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Get update API Key from the user."""
         errors: dict[str, str] = {}
-        assert self._reauth_entry
+
         if user_input:
             try:
                 await get_state_of_all_vehicles(
@@ -95,7 +88,7 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(
-                    self._reauth_entry, data=user_input
+                    self._get_reauth_entry(), data=user_input
                 )
 
         return self.async_show_form(

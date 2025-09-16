@@ -51,15 +51,6 @@ async def validate_input(
 
 DATA_SCHEMA_OPTIONS = vol.Schema(
     {
-        vol.Required(CONF_CALIBRATION_FACTOR): NumberSelector(
-            NumberSelectorConfig(step=0.1, mode=NumberSelectorMode.BOX)
-        )
-    }
-)
-
-DATA_SCHEMA_CONFIG = vol.Schema(
-    {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
         vol.Required(CONF_INDOOR_TEMP): EntitySelector(
             EntitySelectorConfig(
                 domain=Platform.SENSOR, device_class=SensorDeviceClass.TEMPERATURE
@@ -75,6 +66,15 @@ DATA_SCHEMA_CONFIG = vol.Schema(
                 domain=Platform.SENSOR, device_class=SensorDeviceClass.TEMPERATURE
             )
         ),
+        vol.Required(CONF_CALIBRATION_FACTOR): NumberSelector(
+            NumberSelectorConfig(step=0.1, mode=NumberSelectorMode.BOX)
+        ),
+    }
+)
+
+DATA_SCHEMA_CONFIG = vol.Schema(
+    {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
     }
 ).extend(DATA_SCHEMA_OPTIONS.schema)
 
@@ -100,6 +100,9 @@ class MoldIndicatorConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+
+    VERSION = 1
+    MINOR_VERSION = 2
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

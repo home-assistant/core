@@ -16,6 +16,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
+    AreaConverter,
+    BloodGlucoseConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -23,10 +26,14 @@ from homeassistant.util.unit_conversion import (
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
+    EnergyDistanceConverter,
     InformationConverter,
     MassConverter,
+    MassVolumeConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    ReactiveEnergyConverter,
+    ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -34,7 +41,7 @@ from homeassistant.util.unit_conversion import (
     VolumeFlowRateConverter,
 )
 
-from .models import StatisticPeriod
+from .models import StatisticMeanType, StatisticPeriod
 from .statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     async_add_external_statistics,
@@ -54,6 +61,14 @@ UPDATE_STATISTICS_METADATA_TIME_OUT = 10
 
 UNIT_SCHEMA = vol.Schema(
     {
+        vol.Optional("apparent_power"): vol.In(ApparentPowerConverter.VALID_UNITS),
+        vol.Optional("area"): vol.In(AreaConverter.VALID_UNITS),
+        vol.Optional("blood_glucose_concentration"): vol.In(
+            BloodGlucoseConcentrationConverter.VALID_UNITS
+        ),
+        vol.Optional("concentration"): vol.In(
+            MassVolumeConcentrationConverter.VALID_UNITS
+        ),
         vol.Optional("conductivity"): vol.In(ConductivityConverter.VALID_UNITS),
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
         vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
@@ -61,10 +76,13 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
         vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
         vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+        vol.Optional("energy_distance"): vol.In(EnergyDistanceConverter.VALID_UNITS),
         vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
         vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
         vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
         vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
+        vol.Optional("reactive_energy"): vol.In(ReactiveEnergyConverter.VALID_UNITS),
+        vol.Optional("reactive_power"): vol.In(ReactivePowerConverter.VALID_UNITS),
         vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
         vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
         vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
@@ -289,13 +307,13 @@ async def ws_list_statistic_ids(
 async def ws_validate_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Fetch a list of available statistic_id."""
+    """Validate statistics and return issues found."""
     instance = get_instance(hass)
-    statistic_ids = await instance.async_add_executor_job(
+    validation_issues = await instance.async_add_executor_job(
         validate_statistics,
         hass,
     )
-    connection.send_result(msg["id"], statistic_ids)
+    connection.send_result(msg["id"], validation_issues)
 
 
 @websocket_api.websocket_command(
@@ -524,6 +542,10 @@ def ws_import_statistics(
 ) -> None:
     """Import statistics."""
     metadata = msg["metadata"]
+    # The WS command will be changed in a follow up PR
+    metadata["mean_type"] = (
+        StatisticMeanType.ARITHMETIC if metadata["has_mean"] else StatisticMeanType.NONE
+    )
     stats = msg["stats"]
 
     if valid_entity_id(metadata["statistic_id"]):

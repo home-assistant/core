@@ -85,6 +85,40 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_ingress_host(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test disallow ingress host."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "http://homeassistant/hassio/ingress/db21ed7f_mealie",
+            CONF_API_TOKEN: "token",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "ingress_url"}
+
+    mock_mealie_client.get_user_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "http://homeassistant:9001", CONF_API_TOKEN: "token"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 @pytest.mark.parametrize(
     ("version"),
     [
@@ -244,7 +278,7 @@ async def test_reconfigure_flow(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -273,7 +307,7 @@ async def test_reconfigure_flow_wrong_account(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     mock_mealie_client.get_user_info.return_value.user_id = "wrong_user_id"
 
@@ -308,7 +342,7 @@ async def test_reconfigure_flow_exceptions(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -316,7 +350,7 @@ async def test_reconfigure_flow_exceptions(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": error}
 
     mock_mealie_client.get_user_info.side_effect = None

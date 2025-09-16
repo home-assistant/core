@@ -4,18 +4,18 @@ import json
 from typing import Any
 from unittest.mock import Mock, patch
 
-from homematicip.aio.class_maps import (
+from homematicip.async_home import AsyncHome
+from homematicip.base.homematicip_object import HomeMaticIPObject
+from homematicip.class_maps import (
     TYPE_CLASS_MAP,
     TYPE_GROUP_MAP,
     TYPE_SECURITY_EVENT_MAP,
 )
-from homematicip.aio.device import AsyncDevice
-from homematicip.aio.group import AsyncGroup
-from homematicip.aio.home import AsyncHome
-from homematicip.base.homematicip_object import HomeMaticIPObject
+from homematicip.device import Device
+from homematicip.group import Group
 from homematicip.home import Home
 
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_IS_GROUP,
     ATTR_MODEL_TYPE,
@@ -49,9 +49,9 @@ def get_and_check_entity_basics(
     hmip_device = mock_hap.hmip_device_by_entity_id.get(entity_id)
 
     if hmip_device:
-        if isinstance(hmip_device, AsyncDevice):
+        if isinstance(hmip_device, Device):
             assert ha_state.attributes[ATTR_IS_GROUP] is False
-        elif isinstance(hmip_device, AsyncGroup):
+        elif isinstance(hmip_device, Group):
             assert ha_state.attributes[ATTR_IS_GROUP]
     return ha_state, hmip_device
 
@@ -116,11 +116,11 @@ class HomeFactory:
             "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.get_hap",
             return_value=mock_home,
         ):
-            assert await async_setup_component(self.hass, HMIPC_DOMAIN, {})
+            assert await async_setup_component(self.hass, DOMAIN, {})
 
         await self.hass.async_block_till_done()
 
-        hap = self.hass.data[HMIPC_DOMAIN][HAPID]
+        hap = self.hmip_config_entry.runtime_data
         mock_home.on_update(hap.async_update)
         mock_home.on_create(hap.async_create_entity)
         return hap
@@ -174,22 +174,26 @@ class HomeTemplate(Home):
     def init_home(self):
         """Init template with json."""
         self.init_json_state = self._cleanup_json(json.loads(FIXTURE_DATA))
-        self.update_home(json_state=self.init_json_state, clearConfig=True)
+        self.update_home(json_state=self.init_json_state, clear_config=True)
         return self
 
-    def update_home(self, json_state, clearConfig: bool = False):
+    def update_home(self, json_state, clear_config: bool = False):
         """Update home and ensure that mocks are created."""
-        result = super().update_home(json_state, clearConfig)
+        result = super().update_home(json_state, clear_config)
         self._generate_mocks()
         return result
 
     def _generate_mocks(self):
         """Generate mocks for groups and devices."""
         self.devices = [_get_mock(device) for device in self.devices]
+        for device in self.devices:
+            device.functionalChannels = [
+                _get_mock(ch) for ch in device.functionalChannels
+            ]
 
         self.groups = [_get_mock(group) for group in self.groups]
 
-    def download_configuration(self):
+    async def download_configuration_async(self):
         """Return the initial json config."""
         return self.init_json_state
 

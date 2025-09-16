@@ -1,9 +1,11 @@
 """The test for ZHA device automation actions."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
 from pytest_unordered import unordered
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general, security
 import zigpy.zcl.foundation as zcl_f
@@ -56,8 +58,8 @@ async def test_get_actions(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test we get the expected actions from a ZHA device."""
 
@@ -142,8 +144,8 @@ async def test_get_actions(
 async def test_action(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test for executing a ZHA device action."""
     await setup_zha()
@@ -209,7 +211,7 @@ async def test_action(
         cluster_handler = (
             gateway.get_device(zigpy_device.ieee)
             .endpoints[1]
-            .client_cluster_handlers["1:0x0006"]
+            .client_cluster_handlers["1:0x0006_client"]
         )
         cluster_handler.zha_send_event(COMMAND_SINGLE, [])
         await hass.async_block_till_done()
@@ -221,7 +223,9 @@ async def test_action(
 
 
 async def test_invalid_zha_event_type(
-    hass: HomeAssistant, setup_zha, zigpy_device_mock
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test that unexpected types are not passed to `zha_send_event`."""
     await setup_zha()
@@ -252,9 +256,75 @@ async def test_invalid_zha_event_type(
     cluster_handler = (
         gateway.get_device(zigpy_device.ieee)
         .endpoints[1]
-        .client_cluster_handlers["1:0x0006"]
+        .client_cluster_handlers["1:0x0006_client"]
     )
 
     # `zha_send_event` accepts only zigpy responses, lists, and dicts
     with pytest.raises(TypeError):
         cluster_handler.zha_send_event(COMMAND_SINGLE, 123)
+
+
+async def test_client_unique_id_suffix_stripped(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test that the `_CLIENT_` unique ID suffix is stripped."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "zha_event",
+                    "event_data": {
+                        "unique_id": "38:5b:44:ff:fe:a7:cc:69:1:0x0006",  # no `_CLIENT` suffix
+                        "endpoint_id": 1,
+                        "cluster_id": 6,
+                        "command": "on",
+                        "args": [],
+                        "params": {},
+                    },
+                },
+                "action": {"service": "zha.test"},
+            }
+        },
+    )
+
+    service_calls = async_mock_service(hass, DOMAIN, "test")
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    general.Basic.cluster_id,
+                    security.IasZone.cluster_id,
+                    security.IasWd.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [general.OnOff.cluster_id],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        }
+    )
+
+    zha_device = gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zha_device.device)
+
+    zha_device.emit_zha_event(
+        {
+            "unique_id": "38:5b:44:ff:fe:a7:cc:69:1:0x0006_CLIENT",
+            "endpoint_id": 1,
+            "cluster_id": 6,
+            "command": "on",
+            "args": [],
+            "params": {},
+        }
+    )
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(service_calls) == 1

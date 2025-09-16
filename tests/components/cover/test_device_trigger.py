@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import MockCover
 
@@ -192,7 +192,12 @@ async def test_get_trigger_capabilities(
         )
         assert capabilities == {
             "extra_fields": [
-                {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+                {
+                    "name": "for",
+                    "optional": True,
+                    "required": False,
+                    "type": "positive_time_period_dict",
+                }
             ]
         }
 
@@ -230,7 +235,12 @@ async def test_get_trigger_capabilities_legacy(
         )
         assert capabilities == {
             "extra_fields": [
-                {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+                {
+                    "name": "for",
+                    "optional": True,
+                    "required": False,
+                    "type": "positive_time_period_dict",
+                }
             ]
         }
 
@@ -262,6 +272,7 @@ async def test_get_trigger_capabilities_set_pos(
             {
                 "name": "above",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 0,
                 "valueMax": 100,
@@ -270,6 +281,7 @@ async def test_get_trigger_capabilities_set_pos(
             {
                 "name": "below",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 100,
                 "valueMax": 100,
@@ -293,6 +305,7 @@ async def test_get_trigger_capabilities_set_pos(
                     {
                         "name": "for",
                         "optional": True,
+                        "required": False,
                         "type": "positive_time_period_dict",
                     }
                 ]
@@ -326,6 +339,7 @@ async def test_get_trigger_capabilities_set_tilt_pos(
             {
                 "name": "above",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 0,
                 "valueMax": 100,
@@ -334,6 +348,7 @@ async def test_get_trigger_capabilities_set_tilt_pos(
             {
                 "name": "below",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 100,
                 "valueMax": 100,
@@ -357,6 +372,7 @@ async def test_get_trigger_capabilities_set_tilt_pos(
                     {
                         "name": "for",
                         "optional": True,
+                        "required": False,
                         "type": "positive_time_period_dict",
                     }
                 ]
@@ -766,10 +782,7 @@ async def test_if_fires_on_position(
         ]
     ) == sorted(
         [
-            (
-                f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open"
-                " - None"
-            ),
+            f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open - None",
             f"is_pos_lt_90 - device - {entry.entity_id} - closed - open - None",
             f"is_pos_gt_45 - device - {entry.entity_id} - open - closed - None",
         ]
@@ -925,10 +938,7 @@ async def test_if_fires_on_tilt_position(
         ]
     ) == sorted(
         [
-            (
-                f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open"
-                " - None"
-            ),
+            f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open - None",
             f"is_pos_lt_90 - device - {entry.entity_id} - closed - open - None",
             f"is_pos_gt_45 - device - {entry.entity_id} - open - closed - None",
         ]

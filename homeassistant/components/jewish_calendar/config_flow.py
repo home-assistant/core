@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, get_args
 import zoneinfo
 
+from hdate.translator import Language
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_ELEVATION,
@@ -25,8 +25,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    LanguageSelector,
+    LanguageSelectorConfig,
     LocationSelector,
-    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
 )
@@ -42,11 +43,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
-
-LANGUAGE = [
-    SelectOptionDict(value="hebrew", label="Hebrew"),
-    SelectOptionDict(value="english", label="English"),
-]
+from .entity import JewishCalendarConfigEntry
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -61,23 +58,24 @@ OPTIONS_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
+async def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
     default_location = {
         CONF_LATITUDE: hass.config.latitude,
         CONF_LONGITUDE: hass.config.longitude,
     }
+    get_timezones: list[str] = list(
+        await hass.async_add_executor_job(zoneinfo.available_timezones)
+    )
     return vol.Schema(
         {
             vol.Required(CONF_DIASPORA, default=DEFAULT_DIASPORA): BooleanSelector(),
-            vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): SelectSelector(
-                SelectSelectorConfig(options=LANGUAGE)
+            vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
+                LanguageSelectorConfig(languages=list(get_args(Language)))
             ),
             vol.Optional(CONF_LOCATION, default=default_location): LocationSelector(),
             vol.Optional(CONF_ELEVATION, default=hass.config.elevation): int,
             vol.Optional(CONF_TIME_ZONE, default=hass.config.time_zone): SelectSelector(
-                SelectSelectorConfig(
-                    options=sorted(zoneinfo.available_timezones()),
-                )
+                SelectSelectorConfig(options=get_timezones, sort=True)
             ),
         }
     )
@@ -86,47 +84,32 @@ def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
 class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Jewish calendar."""
 
-    VERSION = 1
+    VERSION = 3
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithConfigEntry:
+    def async_get_options_flow(
+        config_entry: JewishCalendarConfigEntry,
+    ) -> JewishCalendarOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return JewishCalendarOptionsFlowHandler(config_entry)
+        return JewishCalendarOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
-            _options = {}
-            if CONF_CANDLE_LIGHT_MINUTES in user_input:
-                _options[CONF_CANDLE_LIGHT_MINUTES] = user_input[
-                    CONF_CANDLE_LIGHT_MINUTES
-                ]
-                del user_input[CONF_CANDLE_LIGHT_MINUTES]
-            if CONF_HAVDALAH_OFFSET_MINUTES in user_input:
-                _options[CONF_HAVDALAH_OFFSET_MINUTES] = user_input[
-                    CONF_HAVDALAH_OFFSET_MINUTES
-                ]
-                del user_input[CONF_HAVDALAH_OFFSET_MINUTES]
             if CONF_LOCATION in user_input:
                 user_input[CONF_LATITUDE] = user_input[CONF_LOCATION][CONF_LATITUDE]
                 user_input[CONF_LONGITUDE] = user_input[CONF_LOCATION][CONF_LONGITUDE]
-            return self.async_create_entry(
-                title=DEFAULT_NAME, data=user_input, options=_options
-            )
+            return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                _get_data_schema(self.hass), user_input
+                await _get_data_schema(self.hass), user_input
             ),
         )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_data)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -136,7 +119,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_show_form(
                 data_schema=self.add_suggested_values_to_schema(
-                    _get_data_schema(self.hass),
+                    await _get_data_schema(self.hass),
                     reconfigure_entry.data,
                 ),
                 step_id="reconfigure",
@@ -145,7 +128,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_update_reload_and_abort(reconfigure_entry, data=user_input)
 
 
-class JewishCalendarOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class JewishCalendarOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Jewish Calendar options."""
 
     async def async_step_init(

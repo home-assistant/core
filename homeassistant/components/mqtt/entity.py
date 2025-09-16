@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_MODEL_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    CONF_URL,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import Event, HassJobType, HomeAssistant, callback
@@ -43,7 +44,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
@@ -74,14 +75,17 @@ from .const import (
     CONF_AVAILABILITY_TOPIC,
     CONF_CONFIGURATION_URL,
     CONF_CONNECTIONS,
+    CONF_DEFAULT_ENTITY_ID,
     CONF_ENABLED_BY_DEFAULT,
     CONF_ENCODING,
+    CONF_ENTITY_PICTURE,
     CONF_HW_VERSION,
     CONF_IDENTIFIERS,
     CONF_JSON_ATTRS_TEMPLATE,
     CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
     CONF_OBJECT_ID,
+    CONF_ORIGIN,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
@@ -103,11 +107,14 @@ from .discovery import (
     MQTT_DISCOVERY_UPDATED,
     MQTTDiscoveryPayload,
     clear_discovery_hash,
+    get_origin_log_string,
+    get_origin_support_url,
     set_discovery_hash,
 )
 from .models import (
     DATA_MQTT,
     MessageCallbackType,
+    MqttSubentryData,
     MqttValueTemplate,
     MqttValueTemplateException,
     PublishPayloadType,
@@ -119,7 +126,7 @@ from .subscription import (
     async_subscribe_topics_internal,
     async_unsubscribe_topics,
 )
-from .util import mqtt_config_entry_enabled
+from .util import learn_more_url, mqtt_config_entry_enabled
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,7 +141,7 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "extra_state_attributes",
     "force_update",
     "icon",
-    "name",
+    "friendly_name",
     "should_poll",
     "state",
     "supported_features",
@@ -235,13 +242,65 @@ def async_setup_entity_entry_helper(
     entry: ConfigEntry,
     entity_class: type[MqttEntity] | None,
     domain: str,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     discovery_schema: VolSchemaType,
     platform_schema_modern: VolSchemaType,
     schema_class_mapping: dict[str, type[MqttEntity]] | None = None,
 ) -> None:
     """Set up entity creation dynamically through MQTT discovery."""
     mqtt_data = hass.data[DATA_MQTT]
+
+    @callback
+    def _async_migrate_subentry(
+        config: dict[str, Any], raw_config: dict[str, Any], migration_type: str
+    ) -> bool:
+        """Start a repair flow to allow migration of MQTT device subentries.
+
+        If a YAML config or discovery is detected using the ID
+        of an existing mqtt subentry, and exported configuration is detected,
+        and a repair flow is offered to migrate the subentry.
+        """
+        if (
+            CONF_DEVICE in config
+            and CONF_IDENTIFIERS in config[CONF_DEVICE]
+            and config[CONF_DEVICE][CONF_IDENTIFIERS]
+            and (subentry_id := config[CONF_DEVICE][CONF_IDENTIFIERS][0])
+            in entry.subentries
+        ):
+            name: str = config[CONF_DEVICE].get(CONF_NAME, "-")
+            if migration_type == "subentry_migration_yaml":
+                _LOGGER.info(
+                    "Starting migration repair flow for MQTT subentry %s "
+                    "for migration to YAML config: %s",
+                    subentry_id,
+                    raw_config,
+                )
+            elif migration_type == "subentry_migration_discovery":
+                _LOGGER.info(
+                    "Starting migration repair flow for MQTT subentry %s "
+                    "for migration to configuration via MQTT discovery: %s",
+                    subentry_id,
+                    raw_config,
+                )
+            async_create_issue(
+                hass,
+                DOMAIN,
+                subentry_id,
+                issue_domain=DOMAIN,
+                is_fixable=True,
+                severity=IssueSeverity.WARNING,
+                learn_more_url=learn_more_url(domain),
+                data={
+                    "entry_id": entry.entry_id,
+                    "subentry_id": subentry_id,
+                    "name": name,
+                },
+                translation_placeholders={"name": name},
+                translation_key=migration_type,
+            )
+            return True
+
+        return False
 
     @callback
     def _async_setup_entity_entry_from_discovery(
@@ -259,9 +318,22 @@ def async_setup_entity_entry_helper(
                 entity_class = schema_class_mapping[config[CONF_SCHEMA]]
             if TYPE_CHECKING:
                 assert entity_class is not None
-            async_add_entities(
-                [entity_class(hass, config, entry, discovery_payload.discovery_data)]
-            )
+            if _async_migrate_subentry(
+                config, discovery_payload, "subentry_migration_discovery"
+            ):
+                _handle_discovery_failure(hass, discovery_payload)
+                _LOGGER.debug(
+                    "MQTT discovery skipped, as device exists in subentry, "
+                    "and repair flow must be completed first"
+                )
+            else:
+                async_add_entities(
+                    [
+                        entity_class(
+                            hass, config, entry, discovery_payload.discovery_data
+                        )
+                    ]
+                )
         except vol.Invalid as err:
             _handle_discovery_failure(hass, discovery_payload)
             async_handle_schema_error(discovery_payload, err)
@@ -279,11 +351,10 @@ def async_setup_entity_entry_helper(
 
     @callback
     def _async_setup_entities() -> None:
-        """Set up MQTT items from configuration.yaml."""
+        """Set up MQTT items from subentries and configuration.yaml."""
         nonlocal entity_class
         mqtt_data = hass.data[DATA_MQTT]
-        if not (config_yaml := mqtt_data.config):
-            return
+        config_yaml = mqtt_data.config
         yaml_configs: list[ConfigType] = [
             config
             for config_item in config_yaml
@@ -291,6 +362,50 @@ def async_setup_entity_entry_helper(
             for config in configs
             if config_domain == domain
         ]
+        # process subentry entity setup
+        for config_subentry_id, subentry in entry.subentries.items():
+            subentry_data = cast(MqttSubentryData, subentry.data)
+            availability_config = subentry_data.get("availability", {})
+            subentry_entities: list[Entity] = []
+            device_config = subentry_data["device"].copy()
+            device_mqtt_options = device_config.pop("mqtt_settings", {})
+            device_config["identifiers"] = config_subentry_id
+            for component_id, component_data in subentry_data["components"].items():
+                if component_data["platform"] != domain:
+                    continue
+                component_config: dict[str, Any] = component_data.copy()
+                component_config[CONF_UNIQUE_ID] = (
+                    f"{config_subentry_id}_{component_id}"
+                )
+                component_config[CONF_DEVICE] = device_config
+                component_config.pop("platform")
+                component_config.update(availability_config)
+                component_config.update(device_mqtt_options)
+                if (
+                    CONF_ENTITY_CATEGORY in component_config
+                    and component_config[CONF_ENTITY_CATEGORY] is None
+                ):
+                    component_config.pop(CONF_ENTITY_CATEGORY)
+
+                try:
+                    config = platform_schema_modern(component_config)
+                    if schema_class_mapping is not None:
+                        entity_class = schema_class_mapping[config[CONF_SCHEMA]]
+                    if TYPE_CHECKING:
+                        assert entity_class is not None
+                    subentry_entities.append(entity_class(hass, config, entry, None))
+                except vol.Invalid as exc:
+                    _LOGGER.error(
+                        "Schema violation occurred when trying to set up "
+                        "entity from subentry %s %s %s: %s",
+                        config_subentry_id,
+                        subentry.title,
+                        subentry.data,
+                        exc,
+                    )
+
+            async_add_entities(subentry_entities, config_subentry_id=config_subentry_id)
+
         entities: list[Entity] = []
         for yaml_config in yaml_configs:
             try:
@@ -299,6 +414,11 @@ def async_setup_entity_entry_helper(
                     entity_class = schema_class_mapping[config[CONF_SCHEMA]]
                 if TYPE_CHECKING:
                     assert entity_class is not None
+                if _async_migrate_subentry(
+                    config, yaml_config, "subentry_migration_yaml"
+                ):
+                    continue
+
                 entities.append(entity_class(hass, config, entry, None))
             except vol.Invalid as exc:
                 error = str(exc)
@@ -306,9 +426,6 @@ def async_setup_entity_entry_helper(
                 line = getattr(yaml_config, "__line__", "?")
                 issue_id = hex(hash(frozenset(yaml_config)))
                 yaml_config_str = yaml_dump(yaml_config)
-                learn_more_url = (
-                    f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
-                )
                 async_create_issue(
                     hass,
                     DOMAIN,
@@ -316,7 +433,7 @@ def async_setup_entity_entry_helper(
                     issue_domain=domain,
                     is_fixable=False,
                     severity=IssueSeverity.ERROR,
-                    learn_more_url=learn_more_url,
+                    learn_more_url=learn_more_url(domain),
                     translation_placeholders={
                         "domain": domain,
                         "config_file": config_file,
@@ -345,21 +462,15 @@ def async_setup_entity_entry_helper(
     _async_setup_entities()
 
 
-def init_entity_id_from_config(
-    hass: HomeAssistant, entity: Entity, config: ConfigType, entity_id_format: str
-) -> None:
-    """Set entity_id from object_id if defined in config."""
-    if CONF_OBJECT_ID in config:
-        entity.entity_id = async_generate_entity_id(
-            entity_id_format, config[CONF_OBJECT_ID], None, hass
-        )
-
-
 class MqttAttributesMixin(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
     _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
+    _message_callback: Callable[
+        [MessageCallbackType, set[str] | None, ReceiveMessage], None
+    ]
+    _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
@@ -394,9 +505,15 @@ class MqttAttributesMixin(Entity):
                 CONF_JSON_ATTRS_TOPIC: {
                     "topic": self._attributes_config.get(CONF_JSON_ATTRS_TOPIC),
                     "msg_callback": partial(
-                        self._message_callback,  # type: ignore[attr-defined]
+                        self._message_callback,
                         self._attributes_message_received,
-                        {"_attr_extra_state_attributes"},
+                        {
+                            "_attr_extra_state_attributes",
+                            "_attr_gps_accuracy",
+                            "_attr_latitude",
+                            "_attr_location_name",
+                            "_attr_longitude",
+                        },
                     ),
                     "entity_id": self.entity_id,
                     "qos": self._attributes_config.get(CONF_QOS),
@@ -435,13 +552,21 @@ class MqttAttributesMixin(Entity):
                     if k not in MQTT_ATTRIBUTES_BLOCKED
                     and k not in self._attributes_extra_blocked
                 }
-                self._attr_extra_state_attributes = filtered_dict
+                if hasattr(self, "_process_update_extra_state_attributes"):
+                    self._process_update_extra_state_attributes(filtered_dict)
+                else:
+                    self._attr_extra_state_attributes = filtered_dict
+
             else:
                 _LOGGER.warning("JSON result was not a dictionary")
 
 
 class MqttAvailabilityMixin(Entity):
     """Mixin used for platforms that report availability."""
+
+    _message_callback: Callable[
+        [MessageCallbackType, set[str] | None, ReceiveMessage], None
+    ]
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the availability mixin."""
@@ -508,7 +633,7 @@ class MqttAvailabilityMixin(Entity):
             f"availability_{topic}": {
                 "topic": topic,
                 "msg_callback": partial(
-                    self._message_callback,  # type: ignore[attr-defined]
+                    self._message_callback,
                     self._availability_message_received,
                     {"available"},
                 ),
@@ -583,13 +708,13 @@ async def cleanup_device_registry(
     entities, triggers or tags.
     """
     # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from . import device_trigger, tag
+    from . import device_trigger, tag  # noqa: PLC0415
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     if (
         device_id
+        and device_id not in device_registry.deleted_devices
         and config_entry_id
         and not er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=False
@@ -671,6 +796,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         self._config_entry = config_entry
         self._config_entry_id = config_entry.entry_id
         self._skip_device_removal: bool = False
+        self._migrate_discovery: str | None = None
 
         discovery_hash = get_discovery_hash(discovery_data)
         self._remove_discovery_updated = async_dispatcher_connect(
@@ -703,12 +829,95 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
     ) -> None:
         """Handle discovery update."""
         discovery_hash = get_discovery_hash(self._discovery_data)
+        # Start discovery migration or rollback if migrate_discovery flag is set
+        # and the discovery topic is valid and not yet migrating
+        if (
+            discovery_payload.migrate_discovery
+            and self._migrate_discovery is None
+            and self._discovery_data[ATTR_DISCOVERY_TOPIC]
+            == discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+        ):
+            self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
+            discovery_hash = self._discovery_data[ATTR_DISCOVERY_HASH]
+            origin_info = get_origin_log_string(
+                self._discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+            )
+            action = "Rollback" if discovery_payload.device_discovery else "Migration"
+            schema_type = "platform" if discovery_payload.device_discovery else "device"
+            _LOGGER.info(
+                "%s to MQTT %s discovery schema started for %s '%s'"
+                "%s on topic %s. To complete %s, publish a %s discovery "
+                "message with %s '%s'. After completed %s, "
+                "publish an empty (retained) payload to %s",
+                action,
+                schema_type,
+                discovery_hash[0],
+                discovery_hash[1],
+                origin_info,
+                self._migrate_discovery,
+                action.lower(),
+                schema_type,
+                discovery_hash[0],
+                discovery_hash[1],
+                action.lower(),
+                self._migrate_discovery,
+            )
+
+            # Cleanup platform resources
+            await self.async_tear_down()
+            # Unregister and clean discovery
+            stop_discovery_updates(
+                self.hass, self._discovery_data, self._remove_discovery_updated
+            )
+            send_discovery_done(self.hass, self._discovery_data)
+            return
+
         _LOGGER.debug(
             "Got update for %s with hash: %s '%s'",
             self.log_name,
             discovery_hash,
             discovery_payload,
         )
+        new_discovery_topic = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+
+        # Abort early if an update is not received via the registered discovery topic.
+        # This can happen if a device and single component discovery payload
+        # share the same discovery ID.
+        if self._discovery_data[ATTR_DISCOVERY_TOPIC] != new_discovery_topic:
+            # Prevent illegal updates
+            old_origin_info = get_origin_log_string(
+                self._discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+            )
+            new_origin_info = get_origin_log_string(
+                discovery_payload.discovery_data[ATTR_DISCOVERY_PAYLOAD],
+                include_url=False,
+            )
+            new_origin_support_url = get_origin_support_url(
+                discovery_payload.discovery_data[ATTR_DISCOVERY_PAYLOAD]
+            )
+            if new_origin_support_url:
+                get_support = f"for support visit {new_origin_support_url}"
+            else:
+                get_support = (
+                    "for documentation on migration to device schema or rollback to "
+                    "discovery schema, visit https://www.home-assistant.io/integrations/"
+                    "mqtt/#migration-from-single-component-to-device-based-discovery"
+                )
+            _LOGGER.warning(
+                "Received a conflicting MQTT discovery message for %s '%s' which was "
+                "previously discovered on topic %s%s; the conflicting discovery "
+                "message was received on topic %s%s; %s",
+                discovery_hash[0],
+                discovery_hash[1],
+                self._discovery_data[ATTR_DISCOVERY_TOPIC],
+                old_origin_info,
+                new_discovery_topic,
+                new_origin_info,
+                get_support,
+            )
+            send_discovery_done(self.hass, self._discovery_data)
+            return
+
         if (
             discovery_payload
             and discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
@@ -805,6 +1014,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         mqtt_data = hass.data[DATA_MQTT]
         self._registry_hooks = mqtt_data.discovery_registry_hooks
         discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+        self._migrate_discovery: str | None = None
         if discovery_hash in self._registry_hooks:
             self._registry_hooks.pop(discovery_hash)()
 
@@ -862,7 +1072,12 @@ class MqttDiscoveryUpdateMixin(Entity):
         if TYPE_CHECKING:
             assert self._discovery_data
         self._cleanup_discovery_on_remove()
-        await self._async_remove_state_and_registry_entry()
+        if self._migrate_discovery is None:
+            # Unload and cleanup registry
+            await self._async_remove_state_and_registry_entry()
+        else:
+            # Only unload the entity
+            await self.async_remove(force_remove=True)
         send_discovery_done(self.hass, self._discovery_data)
 
     @callback
@@ -877,18 +1092,102 @@ class MqttDiscoveryUpdateMixin(Entity):
         """
         if TYPE_CHECKING:
             assert self._discovery_data
-        discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
+        discovery_hash = get_discovery_hash(self._discovery_data)
+        # Start discovery migration or rollback if migrate_discovery flag is set
+        # and the discovery topic is valid and not yet migrating
+        if (
+            payload.migrate_discovery
+            and self._migrate_discovery is None
+            and self._discovery_data[ATTR_DISCOVERY_TOPIC]
+            == payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+        ):
+            if self.unique_id is None or self.device_info is None:
+                _LOGGER.error(
+                    "Discovery migration is not possible for "
+                    "for entity %s on topic %s. A unique_id "
+                    "and device context is required, got unique_id: %s, device: %s",
+                    self.entity_id,
+                    self._discovery_data[ATTR_DISCOVERY_TOPIC],
+                    self.unique_id,
+                    self.device_info,
+                )
+                send_discovery_done(self.hass, self._discovery_data)
+                return
+
+            self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
+            discovery_hash = self._discovery_data[ATTR_DISCOVERY_HASH]
+            origin_info = get_origin_log_string(
+                self._discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+            )
+            action = "Rollback" if payload.device_discovery else "Migration"
+            schema_type = "platform" if payload.device_discovery else "device"
+            _LOGGER.info(
+                "%s to MQTT %s discovery schema started for entity %s"
+                "%s on topic %s. To complete %s, publish a %s discovery "
+                "message with %s entity '%s'. After completed %s, "
+                "publish an empty (retained) payload to %s",
+                action,
+                schema_type,
+                self.entity_id,
+                origin_info,
+                self._migrate_discovery,
+                action.lower(),
+                schema_type,
+                discovery_hash[0],
+                discovery_hash[1],
+                action.lower(),
+                self._migrate_discovery,
+            )
+        old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
         _LOGGER.debug(
             "Got update for entity with hash: %s '%s'",
             discovery_hash,
             payload,
         )
-        old_payload: DiscoveryInfoType
-        old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
+        new_discovery_topic = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+        # Abort early if an update is not received via the registered discovery topic.
+        # This can happen if a device and single component discovery payload
+        # share the same discovery ID.
+        if self._discovery_data[ATTR_DISCOVERY_TOPIC] != new_discovery_topic:
+            # Prevent illegal updates
+            old_origin_info = get_origin_log_string(
+                self._discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+            )
+            new_origin_info = get_origin_log_string(
+                payload.discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+            )
+            new_origin_support_url = get_origin_support_url(
+                payload.discovery_data[ATTR_DISCOVERY_PAYLOAD]
+            )
+            if new_origin_support_url:
+                get_support = f"for support visit {new_origin_support_url}"
+            else:
+                get_support = (
+                    "for documentation on migration to device schema or rollback to "
+                    "discovery schema, visit https://www.home-assistant.io/integrations/"
+                    "mqtt/#migration-from-single-component-to-device-based-discovery"
+                )
+            _LOGGER.warning(
+                "Received a conflicting MQTT discovery message for entity %s; the "
+                "entity was previously discovered on topic %s%s; the conflicting "
+                "discovery message was received on topic %s%s; %s",
+                self.entity_id,
+                self._discovery_data[ATTR_DISCOVERY_TOPIC],
+                old_origin_info,
+                new_discovery_topic,
+                new_origin_info,
+                get_support,
+            )
+            send_discovery_done(self.hass, self._discovery_data)
+            return
+
         debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
         if not payload:
             # Empty payload: Remove component
-            _LOGGER.info("Removing component: %s", self.entity_id)
+            if self._migrate_discovery is None:
+                _LOGGER.info("Removing component: %s", self.entity_id)
+            else:
+                _LOGGER.info("Unloading component: %s", self.entity_id)
             self.hass.async_create_task(
                 self._async_process_discovery_update_and_remove()
             )
@@ -1007,6 +1306,33 @@ def device_info_from_specifications(
     return info
 
 
+@callback
+def ensure_via_device_exists(
+    hass: HomeAssistant, device_info: DeviceInfo | None, config_entry: ConfigEntry
+) -> None:
+    """Ensure the via device is in the device registry."""
+    if (
+        device_info is None
+        or CONF_VIA_DEVICE not in device_info
+        or (device_registry := dr.async_get(hass)).async_get_device(
+            identifiers={device_info["via_device"]}
+        )
+    ):
+        return
+
+    # Ensure the via device exists in the device registry
+    _LOGGER.debug(
+        "Device identifier %s via_device reference from device_info %s "
+        "not found in the Device Registry, creating new entry",
+        device_info["via_device"],
+        device_info,
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={device_info["via_device"]},
+    )
+
+
 class MqttEntityDeviceInfo(Entity):
     """Mixin used for mqtt platforms that support the device registry."""
 
@@ -1025,6 +1351,7 @@ class MqttEntityDeviceInfo(Entity):
         device_info = self.device_info
 
         if device_info is not None:
+            ensure_via_device_exists(self.hass, device_info, self._config_entry)
             device_registry.async_get_or_create(
                 config_entry_id=config_entry_id, **device_info
             )
@@ -1048,6 +1375,7 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
+    _update_registry_entity_id: str | None = None
 
     def __init__(
         self,
@@ -1078,16 +1406,87 @@ class MqttEntity(
             self, hass, discovery_data, self.discovery_update
         )
         MqttEntityDeviceInfo.__init__(self, config.get(CONF_DEVICE), config_entry)
+        ensure_via_device_exists(self.hass, self.device_info, self._config_entry)
 
     def _init_entity_id(self) -> None:
-        """Set entity_id from object_id if defined in config."""
-        init_entity_id_from_config(
-            self.hass, self, self._config, self._entity_id_format
+        """Set entity_id from default_entity_id if defined in config."""
+        object_id: str
+        default_entity_id: str | None
+        # Setting the default entity_id through the CONF_OBJECT_ID is deprecated
+        # Support will be removed with HA Core 2026.4
+        if (
+            CONF_DEFAULT_ENTITY_ID not in self._config
+            and CONF_OBJECT_ID not in self._config
+        ):
+            return
+        if (default_entity_id := self._config.get(CONF_DEFAULT_ENTITY_ID)) is None:
+            object_id = self._config[CONF_OBJECT_ID]
+        else:
+            _, _, object_id = default_entity_id.partition(".")
+        self.entity_id = async_generate_entity_id(
+            self._entity_id_format, object_id, None, self.hass
         )
+        if CONF_OBJECT_ID in self._config:
+            domain = self.entity_id.split(".")[0]
+            if not self._discovery:
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    self.entity_id,
+                    issue_domain=DOMAIN,
+                    is_fixable=False,
+                    breaks_in_ha_version="2026.4",
+                    severity=IssueSeverity.WARNING,
+                    learn_more_url=f"{learn_more_url(domain)}#default_enity_id",
+                    translation_placeholders={
+                        "entity_id": self.entity_id,
+                        "object_id": self._config[CONF_OBJECT_ID],
+                        "domain": domain,
+                    },
+                    translation_key="deprecated_object_id",
+                )
+            elif CONF_DEFAULT_ENTITY_ID not in self._config:
+                if CONF_ORIGIN in self._config:
+                    origin_name = self._config[CONF_ORIGIN][CONF_NAME]
+                    url = self._config[CONF_ORIGIN].get(CONF_URL)
+                    origin = f"[{origin_name}]({url})" if url else origin_name
+                else:
+                    origin = "the integration"
+                _LOGGER.warning(
+                    "The configuration for entity %s uses the deprecated option "
+                    "`object_id` to set the default entity id. Replace the "
+                    '`"object_id": "%s"` option with `"default_entity_id": '
+                    '"%s"` in your published discovery configuration to fix this '
+                    "issue, or contact the maintainer of %s that published this config "
+                    "to fix this. This will stop working in Home Assistant Core 2026.4",
+                    self.entity_id,
+                    self._config[CONF_OBJECT_ID],
+                    f"{domain}.{self._config[CONF_OBJECT_ID]}",
+                    origin,
+                )
+
+        if self.unique_id is None:
+            return
+        # Check for previous deleted entities
+        entity_registry = er.async_get(self.hass)
+        entity_platform = self._entity_id_format.split(".")[0]
+        if (
+            deleted_entry := entity_registry.deleted_entities.get(
+                (entity_platform, DOMAIN, self.unique_id)
+            )
+        ) and deleted_entry.entity_id != self.entity_id:
+            #  Plan to update the entity_id basis on `object_id` if a deleted entity was found
+            self._update_registry_entity_id = self.entity_id
 
     @final
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
+        if self._update_registry_entity_id is not None:
+            entity_registry = er.async_get(self.hass)
+            entity_registry.async_update_entity(
+                self.entity_id, new_entity_id=self._update_registry_entity_id
+            )
+
         await super().async_added_to_hass()
         self._subscriptions = {}
         self._prepare_subscribe_topics()
@@ -1211,6 +1610,7 @@ class MqttEntity(
             config.get(CONF_ENABLED_BY_DEFAULT)
         )
         self._attr_icon = config.get(CONF_ICON)
+        self._attr_entity_picture = config.get(CONF_ENTITY_PICTURE)
         # Set the entity name if needed
         self._set_entity_name(config)
 
@@ -1310,6 +1710,8 @@ def update_device(
     device_registry = dr.async_get(hass)
     config_entry_id = config_entry.entry_id
     device_info = device_info_from_specifications(config[CONF_DEVICE])
+
+    ensure_via_device_exists(hass, device_info, config_entry)
 
     if config_entry_id is not None and device_info is not None:
         update_device_info = cast(dict[str, Any], device_info)

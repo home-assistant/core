@@ -5,37 +5,37 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "incomplete_info": "Incomplete information to set up device, no host or token supplied.",
-      "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Miio.",
+      "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Home integration.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "wrong_token": "Checksum error, wrong token",
       "unknown_device": "The device model is not known, not able to set up the device using config flow.",
-      "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
-      "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
-      "cloud_login_error": "Could not login to Xiaomi Miio Cloud, check the credentials."
+      "cloud_no_devices": "No devices found in this Xiaomi Home account.",
+      "cloud_credentials_incomplete": "Credentials incomplete, please fill in username, password and server region",
+      "cloud_login_error": "Could not log in to Xiaomi Home, check the credentials."
     },
     "flow_title": "{name}",
     "step": {
       "reauth_confirm": {
-        "description": "The Xiaomi Miio integration needs to re-authenticate your account in order to update the tokens or add missing cloud credentials.",
+        "description": "The Xiaomi Home integration needs to re-authenticate your account in order to update the tokens or add missing credentials.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "cloud": {
         "data": {
-          "cloud_username": "Cloud username",
-          "cloud_password": "Cloud password",
-          "cloud_country": "Cloud server country",
+          "cloud_username": "[%key:common::config_flow::data::username%]",
+          "cloud_password": "[%key:common::config_flow::data::password%]",
+          "cloud_country": "Server region",
           "manual": "Configure manually (not recommended)"
         },
-        "description": "Log in to the Xiaomi Miio cloud, see https://www.openhab.org/addons/bindings/miio/#country-servers for the cloud server to use."
+        "description": "Log in to Xiaomi Home, see https://www.openhab.org/addons/bindings/miio/#country-servers for the server region to use."
       },
       "select": {
         "data": {
-          "select_device": "Miio device"
+          "select_device": "[%key:common::config_flow::data::device%]"
         },
-        "description": "Select the Xiaomi Miio device to set up."
+        "description": "Select the Xiaomi Home device to set up."
       },
       "manual": {
         "data": {
@@ -58,7 +58,7 @@
     "step": {
       "init": {
         "data": {
-          "cloud_subdevices": "Use cloud to get connected subdevices"
+          "cloud_subdevices": "Use Xiaomi Home service to get connected subdevices"
         }
       }
     }
@@ -82,15 +82,15 @@
       "airpurifier_mode": {
         "state": {
           "silent": "Silent",
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "favorite": "Favorite"
         }
       },
       "ptc_level": {
         "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       }
     },
@@ -100,7 +100,7 @@
           "preset_mode": {
             "state": {
               "nature": "Nature",
-              "normal": "Normal"
+              "normal": "[%key:common::state::normal%]"
             }
           }
         }
@@ -216,22 +216,22 @@
         "name": "Air quality index"
       },
       "filter_life_remaining": {
-        "name": "Filter lifetime remaining"
+        "name": "Filter life remaining"
       },
       "filter_hours_used": {
         "name": "Filter use"
       },
       "filter_left_time": {
-        "name": "Filter lifetime left"
+        "name": "Filter lifetime remaining"
       },
       "dust_filter_life_remaining": {
-        "name": "Dust filter lifetime remaining"
+        "name": "Dust filter life remaining"
       },
       "dust_filter_life_remaining_days": {
         "name": "Dust filter lifetime remaining days"
       },
       "upper_filter_life_remaining": {
-        "name": "Upper filter lifetime remaining"
+        "name": "Upper filter life remaining"
       },
       "upper_filter_life_remaining_days": {
         "name": "Upper filter lifetime remaining days"
@@ -276,16 +276,16 @@
         "name": "Total dust collection count"
       },
       "main_brush_left": {
-        "name": "Main brush left"
+        "name": "Main brush remaining"
       },
       "side_brush_left": {
-        "name": "Side brush left"
+        "name": "Side brush remaining"
       },
       "filter_left": {
-        "name": "Filter left"
+        "name": "Filter remaining"
       },
       "sensor_dirty_left": {
-        "name": "Sensor dirty left"
+        "name": "Sensor dirty remaining"
       }
     },
     "switch": {
@@ -311,7 +311,7 @@
         "name": "Learn mode"
       },
       "auto_detect": {
-        "name": "Auto detect"
+        "name": "Autodetect"
       },
       "ionizer": {
         "name": "Ionizer"
@@ -331,7 +331,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the xiaomi miio entity."
+          "description": "Name of the Xiaomi Home entity."
         }
       }
     },
@@ -365,7 +365,7 @@
     },
     "light_set_delayed_turn_off": {
       "name": "Light set delayed turn off",
-      "description": "Delayed turn off.",
+      "description": "Sets the delayed turning off of a light.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -373,7 +373,7 @@
         },
         "time_period": {
           "name": "Time period",
-          "description": "Time period for the delayed turn off."
+          "description": "Time period for the delayed turning off."
         }
       }
     },
@@ -398,8 +398,8 @@
       }
     },
     "light_night_light_mode_on": {
-      "name": "Night light mode on",
-      "description": "Turns the eyecare mode on (EYECARE SMART LAMP 2 ONLY).",
+      "name": "Light night light mode on",
+      "description": "Turns on the night light mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -408,8 +408,8 @@
       }
     },
     "light_night_light_mode_off": {
-      "name": "Night light mode off",
-      "description": "Turns the eyecare mode fan_set_dry_off (EYECARE SMART LAMP 2 ONLY).",
+      "name": "Light night light mode off",
+      "description": "Turns off the night light mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -419,7 +419,7 @@
     },
     "light_eyecare_mode_on": {
       "name": "Light eyecare mode on",
-      "description": "[%key:component::xiaomi_miio::services::light_reminder_on::description%]",
+      "description": "Turns on the eyecare mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -429,7 +429,7 @@
     },
     "light_eyecare_mode_off": {
       "name": "Light eyecare mode off",
-      "description": "[%key:component::xiaomi_miio::services::light_reminder_off::description%]",
+      "description": "Turns off the eyecare mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -439,7 +439,7 @@
     },
     "remote_learn_command": {
       "name": "Remote learn command",
-      "description": "Learns an IR command, select **Perform action**, point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
+      "description": "Learns an IR command. Select **Perform action**, point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
       "fields": {
         "slot": {
           "name": "Slot",
@@ -447,21 +447,21 @@
         },
         "timeout": {
           "name": "Timeout",
-          "description": "Define the timeout, before which the command must be learned."
+          "description": "Define the timeout before which the command must be learned."
         }
       }
     },
     "remote_set_led_on": {
       "name": "Remote set LED on",
-      "description": "Turns on blue LED."
+      "description": "Turns on the remote’s blue LED."
     },
     "remote_set_led_off": {
       "name": "Remote set LED off",
-      "description": "Turns off blue LED."
+      "description": "Turns off the remote’s blue LED."
     },
     "switch_set_wifi_led_on": {
       "name": "Switch set Wi-Fi LED on",
-      "description": "Turns the wifi led on.",
+      "description": "Turns on the Wi-Fi LED of a switch.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -471,7 +471,7 @@
     },
     "switch_set_wifi_led_off": {
       "name": "Switch set Wi-Fi LED off",
-      "description": "Turn the Wi-Fi led off.",
+      "description": "Turns off the Wi-Fi LED of a switch.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -509,7 +509,7 @@
     },
     "vacuum_remote_control_start": {
       "name": "Vacuum remote control start",
-      "description": "Starts remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`."
+      "description": "Starts remote control of the vacuum cleaner. You can then move it with the 'Vacuum remote control move' action, when done use 'Vacuum remote control stop'."
     },
     "vacuum_remote_control_stop": {
       "name": "Vacuum remote control stop",
@@ -517,7 +517,7 @@
     },
     "vacuum_remote_control_move": {
       "name": "Vacuum remote control move",
-      "description": "Remote controls the vacuum cleaner, make sure you first set it in remote control mode with `remote_control_start`.",
+      "description": "Remote controls the vacuum cleaner, make sure you first set it in remote control mode with the 'Vacuum remote control start' action.",
       "fields": {
         "velocity": {
           "name": "Velocity",
@@ -567,7 +567,7 @@
     },
     "vacuum_goto": {
       "name": "Vacuum go to",
-      "description": "Go to the specified coordinates.",
+      "description": "Sends the robot to the specified coordinates.",
       "fields": {
         "x_coord": {
           "name": "X coordinate",

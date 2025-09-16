@@ -8,10 +8,18 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import default_agent
-from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
+from homeassistant.components.conversation import (
+    ConversationInput,
+    async_handle_intents,
+    async_handle_sentence_triggers,
+    default_agent,
+)
+from homeassistant.components.conversation.const import (
+    DATA_DEFAULT_ENTITY,
+    HOME_ASSISTANT_AGENT,
+)
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
@@ -23,8 +31,6 @@ from tests.typing import ClientSessionGenerator
 
 AGENT_ID_OPTIONS = [
     None,
-    # Old value of conversation.HOME_ASSISTANT_AGENT,
-    "homeassistant",
     # Current value of conversation.HOME_ASSISTANT_AGENT,
     "conversation.home_assistant",
 ]
@@ -200,8 +206,8 @@ async def test_get_agent_info(
     """Test get agent info."""
     agent_info = conversation.async_get_agent_info(hass)
     # Test it's the default
-    assert conversation.async_get_agent_info(hass, "homeassistant") == agent_info
-    assert conversation.async_get_agent_info(hass, "homeassistant") == snapshot
+    assert conversation.async_get_agent_info(hass, HOME_ASSISTANT_AGENT) == agent_info
+    assert conversation.async_get_agent_info(hass, HOME_ASSISTANT_AGENT) == snapshot
     assert (
         conversation.async_get_agent_info(hass, mock_conversation_agent.agent_id)
         == snapshot
@@ -214,6 +220,13 @@ async def test_get_agent_info(
 
     agent_info = conversation.async_get_agent_info(hass)
     assert agent_info == snapshot
+
+    default_agent = conversation.async_get_agent(hass)
+    default_agent._attr_supports_streaming = True
+    assert (
+        conversation.async_get_agent_info(hass, HOME_ASSISTANT_AGENT).supports_streaming
+        is True
+    )
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
@@ -229,3 +242,103 @@ async def test_prepare_agent(
         await conversation.async_prepare_agent(hass, agent_id, "en")
 
     assert len(mock_prepare.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("response_template", "expected_response"),
+    [("response {{ trigger.device_id }}", "response 1234"), ("", "")],
+)
+async def test_async_handle_sentence_triggers(
+    hass: HomeAssistant, response_template: str, expected_response: str
+) -> None:
+    """Test handling sentence triggers with async_handle_sentence_triggers."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["my trigger"],
+                },
+                "action": {
+                    "set_conversation_response": response_template,
+                },
+            }
+        },
+    )
+
+    # Device id will be available in response template
+    device_id = "1234"
+    actual_response = await async_handle_sentence_triggers(
+        hass,
+        ConversationInput(
+            text="my trigger",
+            context=Context(),
+            conversation_id=None,
+            agent_id=conversation.HOME_ASSISTANT_AGENT,
+            device_id=device_id,
+            satellite_id=None,
+            language=hass.config.language,
+        ),
+    )
+    assert actual_response == expected_response
+
+
+async def test_async_handle_intents(hass: HomeAssistant) -> None:
+    """Test handling registered intents with async_handle_intents."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+
+    # Reuse custom sentences in test config to trigger default agent.
+    class OrderBeerIntentHandler(intent.IntentHandler):
+        intent_type = "OrderBeer"
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.was_handled = False
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            self.was_handled = True
+            return intent_obj.create_response()
+
+    handler = OrderBeerIntentHandler()
+    intent.async_register(hass, handler)
+
+    # Registered intent will be handled
+    result = await async_handle_intents(
+        hass,
+        ConversationInput(
+            text="I'd like to order a stout",
+            context=Context(),
+            agent_id=conversation.HOME_ASSISTANT_AGENT,
+            conversation_id=None,
+            device_id=None,
+            satellite_id=None,
+            language=hass.config.language,
+        ),
+    )
+    assert result is not None
+    assert result.intent is not None
+    assert result.intent.intent_type == handler.intent_type
+    assert handler.was_handled
+
+    # No error messages, just None as a result
+    result = await async_handle_intents(
+        hass,
+        ConversationInput(
+            text="this sentence does not exist",
+            agent_id=conversation.HOME_ASSISTANT_AGENT,
+            context=Context(),
+            conversation_id=None,
+            device_id=None,
+            satellite_id=None,
+            language=hass.config.language,
+        ),
+    )
+    assert result is None

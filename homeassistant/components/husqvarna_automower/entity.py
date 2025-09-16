@@ -1,21 +1,22 @@
 """Platform for Husqvarna Automower base entity."""
 
+from __future__ import annotations
+
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Concatenate
 
-from aioautomower.exceptions import ApiException
+from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
+from . import AutomowerDataUpdateCoordinator
 from .const import DOMAIN, EXECUTION_TIME_DELAY
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,15 +38,6 @@ ERROR_STATES = [
 
 
 @callback
-def _check_error_free(mower_attributes: MowerAttributes) -> bool:
-    """Check if the mower has any errors."""
-    return (
-        mower_attributes.mower.state not in ERROR_STATES
-        or mower_attributes.mower.activity not in ERROR_ACTIVITIES
-    )
-
-
-@callback
 def _work_area_translation_key(work_area_id: int, key: str) -> str:
     """Return the translation key."""
     if work_area_id == 0:
@@ -53,45 +45,20 @@ def _work_area_translation_key(work_area_id: int, key: str) -> str:
     return f"work_area_{key}"
 
 
-@callback
-def async_remove_work_area_entities(
-    hass: HomeAssistant,
-    coordinator: AutomowerDataUpdateCoordinator,
-    entry: AutomowerConfigEntry,
-    mower_id: str,
-) -> None:
-    """Remove deleted work areas from Home Assistant."""
-    entity_reg = er.async_get(hass)
-    active_work_areas = set()
-    _work_areas = coordinator.data[mower_id].work_areas
-    if _work_areas is not None:
-        for work_area_id in _work_areas:
-            uid = f"{mower_id}_{work_area_id}_cutting_height_work_area"
-            active_work_areas.add(uid)
-    for entity_entry in er.async_entries_for_config_entry(entity_reg, entry.entry_id):
-        if (
-            (split := entity_entry.unique_id.split("_"))[0] == mower_id
-            and split[-1] == "area"
-            and entity_entry.unique_id not in active_work_areas
-        ):
-            entity_reg.async_remove(entity_entry.entity_id)
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]
 
 
-def handle_sending_exception(
+def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
     poll_after_sending: bool = False,
-) -> Callable[
-    [Callable[..., Awaitable[Any]]], Callable[..., Coroutine[Any, Any, None]]
-]:
+) -> Callable[[_FuncType[_Entity, _P, Any]], _FuncType[_Entity, _P, None]]:
     """Handle exceptions while sending a command and optionally refresh coordinator."""
 
-    def decorator(
-        func: Callable[..., Awaitable[Any]],
-    ) -> Callable[..., Coroutine[Any, Any, None]]:
+    def decorator(func: _FuncType[_Entity, _P, Any]) -> _FuncType[_Entity, _P, None]:
         @functools.wraps(func)
-        async def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+        async def wrapper(self: _Entity, *args: _P.args, **kwargs: _P.kwargs) -> None:
             try:
                 await func(self, *args, **kwargs)
-            except ApiException as exception:
+            except ApiError as exception:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="command_send_failed",
@@ -138,27 +105,27 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         """Get the mower attributes of the current mower."""
         return self.coordinator.data[self.mower_id]
 
+    @property
+    def available(self) -> bool:
+        """Return True if the device is available."""
+        return super().available and self.mower_id in self.coordinator.data
 
-class AutomowerAvailableEntity(AutomowerBaseEntity):
+
+class AutomowerControlEntity(AutomowerBaseEntity):
     """Replies available when the mower is connected."""
 
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
-        return super().available and self.mower_attributes.metadata.connected
+        return (
+            super().available
+            and self.mower_attributes.metadata.connected
+            and self.mower_attributes.mower.state != MowerStates.OFF
+        )
 
 
-class AutomowerControlEntity(AutomowerAvailableEntity):
-    """Replies available when the mower is connected and not in error state."""
-
-    @property
-    def available(self) -> bool:
-        """Return True if the device is available."""
-        return super().available and _check_error_free(self.mower_attributes)
-
-
-class WorkAreaAvailableEntity(AutomowerAvailableEntity):
-    """Base entity for work work areas."""
+class WorkAreaAvailableEntity(AutomowerControlEntity):
+    """Base entity for work areas."""
 
     def __init__(
         self,
@@ -189,4 +156,4 @@ class WorkAreaAvailableEntity(AutomowerAvailableEntity):
 
 
 class WorkAreaControlEntity(WorkAreaAvailableEntity, AutomowerControlEntity):
-    """Base entity work work areas with control function."""
+    """Base entity for work areas with control function."""

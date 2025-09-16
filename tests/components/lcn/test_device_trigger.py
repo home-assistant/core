@@ -45,9 +45,14 @@ async def test_get_triggers_module_device(
         )
     ]
 
-    triggers = await async_get_device_automations(
-        hass, DeviceAutomationType.TRIGGER, device.id
-    )
+    triggers = [
+        trigger
+        for trigger in await async_get_device_automations(
+            hass, DeviceAutomationType.TRIGGER, device.id
+        )
+        if trigger[CONF_DOMAIN] == DOMAIN
+    ]
+
     assert triggers == unordered(expected_triggers)
 
 
@@ -63,11 +68,8 @@ async def test_get_triggers_non_module_device(
         identifiers={(DOMAIN, entry.entry_id)}
     )
     group_device = get_device(hass, entry, (0, 5, True))
-    resource_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{entry.entry_id}-m000007-output1")}
-    )
 
-    for device in (host_device, group_device, resource_device):
+    for device in (host_device, group_device):
         triggers = await async_get_device_automations(
             hass, DeviceAutomationType.TRIGGER, device.id
         )
@@ -347,7 +349,15 @@ async def test_get_transponder_trigger_capabilities(
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "code", "optional": True, "type": "string", "lower": True}]
+    ) == [
+        {
+            "name": "code",
+            "optional": True,
+            "required": False,
+            "type": "string",
+            "lower": True,
+        }
+    ]
 
 
 async def test_get_fingerprint_trigger_capabilities(
@@ -371,7 +381,15 @@ async def test_get_fingerprint_trigger_capabilities(
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "code", "optional": True, "type": "string", "lower": True}]
+    ) == [
+        {
+            "name": "code",
+            "optional": True,
+            "required": False,
+            "type": "string",
+            "lower": True,
+        }
+    ]
 
 
 async def test_get_transmitter_trigger_capabilities(
@@ -396,13 +414,32 @@ async def test_get_transmitter_trigger_capabilities(
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
-        {"name": "code", "type": "string", "optional": True, "lower": True},
-        {"name": "level", "type": "integer", "optional": True, "valueMin": 0},
-        {"name": "key", "type": "integer", "optional": True, "valueMin": 0},
+        {
+            "name": "code",
+            "type": "string",
+            "optional": True,
+            "required": False,
+            "lower": True,
+        },
+        {
+            "name": "level",
+            "type": "integer",
+            "optional": True,
+            "required": False,
+            "valueMin": 0,
+        },
+        {
+            "name": "key",
+            "type": "integer",
+            "optional": True,
+            "required": False,
+            "valueMin": 0,
+        },
         {
             "name": "action",
             "type": "select",
             "optional": True,
+            "required": False,
             "options": [("hit", "hit"), ("make", "make"), ("break", "break")],
         },
     ]
@@ -434,6 +471,7 @@ async def test_get_send_keys_trigger_capabilities(
             "name": "key",
             "type": "select",
             "optional": True,
+            "required": False,
             "options": [(send_key.lower(), send_key.lower()) for send_key in SENDKEYS],
         },
         {
@@ -443,6 +481,7 @@ async def test_get_send_keys_trigger_capabilities(
                 (key_action.lower(), key_action.lower()) for key_action in KEY_ACTIONS
             ],
             "optional": True,
+            "required": False,
         },
     ]
 

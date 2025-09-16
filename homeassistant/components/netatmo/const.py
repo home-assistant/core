@@ -10,6 +10,7 @@ DEFAULT_ATTRIBUTION = f"Data provided by {MANUFACTURER}"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
@@ -45,6 +46,7 @@ NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
 NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
 NETATMO_CREATE_COVER = "netatmo_create_cover"
+NETATMO_CREATE_BUTTON = "netatmo_create_button"
 NETATMO_CREATE_FAN = "netatmo_create_fan"
 NETATMO_CREATE_LIGHT = "netatmo_create_light"
 NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
@@ -93,6 +95,7 @@ ATTR_PSEUDO = "pseudo"
 ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"
 ATTR_SELECTED_SCHEDULE = "selected_schedule"
+ATTR_SELECTED_SCHEDULE_ID = "selected_schedule_id"
 ATTR_TARGET_TEMPERATURE = "target_temperature"
 ATTR_TIME_PERIOD = "time_period"
 

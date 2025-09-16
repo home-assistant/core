@@ -1,16 +1,20 @@
 """The tests for the analytics ."""
 
 from collections.abc import Generator
+from http import HTTPStatus
 from typing import Any
-from unittest.mock import AsyncMock, Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 from awesomeversion import AwesomeVersion
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
 
-from homeassistant.components.analytics.analytics import Analytics
+from homeassistant.components.analytics.analytics import (
+    Analytics,
+    async_devices_payload,
+)
 from homeassistant.components.analytics.const import (
     ANALYTICS_ENDPOINT_URL,
     ANALYTICS_ENDPOINT_URL_DEV,
@@ -19,14 +23,19 @@ from homeassistant.components.analytics.const import (
     ATTR_STATISTICS,
     ATTR_USAGE,
 )
+from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.const import ATTR_ASSUMED_STATE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 MOCK_UUID = "abcdefg"
 MOCK_VERSION = "1970.1.0"
@@ -37,8 +46,9 @@ MOCK_VERSION_NIGHTLY = "1970.1.0.dev19700101"
 @pytest.fixture(autouse=True)
 def uuid_mock() -> Generator[None]:
     """Mock the UUID."""
-    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex_mock:
-        hex_mock.return_value = MOCK_UUID
+    with patch(
+        "homeassistant.components.analytics.analytics.gen_uuid", return_value=MOCK_UUID
+    ):
         yield
 
 
@@ -76,7 +86,7 @@ async def test_no_send(
     """Test send when no preferences are defined."""
     analytics = Analytics(hass)
     with patch(
-        "homeassistant.components.hassio.is_hassio",
+        "homeassistant.components.analytics.analytics.is_hassio",
         side_effect=Mock(return_value=False),
     ):
         assert not analytics.preferences[ATTR_BASE]
@@ -97,7 +107,7 @@ async def test_load_with_supervisor_diagnostics(hass: HomeAssistant) -> None:
             side_effect=Mock(return_value={"diagnostics": True}),
         ),
         patch(
-            "homeassistant.components.hassio.is_hassio",
+            "homeassistant.components.analytics.analytics.is_hassio",
             side_effect=Mock(return_value=True),
         ),
     ):
@@ -118,7 +128,7 @@ async def test_load_with_supervisor_without_diagnostics(hass: HomeAssistant) -> 
             side_effect=Mock(return_value={"diagnostics": False}),
         ),
         patch(
-            "homeassistant.components.hassio.is_hassio",
+            "homeassistant.components.analytics.analytics.is_hassio",
             side_effect=Mock(return_value=True),
         ),
     ):
@@ -219,8 +229,12 @@ async def test_send_base_with_supervisor(
             side_effect=Mock(return_value={}),
         ),
         patch(
-            "homeassistant.components.hassio.is_hassio",
+            "homeassistant.components.analytics.analytics.is_hassio",
             side_effect=Mock(return_value=True),
+        ) as is_hassio_mock,
+        patch(
+            "homeassistant.helpers.system_info.is_hassio",
+            new=is_hassio_mock,
         ),
     ):
         await analytics.load()
@@ -314,8 +328,12 @@ async def test_send_usage_with_supervisor(
             side_effect=Mock(return_value={}),
         ),
         patch(
-            "homeassistant.components.hassio.is_hassio",
+            "homeassistant.components.analytics.analytics.is_hassio",
             side_effect=Mock(return_value=True),
+        ) as is_hassio_mock,
+        patch(
+            "homeassistant.helpers.system_info.is_hassio",
+            new=is_hassio_mock,
         ),
     ):
         await analytics.send_analytics()
@@ -529,8 +547,12 @@ async def test_send_statistics_with_supervisor(
             side_effect=Mock(return_value={}),
         ),
         patch(
-            "homeassistant.components.hassio.is_hassio",
+            "homeassistant.components.analytics.analytics.is_hassio",
             side_effect=Mock(return_value=True),
+        ) as is_hassio_mock,
+        patch(
+            "homeassistant.helpers.system_info.is_hassio",
+            new=is_hassio_mock,
         ),
     ):
         await analytics.send_analytics()
@@ -908,3 +930,383 @@ async def test_not_check_config_entries_if_yaml(
     assert submitted_data["integrations"] == ["default_config"]
     assert submitted_data == logged_data
     assert snapshot == submitted_data
+
+
+@pytest.mark.usefixtures("installation_type_mock", "supervisor_client")
+async def test_submitting_legacy_integrations(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test submitting legacy integrations."""
+    hass.http = Mock(ssl_certificate=None)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
+    assert analytics.preferences[ATTR_BASE]
+    assert analytics.preferences[ATTR_USAGE]
+    hass.config.components = ["binary_sensor"]
+
+    with (
+        patch(
+            "homeassistant.components.analytics.analytics.async_get_integrations",
+            return_value={
+                "default_config": mock_integration(
+                    hass,
+                    MockModule(
+                        "legacy_binary_sensor",
+                        async_setup=AsyncMock(return_value=True),
+                        partial_manifest={"config_flow": False},
+                    ),
+                ),
+            },
+        ),
+        patch(
+            "homeassistant.config.async_hass_config_yaml",
+            return_value={"binary_sensor": [{"platform": "legacy_binary_sensor"}]},
+        ),
+    ):
+        await analytics.send_analytics()
+
+    logged_data = caplog.records[-1].args
+    submitted_data = _last_call_payload(aioclient_mock)
+
+    assert submitted_data["integrations"] == ["legacy_binary_sensor"]
+    assert submitted_data == logged_data
+    assert snapshot == submitted_data
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_devices_payload_no_entities(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices payload with no entities."""
+    assert await async_setup_component(hass, "analytics", {})
+    assert await async_devices_payload(hass) == {
+        "version": "home-assistant:1",
+        "home_assistant": MOCK_VERSION,
+        "integrations": {},
+    }
+
+    mock_config_entry = MockConfigEntry(domain="hue")
+    mock_config_entry.add_to_hass(hass)
+
+    # Normal device with all fields
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "1")},
+        sw_version="test-sw-version",
+        hw_version="test-hw-version",
+        name="test-name",
+        manufacturer="test-manufacturer",
+        model="test-model",
+        model_id="test-model-id",
+        suggested_area="Game Room",
+        configuration_url="http://example.com/config",
+    )
+
+    # Service type device
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "2")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    # Device without model_id
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "4")},
+        manufacturer="test-manufacturer",
+    )
+
+    # Device without manufacturer
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "5")},
+        model_id="test-model-id",
+    )
+
+    # Device with via_device reference
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "6")},
+        manufacturer="test-manufacturer6",
+        model_id="test-model-id6",
+        via_device=("device", "1"),
+    )
+
+    # Device from custom integration
+    mock_custom_config_entry = MockConfigEntry(domain="test")
+    mock_custom_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_custom_config_entry.entry_id,
+        identifiers={("device", "7")},
+        manufacturer="test-manufacturer7",
+        model_id="test-model-id7",
+    )
+
+    client = await hass_client()
+    response = await client.get("/api/analytics/devices")
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == {
+        "version": "home-assistant:1",
+        "home_assistant": MOCK_VERSION,
+        "integrations": {
+            "hue": {
+                "devices": [
+                    {
+                        "entities": [],
+                        "entry_type": None,
+                        "has_configuration_url": True,
+                        "hw_version": "test-hw-version",
+                        "manufacturer": "test-manufacturer",
+                        "model": "test-model",
+                        "model_id": "test-model-id",
+                        "sw_version": "test-sw-version",
+                        "via_device": None,
+                    },
+                    {
+                        "entities": [],
+                        "entry_type": "service",
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer",
+                        "model": None,
+                        "model_id": "test-model-id",
+                        "sw_version": None,
+                        "via_device": None,
+                    },
+                    {
+                        "entities": [],
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer",
+                        "model": None,
+                        "model_id": None,
+                        "sw_version": None,
+                        "via_device": None,
+                    },
+                    {
+                        "entities": [],
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": None,
+                        "model": None,
+                        "model_id": "test-model-id",
+                        "sw_version": None,
+                        "via_device": None,
+                    },
+                    {
+                        "entities": [],
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer6",
+                        "model": None,
+                        "model_id": "test-model-id6",
+                        "sw_version": None,
+                        "via_device": ["hue", 0],
+                    },
+                ],
+                "entities": [],
+                "is_custom_integration": False,
+            },
+            "test": {
+                "devices": [
+                    {
+                        "entities": [],
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer7",
+                        "model": None,
+                        "model_id": "test-model-id7",
+                        "sw_version": None,
+                        "via_device": None,
+                    },
+                ],
+                "entities": [],
+                "is_custom_integration": True,
+                "custom_integration_version": "1.2.3",
+            },
+        },
+    }
+
+
+async def test_devices_payload_with_entities(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test devices payload with entities."""
+    assert await async_setup_component(hass, "analytics", {})
+
+    mock_config_entry = MockConfigEntry(domain="hue")
+    mock_config_entry.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "1")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+    )
+    device_entry_2 = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "2")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+    )
+
+    # First device
+
+    # Entity with capabilities
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="1",
+        capabilities={"min_color_temp_kelvin": 2000, "max_color_temp_kelvin": 6535},
+        device_id=device_entry.id,
+        has_entity_name=True,
+    )
+    # Entity with category and device class
+    entity_registry.async_get_or_create(
+        domain="number",
+        platform="hue",
+        unique_id="1",
+        device_id=device_entry.id,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        original_device_class=NumberDeviceClass.TEMPERATURE,
+    )
+    hass.states.async_set("number.hue_1", "2")
+    # Helper entity with assumed state
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="template",
+        unique_id="1",
+        device_id=device_entry.id,
+        has_entity_name=True,
+    )
+    hass.states.async_set("light.template_1", "on", {ATTR_ASSUMED_STATE: True})
+
+    # Second device
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="2",
+        device_id=device_entry_2.id,
+    )
+
+    # Entity without device with unit of measurement and state class
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="hue",
+        unique_id="1",
+        capabilities={"state_class": "measurement"},
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        unit_of_measurement="°C",
+    )
+
+    client = await hass_client()
+    response = await client.get("/api/analytics/devices")
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == {
+        "version": "home-assistant:1",
+        "home_assistant": MOCK_VERSION,
+        "integrations": {
+            "hue": {
+                "devices": [
+                    {
+                        "entities": [
+                            {
+                                "assumed_state": None,
+                                "capabilities": {
+                                    "min_color_temp_kelvin": 2000,
+                                    "max_color_temp_kelvin": 6535,
+                                },
+                                "domain": "light",
+                                "entity_category": None,
+                                "has_entity_name": True,
+                                "original_device_class": None,
+                                "unit_of_measurement": None,
+                            },
+                            {
+                                "assumed_state": False,
+                                "capabilities": None,
+                                "domain": "number",
+                                "entity_category": "config",
+                                "has_entity_name": True,
+                                "original_device_class": "temperature",
+                                "unit_of_measurement": None,
+                            },
+                        ],
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer",
+                        "model": None,
+                        "model_id": "test-model-id",
+                        "sw_version": None,
+                        "via_device": None,
+                    },
+                    {
+                        "entities": [
+                            {
+                                "assumed_state": None,
+                                "capabilities": None,
+                                "domain": "light",
+                                "entity_category": None,
+                                "has_entity_name": False,
+                                "original_device_class": None,
+                                "unit_of_measurement": None,
+                            },
+                        ],
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer",
+                        "model": None,
+                        "model_id": "test-model-id",
+                        "sw_version": None,
+                        "via_device": None,
+                    },
+                ],
+                "entities": [
+                    {
+                        "assumed_state": None,
+                        "capabilities": {"state_class": "measurement"},
+                        "domain": "sensor",
+                        "entity_category": None,
+                        "has_entity_name": False,
+                        "original_device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                    },
+                ],
+                "is_custom_integration": False,
+            },
+            "template": {
+                "devices": [],
+                "entities": [
+                    {
+                        "assumed_state": True,
+                        "capabilities": None,
+                        "domain": "light",
+                        "entity_category": None,
+                        "has_entity_name": True,
+                        "original_device_class": None,
+                        "unit_of_measurement": None,
+                    },
+                ],
+                "is_custom_integration": False,
+            },
+        },
+    }

@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -16,7 +17,6 @@
         '0000-0000',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tedee',
@@ -26,8 +26,38 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '0000-0000',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
+  })
+# ---
+# name: test_lock_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tedee',
+        '12345',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tedee',
+    'model': 'Tedee PRO',
+    'model_id': 'Tedee PRO',
+    'name': 'Lock-1A2B',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
   })
 # ---

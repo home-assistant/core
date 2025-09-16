@@ -8,17 +8,25 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+import os
 from random import SystemRandom
 from typing import Final, final
 
 from aiohttp import hdrs, web
 import httpx
-from propcache import cached_property
+from propcache.api import cached_property
+import voluptuous as vol
 
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONTENT_TYPE_MULTIPART, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -28,16 +36,25 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    UndefinedType,
+    VolDictType,
+)
 
 from .const import DATA_COMPONENT, DOMAIN, IMAGE_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_SNAPSHOT: Final = "snapshot"
+
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL: Final = timedelta(seconds=30)
+
+ATTR_FILENAME: Final = "filename"
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
 ENTITY_IMAGE_URL: Final = "/api/image_proxy/{0}?token={1}"
@@ -50,6 +67,8 @@ GET_IMAGE_TIMEOUT: Final = 10
 FRAME_BOUNDARY = "frame-boundary"
 FRAME_SEPARATOR = bytes(f"\r\n--{FRAME_BOUNDARY}\r\n", "utf-8")
 LAST_FRAME_MARKER = bytes(f"\r\n--{FRAME_BOUNDARY}--\r\n", "utf-8")
+
+IMAGE_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.string}
 
 
 class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -114,6 +133,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         unsub()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval)
+
+    component.async_register_entity_service(
+        SERVICE_SNAPSHOT, IMAGE_SERVICE_SNAPSHOT, async_handle_snapshot_service
+    )
 
     return True
 
@@ -265,8 +288,10 @@ class ImageView(HomeAssistantView):
         """Initialize an image view."""
         self.component = component
 
-    async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
-        """Start a GET request."""
+    async def _authenticate_request(
+        self, request: web.Request, entity_id: str
+    ) -> ImageEntity:
+        """Authenticate request and return image entity."""
         if (image_entity := self.component.get_entity(entity_id)) is None:
             raise web.HTTPNotFound
 
@@ -283,6 +308,31 @@ class ImageView(HomeAssistantView):
             # Invalid sigAuth or image entity access token
             raise web.HTTPForbidden
 
+        return image_entity
+
+    async def head(self, request: web.Request, entity_id: str) -> web.Response:
+        """Start a HEAD request.
+
+        This is sent by some DLNA renderers, like Samsung ones, prior to sending
+        the GET request.
+        """
+        image_entity = await self._authenticate_request(request, entity_id)
+
+        # Don't use `handle` as we don't care about the stream case, we only want
+        # to verify that the image exists.
+        try:
+            image = await _async_get_image(image_entity, IMAGE_TIMEOUT)
+        except (HomeAssistantError, ValueError) as ex:
+            raise web.HTTPInternalServerError from ex
+
+        return web.Response(
+            content_type=image.content_type,
+            headers={"Content-Length": str(len(image.content))},
+        )
+
+    async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
+        """Start a GET request."""
+        image_entity = await self._authenticate_request(request, entity_id)
         return await self.handle(request, image_entity)
 
     async def handle(
@@ -294,7 +344,11 @@ class ImageView(HomeAssistantView):
         except (HomeAssistantError, ValueError) as ex:
             raise web.HTTPInternalServerError from ex
 
-        return web.Response(body=image.content, content_type=image.content_type)
+        return web.Response(
+            body=image.content,
+            content_type=image.content_type,
+            headers={"Content-Length": str(len(image.content))},
+        )
 
 
 async def async_get_still_stream(
@@ -380,3 +434,34 @@ class ImageStreamView(ImageView):
     ) -> web.StreamResponse:
         """Serve image stream."""
         return await async_get_still_stream(request, image_entity)
+
+
+async def async_handle_snapshot_service(
+    image: ImageEntity, service_call: ServiceCall
+) -> None:
+    """Handle snapshot services calls."""
+    hass = image.hass
+    snapshot_file: str = service_call.data[ATTR_FILENAME]
+
+    # check if we allow to access to that file
+    if not hass.config.is_allowed_path(snapshot_file):
+        raise HomeAssistantError(
+            f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+        )
+
+    async with asyncio.timeout(IMAGE_TIMEOUT):
+        image_data = await image.async_image()
+
+    if image_data is None:
+        return
+
+    def _write_image(to_file: str, image_data: bytes) -> None:
+        """Executor helper to write image."""
+        os.makedirs(os.path.dirname(to_file), exist_ok=True)
+        with open(to_file, "wb") as img_file:
+            img_file.write(image_data)
+
+    try:
+        await hass.async_add_executor_job(_write_image, snapshot_file, image_data)
+    except OSError as err:
+        raise HomeAssistantError("Can't write image to file") from err

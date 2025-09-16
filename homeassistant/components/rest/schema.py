@@ -26,11 +26,12 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     TEMPLATE_ENTITY_BASE_SCHEMA,
     TEMPLATE_SENSOR_BASE_SCHEMA,
+    ValueTemplate,
 )
 from homeassistant.util.ssl import SSLCipherList
 
@@ -76,7 +77,9 @@ SENSOR_SCHEMA = {
     **TEMPLATE_SENSOR_BASE_SCHEMA.schema,
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+        cv.template, ValueTemplate.from_template
+    ),
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     vol.Optional(CONF_AVAILABILITY): cv.template,
 }
@@ -84,7 +87,9 @@ SENSOR_SCHEMA = {
 BINARY_SENSOR_SCHEMA = {
     **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
     vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+        cv.template, ValueTemplate.from_template
+    ),
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     vol.Optional(CONF_AVAILABILITY): cv.template,
 }

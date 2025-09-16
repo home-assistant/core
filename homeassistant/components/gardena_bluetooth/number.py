@@ -13,17 +13,16 @@ from gardena_bluetooth.parse import (
 )
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import GardenaBluetoothCoordinator
+from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
 from .entity import GardenaBluetoothDescriptorEntity, GardenaBluetoothEntity
 
 
@@ -56,6 +55,7 @@ DESCRIPTIONS = (
         native_step=60,
         entity_category=EntityCategory.CONFIG,
         char=Valve.manual_watering_time,
+        device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
         key=Valve.remaining_open_time.uuid,
@@ -66,6 +66,7 @@ DESCRIPTIONS = (
         native_step=60.0,
         entity_category=EntityCategory.DIAGNOSTIC,
         char=Valve.remaining_open_time,
+        device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
         key=DeviceConfiguration.rain_pause.uuid,
@@ -77,6 +78,7 @@ DESCRIPTIONS = (
         native_step=6 * 60.0,
         entity_category=EntityCategory.CONFIG,
         char=DeviceConfiguration.rain_pause,
+        device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
         key=DeviceConfiguration.seasonal_adjust.uuid,
@@ -88,6 +90,7 @@ DESCRIPTIONS = (
         native_step=1.0,
         entity_category=EntityCategory.CONFIG,
         char=DeviceConfiguration.seasonal_adjust,
+        device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
         key=Sensor.threshold.uuid,
@@ -105,10 +108,12 @@ DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GardenaBluetoothConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entity based on a config entry."""
-    coordinator: GardenaBluetoothCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities: list[NumberEntity] = [
         GardenaBluetoothNumber(coordinator, description, description.context)
         for description in DESCRIPTIONS
@@ -153,6 +158,7 @@ class GardenaBluetoothRemainingOpenSetNumber(GardenaBluetoothEntity, NumberEntit
     _attr_native_min_value = 0.0
     _attr_native_max_value = 24 * 60
     _attr_native_step = 1.0
+    _attr_device_class = NumberDeviceClass.DURATION
 
     def __init__(
         self,

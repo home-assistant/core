@@ -37,8 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import frame, issue_registry as ir, storage
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir, storage
 from homeassistant.helpers.http import (
     KEY_ALLOW_CONFIGURED_CORS,
     KEY_AUTHENTICATED,  # noqa: F401
@@ -274,8 +273,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ssl_certificate is not None
             and (hass.config.external_url or hass.config.internal_url) is None
         ):
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components.cloud import (
+            from homeassistant.components.cloud import (  # noqa: PLC0415
                 CloudNotAvailable,
                 async_remote_ui_url,
             )
@@ -326,7 +324,8 @@ class HomeAssistantApplication(web.Application):
             protocol,
             writer,
             task,
-            loop=self._loop,
+            # loop will never be None when called from aiohttp
+            loop=self._loop,  # type: ignore[arg-type]
             client_max_size=self._client_max_size,
         )
 
@@ -500,24 +499,6 @@ class HomeAssistantHTTP:
                     "GET", config.url_path, partial(target, config.path)
                 )
             )
-
-    def register_static_path(
-        self, url_path: str, path: str, cache_headers: bool = True
-    ) -> None:
-        """Register a folder or file to serve as a static path."""
-        frame.report(
-            "calls hass.http.register_static_path which is deprecated because "
-            "it does blocking I/O in the event loop, instead "
-            "call `await hass.http.async_register_static_paths("
-            f'[StaticPathConfig("{url_path}", "{path}", {cache_headers})])`; '
-            "This function will be removed in 2025.7",
-            exclude_integrations={"http"},
-            error_if_core=False,
-            error_if_integration=False,
-        )
-        configs = [StaticPathConfig(url_path, path, cache_headers)]
-        resources = self._make_static_resources(configs)
-        self._async_register_static_paths(configs, resources)
 
     def _create_ssl_context(self) -> ssl.SSLContext | None:
         context: ssl.SSLContext | None = None

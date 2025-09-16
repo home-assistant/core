@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from binascii import unhexlify
+from collections.abc import Callable, Coroutine
 from copy import deepcopy
 from typing import TYPE_CHECKING
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
@@ -23,7 +24,7 @@ from zha.application.const import (
     CLUSTER_TYPE_IN,
 )
 from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
-from zha.zigbee.device import ClusterHandlerConfigurationComplete
+from zha.zigbee.device import ClusterHandlerConfigurationComplete, Device
 import zigpy.backups
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.profiles.zha
@@ -97,8 +98,8 @@ def required_platform_only():
 async def zha_client(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> MockHAClientWebSocket:
     """Get ZHA WebSocket client."""
 
@@ -261,7 +262,9 @@ async def test_get_zha_config(zha_client) -> None:
 
 
 async def test_get_zha_config_with_alarm(
-    hass: HomeAssistant, zha_client, zigpy_device_mock
+    hass: HomeAssistant,
+    zha_client,
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test getting ZHA custom configuration."""
 
@@ -420,8 +423,11 @@ async def test_list_groupable_devices(
             assert entity_reference[ATTR_NAME] is not None
             assert entity_reference["entity_id"] is not None
 
-        for entity_reference in endpoint["entities"]:
-            assert entity_reference["original_name"] is not None
+        if len(endpoint["entities"]) == 1:
+            assert endpoint["entities"][0]["original_name"] is None
+        else:
+            for entity_reference in endpoint["entities"]:
+                assert entity_reference["original_name"] is not None
 
     # Make sure there are no groupable devices when the device is unavailable
     # Make device unavailable
@@ -593,7 +599,9 @@ async def test_remove_group_member(hass: HomeAssistant, zha_client) -> None:
 
 @pytest.fixture
 async def app_controller(
-    hass: HomeAssistant, setup_zha, zigpy_app_controller: ControllerApplication
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_app_controller: ControllerApplication,
 ) -> ControllerApplication:
     """Fixture for zigpy Application Controller."""
     await setup_zha()
@@ -1135,7 +1143,9 @@ async def test_websocket_bind_unbind_group(
 
 
 async def test_websocket_reconfigure(
-    hass: HomeAssistant, zha_client: MockHAClientWebSocket, zigpy_device_mock
+    hass: HomeAssistant,
+    zha_client: MockHAClientWebSocket,
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test websocket API to reconfigure a device."""
     gateway = get_zha_gateway(hass)

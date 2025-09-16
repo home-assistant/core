@@ -42,6 +42,7 @@ EVENT_TYPES_BY_EVENT_CLASS = {
         "long_press",
         "long_double_press",
         "long_triple_press",
+        "hold_press",
     },
     EVENT_CLASS_DIMMER: {"rotate_left", "rotate_right"},
 }
@@ -69,7 +70,7 @@ def get_event_classes_by_device_id(hass: HomeAssistant, device_id: str) -> list[
     bthome_config_entry = next(
         entry for entry in config_entries if entry and entry.domain == DOMAIN
     )
-    return bthome_config_entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, [])
+    return bthome_config_entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, [])  # type: ignore[no-any-return]
 
 
 def get_event_types_by_event_class(event_class: str) -> set[str]:

@@ -7,9 +7,7 @@ from collections.abc import Callable, Iterable
 from datetime import timedelta
 import logging
 from types import ModuleType
-from typing import Any, Generic
-
-from typing_extensions import TypeVar
+from typing import Any
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
@@ -31,22 +29,27 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util.hass_dict import HassKey
 
-from . import config_validation as cv, discovery, entity, service
-from .entity_platform import EntityPlatform
+from . import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+    entity,
+    entity_registry as er,
+    service,
+)
+from .entity_platform import EntityPlatform, async_calculate_suggested_object_id
 from .typing import ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
-DATA_INSTANCES = "entity_components"
-
-_EntityT = TypeVar("_EntityT", bound=entity.Entity, default=entity.Entity)
+DATA_INSTANCES: HassKey[dict[str, EntityComponent]] = HassKey("entity_components")
 
 
 @bind_hass
 async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Trigger an update for an entity."""
     domain = entity_id.partition(".")[0]
-    entity_comp: EntityComponent[entity.Entity] | None
     entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
 
     if entity_comp is None:
@@ -64,7 +67,37 @@ async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
     await entity_obj.async_update_ha_state(True)
 
 
-class EntityComponent(Generic[_EntityT]):
+@callback
+def async_get_entity_suggested_object_id(
+    hass: HomeAssistant, entity_id: str
+) -> str | None:
+    """Get the suggested object id for an entity.
+
+    Raises HomeAssistantError if the entity is not in the registry or
+    is not backed by an object.
+    """
+    entity_registry = er.async_get(hass)
+    if not (entity_entry := entity_registry.async_get(entity_id)):
+        raise HomeAssistantError(f"Entity {entity_id} is not in the registry.")
+
+    domain = entity_id.partition(".")[0]
+
+    if entity_entry.name:
+        return entity_entry.name
+
+    if entity_entry.suggested_object_id:
+        return entity_entry.suggested_object_id
+
+    entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
+    if not (entity_obj := entity_comp.get_entity(entity_id) if entity_comp else None):
+        raise HomeAssistantError(f"Entity {entity_id} has no object.")
+    device: dr.DeviceEntry | None = None
+    if device_id := entity_entry.device_id:
+        device = dr.async_get(hass).async_get(device_id)
+    return async_calculate_suggested_object_id(entity_obj, device)
+
+
+class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
     """The EntityComponent manages platforms that manage entities.
 
     An example of an entity component is 'light', which manages platforms such
@@ -99,7 +132,7 @@ class EntityComponent(Generic[_EntityT]):
         self.async_add_entities = domain_platform.async_add_entities
         self.add_entities = domain_platform.add_entities
         self._entities: dict[str, entity.Entity] = domain_platform.domain_entities
-        hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
+        hass.data.setdefault(DATA_INSTANCES, {})[domain] = self  # type: ignore[assignment]
 
     @property
     def entities(self) -> Iterable[_EntityT]:

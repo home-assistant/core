@@ -6,10 +6,11 @@ from unittest.mock import patch
 import pytest
 from soco.data_structures import SearchResult
 from sonos_websocket.exception import SonosWebsocketError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -26,19 +27,28 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.components.sonos.const import (
-    DOMAIN as SONOS_DOMAIN,
+    DOMAIN,
+    MEDIA_TYPE_DIRECTORY,
     SOURCE_LINEIN,
     SOURCE_TV,
 )
 from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
+    VOLUME_INCREMENT,
+)
+from homeassistant.components.sonos.services import (
+    ATTR_ALARM_ID,
+    ATTR_ENABLED,
+    ATTR_INCLUDE_LINKED_ZONES,
+    ATTR_VOLUME,
     SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
-    VOLUME_INCREMENT,
+    SERVICE_UPDATE_ALARM,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_TIME,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -52,7 +62,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
@@ -81,11 +91,15 @@ async def test_device_registry(
     assert reg_device.manufacturer == "Sonos"
     assert reg_device.name == "Zone A"
     # Default device provides battery info, area should not be suggested
-    assert reg_device.suggested_area is None
+    assert reg_device.area_id is None
 
 
 async def test_device_registry_not_portable(
-    hass: HomeAssistant, device_registry: DeviceRegistry, async_setup_sonos, soco
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: DeviceRegistry,
+    async_setup_sonos,
+    soco,
 ) -> None:
     """Test non-portable sonos device registered in the device registry to ensure area suggested."""
     soco.get_battery_info.return_value = {}
@@ -95,7 +109,7 @@ async def test_device_registry_not_portable(
         identifiers={("sonos", "RINCON_test")}
     )
     assert reg_device is not None
-    assert reg_device.suggested_area == "Zone A"
+    assert reg_device.area_id == area_registry.async_get_area_by_name("Zone A").id
 
 
 async def test_entity_basic(
@@ -181,6 +195,19 @@ async def test_entity_basic(
                 "play_pos": 0,
             },
         ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/elton%20john",
+            MediaPlayerEnqueue.REPLACE,
+            {
+                "title": None,
+                "item_id": "S://192.168.1.1/music/elton%20john",
+                "clear_queue": 1,
+                "position": None,
+                "play": 1,
+                "play_pos": 0,
+            },
+        ),
     ],
 )
 async def test_play_media_library(
@@ -245,6 +272,11 @@ async def test_play_media_library(
             "UnknownContent",
             "A:ALBUM/UnknowAlbum",
             "Sonos does not support media content type: UnknownContent",
+        ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/error",
+            "Could not find media in library: S://192.168.1.1/music/error",
         ),
     ],
 )
@@ -691,6 +723,7 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-radio:ST%3aetc",
                 "play_uri_title": "James Taylor Radio",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="100c2068ST%3a1683194971234567890" parentID="10fe2064myStations" restricted="true"><dc:title>James Taylor Radio</dc:title><upnp:class>object.item.audioItem.audioBroadcast.#station</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON60423_X_#Svc60423-99999999-Token</desc></item></DIDL-Lite>',
             },
         ),
         (
@@ -699,6 +732,16 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
                 "play_uri_title": "66 - Watercolors",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10090120Api%3atune%3aliveAudio%3ajazzcafe%3ae4b5402c-9999-9999-9999-4bc8e2cdccce" parentID="10086064live%3f93b0b9cb-9999-9999-9999-bcf75971fcfe" restricted="false"><dc:title>66 - Watercolors</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON9479_X_#Svc9479-99999999-Token</desc></item></DIDL-Lite>',
+            },
+        ),
+        (
+            "American Tall Tales",
+            {
+                "play_uri": 1,
+                "play_uri_uri": "x-rincon-cpcontainer:101340c8reftitle%C9F27_com?sid=239&flags=16584&sn=5",
+                "play_uri_title": "American Tall Tales",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="101340c8reftitleC9F27_com" parentID="101340c8reftitleC9F27_com" restricted="true"><dc:title>American Tall Tales</dc:title><upnp:class>object.item.audioItem.audioBook</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON61191_X_#Svc6-0-Token</desc></item></DIDL-Lite>',
             },
         ),
     ],
@@ -725,6 +768,7 @@ async def test_select_source_play_uri(
     soco_mock.play_uri.assert_called_with(
         result.get("play_uri_uri"),
         title=result.get("play_uri_title"),
+        meta=result.get("play_uri_meta"),
         timeout=LONG_SERVICE_TIMEOUT,
     )
 
@@ -980,7 +1024,7 @@ async def test_play_media_favorite_item_id(
 async def _setup_hass(hass: HomeAssistant):
     await async_setup_component(
         hass,
-        SONOS_DOMAIN,
+        DOMAIN,
         {
             "sonos": {
                 "media_player": {
@@ -1005,7 +1049,7 @@ async def test_service_snapshot_restore(
         "homeassistant.components.sonos.speaker.Snapshot.snapshot"
     ) as mock_snapshot:
         await hass.services.async_call(
-            SONOS_DOMAIN,
+            DOMAIN,
             SERVICE_SNAPSHOT,
             {
                 ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
@@ -1018,7 +1062,7 @@ async def test_service_snapshot_restore(
         "homeassistant.components.sonos.speaker.Snapshot.restore"
     ) as mock_restore:
         await hass.services.async_call(
-            SONOS_DOMAIN,
+            DOMAIN,
             SERVICE_RESTORE,
             {
                 ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
@@ -1195,7 +1239,7 @@ async def test_media_get_queue(
     """Test getting the media queue."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     result = await hass.services.async_call(
-        SONOS_DOMAIN,
+        DOMAIN,
         SERVICE_GET_QUEUE,
         {
             ATTR_ENTITY_ID: "media_player.zone_a",
@@ -1205,3 +1249,91 @@ async def test_media_get_queue(
     )
     soco_mock.get_queue.assert_called_with(max_items=0)
     assert result == snapshot
+
+
+@pytest.mark.parametrize(
+    ("speaker_model", "source_list"),
+    [
+        ("Sonos Arc Ultra", [SOURCE_TV]),
+        ("Sonos Arc", [SOURCE_TV]),
+        ("Sonos Playbar", [SOURCE_TV]),
+        ("Sonos Connect", [SOURCE_LINEIN]),
+        ("Sonos Play:5", [SOURCE_LINEIN]),
+        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV]),
+        ("Sonos Era", None),
+    ],
+    indirect=["speaker_model"],
+)
+async def test_media_source_list(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    speaker_model: str,
+    source_list: list[str] | None,
+) -> None:
+    """Test the mapping between the speaker model name and source_list."""
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == source_list
+
+
+async def test_service_update_alarm(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test updating an alarm."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_ALARM,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_ALARM_ID: 14,
+            ATTR_TIME: "07:15:00",
+            ATTR_VOLUME: 0.25,
+            ATTR_INCLUDE_LINKED_ZONES: True,
+            ATTR_ENABLED: True,
+        },
+        blocking=True,
+    )
+
+    assert soco.alarmClock.UpdateAlarm.call_count == 1
+    assert soco.alarmClock.UpdateAlarm.call_args.args[0] == [
+        ("ID", "14"),
+        ("StartLocalTime", "07:15:00"),
+        ("Duration", "02:00:00"),
+        ("Recurrence", "DAILY"),
+        ("Enabled", "1"),
+        ("RoomUUID", "RINCON_test"),
+        ("ProgramURI", "x-rincon-buzzer:0"),
+        ("ProgramMetaData", ""),
+        ("PlayMode", "SHUFFLE_NOREPEAT"),
+        ("Volume", 25),
+        ("IncludeLinkedZones", "1"),
+    ]
+
+
+async def test_service_update_alarm_dne(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test updating an alarm that does not exist."""
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Alarm 99 does not exist and cannot be updated",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_ALARM,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_ALARM_ID: 99,
+                ATTR_TIME: "07:15:00",
+                ATTR_VOLUME: 0.25,
+                ATTR_INCLUDE_LINKED_ZONES: True,
+                ATTR_ENABLED: True,
+            },
+            blocking=True,
+        )
+    assert soco.alarmClock.UpdateAlarm.call_count == 0

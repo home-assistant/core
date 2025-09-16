@@ -6,7 +6,7 @@
       "fields": {
         "controller_id": {
           "name": "Controller ID",
-          "description": "If you have multiple controller, this is the index of you controller\nstarting with 0.\n."
+          "description": "If you have multiple controllers, this is the index of your controller, starting with 0."
         },
         "ihc_id": {
           "name": "IHC ID",

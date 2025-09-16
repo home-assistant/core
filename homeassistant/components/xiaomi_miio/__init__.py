@@ -35,7 +35,6 @@ from miio import (
 )
 from miio.gateway.gateway import GatewayException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -47,8 +46,6 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
-    KEY_COORDINATOR,
-    KEY_DEVICE,
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_FAN_1C,
@@ -56,6 +53,7 @@ from .const import (
     MODEL_FAN_P9,
     MODEL_FAN_P10,
     MODEL_FAN_P11,
+    MODEL_FAN_P18,
     MODEL_FAN_ZA5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
@@ -74,6 +72,7 @@ from .const import (
     SetupException,
 )
 from .gateway import ConnectXiaomiGateway
+from .typing import XiaomiMiioConfigEntry, XiaomiMiioRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,14 +117,14 @@ MODEL_TO_CLASS_MAP = {
     MODEL_FAN_P9: FanMiot,
     MODEL_FAN_P10: FanMiot,
     MODEL_FAN_P11: FanMiot,
+    MODEL_FAN_P18: FanMiot,
     MODEL_FAN_P5: FanP5,
     MODEL_FAN_ZA5: FanZA5,
 }
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: XiaomiMiioConfigEntry) -> bool:
     """Set up the Xiaomi Miio components from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     if entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         await async_setup_gateway_entry(hass, entry)
         return True
@@ -289,14 +288,13 @@ def _async_update_data_vacuum(
 
 
 async def async_create_miio_device_and_coordinator(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: XiaomiMiioConfigEntry
 ) -> None:
     """Set up a data coordinator and one miio device to service multiple entities."""
     model: str = entry.data[CONF_MODEL]
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_TOKEN]
     name = entry.title
-    device: MiioDevice | None = None
     migrate = False
     update_method = _async_update_data_default
     coordinator_class: type[DataUpdateCoordinator[Any]] = DataUpdateCoordinator
@@ -306,6 +304,7 @@ async def async_create_miio_device_and_coordinator(
         "zhimi.fan.za3": True,
         "zhimi.fan.za5": True,
         "zhimi.airpurifier.za1": True,
+        "dmaker.fan.1c": True,
     }
     lazy_discover = LAZY_DISCOVER_FOR_MODEL.get(model, False)
 
@@ -320,6 +319,7 @@ async def async_create_miio_device_and_coordinator(
 
     _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
+    device: MiioDevice
     # Humidifiers
     if model in MODELS_HUMIDIFIER_MIOT:
         device = AirHumidifierMiot(host, token, lazy_discover=lazy_discover)
@@ -385,21 +385,24 @@ async def async_create_miio_device_and_coordinator(
     coordinator = coordinator_class(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=name,
         update_method=update_method(hass, device),
         # Polling interval. Will only be polled if there are subscribers.
         update_interval=UPDATE_INTERVAL,
     )
-    hass.data[DOMAIN][entry.entry_id] = {
-        KEY_DEVICE: device,
-        KEY_COORDINATOR: coordinator,
-    }
 
     # Trigger first data fetch
     await coordinator.async_config_entry_first_refresh()
 
+    entry.runtime_data = XiaomiMiioRuntimeData(
+        device=device, device_coordinator=coordinator
+    )
 
-async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+
+async def async_setup_gateway_entry(
+    hass: HomeAssistant, entry: XiaomiMiioConfigEntry
+) -> None:
     """Set up the Xiaomi Gateway component from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_TOKEN]
@@ -450,23 +453,23 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         coordinator_dict[sub_device.sid] = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=name,
             update_method=update_data_factory(sub_device),
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=UPDATE_INTERVAL,
         )
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        CONF_GATEWAY: gateway.gateway_device,
-        KEY_COORDINATOR: coordinator_dict,
-    }
+    entry.runtime_data = XiaomiMiioRuntimeData(
+        gateway=gateway.gateway_device, gateway_coordinators=coordinator_dict
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, GATEWAY_PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
-
-async def async_setup_device_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_device_entry(
+    hass: HomeAssistant, entry: XiaomiMiioConfigEntry
+) -> bool:
     """Set up the Xiaomi Miio device component from a config entry."""
     platforms = get_platforms(entry)
     await async_create_miio_device_and_coordinator(hass, entry)
@@ -476,25 +479,13 @@ async def async_setup_device_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: XiaomiMiioConfigEntry
+) -> bool:
     """Unload a config entry."""
     platforms = get_platforms(config_entry)
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, platforms
-    )
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(config_entry, platforms)

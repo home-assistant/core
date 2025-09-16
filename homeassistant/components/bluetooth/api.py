@@ -67,6 +67,22 @@ def async_scanner_count(hass: HomeAssistant, connectable: bool = True) -> int:
 
 
 @hass_callback
+def async_current_scanners(hass: HomeAssistant) -> list[BaseHaScanner]:
+    """Return the list of currently active scanners.
+
+    This method returns a list of all active Bluetooth scanners registered
+    with Home Assistant, including both connectable and non-connectable scanners.
+
+    Args:
+        hass: Home Assistant instance
+
+    Returns:
+        List of all active scanner instances
+    """
+    return _get_manager(hass).async_current_scanners()
+
+
+@hass_callback
 def async_discovered_service_info(
     hass: HomeAssistant, connectable: bool = True
 ) -> Iterable[BluetoothServiceInfoBleak]:
@@ -178,9 +194,26 @@ def async_register_scanner(
     hass: HomeAssistant,
     scanner: BaseHaScanner,
     connection_slots: int | None = None,
+    source_domain: str | None = None,
+    source_model: str | None = None,
+    source_config_entry_id: str | None = None,
+    source_device_id: str | None = None,
 ) -> CALLBACK_TYPE:
     """Register a BleakScanner."""
-    return _get_manager(hass).async_register_scanner(scanner, connection_slots)
+    return _get_manager(hass).async_register_hass_scanner(
+        scanner,
+        connection_slots,
+        source_domain,
+        source_model,
+        source_config_entry_id,
+        source_device_id,
+    )
+
+
+@hass_callback
+def async_remove_scanner(hass: HomeAssistant, source: str) -> None:
+    """Permanently remove a BleakScanner by source address."""
+    return _get_manager(hass).async_remove_scanner(source)
 
 
 @hass_callback

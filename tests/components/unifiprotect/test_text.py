@@ -51,8 +51,8 @@ async def test_text_camera_setup(
     assert_entity_counts(hass, Platform.TEXT, 1, 1)
 
     description = CAMERA[0]
-    unique_id, entity_id = ids_from_device_description(
-        Platform.TEXT, doorbell, description
+    unique_id, entity_id = await ids_from_device_description(
+        hass, Platform.TEXT, doorbell, description
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -74,11 +74,11 @@ async def test_text_camera_set(
     assert_entity_counts(hass, Platform.TEXT, 1, 1)
 
     description = CAMERA[0]
-    unique_id, entity_id = ids_from_device_description(
-        Platform.TEXT, doorbell, description
+    _unique_id, entity_id = await ids_from_device_description(
+        hass, Platform.TEXT, doorbell, description
     )
 
-    doorbell.__fields__["set_lcd_text"] = Mock(final=False)
+    doorbell.__pydantic_fields__["set_lcd_text"] = Mock(final=False, frozen=False)
     doorbell.set_lcd_text = AsyncMock()
 
     await hass.services.async_call(

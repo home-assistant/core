@@ -1,13 +1,32 @@
 """Go2rtc tests."""
 
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
+from homeassistant.components.camera import Camera, CameraEntityFeature
 
 
-async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
-    """Fixture for setting up the component."""
-    config_entry.add_to_hass(hass)
+class MockCamera(Camera):
+    """Mock Camera Entity."""
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    _attr_name = "Test"
+    _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
+
+    def __init__(self) -> None:
+        """Initialize the mock entity."""
+        super().__init__()
+        self._stream_source: str | None = "rtsp://stream"
+
+    def set_stream_source(self, stream_source: str | None) -> None:
+        """Set the stream source."""
+        self._stream_source = stream_source
+
+    async def stream_source(self) -> str | None:
+        """Return the source of the stream.
+
+        This is used by cameras with CameraEntityFeature.STREAM
+        and StreamType.HLS.
+        """
+        return self._stream_source
+
+    @property
+    def use_stream_for_stills(self) -> bool:
+        """Always use the RTSP stream to generate snapshots."""
+        return True

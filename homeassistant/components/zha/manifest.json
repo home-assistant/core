@@ -1,10 +1,10 @@
 {
   "domain": "zha",
   "name": "Zigbee Home Automation",
-  "after_dependencies": ["onboarding", "usb"],
+  "after_dependencies": ["hassio", "onboarding", "usb"],
   "codeowners": ["@dmulcahey", "@adminiuga", "@puddly", "@TheJulianJES"],
   "config_flow": true,
-  "dependencies": ["file_upload"],
+  "dependencies": ["file_upload", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "iot_class": "local_polling",
   "loggers": [
@@ -21,7 +21,7 @@
     "zha",
     "universal_silabs_flasher"
   ],
-  "requirements": ["universal-silabs-flasher==0.0.22", "zha==0.0.34"],
+  "requirements": ["zha==0.0.70"],
   "usb": [
     {
       "vid": "10C4",
@@ -100,6 +100,18 @@
       "pid": "8B34",
       "description": "*bv 2010/10*",
       "known_devices": ["Bitron Video AV2010/10"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*sonoff*max*",
+      "known_devices": ["SONOFF Dongle Max MG24"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*sonoff*lite*mg21*",
+      "known_devices": ["sonoff zigbee dongle lite mg21"]
     }
   ],
   "zeroconf": [
@@ -130,6 +142,10 @@
     {
       "type": "_czc._tcp.local.",
       "name": "czc*"
+    },
+    {
+      "type": "_zigbee-coordinator._tcp.local.",
+      "name": "*"
     }
   ]
 }

@@ -16,6 +16,7 @@ from homeassistant.components.number import (
     NumberMode,
     RestoreNumber,
 )
+from homeassistant.components.sensor import AMBIGUOUS_UNITS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -27,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
@@ -50,6 +51,8 @@ from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 CONF_MIN = "min"
 CONF_MAX = "max"
 CONF_STEP = "step"
@@ -68,8 +71,14 @@ MQTT_NUMBER_ATTRIBUTES_BLOCKED = frozenset(
 
 def validate_config(config: ConfigType) -> ConfigType:
     """Validate that the configuration is valid, throws if it isn't."""
-    if config[CONF_MIN] >= config[CONF_MAX]:
-        raise vol.Invalid(f"'{CONF_MAX}' must be > '{CONF_MIN}'")
+    if (
+        CONF_UNIT_OF_MEASUREMENT in config
+        and (unit_of_measurement := config[CONF_UNIT_OF_MEASUREMENT]) in AMBIGUOUS_UNITS
+    ):
+        config[CONF_UNIT_OF_MEASUREMENT] = AMBIGUOUS_UNITS[unit_of_measurement]
+
+    if config[CONF_MIN] > config[CONF_MAX]:
+        raise vol.Invalid(f"{CONF_MAX} must be >= {CONF_MIN}")
 
     return config
 
@@ -107,7 +116,7 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT number through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -177,14 +186,14 @@ class MqttNumber(MqttEntity, RestoreNumber):
             return
 
         if num_value is not None and (
-            num_value < self.min_value or num_value > self.max_value
+            num_value < self.native_min_value or num_value > self.native_max_value
         ):
             _LOGGER.error(
                 "Invalid value for %s: %s (range %s - %s)",
                 self.entity_id,
                 num_value,
-                self.min_value,
-                self.max_value,
+                self.native_min_value,
+                self.native_max_value,
             )
             return
 

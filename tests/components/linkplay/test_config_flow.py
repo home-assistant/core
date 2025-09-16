@@ -7,11 +7,11 @@ from linkplay.exceptions import LinkPlayRequestException
 import pytest
 
 from homeassistant.components.linkplay.const import DOMAIN
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import HOST, HOST_REENTRY, NAME, UUID
 
@@ -220,3 +220,28 @@ async def test_user_flow_errors(
         CONF_HOST: HOST,
     }
     assert result["result"].unique_id == UUID
+
+
+@pytest.mark.usefixtures("mock_linkplay_factory_bridge")
+async def test_zeroconf_no_probe_existing_device(
+    hass: HomeAssistant, mock_linkplay_factory_bridge: AsyncMock
+) -> None:
+    """Test we do not probe the device is the host is already configured."""
+    entry = MockConfigEntry(
+        data={CONF_HOST: HOST},
+        domain=DOMAIN,
+        title=NAME,
+        unique_id=UUID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(mock_linkplay_factory_bridge.mock_calls) == 0

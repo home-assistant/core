@@ -7,23 +7,26 @@ import socket
 import motionmount
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import MotionMountConfigEntry
 from .const import DOMAIN, WALL_PRESET_NAME
 from .entity import MotionMountEntity
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: MotionMountConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Vogel's MotionMount from a config entry."""
-    mm = hass.data[DOMAIN][entry.entry_id]
+    mm = entry.runtime_data
 
     async_add_entities([MotionMountPresets(mm, entry)], True)
 
@@ -33,23 +36,61 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
     _attr_should_poll = True
     _attr_translation_key = "motionmount_preset"
+    _name_to_index: dict[str, int]
 
     def __init__(
         self,
         mm: motionmount.MotionMount,
-        config_entry: ConfigEntry,
+        config_entry: MotionMountConfigEntry,
     ) -> None:
         """Initialize Preset selector."""
         super().__init__(mm, config_entry)
         self._attr_unique_id = f"{self._base_unique_id}-preset"
         self._presets: list[motionmount.Preset] = []
+        self._attr_current_option = None
 
     def _update_options(self, presets: list[motionmount.Preset]) -> None:
         """Convert presets to select options."""
-        options = [f"{preset.index}: {preset.name}" for preset in presets]
-        options.insert(0, WALL_PRESET_NAME)
+        # Ordered list of options (wall first, then presets)
+        options = [WALL_PRESET_NAME] + [preset.name for preset in presets]
+
+        # Build mapping name → index (wall = 0)
+        self._name_to_index = {WALL_PRESET_NAME: 0}
+        self._name_to_index.update({preset.name: preset.index for preset in presets})
 
         self._attr_options = options
+
+    async def _ensure_connected(self) -> bool:
+        """Make sure there is a connection with the MotionMount.
+
+        Returns false if the connection failed to be ensured.
+        """
+        if self.mm.is_connected:
+            return True
+        try:
+            await self.mm.connect()
+        except (ConnectionError, TimeoutError, socket.gaierror):
+            # We're not interested in exceptions here. In case of a failed connection
+            # the try/except from the caller will report it.
+            # The purpose of `_ensure_connected()` is only to make sure we try to
+            # reconnect, where failures should not be logged each time
+            return False
+
+        # Check we're properly authenticated or be able to become so
+        if not self.mm.is_authenticated:
+            if self.pin is None:
+                await self.mm.disconnect()
+                self.config_entry.async_start_reauth(self.hass)
+                return False
+            await self.mm.authenticate(self.pin)
+            if not self.mm.is_authenticated:
+                self.pin = None
+                await self.mm.disconnect()
+                self.config_entry.async_start_reauth(self.hass)
+                return False
+
+        _LOGGER.debug("Successfully reconnected to MotionMount")
+        return True
 
     async def async_update(self) -> None:
         """Get latest state from MotionMount."""
@@ -87,7 +128,10 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set the new option."""
-        index = int(option[:1])
+        index = self._name_to_index.get(option)
+        if index is None:
+            raise HomeAssistantError(f"Unknown preset selected: {option}")
+
         try:
             await self.mm.go_to_preset(index)
         except (TimeoutError, socket.gaierror) as ex:

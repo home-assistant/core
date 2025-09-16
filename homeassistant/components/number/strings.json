@@ -31,17 +31,26 @@
         }
       }
     },
+    "absolute_humidity": {
+      "name": "[%key:component::sensor::entity_component::absolute_humidity::name%]"
+    },
     "apparent_power": {
       "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
     },
     "aqi": {
       "name": "[%key:component::sensor::entity_component::aqi::name%]"
     },
+    "area": {
+      "name": "[%key:component::sensor::entity_component::area::name%]"
+    },
     "atmospheric_pressure": {
       "name": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]"
     },
     "battery": {
       "name": "[%key:component::sensor::entity_component::battery::name%]"
+    },
+    "blood_glucose_concentration": {
+      "name": "[%key:component::sensor::entity_component::blood_glucose_concentration::name%]"
     },
     "carbon_dioxide": {
       "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]"
@@ -124,6 +133,9 @@
     "pressure": {
       "name": "[%key:component::sensor::entity_component::pressure::name%]"
     },
+    "reactive_energy": {
+      "name": "[%key:component::sensor::entity_component::reactive_energy::name%]"
+    },
     "reactive_power": {
       "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
     },
@@ -162,6 +174,9 @@
     },
     "weight": {
       "name": "[%key:component::sensor::entity_component::weight::name%]"
+    },
+    "wind_direction": {
+      "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
     },
     "wind_speed": {
       "name": "[%key:component::sensor::entity_component::wind_speed::name%]"

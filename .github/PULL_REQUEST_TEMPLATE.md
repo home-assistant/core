@@ -46,6 +46,8 @@
 - This PR fixes or closes issue: fixes #
 - This PR is related to issue: 
 - Link to documentation pull request: 
+- Link to developer documentation pull request: 
+- Link to frontend pull request: 
 
 ## Checklist
 <!--
@@ -53,8 +55,12 @@
   creating the PR. If you're unsure about any of them, don't hesitate to ask.
   We're here to help! This is simply a reminder of what we are going to look
   for before merging your code.
+
+  AI tools are welcome, but contributors are responsible for *fully*
+  understanding the code before submitting a PR.
 -->
 
+- [ ] I understand the code I am submitting and can explain how it works.
 - [ ] The code change is tested and works locally.
 - [ ] Local tests pass. **Your PR cannot be merged unless tests pass**
 - [ ] There is no commented out code in this PR.
@@ -62,6 +68,7 @@
 - [ ] I have followed the [perfect PR recommendations][perfect-pr]
 - [ ] The code has been formatted using Ruff (`ruff format homeassistant tests`)
 - [ ] Tests have been added to verify that the new code works.
+- [ ] Any generated code has been carefully reviewed for correctness and compliance with project standards.
 
 If user exposed functionality or configuration variables are added/changed:
 

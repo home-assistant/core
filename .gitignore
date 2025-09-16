@@ -69,6 +69,7 @@ test-reports/
 test-results.xml
 test-output.xml
 pytest-*.txt
+junit.xml
 
 # Translations
 *.mo
@@ -79,6 +80,7 @@ pytest-*.txt
 .pydevproject
 
 .python-version
+.tool-versions
 
 # emacs auto backups
 *~
@@ -136,3 +138,7 @@ tmp_cache
 
 # Will be created from script/split_tests.py
 pytest_buckets.txt
+
+# AI tooling
+.claude/settings.local.json
+

@@ -138,6 +138,7 @@
               'state': 'LOW',
             }),
           ]),
+          'urgent_check_control_messages': None,
         }),
         'climate': dict({
           'activity': 'INACTIVE',
@@ -193,6 +194,24 @@
               'state': 'OK',
             }),
           ]),
+          'next_service_by_distance': dict({
+            'due_date': '2024-12-01T00:00:00+00:00',
+            'due_distance': list([
+              50000,
+              'km',
+            ]),
+            'service_type': 'BRAKE_FLUID',
+            'state': 'OK',
+          }),
+          'next_service_by_time': dict({
+            'due_date': '2024-12-01T00:00:00+00:00',
+            'due_distance': list([
+              50000,
+              'km',
+            ]),
+            'service_type': 'BRAKE_FLUID',
+            'state': 'OK',
+          }),
         }),
         'data': dict({
           'attributes': dict({
@@ -1053,6 +1072,7 @@
               'state': 'LOW',
             }),
           ]),
+          'urgent_check_control_messages': None,
         }),
         'climate': dict({
           'activity': 'HEATING',
@@ -1108,6 +1128,24 @@
               'state': 'OK',
             }),
           ]),
+          'next_service_by_distance': dict({
+            'due_date': '2024-12-01T00:00:00+00:00',
+            'due_distance': list([
+              50000,
+              'km',
+            ]),
+            'service_type': 'BRAKE_FLUID',
+            'state': 'OK',
+          }),
+          'next_service_by_time': dict({
+            'due_date': '2024-12-01T00:00:00+00:00',
+            'due_distance': list([
+              50000,
+              'km',
+            ]),
+            'service_type': 'BRAKE_FLUID',
+            'state': 'OK',
+          }),
         }),
         'data': dict({
           'attributes': dict({
@@ -1858,6 +1896,7 @@
               'state': 'LOW',
             }),
           ]),
+          'urgent_check_control_messages': None,
         }),
         'climate': dict({
           'activity': 'INACTIVE',
@@ -1922,6 +1961,24 @@
               'state': 'OK',
             }),
           ]),
+          'next_service_by_distance': dict({
+            'due_date': '2024-12-01T00:00:00+00:00',
+            'due_distance': list([
+              50000,
+              'km',
+            ]),
+            'service_type': 'BRAKE_FLUID',
+            'state': 'OK',
+          }),
+          'next_service_by_time': dict({
+            'due_date': '2024-12-01T00:00:00+00:00',
+            'due_distance': list([
+              50000,
+              'km',
+            ]),
+            'service_type': 'BRAKE_FLUID',
+            'state': 'OK',
+          }),
         }),
         'data': dict({
           'attributes': dict({
@@ -2621,6 +2678,7 @@
           'has_check_control_messages': False,
           'messages': list([
           ]),
+          'urgent_check_control_messages': None,
         }),
         'climate': dict({
           'activity': 'UNKNOWN',
@@ -2658,6 +2716,16 @@
               'state': 'OK',
             }),
           ]),
+          'next_service_by_distance': None,
+          'next_service_by_time': dict({
+            'due_date': '2022-10-01T00:00:00+00:00',
+            'due_distance': list([
+              None,
+              None,
+            ]),
+            'service_type': 'BRAKE_FLUID',
+            'state': 'OK',
+          }),
         }),
         'data': dict({
           'attributes': dict({
@@ -4833,7 +4901,7 @@
       }),
     ]),
     'info': dict({
-      'gcid': 'SOME_GCID',
+      'gcid': 'DUMMY',
       'password': '**REDACTED**',
       'refresh_token': '**REDACTED**',
       'region': 'rest_of_world',
@@ -4991,6 +5059,7 @@
         'has_check_control_messages': False,
         'messages': list([
         ]),
+        'urgent_check_control_messages': None,
       }),
       'climate': dict({
         'activity': 'UNKNOWN',
@@ -5028,6 +5097,16 @@
             'state': 'OK',
           }),
         ]),
+        'next_service_by_distance': None,
+        'next_service_by_time': dict({
+          'due_date': '2022-10-01T00:00:00+00:00',
+          'due_distance': list([
+            None,
+            None,
+          ]),
+          'service_type': 'BRAKE_FLUID',
+          'state': 'OK',
+        }),
       }),
       'data': dict({
         'attributes': dict({
@@ -7202,7 +7281,7 @@
       }),
     ]),
     'info': dict({
-      'gcid': 'SOME_GCID',
+      'gcid': 'DUMMY',
       'password': '**REDACTED**',
       'refresh_token': '**REDACTED**',
       'region': 'rest_of_world',
@@ -8925,7 +9004,7 @@
       }),
     ]),
     'info': dict({
-      'gcid': 'SOME_GCID',
+      'gcid': 'DUMMY',
       'password': '**REDACTED**',
       'refresh_token': '**REDACTED**',
       'region': 'rest_of_world',

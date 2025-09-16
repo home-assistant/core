@@ -30,6 +30,7 @@
         'auto',
       ]),
       'friendly_name': 'myauto',
+      'hvac_action': <HVACAction.COOLING: 'cooling'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,

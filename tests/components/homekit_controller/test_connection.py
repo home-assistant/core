@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 import dataclasses
+from typing import Any
 from unittest import mock
 
 from aiohomekit.controller import TransportType
@@ -11,6 +12,10 @@ from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController
 import pytest
 
+from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
+from homeassistant.components.homekit_controller.connection import (
+    MAX_CHARACTERISTICS_PER_REQUEST,
+)
 from homeassistant.components.homekit_controller.const import (
     DEBOUNCE_COOLDOWN,
     DOMAIN,
@@ -375,9 +380,15 @@ async def test_poll_firmware_version_only_all_watchable_accessory_mode(
         state = await helper.poll_and_get_state()
         assert state.state == STATE_OFF
         assert mock_get_characteristics.call_count == 2
-        # Verify only firmware version is polled
-        assert mock_get_characteristics.call_args_list[0][0][0] == {(1, 7)}
-        assert mock_get_characteristics.call_args_list[1][0][0] == {(1, 7)}
+        # Verify everything is polled (convert to set for comparison since batching changes the type)
+        assert set(mock_get_characteristics.call_args_list[0][0][0]) == {
+            (1, 10),
+            (1, 11),
+        }
+        assert set(mock_get_characteristics.call_args_list[1][0][0]) == {
+            (1, 10),
+            (1, 11),
+        }
 
         # Test device goes offline
         helper.pairing.available = False
@@ -429,8 +440,8 @@ async def test_manual_poll_all_chars(
     ) as mock_get_characteristics:
         # Initial state is that the light is off
         await helper.poll_and_get_state()
-        # Verify only firmware version is polled
-        assert mock_get_characteristics.call_args_list[0][0][0] == {(1, 7)}
+        # Verify poll polls all chars
+        assert len(mock_get_characteristics.call_args_list[0][0][0]) > 1
 
         # Now do a manual poll to ensure all chars are polled
         mock_get_characteristics.reset_mock()
@@ -439,3 +450,169 @@ async def test_manual_poll_all_chars(
         await time_changed(hass, DEBOUNCE_COOLDOWN)
         await hass.async_block_till_done()
         assert len(mock_get_characteristics.call_args_list[0][0][0]) > 1
+
+
+async def test_poll_all_on_startup_refreshes_stale_values(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test that entities get fresh values on startup instead of stale stored values."""
+    # Load actual Ecobee accessory fixture
+    accessories = await setup_accessories_from_file(hass, "ecobee3.json")
+
+    # Pre-populate storage with the accessories data (already has stale values)
+    hass_storage["homekit_controller-entity-map"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "homekit_controller-entity-map",
+        "data": {
+            "pairings": {
+                "00:00:00:00:00:00": {
+                    "config_num": 1,
+                    "accessories": [
+                        a.to_accessory_and_service_list() for a in accessories
+                    ],
+                }
+            }
+        },
+    }
+
+    # Track what gets polled during setup
+    polled_chars: list[tuple[int, int]] = []
+
+    # Set up the test accessories
+    fake_controller = await setup_platform(hass)
+
+    # Mock get_characteristics to track polling and return fresh temperature
+    async def mock_get_characteristics(
+        chars: set[tuple[int, int]], **kwargs: Any
+    ) -> dict[tuple[int, int], dict[str, Any]]:
+        """Return fresh temperature value when polled."""
+        polled_chars.extend(chars)
+        # Return fresh values for all characteristics
+        result: dict[tuple[int, int], dict[str, Any]] = {}
+        for aid, iid in chars:
+            # Find the characteristic and return appropriate value
+            for accessory in accessories:
+                if accessory.aid != aid:
+                    continue
+                for service in accessory.services:
+                    for char in service.characteristics:
+                        if char.iid != iid:
+                            continue
+                        # Return fresh temperature instead of stale fixture value
+                        if char.type == CharacteristicsTypes.TEMPERATURE_CURRENT:
+                            result[(aid, iid)] = {"value": 22.5}  # Fresh value
+                        else:
+                            result[(aid, iid)] = {"value": char.value}
+                        break
+        return result
+
+    # Add the paired device with our mock
+    await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
+    config_entry = MockConfigEntry(
+        version=1,
+        domain="homekit_controller",
+        entry_id="TestData",
+        data={"AccessoryPairingID": "00:00:00:00:00:00"},
+        title="test",
+    )
+    config_entry.add_to_hass(hass)
+
+    # Get the pairing and patch its get_characteristics
+    pairing = fake_controller.pairings["00:00:00:00:00:00"]
+
+    with mock.patch.object(pairing, "get_characteristics", mock_get_characteristics):
+        # Set up the config entry (this should trigger poll_all=True)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify that polling happened during setup (poll_all=True was used)
+    assert (
+        len(polled_chars) == 79
+    )  # The Ecobee fixture has exactly 79 readable characteristics
+
+    # Check that the climate entity has the fresh temperature (22.5°C) not the stale fixture value (21.8°C)
+    state = hass.states.get("climate.homew")
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
+
+
+async def test_characteristic_polling_batching(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test that characteristic polling is batched to MAX_CHARACTERISTICS_PER_REQUEST."""
+
+    # Create a large accessory with many characteristics (more than 49)
+    def create_large_accessory_with_many_chars(accessory: Accessory) -> None:
+        """Create an accessory with many characteristics to test batching."""
+        # Add multiple services with many characteristics each
+        for service_num in range(10):  # 10 services
+            service = accessory.add_service(
+                ServicesTypes.LIGHTBULB, name=f"Light {service_num}"
+            )
+            # Each lightbulb service gets several characteristics
+            service.add_char(CharacteristicsTypes.ON)
+            service.add_char(CharacteristicsTypes.BRIGHTNESS)
+            service.add_char(CharacteristicsTypes.HUE)
+            service.add_char(CharacteristicsTypes.SATURATION)
+            service.add_char(CharacteristicsTypes.COLOR_TEMPERATURE)
+            # Set initial values
+            for char in service.characteristics:
+                if char.type != CharacteristicsTypes.IDENTIFY:
+                    char.value = 0
+
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_large_accessory_with_many_chars
+    )
+
+    # Track the get_characteristics calls
+    get_chars_calls = []
+    original_get_chars = helper.pairing.get_characteristics
+
+    async def mock_get_characteristics(chars):
+        """Mock get_characteristics to track batch sizes."""
+        get_chars_calls.append(list(chars))
+        return await original_get_chars(chars)
+
+    # Clear any calls from setup
+    get_chars_calls.clear()
+
+    # Patch get_characteristics to track calls
+    with mock.patch.object(
+        helper.pairing, "get_characteristics", side_effect=mock_get_characteristics
+    ):
+        # Trigger an update through time_changed which simulates regular polling
+        # time_changed expects seconds, not a datetime
+        await time_changed(hass, 300)  # 5 minutes in seconds
+        await hass.async_block_till_done()
+
+    # We created 10 lightbulb services with 5 characteristics each = 50 total
+    # Plus any base accessory characteristics that are pollable
+    # This should result in exactly 2 batches
+    assert len(get_chars_calls) == 2, (
+        f"Should have made exactly 2 batched calls, got {len(get_chars_calls)}"
+    )
+
+    # Check that no batch exceeded MAX_CHARACTERISTICS_PER_REQUEST
+    for i, batch in enumerate(get_chars_calls):
+        assert len(batch) <= MAX_CHARACTERISTICS_PER_REQUEST, (
+            f"Batch {i} size {len(batch)} exceeded maximum {MAX_CHARACTERISTICS_PER_REQUEST}"
+        )
+
+    # Verify the total number of characteristics polled
+    total_chars = sum(len(batch) for batch in get_chars_calls)
+    # Each lightbulb has: ON, BRIGHTNESS, HUE, SATURATION, COLOR_TEMPERATURE = 5
+    # 10 lightbulbs = 50 characteristics
+    assert total_chars == 50, (
+        f"Should have polled exactly 50 characteristics, got {total_chars}"
+    )
+
+    # The first batch should be full (49 characteristics)
+    assert len(get_chars_calls[0]) == 49, (
+        f"First batch should have exactly 49 characteristics, got {len(get_chars_calls[0])}"
+    )
+
+    # The second batch should have exactly 1 characteristic
+    assert len(get_chars_calls[1]) == 1, (
+        f"Second batch should have exactly 1 characteristic, got {len(get_chars_calls[1])}"
+    )

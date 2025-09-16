@@ -17,7 +17,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util
 
@@ -65,7 +65,7 @@ def _migrate_calendar(calendar: Calendar) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: LocalTodoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the local_todo todo platform."""
 
@@ -132,7 +132,7 @@ class LocalTodoListEntity(TodoListEntity):
         self._store = store
         self._calendar = calendar
         self._calendar_lock = asyncio.Lock()
-        self._attr_name = name.capitalize()
+        self._attr_name = name
         self._attr_unique_id = unique_id
 
     def _new_todo_store(self) -> TodoStore:

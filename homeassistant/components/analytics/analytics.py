@@ -11,6 +11,7 @@ import uuid
 
 import aiohttp
 
+from homeassistant import config as conf_util
 from homeassistant.components import hassio
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -22,13 +23,18 @@ from homeassistant.components.recorder import (
     DOMAIN as RECORDER_DOMAIN,
     get_instance as get_recorder_instance,
 )
-import homeassistant.config as conf_util
 from homeassistant.config_entries import SOURCE_IGNORE
-from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_DOMAIN,
+    BASE_PLATFORMS,
+    __version__ as HA_VERSION,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.loader import (
@@ -74,6 +80,11 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+
+
+def gen_uuid() -> str:
+    """Generate a new UUID."""
+    return uuid.uuid4().hex
 
 
 @dataclass
@@ -136,7 +147,7 @@ class Analytics:
     @property
     def supervisor(self) -> bool:
         """Return bool if a supervisor is present."""
-        return hassio.is_hassio(self.hass)
+        return is_hassio(self.hass)
 
     async def load(self) -> None:
         """Load preferences."""
@@ -183,7 +194,7 @@ class Analytics:
             return
 
         if self._data.uuid is None:
-            self._data.uuid = uuid.uuid4().hex
+            self._data.uuid = gen_uuid()
             await self._store.async_save(dataclass_asdict(self._data))
 
         if self.supervisor:
@@ -224,7 +235,8 @@ class Analytics:
                 LOGGER.error(err)
                 return
 
-            configuration_set = set(yaml_configuration)
+            configuration_set = _domains_from_yaml_config(yaml_configuration)
+
             er_platforms = {
                 entity.platform
                 for entity in ent_reg.entities.values()
@@ -369,3 +381,130 @@ class Analytics:
             for entry in entries
             if entry.source != SOURCE_IGNORE and entry.disabled_by is None
         )
+
+
+def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
+    """Extract domains from the YAML configuration."""
+    domains = set(yaml_configuration)
+    for platforms in conf_util.extract_platform_integrations(
+        yaml_configuration, BASE_PLATFORMS
+    ).values():
+        domains.update(platforms)
+    return domains
+
+
+async def async_devices_payload(hass: HomeAssistant) -> dict:
+    """Return detailed information about entities and devices."""
+    integrations_info: dict[str, dict[str, Any]] = {}
+
+    dev_reg = dr.async_get(hass)
+
+    # We need to refer to other devices, for example in `via_device` field.
+    # We don't however send the original device ids outside of Home Assistant,
+    # instead we refer to devices by (integration_domain, index_in_integration_device_list).
+    device_id_mapping: dict[str, tuple[str, int]] = {}
+
+    for device_entry in dev_reg.devices.values():
+        if not device_entry.primary_config_entry:
+            continue
+
+        config_entry = hass.config_entries.async_get_entry(
+            device_entry.primary_config_entry
+        )
+
+        if config_entry is None:
+            continue
+
+        integration_domain = config_entry.domain
+        integration_info = integrations_info.setdefault(
+            integration_domain, {"devices": [], "entities": []}
+        )
+
+        devices_info = integration_info["devices"]
+
+        device_id_mapping[device_entry.id] = (integration_domain, len(devices_info))
+
+        devices_info.append(
+            {
+                "entities": [],
+                "entry_type": device_entry.entry_type,
+                "has_configuration_url": device_entry.configuration_url is not None,
+                "hw_version": device_entry.hw_version,
+                "manufacturer": device_entry.manufacturer,
+                "model": device_entry.model,
+                "model_id": device_entry.model_id,
+                "sw_version": device_entry.sw_version,
+                "via_device": device_entry.via_device_id,
+            }
+        )
+
+    # Fill out via_device with new device ids
+    for integration_info in integrations_info.values():
+        for device_info in integration_info["devices"]:
+            if device_info["via_device"] is None:
+                continue
+            device_info["via_device"] = device_id_mapping.get(device_info["via_device"])
+
+    ent_reg = er.async_get(hass)
+
+    for entity_entry in ent_reg.entities.values():
+        integration_domain = entity_entry.platform
+        integration_info = integrations_info.setdefault(
+            integration_domain, {"devices": [], "entities": []}
+        )
+
+        devices_info = integration_info["devices"]
+        entities_info = integration_info["entities"]
+
+        entity_state = hass.states.get(entity_entry.entity_id)
+
+        entity_info = {
+            # LIMITATION: `assumed_state` can be overridden by users;
+            # we should replace it with the original value in the future.
+            # It is also not present, if entity is not in the state machine,
+            # which can happen for disabled entities.
+            "assumed_state": entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
+            if entity_state is not None
+            else None,
+            "capabilities": entity_entry.capabilities,
+            "domain": entity_entry.domain,
+            "entity_category": entity_entry.entity_category,
+            "has_entity_name": entity_entry.has_entity_name,
+            "original_device_class": entity_entry.original_device_class,
+            # LIMITATION: `unit_of_measurement` can be overridden by users;
+            # we should replace it with the original value in the future.
+            "unit_of_measurement": entity_entry.unit_of_measurement,
+        }
+
+        if (
+            ((device_id := entity_entry.device_id) is not None)
+            and ((new_device_id := device_id_mapping.get(device_id)) is not None)
+            and (new_device_id[0] == integration_domain)
+        ):
+            device_info = devices_info[new_device_id[1]]
+            device_info["entities"].append(entity_info)
+        else:
+            entities_info.append(entity_info)
+
+    integrations = {
+        domain: integration
+        for domain, integration in (
+            await async_get_integrations(hass, integrations_info.keys())
+        ).items()
+        if isinstance(integration, Integration)
+    }
+
+    for domain, integration_info in integrations_info.items():
+        if integration := integrations.get(domain):
+            integration_info["is_custom_integration"] = not integration.is_built_in
+            # Include version for custom integrations
+            if not integration.is_built_in and integration.version:
+                integration_info["custom_integration_version"] = str(
+                    integration.version
+                )
+
+    return {
+        "version": "home-assistant:1",
+        "home_assistant": HA_VERSION,
+        "integrations": integrations_info,
+    }

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from functools import partial
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import voluptuous as vol
 
@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    WEEKDAYS,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -26,7 +27,8 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
@@ -34,31 +36,51 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+
+CONF_WEEKDAY = "weekday"
 
 _TIME_TRIGGER_ENTITY = vol.All(str, cv.entity_domain(["input_datetime", "sensor"]))
+_TIME_AT_SCHEMA = vol.Any(cv.time, _TIME_TRIGGER_ENTITY)
 
 _TIME_TRIGGER_ENTITY_WITH_OFFSET = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(["sensor"]),
+        vol.Required(CONF_ENTITY_ID): cv.entity_domain(["input_datetime", "sensor"]),
         vol.Optional(CONF_OFFSET): cv.time_period,
     }
 )
+
+
+def valid_at_template(value: Any) -> template.Template:
+    """Validate either a jinja2 template, valid time, or valid trigger entity."""
+    tpl = cv.template(value)
+
+    if tpl.is_static:
+        _TIME_AT_SCHEMA(value)
+
+    return tpl
+
 
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
     _TIME_TRIGGER_ENTITY,
     _TIME_TRIGGER_ENTITY_WITH_OFFSET,
+    valid_at_template,
     msg=(
         "Expected HH:MM, HH:MM:SS, an Entity ID with domain 'input_datetime' or "
-        "'sensor', or a combination of a timestamp sensor entity and an offset."
+        "'sensor', a combination of a timestamp sensor entity and an offset, or Limited Template"
     ),
 )
+
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "time",
         vol.Required(CONF_AT): vol.All(cv.ensure_list, [_TIME_TRIGGER_SCHEMA]),
+        vol.Optional(CONF_WEEKDAY): vol.Any(
+            vol.In(WEEKDAYS),
+            vol.All(cv.ensure_list, [vol.In(WEEKDAYS)]),
+        ),
     }
 )
 
@@ -70,7 +92,7 @@ class TrackEntity(NamedTuple):
     callback: Callable
 
 
-async def async_attach_trigger(
+async def async_attach_trigger(  # noqa: C901
     hass: HomeAssistant,
     config: ConfigType,
     action: TriggerActionType,
@@ -78,6 +100,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     trigger_data = trigger_info["trigger_data"]
+    variables = trigger_info["variables"] or {}
     entities: dict[tuple[str, timedelta], CALLBACK_TYPE] = {}
     removes: list[CALLBACK_TYPE] = []
     job = HassJob(action, f"time trigger {trigger_info}")
@@ -87,6 +110,18 @@ async def async_attach_trigger(
         description: str, now: datetime, *, entity_id: str | None = None
     ) -> None:
         """Listen for time changes and calls action."""
+        # Check weekday filter if configured
+        if CONF_WEEKDAY in config:
+            weekday_config = config[CONF_WEEKDAY]
+            current_weekday = WEEKDAYS[now.weekday()]
+
+            # Check if current weekday matches the configuration
+            if isinstance(weekday_config, str):
+                if current_weekday != weekday_config:
+                    return
+            elif current_weekday not in weekday_config:
+                return
+
         hass.async_run_hass_job(
             job,
             {
@@ -140,14 +175,17 @@ async def async_attach_trigger(
 
             if has_date:
                 # If input_datetime has date, then track point in time.
-                trigger_dt = datetime(
-                    year,
-                    month,
-                    day,
-                    hour,
-                    minute,
-                    second,
-                    tzinfo=dt_util.get_default_time_zone(),
+                trigger_dt = (
+                    datetime(
+                        year,
+                        month,
+                        day,
+                        hour,
+                        minute,
+                        second,
+                        tzinfo=dt_util.get_default_time_zone(),
+                    )
+                    + offset
                 )
                 # Only set up listener if time is now or in the future.
                 if trigger_dt >= dt_util.now():
@@ -162,6 +200,17 @@ async def async_attach_trigger(
                     )
             elif has_time:
                 # Else if it has time, then track time change.
+                if offset != timedelta(0):
+                    # Create a temporary datetime object to get an offset.
+                    temp_dt = dt_util.now().replace(
+                        hour=hour, minute=minute, second=second, microsecond=0
+                    )
+                    temp_dt += offset
+                    # Ignore the date and apply the offset even if it wraps
+                    # around to the next day.
+                    hour = temp_dt.hour
+                    minute = temp_dt.minute
+                    second = temp_dt.second
                 remove = async_track_time_change(
                     hass,
                     partial(
@@ -202,6 +251,16 @@ async def async_attach_trigger(
     to_track: list[TrackEntity] = []
 
     for at_time in config[CONF_AT]:
+        if isinstance(at_time, template.Template):
+            render = template.render_complex(at_time, variables, limited=True)
+            try:
+                at_time = _TIME_AT_SCHEMA(render)
+            except vol.Invalid as exc:
+                raise HomeAssistantError(
+                    f"Limited Template for 'at' rendered a unexpected value '{render}', expected HH:MM, "
+                    f"HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
+                ) from exc
+
         if isinstance(at_time, str):
             # entity
             update_entity_trigger(at_time, new_state=hass.states.get(at_time))

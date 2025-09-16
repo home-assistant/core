@@ -1,0 +1,106 @@
+{
+  "components": {
+    "main": {
+      "thermostatOperatingState": {
+        "supportedThermostatOperatingStates": {
+          "value": null
+        },
+        "thermostatOperatingState": {
+          "value": "idle",
+          "timestamp": "2025-05-17T14:16:43.740Z"
+        }
+      },
+      "relativeHumidityMeasurement": {
+        "humidity": {
+          "value": 49,
+          "unit": "%",
+          "timestamp": "2025-05-17T14:32:56.192Z"
+        }
+      },
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2022-04-16T19:45:51.006Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "online",
+          "data": {},
+          "timestamp": "2025-05-17T14:16:10.555Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 74.5,
+          "unit": "F",
+          "timestamp": "2025-05-17T14:32:56.192Z"
+        }
+      },
+      "thermostatHeatingSetpoint": {
+        "heatingSetpoint": {
+          "value": 71,
+          "unit": "F",
+          "timestamp": "2025-05-17T14:16:12.093Z"
+        },
+        "heatingSetpointRange": {
+          "value": null
+        }
+      },
+      "thermostatFanMode": {
+        "thermostatFanMode": {
+          "value": "auto",
+          "data": {
+            "supportedThermostatFanModes": ["auto", "on", "circulate"]
+          },
+          "timestamp": "2025-05-17T03:45:45.413Z"
+        },
+        "supportedThermostatFanModes": {
+          "value": ["auto", "on", "circulate"],
+          "timestamp": "2025-05-17T03:45:45.413Z"
+        }
+      },
+      "thermostatMode": {
+        "thermostatMode": {
+          "value": "auto",
+          "data": {
+            "supportedThermostatModes": [
+              "off",
+              "heat",
+              "cool",
+              "emergency heat",
+              "auto"
+            ]
+          },
+          "timestamp": "2025-05-17T05:45:53.597Z"
+        },
+        "supportedThermostatModes": {
+          "value": ["off", "heat", "cool", "emergency heat", "auto"],
+          "timestamp": "2025-05-17T03:45:45.413Z"
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": 75,
+          "unit": "F",
+          "timestamp": "2025-05-17T14:16:13.677Z"
+        }
+      }
+    }
+  }
+}

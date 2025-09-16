@@ -11,11 +11,16 @@ WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
 WAKE_UP_ASLEEP = {"response": {"state": TeslemetryState.ASLEEP}, "error": None}
 
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
+PRODUCTS_MODERN = load_json_object_fixture("products.json", DOMAIN)
+PRODUCTS_MODERN["response"][0]["command_signing"] = "required"
 VEHICLE_DATA = load_json_object_fixture("vehicle_data.json", DOMAIN)
+VEHICLE_DATA_ASLEEP = load_json_object_fixture("vehicle_data.json", DOMAIN)
+VEHICLE_DATA_ASLEEP["response"]["state"] = TeslemetryState.OFFLINE
 VEHICLE_DATA_ALT = load_json_object_fixture("vehicle_data_alt.json", DOMAIN)
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
 ENERGY_HISTORY = load_json_object_fixture("energy_history.json", DOMAIN)
+ENERGY_HISTORY_EMPTY = load_json_object_fixture("energy_history_empty.json", DOMAIN)
 
 COMMAND_OK = {"response": {"result": True, "reason": ""}}
 COMMAND_REASON = {"response": {"result": False, "reason": "already closed"}}
@@ -41,12 +46,61 @@ METADATA = {
         "vehicle_device_data",
         "vehicle_cmds",
         "vehicle_charging_cmds",
+        "vehicle_location",
         "energy_device_data",
         "energy_cmds",
     ],
+    "vehicles": {
+        "LRW3F7EK4NC700000": {
+            "proxy": True,
+            "access": True,
+            "polling": False,
+            "firmware": "2026.0.0",
+            "discounted": False,
+            "fleet_telemetry": "1.0.2",
+            "name": "Home Assistant",
+        }
+    },
+}
+METADATA_LEGACY = {
+    "uid": "abc-123",
+    "region": "NA",
+    "scopes": [
+        "openid",
+        "offline_access",
+        "user_data",
+        "vehicle_device_data",
+        "vehicle_cmds",
+        "vehicle_charging_cmds",
+        "vehicle_location",
+        "energy_device_data",
+        "energy_cmds",
+    ],
+    "vehicles": {
+        "LRW3F7EK4NC700000": {
+            "proxy": False,
+            "access": True,
+            "polling": True,
+            "firmware": "2026.0.0",
+            "discounted": True,
+            "fleet_telemetry": "unknown",
+            "name": "Home Assistant",
+        }
+    },
 }
 METADATA_NOSCOPE = {
     "uid": "abc-123",
     "region": "NA",
     "scopes": ["openid", "offline_access", "vehicle_device_data"],
+    "vehicles": {
+        "LRW3F7EK4NC700000": {
+            "proxy": False,
+            "access": True,
+            "polling": True,
+            "firmware": "2026.0.0",
+            "discounted": True,
+            "fleet_telemetry": "unknown",
+            "name": "Home Assistant",
+        }
+    },
 }

@@ -3,15 +3,13 @@
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
     ATTR_PLAYERS_LIST,
     ATTR_RESOURCES_LIST,
-    DOMAIN,
     NAME_PLAYERS_MAX,
     NAME_PLAYERS_ONLINE,
     NAME_RESOURCES,
@@ -19,6 +17,7 @@ from .const import (
     UNIT_PLAYERS_ONLINE,
     UNIT_RESOURCES,
 )
+from .coordinator import FiveMConfigEntry
 from .entity import FiveMEntity, FiveMEntityDescription
 
 
@@ -50,11 +49,11 @@ SENSORS: tuple[FiveMSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FiveMConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FiveM sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     # Add sensor entities.
     async_add_entities(

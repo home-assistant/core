@@ -12,6 +12,7 @@ from aiohttp import hdrs
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_AUTHENTICATION,
     CONF_HEADERS,
     CONF_METHOD,
     CONF_PASSWORD,
@@ -20,6 +21,8 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
     SERVICE_RELOAD,
 )
 from homeassistant.core import (
@@ -30,10 +33,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.ssl import SSLCipherList
 
 DOMAIN = "rest_command"
 
@@ -46,6 +50,7 @@ DEFAULT_VERIFY_SSL = True
 SUPPORT_REST_METHODS = ["get", "patch", "post", "put", "delete"]
 
 CONF_CONTENT_TYPE = "content_type"
+CONF_INSECURE_CIPHER = "insecure_cipher"
 
 COMMAND_SCHEMA = vol.Schema(
     {
@@ -54,12 +59,16 @@ COMMAND_SCHEMA = vol.Schema(
             vol.Lower, vol.In(SUPPORT_REST_METHODS)
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.template}),
+        vol.Optional(CONF_AUTHENTICATION): vol.In(
+            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
+        ),
         vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
         vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
         vol.Optional(CONF_PAYLOAD): cv.template,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
         vol.Optional(CONF_CONTENT_TYPE): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_INSECURE_CIPHER, default=False): cv.boolean,
     }
 )
 
@@ -91,17 +100,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def async_register_rest_command(name: str, command_config: dict[str, Any]) -> None:
         """Create service for rest command."""
-        websession = async_get_clientsession(hass, command_config[CONF_VERIFY_SSL])
+        websession = async_get_clientsession(
+            hass,
+            command_config[CONF_VERIFY_SSL],
+            ssl_cipher=(
+                SSLCipherList.INSECURE
+                if command_config[CONF_INSECURE_CIPHER]
+                else SSLCipherList.PYTHON_DEFAULT
+            ),
+        )
         timeout = command_config[CONF_TIMEOUT]
         method = command_config[CONF_METHOD]
 
         template_url = command_config[CONF_URL]
 
         auth = None
+        digest_middleware = None
         if CONF_USERNAME in command_config:
             username = command_config[CONF_USERNAME]
             password = command_config.get(CONF_PASSWORD, "")
-            auth = aiohttp.BasicAuth(username, password=password)
+            if command_config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
+                digest_middleware = aiohttp.DigestAuthMiddleware(username, password)
+            else:
+                auth = aiohttp.BasicAuth(username, password=password)
 
         template_payload = None
         if CONF_PAYLOAD in command_config:
@@ -135,13 +156,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if content_type:
                 headers[hdrs.CONTENT_TYPE] = content_type
 
+            _LOGGER.debug(
+                "Calling %s %s with headers: %s and payload: %s",
+                method,
+                request_url,
+                headers,
+                payload,
+            )
+
             try:
+                # Prepare request kwargs
+                request_kwargs = {
+                    "data": payload,
+                    "headers": headers or None,
+                    "timeout": timeout,
+                }
+
+                # Add authentication
+                if auth is not None:
+                    request_kwargs["auth"] = auth
+                elif digest_middleware is not None:
+                    request_kwargs["middlewares"] = (digest_middleware,)
+
                 async with getattr(websession, method)(
                     request_url,
-                    data=payload,
-                    auth=auth,
-                    headers=headers or None,
-                    timeout=timeout,
+                    **request_kwargs,
                 ) as response:
                     if response.status < HTTPStatus.BAD_REQUEST:
                         _LOGGER.debug(
@@ -159,6 +198,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         )
 
                     if not service.return_response:
+                        # always read the response to avoid closing the connection
+                        # before the server has finished sending it, while avoiding excessive memory usage
+                        async for _ in response.content.iter_chunked(1024):
+                            pass
+
                         return None
 
                     _content = None
@@ -186,7 +230,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                                 "decoding_type": "text",
                             },
                         ) from err
-                    return {"content": _content, "status": response.status}
+                    return {
+                        "content": _content,
+                        "status": response.status,
+                        "headers": dict(response.headers),
+                    }
 
             except TimeoutError as err:
                 raise HomeAssistantError(

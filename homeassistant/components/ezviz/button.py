@@ -6,18 +6,16 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from pyezviz import EzvizClient
-from pyezviz.constants import SupportExt
-from pyezviz.exceptions import HTTPError, PyEzvizError
+from pyezvizapi import EzvizClient
+from pyezvizapi.constants import SupportExt
+from pyezvizapi.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_COORDINATOR, DOMAIN
-from .coordinator import EzvizDataUpdateCoordinator
+from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 PARALLEL_UPDATES = 1
@@ -68,12 +66,12 @@ BUTTON_ENTITIES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EzvizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ button based on a config entry."""
-    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
 
     # Add button entities if supportExt value indicates PTZ capbility.
     # Could be missing or "0" for unsupported.

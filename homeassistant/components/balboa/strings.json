@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{model}",
     "step": {
       "user": {
         "description": "Connect to the Balboa Wi-Fi device",
@@ -9,6 +10,9 @@
         "data_description": {
           "host": "Hostname or IP address of your Balboa Spa Wi-Fi Device. For example, 192.168.1.58."
         }
+      },
+      "confirm_discovery": {
+        "description": "Do you want to set up the spa at {host}?"
       }
     },
     "error": {
@@ -53,6 +57,35 @@
         }
       }
     },
+    "event": {
+      "fault": {
+        "name": "Fault",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "sensor_out_of_sync": "Sensors are out of sync",
+              "low_flow": "The water flow is low",
+              "flow_failed": "The water flow has failed",
+              "settings_reset": "The settings have been reset",
+              "priming_mode": "Priming mode",
+              "clock_failed": "The clock has failed",
+              "memory_failure": "Program memory failure",
+              "service_sensor_sync": "Sensors are out of sync -- call for service",
+              "heater_dry": "The heater is dry",
+              "heater_may_be_dry": "The heater may be dry",
+              "water_too_hot": "The water is too hot",
+              "heater_too_hot": "The heater is too hot",
+              "sensor_a_fault": "Sensor A fault",
+              "sensor_b_fault": "Sensor B fault",
+              "pump_stuck": "A pump may be stuck on",
+              "hot_fault": "Hot fault",
+              "gfci_test_failed": "The GFCI test failed",
+              "standby_mode": "Standby mode (hold mode)"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "pump": {
         "name": "Pump {index}"
@@ -70,9 +103,22 @@
       "temperature_range": {
         "name": "Temperature range",
         "state": {
-          "low": "Low",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "high": "[%key:common::state::high%]"
         }
+      }
+    },
+    "switch": {
+      "filter_cycle_2_enabled": {
+        "name": "Filter cycle 2 enabled"
+      }
+    },
+    "time": {
+      "filter_cycle_start": {
+        "name": "Filter cycle {index} start"
+      },
+      "filter_cycle_end": {
+        "name": "Filter cycle {index} end"
       }
     }
   }

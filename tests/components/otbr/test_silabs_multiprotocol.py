@@ -1,6 +1,6 @@
 """Test OTBR Silicon Labs Multiprotocol support."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from python_otbr_api import ActiveDataSet, tlv_parser
@@ -29,6 +29,11 @@ DATASET_CH16_PENDING = (
     "0410F5DD18371BFD29E1A601EF6FFAD94C03"  # PSKC
     "0C0402A0F7F8"  # SECURITYPOLICY
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_supervisor_client(supervisor_client: AsyncMock) -> None:
+    """Mock supervisor client."""
 
 
 async def test_async_change_channel(

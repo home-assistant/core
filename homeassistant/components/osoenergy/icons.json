@@ -11,5 +11,25 @@
         "default": "mdi:water-boiler"
       }
     }
+  },
+  "services": {
+    "get_profile": {
+      "service": "mdi:thermometer-lines"
+    },
+    "set_profile": {
+      "service": "mdi:thermometer-lines"
+    },
+    "set_v40_min": {
+      "service": "mdi:car-coolant-level"
+    },
+    "turn_away_mode_on": {
+      "service": "mdi:beach"
+    },
+    "turn_off": {
+      "service": "mdi:water-boiler-off"
+    },
+    "turn_on": {
+      "service": "mdi:water-boiler"
+    }
   }
 }

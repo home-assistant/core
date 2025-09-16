@@ -7,7 +7,7 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
-from homeassistant import config as hass_config
+from homeassistant import config as hass_config, core as ha
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
@@ -21,9 +21,7 @@ from homeassistant.components.climate import (
     PRESET_SLEEP,
     HVACMode,
 )
-from homeassistant.components.generic_thermostat.const import (
-    DOMAIN as GENERIC_THERMOSTAT_DOMAIN,
-)
+from homeassistant.components.generic_thermostat.const import DOMAIN
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_RELOAD,
@@ -35,7 +33,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-import homeassistant.core as ha
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
@@ -317,6 +314,20 @@ async def test_set_target_temp(hass: HomeAssistant) -> None:
         await common.async_set_temperature(hass, None)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 30.0
+
+
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_set_target_temp_change_preset(hass: HomeAssistant) -> None:
+    """Test the setting of the target temperature.
+
+    Verify that preset is changed.
+    """
+    await common.async_set_temperature(hass, 30)
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == PRESET_NONE
+    await common.async_set_temperature(hass, 20)
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == PRESET_COMFORT
 
 
 @pytest.mark.parametrize(
@@ -885,7 +896,7 @@ async def test_heating_cooling_switch_toggles_when_outside_min_cycle_duration(
         "expected_triggered_service_call",
     ),
     [
-        (True, HVACMode.COOL, False, 30, 25, HVACMode.HEAT, SERVICE_TURN_ON),
+        (True, HVACMode.COOL, False, 30, 25, HVACMode.COOL, SERVICE_TURN_ON),
         (True, HVACMode.COOL, True, 25, 30, HVACMode.OFF, SERVICE_TURN_OFF),
         (False, HVACMode.HEAT, False, 25, 30, HVACMode.HEAT, SERVICE_TURN_ON),
         (False, HVACMode.HEAT, True, 30, 25, HVACMode.OFF, SERVICE_TURN_OFF),
@@ -1104,6 +1115,52 @@ async def test_precision(hass: HomeAssistant) -> None:
     assert state.attributes.get("temperature") == 55.3
     # check that target_temp_step defaults to precision
     assert state.attributes.get("target_temp_step") == 0.1
+
+
+@pytest.fixture(
+    params=[
+        HVACMode.HEAT,
+        HVACMode.COOL,
+    ]
+)
+async def setup_comp_10(hass: HomeAssistant, request: pytest.FixtureRequest) -> None:
+    """Initialize components."""
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0,
+                "hot_tolerance": 0,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "initial_hvac_mode": request.param,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("setup_comp_10")
+async def test_zero_tolerances(hass: HomeAssistant) -> None:
+    """Test that having a zero tolerance doesn't cause the switch to flip-flop."""
+
+    # if the switch is off, it should remain off
+    calls = _setup_switch(hass, False)
+    _setup_sensor(hass, 25)
+    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
+    assert len(calls) == 0
+
+    # if the switch is on, it should turn off
+    calls = _setup_switch(hass, True)
+    _setup_sensor(hass, 25)
+    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
+    assert len(calls) == 1
 
 
 async def test_custom_setup_params(hass: HomeAssistant) -> None:
@@ -1433,7 +1490,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     yaml_path = get_fixture_path("configuration.yaml", "generic_thermostat")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            GENERIC_THERMOSTAT_DOMAIN,
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -1471,7 +1528,7 @@ async def test_device_id(
 
     helper_config_entry = MockConfigEntry(
         data={},
-        domain=GENERIC_THERMOSTAT_DOMAIN,
+        domain=DOMAIN,
         options={
             "name": "Test",
             "heater": "switch.test_source",

@@ -1,5 +1,6 @@
 """Test zha siren."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from unittest.mock import ANY, call, patch
 
@@ -9,6 +10,7 @@ from zha.application.const import (
     WARNING_DEVICE_SOUND_MEDIUM,
 )
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+from zigpy.device import Device
 from zigpy.profiles import zha
 import zigpy.zcl
 from zigpy.zcl.clusters import general, security
@@ -28,7 +30,7 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import find_entity_id
 
@@ -51,7 +53,11 @@ def siren_platform_only():
         yield
 
 
-async def test_siren(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
+async def test_siren(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
     """Test zha siren platform."""
 
     await setup_zha()

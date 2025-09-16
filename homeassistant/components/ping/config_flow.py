@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
@@ -25,6 +25,12 @@ from homeassistant.util.network import is_ip_address
 from .const import CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _clean_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Clean up the user input."""
+    user_input[CONF_HOST] = user_input[CONF_HOST].strip()
+    return user_input
 
 
 class PingConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -46,6 +52,7 @@ class PingConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
             )
 
+        user_input = _clean_user_input(user_input)
         if not is_ip_address(user_input[CONF_HOST]):
             self.async_abort(reason="invalid_ip_address")
 
@@ -64,24 +71,20 @@ class PingConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> OptionsFlowHandler:
         """Create the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle an options flow for Ping."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(title="", data=_clean_user_input(user_input))
 
         return self.async_show_form(
             step_id="init",

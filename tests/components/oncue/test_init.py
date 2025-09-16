@@ -1,94 +1,79 @@
-"""Tests for the oncue component."""
+"""Tests for the Oncue integration."""
 
-from __future__ import annotations
-
-from datetime import timedelta
-from unittest.mock import patch
-
-from aiooncue import LoginFailedException
-
-from homeassistant.components import oncue
-from homeassistant.components.oncue.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.oncue import DOMAIN
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers import issue_registry as ir
 
-from . import _patch_login_and_data, _patch_login_and_data_auth_failure
-
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
-async def test_config_entry_reload(hass: HomeAssistant) -> None:
-    """Test that a config entry can be reloaded."""
-    config_entry = MockConfigEntry(
+async def test_oncue_repair_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the Oncue configuration entry loading/unloading handles the repair."""
+    config_entry_1 = MockConfigEntry(
+        title="Example 1",
         domain=DOMAIN,
-        data={CONF_USERNAME: "any", CONF_PASSWORD: "any"},
-        unique_id="any",
     )
-    config_entry.add_to_hass(hass)
-    with _patch_login_and_data():
-        await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
-        await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.LOADED
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    config_entry_1.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_1.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert config_entry_1.state is ConfigEntryState.LOADED
 
-
-async def test_config_entry_login_error(hass: HomeAssistant) -> None:
-    """Test that a config entry is failed on login error."""
-    config_entry = MockConfigEntry(
+    # Add a second one
+    config_entry_2 = MockConfigEntry(
+        title="Example 2",
         domain=DOMAIN,
-        data={CONF_USERNAME: "any", CONF_PASSWORD: "any"},
-        unique_id="any",
     )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.oncue.Oncue.async_login",
-        side_effect=LoginFailedException,
-    ):
-        await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
-        await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    config_entry_2.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_2.entry_id)
+    await hass.async_block_till_done()
 
+    assert config_entry_2.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, DOMAIN)
 
-async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
-    """Test that a config entry retry on connection error."""
-    config_entry = MockConfigEntry(
+    # Add an ignored entry
+    config_entry_3 = MockConfigEntry(
+        source=SOURCE_IGNORE,
         domain=DOMAIN,
-        data={CONF_USERNAME: "any", CONF_PASSWORD: "any"},
-        unique_id="any",
     )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.oncue.Oncue.async_login",
-        side_effect=TimeoutError,
-    ):
-        await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
-        await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    config_entry_3.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_3.entry_id)
+    await hass.async_block_till_done()
 
+    assert config_entry_3.state is ConfigEntryState.NOT_LOADED
 
-async def test_late_auth_failure(hass: HomeAssistant) -> None:
-    """Test auth fails after already setup."""
-    config_entry = MockConfigEntry(
+    # Add a disabled entry
+    config_entry_4 = MockConfigEntry(
+        disabled_by=ConfigEntryDisabler.USER,
         domain=DOMAIN,
-        data={CONF_USERNAME: "any", CONF_PASSWORD: "any"},
-        unique_id="any",
     )
-    config_entry.add_to_hass(hass)
-    with _patch_login_and_data():
-        await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
-        await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.LOADED
+    config_entry_4.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_4.entry_id)
+    await hass.async_block_till_done()
 
-    with _patch_login_and_data_auth_failure():
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-        await hass.async_block_till_done()
+    assert config_entry_4.state is ConfigEntryState.NOT_LOADED
 
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert len(flows) == 1
-    flow = flows[0]
-    assert flow["context"]["source"] == "reauth"
+    # Remove the first one
+    await hass.config_entries.async_remove(config_entry_1.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_1.state is ConfigEntryState.NOT_LOADED
+    assert config_entry_2.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, DOMAIN)
+
+    # Remove the second one
+    await hass.config_entries.async_remove(config_entry_2.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_1.state is ConfigEntryState.NOT_LOADED
+    assert config_entry_2.state is ConfigEntryState.NOT_LOADED
+    assert issue_registry.async_get_issue(DOMAIN, DOMAIN) is None
+
+    # Check the ignored and disabled entries are removed
+    assert not hass.config_entries.async_entries(DOMAIN)

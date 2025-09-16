@@ -1,5 +1,7 @@
 """Configflow for the emoncms integration."""
 
+from __future__ import annotations
+
 from typing import Any
 
 from pyemoncms import EmoncmsClient
@@ -9,13 +11,17 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_KEY, CONF_URL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import selector
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    selector,
+)
 
 from .const import (
     CONF_MESSAGE,
@@ -25,7 +31,9 @@ from .const import (
     FEED_ID,
     FEED_NAME,
     FEED_TAG,
-    LOGGER,
+    SYNC_MODE,
+    SYNC_MODE_AUTO,
+    SYNC_MODE_MANUAL,
 )
 
 
@@ -46,13 +54,10 @@ def sensor_name(url: str) -> str:
     return f"emoncms@{sensorip}"
 
 
-async def get_feed_list(hass: HomeAssistant, url: str, api_key: str) -> dict[str, Any]:
+async def get_feed_list(
+    emoncms_client: EmoncmsClient,
+) -> dict[str, Any]:
     """Check connection to emoncms and return feed list if successful."""
-    emoncms_client = EmoncmsClient(
-        url,
-        api_key,
-        session=async_get_clientsession(hass),
-    )
     return await emoncms_client.async_request("/feed/list.json")
 
 
@@ -68,7 +73,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlowWithConfigEntry:
+    ) -> EmoncmsOptionsFlow:
         """Get the options flow for this handler."""
         return EmoncmsOptionsFlow(config_entry)
 
@@ -77,29 +82,45 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Initiate a flow via the UI."""
         errors: dict[str, str] = {}
+        description_placeholders = {}
 
         if user_input is not None:
+            self.url = user_input[CONF_URL]
+            self.api_key = user_input[CONF_API_KEY]
             self._async_abort_entries_match(
                 {
-                    CONF_API_KEY: user_input[CONF_API_KEY],
-                    CONF_URL: user_input[CONF_URL],
+                    CONF_API_KEY: self.api_key,
+                    CONF_URL: self.url,
                 }
             )
-            result = await get_feed_list(
-                self.hass, user_input[CONF_URL], user_input[CONF_API_KEY]
+            emoncms_client = EmoncmsClient(
+                self.url, self.api_key, session=async_get_clientsession(self.hass)
             )
+            result = await get_feed_list(emoncms_client)
             if not result[CONF_SUCCESS]:
-                errors["base"] = result[CONF_MESSAGE]
+                errors["base"] = "api_error"
+                description_placeholders = {"details": result[CONF_MESSAGE]}
             else:
                 self.include_only_feeds = user_input.get(CONF_ONLY_INCLUDE_FEEDID)
-                self.url = user_input[CONF_URL]
-                self.api_key = user_input[CONF_API_KEY]
+                await self.async_set_unique_id(await emoncms_client.async_get_uuid())
+                self._abort_if_unique_id_configured()
                 options = get_options(result[CONF_MESSAGE])
                 self.dropdown = {
                     "options": options,
                     "mode": "dropdown",
                     "multiple": True,
                 }
+                if user_input.get(SYNC_MODE) == SYNC_MODE_AUTO:
+                    return self.async_create_entry(
+                        title=sensor_name(self.url),
+                        data={
+                            CONF_URL: self.url,
+                            CONF_API_KEY: self.api_key,
+                            CONF_ONLY_INCLUDE_FEEDID: [
+                                feed[FEED_ID] for feed in result[CONF_MESSAGE]
+                            ],
+                        },
+                    )
                 return await self.async_step_choose_feeds()
         return self.async_show_form(
             step_id="user",
@@ -108,11 +129,21 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         vol.Required(CONF_URL): str,
                         vol.Required(CONF_API_KEY): str,
+                        vol.Required(
+                            SYNC_MODE, default=SYNC_MODE_MANUAL
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                options=[SYNC_MODE_MANUAL, SYNC_MODE_AUTO],
+                                mode=SelectSelectorMode.DROPDOWN,
+                                translation_key=SYNC_MODE,
+                            )
+                        ),
                     }
                 ),
                 user_input,
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_choose_feeds(
@@ -148,51 +179,83 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_info: ConfigType) -> ConfigFlowResult:
-        """Import config from yaml."""
-        url = import_info[CONF_URL]
-        api_key = import_info[CONF_API_KEY]
-        include_only_feeds = None
-        if import_info.get(CONF_ONLY_INCLUDE_FEEDID) is not None:
-            include_only_feeds = list(map(str, import_info[CONF_ONLY_INCLUDE_FEEDID]))
-        config = {
-            CONF_API_KEY: api_key,
-            CONF_ONLY_INCLUDE_FEEDID: include_only_feeds,
-            CONF_URL: url,
-        }
-        LOGGER.debug(config)
-        result = await self.async_step_user(config)
-        if errors := result.get("errors"):
-            return self.async_abort(reason=errors["base"])
-        return result
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure the entry."""
+        errors: dict[str, str] = {}
+        description_placeholders = {}
+        reconfig_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            url = user_input[CONF_URL]
+            api_key = user_input[CONF_API_KEY]
+            emoncms_client = EmoncmsClient(
+                url, api_key, session=async_get_clientsession(self.hass)
+            )
+            result = await get_feed_list(emoncms_client)
+            if not result[CONF_SUCCESS]:
+                errors["base"] = "api_error"
+                description_placeholders = {"details": result[CONF_MESSAGE]}
+            else:
+                await self.async_set_unique_id(await emoncms_client.async_get_uuid())
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfig_entry,
+                    title=sensor_name(url),
+                    data=user_input,
+                    reload_even_if_entry_is_unchanged=False,
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_URL): str,
+                        vol.Required(CONF_API_KEY): str,
+                    }
+                ),
+                user_input or reconfig_entry.data,
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
 
 
-class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
+class EmoncmsOptionsFlow(OptionsFlowWithReload):
     """Emoncms Options flow handler."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize emoncms options flow."""
+        self._url = config_entry.data[CONF_URL]
+        self._api_key = config_entry.data[CONF_API_KEY]
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
-        data = self.options if self.options else self._config_entry.data
-        url = data[CONF_URL]
-        api_key = data[CONF_API_KEY]
-        include_only_feeds = data.get(CONF_ONLY_INCLUDE_FEEDID, [])
+        description_placeholders = {}
+        include_only_feeds = self.config_entry.options.get(
+            CONF_ONLY_INCLUDE_FEEDID,
+            self.config_entry.data.get(CONF_ONLY_INCLUDE_FEEDID, []),
+        )
         options: list = include_only_feeds
-        result = await get_feed_list(self.hass, url, api_key)
+        emoncms_client = EmoncmsClient(
+            self._url,
+            self._api_key,
+            session=async_get_clientsession(self.hass),
+        )
+        result = await get_feed_list(emoncms_client)
         if not result[CONF_SUCCESS]:
-            errors["base"] = result[CONF_MESSAGE]
+            errors["base"] = "api_error"
+            description_placeholders = {"details": result[CONF_MESSAGE]}
         else:
             options = get_options(result[CONF_MESSAGE])
         dropdown = {"options": options, "mode": "dropdown", "multiple": True}
         if user_input:
             include_only_feeds = user_input[CONF_ONLY_INCLUDE_FEEDID]
             return self.async_create_entry(
-                title=sensor_name(url),
                 data={
-                    CONF_URL: url,
-                    CONF_API_KEY: api_key,
                     CONF_ONLY_INCLUDE_FEEDID: include_only_feeds,
                 },
             )
@@ -207,4 +270,5 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
                 }
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )

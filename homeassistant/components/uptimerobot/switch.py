@@ -11,20 +11,25 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import API_ATTR_OK, DOMAIN, LOGGER
-from .coordinator import UptimeRobotDataUpdateCoordinator
+from .const import API_ATTR_OK, DOMAIN
+from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
+
+# Limit the number of parallel updates to 1
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: UptimeRobotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UptimeRobot switches."""
-    coordinator: UptimeRobotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         UptimeRobotSwitch(
             coordinator,
@@ -53,16 +58,21 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
         try:
             response = await self.api.async_edit_monitor(**kwargs)
         except UptimeRobotAuthenticationException:
-            LOGGER.debug("API authentication error, calling reauth")
             self.coordinator.config_entry.async_start_reauth(self.hass)
             return
         except UptimeRobotException as exception:
-            LOGGER.error("API exception: %s", exception)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_exception",
+                translation_placeholders={"error": repr(exception)},
+            ) from exception
 
         if response.status != API_ATTR_OK:
-            LOGGER.error("API exception: %s", response.error.message, exc_info=True)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_exception",
+                translation_placeholders={"error": response.error.message},
+            )
 
         await self.coordinator.async_request_refresh()
 

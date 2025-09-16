@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 
 from aiohttp.client_exceptions import ClientError
-from slack import WebClient
-from slack.errors import SlackApiError
+from slack_sdk.errors import SlackApiError
+from slack_sdk.web.async_client import AsyncWebClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
@@ -40,7 +40,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Slack from a config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
-    slack = WebClient(token=entry.data[CONF_API_KEY], run_async=True, session=session)
+    slack = AsyncWebClient(
+        token=entry.data[CONF_API_KEY], session=session
+    )  # No run_async
 
     try:
         res = await slack.auth_test()
@@ -49,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Invalid API key")
             return False
         raise ConfigEntryNotReady("Error while setting up integration") from ex
+
     data = {
         DATA_CLIENT: slack,
         ATTR_URL: res[ATTR_URL],

@@ -1,23 +1,30 @@
 """HTTP view that converts audio from a URL to a preferred format."""
 
 import asyncio
+from collections import defaultdict
 from dataclasses import dataclass, field
 from http import HTTPStatus
 import logging
 import secrets
+from typing import Final
 
 from aiohttp import web
 from aiohttp.abc import AbstractStreamWriter, BaseRequest
 
+from homeassistant.components import ffmpeg
 from homeassistant.components.ffmpeg import FFmpegManager
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DATA_FFMPEG_PROXY
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+_MAX_CONVERSIONS_PER_DEVICE: Final[int] = 2
 
+
+@callback
 def async_create_proxy_url(
     hass: HomeAssistant,
     device_id: str,
@@ -28,7 +35,7 @@ def async_create_proxy_url(
     width: int | None = None,
 ) -> str:
     """Create a use proxy URL that automatically converts the media."""
-    data: FFmpegProxyData = hass.data[DATA_FFMPEG_PROXY]
+    data = hass.data[DATA_FFMPEG_PROXY]
     return data.async_create_proxy_url(
         device_id, media_url, media_format, rate, channels, width
     )
@@ -59,13 +66,18 @@ class FFmpegConversionInfo:
     proc: asyncio.subprocess.Process | None = None
     """Subprocess doing ffmpeg conversion."""
 
+    is_finished: bool = False
+    """True if conversion has finished."""
+
 
 @dataclass
 class FFmpegProxyData:
     """Data for ffmpeg proxy conversion."""
 
-    # device_id -> info
-    conversions: dict[str, FFmpegConversionInfo] = field(default_factory=dict)
+    # device_id -> [info]
+    conversions: dict[str, list[FFmpegConversionInfo]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
 
     def async_create_proxy_url(
         self,
@@ -77,8 +89,15 @@ class FFmpegProxyData:
         width: int | None,
     ) -> str:
         """Create a one-time use proxy URL that automatically converts the media."""
-        if (convert_info := self.conversions.pop(device_id, None)) is not None:
-            # Stop existing conversion before overwriting info
+
+        # Remove completed conversions
+        device_conversions = [
+            info for info in self.conversions[device_id] if not info.is_finished
+        ]
+
+        while len(device_conversions) >= _MAX_CONVERSIONS_PER_DEVICE:
+            # Stop oldest conversion before adding a new one
+            convert_info = device_conversions[0]
             if (convert_info.proc is not None) and (
                 convert_info.proc.returncode is None
             ):
@@ -87,11 +106,17 @@ class FFmpegProxyData:
                 )
                 convert_info.proc.kill()
 
+            device_conversions = device_conversions[1:]
+
         convert_id = secrets.token_urlsafe(16)
-        self.conversions[device_id] = FFmpegConversionInfo(
-            convert_id, media_url, media_format, rate, channels, width
+        device_conversions.append(
+            FFmpegConversionInfo(
+                convert_id, media_url, media_format, rate, channels, width
+            )
         )
         _LOGGER.debug("Media URL allowed by proxy: %s", media_url)
+
+        self.conversions[device_id] = device_conversions
 
         return f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
 
@@ -131,11 +156,10 @@ class FFmpegConvertResponse(web.StreamResponse):
         self.proxy_data = proxy_data
         self.chunk_size = chunk_size
 
-    async def prepare(self, request: BaseRequest) -> AbstractStreamWriter | None:
+    async def transcode(
+        self, request: BaseRequest, writer: AbstractStreamWriter
+    ) -> None:
         """Stream url through ffmpeg conversion and out to HTTP client."""
-        writer = await super().prepare(request)
-        assert writer is not None
-
         command_args = [
             "-i",
             self.convert_info.media_url,
@@ -155,6 +179,12 @@ class FFmpegConvertResponse(web.StreamResponse):
             # 16-bit samples
             command_args.extend(["-sample_fmt", "s16"])
 
+        # Remove metadata and cover art
+        command_args.extend(["-map_metadata", "-1", "-vn"])
+
+        # disable progress stats on stderr
+        command_args.append("-nostats")
+
         # Output to stdout
         command_args.append("pipe:")
 
@@ -164,13 +194,30 @@ class FFmpegConvertResponse(web.StreamResponse):
             *command_args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            close_fds=False,  # use posix_spawn in CPython < 3.13
         )
 
         # Only one conversion process per device is allowed
         self.convert_info.proc = proc
 
+        # Create background task which will be cancelled when home assistant shuts down
+        write_task = self.hass.async_create_background_task(
+            self._write_ffmpeg_data(request, writer, proc), "ESPHome media proxy"
+        )
+        await write_task
+
+    async def _write_ffmpeg_data(
+        self,
+        request: BaseRequest,
+        writer: AbstractStreamWriter,
+        proc: asyncio.subprocess.Process,
+    ) -> None:
         assert proc.stdout is not None
         assert proc.stderr is not None
+
+        stderr_task = self.hass.async_create_background_task(
+            self._dump_ffmpeg_stderr(proc), "ESPHome media proxy dump stderr"
+        )
 
         try:
             # Pull audio chunks from ffmpeg and pass them to the HTTP client
@@ -178,32 +225,43 @@ class FFmpegConvertResponse(web.StreamResponse):
                 self.hass.is_running
                 and (request.transport is not None)
                 and (not request.transport.is_closing())
-                and (proc.returncode is None)
                 and (chunk := await proc.stdout.read(self.chunk_size))
             ):
-                await writer.write(chunk)
-                await writer.drain()
+                await self.write(chunk)
         except asyncio.CancelledError:
+            _LOGGER.debug("ffmpeg transcoding cancelled")
+            # Abort the transport, we don't wait for ESPHome to drain the write buffer;
+            # it may need a very long time or never finish if the player is paused.
+            if request.transport:
+                request.transport.abort()
             raise  # don't log error
         except:
             _LOGGER.exception("Unexpected error during ffmpeg conversion")
-
-            # Process did not exit successfully
-            stderr_text = ""
-            while line := await proc.stderr.readline():
-                stderr_text += line.decode()
-            _LOGGER.error("FFmpeg output: %s", stderr_text)
-
             raise
         finally:
+            # Allow conversion info to be removed
+            self.convert_info.is_finished = True
+
+            # stop dumping ffmpeg stderr task
+            stderr_task.cancel()
+
             # Terminate hangs, so kill is used
             if proc.returncode is None:
                 proc.kill()
 
-            # Close connection
-            await writer.write_eof()
+            # Close connection by writing EOF unless already closing
+            if request.transport and not request.transport.is_closing():
+                await writer.write_eof()
 
-        return writer
+    async def _dump_ffmpeg_stderr(
+        self,
+        proc: asyncio.subprocess.Process,
+    ) -> None:
+        assert proc.stdout is not None
+        assert proc.stderr is not None
+
+        while self.hass.is_running and (chunk := await proc.stderr.readline()):
+            _LOGGER.debug("ffmpeg[%s] output: %s", proc.pid, chunk.decode().rstrip())
 
 
 class FFmpegProxyView(HomeAssistantView):
@@ -222,7 +280,8 @@ class FFmpegProxyView(HomeAssistantView):
         self, request: web.Request, device_id: str, filename: str
     ) -> web.StreamResponse:
         """Start a get request."""
-        if (convert_info := self.proxy_data.conversions.get(device_id)) is None:
+        device_conversions = self.proxy_data.conversions[device_id]
+        if not device_conversions:
             return web.Response(
                 body="No proxy URL for device", status=HTTPStatus.NOT_FOUND
             )
@@ -230,9 +289,16 @@ class FFmpegProxyView(HomeAssistantView):
         # {id}.mp3 -> id, mp3
         convert_id, media_format = filename.rsplit(".")
 
-        if (convert_info.convert_id != convert_id) or (
-            convert_info.media_format != media_format
-        ):
+        # Look up conversion info
+        convert_info: FFmpegConversionInfo | None = None
+        for maybe_convert_info in device_conversions:
+            if (maybe_convert_info.convert_id == convert_id) and (
+                maybe_convert_info.media_format == media_format
+            ):
+                convert_info = maybe_convert_info
+                break
+
+        if convert_info is None:
             return web.Response(body="Invalid proxy URL", status=HTTPStatus.BAD_REQUEST)
 
         # Stop previous process if the URL is being reused.
@@ -243,6 +309,23 @@ class FFmpegProxyView(HomeAssistantView):
             convert_info.proc = None
 
         # Stream converted audio back to client
-        return FFmpegConvertResponse(
+        resp = FFmpegConvertResponse(
             self.manager, convert_info, device_id, self.proxy_data
         )
+        writer = await resp.prepare(request)
+        assert writer is not None
+        await resp.transcode(request, writer)
+        return resp
+
+
+DATA_FFMPEG_PROXY: HassKey[FFmpegProxyData] = HassKey(f"{DOMAIN}.ffmpeg_proxy")
+
+
+@callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the ffmpeg proxy."""
+    proxy_data = FFmpegProxyData()
+    hass.data[DATA_FFMPEG_PROXY] = proxy_data
+    hass.http.register_view(
+        FFmpegProxyView(ffmpeg.get_ffmpeg_manager(hass), proxy_data)
+    )

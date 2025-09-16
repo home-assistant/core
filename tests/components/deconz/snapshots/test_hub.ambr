@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://1.2.3.4:80',
     'connections': set({
     }),
@@ -16,17 +17,15 @@
         '01234E56789A',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
-    'manufacturer': 'Dresden Elektronik',
+    'manufacturer': 'dresden elektronik',
     'model': 'deCONZ',
     'model_id': None,
     'name': 'deCONZ mock gateway',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })

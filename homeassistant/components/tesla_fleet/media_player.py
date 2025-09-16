@@ -11,7 +11,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslaFleetConfigEntry
 from .entity import TeslaFleetVehicleEntity
@@ -33,7 +33,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tesla Fleet Media platform from a config entry."""
 
@@ -64,7 +64,7 @@ class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
         """Initialize the media player entity."""
         super().__init__(data, "media")
         self.scoped = scoped
-        if not scoped and data.signing:
+        if not scoped:
             self._attr_supported_features = MediaPlayerEntityFeature(0)
 
     def _async_update_attrs(self) -> None:

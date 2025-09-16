@@ -4,54 +4,64 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.knx.const import KNX_ADDRESS, KNX_MODULE_KEY
+from homeassistant.components.knx.const import (
+    KNX_ADDRESS,
+    KNX_MODULE_KEY,
+    SUPPORTED_PLATFORMS_UI,
+)
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.schema import SwitchSchema
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from .conftest import FIXTURE_PROJECT_DATA, KNXTestKit
+from .conftest import KNXTestKit
 
 from tests.typing import WebSocketGenerator
 
 
-async def test_knx_info_command(
+async def test_knx_get_base_data_command(
     hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test knx/info command."""
-    await knx.setup_integration({})
+    """Test knx/get_base_data command."""
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 6, "type": "knx/info"})
+    await client.send_json_auto_id({"type": "knx/get_base_data"})
 
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["version"] is not None
-    assert res["result"]["connected"]
-    assert res["result"]["current_address"] == "0.0.0"
-    assert res["result"]["project"] is None
+    assert res["result"]["connection_info"]["version"] is not None
+    assert res["result"]["connection_info"]["connected"]
+    assert res["result"]["connection_info"]["current_address"] == "0.0.0"
+    assert res["result"]["project_info"] is None
+    assert not SUPPORTED_PLATFORMS_UI.difference(res["result"]["supported_platforms"])
 
 
-async def test_knx_info_command_with_project(
+@pytest.mark.usefixtures("load_knxproj")
+async def test_knx_get_base_data_command_with_project(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
-    load_knxproj: None,
 ) -> None:
-    """Test knx/info command with loaded project."""
-    await knx.setup_integration({})
+    """Test knx/get_base_data command with loaded project."""
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 6, "type": "knx/info"})
+    await client.send_json_auto_id({"type": "knx/get_base_data"})
 
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["version"] is not None
-    assert res["result"]["connected"]
-    assert res["result"]["current_address"] == "0.0.0"
-    assert res["result"]["project"] is not None
-    assert res["result"]["project"]["name"] == "Fixture"
-    assert res["result"]["project"]["last_modified"] == "2023-04-30T09:04:04.4043671Z"
-    assert res["result"]["project"]["tool_version"] == "5.7.1428.39779"
+
+    connection_info = res["result"]["connection_info"]
+    assert connection_info["version"] is not None
+    assert connection_info["connected"]
+    assert connection_info["current_address"] == "0.0.0"
+
+    project_info = res["result"]["project_info"]
+    assert project_info is not None
+    assert project_info["name"] == "Fixture"
+    assert project_info["last_modified"] == "2023-04-30T09:04:04.4043671Z"
+    assert project_info["tool_version"] == "5.7.1428.39779"
 
 
 async def test_knx_project_file_process(
@@ -59,19 +69,18 @@ async def test_knx_project_file_process(
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
+    project_data: dict[str, Any],
 ) -> None:
     """Test knx/project_file_process command for storing and loading new data."""
     _file_id = "1234"
     _password = "pw-test"
-    _parse_result = FIXTURE_PROJECT_DATA
 
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
     assert not hass.data[KNX_MODULE_KEY].project.loaded
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "knx/project_file_process",
             "file_id": _file_id,
             "password": _password,
@@ -81,7 +90,7 @@ async def test_knx_project_file_process(
         patch(
             "homeassistant.components.knx.project.process_uploaded_file",
         ) as file_upload_mock,
-        patch("xknxproject.XKNXProj.parse", return_value=_parse_result) as parse_mock,
+        patch("xknxproject.XKNXProj.parse", return_value=project_data) as parse_mock,
     ):
         file_upload_mock.return_value.__enter__.return_value = ""
         res = await client.receive_json()
@@ -91,7 +100,7 @@ async def test_knx_project_file_process(
 
     assert res["success"], res
     assert hass.data[KNX_MODULE_KEY].project.loaded
-    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == _parse_result
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == project_data
 
 
 async def test_knx_project_file_process_error(
@@ -100,13 +109,12 @@ async def test_knx_project_file_process_error(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test knx/project_file_process exception handling."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
     assert not hass.data[KNX_MODULE_KEY].project.loaded
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "knx/project_file_process",
             "file_id": "1234",
             "password": "",
@@ -126,20 +134,20 @@ async def test_knx_project_file_process_error(
     assert not hass.data[KNX_MODULE_KEY].project.loaded
 
 
+@pytest.mark.usefixtures("load_knxproj")
 async def test_knx_project_file_remove(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
-    load_knxproj: None,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test knx/project_file_remove command."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     assert hass_storage[KNX_PROJECT_STORAGE_KEY]
     client = await hass_ws_client(hass)
     assert hass.data[KNX_MODULE_KEY].project.loaded
 
-    await client.send_json({"id": 6, "type": "knx/project_file_remove"})
+    await client.send_json_auto_id({"type": "knx/project_file_remove"})
     res = await client.receive_json()
 
     assert res["success"], res
@@ -147,37 +155,85 @@ async def test_knx_project_file_remove(
     assert not hass_storage.get(KNX_PROJECT_STORAGE_KEY)
 
 
+@pytest.mark.usefixtures("load_knxproj")
 async def test_knx_get_project(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
-    load_knxproj: None,
+    project_data: dict[str, Any],
 ) -> None:
     """Test retrieval of kxnproject from store."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
     assert hass.data[KNX_MODULE_KEY].project.loaded
 
-    await client.send_json({"id": 3, "type": "knx/get_knx_project"})
+    await client.send_json_auto_id({"type": "knx/get_knx_project"})
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["project_loaded"] is True
-    assert res["result"]["knxproject"] == FIXTURE_PROJECT_DATA
+    assert res["result"] == project_data
+
+
+async def test_knx_get_project_no_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    project_data: dict[str, Any],
+) -> None:
+    """Test retrieval of kxnproject from store."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    assert not hass.data[KNX_MODULE_KEY].project.loaded
+
+    await client.send_json_auto_id({"type": "knx/get_knx_project"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"] is None
 
 
 async def test_knx_group_monitor_info_command(
     hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test knx/group_monitor_info command."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 6, "type": "knx/group_monitor_info"})
+    await client.send_json_auto_id({"type": "knx/group_monitor_info"})
 
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"]["project_loaded"] is False
     assert res["result"]["recent_telegrams"] == []
+
+
+async def test_knx_group_telegrams_command(
+    hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test knx/group_telegrams command."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "knx/group_telegrams"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"] == {}
+
+    # # get some telegrams to populate the cache
+    await knx.receive_write("1/1/1", True)
+    await knx.receive_read("2/2/2")  # read telegram shall be ignored
+    await knx.receive_write("3/3/3", 0x34)
+
+    await client.send_json_auto_id({"type": "knx/group_telegrams"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert len(res["result"]) == 2
+    assert "1/1/1" in res["result"]
+    assert res["result"]["1/1/1"]["destination"] == "1/1/1"
+    assert "3/3/3" in res["result"]
+    assert res["result"]["3/3/3"]["payload"] == 52
+    assert res["result"]["3/3/3"]["telegramtype"] == "GroupValueWrite"
+    assert res["result"]["3/3/3"]["source"] == "1.2.3"
+    assert res["result"]["3/3/3"]["direction"] == "Incoming"
+    assert res["result"]["3/3/3"]["timestamp"] is not None
 
 
 async def test_knx_subscribe_telegrams_command_recent_telegrams(
@@ -203,7 +259,7 @@ async def test_knx_subscribe_telegrams_command_recent_telegrams(
 
     # connect websocket after telegrams have been sent
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 6, "type": "knx/group_monitor_info"})
+    await client.send_json_auto_id({"type": "knx/group_monitor_info"})
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"]["project_loaded"] is False
@@ -241,7 +297,7 @@ async def test_knx_subscribe_telegrams_command_no_project(
         }
     )
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 6, "type": "knx/subscribe_telegrams"})
+    await client.send_json_auto_id({"type": "knx/subscribe_telegrams"})
     res = await client.receive_json()
     assert res["success"], res
 
@@ -307,9 +363,9 @@ async def test_knx_subscribe_telegrams_command_project(
     load_knxproj: None,
 ) -> None:
     """Test knx/subscribe_telegrams command with project data."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 6, "type": "knx/subscribe_telegrams"})
+    await client.send_json_auto_id({"type": "knx/subscribe_telegrams"})
     res = await client.receive_json()
     assert res["success"], res
 
@@ -360,10 +416,26 @@ async def test_knx_subscribe_telegrams_command_project(
     assert res["event"]["timestamp"] is not None
 
 
+@pytest.mark.parametrize("platform", sorted({*SUPPORTED_PLATFORMS_UI, "tts"}))
+async def test_knx_get_schema(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    platform: str,
+) -> None:
+    """Test knx/get_schema command returning proper schema data."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "knx/get_schema", "platform": platform})
+    res = await client.receive_json()
+    assert res == snapshot
+
+
 @pytest.mark.parametrize(
     "endpoint",
     [
-        "knx/info",  # sync ws-command
+        "knx/get_base_data",  # sync ws-command
         "knx/get_knx_project",  # async ws-command
     ],
 )
@@ -374,7 +446,7 @@ async def test_websocket_when_config_entry_unloaded(
     endpoint: str,
 ) -> None:
     """Test websocket connection when config entry is unloaded."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
     client = await hass_ws_client(hass)
 

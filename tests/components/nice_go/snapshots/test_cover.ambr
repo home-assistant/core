@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -26,6 +27,7 @@
     'original_name': None,
     'platform': 'nice_go',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
     'unique_id': '1',
@@ -54,6 +56,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -74,6 +77,7 @@
     'original_name': None,
     'platform': 'nice_go',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
     'unique_id': '2',
@@ -102,6 +106,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -117,11 +122,12 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
+    'original_device_class': <CoverDeviceClass.GATE: 'gate'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'nice_go',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
     'unique_id': '3',
@@ -131,7 +137,7 @@
 # name: test_covers[cover.test_garage_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
+      'device_class': 'gate',
       'friendly_name': 'Test Garage 3',
       'supported_features': <CoverEntityFeature: 3>,
     }),
@@ -140,7 +146,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'closed',
+    'state': 'open',
   })
 # ---
 # name: test_covers[cover.test_garage_4-entry]
@@ -150,6 +156,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -168,11 +175,12 @@
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
     'original_icon': None,
     'original_name': None,
-    'platform': 'linear_garage_door',
+    'platform': 'nice_go',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'test4-GDO',
+    'unique_id': '4',
     'unit_of_measurement': None,
   })
 # ---
@@ -188,6 +196,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'closing',
+    'state': 'open',
   })
 # ---

@@ -7,9 +7,9 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.util.location as location_util
+from homeassistant.util import location as location_util
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 # Paris
@@ -77,10 +77,14 @@ def test_get_miles() -> None:
 
 
 async def test_detect_location_info_whoami(
-    aioclient_mock: AiohttpClientMocker, session: aiohttp.ClientSession
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    session: aiohttp.ClientSession,
 ) -> None:
     """Test detect location info using services.home-assistant.io/whoami."""
-    aioclient_mock.get(location_util.WHOAMI_URL, text=load_fixture("whoami.json"))
+    aioclient_mock.get(
+        location_util.WHOAMI_URL, text=await async_load_fixture(hass, "whoami.json")
+    )
 
     with patch("homeassistant.util.location.HA_VERSION", "1.0"):
         info = await location_util.async_detect_location_info(session, _test_real=True)
@@ -101,10 +105,14 @@ async def test_detect_location_info_whoami(
 
 
 async def test_dev_url(
-    aioclient_mock: AiohttpClientMocker, session: aiohttp.ClientSession
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    session: aiohttp.ClientSession,
 ) -> None:
     """Test usage of dev URL."""
-    aioclient_mock.get(location_util.WHOAMI_URL_DEV, text=load_fixture("whoami.json"))
+    aioclient_mock.get(
+        location_util.WHOAMI_URL_DEV, text=await async_load_fixture(hass, "whoami.json")
+    )
     with patch("homeassistant.util.location.HA_VERSION", "1.0.dev0"):
         info = await location_util.async_detect_location_info(session, _test_real=True)
 

@@ -8,11 +8,14 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import sun
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -179,3 +182,46 @@ async def test_setting_rising(
     assert entity
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert entity.unique_id == f"{entry_ids[0].entry_id}-solar_rising"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_deprecation(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensor.sun_solar_rising deprecation."""
+    utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+    freezer.move_to(utc_now)
+    await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        domain="sun",
+        issue_id="deprecated_sun_solar_rising",
+    )
+    assert len(issue_registry.issues) == 1
+
+    entity_registry.async_update_entity(
+        "sensor.sun_solar_rising", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        domain="sun",
+        issue_id="deprecated_sun_solar_rising",
+    )
+    assert len(issue_registry.issues) == 0
+
+    entity_registry.async_update_entity("sensor.sun_solar_rising", disabled_by=None)
+    await hass.async_block_till_done()
+    freezer.tick(delta=RELOAD_AFTER_UPDATE_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        domain="sun",
+        issue_id="deprecated_sun_solar_rising",
+    )
+    assert len(issue_registry.issues) == 1

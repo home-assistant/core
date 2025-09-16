@@ -5,11 +5,11 @@ from unittest.mock import AsyncMock
 from intellifire4py.exceptions import LoginError
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.intellifire.const import CONF_SERIAL, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -79,7 +79,7 @@ async def test_standard_config_with_single_fireplace_and_bad_credentials(
     mock_apis_single_fp,
 ) -> None:
     """Test bad credentials on a login."""
-    mock_local_interface, mock_cloud_interface, mock_fp = mock_apis_single_fp
+    _mock_local_interface, mock_cloud_interface, _mock_fp = mock_apis_single_fp
     # Set login error
     mock_cloud_interface.login_with_credentials.side_effect = LoginError
 
@@ -166,7 +166,7 @@ async def test_dhcp_discovery_intellifire_device(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.1.1.1",
             macaddress="aabbcceeddff",
             hostname="zentrios-Test",
@@ -190,13 +190,13 @@ async def test_dhcp_discovery_non_intellifire_device(
     """Test successful DHCP Discovery of a non intellifire device.."""
 
     # Patch poll with an exception
-    mock_local_interface, mock_cloud_interface, mock_fp = mock_apis_multifp
+    mock_local_interface, _mock_cloud_interface, _mock_fp = mock_apis_multifp
     mock_local_interface.poll.side_effect = ConnectionError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.1.1.1",
             macaddress="aabbcceeddff",
             hostname="zentrios-Evil",

@@ -1,5 +1,7 @@
 """deCONZ services."""
 
+from typing import TYPE_CHECKING
+
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
@@ -9,12 +11,15 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from .config_flow import get_master_hub
 from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
 from .hub import DeconzHub
+from .util import get_master_hub
+
+if TYPE_CHECKING:
+    from . import DeconzConfigEntry
+
 
 DECONZ_SERVICES = "deconz_services"
 
@@ -65,7 +70,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
             found_hub = False
             bridge_id = normalize_bridge_id(service_data[CONF_BRIDGE_ID])
 
-            for possible_hub in hass.data[DOMAIN].values():
+            entry: DeconzConfigEntry
+            for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+                possible_hub = entry.runtime_data
                 if possible_hub.bridgeid == bridge_id:
                     hub = possible_hub
                     found_hub = True
@@ -112,8 +119,8 @@ async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
         "field": "/lights/1/state",
         "data": {"on": true}
     }
-    See Dresden Elektroniks REST API documentation for details:
-    http://dresden-elektronik.github.io/deconz-rest-doc/rest/
+    See deCONZ REST-API documentation for details:
+    https://dresden-elektronik.github.io/deconz-rest-doc/
     """
     field = data.get(SERVICE_FIELD, "")
     entity_id = data.get(SERVICE_ENTITY)
@@ -153,14 +160,6 @@ async def async_remove_orphaned_entries_service(hub: DeconzHub) -> None:
             hub.config_entry.entry_id
         )
     ]
-
-    # Don't remove the Gateway host entry
-    if hub.api.config.mac:
-        hub_host = device_registry.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, hub.api.config.mac)},
-        )
-        if hub_host and hub_host.id in devices_to_be_removed:
-            devices_to_be_removed.remove(hub_host.id)
 
     # Don't remove the Gateway service entry
     hub_service = device_registry.async_get_device(

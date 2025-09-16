@@ -7,9 +7,11 @@ from dataclasses import fields
 import logging
 from types import MethodType
 from typing import Any
-from unittest.mock import DEFAULT, AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohasupervisor.models import (
+    AddonsOptions,
+    AddonsStats,
     AddonStage,
     InstalledAddonComplete,
     Repository,
@@ -23,6 +25,7 @@ from homeassistant.core import HomeAssistant
 LOGGER = logging.getLogger(__name__)
 INSTALLED_ADDON_FIELDS = [field.name for field in fields(InstalledAddonComplete)]
 STORE_ADDON_FIELDS = [field.name for field in fields(StoreAddonComplete)]
+ADDONS_STATS_FIELDS = [field.name for field in fields(AddonsStats)]
 
 MOCK_STORE_ADDONS = [
     StoreAddon(
@@ -70,23 +73,6 @@ def mock_to_dict(obj: Mock, fields: list[str]) -> dict[str, Any]:
 def mock_addon_manager(hass: HomeAssistant) -> AddonManager:
     """Return an AddonManager instance."""
     return AddonManager(hass, LOGGER, "Test", "test_addon")
-
-
-def mock_discovery_info() -> Any:
-    """Return the discovery info from the supervisor."""
-    return DEFAULT
-
-
-def mock_get_addon_discovery_info(
-    discovery_info: dict[str, Any], discovery_info_side_effect: Any | None
-) -> Generator[AsyncMock]:
-    """Mock get add-on discovery info."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
-        side_effect=discovery_info_side_effect,
-        return_value=discovery_info,
-    ) as get_addon_discovery_info:
-        yield get_addon_discovery_info
 
 
 def mock_addon_store_info(
@@ -165,8 +151,7 @@ def mock_addon_installed(
 
 def mock_addon_running(addon_store_info: AsyncMock, addon_info: AsyncMock) -> AsyncMock:
     """Mock add-on already running."""
-    addon_store_info.return_value.available = True
-    addon_store_info.return_value.installed = True
+    mock_addon_installed(addon_store_info, addon_info)
     addon_info.return_value.state = "started"
     return addon_info
 
@@ -202,30 +187,14 @@ def mock_start_addon_side_effect(
     return start_addon
 
 
-def mock_addon_options(addon_info: AsyncMock) -> dict[str, Any]:
-    """Mock add-on options."""
-    return addon_info.return_value.options
-
-
 def mock_set_addon_options_side_effect(addon_options: dict[str, Any]) -> Any | None:
     """Return the set add-on options side effect."""
 
-    async def set_addon_options(hass: HomeAssistant, slug: str, options: dict) -> None:
+    async def set_addon_options(slug: str, options: AddonsOptions) -> None:
         """Mock set add-on options."""
-        addon_options.update(options["options"])
+        addon_options.update(options.config)
 
     return set_addon_options
-
-
-def mock_set_addon_options(
-    set_addon_options_side_effect: Any | None,
-) -> Generator[AsyncMock]:
-    """Mock set add-on options."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_set_addon_options",
-        side_effect=set_addon_options_side_effect,
-    ) as set_options:
-        yield set_options
 
 
 def mock_create_backup() -> Generator[AsyncMock]:
@@ -236,9 +205,21 @@ def mock_create_backup() -> Generator[AsyncMock]:
         yield create_backup
 
 
-def mock_update_addon() -> Generator[AsyncMock]:
-    """Mock update add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_update_addon"
-    ) as update_addon:
-        yield update_addon
+def mock_addon_stats(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock addon stats."""
+    supervisor_client.addons.addon_stats.return_value = addon_stats = Mock(
+        spec=AddonsStats,
+        cpu_percent=0.99,
+        memory_usage=182611968,
+        memory_limit=3977146368,
+        memory_percent=4.59,
+        network_rx=362570232,
+        network_tx=82374138,
+        blk_read=46010945536,
+        blk_write=15051526144,
+    )
+    addon_stats.to_dict = MethodType(
+        lambda self: mock_to_dict(self, ADDONS_STATS_FIELDS),
+        addon_stats,
+    )
+    return supervisor_client.addons.addon_stats

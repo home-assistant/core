@@ -29,8 +29,8 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -43,23 +43,45 @@ from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TOPIC,
+    CONF_GET_POSITION_TEMPLATE,
+    CONF_GET_POSITION_TOPIC,
     CONF_PAYLOAD_CLOSE,
     CONF_PAYLOAD_OPEN,
     CONF_PAYLOAD_STOP,
+    CONF_PAYLOAD_STOP_TILT,
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
     CONF_RETAIN,
+    CONF_SET_POSITION_TEMPLATE,
+    CONF_SET_POSITION_TOPIC,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OPEN,
     CONF_STATE_OPENING,
+    CONF_STATE_STOPPED,
     CONF_STATE_TOPIC,
+    CONF_TILT_CLOSED_POSITION,
+    CONF_TILT_COMMAND_TEMPLATE,
+    CONF_TILT_COMMAND_TOPIC,
+    CONF_TILT_MAX,
+    CONF_TILT_MIN,
+    CONF_TILT_OPEN_POSITION,
+    CONF_TILT_STATE_OPTIMISTIC,
+    CONF_TILT_STATUS_TEMPLATE,
+    CONF_TILT_STATUS_TOPIC,
     DEFAULT_OPTIMISTIC,
     DEFAULT_PAYLOAD_CLOSE,
     DEFAULT_PAYLOAD_OPEN,
+    DEFAULT_PAYLOAD_STOP,
     DEFAULT_POSITION_CLOSED,
     DEFAULT_POSITION_OPEN,
     DEFAULT_RETAIN,
+    DEFAULT_STATE_STOPPED,
+    DEFAULT_TILT_CLOSED_POSITION,
+    DEFAULT_TILT_MAX,
+    DEFAULT_TILT_MIN,
+    DEFAULT_TILT_OPEN_POSITION,
+    DEFAULT_TILT_OPTIMISTIC,
     PAYLOAD_NONE,
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
@@ -69,35 +91,9 @@ from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_GET_POSITION_TOPIC = "position_topic"
-CONF_GET_POSITION_TEMPLATE = "position_template"
-CONF_SET_POSITION_TOPIC = "set_position_topic"
-CONF_SET_POSITION_TEMPLATE = "set_position_template"
-CONF_TILT_COMMAND_TOPIC = "tilt_command_topic"
-CONF_TILT_COMMAND_TEMPLATE = "tilt_command_template"
-CONF_TILT_STATUS_TOPIC = "tilt_status_topic"
-CONF_TILT_STATUS_TEMPLATE = "tilt_status_template"
-
-CONF_STATE_STOPPED = "state_stopped"
-CONF_TILT_CLOSED_POSITION = "tilt_closed_value"
-CONF_TILT_MAX = "tilt_max"
-CONF_TILT_MIN = "tilt_min"
-CONF_TILT_OPEN_POSITION = "tilt_opened_value"
-CONF_TILT_STATE_OPTIMISTIC = "tilt_optimistic"
-
-TILT_PAYLOAD = "tilt"
-COVER_PAYLOAD = "cover"
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Cover"
-
-DEFAULT_STATE_STOPPED = "stopped"
-DEFAULT_PAYLOAD_STOP = "STOP"
-
-DEFAULT_TILT_CLOSED_POSITION = 0
-DEFAULT_TILT_MAX = 100
-DEFAULT_TILT_MIN = 0
-DEFAULT_TILT_OPEN_POSITION = 100
-DEFAULT_TILT_OPTIMISTIC = False
 
 TILT_FEATURES = (
     CoverEntityFeature.OPEN_TILT
@@ -201,6 +197,9 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_GET_POSITION_TEMPLATE): cv.template,
         vol.Optional(CONF_TILT_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_PAYLOAD_STOP_TILT, default=DEFAULT_PAYLOAD_STOP): vol.Any(
+            cv.string, None
+        ),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -218,7 +217,7 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT cover through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -589,6 +588,12 @@ class MqttCover(MqttEntity, CoverEntity):
             _LOGGER.debug("Set tilt value optimistic")
             self._attr_current_cover_tilt_position = tilt_percentage
             self.async_write_ha_state()
+
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop moving the cover tilt."""
+        await self.async_publish_with_config(
+            self._config[CONF_TILT_COMMAND_TOPIC], self._config[CONF_PAYLOAD_STOP_TILT]
+        )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""

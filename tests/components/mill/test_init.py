@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant.components import mill
+from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -11,7 +12,9 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-async def test_setup_with_cloud_config(hass: HomeAssistant) -> None:
+async def test_setup_with_cloud_config(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test setup of cloud config."""
     entry = MockConfigEntry(
         domain=mill.DOMAIN,
@@ -31,7 +34,9 @@ async def test_setup_with_cloud_config(hass: HomeAssistant) -> None:
     assert len(mock_connect.mock_calls) == 1
 
 
-async def test_setup_with_cloud_config_fails(hass: HomeAssistant) -> None:
+async def test_setup_with_cloud_config_fails(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test setup of cloud config."""
     entry = MockConfigEntry(
         domain=mill.DOMAIN,
@@ -47,7 +52,9 @@ async def test_setup_with_cloud_config_fails(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_with_cloud_config_times_out(hass: HomeAssistant) -> None:
+async def test_setup_with_cloud_config_times_out(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test setup of cloud config will retry if timed out."""
     entry = MockConfigEntry(
         domain=mill.DOMAIN,
@@ -63,7 +70,9 @@ async def test_setup_with_cloud_config_times_out(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_with_old_cloud_config(hass: HomeAssistant) -> None:
+async def test_setup_with_old_cloud_config(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test setup of old cloud config."""
     entry = MockConfigEntry(
         domain=mill.DOMAIN,
@@ -82,7 +91,9 @@ async def test_setup_with_old_cloud_config(hass: HomeAssistant) -> None:
     assert len(mock_connect.mock_calls) == 1
 
 
-async def test_setup_with_local_config(hass: HomeAssistant) -> None:
+async def test_setup_with_local_config(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test setup of local config."""
     entry = MockConfigEntry(
         domain=mill.DOMAIN,
@@ -119,7 +130,7 @@ async def test_setup_with_local_config(hass: HomeAssistant) -> None:
     assert len(mock_connect.mock_calls) == 1
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test removing mill client."""
     entry = MockConfigEntry(
         domain=mill.DOMAIN,
@@ -147,5 +158,5 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
         assert await hass.config_entries.async_unload(entry.entry_id)
 
-        assert unload_entry.call_count == 2
+        assert unload_entry.call_count == 3
         assert entry.entry_id not in hass.data[mill.DOMAIN]

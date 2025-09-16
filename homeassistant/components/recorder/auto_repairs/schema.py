@@ -175,7 +175,7 @@ def _validate_db_schema_precision(
     # Mark the session as read_only to ensure that the test data is not committed
     # to the database and we always rollback when the scope is exited
     with session_scope(session=instance.get_session(), read_only=True) as session:
-        db_object = table_object(**{column: PRECISE_NUMBER for column in columns})
+        db_object = table_object(**dict.fromkeys(columns, PRECISE_NUMBER))
         table = table_object.__tablename__
         try:
             session.add(db_object)
@@ -184,7 +184,7 @@ def _validate_db_schema_precision(
             _check_columns(
                 schema_errors=schema_errors,
                 stored={column: getattr(db_object, column) for column in columns},
-                expected={column: PRECISE_NUMBER for column in columns},
+                expected=dict.fromkeys(columns, PRECISE_NUMBER),
                 columns=columns,
                 table_name=table,
                 supports="double precision",
@@ -242,7 +242,7 @@ def correct_db_schema_utf8(
         f"{table_name}.4-byte UTF-8" in schema_errors
         or f"{table_name}.utf8mb4_unicode_ci" in schema_errors
     ):
-        from ..migration import (  # pylint: disable=import-outside-toplevel
+        from ..migration import (  # noqa: PLC0415
             _correct_table_character_set_and_collation,
         )
 
@@ -258,12 +258,10 @@ def correct_db_schema_precision(
     table_name = table_object.__tablename__
 
     if f"{table_name}.double precision" in schema_errors:
-        from ..migration import (  # pylint: disable=import-outside-toplevel
-            _modify_columns,
-        )
+        from ..migration import _modify_columns  # noqa: PLC0415
 
         precision_columns = _get_precision_column_types(table_object)
-        # Attempt to convert timestamp columns to µs precision
+        # Attempt to convert timestamp columns to μs precision
         session_maker = instance.get_session
         engine = instance.engine
         assert engine is not None, "Engine should be set"

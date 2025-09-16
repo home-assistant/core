@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from yt_dlp import DownloadError
 
 from homeassistant.components.media_extractor.const import (
@@ -22,12 +22,15 @@ from homeassistant.setup import async_setup_component
 from . import YOUTUBE_EMPTY_PLAYLIST, YOUTUBE_PLAYLIST, YOUTUBE_VIDEO, MockYoutubeDL
 from .const import NO_FORMATS_RESPONSE, SOUNDCLOUD_TRACK
 
-from tests.common import load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_play_media_service_is_registered(hass: HomeAssistant) -> None:
     """Test play media service is registered."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    mock_config_entry = MockConfigEntry(domain=DOMAIN)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, SERVICE_PLAY_MEDIA)
@@ -250,8 +253,8 @@ async def test_query_error(
     with (
         patch(
             "homeassistant.components.media_extractor.YoutubeDL.extract_info",
-            return_value=load_json_object_fixture(
-                "media_extractor/youtube_1_info.json"
+            return_value=await async_load_json_object_fixture(
+                hass, "youtube_1_info.json", DOMAIN
             ),
         ),
         patch(

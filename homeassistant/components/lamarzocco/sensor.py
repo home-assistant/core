@@ -2,9 +2,19 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
+from typing import cast
 
-from lmcloud.const import BoilerType, MachineModel, PhysicalKey
-from lmcloud.lm_machine import LaMarzoccoMachine
+from pylamarzocco.const import BackFlushStatus, ModelName, WidgetType
+from pylamarzocco.models import (
+    BackFlush,
+    BaseWidgetOutput,
+    CoffeeAndFlushCounter,
+    CoffeeBoiler,
+    MachineStatus,
+    SteamBoilerLevel,
+    SteamBoilerTemperature,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,76 +22,140 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from . import LaMarzoccoConfigEntry
+from .coordinator import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class LaMarzoccoSensorEntityDescription(
-    LaMarzoccoEntityDescription, SensorEntityDescription
+    LaMarzoccoEntityDescription,
+    SensorEntityDescription,
 ):
     """Description of a La Marzocco sensor."""
 
-    value_fn: Callable[[LaMarzoccoMachine], float | int]
+    value_fn: Callable[
+        [dict[WidgetType, BaseWidgetOutput]], StateType | datetime | None
+    ]
 
 
 ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     LaMarzoccoSensorEntityDescription(
+        key="coffee_boiler_ready_time",
+        translation_key="coffee_boiler_ready_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=(
+            lambda config: cast(
+                CoffeeBoiler, config[WidgetType.CM_COFFEE_BOILER]
+            ).ready_start_time
+        ),
+        available_fn=(
+            lambda coordinator: cast(
+                CoffeeBoiler,
+                coordinator.device.dashboard.config[WidgetType.CM_COFFEE_BOILER],
+            ).ready_start_time
+            is not None
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    LaMarzoccoSensorEntityDescription(
+        key="steam_boiler_ready_time",
+        translation_key="steam_boiler_ready_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=(
+            lambda config: cast(
+                SteamBoilerLevel, config[WidgetType.CM_STEAM_BOILER_LEVEL]
+            ).ready_start_time
+        ),
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            in (ModelName.LINEA_MICRA, ModelName.LINEA_MINI_R)
+        ),
+        available_fn=(
+            lambda coordinator: cast(
+                SteamBoilerLevel,
+                coordinator.device.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL],
+            ).ready_start_time
+            is not None
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    LaMarzoccoSensorEntityDescription(
+        key="brewing_start_time",
+        translation_key="brewing_start_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=(
+            lambda config: cast(
+                MachineStatus, config[WidgetType.CM_MACHINE_STATUS]
+            ).brewing_start_time
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        available_fn=(lambda coordinator: not coordinator.websocket_terminated),
+    ),
+    LaMarzoccoSensorEntityDescription(
+        key="steam_boiler_ready_time",
+        translation_key="steam_boiler_ready_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=(
+            lambda config: cast(
+                SteamBoilerTemperature, config[WidgetType.CM_STEAM_BOILER_TEMPERATURE]
+            ).ready_start_time
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            in (ModelName.GS3_AV, ModelName.GS3_MP, ModelName.LINEA_MINI)
+        ),
+    ),
+    LaMarzoccoSensorEntityDescription(
+        key="last_cleaning_time",
+        translation_key="last_cleaning_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=(
+            lambda config: cast(
+                BackFlush,
+                config.get(
+                    WidgetType.CM_BACK_FLUSH, BackFlush(status=BackFlushStatus.OFF)
+                ),
+            ).last_cleaning_start_time
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            is not ModelName.GS3_MP
+        ),
+    ),
+)
+
+STATISTIC_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
+    LaMarzoccoSensorEntityDescription(
         key="drink_stats_coffee",
-        translation_key="drink_stats_coffee",
-        native_unit_of_measurement="drinks",
+        translation_key="total_coffees_made",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.statistics.drink_stats.get(PhysicalKey.A, 0),
-        available_fn=lambda device: len(device.statistics.drink_stats) > 0,
+        value_fn=(
+            lambda statistics: cast(
+                CoffeeAndFlushCounter, statistics[WidgetType.COFFEE_AND_FLUSH_COUNTER]
+            ).total_coffee
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LaMarzoccoSensorEntityDescription(
         key="drink_stats_flushing",
-        translation_key="drink_stats_flushing",
-        native_unit_of_measurement="drinks",
+        translation_key="total_flushes_done",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.statistics.total_flushes,
-        available_fn=lambda device: len(device.statistics.drink_stats) > 0,
+        value_fn=(
+            lambda statistics: cast(
+                CoffeeAndFlushCounter, statistics[WidgetType.COFFEE_AND_FLUSH_COUNTER]
+            ).total_flush
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    LaMarzoccoSensorEntityDescription(
-        key="shot_timer",
-        translation_key="shot_timer",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.DURATION,
-        value_fn=lambda device: device.config.brew_active_duration,
-        available_fn=lambda device: device.websocket_connected,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        supported_fn=lambda coordinator: coordinator.local_connection_configured,
-    ),
-    LaMarzoccoSensorEntityDescription(
-        key="current_temp_coffee",
-        translation_key="current_temp_coffee",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        suggested_display_precision=1,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        value_fn=lambda device: device.config.boilers[
-            BoilerType.COFFEE
-        ].current_temperature,
-    ),
-    LaMarzoccoSensorEntityDescription(
-        key="current_temp_steam",
-        translation_key="current_temp_steam",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        suggested_display_precision=1,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        value_fn=lambda device: device.config.boilers[
-            BoilerType.STEAM
-        ].current_temperature,
-        supported_fn=lambda coordinator: coordinator.device.model
-        != MachineModel.LINEA_MINI,
     ),
 )
 
@@ -89,24 +163,46 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LaMarzoccoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor entities."""
-    coordinator = entry.runtime_data
+    config_coordinator = entry.runtime_data.config_coordinator
+    statistic_coordinators = entry.runtime_data.statistics_coordinator
 
-    async_add_entities(
-        LaMarzoccoSensorEntity(coordinator, description)
+    entities = [
+        LaMarzoccoSensorEntity(config_coordinator, description)
         for description in ENTITIES
-        if description.supported_fn(coordinator)
+        if description.supported_fn(config_coordinator)
+    ]
+    entities.extend(
+        LaMarzoccoStatisticSensorEntity(statistic_coordinators, description)
+        for description in STATISTIC_ENTITIES
+        if description.supported_fn(statistic_coordinators)
     )
+    async_add_entities(entities)
 
 
 class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
-    """Sensor representing espresso machine temperature data."""
+    """Sensor for La Marzocco."""
 
     entity_description: LaMarzoccoSensorEntityDescription
 
     @property
-    def native_value(self) -> int | float:
-        """State of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.device)
+    def native_value(self) -> StateType | datetime | None:
+        """Return  value of the sensor."""
+        return self.entity_description.value_fn(
+            self.coordinator.device.dashboard.config
+        )
+
+
+class LaMarzoccoStatisticSensorEntity(LaMarzoccoSensorEntity):
+    """Sensor for La Marzocco statistics."""
+
+    _unavailable_when_machine_off = False
+
+    @property
+    def native_value(self) -> StateType | datetime | None:
+        """Return the value of the sensor."""
+        return self.entity_description.value_fn(
+            self.coordinator.device.statistics.widgets
+        )

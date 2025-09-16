@@ -10,23 +10,15 @@ from contextlib import suppress
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
-from functools import partial
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, cast
+from typing import Any, Generic, Required, TypedDict, TypeVar, cast
 
-from typing_extensions import TypeVar
 import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
-from .helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
-from .helpers.frame import report
+from .helpers.frame import ReportBehavior, report_usage
 from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
 
@@ -46,28 +38,9 @@ class FlowResultType(StrEnum):
     MENU = "menu"
 
 
-# RESULT_TYPE_* is deprecated, to be removed in 2025.1
-_DEPRECATED_RESULT_TYPE_FORM = DeprecatedConstantEnum(FlowResultType.FORM, "2025.1")
-_DEPRECATED_RESULT_TYPE_CREATE_ENTRY = DeprecatedConstantEnum(
-    FlowResultType.CREATE_ENTRY, "2025.1"
-)
-_DEPRECATED_RESULT_TYPE_ABORT = DeprecatedConstantEnum(FlowResultType.ABORT, "2025.1")
-_DEPRECATED_RESULT_TYPE_EXTERNAL_STEP = DeprecatedConstantEnum(
-    FlowResultType.EXTERNAL_STEP, "2025.1"
-)
-_DEPRECATED_RESULT_TYPE_EXTERNAL_STEP_DONE = DeprecatedConstantEnum(
-    FlowResultType.EXTERNAL_STEP_DONE, "2025.1"
-)
-_DEPRECATED_RESULT_TYPE_SHOW_PROGRESS = DeprecatedConstantEnum(
-    FlowResultType.SHOW_PROGRESS, "2025.1"
-)
-_DEPRECATED_RESULT_TYPE_SHOW_PROGRESS_DONE = DeprecatedConstantEnum(
-    FlowResultType.SHOW_PROGRESS_DONE, "2025.1"
-)
-_DEPRECATED_RESULT_TYPE_MENU = DeprecatedConstantEnum(FlowResultType.MENU, "2025.1")
-
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
+EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE = "data_entry_flow_progress_update"
 
 FLOW_NOT_COMPLETE_STEPS = {
     FlowResultType.FORM,
@@ -126,6 +99,7 @@ class InvalidData(vol.Invalid):
         schema_errors: dict[str, Any],
         **kwargs: Any,
     ) -> None:
+        """Initialize an invalid data exception."""
         super().__init__(message, path, error_message, **kwargs)
         self.schema_errors = schema_errors
 
@@ -155,7 +129,7 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     context: _FlowContextT
     data_schema: vol.Schema | None
     data: Mapping[str, Any]
-    description_placeholders: Mapping[str, str | None] | None
+    description_placeholders: Mapping[str, str] | None
     description: str | None
     errors: dict[str, str] | None
     extra: str
@@ -168,7 +142,7 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     progress_task: asyncio.Task[Any] | None
     reason: str
     required: bool
-    result: Any
+    sort: bool
     step_id: str
     title: str
     translation_domain: str
@@ -234,6 +208,13 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         Handler key is the domain of the component that we want to set up.
         """
 
+    @callback
+    def async_flow_removed(
+        self,
+        flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
+    ) -> None:
+        """Handle a removed data entry flow."""
+
     @abc.abstractmethod
     async def async_finish_flow(
         self,
@@ -245,13 +226,6 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         This method is called when a flow step returns FlowResultType.ABORT or
         FlowResultType.CREATE_ENTRY.
         """
-
-    async def async_post_init(
-        self,
-        flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
-        result: _FlowResultT,
-    ) -> None:
-        """Entry has finished executing its first step asynchronously."""
 
     @callback
     def async_get(self, flow_id: str) -> _FlowResultT:
@@ -339,12 +313,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         flow.init_data = data
         self._async_add_flow_progress(flow)
 
-        result = await self._async_handle_step(flow, flow.init_step, data)
-
-        if result["type"] != FlowResultType.ABORT:
-            await self.async_post_init(flow, result)
-
-        return result
+        return await self._async_handle_step(flow, flow.init_step, data)
 
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
@@ -496,6 +465,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         """Remove a flow from in progress."""
         if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
+        self.async_flow_removed(flow)
         self._async_remove_flow_from_index(flow)
         flow.async_cancel_progress_task()
         try:
@@ -524,18 +494,23 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 description_placeholders=err.description_placeholders,
             )
 
+        if flow.flow_id not in self._progress:
+            # The flow was removed during the step, raise UnknownFlow
+            # unless the result is an abort
+            if result["type"] != FlowResultType.ABORT:
+                raise UnknownFlow
+            return result
+
         # Setup the flow handler's preview if needed
         if result.get("preview") is not None:
             await self._async_setup_preview(flow)
 
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
-            report(
-                (
-                    "does not use FlowResultType enum for data entry flow result type. "
-                    "This is deprecated and will stop working in Home Assistant 2025.1"
-                ),
-                error_if_core=False,
+            report_usage(
+                "does not use FlowResultType enum for data entry flow result type",
+                core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2025.1",
             )
 
         if (
@@ -568,15 +543,24 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             flow.cur_step = result
             return result
 
-        # We pass a copy of the result because we're mutating our version
-        result = await self.async_finish_flow(flow, result.copy())
+        try:
+            # We pass a copy of the result because we're mutating our version
+            result = await self.async_finish_flow(flow, result.copy())
+        except AbortFlow as err:
+            result = self._flow_result(
+                type=FlowResultType.ABORT,
+                flow_id=flow.flow_id,
+                handler=flow.handler,
+                reason=err.reason,
+                description_placeholders=err.description_placeholders,
+            )
 
         # _async_finish_flow may change result type, check it again
         if result["type"] == FlowResultType.FORM:
             flow.cur_step = result
             return result
 
-        # Abort and Success results both finish the flow
+        # Abort and Success results both finish the flow.
         self._async_remove_flow_progress(flow.flow_id)
 
         return result
@@ -590,7 +574,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if not hasattr(flow, method):
             self._async_remove_flow_progress(flow.flow_id)
             raise UnknownStep(
-                f"Handler {self.__class__.__name__} doesn't support step {step_id}"
+                f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
             )
 
     async def _async_setup_preview(
@@ -686,6 +670,20 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 ):
                     continue
 
+            # Process the section schema options
+            if (
+                suggested_values is not None
+                and isinstance(val, section)
+                and key in suggested_values
+            ):
+                new_section_key = copy.copy(key)
+                new_val = copy.copy(val)
+                schema[new_section_key] = new_val
+                new_val.schema = self.add_suggested_values_to_schema(
+                    new_val.schema, suggested_values[key]
+                )
+                continue
+
             new_key = key
             if (
                 suggested_values
@@ -705,14 +703,11 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         step_id: str | None = None,
         data_schema: vol.Schema | None = None,
         errors: dict[str, str] | None = None,
-        description_placeholders: Mapping[str, str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> _FlowResultT:
-        """Return the definition of a form to gather user input.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Return the definition of a form to gather user input."""
         flow_result = self._flow_result(
             type=FlowResultType.FORM,
             flow_id=self.flow_id,
@@ -774,10 +769,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         url: str,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> _FlowResultT:
-        """Return the definition of an external step for the user to take.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Return the definition of an external step for the user to take."""
         flow_result = self._flow_result(
             type=FlowResultType.EXTERNAL_STEP,
             flow_id=self.flow_id,
@@ -808,10 +800,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         description_placeholders: Mapping[str, str] | None = None,
         progress_task: asyncio.Task[Any] | None = None,
     ) -> _FlowResultT:
-        """Show a progress message to the user, without user input allowed.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Show a progress message to the user, without user input allowed."""
         if progress_task is None and not self.__no_progress_task_reported:
             self.__no_progress_task_reported = True
             cls = self.__class__
@@ -843,6 +832,14 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         return flow_result
 
     @callback
+    def async_update_progress(self, progress: float) -> None:
+        """Update the progress of a flow. `progress` must be between 0 and 1."""
+        self.hass.bus.async_fire_internal(
+            EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE,
+            {"handler": self.handler, "flow_id": self.flow_id, "progress": progress},
+        )
+
+    @callback
     def async_show_progress_done(self, *, next_step_id: str) -> _FlowResultT:
         """Mark the progress done."""
         return self._flow_result(
@@ -858,12 +855,12 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         *,
         step_id: str | None = None,
         menu_options: Container[str],
+        sort: bool = False,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> _FlowResultT:
         """Show a navigation menu to the user.
 
         Options dict maps step_id => i18n label
-        The step_id parameter is deprecated and will be removed in a future release.
         """
         flow_result = self._flow_result(
             type=FlowResultType.MENU,
@@ -873,6 +870,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
+        if sort:
+            flow_result["sort"] = sort
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -931,11 +930,3 @@ class section:
     def __call__(self, value: Any) -> Any:
         """Validate input."""
         return self.schema(value)
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

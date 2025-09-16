@@ -5,17 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from elevenlabs.client import AsyncElevenLabs
+from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-    OptionsFlowWithConfigEntry,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
@@ -25,17 +19,16 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
+from . import ElevenLabsConfigEntry
 from .const import (
     CONF_CONFIGURE_VOICE,
     CONF_MODEL,
-    CONF_OPTIMIZE_LATENCY,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STYLE,
     CONF_USE_SPEAKER_BOOST,
     CONF_VOICE,
     DEFAULT_MODEL,
-    DEFAULT_OPTIMIZE_LATENCY,
     DEFAULT_SIMILARITY,
     DEFAULT_STABILITY,
     DEFAULT_STYLE,
@@ -56,7 +49,8 @@ async def get_voices_models(
     httpx_client = get_async_client(hass)
     client = AsyncElevenLabs(api_key=api_key, httpx_client=httpx_client)
     voices = (await client.voices.get_all()).voices
-    models = await client.models.get_all()
+    models = await client.models.list()
+
     voices_dict = {
         voice.voice_id: voice.name
         for voice in sorted(voices, key=lambda v: v.name or "")
@@ -83,8 +77,13 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 voices, _ = await get_voices_models(self.hass, user_input[CONF_API_KEY])
-            except ApiError:
-                errors["base"] = "invalid_api_key"
+            except ApiError as exc:
+                errors["base"] = "unknown"
+                details = getattr(exc, "body", {}).get("detail", {})
+                if details:
+                    status = details.get("status")
+                    if status == "invalid_api_key":
+                        errors["base"] = "invalid_api_key"
             else:
                 return self.async_create_entry(
                     title="ElevenLabs",
@@ -97,19 +96,18 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: ElevenLabsConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return ElevenLabsOptionsFlow(config_entry)
 
 
-class ElevenLabsOptionsFlow(OptionsFlowWithConfigEntry):
+class ElevenLabsOptionsFlow(OptionsFlow):
     """ElevenLabs options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: ElevenLabsConfigEntry) -> None:
         """Initialize options flow."""
-        super().__init__(config_entry)
-        self.api_key: str = self.config_entry.data[CONF_API_KEY]
+        self.api_key: str = config_entry.data[CONF_API_KEY]
         # id -> name
         self.voices: dict[str, str] = {}
         self.models: dict[str, str] = {}
@@ -170,7 +168,7 @@ class ElevenLabsOptionsFlow(OptionsFlowWithConfigEntry):
                     vol.Required(CONF_CONFIGURE_VOICE, default=False): bool,
                 }
             ),
-            self.options,
+            self.config_entry.options,
         )
 
     async def async_step_voice_settings(
@@ -212,12 +210,6 @@ class ElevenLabsOptionsFlow(OptionsFlowWithConfigEntry):
                     vol.Coerce(float),
                     vol.Range(min=0, max=1),
                 ),
-                vol.Optional(
-                    CONF_OPTIMIZE_LATENCY,
-                    default=self.config_entry.options.get(
-                        CONF_OPTIMIZE_LATENCY, DEFAULT_OPTIMIZE_LATENCY
-                    ),
-                ): vol.All(int, vol.Range(min=0, max=4)),
                 vol.Optional(
                     CONF_STYLE,
                     default=self.config_entry.options.get(CONF_STYLE, DEFAULT_STYLE),

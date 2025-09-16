@@ -131,17 +131,11 @@ play_media:
       supported_features:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
   fields:
-    media_content_id:
+    media:
       required: true
-      example: "https://home-assistant.io/images/cast/splash.png"
       selector:
-        text:
-
-    media_content_type:
-      required: true
-      example: "music"
-      selector:
-        text:
+        media:
+      example: '{"media_content_id": "https://home-assistant.io/images/cast/splash.png", "media_content_type": "music"}'
 
     enqueue:
       filter:
@@ -164,6 +158,53 @@ play_media:
       example: "true"
       selector:
         boolean:
+
+browse_media:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.BROWSE_MEDIA
+  fields:
+    media_content_type:
+      required: false
+      example: "music"
+      selector:
+        text:
+    media_content_id:
+      required: false
+      example: "A:ALBUMARTIST/Beatles"
+      selector:
+        text:
+
+search_media:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SEARCH_MEDIA
+  fields:
+    search_query:
+      required: true
+      example: "Beatles"
+      selector:
+        text:
+    media_content_type:
+      required: false
+      example: "music"
+      selector:
+        text:
+    media_content_id:
+      required: false
+      example: "A:ALBUMARTIST/Beatles"
+      selector:
+        text:
+    media_filter_classes:
+      required: false
+      example: ["album", "artist"]
+      selector:
+        text:
+          multiple: true
 
 select_source:
   target:

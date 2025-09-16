@@ -14,11 +14,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import NYTGamesConfigEntry
-from .coordinator import NYTGamesCoordinator
+from .coordinator import NYTGamesConfigEntry, NYTGamesCoordinator
 from .entity import ConnectionsEntity, SpellingBeeEntity, WordleEntity
 
 
@@ -139,7 +138,7 @@ CONNECTIONS_SENSORS: tuple[NYTGamesConnectionsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.DAYS,
         device_class=SensorDeviceClass.DURATION,
-        value_fn=lambda connections: connections.current_streak,
+        value_fn=lambda connections: connections.max_streak,
     ),
 )
 
@@ -147,7 +146,7 @@ CONNECTIONS_SENSORS: tuple[NYTGamesConnectionsSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NYTGamesConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NYT Games sensor entities based on a config entry."""
 

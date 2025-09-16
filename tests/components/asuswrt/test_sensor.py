@@ -2,8 +2,9 @@
 
 from datetime import timedelta
 
+from asusrouter import AsusRouterError
+from asusrouter.modules.data import AsusData
 from freezegun.api import FrozenDateTimeFactory
-from pyasuswrt.exceptions import AsusWrtError, AsusWrtNotAvailableInfoError
 import pytest
 
 from homeassistant.components import device_tracker, sensor
@@ -39,6 +40,7 @@ from .common import (
     ROUTER_MAC_ADDR,
     new_device,
 )
+from .conftest import make_async_get_data_side_effect
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -82,6 +84,7 @@ def _setup_entry(hass: HomeAssistant, config, sensors, unique_id=None):
         options={CONF_CONSIDER_HOME: 60},
         unique_id=unique_id,
     )
+    config_entry.add_to_hass(hass)
 
     # init variable
     obj_prefix = slugify(HOST)
@@ -130,8 +133,6 @@ async def _test_sensors(
             config_entry=config_entry,
             disabled_by=None,
         )
-
-    config_entry.add_to_hass(hass)
 
     # initial devices setup
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -261,8 +262,8 @@ async def test_loadavg_sensors_unaivalable_http(
     config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_HTTP, SENSORS_LOAD_AVG)
     config_entry.add_to_hass(hass)
 
-    connect_http.return_value.async_get_loadavg.side_effect = (
-        AsusWrtNotAvailableInfoError
+    connect_http.return_value.async_get_data.side_effect = (
+        make_async_get_data_side_effect([AsusData.SYSINFO])
     )
 
     # initial devices setup
@@ -282,6 +283,7 @@ async def test_temperature_sensors_http_fail(
     hass: HomeAssistant, connect_http_sens_fail
 ) -> None:
     """Test fail creating AsusWRT temperature sensors."""
+    _ = connect_http_sens_fail([AsusData.TEMPERATURE])
     config_entry, sensor_prefix = _setup_entry(
         hass, CONFIG_DATA_HTTP, SENSORS_TEMPERATURES
     )
@@ -348,6 +350,7 @@ async def test_cpu_sensors_http_fail(
     hass: HomeAssistant, connect_http_sens_fail
 ) -> None:
     """Test fail creating AsusWRT cpu sensors."""
+    _ = connect_http_sens_fail([AsusData.CPU])
     config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_HTTP, SENSORS_CPU)
     config_entry.add_to_hass(hass)
 
@@ -368,7 +371,10 @@ async def test_cpu_sensors_http_fail(
 
 
 async def test_cpu_sensors_http(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, connect_http
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    connect_http,
+    connect_http_sens_detect,
 ) -> None:
     """Test creating AsusWRT cpu sensors."""
     config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_HTTP, SENSORS_CPU)
@@ -462,7 +468,7 @@ async def test_connect_fail_legacy(
 
 @pytest.mark.parametrize(
     "side_effect",
-    [AsusWrtError, None],
+    [AsusRouterError, None],
 )
 async def test_connect_fail_http(
     hass: HomeAssistant, connect_http, side_effect
@@ -477,7 +483,7 @@ async def test_connect_fail_http(
     config_entry.add_to_hass(hass)
 
     connect_http.return_value.async_connect.side_effect = side_effect
-    connect_http.return_value.is_connected = False
+    connect_http.return_value.connected = False
 
     # initial setup fail
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -525,6 +531,16 @@ async def test_sensors_polling_fails_http(
     connect_http_sens_detect,
 ) -> None:
     """Test AsusWRT sensors are unavailable when polling fails."""
+    # Fail all relevant AsusData types for HTTP sensors
+    fail_types = [
+        AsusData.NETWORK,
+        AsusData.CPU,
+        AsusData.SYSINFO,
+        AsusData.RAM,
+        AsusData.TEMPERATURE,
+        AsusData.BOOTTIME,
+    ]
+    _ = connect_http_sens_fail(fail_types)
     await _test_sensors_polling_fails(hass, freezer, CONFIG_DATA_HTTP, SENSORS_ALL_HTTP)
 
 

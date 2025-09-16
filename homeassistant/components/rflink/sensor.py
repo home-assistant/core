@@ -35,7 +35,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -71,6 +71,8 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     SensorEntityDescription(
+        # Rflink devices reports ok/low so device class can’t be used
+        # It should be migrated to a binary sensor
         key="battery",
         name="Battery",
         icon="mdi:battery",
@@ -234,7 +236,8 @@ SENSOR_TYPES = (
         key="winddirection",
         name="Wind direction",
         icon="mdi:compass",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(

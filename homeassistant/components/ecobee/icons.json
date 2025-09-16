@@ -20,6 +20,9 @@
     },
     "set_occupancy_modes": {
       "service": "mdi:eye-settings"
+    },
+    "set_sensors_used_in_climate": {
+      "service": "mdi:home-thermometer"
     }
   }
 }

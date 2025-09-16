@@ -8,14 +8,22 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.config_flow import LifXConfigFlow
 from homeassistant.components.lifx.const import CONF_SERIAL
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -135,7 +143,11 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
     )
     config_entry.add_to_hass(hass)
 
-    with _patch_discovery(), _patch_config_flow_try_connect(no_device=True):
+    with (
+        _patch_device(),
+        _patch_discovery(),
+        _patch_config_flow_try_connect(no_device=True),
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -362,7 +374,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
             ),
         )
@@ -385,7 +397,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress="000000000000", hostname="mock_hostname"
             ),
         )
@@ -402,7 +414,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.2.3.5", macaddress="000000000001", hostname="mock_hostname"
             ),
         )
@@ -416,19 +428,19 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
             ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address(IP_ADDRESS),
                 ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname=LABEL,
                 name=LABEL,
                 port=None,
-                properties={zeroconf.ATTR_PROPERTIES_ID: "any"},
+                properties={ATTR_PROPERTIES_ID: "any"},
                 type="mock_type",
             ),
         ),
@@ -476,19 +488,19 @@ async def test_discovered_by_dhcp_or_discovery(
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
             ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address(IP_ADDRESS),
                 ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname=LABEL,
                 name=LABEL,
                 port=None,
-                properties={zeroconf.ATTR_PROPERTIES_ID: "any"},
+                properties={ATTR_PROPERTIES_ID: "any"},
                 type="mock_type",
             ),
         ),
@@ -520,19 +532,19 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
             ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address(IP_ADDRESS),
                 ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname=LABEL,
                 name=LABEL,
                 port=None,
-                properties={zeroconf.ATTR_PROPERTIES_ID: "any"},
+                properties={ATTR_PROPERTIES_ID: "any"},
                 type="mock_type",
             ),
         ),
@@ -581,6 +593,7 @@ async def test_refuse_relays(hass: HomeAssistant) -> None:
 
 async def test_suggested_area(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -620,4 +633,4 @@ async def test_suggested_area(
     entity = entity_registry.async_get(entity_id)
 
     device = device_registry.async_get(entity.device_id)
-    assert device.suggested_area == "My LIFX Group"
+    assert device.area_id == area_registry.async_get_area_by_name("My LIFX Group").id

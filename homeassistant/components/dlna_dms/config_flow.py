@@ -14,6 +14,11 @@ from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_SERVICE_LIST,
+    SsdpServiceInfo,
+)
 
 from .const import CONF_SOURCE_ID, CONFIG_VERSION, DEFAULT_NAME, DOMAIN
 from .util import generate_source_id
@@ -33,7 +38,7 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._discoveries: dict[str, ssdp.SsdpServiceInfo] = {}
+        self._discoveries: dict[str, SsdpServiceInfo] = {}
         self._location: str | None = None
         self._usn: str | None = None
         self._name: str | None = None
@@ -60,14 +65,14 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
         }
 
         discovery_choices = {
-            host: f"{discovery.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)} ({host})"
+            host: f"{discovery.upnp.get(ATTR_UPNP_FRIENDLY_NAME)} ({host})"
             for host, discovery in self._discoveries.items()
         }
         data_schema = vol.Schema({vol.Optional(CONF_HOST): vol.In(discovery_choices)})
         return self.async_show_form(step_id="user", data_schema=data_schema)
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by SSDP discovery."""
         if LOGGER.isEnabledFor(logging.DEBUG):
@@ -81,7 +86,7 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
         # Abort if the device doesn't support all services required for a DmsDevice.
         # Use the discovery_info instead of DmsDevice.is_profile_device to avoid
         # contacting the device again.
-        discovery_service_list = discovery_info.upnp.get(ssdp.ATTR_UPNP_SERVICE_LIST)
+        discovery_service_list = discovery_info.upnp.get(ATTR_UPNP_SERVICE_LIST)
         if not discovery_service_list:
             return self.async_abort(reason="not_dms")
 
@@ -135,7 +140,7 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=self._name, data=data)
 
     async def _async_parse_discovery(
-        self, discovery_info: ssdp.SsdpServiceInfo, raise_on_progress: bool = True
+        self, discovery_info: SsdpServiceInfo, raise_on_progress: bool = True
     ) -> None:
         """Get required details from an SSDP discovery.
 
@@ -162,15 +167,15 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         self._name = (
-            discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
             or urlparse(self._location).hostname
             or DEFAULT_NAME
         )
 
-    async def _async_get_discoveries(self) -> list[ssdp.SsdpServiceInfo]:
+    async def _async_get_discoveries(self) -> list[SsdpServiceInfo]:
         """Get list of unconfigured DLNA devices discovered by SSDP."""
         # Get all compatible devices from ssdp's cache
-        discoveries: list[ssdp.SsdpServiceInfo] = []
+        discoveries: list[SsdpServiceInfo] = []
         for udn_st in DmsDevice.DEVICE_TYPES:
             st_discoveries = await ssdp.async_get_discovery_info_by_st(
                 self.hass, udn_st

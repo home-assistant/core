@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+from abc import ABC
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import date, datetime
+from decimal import Decimal
 
 from weatherflow4py.models.rest.observation import Observation
+from weatherflow4py.models.ws.websocket_response import (
+    EventDataRapidWind,
+    WebsocketObservation,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,14 +21,31 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfLength, UnitOfPressure, UnitOfTemperature
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import UTC
 
+from . import WeatherFlowCloudUpdateCoordinatorREST, WeatherFlowCoordinators
 from .const import DOMAIN
-from .coordinator import WeatherFlowCloudDataUpdateCoordinator
+from .coordinator import WeatherFlowObservationCoordinator, WeatherFlowWindCoordinator
 from .entity import WeatherFlowCloudEntity
+
+PRECIPITATION_TYPE = {
+    0: "none",
+    1: "rain",
+    2: "snow",
+    3: "sleet",
+    4: "storm",
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -32,6 +55,87 @@ class WeatherFlowCloudSensorEntityDescription(
     """Describes a weatherflow sensor."""
 
     value_fn: Callable[[Observation], StateType | datetime]
+
+
+@dataclass(frozen=True, kw_only=True)
+class WeatherFlowCloudSensorEntityDescriptionWebsocketWind(
+    SensorEntityDescription,
+):
+    """Describes a weatherflow sensor."""
+
+    value_fn: Callable[[EventDataRapidWind], StateType | datetime]
+
+
+@dataclass(frozen=True, kw_only=True)
+class WeatherFlowCloudSensorEntityDescriptionWebsocketObservation(
+    SensorEntityDescription,
+):
+    """Describes a weatherflow sensor."""
+
+    value_fn: Callable[[WebsocketObservation], StateType | datetime]
+
+
+WEBSOCKET_WIND_SENSORS: tuple[
+    WeatherFlowCloudSensorEntityDescriptionWebsocketWind, ...
+] = (
+    WeatherFlowCloudSensorEntityDescriptionWebsocketWind(
+        key="wind_speed",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.WIND_SPEED,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.wind_speed_meters_per_second,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+    ),
+    WeatherFlowCloudSensorEntityDescriptionWebsocketWind(
+        key="wind_direction",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        translation_key="wind_direction",
+        value_fn=lambda data: data.wind_direction_degrees,
+        native_unit_of_measurement="°",
+    ),
+)
+
+WEBSOCKET_OBSERVATION_SENSORS: tuple[
+    WeatherFlowCloudSensorEntityDescriptionWebsocketObservation, ...
+] = (
+    WeatherFlowCloudSensorEntityDescriptionWebsocketObservation(
+        key="wind_lull",
+        translation_key="wind_lull",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.WIND_SPEED,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.wind_lull,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+    ),
+    WeatherFlowCloudSensorEntityDescriptionWebsocketObservation(
+        key="wind_gust",
+        translation_key="wind_gust",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.WIND_SPEED,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.wind_gust,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+    ),
+    WeatherFlowCloudSensorEntityDescriptionWebsocketObservation(
+        key="wind_avg",
+        translation_key="wind_avg",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.WIND_SPEED,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.wind_avg,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+    ),
+    WeatherFlowCloudSensorEntityDescriptionWebsocketObservation(
+        key="wind_sample_interval",
+        translation_key="wind_sample_interval",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.wind_sample_interval,
+    ),
+)
 
 
 WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
@@ -127,6 +231,81 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
     ),
+    # Rain Sensors
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_last_1hr",
+        translation_key="precip_accum_last_1hr",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_last_1hr,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_local_day",
+        translation_key="precip_accum_local_day",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_local_day,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_local_day_final",
+        translation_key="precip_accum_local_day_final",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_local_day_final,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_local_yesterday",
+        translation_key="precip_accum_local_yesterday",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_local_yesterday,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_local_yesterday_final",
+        translation_key="precip_accum_local_yesterday_final",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_local_yesterday_final,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_analysis_type_yesterday",
+        translation_key="precip_analysis_type_yesterday",
+        device_class=SensorDeviceClass.ENUM,
+        options=["none", "rain", "snow", "sleet", "storm"],
+        suggested_display_precision=1,
+        value_fn=lambda data: PRECIPITATION_TYPE.get(
+            data.precip_analysis_type_yesterday
+        ),
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_minutes_local_day",
+        translation_key="precip_minutes_local_day",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_minutes_local_day,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_minutes_local_yesterday",
+        translation_key="precip_minutes_local_yesterday",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_minutes_local_yesterday,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_minutes_local_yesterday_final",
+        translation_key="precip_minutes_local_yesterday_final",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_minutes_local_yesterday_final,
+    ),
     # Lightning Sensors
     WeatherFlowCloudSensorEntityDescription(
         key="lightning_strike_count",
@@ -172,39 +351,137 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeatherFlow sensors based on a config entry."""
 
-    coordinator: WeatherFlowCloudDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
+    coordinators: WeatherFlowCoordinators = hass.data[DOMAIN][entry.entry_id]
+    rest_coordinator = coordinators.rest
+    wind_coordinator = coordinators.wind  # Now properly typed
+    observation_coordinator = coordinators.observation  # Now properly typed
+
+    entities: list[SensorEntity] = [
+        WeatherFlowCloudSensorREST(rest_coordinator, sensor_description, station_id)
+        for station_id in rest_coordinator.data
+        for sensor_description in WF_SENSORS
     ]
 
-    async_add_entities(
-        WeatherFlowCloudSensor(coordinator, sensor_description, station_id)
-        for station_id in coordinator.data
-        for sensor_description in WF_SENSORS
+    entities.extend(
+        WeatherFlowWebsocketSensorWind(
+            coordinator=wind_coordinator,
+            description=sensor_description,
+            station_id=station_id,
+            device_id=device_id,
+        )
+        for station_id in wind_coordinator.stations.station_outdoor_device_map
+        for device_id in wind_coordinator.stations.station_outdoor_device_map[
+            station_id
+        ]
+        for sensor_description in WEBSOCKET_WIND_SENSORS
     )
 
+    entities.extend(
+        WeatherFlowWebsocketSensorObservation(
+            coordinator=observation_coordinator,
+            description=sensor_description,
+            station_id=station_id,
+            device_id=device_id,
+        )
+        for station_id in observation_coordinator.stations.station_outdoor_device_map
+        for device_id in observation_coordinator.stations.station_outdoor_device_map[
+            station_id
+        ]
+        for sensor_description in WEBSOCKET_OBSERVATION_SENSORS
+    )
+    async_add_entities(entities)
 
-class WeatherFlowCloudSensor(WeatherFlowCloudEntity, SensorEntity):
-    """Implementation of a WeatherFlow sensor."""
 
-    entity_description: WeatherFlowCloudSensorEntityDescription
+class WeatherFlowSensorBase(WeatherFlowCloudEntity, SensorEntity, ABC):
+    """Common base class."""
 
     def __init__(
         self,
-        coordinator: WeatherFlowCloudDataUpdateCoordinator,
-        description: WeatherFlowCloudSensorEntityDescription,
+        coordinator: (
+            WeatherFlowCloudUpdateCoordinatorREST
+            | WeatherFlowWindCoordinator
+            | WeatherFlowObservationCoordinator
+        ),
+        description: (
+            WeatherFlowCloudSensorEntityDescription
+            | WeatherFlowCloudSensorEntityDescriptionWebsocketWind
+            | WeatherFlowCloudSensorEntityDescriptionWebsocketObservation
+        ),
         station_id: int,
+        device_id: int | None = None,
     ) -> None:
-        """Initialize the sensor."""
-        # Initialize the Entity Class
+        """Initialize a sensor."""
         super().__init__(coordinator, station_id)
+        self.station_id = station_id
+        self.device_id = device_id
         self.entity_description = description
-        self._attr_unique_id = f"{station_id}_{description.key}"
+        self._attr_unique_id = self._generate_unique_id()
+
+    def _generate_unique_id(self) -> str:
+        """Generate a unique ID for the sensor."""
+        if self.device_id is not None:
+            return f"{self.station_id}_{self.device_id}_{self.entity_description.key}"
+        return f"{self.station_id}_{self.entity_description.key}"
+
+    @property
+    def available(self) -> bool:
+        """Get if available."""
+
+        if not super().available:
+            return False
+
+        if self.device_id is not None:
+            # Websocket sensors - have Device IDs
+            return bool(
+                self.coordinator.data
+                and self.coordinator.data[self.station_id][self.device_id] is not None
+            )
+
+        return True
+
+
+class WeatherFlowWebsocketSensorObservation(WeatherFlowSensorBase):
+    """Class for Websocket Observations."""
+
+    entity_description: WeatherFlowCloudSensorEntityDescriptionWebsocketObservation
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        """Return the native value."""
+        data = self.coordinator.data[self.station_id][self.device_id]
+        return self.entity_description.value_fn(data)
+
+
+class WeatherFlowWebsocketSensorWind(WeatherFlowSensorBase):
+    """Class for wind over websockets."""
+
+    entity_description: WeatherFlowCloudSensorEntityDescriptionWebsocketWind
 
     @property
     def native_value(self) -> StateType | datetime:
-        """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.station.observation.obs[0])
+        """Return the native value."""
+
+        # This data is often invalid at starutp.
+        if self.coordinator.data is not None:
+            data = self.coordinator.data[self.station_id][self.device_id]
+            return self.entity_description.value_fn(data)
+        return None
+
+
+class WeatherFlowCloudSensorREST(WeatherFlowSensorBase):
+    """Class for a REST based sensor."""
+
+    entity_description: WeatherFlowCloudSensorEntityDescription
+
+    coordinator: WeatherFlowCloudUpdateCoordinatorREST
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the native value."""
+        return self.entity_description.value_fn(
+            self.coordinator.data[self.station_id].observation.obs[0]
+        )

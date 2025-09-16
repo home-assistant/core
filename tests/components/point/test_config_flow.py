@@ -10,7 +10,6 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.point.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -47,7 +46,7 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(  # noqa: SLF001
+    state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
             "flow_id": result["flow_id"],
@@ -157,16 +156,3 @@ async def test_reauthentication_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected
     assert old_entry.unique_id == expected_unique_id
-
-
-async def test_import_flow(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test import flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "pick_implementation"

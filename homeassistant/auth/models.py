@@ -11,7 +11,7 @@ import uuid
 import attr
 from attr import Attribute
 from attr.setters import validate
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.const import __version__
 from homeassistant.data_entry_flow import FlowContext, FlowResult
@@ -33,7 +33,10 @@ class AuthFlowContext(FlowContext, total=False):
     redirect_uri: str
 
 
-AuthFlowResult = FlowResult[AuthFlowContext, tuple[str, str]]
+class AuthFlowResult(FlowResult[AuthFlowContext, tuple[str, str]], total=False):
+    """Typed result dict for auth flow."""
+
+    result: Credentials  # Only present if type is CREATE_ENTRY
 
 
 @attr.s(slots=True)

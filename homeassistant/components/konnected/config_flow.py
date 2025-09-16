@@ -12,7 +12,6 @@ from urllib.parse import urlparse
 
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     BinarySensorDeviceClass,
@@ -40,6 +39,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    SsdpServiceInfo,
+)
 
 from .const import (
     CONF_ACTIVATION,
@@ -254,7 +258,7 @@ class KonnectedFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered konnected panel.
 
@@ -264,16 +268,16 @@ class KonnectedFlowHandler(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug(discovery_info)
 
         try:
-            if discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER] != KONN_MANUFACTURER:
+            if discovery_info.upnp[ATTR_UPNP_MANUFACTURER] != KONN_MANUFACTURER:
                 return self.async_abort(reason="not_konn_panel")
 
             if not any(
-                name in discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
+                name in discovery_info.upnp[ATTR_UPNP_MODEL_NAME]
                 for name in KONN_PANEL_MODEL_NAMES
             ):
                 _LOGGER.warning(
                     "Discovered unrecognized Konnected device %s",
-                    discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "Unknown"),
+                    discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME, "Unknown"),
                 )
                 return self.async_abort(reason="not_konn_panel")
 
@@ -402,9 +406,10 @@ class OptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.entry = config_entry
-        self.model = self.entry.data[CONF_MODEL]
-        self.current_opt = self.entry.options or self.entry.data[CONF_DEFAULT_OPTIONS]
+        self.model = config_entry.data[CONF_MODEL]
+        self.current_opt = (
+            config_entry.options or config_entry.data[CONF_DEFAULT_OPTIONS]
+        )
 
         # as config proceeds we'll build up new options and then replace what's in the config entry
         self.new_opt: dict[str, Any] = {CONF_IO: {}}
@@ -475,7 +480,7 @@ class OptionsFlowHandler(OptionsFlow):
                 ),
                 description_placeholders={
                     "model": KONN_PANEL_MODEL_NAMES[self.model],
-                    "host": self.entry.data[CONF_HOST],
+                    "host": self.config_entry.data[CONF_HOST],
                 },
                 errors=errors,
             )
@@ -511,7 +516,7 @@ class OptionsFlowHandler(OptionsFlow):
                 ),
                 description_placeholders={
                     "model": KONN_PANEL_MODEL_NAMES[self.model],
-                    "host": self.entry.data[CONF_HOST],
+                    "host": self.config_entry.data[CONF_HOST],
                 },
                 errors=errors,
             )
@@ -571,7 +576,7 @@ class OptionsFlowHandler(OptionsFlow):
                 ),
                 description_placeholders={
                     "model": KONN_PANEL_MODEL_NAMES[self.model],
-                    "host": self.entry.data[CONF_HOST],
+                    "host": self.config_entry.data[CONF_HOST],
                 },
                 errors=errors,
             )

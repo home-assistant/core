@@ -20,18 +20,22 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
 from .entity import EsphomeEntity, platform_async_setup_entry
+from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up esphome sensors based on a config entry."""
     await platform_async_setup_entry(
@@ -77,6 +81,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         # if the string is empty
         if unit_of_measurement := static_info.unit_of_measurement:
             self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_suggested_display_precision = static_info.accuracy_decimals
         self._attr_device_class = try_parse_enum(
             SensorDeviceClass, static_info.device_class
         )
@@ -84,16 +89,16 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             return
         if (
             state_class == EsphomeSensorStateClass.MEASUREMENT
-            and static_info.last_reset_type == LastResetType.AUTO
+            and static_info.legacy_last_reset_type == LastResetType.AUTO
         ):
-            # Legacy, last_reset_type auto was the equivalent to the
+            # Legacy, legacy_last_reset_type auto was the equivalent to the
             # TOTAL_INCREASING state class
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         else:
             self._attr_state_class = _STATE_CLASSES.from_esphome(state_class)
 
     @property
-    def native_value(self) -> datetime | str | None:
+    def native_value(self) -> datetime | int | float | None:
         """Return the state of the entity."""
         if not self._has_state or (state := self._state).missing_state:
             return None
@@ -102,7 +107,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             return None
         if self.device_class is SensorDeviceClass.TIMESTAMP:
             return dt_util.utc_from_timestamp(state_float)
-        return f"{state_float:.{self._static_info.accuracy_decimals}f}"
+        return state_float
 
 
 class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):

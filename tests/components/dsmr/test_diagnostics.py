@@ -26,7 +26,7 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    (connection_factory, transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -58,7 +58,7 @@ async def test_diagnostics(
             (0, 0),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m³"},
+                {"value": Decimal("745.695"), "unit": "m³"},
             ],
         ),
         "GAS_METER_READING",

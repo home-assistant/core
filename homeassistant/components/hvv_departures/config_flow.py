@@ -9,19 +9,13 @@ from pygti.auth import GTI_DEFAULT_HOST
 from pygti.exceptions import CannotConnect, InvalidAuth
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import CONF_FILTER, CONF_REAL_TIME, CONF_STATION, DOMAIN
-from .hub import GTIHub
+from .hub import GTIHub, HVVConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,19 +132,19 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HVVConfigEntry,
     ) -> OptionsFlowHandler:
         """Get options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Options flow handler."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    config_entry: HVVConfigEntry
+
+    def __init__(self) -> None:
         """Initialize HVV Departures options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
         self.departure_filters: dict[str, Any] = {}
 
     async def async_step_init(
@@ -160,7 +154,7 @@ class OptionsFlowHandler(OptionsFlow):
         errors = {}
         if not self.departure_filters:
             departure_list = {}
-            hub: GTIHub = self.hass.data[DOMAIN][self.config_entry.entry_id]
+            hub = self.config_entry.runtime_data
 
             try:
                 departure_list = await hub.gti.departureList(

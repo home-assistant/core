@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smhi",
   "iot_class": "cloud_polling",
-  "loggers": ["smhi"],
-  "requirements": ["smhi-pkg==1.0.18"]
+  "loggers": ["pysmhi"],
+  "requirements": ["pysmhi==1.0.2"]
 }

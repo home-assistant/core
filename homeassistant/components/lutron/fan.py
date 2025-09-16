@@ -2,33 +2,29 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pylutron import Output
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, LutronData
+from . import LutronConfigEntry
 from .entity import LutronDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LutronConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron fan platform.
 
     Adds fan controls from the Main Repeater associated with the config_entry as
     fan entities.
     """
-    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    entry_data = config_entry.runtime_data
     async_add_entities(
         [
             LutronFan(area_name, device, entry_data.client)
@@ -51,7 +47,6 @@ class LutronFan(LutronDevice, FanEntity):
     )
     _lutron_device: Output
     _prev_percentage: int | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""

@@ -7,18 +7,16 @@ from typing import Any
 
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import (
-    DATA_FRITZ,
     DOMAIN,
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_PORTFORWARD,
@@ -27,16 +25,15 @@ from .const import (
     WIFI_STANDARD,
     MeshRoles,
 )
-from .coordinator import (
-    AvmWrapper,
-    FritzData,
-    FritzDevice,
-    SwitchInfo,
-    device_filter_out_from_trackers,
-)
+from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzBoxBaseEntity, FritzDeviceBase
+from .helpers import device_filter_out_from_trackers
+from .models import FritzDevice, SwitchInfo
 
 _LOGGER = logging.getLogger(__name__)
+
+# Set a sane value to avoid too many updates
+PARALLEL_UPDATES = 5
 
 
 async def _async_deflection_entities_list(
@@ -207,8 +204,9 @@ async def async_all_entities_list(
     local_ip: str,
 ) -> list[Entity]:
     """Get a list of all entities."""
-
     if avm_wrapper.mesh_role == MeshRoles.SLAVE:
+        if not avm_wrapper.mesh_wifi_uplink:
+            return [*await _async_wifi_entities_list(avm_wrapper, device_friendly_name)]
         return []
 
     return [
@@ -220,12 +218,14 @@ async def async_all_entities_list(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up switches")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
-    data_fritz: FritzData = hass.data[DATA_FRITZ]
+    avm_wrapper = entry.runtime_data
+    data_fritz = hass.data[FRITZ_DATA_KEY]
 
     _LOGGER.debug("Fritzbox services: %s", avm_wrapper.connection.services)
 
@@ -276,7 +276,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
             configuration_url=f"http://{self.coordinator.host}",
             connections={(CONNECTION_NETWORK_MAC, self.coordinator.mac)},
             identifiers={(DOMAIN, self.coordinator.unique_id)},
-            manufacturer="AVM",
+            manufacturer="FRITZ!",
             model=self.coordinator.model,
             name=self._device_name,
             sw_version=self.coordinator.current_firmware,
@@ -508,16 +508,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._name = f"{device.hostname} Internet Access"
         self._attr_unique_id = f"{self._mac}_internet_access"
         self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            default_manufacturer="AVM",
-            default_model="FRITZ!Box Tracked device",
-            default_name=device.hostname,
-            via_device=(
-                DOMAIN,
-                avm_wrapper.unique_id,
-            ),
-        )
 
     @property
     def is_on(self) -> bool | None:
@@ -563,6 +553,9 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
 
         self._attributes = {}
         self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_entity_registry_enabled_default = (
+            avm_wrapper.mesh_role is not MeshRoles.SLAVE
+        )
         self._network_num = network_num
 
         switch_info = SwitchInfo(

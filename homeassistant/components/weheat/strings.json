@@ -2,7 +2,13 @@
   "config": {
     "step": {
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        }
       },
       "find_devices": {
         "title": "Select your heat pump"
@@ -32,6 +38,23 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "indoor_unit_water_pump_state": {
+        "name": "Indoor unit water pump"
+      },
+      "indoor_unit_auxiliary_pump_state": {
+        "name": "Indoor unit auxiliary water pump"
+      },
+      "indoor_unit_dhw_valve_or_pump_state": {
+        "name": "Indoor unit DHW valve or water pump"
+      },
+      "indoor_unit_gas_boiler_state": {
+        "name": "Indoor unit gas boiler heating allowed"
+      },
+      "indoor_unit_electric_heater_state": {
+        "name": "Indoor unit electric heater"
+      }
+    },
     "sensor": {
       "power_output": {
         "name": "Output power"
@@ -54,11 +77,26 @@
       "outside_temperature": {
         "name": "Outside temperature"
       },
+      "thermostat_water_setpoint": {
+        "name": "Water target temperature"
+      },
+      "thermostat_room_temperature": {
+        "name": "Current room temperature"
+      },
+      "thermostat_room_temperature_setpoint": {
+        "name": "Room temperature setpoint"
+      },
       "dhw_top_temperature": {
         "name": "DHW top temperature"
       },
       "dhw_bottom_temperature": {
         "name": "DHW bottom temperature"
+      },
+      "dhw_flow_volume": {
+        "name": "DHW pump flow"
+      },
+      "central_heating_flow_volume": {
+        "name": "Central heating pump flow"
       },
       "heat_pump_state": {
         "state": {
@@ -69,12 +107,21 @@
           "dhw": "Heating DHW",
           "legionella_prevention": "Legionella prevention",
           "defrosting": "Defrosting",
-          "self_test": "Self test",
+          "self_test": "Self-test",
           "manual_control": "Manual control"
         }
       },
       "electricity_used": {
         "name": "Electricity used"
+      },
+      "energy_output": {
+        "name": "Total energy output"
+      },
+      "compressor_rpm": {
+        "name": "Compressor speed"
+      },
+      "compressor_percentage": {
+        "name": "Compressor usage"
       }
     }
   }

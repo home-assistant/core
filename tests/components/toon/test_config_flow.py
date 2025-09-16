@@ -7,10 +7,10 @@ import pytest
 from toonapi import Agreement, ToonError
 
 from homeassistant.components.toon.const import CONF_AGREEMENT, DOMAIN
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
@@ -27,13 +27,12 @@ async def setup_component(hass: HomeAssistant) -> None:
         {"external_url": "https://example.com"},
     )
 
-    with patch("os.path.isfile", return_value=False):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {DOMAIN: {CONF_CLIENT_ID: "client", CONF_CLIENT_SECRET: "secret"}},
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {CONF_CLIENT_ID: "client", CONF_CLIENT_SECRET: "secret"}},
+    )
+    await hass.async_block_till_done()
 
 
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:

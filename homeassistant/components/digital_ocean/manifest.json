@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/digital_ocean",
   "iot_class": "local_polling",
   "loggers": ["digitalocean"],
+  "quality_scale": "legacy",
   "requirements": ["python-digitalocean==1.13.2"]
 }

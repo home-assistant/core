@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import Room, Zone
-from aiohue.v2.models.device import Device, DeviceArchetypes
+from aiohue.v2.models.device import Device
 from aiohue.v2.models.resource import ResourceTypes
 
 from homeassistant.const import (
@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
@@ -55,17 +56,17 @@ async def async_setup_devices(bridge: HueBridge):
                 else None,
             )
         # Register a Hue device resource as device in HA device registry.
-        model = f"{hue_resource.product_data.product_name} ({hue_resource.product_data.model_id})"
         params = {
             ATTR_IDENTIFIERS: {(DOMAIN, hue_resource.id)},
             ATTR_SW_VERSION: hue_resource.product_data.software_version,
             ATTR_NAME: hue_resource.metadata.name,
-            ATTR_MODEL: model,
+            ATTR_MODEL: hue_resource.product_data.product_name,
+            ATTR_MODEL_ID: hue_resource.product_data.model_id,
             ATTR_MANUFACTURER: hue_resource.product_data.manufacturer_name,
         }
         if room := dev_controller.get_room(hue_resource.id):
             params[ATTR_SUGGESTED_AREA] = room.metadata.name
-        if hue_resource.metadata.archetype == DeviceArchetypes.BRIDGE_V2:
+        if hue_resource.id == api.config.bridge_device.id:
             params[ATTR_IDENTIFIERS].add((DOMAIN, api.config.bridge_id))
         else:
             params[ATTR_VIA_DEVICE] = (DOMAIN, api.config.bridge_device.id)
@@ -94,7 +95,10 @@ async def async_setup_devices(bridge: HueBridge):
             add_device(hue_resource)
 
     # create/update all current devices found in controllers
-    known_devices = [add_device(hue_device) for hue_device in dev_controller]
+    # sort the devices to ensure bridges are added first
+    hue_devices = list(dev_controller)
+    hue_devices.sort(key=lambda dev: dev.id != api.config.bridge_device.id)
+    known_devices = [add_device(hue_device) for hue_device in hue_devices]
     known_devices += [add_device(hue_room) for hue_room in api.groups.room]
     known_devices += [add_device(hue_zone) for hue_zone in api.groups.zone]
 

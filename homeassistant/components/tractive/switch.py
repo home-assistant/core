@@ -11,13 +11,14 @@ from aiotractive.exceptions import TractiveError
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Trackables, TractiveClient, TractiveConfigEntry
 from .const import (
     ATTR_BUZZER,
     ATTR_LED,
     ATTR_LIVE_TRACKING,
+    ATTR_POWER_SAVING,
     TRACKER_SWITCH_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
@@ -57,7 +58,7 @@ SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TractiveConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tractive switches."""
     client = entry.runtime_data.client
@@ -104,7 +105,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
         # We received an event, so the service is online and the switch entities should
         #  be available.
-        self._attr_available = True
+        self._attr_available = not event[ATTR_POWER_SAVING]
         self._attr_is_on = event[self.entity_description.key]
 
         self.async_write_ha_state()

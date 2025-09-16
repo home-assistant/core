@@ -1,6 +1,7 @@
 """Constants used in modbus integration."""
 
 from enum import Enum
+import logging
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -16,11 +17,12 @@ from homeassistant.const import (
 CONF_BAUDRATE = "baudrate"
 CONF_BYTESIZE = "bytesize"
 CONF_CLIMATES = "climates"
+CONF_BRIGHTNESS_REGISTER = "brightness_address"
+CONF_COLOR_TEMP_REGISTER = "color_temp_address"
 CONF_DATA_TYPE = "data_type"
 CONF_DEVICE_ADDRESS = "device_address"
 CONF_FANS = "fans"
 CONF_INPUT_TYPE = "input_type"
-CONF_LAZY_ERROR = "lazy_error_count"
 CONF_MAX_TEMP = "max_temp"
 CONF_MAX_VALUE = "max_value"
 CONF_MIN_TEMP = "min_temp"
@@ -28,7 +30,6 @@ CONF_MIN_VALUE = "min_value"
 CONF_MSG_WAIT = "message_wait_milliseconds"
 CONF_NAN_VALUE = "nan_value"
 CONF_PARITY = "parity"
-CONF_RETRIES = "retries"
 CONF_PRECISION = "precision"
 CONF_SCALE = "scale"
 CONF_SLAVE_COUNT = "slave_count"
@@ -62,6 +63,19 @@ CONF_FAN_MODE_DIFFUSE = "state_fan_diffuse"
 CONF_FAN_MODE_VALUES = "values"
 CONF_HVAC_MODE_REGISTER = "hvac_mode_register"
 CONF_HVAC_ONOFF_REGISTER = "hvac_onoff_register"
+CONF_HVAC_ON_VALUE = "hvac_on_value"
+CONF_HVAC_OFF_VALUE = "hvac_off_value"
+CONF_HVAC_ONOFF_COIL = "hvac_onoff_coil"
+CONF_HVAC_ACTION_REGISTER = "hvac_action_register"
+CONF_HVAC_ACTION_COOLING = "action_cooling"
+CONF_HVAC_ACTION_DEFROSTING = "action_defrosting"
+CONF_HVAC_ACTION_DRYING = "action_drying"
+CONF_HVAC_ACTION_FAN = "action_fan"
+CONF_HVAC_ACTION_HEATING = "action_heating"
+CONF_HVAC_ACTION_IDLE = "action_idle"
+CONF_HVAC_ACTION_OFF = "action_off"
+CONF_HVAC_ACTION_PREHEATING = "action_preheating"
+CONF_HVAC_ACTION_VALUES = "values"
 CONF_HVAC_MODE_OFF = "state_off"
 CONF_HVAC_MODE_HEAT = "state_heat"
 CONF_HVAC_MODE_COOL = "state_cool"
@@ -83,6 +97,7 @@ CONF_VIRTUAL_COUNT = "virtual_count"
 CONF_WRITE_TYPE = "write_type"
 CONF_ZERO_SUPPRESS = "zero_suppress"
 
+DEVICE_ID = "device_id"
 RTUOVERTCP = "rtuovertcp"
 SERIAL = "serial"
 TCP = "tcp"
@@ -141,6 +156,8 @@ DEFAULT_SCAN_INTERVAL = 15  # seconds
 DEFAULT_SLAVE = 1
 DEFAULT_STRUCTURE_PREFIX = ">f"
 DEFAULT_TEMP_UNIT = "C"
+DEFAULT_HVAC_ON_VALUE = 1
+DEFAULT_HVAC_OFF_VALUE = 0
 MODBUS_DOMAIN = "modbus"
 
 ACTIVE_SCAN_INTERVAL = 2  # limit to force an extra update
@@ -154,3 +171,13 @@ PLATFORMS = (
     (Platform.SENSOR, CONF_SENSORS),
     (Platform.SWITCH, CONF_SWITCHES),
 )
+
+LIGHT_DEFAULT_MIN_KELVIN = 2000
+LIGHT_DEFAULT_MAX_KELVIN = 7000
+LIGHT_MIN_BRIGHTNESS = 0
+LIGHT_MAX_BRIGHTNESS = 255
+LIGHT_MODBUS_SCALE_MIN = 0
+LIGHT_MODBUS_SCALE_MAX = 100
+LIGHT_MODBUS_INVALID_VALUE = 0xFFFF
+
+_LOGGER = logging.getLogger(__package__)

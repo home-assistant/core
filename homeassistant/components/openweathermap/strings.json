@@ -17,7 +17,15 @@
           "mode": "[%key:common::config_flow::data::mode%]",
           "name": "[%key:common::config_flow::data::name%]"
         },
-        "description": "To generate API key go to https://openweathermap.org/appid"
+        "data_description": {
+          "api_key": "API key for the OpenWeatherMap integration",
+          "language": "Language for the OpenWeatherMap content",
+          "latitude": "Latitude of the location",
+          "longitude": "Longitude of the location",
+          "mode": "Mode for the OpenWeatherMap API",
+          "name": "Name for this OpenWeatherMap location"
+        },
+        "description": "To generate an API key, please refer to the [integration documentation]({doc_url})"
       }
     }
   },
@@ -27,6 +35,10 @@
         "data": {
           "language": "[%key:common::config_flow::data::language%]",
           "mode": "[%key:common::config_flow::data::mode%]"
+        },
+        "data_description": {
+          "language": "[%key:component::openweathermap::config::step::user::data_description::language%]",
+          "mode": "[%key:component::openweathermap::config::step::user::data_description::mode%]"
         }
       }
     }
@@ -46,6 +58,17 @@
           "cannot_connect": "Failed to connect: {error}"
         }
       }
+    }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "name": "Get minute forecast",
+      "description": "Retrieves a minute-by-minute weather forecast for one hour."
+    }
+  },
+  "exceptions": {
+    "service_minute_forecast_mode": {
+      "message": "Minute forecast is available only when {name} mode is set to v3.0"
     }
   }
 }

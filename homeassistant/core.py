@@ -18,15 +18,12 @@ from collections.abc import (
     ValuesView,
 )
 import concurrent.futures
-from contextlib import suppress
 from dataclasses import dataclass
 import datetime
 import enum
 import functools
 import inspect
 import logging
-import os
-import pathlib
 import re
 import threading
 import time
@@ -39,15 +36,14 @@ from typing import (
     NotRequired,
     Self,
     TypedDict,
+    TypeVar,
     cast,
+    final,
     overload,
 )
-from urllib.parse import urlparse
 
-from propcache import cached_property, under_cached_property
-from typing_extensions import TypeVar
+from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
-import yarl
 
 from . import util
 from .const import (
@@ -55,7 +51,6 @@ from .const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
-    BASE_PLATFORMS,
     COMPRESSED_STATE_ATTRIBUTES,
     COMPRESSED_STATE_CONTEXT,
     COMPRESSED_STATE_LAST_CHANGED,
@@ -77,7 +72,7 @@ from .const import (
     MAX_EXPECTED_ENTITY_IDS,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
-    UnitOfLength,
+    STATE_UNKNOWN,
     __version__,
 )
 from .exceptions import (
@@ -90,14 +85,15 @@ from .exceptions import (
     Unauthorized,
 )
 from .helpers.deprecation import (
-    DeprecatedConstantEnum,
+    DeferredDeprecatedAlias,
+    EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
 from .helpers.json import json_bytes, json_fragment
-from .helpers.typing import UNDEFINED, UndefinedType, VolSchemaType
-from .util import dt as dt_util, location
+from .helpers.typing import VolSchemaType
+from .util import dt as dt_util
 from .util.async_ import (
     cancelling,
     create_eager_task,
@@ -112,18 +108,11 @@ from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
 from .util.ulid import ulid_at_time, ulid_now
-from .util.unit_system import (
-    _CONF_UNIT_SYSTEM_IMPERIAL,
-    _CONF_UNIT_SYSTEM_US_CUSTOMARY,
-    METRIC_SYSTEM,
-    UnitSystem,
-    get_unit_system,
-)
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from .auth import AuthManager
-    from .components.http import ApiConfig, HomeAssistantHTTP
+    from .components.http import HomeAssistantHTTP
     from .config_entries import ConfigEntries
     from .helpers.entity import StateInfo
 
@@ -137,10 +126,6 @@ _SENTINEL = object()
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 type CALLBACK_TYPE = Callable[[], None]
 
-CORE_STORAGE_KEY = "core.config"
-CORE_STORAGE_VERSION = 1
-CORE_STORAGE_MINOR_VERSION = 4
-
 DOMAIN = "homeassistant"
 
 # How long to wait to log tasks that are blocking
@@ -150,7 +135,16 @@ type ServiceResponse = JsonObjectType | None
 type EntityServiceResponse = dict[str, ServiceResponse]
 
 
-class ConfigSource(enum.StrEnum):
+class ConfigSource(
+    enum.StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "DEFAULT": ("core_config.ConfigSource.DEFAULT", "2025.11.0"),
+        "DISCOVERED": ("core_config.ConfigSource.DISCOVERED", "2025.11.0"),
+        "STORAGE": ("core_config.ConfigSource.STORAGE", "2025.11.0"),
+        "YAML": ("core_config.ConfigSource.YAML", "2025.11.0"),
+    },
+):
     """Source of core configuration."""
 
     DEFAULT = "default"
@@ -163,7 +157,6 @@ class EventStateEventData(TypedDict):
     """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
 
     entity_id: str
-    new_state: State | None
 
 
 class EventStateChangedData(EventStateEventData):
@@ -172,6 +165,7 @@ class EventStateChangedData(EventStateEventData):
     A state changed event is fired when on state write the state is changed.
     """
 
+    new_state: State | None
     old_state: State | None
 
 
@@ -181,15 +175,21 @@ class EventStateReportedData(EventStateEventData):
     A state reported event is fired when on state write the state is unchanged.
     """
 
+    last_reported: datetime.datetime
+    new_state: State
     old_last_reported: datetime.datetime
 
 
-# SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
-_DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
-    ConfigSource.DISCOVERED, "2025.1"
+def _deprecated_core_config() -> Any:
+    from . import core_config  # noqa: PLC0415
+
+    return core_config.Config
+
+
+# The Config class was moved to core_config in Home Assistant 2024.11
+_DEPRECATED_Config = DeferredDeprecatedAlias(
+    _deprecated_core_config, "homeassistant.core_config.Config", "2025.11"
 )
-_DEPRECATED_SOURCE_STORAGE = DeprecatedConstantEnum(ConfigSource.STORAGE, "2025.1")
-_DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
 
 
 # How long to wait until things that run on startup have to finish.
@@ -327,6 +327,7 @@ class HassJobType(enum.Enum):
     Executor = 3
 
 
+@final  # Final to allow direct checking of the type instead of using isinstance
 class HassJob[**_P, _R_co]:
     """Represent a job to be run later.
 
@@ -335,7 +336,7 @@ class HassJob[**_P, _R_co]:
     we run the job.
     """
 
-    __slots__ = ("target", "name", "_cancel_on_shutdown", "_cache")
+    __slots__ = ("_cache", "_cancel_on_shutdown", "name", "target")
 
     def __init__(
         self,
@@ -385,7 +386,7 @@ def get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
     while isinstance(check_target, functools.partial):
         check_target = check_target.func
 
-    if asyncio.iscoroutinefunction(check_target):
+    if inspect.iscoroutinefunction(check_target):
         return HassJobType.Coroutinefunction
     if is_callback(check_target):
         return HassJobType.Callback
@@ -428,8 +429,7 @@ class HomeAssistant:
 
     def __init__(self, config_dir: str) -> None:
         """Initialize new Home Assistant object."""
-        # pylint: disable-next=import-outside-toplevel
-        from . import loader
+        from .core_config import Config  # noqa: PLC0415
 
         # This is a dictionary that any component can store any data on.
         self.data = HassDict()
@@ -441,8 +441,6 @@ class HomeAssistant:
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config(self, config_dir)
         self.config.async_initialize()
-        self.components = loader.Components(self)
-        self.helpers = loader.Helpers(self)
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
         # If not None, use to signal end-of-loop
@@ -454,13 +452,13 @@ class HomeAssistant:
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
-        self.loop_thread_id = getattr(self.loop, "_thread_id")
+        self.loop_thread_id = self.loop._thread_id  # type: ignore[attr-defined] # noqa: SLF001
 
     def verify_event_loop_thread(self, what: str) -> None:
         """Report and raise if we are not running in the event loop thread."""
         if self.loop_thread_id != threading.get_ident():
             # frame is a circular import, so we import it here
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_non_thread_safe_operation(what)
 
@@ -524,8 +522,7 @@ class HomeAssistant:
 
         await self.async_start()
         if attach_signals:
-            # pylint: disable-next=import-outside-toplevel
-            from .helpers.signal import async_register_signal_handling
+            from .helpers.signal import async_register_signal_handling  # noqa: PLC0415
 
             async_register_signal_handling(self)
 
@@ -537,7 +534,7 @@ class HomeAssistant:
 
         This method is a coroutine.
         """
-        _LOGGER.info("Starting Home Assistant")
+        _LOGGER.info("Starting Home Assistant %s", __version__)
 
         self.set_state(CoreState.starting)
         self.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE)
@@ -645,14 +642,14 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         # late import to avoid circular imports
-        from .helpers import frame  # pylint: disable=import-outside-toplevel
+        from .helpers import frame  # noqa: PLC0415
 
-        frame.report(
-            "calls `async_add_job`, which is deprecated and will be removed in Home "
-            "Assistant 2025.4; Please review "
+        frame.report_usage(
+            "calls `async_add_job`, which should be reviewed against "
             "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
             " for replacement options",
-            error_if_core=False,
+            core_behavior=frame.ReportBehavior.LOG,
+            breaks_in_ha_version="2025.4",
         )
 
         if target is None:
@@ -701,14 +698,14 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         # late import to avoid circular imports
-        from .helpers import frame  # pylint: disable=import-outside-toplevel
+        from .helpers import frame  # noqa: PLC0415
 
-        frame.report(
-            "calls `async_add_hass_job`, which is deprecated and will be removed in Home "
-            "Assistant 2025.5; Please review "
+        frame.report_usage(
+            "calls `async_add_hass_job`, which should be reviewed against "
             "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
             " for replacement options",
-            error_if_core=False,
+            core_behavior=frame.ReportBehavior.LOG,
+            breaks_in_ha_version="2025.5",
         )
 
         return self._async_add_hass_job(hassjob, *args, background=background)
@@ -804,7 +801,7 @@ class HomeAssistant:
         target: target to call.
         """
         if self.loop_thread_id != threading.get_ident():
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_non_thread_safe_operation("hass.async_create_task")
         return self.async_create_task_internal(target, name, eager_start)
@@ -975,14 +972,14 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         # late import to avoid circular imports
-        from .helpers import frame  # pylint: disable=import-outside-toplevel
+        from .helpers import frame  # noqa: PLC0415
 
-        frame.report(
-            "calls `async_run_job`, which is deprecated and will be removed in Home "
-            "Assistant 2025.4; Please review "
+        frame.report_usage(
+            "calls `async_run_job`, which should be reviewed against "
             "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
             " for replacement options",
-            error_if_core=False,
+            core_behavior=frame.ReportBehavior.LOG,
+            breaks_in_ha_version="2025.4",
         )
 
         if asyncio.iscoroutine(target):
@@ -1153,8 +1150,7 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for integrations to stop, the shutdown will"
-                " continue"
+                "Timed out waiting for integrations to stop, the shutdown will continue"
             )
             self._async_log_running_tasks("stop integrations")
 
@@ -1247,7 +1243,7 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    __slots__ = ("id", "user_id", "parent_id", "origin_event", "_cache")
+    __slots__ = ("_cache", "id", "origin_event", "parent_id", "user_id")
 
     def __init__(
         self,
@@ -1318,16 +1314,17 @@ class EventOrigin(enum.Enum):
         return next((idx for idx, origin in enumerate(EventOrigin) if origin is self))
 
 
+@final  # Final to allow direct checking of the type instead of using isinstance
 class Event(Generic[_DataT]):
     """Representation of an event within the bus."""
 
     __slots__ = (
-        "event_type",
+        "_cache",
+        "context",
         "data",
+        "event_type",
         "origin",
         "time_fired_timestamp",
-        "context",
-        "_cache",
     )
 
     def __init__(
@@ -1519,7 +1516,7 @@ class EventBus:
         """
         _verify_event_type_length_or_raise(event_type)
         if self._hass.loop_thread_id != threading.get_ident():
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_non_thread_safe_operation("hass.bus.async_fire")
         return self.async_fire_internal(
@@ -1624,12 +1621,12 @@ class EventBus:
         """
         if run_immediately in (True, False):
             # late import to avoid circular imports
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
-            frame.report(
-                "calls `async_listen` with run_immediately, which is"
-                " deprecated and will be removed in Home Assistant 2025.5",
-                error_if_core=False,
+            frame.report_usage(
+                "calls `async_listen` with run_immediately",
+                core_behavior=frame.ReportBehavior.LOG,
+                breaks_in_ha_version="2025.5",
             )
 
         if event_filter is not None and not is_callback_check_partial(event_filter):
@@ -1694,12 +1691,12 @@ class EventBus:
         """
         if run_immediately in (True, False):
             # late import to avoid circular imports
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
-            frame.report(
-                "calls `async_listen_once` with run_immediately, which is "
-                "deprecated and will be removed in Home Assistant 2025.5",
-                error_if_core=False,
+            frame.report_usage(
+                "calls `async_listen_once` with run_immediately",
+                core_behavior=frame.ReportBehavior.LOG,
+                breaks_in_ha_version="2025.5",
             )
 
         one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(
@@ -1754,32 +1751,52 @@ class CompressedState(TypedDict):
 
 
 class State:
-    """Object to represent a state within the state machine.
+    """Object to represent a state within the state machine."""
 
-    entity_id: the entity that is represented.
-    state: the state of the entity
-    attributes: extra information on entity and state
-    last_changed: last time the state was changed.
-    last_reported: last time the state was reported.
-    last_updated: last time the state or attributes were changed.
-    context: Context in which it was created
-    domain: Domain of this state.
-    object_id: Object id of this state.
+    entity_id: str
+    """The entity that is represented by the state."""
+    domain: str
+    """Domain of the entity that is represented by the state."""
+    object_id: str
+    """object_id: Object id of this state."""
+    state: str
+    """The state of the entity."""
+    attributes: ReadOnlyDict[str, Any]
+    """Extra information on entity and state"""
+    last_changed: datetime.datetime
+    """Last time the state was changed."""
+    last_reported: datetime.datetime
+    """Last time the state was reported.
+
+    Note: When the state is set and neither the state nor attributes are
+    changed, the existing state will be mutated with an updated last_reported.
+
+    When handling a state change event, the last_reported attribute of the old
+    state will not be modified and can safely be used. The last_reported attribute
+    of the new state may be modified and the last_updated attribute should be used
+    instead.
+
+    When handling a state report event, the last_reported attribute may be
+    modified and last_reported from the event data should be used instead.
     """
+    last_updated: datetime.datetime
+    """Last time the state or attributes were changed."""
+    context: Context
+    """Context in which the state was created."""
 
     __slots__ = (
-        "entity_id",
-        "state",
+        "_cache",
         "attributes",
+        "context",
+        "domain",
+        "entity_id",
         "last_changed",
         "last_reported",
         "last_updated",
-        "context",
-        "state_info",
-        "domain",
-        "object_id",
         "last_updated_timestamp",
-        "_cache",
+        "object_id",
+        "state",
+        "state_info",
     )
 
     def __init__(
@@ -1797,18 +1814,13 @@ class State:
     ) -> None:
         """Initialize a new state."""
         self._cache: dict[str, Any] = {}
-        state = str(state)
-
         if validate_entity_id and not valid_entity_id(entity_id):
             raise InvalidEntityFormatError(
                 f"Invalid entity id encountered: {entity_id}. "
                 "Format should be <domain>.<object_id>"
             )
-
-        validate_state(state)
-
         self.entity_id = entity_id
-        self.state = state
+        self.state = state if type(state) is str else str(state)
         # State only creates and expects a ReadOnlyDict so
         # there is no need to check for subclassing with
         # isinstance here so we can use the faster type check.
@@ -1851,7 +1863,20 @@ class State:
 
     @under_cached_property
     def last_reported_timestamp(self) -> float:
-        """Timestamp of last report."""
+        """Timestamp of last report.
+
+        Note: When the state is set and neither the state nor attributes are
+        changed, the existing state will be mutated with an updated last_reported.
+
+        When handling a state change event, the last_reported_timestamp attribute
+        of the old state will not be modified and can safely be used. The
+        last_reported_timestamp attribute of the new state may be modified and the
+        last_updated_timestamp attribute should be used instead.
+
+        When handling a state report event, the last_reported_timestamp attribute may
+        be modified and last_reported from the event data should be used instead.
+        """
+
         return self.last_reported.timestamp()
 
     @under_cached_property
@@ -1936,13 +1961,14 @@ class State:
             # to avoid callers outside of this module
             # from misusing it by mistake.
             context = state_context._as_dict  # noqa: SLF001
+        last_changed_timestamp = self.last_changed_timestamp
         compressed_state: CompressedState = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,
-            COMPRESSED_STATE_LAST_CHANGED: self.last_changed_timestamp,
+            COMPRESSED_STATE_LAST_CHANGED: last_changed_timestamp,
         }
-        if self.last_changed != self.last_updated:
+        if last_changed_timestamp != self.last_updated_timestamp:
             compressed_state[COMPRESSED_STATE_LAST_UPDATED] = (
                 self.last_updated_timestamp
             )
@@ -2067,7 +2093,7 @@ class States(UserDict[str, State]):
 class StateMachine:
     """Helper class that tracks the state of different entities."""
 
-    __slots__ = ("_states", "_states_data", "_reservations", "_bus", "_loop")
+    __slots__ = ("_bus", "_loop", "_reservations", "_states", "_states_data")
 
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
@@ -2236,7 +2262,6 @@ class StateMachine:
         This avoids a race condition where multiple entities with the same
         entity_id are added.
         """
-        entity_id = entity_id.lower()
         if entity_id in self._states_data or entity_id in self._reservations:
             raise HomeAssistantError(
                 "async_reserve must not be called once the state is in the state"
@@ -2273,9 +2298,11 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
+        state = str(new_state)
+        validate_state(state)
         self.async_set_internal(
             entity_id.lower(),
-            str(new_state),
+            state,
             attributes or {},
             force_update,
             context,
@@ -2300,6 +2327,8 @@ class StateMachine:
         and should not be considered a stable API. We will make
         breaking changes to this function in the future and it
         should not be used in integrations.
+
+        Callers are responsible for ensuring the entity_id is lower case.
 
         This method must be run in the event loop.
         """
@@ -2346,6 +2375,7 @@ class StateMachine:
                 EVENT_STATE_REPORTED,
                 {
                     "entity_id": entity_id,
+                    "last_reported": now,
                     "old_last_reported": old_last_reported,
                     "new_state": old_state,
                 },
@@ -2358,6 +2388,16 @@ class StateMachine:
             if TYPE_CHECKING:
                 assert old_state is not None
             attributes = old_state.attributes
+
+        if not same_state and len(new_state) > MAX_LENGTH_STATE_STATE:
+            _LOGGER.error(
+                "State %s for %s is longer than %s, falling back to %s",
+                new_state,
+                entity_id,
+                MAX_LENGTH_STATE_STATE,
+                STATE_UNKNOWN,
+            )
+            new_state = STATE_UNKNOWN
 
         # This is intentionally called with positional only arguments for performance
         # reasons
@@ -2405,7 +2445,7 @@ class SupportsResponse(enum.StrEnum):
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["job", "schema", "domain", "service", "supports_response"]
+    __slots__ = ["domain", "job", "schema", "service", "supports_response"]
 
     def __init__(
         self,
@@ -2432,10 +2472,11 @@ class Service:
 class ServiceCall:
     """Representation of a call to a service."""
 
-    __slots__ = ("domain", "service", "data", "context", "return_response")
+    __slots__ = ("context", "data", "domain", "hass", "return_response", "service")
 
     def __init__(
         self,
+        hass: HomeAssistant,
         domain: str,
         service: str,
         data: dict[str, Any] | None = None,
@@ -2443,6 +2484,7 @@ class ServiceCall:
         return_response: bool = False,
     ) -> None:
         """Initialize a service call."""
+        self.hass = hass
         self.domain = domain
         self.service = service
         self.data = ReadOnlyDict(data or {})
@@ -2463,7 +2505,7 @@ class ServiceCall:
 class ServiceRegistry:
     """Offer the services over the eventbus."""
 
-    __slots__ = ("_services", "_hass")
+    __slots__ = ("_hass", "_services")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a service registry."""
@@ -2768,7 +2810,7 @@ class ServiceRegistry:
             processed_data = service_data
 
         service_call = ServiceCall(
-            domain, service, processed_data, context, return_response
+            self._hass, domain, service, processed_data, context, return_response
         )
 
         self._hass.bus.async_fire_internal(
@@ -2841,452 +2883,6 @@ class ServiceRegistry:
         if TYPE_CHECKING:
             target = cast(Callable[..., ServiceResponse], target)
         return await self._hass.async_add_executor_job(target, service_call)
-
-
-class _ComponentSet(set[str]):
-    """Set of loaded components.
-
-    This set contains both top level components and platforms.
-
-    Examples:
-    `light`, `switch`, `hue`, `mjpeg.camera`, `universal.media_player`,
-    `homeassistant.scene`
-
-    The top level components set only contains the top level components.
-
-    The all components set contains all components, including platform
-    based components.
-
-    """
-
-    def __init__(
-        self, top_level_components: set[str], all_components: set[str]
-    ) -> None:
-        """Initialize the component set."""
-        self._top_level_components = top_level_components
-        self._all_components = all_components
-
-    def add(self, component: str) -> None:
-        """Add a component to the store."""
-        if "." not in component:
-            self._top_level_components.add(component)
-            self._all_components.add(component)
-        else:
-            platform, _, domain = component.partition(".")
-            if domain in BASE_PLATFORMS:
-                self._all_components.add(platform)
-        return super().add(component)
-
-    def remove(self, component: str) -> None:
-        """Remove a component from the store."""
-        if "." in component:
-            raise ValueError("_ComponentSet does not support removing sub-components")
-        self._top_level_components.remove(component)
-        return super().remove(component)
-
-    def discard(self, component: str) -> None:
-        """Remove a component from the store."""
-        raise NotImplementedError("_ComponentSet does not support discard, use remove")
-
-
-class Config:
-    """Configuration settings for Home Assistant."""
-
-    _store: Config._ConfigStore
-
-    def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
-        """Initialize a new config object."""
-        # pylint: disable-next=import-outside-toplevel
-        from .components.zone import DEFAULT_RADIUS
-
-        self.hass = hass
-
-        self.latitude: float = 0
-        self.longitude: float = 0
-
-        self.elevation: int = 0
-        """Elevation (always in meters regardless of the unit system)."""
-
-        self.radius: int = DEFAULT_RADIUS
-        """Radius of the Home Zone (always in meters regardless of the unit system)."""
-
-        self.debug: bool = False
-        self.location_name: str = "Home"
-        self.time_zone: str = "UTC"
-        self.units: UnitSystem = METRIC_SYSTEM
-        self.internal_url: str | None = None
-        self.external_url: str | None = None
-        self.currency: str = "EUR"
-        self.country: str | None = None
-        self.language: str = "en"
-
-        self.config_source: ConfigSource = ConfigSource.DEFAULT
-
-        # If True, pip install is skipped for requirements on startup
-        self.skip_pip: bool = False
-
-        # List of packages to skip when installing requirements on startup
-        self.skip_pip_packages: list[str] = []
-
-        # Set of loaded top level components
-        # This set is updated by _ComponentSet
-        # and should not be modified directly
-        self.top_level_components: set[str] = set()
-
-        # Set of all loaded components including platform
-        # based components
-        self.all_components: set[str] = set()
-
-        # Set of loaded components
-        self.components: _ComponentSet = _ComponentSet(
-            self.top_level_components, self.all_components
-        )
-
-        # API (HTTP) server configuration
-        self.api: ApiConfig | None = None
-
-        # Directory that holds the configuration
-        self.config_dir: str = config_dir
-
-        # List of allowed external dirs to access
-        self.allowlist_external_dirs: set[str] = set()
-
-        # List of allowed external URLs that integrations may use
-        self.allowlist_external_urls: set[str] = set()
-
-        # Dictionary of Media folders that integrations may use
-        self.media_dirs: dict[str, str] = {}
-
-        # If Home Assistant is running in recovery mode
-        self.recovery_mode: bool = False
-
-        # Use legacy template behavior
-        self.legacy_templates: bool = False
-
-        # If Home Assistant is running in safe mode
-        self.safe_mode: bool = False
-
-    def async_initialize(self) -> None:
-        """Finish initializing a config object.
-
-        This must be called before the config object is used.
-        """
-        self._store = self._ConfigStore(self.hass)
-
-    def distance(self, lat: float, lon: float) -> float | None:
-        """Calculate distance from Home Assistant.
-
-        Async friendly.
-        """
-        return self.units.length(
-            location.distance(self.latitude, self.longitude, lat, lon),
-            UnitOfLength.METERS,
-        )
-
-    def path(self, *path: str) -> str:
-        """Generate path to the file within the configuration directory.
-
-        Async friendly.
-        """
-        return os.path.join(self.config_dir, *path)
-
-    def is_allowed_external_url(self, url: str) -> bool:
-        """Check if an external URL is allowed."""
-        parsed_url = f"{yarl.URL(url)!s}/"
-
-        return any(
-            allowed
-            for allowed in self.allowlist_external_urls
-            if parsed_url.startswith(allowed)
-        )
-
-    def is_allowed_path(self, path: str) -> bool:
-        """Check if the path is valid for access from outside.
-
-        This function does blocking I/O and should not be called from the event loop.
-        Use hass.async_add_executor_job to schedule it on the executor.
-        """
-        assert path is not None
-
-        thepath = pathlib.Path(path)
-        try:
-            # The file path does not have to exist (it's parent should)
-            if thepath.exists():
-                thepath = thepath.resolve()
-            else:
-                thepath = thepath.parent.resolve()
-        except (FileNotFoundError, RuntimeError, PermissionError):
-            return False
-
-        for allowed_path in self.allowlist_external_dirs:
-            try:
-                thepath.relative_to(allowed_path)
-            except ValueError:
-                pass
-            else:
-                return True
-
-        return False
-
-    def as_dict(self) -> dict[str, Any]:
-        """Create a dictionary representation of the configuration.
-
-        Async friendly.
-        """
-        allowlist_external_dirs = list(self.allowlist_external_dirs)
-        return {
-            "latitude": self.latitude,
-            "longitude": self.longitude,
-            "elevation": self.elevation,
-            "unit_system": self.units.as_dict(),
-            "location_name": self.location_name,
-            "time_zone": self.time_zone,
-            "components": list(self.components),
-            "config_dir": self.config_dir,
-            # legacy, backwards compat
-            "whitelist_external_dirs": allowlist_external_dirs,
-            "allowlist_external_dirs": allowlist_external_dirs,
-            "allowlist_external_urls": list(self.allowlist_external_urls),
-            "version": __version__,
-            "config_source": self.config_source,
-            "recovery_mode": self.recovery_mode,
-            "state": self.hass.state.value,
-            "external_url": self.external_url,
-            "internal_url": self.internal_url,
-            "currency": self.currency,
-            "country": self.country,
-            "language": self.language,
-            "safe_mode": self.safe_mode,
-            "debug": self.debug,
-            "radius": self.radius,
-        }
-
-    async def async_set_time_zone(self, time_zone_str: str) -> None:
-        """Help to set the time zone."""
-        if time_zone := await dt_util.async_get_time_zone(time_zone_str):
-            self.time_zone = time_zone_str
-            dt_util.set_default_time_zone(time_zone)
-        else:
-            raise ValueError(f"Received invalid time zone {time_zone_str}")
-
-    def set_time_zone(self, time_zone_str: str) -> None:
-        """Set the time zone.
-
-        This is a legacy method that should not be used in new code.
-        Use async_set_time_zone instead.
-
-        It will be removed in Home Assistant 2025.6.
-        """
-        # report is imported here to avoid a circular import
-        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
-
-        report(
-            "set the time zone using set_time_zone instead of async_set_time_zone"
-            " which will stop working in Home Assistant 2025.6",
-            error_if_core=True,
-            error_if_integration=True,
-        )
-        if time_zone := dt_util.get_time_zone(time_zone_str):
-            self.time_zone = time_zone_str
-            dt_util.set_default_time_zone(time_zone)
-        else:
-            raise ValueError(f"Received invalid time zone {time_zone_str}")
-
-    async def _async_update(
-        self,
-        *,
-        source: ConfigSource,
-        latitude: float | None = None,
-        longitude: float | None = None,
-        elevation: int | None = None,
-        unit_system: str | None = None,
-        location_name: str | None = None,
-        time_zone: str | None = None,
-        external_url: str | UndefinedType | None = UNDEFINED,
-        internal_url: str | UndefinedType | None = UNDEFINED,
-        currency: str | None = None,
-        country: str | UndefinedType | None = UNDEFINED,
-        language: str | None = None,
-        radius: int | None = None,
-    ) -> None:
-        """Update the configuration from a dictionary."""
-        self.config_source = source
-        if latitude is not None:
-            self.latitude = latitude
-        if longitude is not None:
-            self.longitude = longitude
-        if elevation is not None:
-            self.elevation = elevation
-        if unit_system is not None:
-            try:
-                self.units = get_unit_system(unit_system)
-            except ValueError:
-                self.units = METRIC_SYSTEM
-        if location_name is not None:
-            self.location_name = location_name
-        if time_zone is not None:
-            await self.async_set_time_zone(time_zone)
-        if external_url is not UNDEFINED:
-            self.external_url = external_url
-        if internal_url is not UNDEFINED:
-            self.internal_url = internal_url
-        if currency is not None:
-            self.currency = currency
-        if country is not UNDEFINED:
-            self.country = country
-        if language is not None:
-            self.language = language
-        if radius is not None:
-            self.radius = radius
-
-    async def async_update(self, **kwargs: Any) -> None:
-        """Update the configuration from a dictionary."""
-        # pylint: disable-next=import-outside-toplevel
-        from .config import (
-            _raise_issue_if_historic_currency,
-            _raise_issue_if_no_country,
-        )
-
-        await self._async_update(source=ConfigSource.STORAGE, **kwargs)
-        await self._async_store()
-        self.hass.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE, kwargs)
-
-        _raise_issue_if_historic_currency(self.hass, self.currency)
-        _raise_issue_if_no_country(self.hass, self.country)
-
-    async def async_load(self) -> None:
-        """Load [homeassistant] core config."""
-        if not (data := await self._store.async_load()):
-            return
-
-        # In 2021.9 we fixed validation to disallow a path (because that's never
-        # correct) but this data still lives in storage, so we print a warning.
-        if data.get("external_url") and urlparse(data["external_url"]).path not in (
-            "",
-            "/",
-        ):
-            _LOGGER.warning("Invalid external_url set. It's not allowed to have a path")
-
-        if data.get("internal_url") and urlparse(data["internal_url"]).path not in (
-            "",
-            "/",
-        ):
-            _LOGGER.warning("Invalid internal_url set. It's not allowed to have a path")
-
-        await self._async_update(
-            source=ConfigSource.STORAGE,
-            latitude=data.get("latitude"),
-            longitude=data.get("longitude"),
-            elevation=data.get("elevation"),
-            unit_system=data.get("unit_system_v2"),
-            location_name=data.get("location_name"),
-            time_zone=data.get("time_zone"),
-            external_url=data.get("external_url", UNDEFINED),
-            internal_url=data.get("internal_url", UNDEFINED),
-            currency=data.get("currency"),
-            country=data.get("country"),
-            language=data.get("language"),
-            radius=data["radius"],
-        )
-
-    async def _async_store(self) -> None:
-        """Store [homeassistant] core config."""
-        data = {
-            "latitude": self.latitude,
-            "longitude": self.longitude,
-            "elevation": self.elevation,
-            # We don't want any integrations to use the name of the unit system
-            # so we are using the private attribute here
-            "unit_system_v2": self.units._name,  # noqa: SLF001
-            "location_name": self.location_name,
-            "time_zone": self.time_zone,
-            "external_url": self.external_url,
-            "internal_url": self.internal_url,
-            "currency": self.currency,
-            "country": self.country,
-            "language": self.language,
-            "radius": self.radius,
-        }
-        await self._store.async_save(data)
-
-    # Circular dependency prevents us from generating the class at top level
-    # pylint: disable-next=import-outside-toplevel
-    from .helpers.storage import Store
-
-    class _ConfigStore(Store[dict[str, Any]]):
-        """Class to help storing Config data."""
-
-        def __init__(self, hass: HomeAssistant) -> None:
-            """Initialize storage class."""
-            super().__init__(
-                hass,
-                CORE_STORAGE_VERSION,
-                CORE_STORAGE_KEY,
-                private=True,
-                atomic_writes=True,
-                minor_version=CORE_STORAGE_MINOR_VERSION,
-            )
-            self._original_unit_system: str | None = None  # from old store 1.1
-
-        async def _async_migrate_func(
-            self,
-            old_major_version: int,
-            old_minor_version: int,
-            old_data: dict[str, Any],
-        ) -> dict[str, Any]:
-            """Migrate to the new version."""
-
-            # pylint: disable-next=import-outside-toplevel
-            from .components.zone import DEFAULT_RADIUS
-
-            data = old_data
-            if old_major_version == 1 and old_minor_version < 2:
-                # In 1.2, we remove support for "imperial", replaced by "us_customary"
-                # Using a new key to allow rollback
-                self._original_unit_system = data.get("unit_system")
-                data["unit_system_v2"] = self._original_unit_system
-                if data["unit_system_v2"] == _CONF_UNIT_SYSTEM_IMPERIAL:
-                    data["unit_system_v2"] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
-            if old_major_version == 1 and old_minor_version < 3:
-                # In 1.3, we add the key "language", initialize it from the
-                # owner account.
-                data["language"] = "en"
-                try:
-                    owner = await self.hass.auth.async_get_owner()
-                    if owner is not None:
-                        # pylint: disable-next=import-outside-toplevel
-                        from .components.frontend import storage as frontend_store
-
-                        # pylint: disable-next=import-outside-toplevel
-                        from .helpers import config_validation as cv
-
-                        _, owner_data = await frontend_store.async_user_store(
-                            self.hass, owner.id
-                        )
-
-                        if (
-                            "language" in owner_data
-                            and "language" in owner_data["language"]
-                        ):
-                            with suppress(vol.InInvalid):
-                                data["language"] = cv.language(
-                                    owner_data["language"]["language"]
-                                )
-                # pylint: disable-next=broad-except
-                except Exception:
-                    _LOGGER.exception("Unexpected error during core config migration")
-            if old_major_version == 1 and old_minor_version < 4:
-                # In 1.4, we add the key "radius", initialize it with the default.
-                data.setdefault("radius", DEFAULT_RADIUS)
-
-            if old_major_version > 1:
-                raise NotImplementedError
-            return data
-
-        async def async_save(self, data: dict[str, Any]) -> None:
-            if self._original_unit_system:
-                data["unit_system"] = self._original_unit_system
-            return await super().async_save(data)
 
 
 # These can be removed if no deprecated constant are in this module anymore

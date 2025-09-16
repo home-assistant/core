@@ -6,9 +6,13 @@ from unittest.mock import MagicMock, PropertyMock, patch
 import pytest
 from roombapy import RoombaConnectionError, RoombaInfo
 
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.roomba import config_flow
-from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
+from homeassistant.components.roomba.const import (
+    CONF_BLID,
+    CONF_CONTINUOUS,
+    DEFAULT_DELAY,
+    DOMAIN,
+)
 from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_IGNORE,
@@ -18,6 +22,8 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +33,7 @@ VALID_CONFIG = {CONF_HOST: MOCK_IP, CONF_BLID: "BLID", CONF_PASSWORD: "password"
 DISCOVERY_DEVICES = [
     (
         SOURCE_DHCP,
-        dhcp.DhcpServiceInfo(
+        DhcpServiceInfo(
             ip=MOCK_IP,
             macaddress="501479ddeeff",
             hostname="irobot-blid",
@@ -35,7 +41,7 @@ DISCOVERY_DEVICES = [
     ),
     (
         SOURCE_DHCP,
-        dhcp.DhcpServiceInfo(
+        DhcpServiceInfo(
             ip=MOCK_IP,
             macaddress="80a589ddeeff",
             hostname="roomba-blid",
@@ -43,7 +49,7 @@ DISCOVERY_DEVICES = [
     ),
     (
         SOURCE_ZEROCONF,
-        zeroconf.ZeroconfServiceInfo(
+        ZeroconfServiceInfo(
             ip_address=ip_address(MOCK_IP),
             ip_addresses=[ip_address(MOCK_IP)],
             hostname="irobot-blid.local.",
@@ -55,7 +61,7 @@ DISCOVERY_DEVICES = [
     ),
     (
         SOURCE_ZEROCONF,
-        zeroconf.ZeroconfServiceInfo(
+        ZeroconfServiceInfo(
             ip_address=ip_address(MOCK_IP),
             ip_addresses=[ip_address(MOCK_IP)],
             hostname="roomba-blid.local.",
@@ -69,14 +75,14 @@ DISCOVERY_DEVICES = [
 
 
 DHCP_DISCOVERY_DEVICES_WITHOUT_MATCHING_IP = [
-    dhcp.DhcpServiceInfo(
+    DhcpServiceInfo(
         ip="4.4.4.4",
-        macaddress="50:14:79:DD:EE:FF",
+        macaddress="501479ddeeff",
         hostname="irobot-blid",
     ),
-    dhcp.DhcpServiceInfo(
+    DhcpServiceInfo(
         ip="5.5.5.5",
-        macaddress="80:A5:89:DD:EE:FF",
+        macaddress="80a589ddeeff",
         hostname="roomba-blid",
     ),
 ]
@@ -206,7 +212,7 @@ async def test_form_user_discovery_and_password_fetch(hass: HomeAssistant) -> No
     assert result3["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -331,7 +337,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(
     assert result4["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -468,7 +474,7 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(
     assert result3["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -541,7 +547,7 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(
     assert result4["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -677,7 +683,7 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(
     assert result4["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -687,7 +693,7 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(
 @pytest.mark.parametrize("discovery_data", DISCOVERY_DEVICES)
 async def test_dhcp_discovery_and_roomba_discovery_finds(
     hass: HomeAssistant,
-    discovery_data: tuple[str, dhcp.DhcpServiceInfo | zeroconf.ZeroconfServiceInfo],
+    discovery_data: tuple[str, DhcpServiceInfo | ZeroconfServiceInfo],
 ) -> None:
     """Test we can process the discovery from dhcp and roomba discovery matches the device."""
 
@@ -738,7 +744,7 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(
     assert result2["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -816,7 +822,7 @@ async def test_dhcp_discovery_falls_back_to_manual(
     assert result4["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -886,7 +892,7 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(
     assert result3["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -905,7 +911,7 @@ async def test_dhcp_discovery_with_ignored(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
                 hostname="irobot-blid",
@@ -928,7 +934,7 @@ async def test_dhcp_discovery_already_configured_host(hass: HomeAssistant) -> No
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
                 hostname="irobot-blid",
@@ -954,7 +960,7 @@ async def test_dhcp_discovery_already_configured_blid(hass: HomeAssistant) -> No
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
                 hostname="irobot-blid",
@@ -980,7 +986,7 @@ async def test_dhcp_discovery_not_irobot(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
                 hostname="Notirobot-blid",
@@ -1001,7 +1007,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
                 hostname="irobot-blid",
@@ -1018,7 +1024,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
                 hostname="irobot-blidthatislonger",
@@ -1039,7 +1045,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
                 hostname="irobot-bl",
@@ -1077,7 +1083,7 @@ async def test_dhcp_discovery_when_user_flow_in_progress(hass: HomeAssistant) ->
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
                 hostname="irobot-blidthatislonger",
@@ -1119,10 +1125,10 @@ async def test_options_flow(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_CONTINUOUS: True, CONF_DELAY: 1},
+        user_input={CONF_CONTINUOUS: True, CONF_DELAY: DEFAULT_DELAY},
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_CONTINUOUS: True, CONF_DELAY: 1}
-    assert config_entry.options == {CONF_CONTINUOUS: True, CONF_DELAY: 1}
+    assert result["data"] == {CONF_CONTINUOUS: True, CONF_DELAY: DEFAULT_DELAY}
+    assert config_entry.options == {CONF_CONTINUOUS: True, CONF_DELAY: DEFAULT_DELAY}

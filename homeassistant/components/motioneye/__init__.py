@@ -277,11 +277,6 @@ def _add_camera(
     )
 
 
-async def _async_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Handle entry updates."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up motionEye from a config entry."""
     hass.data.setdefault(DOMAIN, {})
@@ -322,6 +317,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=DOMAIN,
         update_method=async_update_data,
         update_interval=DEFAULT_SCAN_INTERVAL,
@@ -381,7 +377,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator.async_add_listener(_async_process_motioneye_cameras)
     )
     await coordinator.async_refresh()
-    entry.async_on_unload(entry.add_update_listener(_async_entry_updated))
 
     return True
 

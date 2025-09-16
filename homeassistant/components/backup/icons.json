@@ -1,6 +1,16 @@
 {
+  "entity": {
+    "event": {
+      "automatic_backup_event": {
+        "default": "mdi:database"
+      }
+    }
+  },
   "services": {
     "create": {
+      "service": "mdi:cloud-upload"
+    },
+    "create_automatic": {
       "service": "mdi:cloud-upload"
     }
   }

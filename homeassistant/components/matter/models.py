@@ -18,6 +18,14 @@ type SensorValueTypes = type[
 ]
 
 
+# A sentinel object to detect if a parameter is supplied or not.
+class _UNSET_TYPE:
+    pass
+
+
+UNSET = _UNSET_TYPE()
+
+
 class MatterDeviceInfo(TypedDict):
     """Dictionary with Matter Device info.
 
@@ -50,6 +58,9 @@ class MatterEntityInfo:
 
     # entity class to use to instantiate the entity
     entity_class: type
+
+    # the original discovery schema used to create this entity
+    discovery_schema: MatterDiscoverySchema
 
     @property
     def primary_attribute(self) -> type[ClusterAttributeDescriptor]:
@@ -89,6 +100,9 @@ class MatterDiscoverySchema:
     # [optional] the endpoint's vendor_id must match ANY of these values
     vendor_id: tuple[int, ...] | None = None
 
+    # [optional] the endpoint's product_id must match ANY of these values
+    product_id: tuple[int, ...] | None = None
+
     # [optional] the endpoint's product_name must match ANY of these values
     product_name: tuple[str, ...] | None = None
 
@@ -108,11 +122,32 @@ class MatterDiscoverySchema:
     # are not discovered by other entities
     optional_attributes: tuple[type[ClusterAttributeDescriptor], ...] | None = None
 
-    # [optional] the primary attribute value must contain this value
-    # for example for the AcceptedCommandList
-    # NOTE: only works for list values
-    value_contains: Any | None = None
+    # [optional] the primary attribute's cluster featuremap must contain this value
+    # for example for the DoorSensor on a DoorLock Cluster
+    featuremap_contains: int | None = None
 
     # [optional] bool to specify if this primary value may be discovered
     # by multiple platforms
     allow_multi: bool = False
+
+    # [optional] the primary attribute value may not be null/None
+    allow_none_value: bool = False
+
+    # [optional] the primary attribute value must contain this value
+    # for example for the AcceptedCommandList
+    # NOTE: only works for list values
+    value_contains: Any = UNSET
+
+    # [optional] the secondary (required) attribute value must contain this value
+    # for example for the AcceptedCommandList
+    # NOTE: only works for list values
+    secondary_value_contains: Any = UNSET
+
+    # [optional] the primary attribute value must NOT have this value
+    # for example to filter out invalid values (such as empty string instead of null)
+    # in case of a list value, the list may not contain this value
+    value_is_not: Any = UNSET
+
+    # [optional] the secondary (required) attribute value must NOT have this value
+    # for example to filter out empty lists in list sensor values
+    secondary_value_is_not: Any = UNSET

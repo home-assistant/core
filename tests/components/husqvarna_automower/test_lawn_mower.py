@@ -3,8 +3,8 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from aioautomower.exceptions import ApiException
-from aioautomower.utils import mower_list_to_dictionary_dataclass
+from aioautomower.exceptions import ApiError
+from aioautomower.model import MowerActivities, MowerAttributes, MowerStates
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from voluptuous.error import MultipleInvalid
@@ -18,42 +18,60 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.mark.parametrize(
+    ("activity", "mower_state", "expected_state"),
+    [
+        (MowerActivities.UNKNOWN, MowerStates.PAUSED, LawnMowerActivity.PAUSED),
+        (MowerActivities.MOWING, MowerStates.IN_OPERATION, LawnMowerActivity.MOWING),
+        (MowerActivities.NOT_APPLICABLE, MowerStates.ERROR, LawnMowerActivity.ERROR),
+        (
+            MowerActivities.GOING_HOME,
+            MowerStates.IN_OPERATION,
+            LawnMowerActivity.RETURNING,
+        ),
+        (
+            MowerActivities.NOT_APPLICABLE,
+            MowerStates.IN_OPERATION,
+            LawnMowerActivity.MOWING,
+        ),
+        (
+            MowerActivities.PARKED_IN_CS,
+            MowerStates.IN_OPERATION,
+            LawnMowerActivity.DOCKED,
+        ),
+        (
+            MowerActivities.GOING_HOME,
+            MowerStates.RESTRICTED,
+            LawnMowerActivity.RETURNING,
+        ),
+    ],
 )
-
-
 async def test_lawn_mower_states(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
+    activity: MowerActivities,
+    mower_state: MowerStates,
+    expected_state: LawnMowerActivity,
 ) -> None:
     """Test lawn_mower state."""
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("lawn_mower.test_mower_1")
     assert state is not None
     assert state.state == LawnMowerActivity.DOCKED
-
-    for activity, state, expected_state in (
-        ("UNKNOWN", "PAUSED", LawnMowerActivity.PAUSED),
-        ("MOWING", "NOT_APPLICABLE", LawnMowerActivity.MOWING),
-        ("NOT_APPLICABLE", "ERROR", LawnMowerActivity.ERROR),
-        ("GOING_HOME", "IN_OPERATION", LawnMowerActivity.RETURNING),
-    ):
-        values[TEST_MOWER_ID].mower.activity = activity
-        values[TEST_MOWER_ID].mower.state = state
-        mock_automower_client.get_status.return_value = values
-        freezer.tick(SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        state = hass.states.get("lawn_mower.test_mower_1")
-        assert state.state == expected_state
+    values[TEST_MOWER_ID].mower.activity = activity
+    values[TEST_MOWER_ID].mower.state = mower_state
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("lawn_mower.test_mower_1")
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
@@ -82,9 +100,7 @@ async def test_lawn_mower_commands(
     mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
     mocked_method.assert_called_once_with(TEST_MOWER_ID)
 
-    getattr(
-        mock_automower_client.commands, aioautomower_command
-    ).side_effect = ApiException("Test error")
+    mocked_method.side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",
@@ -131,8 +147,7 @@ async def test_lawn_mower_service_commands(
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
-    mocked_method = AsyncMock()
-    setattr(mock_automower_client.commands, aioautomower_command, mocked_method)
+    mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
     await hass.services.async_call(
         domain=DOMAIN,
         service=service,
@@ -142,9 +157,7 @@ async def test_lawn_mower_service_commands(
     )
     mocked_method.assert_called_once_with(TEST_MOWER_ID, extra_data)
 
-    getattr(
-        mock_automower_client.commands, aioautomower_command
-    ).side_effect = ApiException("Test error")
+    mocked_method.side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",
@@ -185,8 +198,7 @@ async def test_lawn_mower_override_work_area_command(
 ) -> None:
     """Test lawn_mower work area override commands."""
     await setup_integration(hass, mock_config_entry)
-    mocked_method = AsyncMock()
-    setattr(mock_automower_client.commands, aioautomower_command, mocked_method)
+    mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
     await hass.services.async_call(
         domain=DOMAIN,
         service=service,
@@ -198,7 +210,7 @@ async def test_lawn_mower_override_work_area_command(
 
     getattr(
         mock_automower_client.commands, aioautomower_command
-    ).side_effect = ApiException("Test error")
+    ).side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",
@@ -253,12 +265,10 @@ async def test_lawn_mower_wrong_service_commands(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
     values[TEST_MOWER_ID].capabilities.work_areas = mower_support_wa
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)

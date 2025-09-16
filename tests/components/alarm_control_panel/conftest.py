@@ -1,20 +1,21 @@
 """Fixturs for Alarm Control Panel tests."""
 
-from collections.abc import Generator
-from unittest.mock import MagicMock
+from collections.abc import AsyncGenerator, Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
 )
 from homeassistant.components.alarm_control_panel.const import CodeFormat
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import entity_registry as er, frame
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import MockAlarm
 
@@ -107,6 +108,22 @@ class MockFlow(ConfigFlow):
     """Test flow."""
 
 
+@pytest.fixture(name="mock_as_custom_component")
+async def mock_frame(hass: HomeAssistant) -> AsyncGenerator[None]:
+    """Mock frame."""
+    with patch(
+        "homeassistant.helpers.frame.get_integration_frame",
+        return_value=frame.IntegrationFrame(
+            custom_integration=True,
+            integration="alarm_control_panel",
+            module="test_init.py",
+            relative_filename="test_init.py",
+            frame=frame.get_current_frame(),
+        ),
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
 def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
@@ -156,7 +173,7 @@ async def setup_alarm_control_panel_platform_test_entity(
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [ALARM_CONTROL_PANEL_DOMAIN]
+            config_entry, [Platform.ALARM_CONTROL_PANEL]
         )
         return True
 
@@ -178,14 +195,14 @@ async def setup_alarm_control_panel_platform_test_entity(
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test alarm control panel platform via config entry."""
         async_add_entities([entity])
 
     mock_platform(
         hass,
-        f"{TEST_DOMAIN}.{ALARM_CONTROL_PANEL_DOMAIN}",
+        f"{TEST_DOMAIN}.{DOMAIN}",
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 

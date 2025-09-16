@@ -8,7 +8,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.conversation import default_agent
-from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
+from homeassistant.components.conversation.const import (
+    DATA_DEFAULT_ENTITY,
+    HOME_ASSISTANT_AGENT,
+)
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
@@ -22,8 +25,6 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 AGENT_ID_OPTIONS = [
     None,
-    # Old value of conversation.HOME_ASSISTANT_AGENT,
-    "homeassistant",
     # Current value of conversation.HOME_ASSISTANT_AGENT,
     "conversation.home_assistant",
 ]
@@ -187,7 +188,7 @@ async def test_http_api_wrong_data(
         },
         {
             "text": "Test Text",
-            "agent_id": "homeassistant",
+            "agent_id": HOME_ASSISTANT_AGENT,
         },
     ],
 )
@@ -355,15 +356,15 @@ async def test_ws_hass_agent_debug_null_result(
     """Test homeassistant agent debug websocket command with a null result."""
     client = await hass_ws_client(hass)
 
-    async def async_recognize(self, user_input, *args, **kwargs):
+    async def async_recognize_intent(self, user_input, *args, **kwargs):
         if user_input.text == "bad sentence":
             return None
 
         return await self.async_recognize(user_input, *args, **kwargs)
 
     with patch(
-        "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize",
-        async_recognize,
+        "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize_intent",
+        async_recognize_intent,
     ):
         await client.send_json_auto_id(
             {
@@ -501,6 +502,19 @@ async def test_ws_hass_agent_debug_sentence_trigger(
 
     client = await hass_ws_client(hass)
 
+    # List sentence
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/sentences/list",
+        }
+    )
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
     # Use trigger sentence
     await client.send_json_auto_id(
         {
@@ -523,3 +537,60 @@ async def test_ws_hass_agent_debug_sentence_trigger(
 
     # Trigger should not have been executed
     assert len(calls) == 0
+
+
+async def test_ws_hass_language_scores(
+    hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting language support scores."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/homeassistant/language_scores"}
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    # Sanity check
+    result = msg["result"]
+    assert result["languages"]["en-US"] == {
+        "cloud": 3,
+        "focused_local": 2,
+        "full_local": 3,
+    }
+
+
+async def test_ws_hass_language_scores_with_filter(
+    hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting language support scores with language/country filter."""
+    client = await hass_ws_client(hass)
+
+    # Language filter
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/homeassistant/language_scores", "language": "de"}
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    # German should be preferred
+    result = msg["result"]
+    assert result["preferred_language"] == "de-DE"
+
+    # Language/country filter
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/language_scores",
+            "language": "en",
+            "country": "GB",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    # GB English should be preferred
+    result = msg["result"]
+    assert result["preferred_language"] == "en-GB"

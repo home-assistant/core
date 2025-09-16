@@ -7,26 +7,19 @@ from typing import Any
 
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import event
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 SUPPORT_MINIMAL_SERVICES = VacuumEntityFeature.TURN_ON | VacuumEntityFeature.TURN_OFF
 
 SUPPORT_BASIC_SERVICES = (
-    VacuumEntityFeature.STATE
-    | VacuumEntityFeature.START
-    | VacuumEntityFeature.STOP
-    | VacuumEntityFeature.BATTERY
+    VacuumEntityFeature.STATE | VacuumEntityFeature.START | VacuumEntityFeature.STOP
 )
 
 SUPPORT_MOST_SERVICES = (
@@ -35,7 +28,6 @@ SUPPORT_MOST_SERVICES = (
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.PAUSE
     | VacuumEntityFeature.RETURN_HOME
-    | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.FAN_SPEED
 )
 
@@ -50,24 +42,23 @@ SUPPORT_ALL_SERVICES = (
     | VacuumEntityFeature.SEND_COMMAND
     | VacuumEntityFeature.LOCATE
     | VacuumEntityFeature.STATUS
-    | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.LOCATE
     | VacuumEntityFeature.MAP
     | VacuumEntityFeature.CLEAN_SPOT
 )
 
 FAN_SPEEDS = ["min", "medium", "high", "max"]
-DEMO_VACUUM_COMPLETE = "0_Ground_floor"
-DEMO_VACUUM_MOST = "1_First_floor"
-DEMO_VACUUM_BASIC = "2_Second_floor"
-DEMO_VACUUM_MINIMAL = "3_Third_floor"
-DEMO_VACUUM_NONE = "4_Fourth_floor"
+DEMO_VACUUM_COMPLETE = "Demo vacuum 0 ground floor"
+DEMO_VACUUM_MOST = "Demo vacuum 1 first floor"
+DEMO_VACUUM_BASIC = "Demo vacuum 2 second floor"
+DEMO_VACUUM_MINIMAL = "Demo vacuum 3 third floor"
+DEMO_VACUUM_NONE = "Demo vacuum 4 fourth floor"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
     async_add_entities(
@@ -91,20 +82,9 @@ class StateDemoVacuum(StateVacuumEntity):
         """Initialize the vacuum."""
         self._attr_name = name
         self._attr_supported_features = supported_features
-        self._state = STATE_DOCKED
+        self._attr_activity = VacuumActivity.DOCKED
         self._fan_speed = FAN_SPEEDS[1]
         self._cleaned_area: float = 0
-        self._battery_level = 100
-
-    @property
-    def state(self) -> str:
-        """Return the current state of the vacuum."""
-        return self._state
-
-    @property
-    def battery_level(self) -> int:
-        """Return the current battery level of the vacuum."""
-        return max(0, min(100, self._battery_level))
 
     @property
     def fan_speed(self) -> str:
@@ -123,35 +103,33 @@ class StateDemoVacuum(StateVacuumEntity):
 
     def start(self) -> None:
         """Start or resume the cleaning task."""
-        if self._state != STATE_CLEANING:
-            self._state = STATE_CLEANING
+        if self._attr_activity != VacuumActivity.CLEANING:
+            self._attr_activity = VacuumActivity.CLEANING
             self._cleaned_area += 1.32
-            self._battery_level -= 1
             self.schedule_update_ha_state()
 
     def pause(self) -> None:
         """Pause the cleaning task."""
-        if self._state == STATE_CLEANING:
-            self._state = STATE_PAUSED
+        if self._attr_activity == VacuumActivity.CLEANING:
+            self._attr_activity = VacuumActivity.PAUSED
             self.schedule_update_ha_state()
 
     def stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task, do not return to dock."""
-        self._state = STATE_IDLE
+        self._attr_activity = VacuumActivity.IDLE
         self.schedule_update_ha_state()
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Return dock to charging base."""
-        self._state = STATE_RETURNING
+        self._attr_activity = VacuumActivity.RETURNING
         self.schedule_update_ha_state()
 
         event.call_later(self.hass, 30, self.__set_state_to_dock)
 
     def clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
-        self._state = STATE_CLEANING
+        self._attr_activity = VacuumActivity.CLEANING
         self._cleaned_area += 1.32
-        self._battery_level -= 1
         self.schedule_update_ha_state()
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
@@ -167,12 +145,12 @@ class StateDemoVacuum(StateVacuumEntity):
             "persistent_notification",
             service_data={"message": "I'm here!", "title": "Locate request"},
         )
-        self._state = STATE_IDLE
+        self._attr_activity = VacuumActivity.IDLE
         self.async_write_ha_state()
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Locate the vacuum's position."""
-        self._state = STATE_CLEANING
+        self._attr_activity = VacuumActivity.CLEANING
         self.async_write_ha_state()
 
     async def async_send_command(
@@ -182,9 +160,9 @@ class StateDemoVacuum(StateVacuumEntity):
         **kwargs: Any,
     ) -> None:
         """Send a command to the vacuum."""
-        self._state = STATE_IDLE
+        self._attr_activity = VacuumActivity.IDLE
         self.async_write_ha_state()
 
     def __set_state_to_dock(self, _: datetime) -> None:
-        self._state = STATE_DOCKED
+        self._attr_activity = VacuumActivity.DOCKED
         self.schedule_update_ha_state()

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 
-from chip.clusters.Objects import ClusterAttributeDescriptor
+from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, NullValue
 from matter_server.client.models.node import MatterEndpoint
 
 from homeassistant.const import Platform
@@ -13,18 +13,21 @@ from homeassistant.core import callback
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .button import DISCOVERY_SCHEMAS as BUTTON_SCHEMAS
 from .climate import DISCOVERY_SCHEMAS as CLIMATE_SENSOR_SCHEMAS
+from .const import FEATUREMAP_ATTRIBUTE_ID
 from .cover import DISCOVERY_SCHEMAS as COVER_SCHEMAS
 from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
 from .fan import DISCOVERY_SCHEMAS as FAN_SCHEMAS
 from .light import DISCOVERY_SCHEMAS as LIGHT_SCHEMAS
 from .lock import DISCOVERY_SCHEMAS as LOCK_SCHEMAS
-from .models import MatterDiscoverySchema, MatterEntityInfo
+from .models import UNSET, MatterDiscoverySchema, MatterEntityInfo
 from .number import DISCOVERY_SCHEMAS as NUMBER_SCHEMAS
 from .select import DISCOVERY_SCHEMAS as SELECT_SCHEMAS
 from .sensor import DISCOVERY_SCHEMAS as SENSOR_SCHEMAS
 from .switch import DISCOVERY_SCHEMAS as SWITCH_SCHEMAS
 from .update import DISCOVERY_SCHEMAS as UPDATE_SCHEMAS
+from .vacuum import DISCOVERY_SCHEMAS as VACUUM_SCHEMAS
 from .valve import DISCOVERY_SCHEMAS as VALVE_SCHEMAS
+from .water_heater import DISCOVERY_SCHEMAS as WATER_HEATER_SCHEMAS
 
 DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
@@ -40,7 +43,9 @@ DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.SENSOR: SENSOR_SCHEMAS,
     Platform.SWITCH: SWITCH_SCHEMAS,
     Platform.UPDATE: UPDATE_SCHEMAS,
+    Platform.VACUUM: VACUUM_SCHEMAS,
     Platform.VALVE: VALVE_SCHEMAS,
+    Platform.WATER_HEATER: WATER_HEATER_SCHEMAS,
 }
 SUPPORTED_PLATFORMS = tuple(DISCOVERY_SCHEMAS)
 
@@ -64,10 +69,19 @@ def async_discover_entities(
         if any(x in schema.required_attributes for x in discovered_attributes):
             continue
 
+        primary_attribute = schema.required_attributes[0]
+
         # check vendor_id
         if (
             schema.vendor_id is not None
             and device_info.vendorID not in schema.vendor_id
+        ):
+            continue
+
+        # check product_id
+        if (
+            schema.product_id is not None
+            and device_info.productID not in schema.product_id
         ):
             continue
 
@@ -118,16 +132,74 @@ def async_discover_entities(
         ):
             continue
 
-        # check for required value in (primary) attribute
-        if schema.value_contains is not None and (
-            (primary_attribute := next((x for x in schema.required_attributes), None))
-            is None
-            or (value := endpoint.get_attribute_value(None, primary_attribute)) is None
-            or not isinstance(value, list)
-            or schema.value_contains not in value
+        # check for required value in cluster featuremap
+        if schema.featuremap_contains is not None and (
+            not bool(
+                int(
+                    endpoint.get_attribute_value(
+                        primary_attribute.cluster_id, FEATUREMAP_ATTRIBUTE_ID
+                    )
+                )
+                & schema.featuremap_contains
+            )
         ):
             continue
 
+        # BEGIN checks on actual attribute values
+        # these are the least likely to be used and least efficient, so they are checked last
+
+        # check if PRIMARY value exists but is none/null
+        if not schema.allow_none_value and any(
+            endpoint.get_attribute_value(None, val_schema) in (None, NullValue)
+            for val_schema in schema.required_attributes
+        ):
+            continue
+
+        # check for required value in PRIMARY attribute
+        primary_value = endpoint.get_attribute_value(None, primary_attribute)
+        if schema.value_contains is not UNSET and (
+            isinstance(primary_value, list)
+            and schema.value_contains not in primary_value
+        ):
+            continue
+
+        # check for value that may not be present in PRIMARY attribute
+        if schema.value_is_not is not UNSET and (
+            schema.value_is_not == primary_value
+            or (
+                isinstance(primary_value, list) and schema.value_is_not in primary_value
+            )
+        ):
+            continue
+
+        # check for value that may not be present in SECONDARY attribute
+        secondary_attribute = (
+            schema.required_attributes[1]
+            if len(schema.required_attributes) > 1
+            else None
+        )
+        secondary_value = (
+            endpoint.get_attribute_value(None, secondary_attribute)
+            if secondary_attribute
+            else None
+        )
+        if schema.secondary_value_is_not is not UNSET and (
+            (schema.secondary_value_is_not == secondary_value)
+            or (
+                isinstance(secondary_value, list)
+                and schema.secondary_value_is_not in secondary_value
+            )
+        ):
+            continue
+
+        # check for required value in SECONDARY attribute
+        if schema.secondary_value_contains is not UNSET and (
+            isinstance(secondary_value, list)
+            and schema.secondary_value_contains not in secondary_value
+        ):
+            continue
+
+        # FINISH all validation checks
         # all checks passed, this value belongs to an entity
 
         attributes_to_watch = list(schema.required_attributes)
@@ -145,6 +217,7 @@ def async_discover_entities(
             attributes_to_watch=attributes_to_watch,
             entity_description=schema.entity_description,
             entity_class=schema.entity_class,
+            discovery_schema=schema,
         )
 
         # prevent re-discovery of the primary attribute if not allowed

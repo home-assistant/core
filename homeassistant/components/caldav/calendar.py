@@ -23,9 +23,12 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -109,6 +112,7 @@ async def async_setup_platform(
             entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             coordinator = CalDavUpdateCoordinator(
                 hass,
+                None,
                 calendar=calendar,
                 days=days,
                 include_all_day=True,
@@ -126,6 +130,7 @@ async def async_setup_platform(
             entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             coordinator = CalDavUpdateCoordinator(
                 hass,
+                None,
                 calendar=calendar,
                 days=days,
                 include_all_day=False,
@@ -141,7 +146,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: CalDavConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CalDav calendar platform for a config entry."""
     calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
@@ -152,6 +157,7 @@ async def async_setup_entry(
                 async_generate_entity_id(ENTITY_ID_FORMAT, calendar.name, hass=hass),
                 CalDavUpdateCoordinator(
                     hass,
+                    entry,
                     calendar=calendar,
                     days=CONFIG_ENTRY_DEFAULT_DAYS,
                     include_all_day=True,
@@ -171,7 +177,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
 
     def __init__(
         self,
-        name: str,
+        name: str | None,
         entity_id: str,
         coordinator: CalDavUpdateCoordinator,
         unique_id: str | None = None,
@@ -204,7 +210,8 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         if self._supports_offset:
             self._attr_extra_state_attributes = {
                 "offset_reached": is_offset_reached(
-                    self._event.start_datetime_local, self.coordinator.offset
+                    self._event.start_datetime_local,
+                    self.coordinator.offset,  # type: ignore[arg-type]
                 )
                 if self._event
                 else False

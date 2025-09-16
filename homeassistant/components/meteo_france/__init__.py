@@ -6,13 +6,14 @@ import logging
 from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.helpers import is_valid_warning_department
 from meteofrance_api.model import CurrentPhenomenons, Forecast, Rain
+from requests import RequestException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -22,7 +23,6 @@ from .const import (
     COORDINATOR_RAIN,
     DOMAIN,
     PLATFORMS,
-    UNDO_UPDATE_LISTENER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,13 +56,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from API endpoint."""
         assert isinstance(department, str)
         return await hass.async_add_executor_job(
-            client.get_warning_current_phenomenoms, department, 0, True
+            client.get_warning_current_phenomenons, department, 0, True
         )
 
     coordinator_forecast = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"Météo-France forecast for city {entry.title}",
+        config_entry=entry,
         update_method=_async_update_data_forecast_forecast,
         update_interval=SCAN_INTERVAL,
     )
@@ -75,22 +76,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not coordinator_forecast.last_update_success:
         raise ConfigEntryNotReady
 
-    # Check if rain forecast is available.
-    if coordinator_forecast.data.position.get("rain_product_available") == 1:
-        coordinator_rain = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"Météo-France rain for city {entry.title}",
-            update_method=_async_update_data_rain,
-            update_interval=SCAN_INTERVAL_RAIN,
-        )
-        await coordinator_rain.async_refresh()
-
-        if not coordinator_rain.last_update_success:
-            raise ConfigEntryNotReady
-    else:
+    # Check rain forecast.
+    coordinator_rain = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"Météo-France rain for city {entry.title}",
+        config_entry=entry,
+        update_method=_async_update_data_rain,
+        update_interval=SCAN_INTERVAL_RAIN,
+    )
+    try:
+        await coordinator_rain._async_refresh(log_failures=False)  # noqa: SLF001
+    except RequestException:
         _LOGGER.warning(
-            "1 hour rain forecast not available. %s is not in covered zone",
+            "1 hour rain forecast not available: %s is not in covered zone",
             entry.title,
         )
 
@@ -106,6 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass,
                 _LOGGER,
                 name=f"Météo-France alert for department {department}",
+                config_entry=entry,
                 update_method=_async_update_data_alert,
                 update_interval=SCAN_INTERVAL,
             )
@@ -132,13 +132,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.title,
         )
 
-    undo_listener = entry.add_update_listener(_async_update_listener)
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     hass.data[DOMAIN][entry.entry_id] = {
-        UNDO_UPDATE_LISTENER: undo_listener,
         COORDINATOR_FORECAST: coordinator_forecast,
-        COORDINATOR_RAIN: coordinator_rain,
     }
+    if coordinator_rain and coordinator_rain.last_update_success:
+        hass.data[DOMAIN][entry.entry_id][COORDINATOR_RAIN] = coordinator_rain
     if coordinator_alert and coordinator_alert.last_update_success:
         hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT] = coordinator_alert
 
@@ -164,7 +164,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)

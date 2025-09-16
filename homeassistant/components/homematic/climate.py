@@ -63,7 +63,11 @@ class HMThermostat(HMDevice, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
+    _attr_min_temp = 4.5
+    _attr_max_temp = 30.5
+    _attr_target_temperature_step = 0.5
+
+    _state: str
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -94,7 +98,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         return [HVACMode.HEAT, HVACMode.OFF]
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
         if self._data.get("BOOST_MODE", False):
             return "boost"
@@ -111,7 +115,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         return mode
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """Return a list of available preset modes."""
         return [
             HM_PRESET_MAP[mode]
@@ -120,7 +124,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         ]
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         for node in HM_HUMI_MAP:
             if node in self._data:
@@ -128,7 +132,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         return None
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         for node in HM_TEMP_MAP:
             if node in self._data:
@@ -136,7 +140,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         return None
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._data.get(self._state)
 
@@ -164,21 +168,6 @@ class HMThermostat(HMDevice, ClimateEntity):
             self._hmdevice.MODE = self._hmdevice.COMFORT_MODE
         elif preset_mode == PRESET_ECO:
             self._hmdevice.MODE = self._hmdevice.LOWERING_MODE
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return 4.5
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return 30.5
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 0.5
 
     @property
     def _hm_control_mode(self):

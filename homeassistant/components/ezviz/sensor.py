@@ -7,13 +7,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_COORDINATOR, DOMAIN
-from .coordinator import EzvizDataUpdateCoordinator
+from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 PARALLEL_UPDATES = 1
@@ -68,26 +66,56 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key="last_alarm_type_name",
         translation_key="last_alarm_type_name",
     ),
+    "Record_Mode": SensorEntityDescription(
+        key="Record_Mode",
+        translation_key="record_mode",
+        entity_registry_enabled_default=False,
+    ),
+    "battery_camera_work_mode": SensorEntityDescription(
+        key="battery_camera_work_mode",
+        translation_key="battery_camera_work_mode",
+        entity_registry_enabled_default=False,
+    ),
+    "powerStatus": SensorEntityDescription(
+        key="powerStatus",
+        translation_key="power_status",
+        entity_registry_enabled_default=False,
+    ),
+    "OnlineStatus": SensorEntityDescription(
+        key="OnlineStatus",
+        translation_key="online_status",
+        entity_registry_enabled_default=False,
+    ),
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EzvizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ sensors based on a config entry."""
-    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
+    entities: list[EzvizSensor] = []
 
-    async_add_entities(
-        [
+    for camera, sensors in coordinator.data.items():
+        entities.extend(
             EzvizSensor(coordinator, camera, sensor)
-            for camera in coordinator.data
-            for sensor, value in coordinator.data[camera].items()
-            if sensor in SENSOR_TYPES
-            if value is not None
-        ]
-    )
+            for sensor, value in sensors.items()
+            if sensor in SENSOR_TYPES and value is not None
+        )
+
+        optionals = sensors.get("optionals", {})
+        entities.extend(
+            EzvizSensor(coordinator, camera, optional_key)
+            for optional_key in ("powerStatus", "OnlineStatus")
+            if optional_key in optionals
+        )
+
+        if "mode" in optionals.get("Record_Mode", {}):
+            entities.append(EzvizSensor(coordinator, camera, "mode"))
+
+    async_add_entities(entities)
 
 
 class EzvizSensor(EzvizEntity, SensorEntity):

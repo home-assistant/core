@@ -1,0 +1,396 @@
+# serializer version: 1
+# name: test_get_library_action[album]
+  dict({
+    'items': list([
+      dict({
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'A Space Love Adventure',
+            'uri': 'library://artist/289',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.ALBUM: 'album'>,
+        'name': 'Synth Punk EP',
+        'uri': 'library://album/396',
+        'version': '',
+      }),
+      dict({
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Various Artists',
+            'uri': 'library://artist/96',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.ALBUM: 'album'>,
+        'name': 'Synthwave (The 80S Revival)',
+        'uri': 'library://album/95',
+        'version': 'The 80S Revival',
+      }),
+    ]),
+    'limit': 25,
+    'media_type': <MediaType.ALBUM: 'album'>,
+    'offset': 0,
+    'order_by': 'name',
+  })
+# ---
+# name: test_get_library_action[artist]
+  dict({
+    'items': list([
+      dict({
+        'image': None,
+        'media_type': <MediaType.ARTIST: 'artist'>,
+        'name': 'W O L F C L U B',
+        'uri': 'library://artist/127',
+        'version': '',
+      }),
+    ]),
+    'limit': 25,
+    'media_type': <MediaType.ARTIST: 'artist'>,
+    'offset': 0,
+    'order_by': 'name',
+  })
+# ---
+# name: test_get_library_action[audiobook]
+  dict({
+    'items': list([
+      dict({
+        'image': None,
+        'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
+        'name': 'Test Audiobook',
+        'uri': 'library://audiobook/1',
+        'version': '',
+      }),
+      dict({
+        'image': None,
+        'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
+        'name': 'Test Audiobook 0',
+        'uri': 'library://audiobook/11',
+        'version': '',
+      }),
+      dict({
+        'image': None,
+        'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
+        'name': 'Test Audiobook 1',
+        'uri': 'library://audiobook/12',
+        'version': '',
+      }),
+      dict({
+        'image': None,
+        'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
+        'name': 'Test Audiobook 2',
+        'uri': 'library://audiobook/13',
+        'version': '',
+      }),
+      dict({
+        'image': None,
+        'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
+        'name': 'Test Audiobook 3',
+        'uri': 'library://audiobook/14',
+        'version': '',
+      }),
+      dict({
+        'image': None,
+        'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
+        'name': 'Test Audiobook 4',
+        'uri': 'library://audiobook/15',
+        'version': '',
+      }),
+    ]),
+    'limit': 25,
+    'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
+    'offset': 0,
+    'order_by': 'name',
+  })
+# ---
+# name: test_get_library_action[playlist]
+  dict({
+    'items': list([
+      dict({
+        'image': None,
+        'media_type': <MediaType.PLAYLIST: 'playlist'>,
+        'name': '1970s Rock Hits',
+        'uri': 'library://playlist/40',
+        'version': '',
+      }),
+    ]),
+    'limit': 25,
+    'media_type': <MediaType.PLAYLIST: 'playlist'>,
+    'offset': 0,
+    'order_by': 'name',
+  })
+# ---
+# name: test_get_library_action[podcast]
+  dict({
+    'items': list([
+      dict({
+        'image': None,
+        'media_type': <MediaType.PODCAST: 'podcast'>,
+        'name': 'Test Podcast 0',
+        'uri': 'library://podcast/6',
+        'version': '',
+      }),
+      dict({
+        'image': None,
+        'media_type': <MediaType.PODCAST: 'podcast'>,
+        'name': 'Test Podcast 1',
+        'uri': 'library://podcast/7',
+        'version': '',
+      }),
+      dict({
+        'image': None,
+        'media_type': <MediaType.PODCAST: 'podcast'>,
+        'name': 'Test Podcast 2',
+        'uri': 'library://podcast/8',
+        'version': '',
+      }),
+      dict({
+        'image': None,
+        'media_type': <MediaType.PODCAST: 'podcast'>,
+        'name': 'Test Podcast 3',
+        'uri': 'library://podcast/9',
+        'version': '',
+      }),
+      dict({
+        'image': None,
+        'media_type': <MediaType.PODCAST: 'podcast'>,
+        'name': 'Test Podcast 4',
+        'uri': 'library://podcast/10',
+        'version': '',
+      }),
+    ]),
+    'limit': 25,
+    'media_type': <MediaType.PODCAST: 'podcast'>,
+    'offset': 0,
+    'order_by': 'name',
+  })
+# ---
+# name: test_get_library_action[radio]
+  dict({
+    'items': list([
+      dict({
+        'image': None,
+        'media_type': <MediaType.RADIO: 'radio'>,
+        'name': 'fm4 | ORF | HQ',
+        'uri': 'library://radio/1',
+        'version': '',
+      }),
+    ]),
+    'limit': 25,
+    'media_type': <MediaType.RADIO: 'radio'>,
+    'offset': 0,
+    'order_by': 'name',
+  })
+# ---
+# name: test_get_library_action[track]
+  dict({
+    'items': list([
+      dict({
+        'album': dict({
+          'image': None,
+          'media_type': <MediaType.ALBUM: 'album'>,
+          'name': 'Traveller',
+          'uri': 'library://album/463',
+          'version': '',
+        }),
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Chris Stapleton',
+            'uri': 'library://artist/433',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.TRACK: 'track'>,
+        'name': 'Tennessee Whiskey',
+        'uri': 'library://track/456',
+        'version': '',
+      }),
+      dict({
+        'album': dict({
+          'image': None,
+          'media_type': <MediaType.ALBUM: 'album'>,
+          'name': 'Thelma + Louise',
+          'uri': 'library://album/471',
+          'version': '',
+        }),
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Bastille',
+            'uri': 'library://artist/81',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.TRACK: 'track'>,
+        'name': 'Thelma + Louise',
+        'uri': 'library://track/467',
+        'version': '',
+      }),
+      dict({
+        'album': dict({
+          'image': None,
+          'media_type': <MediaType.ALBUM: 'album'>,
+          'name': 'HIStory - PAST, PRESENT AND FUTURE - BOOK I',
+          'uri': 'library://album/486',
+          'version': '',
+        }),
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Michael Jackson',
+            'uri': 'library://artist/30',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.TRACK: 'track'>,
+        'name': "They Don't Care About Us",
+        'uri': 'library://track/485',
+        'version': '',
+      }),
+      dict({
+        'album': dict({
+          'image': None,
+          'media_type': <MediaType.ALBUM: 'album'>,
+          'name': 'Better Dayz',
+          'uri': 'library://album/487',
+          'version': '',
+        }),
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': '2Pac',
+            'uri': 'library://artist/159',
+            'version': '',
+          }),
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'The Outlawz',
+            'uri': 'library://artist/451',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.TRACK: 'track'>,
+        'name': "They Don't Give A F**** About Us",
+        'uri': 'library://track/486',
+        'version': '',
+      }),
+      dict({
+        'album': dict({
+          'image': None,
+          'media_type': <MediaType.ALBUM: 'album'>,
+          'name': 'Things We Lost In The Fire',
+          'uri': 'library://album/488',
+          'version': '',
+        }),
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Bastille',
+            'uri': 'library://artist/81',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.TRACK: 'track'>,
+        'name': 'Things We Lost In The Fire',
+        'uri': 'library://track/487',
+        'version': 'TORN Remix',
+      }),
+      dict({
+        'album': dict({
+          'image': None,
+          'media_type': <MediaType.ALBUM: 'album'>,
+          'name': 'Doom Days',
+          'uri': 'library://album/489',
+          'version': '',
+        }),
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Bastille',
+            'uri': 'library://artist/81',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.TRACK: 'track'>,
+        'name': 'Those Nights',
+        'uri': 'library://track/488',
+        'version': '',
+      }),
+    ]),
+    'limit': 25,
+    'media_type': <MediaType.TRACK: 'track'>,
+    'offset': 0,
+    'order_by': 'name',
+  })
+# ---
+# name: test_search_action
+  dict({
+    'albums': list([
+      dict({
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'A Space Love Adventure',
+            'uri': 'library://artist/289',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.ALBUM: 'album'>,
+        'name': 'Synth Punk EP',
+        'uri': 'library://album/396',
+        'version': '',
+      }),
+      dict({
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Various Artists',
+            'uri': 'library://artist/96',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.ALBUM: 'album'>,
+        'name': 'Synthwave (The 80S Revival)',
+        'uri': 'library://album/95',
+        'version': 'The 80S Revival',
+      }),
+    ]),
+    'artists': list([
+    ]),
+    'audiobooks': list([
+    ]),
+    'playlists': list([
+    ]),
+    'podcasts': list([
+    ]),
+    'radio': list([
+    ]),
+    'tracks': list([
+    ]),
+  })
+# ---

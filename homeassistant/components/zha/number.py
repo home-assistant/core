@@ -10,8 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UndefinedType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ZHAEntity
 from .helpers import (
@@ -27,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation Analog Output from config entry."""
     zha_data = get_zha_data(hass)
@@ -45,17 +44,6 @@ async def async_setup_entry(
 
 class ZhaNumber(ZHAEntity, RestoreNumber):
     """Representation of a ZHA Number entity."""
-
-    @property
-    def name(self) -> str | UndefinedType | None:
-        """Return the name of the number entity."""
-        if (description := self.entity_data.entity.description) is None:
-            return super().name
-
-        # The name of this entity is reported by the device itself.
-        # For backwards compatibility, we keep the same format as before. This
-        # should probably be changed in the future to omit the prefix.
-        return f"{super().name} {description}"
 
     @property
     def native_value(self) -> float | None:

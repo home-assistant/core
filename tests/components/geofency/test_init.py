@@ -10,7 +10,6 @@ from homeassistant import config_entries
 from homeassistant.components import zone
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.geofency import CONF_MOBILE_BEACONS, DOMAIN
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -18,6 +17,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -318,12 +318,11 @@ async def test_load_unload_entry(
     state_1 = hass.states.get(f"device_tracker.{device_name}")
     assert state_1.state == STATE_HOME
 
-    assert len(hass.data[DOMAIN]["devices"]) == 1
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert len(entry.runtime_data) == 1
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert len(hass.data[DOMAIN]["devices"]) == 0
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

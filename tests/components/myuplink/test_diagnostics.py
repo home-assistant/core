@@ -1,6 +1,6 @@
 """Tests for the diagnostics data provided by the myuplink integration."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
 from homeassistant.core import HomeAssistant

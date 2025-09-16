@@ -2,43 +2,63 @@
 
 import logging
 
-from .const import VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
+from pyvesync.base_devices import VeSyncHumidifier
+from pyvesync.base_devices.fan_base import VeSyncFanBase
+from pyvesync.base_devices.outlet_base import VeSyncOutlet
+from pyvesync.base_devices.purifier_base import VeSyncPurifier
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.devices.vesyncswitch import VeSyncWallSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_process_devices(hass, manager):
-    """Assign devices to proper component."""
-    devices = {}
-    devices[VS_SWITCHES] = []
-    devices[VS_FANS] = []
-    devices[VS_LIGHTS] = []
-    devices[VS_SENSORS] = []
+def rgetattr(obj: object, attr: str):
+    """Return a string in the form word.1.2.3 and return the item as 3. Note that this last value could be in a dict as well."""
+    _this_func = rgetattr
+    sp = attr.split(".", 1)
+    if len(sp) == 1:
+        left, right = sp[0], ""
+    else:
+        left, right = sp
 
-    await hass.async_add_executor_job(manager.update)
+    if isinstance(obj, dict):
+        obj = obj.get(left)
+    elif hasattr(obj, left):
+        obj = getattr(obj, left)
+    else:
+        return None
 
-    if manager.fans:
-        devices[VS_FANS].extend(manager.fans)
-        # Expose fan sensors separately
-        devices[VS_SENSORS].extend(manager.fans)
-        _LOGGER.debug("%d VeSync fans found", len(manager.fans))
+    if right:
+        obj = _this_func(obj, right)
 
-    if manager.bulbs:
-        devices[VS_LIGHTS].extend(manager.bulbs)
-        _LOGGER.debug("%d VeSync lights found", len(manager.bulbs))
+    return obj
 
-    if manager.outlets:
-        devices[VS_SWITCHES].extend(manager.outlets)
-        # Expose outlets' voltage, power & energy usage as separate sensors
-        devices[VS_SENSORS].extend(manager.outlets)
-        _LOGGER.debug("%d VeSync outlets found", len(manager.outlets))
 
-    if manager.switches:
-        for switch in manager.switches:
-            if not switch.is_dimmable():
-                devices[VS_SWITCHES].append(switch)
-            else:
-                devices[VS_LIGHTS].append(switch)
-        _LOGGER.debug("%d VeSync switches found", len(manager.switches))
+def is_humidifier(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents a humidifier."""
 
-    return devices
+    return isinstance(device, VeSyncHumidifier)
+
+
+def is_fan(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents a fan."""
+
+    return isinstance(device, VeSyncFanBase)
+
+
+def is_outlet(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents an outlet."""
+
+    return isinstance(device, VeSyncOutlet)
+
+
+def is_wall_switch(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents a wall switch, note this doessn't include dimming switches."""
+
+    return isinstance(device, VeSyncWallSwitch)
+
+
+def is_purifier(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents an air purifier."""
+
+    return isinstance(device, VeSyncPurifier)

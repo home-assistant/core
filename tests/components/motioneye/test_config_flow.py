@@ -9,7 +9,6 @@ from motioneye_client.client import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.motioneye.const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
@@ -23,6 +22,7 @@ from homeassistant.components.motioneye.const import (
 from homeassistant.const import CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import TEST_URL, create_mock_motioneye_client, create_mock_motioneye_config_entry
 
@@ -532,7 +532,7 @@ async def test_advanced_options(hass: HomeAssistant) -> None:
         assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
         assert CONF_STREAM_URL_TEMPLATE not in result["data"]
         assert len(mock_setup.mock_calls) == 0
-        assert len(mock_setup_entry.mock_calls) == 0
+        assert len(mock_setup_entry.mock_calls) == 1
 
         result = await hass.config_entries.options.async_init(
             config_entry.entry_id, context={"show_advanced_options": True}
@@ -551,4 +551,4 @@ async def test_advanced_options(hass: HomeAssistant) -> None:
         assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
         assert result["data"][CONF_STREAM_URL_TEMPLATE] == "http://moo"
         assert len(mock_setup.mock_calls) == 0
-        assert len(mock_setup_entry.mock_calls) == 0
+        assert len(mock_setup_entry.mock_calls) == 1

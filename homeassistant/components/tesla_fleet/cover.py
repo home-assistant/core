@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslaFleetConfigEntry
 from .entity import TeslaFleetVehicleEntity
@@ -28,7 +28,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the TeslaFleet cover platform from a config entry."""
 
@@ -57,7 +57,7 @@ class TeslaFleetWindowEntity(TeslaFleetVehicleEntity, CoverEntity):
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
-        if not self.scoped or self.vehicle.signing:
+        if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
     def _async_update_attrs(self) -> None:
@@ -111,7 +111,7 @@ class TeslaFleetChargePortEntity(TeslaFleetVehicleEntity, CoverEntity):
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
-        if not self.scoped or self.vehicle.signing:
+        if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
     def _async_update_attrs(self) -> None:
@@ -144,7 +144,7 @@ class TeslaFleetFrontTrunkEntity(TeslaFleetVehicleEntity, CoverEntity):
 
         self.scoped = Scope.VEHICLE_CMDS in scopes
         self._attr_supported_features = CoverEntityFeature.OPEN
-        if not self.scoped or self.vehicle.signing:
+        if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
     def _async_update_attrs(self) -> None:
@@ -172,18 +172,12 @@ class TeslaFleetRearTrunkEntity(TeslaFleetVehicleEntity, CoverEntity):
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
-        if not self.scoped or self.vehicle.signing:
+        if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        value = self._value
-        if value == CLOSED:
-            self._attr_is_closed = True
-        elif value == OPEN:
-            self._attr_is_closed = False
-        else:
-            self._attr_is_closed = None
+        self._attr_is_closed = self._value == CLOSED
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open rear trunk."""
@@ -216,7 +210,7 @@ class TeslaFleetSunroofEntity(TeslaFleetVehicleEntity, CoverEntity):
         super().__init__(vehicle, "vehicle_state_sun_roof_state")
 
         self.scoped = Scope.VEHICLE_CMDS in scopes
-        if not self.scoped or self.vehicle.signing:
+        if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
     def _async_update_attrs(self) -> None:

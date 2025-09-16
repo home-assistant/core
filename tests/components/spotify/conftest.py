@@ -2,9 +2,29 @@
 
 from collections.abc import Generator
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from spotifyaio.models import (
+    Album,
+    Artist,
+    Devices,
+    FollowedArtistResponse,
+    NewReleasesResponse,
+    NewReleasesResponseInner,
+    PlaybackState,
+    PlayedTrackResponse,
+    Playlist,
+    PlaylistResponse,
+    SavedAlbumResponse,
+    SavedShowResponse,
+    SavedTrackResponse,
+    Show,
+    ShowEpisodesResponse,
+    TopArtistsResponse,
+    TopTracksResponse,
+    UserProfile,
+)
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -14,7 +34,7 @@ from homeassistant.components.spotify.const import DOMAIN, SPOTIFY_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_json_value_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 SCOPES = " ".join(SPOTIFY_SCOPES)
 
@@ -59,49 +79,72 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.fixture(autouse=True)
+async def patch_sleep() -> Generator[AsyncMock]:
+    """Fixture to setup credentials."""
+    with patch("homeassistant.components.spotify.media_player.AFTER_REQUEST_SLEEP", 0):
+        yield
+
+
 @pytest.fixture
-def mock_spotify() -> Generator[MagicMock]:
+def mock_spotify() -> Generator[AsyncMock]:
     """Mock the Spotify API."""
     with (
         patch(
-            "homeassistant.components.spotify.Spotify",
-            autospec=True,
+            "homeassistant.components.spotify.SpotifyClient", autospec=True
         ) as spotify_mock,
         patch(
-            "homeassistant.components.spotify.config_flow.Spotify",
+            "homeassistant.components.spotify.config_flow.SpotifyClient",
             new=spotify_mock,
         ),
     ):
         client = spotify_mock.return_value
         # All these fixtures can be retrieved using the Web API client at
         # https://developer.spotify.com/documentation/web-api
-        current_user = load_json_value_fixture("current_user.json", DOMAIN)
-        client.current_user.return_value = current_user
-        client.me.return_value = current_user
-        for fixture, method in (
-            ("devices.json", "devices"),
-            ("current_user_playlist.json", "current_user_playlists"),
-            ("playback.json", "current_playback"),
-            ("followed_artists.json", "current_user_followed_artists"),
-            ("saved_albums.json", "current_user_saved_albums"),
-            ("saved_tracks.json", "current_user_saved_tracks"),
-            ("saved_shows.json", "current_user_saved_shows"),
-            ("recently_played_tracks.json", "current_user_recently_played"),
-            ("top_artists.json", "current_user_top_artists"),
-            ("top_tracks.json", "current_user_top_tracks"),
-            ("featured_playlists.json", "featured_playlists"),
-            ("categories.json", "categories"),
-            ("category_playlists.json", "category_playlists"),
-            ("category.json", "category"),
-            ("new_releases.json", "new_releases"),
-            ("playlist.json", "playlist"),
-            ("album.json", "album"),
-            ("artist.json", "artist"),
-            ("artist_albums.json", "artist_albums"),
-            ("show_episodes.json", "show_episodes"),
-            ("show.json", "show"),
+        for fixture, method, obj in (
+            (
+                "current_user_playlist.json",
+                "get_playlists_for_current_user",
+                PlaylistResponse,
+            ),
+            ("saved_albums.json", "get_saved_albums", SavedAlbumResponse),
+            ("saved_tracks.json", "get_saved_tracks", SavedTrackResponse),
+            ("saved_shows.json", "get_saved_shows", SavedShowResponse),
+            (
+                "recently_played_tracks.json",
+                "get_recently_played_tracks",
+                PlayedTrackResponse,
+            ),
+            ("top_artists.json", "get_top_artists", TopArtistsResponse),
+            ("top_tracks.json", "get_top_tracks", TopTracksResponse),
+            ("show_episodes.json", "get_show_episodes", ShowEpisodesResponse),
+            ("artist_albums.json", "get_artist_albums", NewReleasesResponseInner),
         ):
-            getattr(client, method).return_value = load_json_value_fixture(
-                fixture, DOMAIN
+            getattr(client, method).return_value = obj.from_json(
+                load_fixture(fixture, DOMAIN)
+            ).items
+        for fixture, method, obj in (
+            (
+                "playback.json",
+                "get_playback",
+                PlaybackState,
+            ),
+            ("current_user.json", "get_current_user", UserProfile),
+            ("playlist.json", "get_playlist", Playlist),
+            ("album.json", "get_album", Album),
+            ("artist.json", "get_artist", Artist),
+            ("show.json", "get_show", Show),
+        ):
+            getattr(client, method).return_value = obj.from_json(
+                load_fixture(fixture, DOMAIN)
             )
+        client.get_followed_artists.return_value = FollowedArtistResponse.from_json(
+            load_fixture("followed_artists.json", DOMAIN)
+        ).artists.items
+        client.get_new_releases.return_value = NewReleasesResponse.from_json(
+            load_fixture("new_releases.json", DOMAIN)
+        ).albums.items
+        client.get_devices.return_value = Devices.from_json(
+            load_fixture("devices.json", DOMAIN)
+        ).devices
         yield spotify_mock

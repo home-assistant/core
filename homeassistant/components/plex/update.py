@@ -4,16 +4,16 @@ import logging
 from typing import Any
 
 from plexapi.exceptions import PlexApiException
-import plexapi.server
 import requests.exceptions
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SERVER_IDENTIFIER
+from .const import CONF_SERVER_IDENTIFIER, DOMAIN
 from .helpers import get_plex_server
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,14 +22,13 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plex update entities from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     server = get_plex_server(hass, server_id)
-    plex_server = server.plex_server
-    can_update = await hass.async_add_executor_job(plex_server.canInstallUpdate)
-    async_add_entities([PlexUpdate(plex_server, can_update)], update_before_add=True)
+    can_update = await hass.async_add_executor_job(server.plex_server.canInstallUpdate)
+    async_add_entities([PlexUpdate(server, can_update)], update_before_add=True)
 
 
 class PlexUpdate(UpdateEntity):
@@ -37,22 +36,21 @@ class PlexUpdate(UpdateEntity):
 
     _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
     _release_notes: str | None = None
+    _attr_translation_key: str = "server_update"
+    _attr_has_entity_name = True
 
-    def __init__(
-        self, plex_server: plexapi.server.PlexServer, can_update: bool
-    ) -> None:
+    def __init__(self, plex_server, can_update: bool) -> None:
         """Initialize the Update entity."""
-        self.plex_server = plex_server
-        self._attr_name = f"Plex Media Server ({plex_server.friendlyName})"
-        self._attr_unique_id = plex_server.machineIdentifier
+        self._server = plex_server
+        self._attr_unique_id = plex_server.machine_identifier
         if can_update:
             self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
     def update(self) -> None:
         """Update sync attributes."""
-        self._attr_installed_version = self.plex_server.version
+        self._attr_installed_version = self._server.version
         try:
-            if (release := self.plex_server.checkForUpdate()) is None:
+            if (release := self._server.plex_server.checkForUpdate()) is None:
                 self._attr_latest_version = self.installed_version
                 return
         except (requests.exceptions.RequestException, PlexApiException):
@@ -73,6 +71,18 @@ class PlexUpdate(UpdateEntity):
     def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update."""
         try:
-            self.plex_server.installUpdate()
+            self._server.plex_server.installUpdate()
         except (requests.exceptions.RequestException, PlexApiException) as exc:
             raise HomeAssistantError(str(exc)) from exc
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a device description for device registry."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._server.machine_identifier)},
+            manufacturer="Plex",
+            model="Plex Media Server",
+            name=self._server.friendly_name,
+            sw_version=self._server.version,
+            configuration_url=f"{self._server.url_in_use}/web",
+        )

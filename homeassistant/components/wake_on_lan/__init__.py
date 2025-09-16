@@ -9,7 +9,7 @@ import wakeonlan
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
@@ -52,7 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         await hass.async_add_executor_job(
-            partial(wakeonlan.send_magic_packet, mac_address, **service_kwargs)
+            partial(wakeonlan.send_magic_packet, mac_address, **service_kwargs)  # type: ignore[arg-type]
         )
 
     hass.services.async_register(

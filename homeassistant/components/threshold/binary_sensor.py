@@ -31,9 +31,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -61,33 +63,42 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME: Final = "Threshold"
 
-PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(float),
-        vol.Optional(CONF_LOWER): vol.Coerce(float),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UPPER): vol.Coerce(float),
-    }
+
+def no_missing_threshold(value: dict) -> dict:
+    """Validate data point list is greater than polynomial degrees."""
+    if value.get(CONF_LOWER) is None and value.get(CONF_UPPER) is None:
+        raise vol.Invalid("Lower or Upper thresholds are not provided")
+
+    return value
+
+
+PLATFORM_SCHEMA = vol.All(
+    BINARY_SENSOR_PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(
+                float
+            ),
+            vol.Optional(CONF_LOWER): vol.Coerce(float),
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_UPPER): vol.Coerce(float),
+        }
+    ),
+    no_missing_threshold,
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize threshold config entry."""
     registry = er.async_get(hass)
     device_class = None
     entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_ENTITY_ID]
-    )
-
-    device_info = async_device_info_to_link_from_entity(
-        hass,
-        entity_id,
     )
 
     hysteresis = config_entry.options[CONF_HYSTERESIS]
@@ -99,14 +110,14 @@ async def async_setup_entry(
     async_add_entities(
         [
             ThresholdSensor(
-                entity_id,
-                name,
-                lower,
-                upper,
-                hysteresis,
-                device_class,
-                unique_id,
-                device_info=device_info,
+                hass,
+                entity_id=entity_id,
+                name=name,
+                lower=lower,
+                upper=upper,
+                hysteresis=hysteresis,
+                device_class=device_class,
+                unique_id=unique_id,
             )
         ]
     )
@@ -126,13 +137,17 @@ async def async_setup_platform(
     hysteresis: float = config[CONF_HYSTERESIS]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
-    if lower is None and upper is None:
-        raise ValueError("Lower or Upper thresholds not provided")
-
     async_add_entities(
         [
             ThresholdSensor(
-                entity_id, name, lower, upper, hysteresis, device_class, None
+                hass,
+                entity_id=entity_id,
+                name=name,
+                lower=lower,
+                upper=upper,
+                hysteresis=hysteresis,
+                device_class=device_class,
+                unique_id=None,
             )
         ],
     )
@@ -151,9 +166,14 @@ class ThresholdSensor(BinarySensorEntity):
     """Representation of a Threshold sensor."""
 
     _attr_should_poll = False
+    _unrecorded_attributes = frozenset(
+        {ATTR_ENTITY_ID, ATTR_HYSTERESIS, ATTR_LOWER, ATTR_TYPE, ATTR_UPPER}
+    )
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        *,
         entity_id: str,
         name: str,
         lower: float | None,
@@ -161,12 +181,15 @@ class ThresholdSensor(BinarySensorEntity):
         hysteresis: float,
         device_class: BinarySensorDeviceClass | None,
         unique_id: str | None,
-        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the Threshold sensor."""
         self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
         self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
+        if entity_id:  # Guard against empty entity_id in preview mode
+            self.device_entry = async_entity_id_to_device(
+                hass,
+                entity_id,
+            )
         self._entity_id = entity_id
         self._attr_name = name
         if lower is not None:
@@ -177,7 +200,6 @@ class ThresholdSensor(BinarySensorEntity):
         self._hysteresis: float = hysteresis
         self._attr_device_class = device_class
         self._state_position = POSITION_UNKNOWN
-        self._state: bool | None = None
         self.sensor_value: float | None = None
 
     async def async_added_to_hass(self) -> None:
@@ -230,11 +252,6 @@ class ThresholdSensor(BinarySensorEntity):
         _update_sensor_state()
 
     @property
-    def is_on(self) -> bool | None:
-        """Return true if sensor is on."""
-        return self._state
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         return {
@@ -261,53 +278,53 @@ class ThresholdSensor(BinarySensorEntity):
 
         if self.sensor_value is None:
             self._state_position = POSITION_UNKNOWN
-            self._state = None
+            self._attr_is_on = None
             return
 
         if self.threshold_type == TYPE_LOWER:
-            if self._state is None:
-                self._state = False
+            if self._attr_is_on is None:
+                self._attr_is_on = False
                 self._state_position = POSITION_ABOVE
 
             if below(self.sensor_value, self._threshold_lower):
                 self._state_position = POSITION_BELOW
-                self._state = True
+                self._attr_is_on = True
             elif above(self.sensor_value, self._threshold_lower):
                 self._state_position = POSITION_ABOVE
-                self._state = False
+                self._attr_is_on = False
             return
 
         if self.threshold_type == TYPE_UPPER:
             assert self._threshold_upper is not None
 
-            if self._state is None:
-                self._state = False
+            if self._attr_is_on is None:
+                self._attr_is_on = False
                 self._state_position = POSITION_BELOW
 
             if above(self.sensor_value, self._threshold_upper):
                 self._state_position = POSITION_ABOVE
-                self._state = True
+                self._attr_is_on = True
             elif below(self.sensor_value, self._threshold_upper):
                 self._state_position = POSITION_BELOW
-                self._state = False
+                self._attr_is_on = False
             return
 
         if self.threshold_type == TYPE_RANGE:
-            if self._state is None:
-                self._state = True
+            if self._attr_is_on is None:
+                self._attr_is_on = True
                 self._state_position = POSITION_IN_RANGE
 
             if below(self.sensor_value, self._threshold_lower):
                 self._state_position = POSITION_BELOW
-                self._state = False
+                self._attr_is_on = False
             if above(self.sensor_value, self._threshold_upper):
                 self._state_position = POSITION_ABOVE
-                self._state = False
+                self._attr_is_on = False
             elif above(self.sensor_value, self._threshold_lower) and below(
                 self.sensor_value, self._threshold_upper
             ):
                 self._state_position = POSITION_IN_RANGE
-                self._state = True
+                self._attr_is_on = True
             return
 
     @callback

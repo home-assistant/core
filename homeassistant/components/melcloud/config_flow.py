@@ -126,9 +126,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     HTTPStatus.UNAUTHORIZED,
                     HTTPStatus.FORBIDDEN,
                 )
-                or isinstance(err, AttributeError)
-                and err.name == "get"
-            ):
+            ) or (isinstance(err, AttributeError) and err.name == "get"):
                 errors["base"] = "invalid_auth"
             else:
                 errors["base"] = "cannot_connect"
@@ -141,12 +139,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         return acquired_token, errors
 
     async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
@@ -171,9 +163,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         HTTPStatus.UNAUTHORIZED,
                         HTTPStatus.FORBIDDEN,
                     )
-                    or isinstance(err, AttributeError)
-                    and err.name == "get"
-                ):
+                ) or (isinstance(err, AttributeError) and err.name == "get"):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
@@ -190,7 +180,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_PASSWORD): str,

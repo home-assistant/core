@@ -20,6 +20,10 @@ CONF_GAIN = "gain"
 CONF_PROFILES = "profiles"
 CONF_TEXT_TYPE = "text_type"
 
+DEFAULT_SPEED = 1.0
+DEFAULT_PITCH = 0
+DEFAULT_GAIN = 0
+
 # STT constants
 CONF_STT_MODEL = "stt_model"
 
@@ -182,3 +186,13 @@ STT_LANGUAGES = [
     "yue-Hant-HK",
     "zu-ZA",
 ]
+
+# This allows us to support HA's standard codes (e.g., zh-CN) while
+# sending the correct code to the Google API (e.g., cmn-Hans-CN).
+HA_TO_GOOGLE_STT_LANG_MAP = {
+    "zh-CN": "cmn-Hans-CN",  # Chinese (Mandarin, Simplified, China)
+    "zh-HK": "yue-Hant-HK",  # Chinese (Cantonese, Traditional, Hong Kong)
+    "zh-TW": "cmn-Hant-TW",  # Chinese (Mandarin, Traditional, Taiwan)
+    "he-IL": "iw-IL",  # Hebrew (Google uses 'iw' legacy code)
+    "nb-NO": "no-NO",  # Norwegian Bokmål
+}

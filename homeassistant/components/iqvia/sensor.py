@@ -12,13 +12,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_STATE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    DOMAIN,
     TYPE_ALLERGY_FORECAST,
     TYPE_ALLERGY_INDEX,
     TYPE_ALLERGY_OUTLOOK,
@@ -32,6 +30,7 @@ from .const import (
     TYPE_DISEASE_INDEX,
     TYPE_DISEASE_TODAY,
 )
+from .coordinator import IqviaConfigEntry
 from .entity import IQVIAEntity
 
 ATTR_ALLERGEN_AMOUNT = "allergen_amount"
@@ -127,12 +126,14 @@ INDEX_SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: IqviaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up IQVIA sensors based on a config entry."""
     sensors: list[ForecastSensor | IndexSensor] = [
         ForecastSensor(
-            hass.data[DOMAIN][entry.entry_id][
+            entry.runtime_data[
                 API_CATEGORY_MAPPING.get(description.key, description.key)
             ],
             entry,
@@ -143,7 +144,7 @@ async def async_setup_entry(
     sensors.extend(
         [
             IndexSensor(
-                hass.data[DOMAIN][entry.entry_id][
+                entry.runtime_data[
                     API_CATEGORY_MAPPING.get(description.key, description.key)
                 ],
                 entry,
@@ -205,9 +206,7 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
         )
 
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
-            outlook_coordinator = self.hass.data[DOMAIN][self._entry.entry_id][
-                TYPE_ALLERGY_OUTLOOK
-            ]
+            outlook_coordinator = self._entry.runtime_data[TYPE_ALLERGY_OUTLOOK]
 
             if not outlook_coordinator.last_update_success:
                 return

@@ -1,4 +1,4 @@
-"""Support for KNX/IP date."""
+"""Support for KNX date entities."""
 
 from __future__ import annotations
 
@@ -18,11 +18,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -31,12 +30,13 @@ from .const import (
     KNX_MODULE_KEY,
 )
 from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for KNX platform."""
     knx_module = hass.data[KNX_MODULE_KEY]

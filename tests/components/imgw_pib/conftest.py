@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
-from imgw_pib import HydrologicalData, SensorData
+from imgw_pib import Alert, HydrologicalData, SensorData
 import pytest
 
 from homeassistant.components.imgw_pib.const import DOMAIN
@@ -16,13 +16,22 @@ HYDROLOGICAL_DATA = HydrologicalData(
     river="River Name",
     station_id="123",
     water_level=SensorData(name="Water Level", value=526.0),
-    flood_alarm_level=SensorData(name="Flood Alarm Level", value=630.0),
-    flood_warning_level=SensorData(name="Flood Warning Level", value=590.0),
+    flood_alarm_level=SensorData(name="Flood Alarm Level", value=None),
+    flood_warning_level=SensorData(name="Flood Warning Level", value=None),
     water_temperature=SensorData(name="Water Temperature", value=10.8),
-    flood_alarm=False,
-    flood_warning=False,
+    flood_alarm=None,
+    flood_warning=None,
     water_level_measurement_date=datetime(2024, 4, 27, 10, 0, tzinfo=UTC),
     water_temperature_measurement_date=datetime(2024, 4, 27, 10, 10, tzinfo=UTC),
+    water_flow=SensorData(name="Water Flow", value=123.45),
+    water_flow_measurement_date=datetime(2024, 4, 27, 10, 5, tzinfo=UTC),
+    hydrological_alert=Alert(
+        value="rapid_water_level_rise",
+        valid_from=datetime(2024, 4, 27, 7, 0, tzinfo=UTC),
+        valid_to=datetime(2024, 4, 28, 11, 0, tzinfo=UTC),
+        level="yellow",
+        probability=80,
+    ),
 )
 
 

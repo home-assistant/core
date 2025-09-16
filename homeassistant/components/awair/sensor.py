@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
     ATTR_SW_VERSION,
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -29,11 +30,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    API_ABS_HUMID,
     API_CO2,
+    API_DEW_POINT,
     API_DUST,
     API_HUMID,
     API_LUX,
@@ -110,6 +113,23 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
         unique_id_tag="CO2",  # matches legacy format
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    AwairSensorEntityDescription(
+        key=API_DEW_POINT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        translation_key="dew_point",
+        unique_id_tag="dew_point",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    AwairSensorEntityDescription(
+        key=API_ABS_HUMID,
+        device_class=SensorDeviceClass.ABSOLUTE_HUMIDITY,
+        native_unit_of_measurement=CONCENTRATION_GRAMS_PER_CUBIC_METER,
+        unique_id_tag="absolute_humidity",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
@@ -133,7 +153,7 @@ SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AwairConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Awair sensor entity based on a config entry."""
     coordinator = config_entry.runtime_data

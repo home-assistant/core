@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
     "error": {
       "connection_error": "Could not connect to the controller.",
       "credentials_needed": "The controller needs credentials.",
@@ -11,7 +14,7 @@
     },
     "step": {
       "import_finish": {
-        "description": "The existing YAML configuration has succesfully been imported.\n\nYou can now remove the `homeworks` configuration from your configuration.yaml file."
+        "description": "The existing YAML configuration has successfully been imported.\n\nYou can now remove the `homeworks` configuration from your configuration.yaml file."
       },
       "import_controller_name": {
         "description": "Lutron Homeworks is no longer configured through configuration.yaml.\n\nPlease fill in the form to import the existing configuration to the UI.",
@@ -22,7 +25,7 @@
           "name": "[%key:component::homeworks::config::step::user::data_description::name%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -45,8 +48,8 @@
         },
         "data_description": {
           "name": "A unique name identifying the Lutron Homeworks controller",
-          "password": "[%key:component::homeworks::config::step::reconfigure_confirm::data_description::password%]",
-          "username": "[%key:component::homeworks::config::step::reconfigure_confirm::data_description::username%]"
+          "password": "[%key:component::homeworks::config::step::reconfigure::data_description::password%]",
+          "username": "[%key:component::homeworks::config::step::reconfigure::data_description::username%]"
         },
         "description": "Add a Lutron Homeworks controller"
       }
@@ -54,7 +57,7 @@
   },
   "exceptions": {
     "invalid_controller_id": {
-      "message": "Invalid controller_id \"{controller_id}\", expected one of \"{controller_ids}\""
+      "message": "Invalid controller ID \"{controller_id}\", expected one of \"{controller_ids}\""
     }
   },
   "options": {
@@ -164,15 +167,15 @@
   "services": {
     "send_command": {
       "name": "Send command",
-      "description": "Send custom command to a controller",
+      "description": "Sends a custom command to a controller",
       "fields": {
         "command": {
           "name": "Command",
-          "description": "Command to send to the controller. This can either be a single command or a list of commands."
+          "description": "The command to send to the controller. This can either be a single command or a list of commands."
         },
         "controller_id": {
           "name": "Controller ID",
-          "description": "The controller to which to send command."
+          "description": "The controller to which to send the command."
         }
       }
     }

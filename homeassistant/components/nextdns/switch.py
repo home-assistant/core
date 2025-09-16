@@ -8,17 +8,18 @@ from typing import Any
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
-from nextdns import ApiError, Settings
+from nextdns import ApiError, InvalidApiKeyError, Settings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NextDnsConfigEntry
+from .const import DOMAIN
 from .coordinator import NextDnsUpdateCoordinator
+from .entity import NextDnsEntity
 
 PARALLEL_UPDATES = 1
 
@@ -54,6 +55,12 @@ SWITCHES = (
         translation_key="anonymized_ecs",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.anonymized_ecs,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="bav",
+        translation_key="bypass_age_verification",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.bav,
     ),
     NextDnsSwitchEntityDescription(
         key="logs",
@@ -525,7 +532,7 @@ SWITCHES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NextDnsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add NextDNS entities from a config_entry."""
     coordinator = entry.runtime_data.settings
@@ -535,12 +542,9 @@ async def async_setup_entry(
     )
 
 
-class NextDnsSwitch(
-    CoordinatorEntity[NextDnsUpdateCoordinator[Settings]], SwitchEntity
-):
+class NextDnsSwitch(NextDnsEntity, SwitchEntity):
     """Define an NextDNS switch."""
 
-    _attr_has_entity_name = True
     entity_description: NextDnsSwitchEntityDescription
 
     def __init__(
@@ -549,11 +553,8 @@ class NextDnsSwitch(
         description: NextDnsSwitchEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
-        self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
+        super().__init__(coordinator, description)
         self._attr_is_on = description.state(coordinator.data)
-        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -582,9 +583,16 @@ class NextDnsSwitch(
             ClientError,
         ) as err:
             raise HomeAssistantError(
-                "NextDNS API returned an error calling set_setting for"
-                f" {self.entity_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="method_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "error": repr(err),
+                },
             ) from err
+        except InvalidApiKeyError:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            return
 
         if result:
             self._attr_is_on = new_state

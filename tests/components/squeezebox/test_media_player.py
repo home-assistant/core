@@ -6,13 +6,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
@@ -30,10 +32,16 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.components.squeezebox.const import DOMAIN, SENSOR_UPDATE_INTERVAL
+from homeassistant.components.squeezebox.const import (
+    ATTR_ANNOUNCE_TIMEOUT,
+    ATTR_ANNOUNCE_VOLUME,
+    DISCOVERY_INTERVAL,
+    DOMAIN,
+    PLAYER_UPDATE_INTERVAL,
+    SENSOR_UPDATE_INTERVAL,
+)
 from homeassistant.components.squeezebox.media_player import (
     ATTR_PARAMETERS,
-    DISCOVERY_INTERVAL,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,
 )
@@ -60,25 +68,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
-from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC
+from .conftest import (
+    FAKE_VALID_ITEM_ID,
+    TEST_MAC,
+    TEST_VOLUME_STEP,
+    configure_squeezebox_media_player_platform,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-
-async def test_device_registry(
-    hass: HomeAssistant,
-    device_registry: DeviceRegistry,
-    configured_player: MagicMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test squeezebox device registered in the device registry."""
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[0])})
-    assert reg_device is not None
-    assert reg_device == snapshot
 
 
 async def test_entity_registry(
@@ -92,6 +92,33 @@ async def test_entity_registry(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+async def test_squeezebox_new_player_discovery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lms: MagicMock,
+    player_factory: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test discovery of a new squeezebox player."""
+    # Initial setup with one player (from the 'lms' fixture)
+    await configure_squeezebox_media_player_platform(hass, config_entry, lms)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get("media_player.test_player") is not None
+    assert hass.states.get("media_player.test_player_2") is None
+
+    # Simulate a new player appearing
+    new_player_mock = player_factory(TEST_MAC[1])
+    lms.async_get_players.return_value = [
+        lms.async_get_players.return_value[0],
+        new_player_mock,
+    ]
+
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.test_player_2") is not None
+
+
 async def test_squeezebox_player_rediscovery(
     hass: HomeAssistant, configured_player: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -101,12 +128,9 @@ async def test_squeezebox_player_rediscovery(
 
     # Make the player appear unavailable
     configured_player.connected = False
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
-        blocking=True,
-    )
+    freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE
 
     # Make the player available again
@@ -115,36 +139,27 @@ async def test_squeezebox_player_rediscovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
+    freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
 
 
-async def test_squeezebox_turn_on(
-    hass: HomeAssistant, configured_player: MagicMock
+@pytest.mark.parametrize(
+    ("service", "state"),
+    [(SERVICE_TURN_ON, True), (SERVICE_TURN_OFF, False)],
+)
+async def test_squeezebox_turn_on_off(
+    hass: HomeAssistant, configured_player: MagicMock, service: str, state: bool
 ) -> None:
     """Test turn on service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_set_power.assert_called_once_with(True)
-
-
-async def test_squeezebox_turn_off(
-    hass: HomeAssistant, configured_player: MagicMock
-) -> None:
-    """Test turn off service call."""
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
-        blocking=True,
-    )
-    configured_player.async_set_power.assert_called_once_with(False)
+    configured_player.async_set_power.assert_called_once_with(state)
 
 
 async def test_squeezebox_state(
@@ -182,26 +197,32 @@ async def test_squeezebox_volume_up(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:
     """Test volume up service call."""
+    configured_player.volume = 50
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_UP,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_set_volume.assert_called_once_with("+5")
+    configured_player.async_set_volume.assert_called_once_with(
+        str(configured_player.volume + TEST_VOLUME_STEP)
+    )
 
 
 async def test_squeezebox_volume_down(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:
     """Test volume down service call."""
+    configured_player.volume = 50
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_DOWN,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_set_volume.assert_called_once_with("-5")
+    configured_player.async_set_volume.assert_called_once_with(
+        str(configured_player.volume - TEST_VOLUME_STEP)
+    )
 
 
 async def test_squeezebox_volume_set(
@@ -429,6 +450,118 @@ async def test_squeezebox_play(
     configured_player.async_play.assert_called_once()
 
 
+async def test_squeezebox_play_media_with_announce(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test play service call with announce."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+    configured_player.async_load_url.assert_called_once_with(
+        FAKE_VALID_ITEM_ID, "announce"
+    )
+
+
+@pytest.mark.parametrize(
+    "announce_volume",
+    ["0.2", 0.2],
+)
+async def test_squeezebox_play_media_with_announce_volume(
+    hass: HomeAssistant, configured_player: MagicMock, announce_volume: str | int
+) -> None:
+    """Test play service call with announce."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            ATTR_MEDIA_ANNOUNCE: True,
+            ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_VOLUME: announce_volume},
+        },
+        blocking=True,
+    )
+    configured_player.set_announce_volume.assert_called_once_with(20)
+    configured_player.async_load_url.assert_called_once_with(
+        FAKE_VALID_ITEM_ID, "announce"
+    )
+
+
+@pytest.mark.parametrize("announce_volume", ["1.1", 1.1, "text", "-1", -1, 0, "0"])
+async def test_squeezebox_play_media_with_announce_volume_invalid(
+    hass: HomeAssistant, configured_player: MagicMock, announce_volume: str | int
+) -> None:
+    """Test play service call with announce and volume zero."""
+    with pytest.raises(
+        ServiceValidationError,
+        match="announce_volume must be a number greater than 0 and less than or equal to 1",
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+                ATTR_MEDIA_ANNOUNCE: True,
+                ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_VOLUME: announce_volume},
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("announce_timeout", ["-1", "text", -1, 0, "0"])
+async def test_squeezebox_play_media_with_announce_timeout_invalid(
+    hass: HomeAssistant, configured_player: MagicMock, announce_timeout: str | int
+) -> None:
+    """Test play service call with announce and invalid timeout."""
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+                ATTR_MEDIA_ANNOUNCE: True,
+                ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_TIMEOUT: announce_timeout},
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("announce_timeout", ["100", 100])
+async def test_squeezebox_play_media_with_announce_timeout(
+    hass: HomeAssistant, configured_player: MagicMock, announce_timeout: str | int
+) -> None:
+    """Test play service call with announce."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            ATTR_MEDIA_ANNOUNCE: True,
+            ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_TIMEOUT: announce_timeout},
+        },
+        blocking=True,
+    )
+    configured_player.set_announce_timeout.assert_called_once_with(100)
+    configured_player.async_load_url.assert_called_once_with(
+        FAKE_VALID_ITEM_ID, "announce"
+    )
+
+
 async def test_squeezebox_play_pause(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:
@@ -632,9 +765,7 @@ async def test_squeezebox_call_query(
         },
         blocking=True,
     )
-    configured_player.async_query.assert_called_once_with(
-        "test_command", "param1", "param2"
-    )
+    configured_player.async_query.assert_called_with("test_command", "param1", "param2")
 
 
 async def test_squeezebox_call_method(
@@ -651,9 +782,7 @@ async def test_squeezebox_call_method(
         },
         blocking=True,
     )
-    configured_player.async_query.assert_called_once_with(
-        "test_command", "param1", "param2"
-    )
+    configured_player.async_query.assert_called_with("test_command", "param1", "param2")
 
 
 async def test_squeezebox_invalid_state(
@@ -678,6 +807,8 @@ async def test_squeezebox_server_discovery(
     async def mock_async_discover(callback):
         """Mock the async_discover function of pysqueezebox."""
         return callback(lms_factory(2))
+
+    lms.async_prepared_status.return_value = {}
 
     with (
         patch(

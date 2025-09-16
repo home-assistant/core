@@ -10,31 +10,29 @@ from aioautomower.session import AutomowerSession
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import (
-    AutomowerAvailableEntity,
-    _check_error_free,
-    handle_sending_exception,
-)
+from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
 
-async def _async_set_time(
+
+async def async_reset_cutting_blade_usage_time(
     session: AutomowerSession,
     mower_id: str,
 ) -> None:
-    """Set datetime for the mower."""
-    # dt_util returns the current (aware) local datetime, set in the frontend.
-    # We assume it's the timezone in which the mower is.
-    await session.commands.set_datetime(
-        mower_id,
-        dt_util.now(),
-    )
+    """Reset cutting blade usage time."""
+    await session.commands.reset_cutting_blade_usage_time(mower_id)
+
+
+def reset_cutting_blade_usage_time_availability(data: MowerAttributes) -> bool:
+    """Return True if blade usage time is greater than 0."""
+    value = data.statistics.cutting_blade_usage_time
+    return value is not None and value > 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -44,9 +42,10 @@ class AutomowerButtonEntityDescription(ButtonEntityDescription):
     available_fn: Callable[[MowerAttributes], bool] = lambda _: True
     exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
     press_fn: Callable[[AutomowerSession, str], Awaitable[Any]]
+    poll_after_sending: bool = False
 
 
-BUTTON_TYPES: tuple[AutomowerButtonEntityDescription, ...] = (
+MOWER_BUTTON_TYPES: tuple[AutomowerButtonEntityDescription, ...] = (
     AutomowerButtonEntityDescription(
         key="confirm_error",
         translation_key="confirm_error",
@@ -57,8 +56,15 @@ BUTTON_TYPES: tuple[AutomowerButtonEntityDescription, ...] = (
     AutomowerButtonEntityDescription(
         key="sync_clock",
         translation_key="sync_clock",
-        available_fn=_check_error_free,
-        press_fn=_async_set_time,
+        press_fn=lambda session, mower_id: session.commands.set_datetime(mower_id),
+    ),
+    AutomowerButtonEntityDescription(
+        key="reset_cutting_blade_usage_time",
+        translation_key="reset_cutting_blade_usage_time",
+        available_fn=reset_cutting_blade_usage_time_availability,
+        exists_fn=lambda data: data.statistics.cutting_blade_usage_time is not None,
+        press_fn=async_reset_cutting_blade_usage_time,
+        poll_after_sending=True,
     ),
 )
 
@@ -66,19 +72,24 @@ BUTTON_TYPES: tuple[AutomowerButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AutomowerButtonEntity(mower_id, coordinator, description)
-        for mower_id in coordinator.data
-        for description in BUTTON_TYPES
-        if description.exists_fn(coordinator.data[mower_id])
-    )
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerButtonEntity(mower_id, coordinator, description)
+            for mower_id in mower_ids
+            for description in MOWER_BUTTON_TYPES
+            if description.exists_fn(coordinator.data[mower_id])
+        )
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
+    _async_add_new_devices(set(coordinator.data))
 
 
-class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
+class AutomowerButtonEntity(AutomowerControlEntity, ButtonEntity):
     """Defining the AutomowerButtonEntity."""
 
     entity_description: AutomowerButtonEntityDescription
@@ -97,9 +108,13 @@ class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Return the available attribute of the entity."""
-        return self.entity_description.available_fn(self.mower_attributes)
+        return super().available and self.entity_description.available_fn(
+            self.mower_attributes
+        )
 
     @handle_sending_exception()
     async def async_press(self) -> None:
         """Send a command to the mower."""
         await self.entity_description.press_fn(self.coordinator.api, self.mower_id)
+        if self.entity_description.poll_after_sending:
+            await self.coordinator.async_request_refresh()

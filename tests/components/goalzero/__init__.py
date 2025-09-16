@@ -2,13 +2,13 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components import dhcp
 from homeassistant.components.goalzero.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 HOST = "1.2.3.4"
@@ -19,7 +19,7 @@ CONF_DATA = {
     CONF_NAME: DEFAULT_NAME,
 }
 
-CONF_DHCP_FLOW = dhcp.DhcpServiceInfo(
+CONF_DHCP_FLOW = DhcpServiceInfo(
     ip=HOST,
     macaddress=format_mac("AA:BB:CC:DD:EE:FF").replace(":", ""),
     hostname="yeti",
@@ -66,11 +66,11 @@ async def async_init_integration(
     base_url = f"http://{HOST}/"
     aioclient_mock.get(
         f"{base_url}state",
-        text=load_fixture("goalzero/state_data.json"),
+        text=await async_load_fixture(hass, "state_data.json", DOMAIN),
     )
     aioclient_mock.get(
         f"{base_url}sysinfo",
-        text=load_fixture("goalzero/info_data.json"),
+        text=await async_load_fixture(hass, "info_data.json", DOMAIN),
     )
 
     if not skip_setup:

@@ -15,15 +15,14 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from . import BSBLanData
+from . import BSBLanConfigEntry, BSBLanData
 from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
 from .entity import BSBLanEntity
 
@@ -43,18 +42,12 @@ PRESET_MODES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: BSBLanConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BSBLAN device based on a config entry."""
-    data: BSBLanData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [
-            BSBLANClimate(
-                data,
-            )
-        ]
-    )
+    data = entry.runtime_data
+    async_add_entities([BSBLANClimate(data)])
 
 
 class BSBLANClimate(BSBLanEntity, ClimateEntity):
@@ -72,7 +65,6 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
 
     _attr_preset_modes = PRESET_MODES
     _attr_hvac_modes = HVAC_MODES
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -82,26 +74,23 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         super().__init__(data.coordinator, data)
         self._attr_unique_id = f"{format_mac(data.device.MAC)}-climate"
 
-        self._attr_min_temp = float(data.static.min_temp.value)
-        self._attr_max_temp = float(data.static.max_temp.value)
-        if data.static.min_temp.unit in ("&deg;C", "°C"):
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        else:
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+        self._attr_min_temp = data.static.min_temp.value
+        self._attr_max_temp = data.static.max_temp.value
+        self._attr_temperature_unit = data.coordinator.client.get_temperature_unit
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.coordinator.data.state.current_temperature.value == "---":
-            # device returns no current temperature
+        if self.coordinator.data.state.current_temperature is None:
             return None
-
-        return float(self.coordinator.data.state.current_temperature.value)
+        return self.coordinator.data.state.current_temperature.value
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return float(self.coordinator.data.state.target_temperature.value)
+        if self.coordinator.data.state.target_temperature is None:
+            return None
+        return self.coordinator.data.state.target_temperature.value
 
     @property
     def hvac_mode(self) -> HVACMode | None:

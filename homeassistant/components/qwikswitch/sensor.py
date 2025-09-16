@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as QWIKSWITCH
+from . import DOMAIN
 from .entity import QSEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,9 +28,9 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    qsusb = hass.data[QWIKSWITCH]
+    qsusb = hass.data[DOMAIN]
     _LOGGER.debug("Setup qwikswitch.sensor %s, %s", qsusb, discovery_info)
-    devs = [QSSensor(sensor) for sensor in discovery_info[QWIKSWITCH]]
+    devs = [QSSensor(sensor) for sensor in discovery_info[DOMAIN]]
     add_entities(devs)
 
 
@@ -48,9 +48,9 @@ class QSSensor(QSEntity, SensorEntity):
 
         self._decode, self.unit = SENSORS[sensor_type]
         # this cannot happen because it only happens in bool and this should be redirected to binary_sensor
-        assert not isinstance(
-            self.unit, type
-        ), f"boolean sensor id={sensor['id']} name={sensor['name']}"
+        assert not isinstance(self.unit, type), (
+            f"boolean sensor id={sensor['id']} name={sensor['name']}"
+        )
 
     @callback
     def update_packet(self, packet):

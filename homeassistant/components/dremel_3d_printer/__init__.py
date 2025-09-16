@@ -29,7 +29,7 @@ async def async_setup_entry(
             f"Unable to connect to Dremel 3D Printer: {ex}"
         ) from ex
 
-    coordinator = Dremel3DPrinterDataUpdateCoordinator(hass, api)
+    coordinator = Dremel3DPrinterDataUpdateCoordinator(hass, config_entry, api)
     await coordinator.async_config_entry_first_refresh()
     config_entry.runtime_data = coordinator
     platforms = list(PLATFORMS)

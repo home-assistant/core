@@ -6,14 +6,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import conversation, light, switch
+from homeassistant.components import light, switch
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
 )
-from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -234,7 +234,7 @@ async def test_async_match_targets(
 
     # Floor 2
     floor_2 = floor_registry.async_create("second floor", aliases={"upstairs"})
-    area_bedroom_2 = area_registry.async_get_or_create("bedroom")
+    area_bedroom_2 = area_registry.async_get_or_create("second floor bedroom")
     area_bedroom_2 = area_registry.async_update(
         area_bedroom_2.id, floor_id=floor_2.floor_id
     )
@@ -269,7 +269,7 @@ async def test_async_match_targets(
 
     # Floor 3
     floor_3 = floor_registry.async_create("third floor", aliases={"upstairs"})
-    area_bedroom_3 = area_registry.async_get_or_create("bedroom")
+    area_bedroom_3 = area_registry.async_get_or_create("third floor bedroom")
     area_bedroom_3 = area_registry.async_update(
         area_bedroom_3.id, floor_id=floor_3.floor_id
     )
@@ -510,6 +510,37 @@ async def test_async_match_targets(
         bathroom_light_3.entity_id,
     }
 
+    # Check single target constraint
+    result = intent.async_match_targets(
+        hass,
+        intent.MatchTargetsConstraints(domains={"light"}, single_target=True),
+        states=states,
+    )
+    assert not result.is_match
+    assert result.no_match_reason == intent.MatchFailedReason.MULTIPLE_TARGETS
+
+    # Only one light on the ground floor
+    result = intent.async_match_targets(
+        hass,
+        intent.MatchTargetsConstraints(domains={"light"}, single_target=True),
+        preferences=intent.MatchTargetsPreferences(floor_id=floor_1.floor_id),
+        states=states,
+    )
+    assert result.is_match
+    assert len(result.states) == 1
+    assert result.states[0].entity_id == bathroom_light_1.entity_id
+
+    # Only one switch in bedroom
+    result = intent.async_match_targets(
+        hass,
+        intent.MatchTargetsConstraints(domains={"switch"}, single_target=True),
+        preferences=intent.MatchTargetsPreferences(area_id=area_bedroom_2.id),
+        states=states,
+    )
+    assert result.is_match
+    assert len(result.states) == 1
+    assert result.states[0].entity_id == bedroom_switch_2.entity_id
+
 
 async def test_match_device_area(
     hass: HomeAssistant,
@@ -582,25 +613,6 @@ def test_async_validate_slots_no_schema() -> None:
     assert handler1.async_validate_slots({"name": {"value": "kitchen"}}) == {
         "name": {"value": "kitchen"}
     }
-
-
-async def test_cant_turn_on_lock(hass: HomeAssistant) -> None:
-    """Test that we can't turn on entities that don't support it."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
-    assert await async_setup_component(hass, "lock", {})
-
-    hass.states.async_set(
-        "lock.test", "123", attributes={ATTR_FRIENDLY_NAME: "Test Lock"}
-    )
-
-    result = await conversation.async_converse(
-        hass, "turn on test lock", None, Context(), None
-    )
-
-    assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
 
 def test_async_register(hass: HomeAssistant) -> None:

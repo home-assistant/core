@@ -10,46 +10,47 @@ import voluptuous as vol
 from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
     ENTITY_ID_FORMAT,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_RETURNING,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    CONF_NAME,
-    STATE_IDLE,
-    STATE_PAUSED,
-)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolSchemaType
 from homeassistant.util.json import json_loads_object
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC
-from .entity import MqttEntity, async_setup_entity_entry_helper
+from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
+from .entity import IssueSeverity, MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
-from .util import valid_publish_topic
+from .util import learn_more_url, valid_publish_topic
+
+PARALLEL_UPDATES = 0
 
 BATTERY = "battery_level"
 FAN_SPEED = "fan_speed"
 STATE = "state"
 
-POSSIBLE_STATES: dict[str, str] = {
-    STATE_IDLE: STATE_IDLE,
-    STATE_DOCKED: STATE_DOCKED,
-    STATE_ERROR: STATE_ERROR,
-    STATE_PAUSED: STATE_PAUSED,
-    STATE_RETURNING: STATE_RETURNING,
-    STATE_CLEANING: STATE_CLEANING,
+STATE_IDLE = "idle"
+STATE_DOCKED = "docked"
+STATE_ERROR = "error"
+STATE_PAUSED = "paused"
+STATE_RETURNING = "returning"
+STATE_CLEANING = "cleaning"
+
+POSSIBLE_STATES: dict[str, VacuumActivity] = {
+    STATE_IDLE: VacuumActivity.IDLE,
+    STATE_DOCKED: VacuumActivity.DOCKED,
+    STATE_ERROR: VacuumActivity.ERROR,
+    STATE_PAUSED: VacuumActivity.PAUSED,
+    STATE_RETURNING: VacuumActivity.RETURNING,
+    STATE_CLEANING: VacuumActivity.CLEANING,
 }
 
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
@@ -83,6 +84,8 @@ SERVICE_TO_STRING: dict[VacuumEntityFeature, str] = {
     VacuumEntityFeature.STOP: "stop",
     VacuumEntityFeature.RETURN_HOME: "return_home",
     VacuumEntityFeature.FAN_SPEED: "fan_speed",
+    # Use of the battery feature was deprecated in HA Core 2025.8
+    # and will be removed with HA Core 2026.2
     VacuumEntityFeature.BATTERY: "battery",
     VacuumEntityFeature.STATUS: "status",
     VacuumEntityFeature.SEND_COMMAND: "send_command",
@@ -95,7 +98,6 @@ DEFAULT_SERVICES = (
     VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.RETURN_HOME
-    | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.CLEAN_SPOT
 )
 ALL_SERVICES = (
@@ -174,7 +176,7 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.ALLOW_EXTRA)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT vacuum through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -250,10 +252,35 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             )
         }
 
+    async def mqtt_async_added_to_hass(self) -> None:
+        """Check for use of deprecated battery features."""
+        if self.supported_features & VacuumEntityFeature.BATTERY:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_vacuum_battery_feature_{self.entity_id}",
+                issue_domain=vacuum.DOMAIN,
+                breaks_in_ha_version="2026.2",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                learn_more_url=learn_more_url(vacuum.DOMAIN),
+                translation_placeholders={"entity_id": self.entity_id},
+                translation_key="deprecated_vacuum_battery_feature",
+            )
+            _LOGGER.warning(
+                "MQTT vacuum entity %s implements the battery feature "
+                "which is deprecated. This will stop working "
+                "in Home Assistant 2026.2. Implement a separate entity "
+                "for the battery status instead",
+                self.entity_id,
+            )
+
     def _update_state_attributes(self, payload: dict[str, Any]) -> None:
         """Update the entity state attributes."""
         self._state_attrs.update(payload)
         self._attr_fan_speed = self._state_attrs.get(FAN_SPEED, 0)
+        # Use of the battery feature was deprecated in HA Core 2025.8
+        # and will be removed with HA Core 2026.2
         self._attr_battery_level = max(0, min(100, self._state_attrs.get(BATTERY, 0)))
 
     @callback
@@ -263,7 +290,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         if STATE in payload and (
             (state := payload[STATE]) in POSSIBLE_STATES or state is None
         ):
-            self._attr_state = (
+            self._attr_activity = (
                 POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
             )
             del payload[STATE]
@@ -275,7 +302,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
-            {"_attr_battery_level", "_attr_fan_speed", "_attr_state"},
+            {"_attr_battery_level", "_attr_fan_speed", "_attr_activity"},
         )
 
     async def _subscribe_topics(self) -> None:

@@ -6,23 +6,36 @@ from collections.abc import Mapping
 import platform
 from typing import Any
 
-from haphilipsjs import ConnectionFailure, PairingFailure, PhilipsTV
+from haphilipsjs import (
+    DEFAULT_API_VERSION,
+    ConnectionFailure,
+    GeneralFailure,
+    PairingFailure,
+    PhilipsTV,
+)
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PIN,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import LOGGER
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
@@ -49,21 +62,6 @@ OPTIONS_FLOW = {
 }
 
 
-async def _validate_input(
-    hass: HomeAssistant, host: str, api_version: int
-) -> PhilipsTV:
-    """Validate the user input allows us to connect."""
-    hub = PhilipsTV(host, api_version)
-
-    await hub.getSystem()
-    await hub.setTransport(hub.secured_transport)
-
-    if not hub.system:
-        raise ConnectionFailure("System data is empty")
-
-    return hub
-
-
 class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Philips TV."""
 
@@ -75,18 +73,45 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._current: dict[str, Any] = {}
         self._hub: PhilipsTV | None = None
         self._pair_state: Any = None
-        self._entry: ConfigEntry | None = None
+
+    async def _async_attempt_prepare(
+        self, host: str, api_version: int, secured_transport: bool
+    ) -> None:
+        hub = PhilipsTV(
+            host, api_version=api_version, secured_transport=secured_transport
+        )
+
+        await hub.getSystem()
+        await hub.setTransport(hub.secured_transport, hub.api_version_detected)
+
+        if not hub.system or not hub.name:
+            raise ConnectionFailure("System data or name is empty")
+
+        self._hub = hub
+        self._current[CONF_HOST] = host
+        self._current[CONF_SYSTEM] = hub.system
+        self._current[CONF_API_VERSION] = hub.api_version
+        self.context.update({"title_placeholders": {CONF_NAME: hub.name}})
+
+        if serialnumber := hub.system.get("serialnumber"):
+            await self.async_set_unique_id(serialnumber)
+            if self.source != SOURCE_REAUTH:
+                self._abort_if_unique_id_configured(
+                    updates=self._current, reload_on_update=True
+                )
+
+    async def _async_attempt_add(self) -> ConfigFlowResult:
+        assert self._hub
+        if self._hub.pairing_type == "digest_auth_pairing":
+            return await self.async_step_pair()
+        return await self._async_create_current()
 
     async def _async_create_current(self) -> ConfigFlowResult:
         system = self._current[CONF_SYSTEM]
-        if self._entry:
-            self.hass.config_entries.async_update_entry(
-                self._entry, data=self._entry.data | self._current
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data_updates=self._current
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._entry.entry_id)
-            )
-            return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(
             title=f"{system['name']} ({system['serialnumber']})",
@@ -150,10 +175,46 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         self._current[CONF_HOST] = entry_data[CONF_HOST]
         self._current[CONF_API_VERSION] = entry_data[CONF_API_VERSION]
         return await self.async_step_user()
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+
+        LOGGER.debug(
+            "Checking discovered device: {discovery_info.name} on {discovery_info.host}"
+        )
+
+        secured_transport = discovery_info.type == "_philipstv_s_rpc._tcp.local."
+        api_version = 6 if secured_transport else DEFAULT_API_VERSION
+
+        try:
+            await self._async_attempt_prepare(
+                discovery_info.host, api_version, secured_transport
+            )
+        except GeneralFailure:
+            LOGGER.debug("Failed to get system info from discovery", exc_info=True)
+            return self.async_abort(reason="discovery_failure")
+
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initiated by zeroconf."""
+        if user_input is not None:
+            return await self._async_attempt_add()
+
+        name = self.context.get("title_placeholders", {CONF_NAME: "Philips TV"})[
+            CONF_NAME
+        ]
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            description_placeholders={CONF_NAME: name},
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -163,28 +224,14 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             self._current = user_input
             try:
-                hub = await _validate_input(
-                    self.hass, user_input[CONF_HOST], user_input[CONF_API_VERSION]
+                await self._async_attempt_prepare(
+                    user_input[CONF_HOST], user_input[CONF_API_VERSION], False
                 )
-            except ConnectionFailure as exc:
+            except GeneralFailure as exc:
                 LOGGER.error(exc)
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
             else:
-                if serialnumber := hub.system.get("serialnumber"):
-                    await self.async_set_unique_id(serialnumber)
-                    if self._entry is None:
-                        self._abort_if_unique_id_configured()
-
-                self._current[CONF_SYSTEM] = hub.system
-                self._current[CONF_API_VERSION] = hub.api_version
-                self._hub = hub
-
-                if hub.pairing_type == "digest_auth_pairing":
-                    return await self.async_step_pair()
-                return await self._async_create_current()
+                return await self._async_attempt_add()
 
         schema = self.add_suggested_values_to_schema(USER_SCHEMA, self._current)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

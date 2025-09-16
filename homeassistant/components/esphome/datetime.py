@@ -8,9 +8,11 @@ from functools import partial
 from aioesphomeapi import DateTimeInfo, DateTimeState
 
 from homeassistant.components.datetime import DateTimeEntity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+
+PARALLEL_UPDATES = 0
 
 
 class EsphomeDateTime(EsphomeEntity[DateTimeInfo, DateTimeState], DateTimeEntity):
@@ -27,7 +29,9 @@ class EsphomeDateTime(EsphomeEntity[DateTimeInfo, DateTimeState], DateTimeEntity
 
     async def async_set_value(self, value: datetime) -> None:
         """Update the current datetime."""
-        self._client.datetime_command(self._key, int(value.timestamp()))
+        self._client.datetime_command(
+            self._key, int(value.timestamp()), device_id=self._static_info.device_id
+        )
 
 
 async_setup_entry = partial(
