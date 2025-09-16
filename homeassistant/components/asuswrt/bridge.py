@@ -120,10 +120,16 @@ class AsusWrtBridge(ABC):
 
     def __init__(self, host: str) -> None:
         """Initialize Bridge."""
+        self._configuration_url = f"http://{host}"
         self._host = host
         self._firmware: str | None = None
         self._label_mac: str | None = None
         self._model: str | None = None
+
+    @property
+    def configuration_url(self) -> str:
+        """Return configuration URL."""
+        return self._configuration_url
 
     @property
     def host(self) -> str:
@@ -359,6 +365,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
         # get main router properties
         if mac := _identity.mac:
             self._label_mac = format_mac(mac)
+        self._configuration_url = self._api.webpanel
         self._firmware = str(_identity.firmware)
         self._model = _identity.model
 
