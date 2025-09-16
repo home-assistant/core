@@ -3,8 +3,9 @@
     "flow_title": "homee {name} ({host})",
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "wrong_hub": "Address belongs to a different homee."
+      "wrong_hub": "IP address belongs to a different homee than the configured one."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -25,6 +26,17 @@
           "password": "The password for your homee."
         }
       },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::homee::config::step::user::data_description::username%]",
+          "password": "[%key:component::homee::config::step::user::data_description::password%]"
+        }
+      },
       "reconfigure": {
         "title": "Reconfigure homee {name}",
         "description": "Reconfigure the IP address of your homee.",
@@ -32,7 +44,18 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The IP address of your homee."
+          "host": "[%key:component::homee::config::step::user::data_description::host%]"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Configure discovered homee {host}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::homee::config::step::user::data_description::username%]",
+          "password": "[%key:component::homee::config::step::user::data_description::password%]"
         }
       }
     }
@@ -160,12 +183,36 @@
       }
     },
     "event": {
+      "button_state": {
+        "name": "Switch",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "upper": "Upper button",
+              "lower": "Lower button",
+              "released": "Released"
+            }
+          }
+        }
+      },
+      "button_state_instance": {
+        "name": "Switch {instance}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "upper": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::upper%]",
+              "lower": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::lower%]",
+              "released": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::released%]"
+            }
+          }
+        }
+      },
       "up_down_remote": {
         "name": "Up/down remote",
         "state_attributes": {
           "event_type": {
             "state": {
-              "release": "Released",
+              "release": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::released%]",
               "up": "Up",
               "down": "Down",
               "stop": "Stop",
@@ -199,6 +246,18 @@
       }
     },
     "number": {
+      "button_brightness_active": {
+        "name": "Button brightness (active)"
+      },
+      "button_brightness_dimmed": {
+        "name": "Button brightness (dimmed)"
+      },
+      "display_brightness_active": {
+        "name": "Display brightness (active)"
+      },
+      "display_brightness_dimmed": {
+        "name": "Display brightness (dimmed)"
+      },
       "down_position": {
         "name": "Down position"
       },
@@ -210,6 +269,12 @@
       },
       "endposition_configuration": {
         "name": "End position"
+      },
+      "external_temperature_offset": {
+        "name": "External temperature offset"
+      },
+      "floor_temperature_offset": {
+        "name": "Floor temperature offset"
       },
       "motion_alarm_cancelation_delay": {
         "name": "Motion alarm delay"
@@ -235,6 +300,9 @@
       "temperature_offset": {
         "name": "Temperature offset"
       },
+      "temperature_report_interval": {
+        "name": "Temperature report interval"
+      },
       "up_time": {
         "name": "Up-movement duration"
       },
@@ -246,6 +314,13 @@
       }
     },
     "select": {
+      "display_temperature_selection": {
+        "name": "Displayed temperature",
+        "state": {
+          "target": "Target",
+          "current": "Measured"
+        }
+      },
       "repeater_mode": {
         "name": "Repeater mode",
         "state": {
@@ -276,6 +351,12 @@
       },
       "exhaust_motor_revs": {
         "name": "Exhaust motor speed"
+      },
+      "external_temperature": {
+        "name": "External temperature"
+      },
+      "floor_temperature": {
+        "name": "Floor temperature"
       },
       "indoor_humidity": {
         "name": "Indoor humidity"

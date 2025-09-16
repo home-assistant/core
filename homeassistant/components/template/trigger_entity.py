@@ -30,7 +30,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         """Initialize the entity."""
         CoordinatorEntity.__init__(self, coordinator)
         TriggerBaseEntity.__init__(self, hass, config)
-        AbstractTemplateEntity.__init__(self, hass)
+        AbstractTemplateEntity.__init__(self, hass, config)
 
         self._state_render_error = False
 

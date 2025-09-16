@@ -41,6 +41,48 @@
       "options": {
         "observed_by": [145]
       }
+    },
+    {
+      "id": 2,
+      "node_id": 1,
+      "instance": 1,
+      "minimum": 0,
+      "maximum": 3,
+      "current_value": 2.0,
+      "target_value": 2.0,
+      "last_value": 0.0,
+      "unit": "n/a",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 40,
+      "state": 1,
+      "last_changed": 1749885830,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "Kitchen Light"
+    },
+    {
+      "id": 3,
+      "node_id": 1,
+      "instance": 2,
+      "minimum": 0,
+      "maximum": 3,
+      "current_value": 2.0,
+      "target_value": 2.0,
+      "last_value": 2.0,
+      "unit": "n/a",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 40,
+      "state": 1,
+      "last_changed": 1749885830,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": ""
     }
   ]
 }
