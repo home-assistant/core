@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -11,7 +12,6 @@ from victron_vrm.models import Site
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
@@ -40,27 +40,11 @@ class SiteNotFound(HomeAssistantError):
     """Error to indicate the site was not found."""
 
 
-class VRMClientHolder:
-    """Holds the VRM client."""
-
-    def __init__(self, hass: HomeAssistant, api_token: str) -> None:
-        """Initialize the VRM client holder."""
-        self.client = VictronVRMClient(
-            token=api_token,
-            client_session=get_async_client(hass),
-        )
-
-    async def get_site(self, site_id: int) -> Site | None:
-        """Get the site data."""
-        return await self.client.users.get_site(site_id)
-
-    async def list_sites(self) -> list[Site]:
-        """List all sites available to the authenticated user."""
-        return await self.client.users.list_sites()
-
-
 class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Victron Remote Monitoring."""
+    """Handle a config flow for Victron Remote Monitoring.
+
+    Supports reauthentication when the stored token becomes invalid.
+    """
 
     VERSION = 1
 
@@ -83,9 +67,12 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
 
         Raises InvalidAuth on bad/unauthorized token; CannotConnect on other errors.
         """
-        client = VRMClientHolder(self.hass, api_token)
+        client = VictronVRMClient(
+            token=api_token,
+            client_session=get_async_client(self.hass),
+        )
         try:
-            sites = await client.list_sites()
+            sites = await client.users.list_sites()
         except AuthenticationError as err:
             raise InvalidAuth("Invalid authentication or permission") from err
         except VictronVRMError as err:
@@ -97,9 +84,12 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_selected_site(self, api_token: str, site_id: int) -> Site:
         """Validate access to the selected site and return its data."""
-        client = VRMClientHolder(self.hass, api_token)
+        client = VictronVRMClient(
+            token=api_token,
+            client_session=get_async_client(self.hass),
+        )
         try:
-            site_data = await client.get_site(site_id)
+            site_data = await client.users.get_site(site_id)
         except AuthenticationError as err:
             raise InvalidAuth("Invalid authentication or permission") from err
         except VictronVRMError as err:
@@ -213,5 +203,53 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Start reauthentication by asking for a (new) API token.
+
+        We only need the token again; the site is fixed per entry and set as unique id.
+        """
+        self._api_token = None
+        self._sites = []
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation with new token."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            new_token = user_input[CONF_API_TOKEN]
+            try:
+                # Validate the token by fetching the site for the existing entry
+                site_id: int = reauth_entry.data[CONF_SITE_ID]
+                await self._async_validate_selected_site(new_token, site_id)
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except SiteNotFound:
+                # Site removed or no longer visible to the account; treat as cannot connect
+                errors["base"] = "site_not_found"
+            except Exception:  # pragma: no cover - unexpected
+                _LOGGER.exception("Unexpected exception during reauth")
+                errors["base"] = "unknown"
+            else:
+                # Update stored token and reload entry
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_API_TOKEN: new_token},
+                    reason="reauth_successful",
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
             errors=errors,
         )

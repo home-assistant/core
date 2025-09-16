@@ -18,6 +18,15 @@
         "data_description": {
           "site_id": "Select one of your VRM sites"
         }
+      },
+      "reauth_confirm": {
+        "description": "Your existing token is no longer valid. Please enter a new VRM API access token to reauthenticate.",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "The new API access token for your VRM account"
+        }
       }
     },
     "error": {
@@ -28,7 +37,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {

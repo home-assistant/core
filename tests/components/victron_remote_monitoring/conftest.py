@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from victron_vrm.models.aggregations import ForecastAggregations
@@ -11,9 +11,6 @@ from homeassistant.components.victron_remote_monitoring.const import (
     CONF_API_TOKEN,
     CONF_SITE_ID,
     DOMAIN,
-)
-from homeassistant.components.victron_remote_monitoring.coordinator import (
-    VRMForecastStore,
 )
 from homeassistant.core import HomeAssistant
 
@@ -24,6 +21,7 @@ CONST_12_HOURS = 43200000
 CONST_24_HOURS = 86400000
 CONST_FORECAST_START = 1745359200000
 CONST_FORECAST_END = CONST_FORECAST_START + (CONST_24_HOURS * 2) + (CONST_1_HOUR * 13)
+# Do not change the values in this fixture; tests depend on them
 CONST_FORECAST_RECORDS = [
     # Yesterday
     [CONST_FORECAST_START + CONST_12_HOURS, 5050.1],
@@ -38,8 +36,8 @@ CONST_FORECAST_RECORDS = [
 
 
 @pytest.fixture
-def mock_setup_entry(patch_forecast_fn) -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
+def mock_setup_entry(mock_vrm_client) -> Generator[AsyncMock]:
+    """Override async_setup_entry while client is patched."""
     with patch(
         "homeassistant.components.victron_remote_monitoring.async_setup_entry",
         return_value=True,
@@ -52,7 +50,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Override async_config_entry."""
     return MockConfigEntry(
         title="Test VRM Forecasts",
-        unique_id="uniqueid",
+        unique_id="123456",
         version=1,
         domain=DOMAIN,
         data={
@@ -64,8 +62,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-def patch_forecast_fn(monkeypatch: pytest.MonkeyPatch):
-    """Patch the forecast function to return a fake store."""
+def mock_vrm_client() -> Generator[AsyncMock]:
+    """Patch the VictronVRMClient to supply forecast and site data."""
 
     def fake_dt_now():
         return datetime.datetime.fromtimestamp(
@@ -73,29 +71,44 @@ def patch_forecast_fn(monkeypatch: pytest.MonkeyPatch):
             tz=datetime.UTC,
         )
 
-    async def fake(client, site_id):
-        return VRMForecastStore(
-            solar=ForecastAggregations(
-                start=CONST_FORECAST_START / 1000,
-                end=CONST_FORECAST_END / 1000,
-                records=[(x / 1000, y) for x, y in CONST_FORECAST_RECORDS],
-                custom_dt_now=fake_dt_now,
-                site_id=123456,
-            ),  # your ForecastEstimates
-            consumption=ForecastAggregations(
-                start=CONST_FORECAST_START / 1000,
-                end=CONST_FORECAST_END / 1000,
-                records=[(x / 1000, y) for x, y in CONST_FORECAST_RECORDS],
-                custom_dt_now=fake_dt_now,
-                site_id=123456,
-            ),  # your ForecastEstimates
-            site_id=123456,
-        )
-
-    monkeypatch.setattr(
-        "homeassistant.components.victron_remote_monitoring.coordinator.get_forecast",
-        fake,
+    solar_agg = ForecastAggregations(
+        start=CONST_FORECAST_START // 1000,
+        end=CONST_FORECAST_END // 1000,
+        records=[(x // 1000, y) for x, y in CONST_FORECAST_RECORDS],
+        custom_dt_now=fake_dt_now,
+        site_id=123456,
     )
+    consumption_agg = ForecastAggregations(
+        start=CONST_FORECAST_START // 1000,
+        end=CONST_FORECAST_END // 1000,
+        records=[(x // 1000, y) for x, y in CONST_FORECAST_RECORDS],
+        custom_dt_now=fake_dt_now,
+        site_id=123456,
+    )
+
+    site_obj = Mock()
+    site_obj.id = 123456
+    site_obj.name = "Test Site"
+
+    with (
+        patch(
+            "homeassistant.components.victron_remote_monitoring.coordinator.VictronVRMClient",
+            autospec=True,
+        ) as mock_client_cls,
+        patch(
+            "homeassistant.components.victron_remote_monitoring.config_flow.VictronVRMClient",
+            new=mock_client_cls,
+        ),
+    ):
+        client = mock_client_cls.return_value
+        # installations.stats returns dict used by get_forecast
+        client.installations.stats = AsyncMock(
+            return_value={"solar_yield": solar_agg, "consumption": consumption_agg}
+        )
+        # users.* used by config flow
+        client.users.list_sites = AsyncMock(return_value=[site_obj])
+        client.users.get_site = AsyncMock(return_value=site_obj)
+        yield client
 
 
 @pytest.fixture

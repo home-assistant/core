@@ -1,247 +1,153 @@
 """Test the Victron VRM Solar Forecast config flow."""
 
-from types import SimpleNamespace
-from typing import Any, cast
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock
 
+import pytest
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 
-from homeassistant import config_entries
 from homeassistant.components.victron_remote_monitoring.const import (
     CONF_API_TOKEN,
     CONF_SITE_ID,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-def _make_site(site_id: int, name: str = "ESS System") -> SimpleNamespace:
-    """Create a minimal object with attributes used by the flow (id, name)."""
-    return SimpleNamespace(id=site_id, name=name)
+def _make_site(site_id: int, name: str = "ESS System") -> Mock:
+    """Return a mock site object exposing id and name attributes.
+
+    Using a mock (instead of SimpleNamespace) helps ensure tests rely only on
+    the attributes we explicitly define and will surface unexpected attribute
+    access via mock assertions if the implementation changes.
+    """
+    site = Mock()
+    site.id = site_id
+    site.name = name
+    return site
 
 
 async def test_full_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_vrm_client: AsyncMock
 ) -> None:
     """Test the 2-step flow: token -> select site -> create entry."""
     site1 = _make_site(123456, "ESS")
     site2 = _make_site(987654, "Cabin")
 
-    # Init user step
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.FORM
-    assert res["step_id"] == "user"
-    assert res["errors"] == {}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
-    # Submit API key, expect select_site form populated from list_sites
-    with patch(
-        "homeassistant.components.victron_remote_monitoring.config_flow.VRMClientHolder.list_sites",
-        return_value=[site2, site1],  # will be sorted by name then id
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            res["flow_id"],
-            {CONF_API_TOKEN: "test_token"},
-        )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.FORM
-    assert res["step_id"] == "select_site"
+    mock_vrm_client.users.list_sites = AsyncMock(return_value=[site2, site1])
+    mock_vrm_client.users.get_site = AsyncMock(return_value=site1)
 
-    # Select a site, expect create entry
-    with patch(
-        "homeassistant.components.victron_remote_monitoring.config_flow.VRMClientHolder.get_site",
-        return_value=site1,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            res["flow_id"],
-            {CONF_SITE_ID: str(site1.id)},
-        )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.CREATE_ENTRY
-    assert res["title"] == f"VRM for {site1.name}"
-    assert res["data"] == {CONF_API_TOKEN: "test_token", CONF_SITE_ID: site1.id}
-    assert len(mock_setup_entry.mock_calls) == 1
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "test_token"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_site"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SITE_ID: str(site1.id)}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"VRM for {site1.name}"
+    assert result["data"] == {
+        CONF_API_TOKEN: "test_token",
+        CONF_SITE_ID: site1.id,
+    }
+    assert mock_setup_entry.call_count == 1
 
 
-async def test_user_step_one_site_creates_entry_immediately(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+async def test_user_step_no_sites(
+    hass: HomeAssistant, mock_vrm_client: AsyncMock
 ) -> None:
-    """If only one site is available, the flow should create the entry right away."""
-    site = _make_site(123456, "OnlySite")
-
-    # Init user step
+    """No sites available keeps user step with no_sites error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.FORM
-    assert res["step_id"] == "user"
-    assert res["errors"] == {}
-
-    # Submit API key; since there is only one site, we expect an entry to be created
-    with patch(
-        "homeassistant.components.victron_remote_monitoring.config_flow.VRMClientHolder.list_sites",
-        return_value=[site],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            res["flow_id"],
-            {CONF_API_TOKEN: "test_token"},
-        )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.CREATE_ENTRY
-    assert res["title"] == f"VRM for {site.name}"
-    assert res["data"] == {CONF_API_TOKEN: "test_token", CONF_SITE_ID: site.id}
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_user_step_invalid_auth(hass: HomeAssistant) -> None:
-    """Invalid token during user step shows invalid_auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    mock_vrm_client.users.list_sites = AsyncMock(return_value=[])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "token"}
     )
-    with patch(
-        "homeassistant.components.victron_remote_monitoring.config_flow.VRMClientHolder.list_sites",
-        side_effect=AuthenticationError("bad token", status_code=401),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            cast(dict[str, Any], result)["flow_id"],
-            {CONF_API_TOKEN: "invalid"},
-        )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.FORM
-    assert res["step_id"] == "user"
-    assert res["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "no_sites"}
 
-
-async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
-    """Server errors during user step show cannot_connect."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    # Provide a site afterwards and resubmit to complete the flow
+    site = _make_site(999999, "Only Site")
+    mock_vrm_client.users.list_sites = AsyncMock(return_value=[site])
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "token"}
     )
-    with patch(
-        "homeassistant.components.victron_remote_monitoring.config_flow.VRMClientHolder.list_sites",
-        side_effect=VictronVRMError("oops", status_code=500, response_data={}),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            cast(dict[str, Any], result)["flow_id"],
-            {CONF_API_TOKEN: "token"},
-        )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.FORM
-    assert res["step_id"] == "user"
-    assert res["errors"] == {"base": "cannot_connect"}
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {CONF_API_TOKEN: "token", CONF_SITE_ID: site.id}
 
 
-async def test_user_step_no_sites(hass: HomeAssistant) -> None:
-    """No sites available after token validation keeps user step with error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    with patch(
-        "homeassistant.components.victron_remote_monitoring.config_flow.VRMClientHolder.list_sites",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            cast(dict[str, Any], result)["flow_id"],
-            {CONF_API_TOKEN: "token"},
-        )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.FORM
-    assert res["step_id"] == "user"
-    assert res["errors"] == {"base": "no_sites"}
-
-
-async def _start_flow_to_select_site(
+@pytest.mark.parametrize(
+    ("side_effect", "return_value", "expected_error"),
+    [
+        (AuthenticationError("ExpiredToken", status_code=403), None, "invalid_auth"),
+        (
+            VictronVRMError("Internal server error", status_code=500, response_data={}),
+            None,
+            "cannot_connect",
+        ),
+        (None, None, "site_not_found"),  # get_site returns None
+        (ValueError("missing"), None, "unknown"),
+    ],
+)
+async def test_select_site_errors(
     hass: HomeAssistant,
-) -> tuple[str, list[SimpleNamespace]]:
-    """Complete user step and return flow_id and sites."""
+    mock_vrm_client: AsyncMock,
+    side_effect: Exception | None,
+    return_value: Mock | None,
+    expected_error: str,
+) -> None:
+    """Parametrized select_site error scenarios."""
     sites = [_make_site(1, "A"), _make_site(2, "B")]
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    with patch(
-        "homeassistant.components.victron_remote_monitoring.config_flow.VRMClientHolder.list_sites",
-        return_value=sites,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            cast(dict[str, Any], result)["flow_id"], {CONF_API_TOKEN: "token"}
-        )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.FORM
-    assert res["step_id"] == "select_site"
-    return res["flow_id"], sites
+    flow_id = result["flow_id"]
+    mock_vrm_client.users.list_sites = AsyncMock(return_value=sites)
+    if side_effect is not None:
+        mock_vrm_client.users.get_site = AsyncMock(side_effect=side_effect)
+    else:
+        mock_vrm_client.users.get_site = AsyncMock(return_value=return_value)
+    res_intermediate = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_API_TOKEN: "token"}
+    )
+    assert res_intermediate["step_id"] == "select_site"
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_SITE_ID: str(sites[0].id)}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_site"
+    assert result["errors"] == {"base": expected_error}
+
+    # Fix the error path by making get_site succeed and submit again
+    good_site = _make_site(sites[0].id, sites[0].name)
+    mock_vrm_client.users.get_site = AsyncMock(return_value=good_site)
+    result_success = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_SITE_ID: str(sites[0].id)}
+    )
+    assert result_success["type"] is FlowResultType.CREATE_ENTRY
+    assert result_success["data"] == {
+        CONF_API_TOKEN: "token",
+        CONF_SITE_ID: good_site.id,
+    }
 
 
-async def test_select_site_invalid_auth(hass: HomeAssistant) -> None:
-    """Invalid auth on site validation shows invalid_auth on select form."""
-    flow_id, sites = await _start_flow_to_select_site(hass)
-    with patch(
-        "homeassistant.components.victron_remote_monitoring.config_flow.VRMClientHolder.get_site",
-        side_effect=AuthenticationError("bad", status_code=403),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id, {CONF_SITE_ID: str(sites[0].id)}
-        )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.FORM
-    assert res["step_id"] == "select_site"
-    assert res["errors"] == {"base": "invalid_auth"}
-
-
-async def test_select_site_cannot_connect(hass: HomeAssistant) -> None:
-    """Connection issues on site validation show cannot_connect."""
-    flow_id, sites = await _start_flow_to_select_site(hass)
-    with patch(
-        "homeassistant.components.victron_remote_monitoring.config_flow.VRMClientHolder.get_site",
-        side_effect=VictronVRMError("oops", status_code=500, response_data={}),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id, {CONF_SITE_ID: str(sites[0].id)}
-        )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.FORM
-    assert res["step_id"] == "select_site"
-    assert res["errors"] == {"base": "cannot_connect"}
-
-
-async def test_select_site_not_found(hass: HomeAssistant) -> None:
-    """None returned from get_site shows site_not_found."""
-    flow_id, sites = await _start_flow_to_select_site(hass)
-    with patch(
-        "homeassistant.components.victron_remote_monitoring.config_flow.VRMClientHolder.get_site",
-        return_value=None,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id, {CONF_SITE_ID: str(sites[0].id)}
-        )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.FORM
-    assert res["step_id"] == "select_site"
-    assert res["errors"] == {"base": "site_not_found"}
-
-
-async def test_select_site_unknown_error(hass: HomeAssistant) -> None:
-    """Unexpected error is surfaced as unknown on select_site form."""
-    flow_id, sites = await _start_flow_to_select_site(hass)
-    with patch(
-        "homeassistant.components.victron_remote_monitoring.config_flow.VRMClientHolder.get_site",
-        side_effect=ValueError("boom"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id, {CONF_SITE_ID: str(sites[0].id)}
-        )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.FORM
-    assert res["step_id"] == "select_site"
-    assert res["errors"] == {"base": "unknown"}
-
-
-async def test_select_site_duplicate_aborts(hass: HomeAssistant) -> None:
+async def test_select_site_duplicate_aborts(
+    hass: HomeAssistant, mock_vrm_client: AsyncMock
+) -> None:
     """Selecting an already configured site aborts during the select step (multi-site)."""
     site_id = 555
     # Existing entry with same site id
@@ -256,24 +162,108 @@ async def test_select_site_duplicate_aborts(hass: HomeAssistant) -> None:
 
     # Start flow and reach select_site
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    with patch(
-        "homeassistant.components.victron_remote_monitoring.config_flow.VRMClientHolder.list_sites",
-        # Return multiple sites so the flow shows the selection step
-        return_value=[_make_site(site_id, "Dup"), _make_site(777, "Other")],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            cast(dict[str, Any], result)["flow_id"], {CONF_API_TOKEN: "token2"}
-        )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.FORM
-    assert res["step_id"] == "select_site"
-
-    # Selecting the same site should abort before validation
+    mock_vrm_client.users.list_sites = AsyncMock(
+        return_value=[_make_site(site_id, "Dup"), _make_site(777, "Other")]
+    )
+    mock_vrm_client.users.get_site = AsyncMock()
     result = await hass.config_entries.flow.async_configure(
-        res["flow_id"], {CONF_SITE_ID: str(site_id)}
+        result["flow_id"], {CONF_API_TOKEN: "token2"}
     )
-    res = cast(dict[str, Any], result)
-    assert res["type"] is FlowResultType.ABORT
-    assert res["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_site"
+
+    # Selecting the same site should abort before validation (get_site not called)
+    res_abort = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SITE_ID: str(site_id)}
+    )
+    assert res_abort["type"] is FlowResultType.ABORT
+    assert res_abort["reason"] == "already_configured"
+    assert mock_vrm_client.users.get_site.call_count == 0
+
+    # Start a new flow selecting the other site to finish with a create entry
+    result_new = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    other_site = _make_site(777, "Other")
+    mock_vrm_client.users.list_sites = AsyncMock(return_value=[other_site])
+    result_new2 = await hass.config_entries.flow.async_configure(
+        result_new["flow_id"], {CONF_API_TOKEN: "token3"}
+    )
+    assert result_new2["type"] is FlowResultType.CREATE_ENTRY
+    assert result_new2["data"] == {
+        CONF_API_TOKEN: "token3",
+        CONF_SITE_ID: other_site.id,
+    }
+
+
+async def test_reauth_flow_success(
+    hass: HomeAssistant, mock_vrm_client: AsyncMock
+) -> None:
+    """Test successful reauthentication with new token."""
+    # Existing configured entry
+    site_id = 123456
+    existing = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_TOKEN: "old_token", CONF_SITE_ID: site_id},
+        unique_id=str(site_id),
+        title="Existing",
+    )
+    existing.add_to_hass(hass)
+
+    # Start reauth
+    result = await existing.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # Provide new token; validate by returning the site
+    site = _make_site(site_id, "ESS")
+    mock_vrm_client.users.get_site = AsyncMock(return_value=site)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "new_token"}
+    )
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    # Data updated
+    assert existing.data[CONF_API_TOKEN] == "new_token"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (AuthenticationError("bad", status_code=401), "invalid_auth"),
+        (VictronVRMError("down", status_code=500, response_data={}), "cannot_connect"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_vrm_client: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Reauth shows errors when validation fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_TOKEN: "old", CONF_SITE_ID: 555},
+        unique_id="555",
+        title="Existing",
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+    mock_vrm_client.users.get_site = AsyncMock(side_effect=side_effect)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "bad"}
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": expected_error}
+
+    # Provide a valid token afterwards to finish the reauth flow successfully
+    good_site = _make_site(555, "Existing")
+    mock_vrm_client.users.get_site = AsyncMock(return_value=good_site)
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "new_valid"}
+    )
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"

@@ -1,4 +1,4 @@
-"""VRM Solar Forecast Coordinator and Client."""
+"""VRM Coordinator and Client."""
 
 from dataclasses import dataclass
 import datetime
@@ -73,7 +73,6 @@ class VictronRemoteMonitoringDataUpdateCoordinator(
         config_entry: VictronRemoteMonitoringConfigEntry,
     ) -> None:
         """Initialize."""
-        self.config_entry = config_entry
         self.client = VictronVRMClient(
             token=config_entry.data[CONF_API_TOKEN],
             client_session=get_async_client(hass),
@@ -87,9 +86,7 @@ class VictronRemoteMonitoringDataUpdateCoordinator(
             update_interval=datetime.timedelta(minutes=60),
         )
 
-    async def _async_update_data(
-        self,
-    ) -> VRMForecastStore:
+    async def _async_update_data(self) -> VRMForecastStore:
         """Fetch data from VRM API."""
         try:
             return await get_forecast(self.client, self.site_id)
