@@ -1677,6 +1677,8 @@ build.json @home-assistant/supervisor
 /tests/components/uptime_kuma/ @tr4nt0r
 /homeassistant/components/uptimerobot/ @ludeeus @chemelli74
 /tests/components/uptimerobot/ @ludeeus @chemelli74
+/homeassistant/components/usage_prediction/ @home-assistant/core
+/tests/components/usage_prediction/ @home-assistant/core
 /homeassistant/components/usb/ @bdraco
 /tests/components/usb/ @bdraco
 /homeassistant/components/usgs_earthquakes_feed/ @exxamalte
