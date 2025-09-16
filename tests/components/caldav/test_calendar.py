@@ -1179,7 +1179,6 @@ async def test_config_entry_supported_components(
                 "description": "Test Description",
                 "dtend": datetime.datetime(2025, 8, 6, 11, 0),
                 "dtstart": datetime.datetime(2025, 8, 6, 10, 0),
-                "language": "EN",
                 "location": "Test Location",
                 "summary": "Test Event",
             },
@@ -1195,7 +1194,6 @@ async def test_config_entry_supported_components(
                 "summary": "Required Only",
                 "dtstart": datetime.datetime(2025, 8, 7, 9, 0),
                 "dtend": datetime.datetime(2025, 8, 7, 10, 0),
-                "language": "EN",
             },
         ),
         # All-day event (date only)
@@ -1209,7 +1207,6 @@ async def test_config_entry_supported_components(
                 "summary": "All Day Event",
                 "dtstart": datetime.date(2025, 8, 8),
                 "dtend": datetime.date(2025, 8, 9),
-                "language": "EN",
             },
         ),
         # Rrule is not supported in API (async_call) calls.

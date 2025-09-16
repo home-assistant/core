@@ -217,17 +217,17 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """Create a new event in the calendar."""
         _LOGGER.debug("Event: %s", kwargs)
 
-        item_data: dict[str, Any] = {}
-        item_data["summary"] = kwargs.get("summary")
-        item_data["dtstart"] = kwargs.get("dtstart")
-        item_data["dtend"] = kwargs.get("dtend")
-        item_data["dtstamp"] = dt_util.utcnow()
-        item_data["description"] = kwargs.get("description")
-        item_data["location"] = kwargs.get("location")
-        item_data["uid"] = str(uuid.uuid4())
+        item_data: dict[str, Any] = {
+            "summary": kwargs.get("summary"),
+            "dtstart": kwargs.get("dtstart"),
+            "dtend": kwargs.get("dtend"),
+            "dtstamp": dt_util.utcnow(),
+            "description": kwargs.get("description"),
+            "location": kwargs.get("location"),
+            "uid": str(uuid.uuid4()),
+        }
         if rrule := kwargs.get("rrule"):
             item_data["rrule"] = rrule
-        item_data["language"] = "EN"
 
         _LOGGER.debug("ICS data %s", item_data)
 
