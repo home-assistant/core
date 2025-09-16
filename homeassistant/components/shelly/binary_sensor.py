@@ -40,6 +40,7 @@ from .utils import (
     get_virtual_component_ids,
     is_block_momentary_input,
     is_rpc_momentary_input,
+    is_view_for_platform,
 )
 
 PARALLEL_UPDATES = 0
@@ -98,8 +99,9 @@ class RpcBluTrvBinarySensor(RpcBinarySensor):
 
         super().__init__(coordinator, key, attribute, description)
         ble_addr: str = coordinator.device.config[key]["addr"]
+        fw_ver = coordinator.device.status[key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            coordinator.device.config[key], ble_addr, coordinator.mac
+            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
         )
 
 
@@ -272,6 +274,9 @@ RPC_SENSORS: Final = {
     "boolean": RpcBinarySensorDescription(
         key="boolean",
         sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, BINARY_SENSOR_PLATFORM
+        ),
     ),
     "calibration": RpcBinarySensorDescription(
         key="blutrv",

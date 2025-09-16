@@ -232,6 +232,7 @@ class BLEScannerMode(StrEnum):
 
 
 BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
+WALL_DISPLAY_MIN_FIRMWARE = "2.3.0"
 
 MAX_PUSH_UPDATE_FAILURES = 5
 PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
@@ -243,6 +244,9 @@ FIRMWARE_UNSUPPORTED_ISSUE_ID = "firmware_unsupported_{unique}"
 BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID = "ble_scanner_firmware_unsupported_{unique}"
 OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
     "outbound_websocket_incorrectly_enabled_{unique}"
+)
+WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID = (
+    "wall_display_firmware_unsupported_{unique}"
 )
 
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
@@ -265,9 +269,10 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 
 CONF_GEN = "gen"
 
-VIRTUAL_COMPONENTS = ("boolean", "enum", "input", "number", "text")
+VIRTUAL_COMPONENTS = ("boolean", "button", "enum", "input", "number", "text")
 VIRTUAL_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
+    "button": {"types": ["button"], "modes": ["button"]},
     "number": {"types": ["number"], "modes": ["field", "slider"]},
     "select": {"types": ["enum"], "modes": ["dropdown"]},
     "sensor": {"types": ["enum", "number", "text"], "modes": ["label"]},
