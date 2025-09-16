@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import asyncio
 
-from aiohttp import ClientResponseError
 from volvocarsapi.api import VolvoCarsApi
-from volvocarsapi.models import VolvoAuthException, VolvoCarsVehicle
+from volvocarsapi.models import VolvoApiException, VolvoAuthException, VolvoCarsVehicle
 
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -69,21 +68,21 @@ async def _async_auth_and_create_api(
     oauth_session = OAuth2Session(hass, entry, implementation)
     web_session = async_get_clientsession(hass)
     auth = VolvoAuth(web_session, oauth_session)
-
-    try:
-        await auth.async_get_access_token()
-    except ClientResponseError as err:
-        if err.status in (400, 401):
-            raise ConfigEntryAuthFailed from err
-
-        raise ConfigEntryNotReady from err
-
-    return VolvoCarsApi(
+    api = VolvoCarsApi(
         web_session,
         auth,
         entry.data[CONF_API_KEY],
         entry.data[CONF_VIN],
     )
+
+    try:
+        await api.async_get_access_token()
+    except VolvoAuthException as err:
+        raise ConfigEntryAuthFailed from err
+    except VolvoApiException as err:
+        raise ConfigEntryNotReady from err
+
+    return api
 
 
 async def _async_load_vehicle(api: VolvoCarsApi) -> VolvoCarsVehicle:

@@ -382,6 +382,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("pressure", UnitOfPressure.MMHG): UnitOfPressure.INHG,
         ("pressure", UnitOfPressure.INH2O): UnitOfPressure.PSI,
         # Convert non-USCS speeds, except knots, to mph
+        ("speed", UnitOfSpeed.METERS_PER_MINUTE): UnitOfSpeed.INCHES_PER_SECOND,
         ("speed", UnitOfSpeed.METERS_PER_SECOND): UnitOfSpeed.MILES_PER_HOUR,
         ("speed", UnitOfSpeed.MILLIMETERS_PER_SECOND): UnitOfSpeed.INCHES_PER_SECOND,
         ("speed", UnitOfSpeed.KILOMETERS_PER_HOUR): UnitOfSpeed.MILES_PER_HOUR,

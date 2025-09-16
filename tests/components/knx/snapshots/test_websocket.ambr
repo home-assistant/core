@@ -111,6 +111,12 @@
         'options': dict({
           'passive': True,
           'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
           'write': dict({
             'required': False,
           }),
@@ -140,6 +146,12 @@
         'options': dict({
           'passive': True,
           'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
           'write': dict({
             'required': False,
           }),
@@ -153,6 +165,12 @@
         'options': dict({
           'passive': True,
           'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
           'write': dict({
             'required': False,
           }),
@@ -172,6 +190,12 @@
         'options': dict({
           'passive': True,
           'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 5,
+              'sub': 1,
+            }),
+          ]),
           'write': dict({
             'required': False,
           }),
@@ -187,6 +211,12 @@
           'state': dict({
             'required': False,
           }),
+          'validDPTs': list([
+            dict({
+              'main': 5,
+              'sub': 1,
+            }),
+          ]),
           'write': False,
         }),
         'required': False,
@@ -216,6 +246,12 @@
           'state': dict({
             'required': False,
           }),
+          'validDPTs': list([
+            dict({
+              'main': 5,
+              'sub': 1,
+            }),
+          ]),
           'write': dict({
             'required': False,
           }),
@@ -242,8 +278,7 @@
       dict({
         'default': 25,
         'name': 'travelling_time_up',
-        'optional': True,
-        'required': False,
+        'required': True,
         'selector': dict({
           'number': dict({
             'max': 1000.0,
@@ -258,8 +293,7 @@
       dict({
         'default': 25,
         'name': 'travelling_time_down',
-        'optional': True,
-        'required': False,
+        'required': True,
         'selector': dict({
           'number': dict({
             'max': 1000.0,
@@ -746,6 +780,12 @@
           'state': dict({
             'required': False,
           }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
           'write': dict({
             'required': True,
           }),

@@ -614,6 +614,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfSpeed.BEAUFORT,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.KNOTS,
+        UnitOfSpeed.METERS_PER_MINUTE,
         UnitOfSpeed.METERS_PER_SECOND,
         UnitOfSpeed.MILLIMETERS_PER_SECOND,
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,

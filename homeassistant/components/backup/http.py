@@ -8,7 +8,7 @@ import threading
 from typing import IO, cast
 
 from aiohttp import BodyPartReader
-from aiohttp.hdrs import CONTENT_DISPOSITION
+from aiohttp.hdrs import CONTENT_DISPOSITION, CONTENT_TYPE
 from aiohttp.web import FileResponse, Request, Response, StreamResponse
 from multidict import istr
 
@@ -76,7 +76,8 @@ class DownloadBackupView(HomeAssistantView):
             return Response(status=HTTPStatus.NOT_FOUND)
 
         headers = {
-            CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar"
+            CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar",
+            CONTENT_TYPE: "application/x-tar",
         }
 
         try:

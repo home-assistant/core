@@ -16,8 +16,10 @@ from homeassistant.data_entry_flow import FlowResult
 
 from . import get_addons_info, get_issues_info
 from .const import (
+    EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+    ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_COMPONENTS,
@@ -26,23 +28,10 @@ from .const import (
 from .handler import get_supervisor_client
 from .issues import Issue, Suggestion
 
-HELP_URLS = {
-    "help_url": "https://www.home-assistant.io/help/",
-    "community_url": "https://community.home-assistant.io/",
-}
-
 SUGGESTION_CONFIRMATION_REQUIRED = {
     "addon_execute_remove",
     "system_adopt_data_disk",
     "system_execute_reboot",
-}
-
-
-EXTRA_PLACEHOLDERS = {
-    "issue_mount_mount_failed": {
-        "storage_url": "/config/storage",
-    },
-    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED: HELP_URLS,
 }
 
 
@@ -219,6 +208,7 @@ async def async_create_fix_flow(
     if issue and issue.key in {
         ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
         ISSUE_KEY_ADDON_BOOT_FAIL,
+        ISSUE_KEY_ADDON_PWNED,
     }:
         return AddonIssueRepairFlow(hass, issue_id)
 
