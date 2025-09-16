@@ -20,7 +20,6 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ISSUE_DEPRECATED_CREDENTIALS = "deprecated_credentials"
 ISSUE_BUCKET_ACCESS_RESTRICTED = "bucket_access_restricted"
 ISSUE_BUCKET_NOT_FOUND = "bucket_not_found"
 
@@ -35,19 +34,8 @@ async def async_check_for_repair_issues(
         # Test basic connectivity and permissions
         await hass.async_add_executor_job(bucket.api.account_info.get_allowed)
     except Unauthorized:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"{ISSUE_DEPRECATED_CREDENTIALS}_{entry.entry_id}",
-            is_fixable=True,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=ISSUE_DEPRECATED_CREDENTIALS,
-            translation_placeholders={
-                "title": entry.title,
-                "entry_id": entry.entry_id,
-            },
-        )
+        # Authentication failures are handled via reauth flow in setup
+        pass
     except RestrictedBucket as err:
         ir.async_create_issue(
             hass,

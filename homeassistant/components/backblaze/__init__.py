@@ -8,7 +8,12 @@ from b2sdk.v2 import B2Api, Bucket, InMemoryAccountInfo, exception
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
+from homeassistant.helpers import issue_registry as ir
 
 from .const import (
     BACKBLAZE_REALM,
@@ -52,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             entry.data[CONF_KEY_ID],
             err,
         )
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
         ) from err
@@ -63,7 +68,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             entry.data[CONF_KEY_ID],
             err,
         )
-        raise ConfigEntryError(
+        # Create repair issue for user to address
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"bucket_access_restricted_{entry.entry_id}",
+            is_fixable=True,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="bucket_access_restricted",
+            translation_placeholders={
+                "title": entry.title,
+                "bucket_name": err.bucket_name,
+                "entry_id": entry.entry_id,
+            },
+        )
+        raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="restricted_bucket",
             translation_placeholders={
@@ -77,7 +97,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             entry.data[CONF_KEY_ID],
             err,
         )
-        raise ConfigEntryError(
+        # Create repair issue for user to address
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"bucket_not_found_{entry.entry_id}",
+            is_fixable=True,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="bucket_not_found",
+            translation_placeholders={
+                "title": entry.title,
+                "bucket_name": entry.data.get(CONF_BUCKET, "unknown"),
+                "entry_id": entry.entry_id,
+            },
+        )
+        raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="invalid_bucket_name",
         ) from err

@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_repair_issue_unauthorized(hass: HomeAssistant) -> None:
-    """Test repair issue creation for unauthorized error."""
+    """Test that unauthorized errors don't create repair issues (handled by reauth)."""
     entry = MockConfigEntry(domain="backblaze", data={"bucket": "test"})
     bucket = Mock()
     entry.runtime_data = bucket
@@ -33,9 +33,9 @@ async def test_repair_issue_unauthorized(hass: HomeAssistant) -> None:
 
     await async_check_for_repair_issues(hass, entry)
 
-    # Check that issue was created
+    # Should not create issue for Unauthorized (handled by reauth flow)
     issues = ir.async_get(hass).issues
-    assert len(issues) == 1
+    assert len(issues) == 0
 
 
 async def test_repair_issue_restricted_bucket(hass: HomeAssistant) -> None:

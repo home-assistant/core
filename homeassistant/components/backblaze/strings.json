@@ -80,43 +80,13 @@
     }
   },
   "issues": {
-    "deprecated_credentials": {
-      "title": "Backblaze credentials may be expired",
-      "description": "The credentials for your Backblaze integration '{title}' may have expired or been revoked. This could cause backup operations to fail. To fix this issue:\n\n1. Log in to your Backblaze account\n2. Check if your application key is still active\n3. If needed, generate new credentials\n4. Update your Home Assistant configuration with the new credentials\n\nClick 'Submit' to update your credentials now."
-    },
     "bucket_access_restricted": {
       "title": "Backblaze bucket access restricted",
-      "description": "Access to your Backblaze bucket '{bucket_name}' is restricted for the current credentials. This means your application key may only have access to specific buckets, but not this one. To fix this issue:\n\n1. Log in to your Backblaze account\n2. Check your application key restrictions\n3. Either use a different bucket that your key can access, or create a new application key with access to '{bucket_name}'\n4. Update your configuration\n\nClick 'Submit' to reconfigure your Backblaze integration."
+      "description": "Access to your Backblaze bucket {bucket_name} is restricted for the current credentials. This means your application key may only have access to specific buckets, but not this one. To fix this issue:\n\n1. Log in to your Backblaze account\n2. Check your application key restrictions\n3. Either use a different bucket that your key can access, or create a new application key with access to {bucket_name}\n4. Go to Settings > Devices & Services > Backblaze to reconfigure your integration\n\nClick 'Submit' to dismiss this issue."
     },
     "bucket_not_found": {
       "title": "Backblaze bucket not found",
-      "description": "The Backblaze bucket '{bucket_name}' cannot be found or accessed. This could mean:\n\n1. The bucket was deleted\n2. The bucket name was changed\n3. Your credentials no longer have access to this bucket\n\nTo fix this issue:\n\n1. Log in to your Backblaze account\n2. Verify the bucket still exists and check its name\n3. Ensure your application key has access to this bucket\n4. Update your configuration with the correct bucket name if needed\n\nClick 'Submit' to reconfigure your Backblaze integration."
-    }
-  },
-  "repairs": {
-    "deprecated_credentials": {
-      "step": {
-        "deprecated_credentials": {
-          "title": "Update Backblaze credentials",
-          "description": "Your Backblaze credentials need to be updated. This will redirect you to the integration configuration where you can enter new credentials."
-        }
-      }
-    },
-    "bucket_access_restricted": {
-      "step": {
-        "bucket_access_restricted": {
-          "title": "Fix Backblaze bucket access",
-          "description": "Your current credentials don't have access to the configured bucket. This will redirect you to the integration configuration where you can update your settings."
-        }
-      }
-    },
-    "bucket_not_found": {
-      "step": {
-        "bucket_not_found": {
-          "title": "Fix Backblaze bucket configuration",
-          "description": "The configured bucket cannot be found. This will redirect you to the integration configuration where you can update your bucket settings."
-        }
-      }
+      "description": "The Backblaze bucket {bucket_name} cannot be found or accessed. This could mean:\n\n1. The bucket was deleted\n2. The bucket name was changed\n3. Your credentials no longer have access to this bucket\n\nTo fix this issue:\n\n1. Log in to your Backblaze account\n2. Verify the bucket still exists and check its name\n3. Ensure your application key has access to this bucket\n4. Go to Settings > Devices & Services > Backblaze to reconfigure your integration\n\nClick 'Submit' to dismiss this issue."
     }
   }
 }

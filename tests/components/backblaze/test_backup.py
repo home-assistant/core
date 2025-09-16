@@ -2,7 +2,6 @@
 
 import json
 import logging
-import tempfile
 from time import time
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -11,7 +10,7 @@ import pytest
 
 from homeassistant.components.backblaze.backup import (
     BackblazeBackupAgent,
-    _parse_and_validate_metadata,
+    _parse_metadata,
     async_get_backup_agents,
     async_register_backup_agents_listener,
     handle_b2_errors,
@@ -22,7 +21,6 @@ from homeassistant.components.backblaze.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
     MAX_BACKUP_SIZE,
-    MAX_SIMPLE_UPLOAD_SIZE,
     METADATA_VERSION,
 )
 from homeassistant.components.backup import (
@@ -161,17 +159,22 @@ class TestBackblazeBackupUtilities:
         }
 
         # Valid metadata should parse successfully
-        result = _parse_and_validate_metadata(json.dumps(valid_metadata))
+        result = _parse_metadata(json.dumps(valid_metadata))
         assert result["backup_id"] == "test"
 
         # Invalid JSON should raise ValueError
-        with pytest.raises(ValueError, match="Invalid metadata format"):
-            _parse_and_validate_metadata("{invalid json")
+        with pytest.raises(ValueError, match="Invalid JSON format"):
+            _parse_metadata("{invalid json")
 
-        # Missing required fields should raise ValueError
+        # Non-dictionary JSON should raise TypeError
+        with pytest.raises(TypeError, match="JSON content is not a dictionary"):
+            _parse_metadata('["this", "is", "a", "list"]')
+
+        # Note: Field validation is now handled by AgentBackup.from_dict, not here
+        # So _parse_metadata will successfully parse incomplete metadata
         incomplete = {k: v for k, v in valid_metadata.items() if k != "backup_id"}
-        with pytest.raises(ValueError, match="backup_id"):
-            _parse_and_validate_metadata(json.dumps(incomplete))
+        result_incomplete = _parse_metadata(json.dumps(incomplete))
+        assert "backup_id" not in result_incomplete
 
     async def test_error_decorator(self):
         """Test the B2Error handling decorator."""
@@ -232,33 +235,33 @@ class TestBackblazeBackupAgent:
         assert "backup123" not in agent._backup_list_cache
 
     async def test_stream_closing(self, agent):
-        """Test stream closing with different close method availability."""
+        """Test stream closing with async close method availability."""
         # Test async close
         mock_stream_async = Mock()
         mock_stream_async.aclose = AsyncMock()
         await agent._close_stream(mock_stream_async)
         mock_stream_async.aclose.assert_called_once()
 
-        # Test sync close fallback
-        mock_stream_sync = Mock(spec=[])
-        mock_stream_sync.close = Mock()
-        await agent._close_stream(mock_stream_sync)
-        mock_stream_sync.close.assert_called_once()
-
-        # Test no close method available
+        # Test no close method available (should not raise)
         mock_stream_none = object()
         await agent._close_stream(mock_stream_none)  # Should not raise
+
+        # Test with sync close method only (should not be called since we only check for aclose)
+        mock_stream_sync = Mock(spec=["close"])  # Only has close, not aclose
+        mock_stream_sync.close = Mock()
+        await agent._close_stream(mock_stream_sync)
+        mock_stream_sync.close.assert_not_called()  # We only call aclose, not close
 
     async def test_response_closing(self, agent):
         """Test response closing in executor."""
         # Test with close method
         mock_response = Mock()
         mock_response.close = Mock()
-        await agent._close_response(mock_response)
+        await agent._close_requests_response(mock_response)
 
         # Test without close method
         mock_response_no_close = object()
-        await agent._close_response(mock_response_no_close)  # Should not raise
+        await agent._close_requests_response(mock_response_no_close)  # Should not raise
 
     async def test_cleanup_failed_upload(self, agent):
         """Test cleanup of failed uploads."""
@@ -322,43 +325,26 @@ class TestBackblazeBackupOperations:
     @pytest.mark.parametrize(
         ("backup_size", "expected_method"),
         [
-            (100, "simple"),
-            (MAX_SIMPLE_UPLOAD_SIZE + 1000, "multipart"),
+            (100, "small_file"),
+            (100 * 1024 * 1024 + 1000, "large_file"),  # Large file test case
         ],
     )
     async def test_upload_backup(self, agent, backup_size, expected_method):
-        """Test backup upload with different sizes."""
+        """Test backup upload with different sizes using unified streaming."""
         backup = create_test_backup(size=backup_size)
         stream = create_mock_stream()
 
         mock_bucket = Mock()
         mock_file_version = Mock(id_="test_file_id")
+        mock_bucket.upload_file_obj.return_value = mock_file_version
         mock_bucket.upload_bytes.return_value = mock_file_version
-        mock_bucket.upload_local_file.return_value = mock_file_version
 
         with patch.object(agent, "_bucket", mock_bucket):
-            if expected_method == "multipart":
-                with (
-                    patch("tempfile.NamedTemporaryFile") as mock_temp,
-                    patch(
-                        "homeassistant.components.backblaze.backup.aiofiles.open"
-                    ) as mock_aiofiles,
-                    patch("os.chmod"),
-                    tempfile.NamedTemporaryFile(delete=False) as temp_file,
-                ):
-                    mock_temp_file = Mock()
-                    mock_temp_file.name = temp_file.name
-                    mock_temp.return_value.__enter__.return_value = mock_temp_file
-
-                    mock_file = Mock()
-                    mock_file.write = AsyncMock()
-                    mock_aiofiles.return_value.__aenter__.return_value = mock_file
-
-                    await agent.async_upload_backup(open_stream=stream, backup=backup)
-                    mock_bucket.upload_local_file.assert_called_once()
-            else:
-                await agent.async_upload_backup(open_stream=stream, backup=backup)
-                assert mock_bucket.upload_bytes.call_count >= 1
+            await agent.async_upload_backup(open_stream=stream, backup=backup)
+            # Main backup file uses streaming (upload_file_obj)
+            mock_bucket.upload_file_obj.assert_called_once()
+            # Metadata file uses upload_bytes
+            mock_bucket.upload_bytes.assert_called_once()
 
     async def test_upload_backup_size_limit_exceeded(self, agent):
         """Test upload rejection when backup exceeds size limit."""
@@ -367,46 +353,6 @@ class TestBackblazeBackupOperations:
 
         with pytest.raises(BackupAgentError, match="exceeds maximum allowed size"):
             await agent.async_upload_backup(open_stream=stream, backup=huge_backup)
-
-    async def test_upload_backup_multipart_progress_logging(self, agent, caplog):
-        """Test progress logging during multipart upload."""
-        large_backup = create_test_backup(size=MAX_SIMPLE_UPLOAD_SIZE + 1000)
-        chunk_size = 50 * 1024 * 1024  # 50MB chunks
-        large_stream = create_mock_stream([b"x" * chunk_size, b"y" * 1000])
-
-        mock_bucket = Mock()
-        mock_bucket.upload_local_file.return_value = Mock(id_="large_file_id")
-        mock_bucket.upload_bytes.return_value = Mock()
-
-        with (
-            patch("tempfile.NamedTemporaryFile") as mock_temp,
-            patch(
-                "homeassistant.components.backblaze.backup.aiofiles.open"
-            ) as mock_aiofiles,
-            patch("os.chmod"),
-            patch.object(agent, "_bucket", mock_bucket),
-            caplog.at_level(logging.DEBUG),
-            tempfile.NamedTemporaryFile(delete=False) as temp_file,
-        ):
-            mock_temp_file = Mock()
-            mock_temp_file.name = temp_file.name
-            mock_temp.return_value.__enter__.return_value = mock_temp_file
-
-            mock_file = Mock()
-            mock_file.write = AsyncMock()
-            mock_aiofiles.return_value.__aenter__.return_value = mock_file
-
-            await agent.async_upload_backup(
-                open_stream=large_stream, backup=large_backup
-            )
-
-            # Verify progress logging occurred
-            progress_logs = [
-                r.message
-                for r in caplog.records
-                if "Written" in r.message and "bytes to temp file" in r.message
-            ]
-            assert len(progress_logs) > 0
 
     async def test_download_backup(self, agent):
         """Test backup download functionality."""
@@ -490,74 +436,119 @@ class TestBackblazeBackupOperations:
 class TestBackblazeErrorHandling:
     """Test error handling scenarios."""
 
+    async def test_b2_error_during_upload_with_cleanup(self, agent):
+        """Test B2Error handling during main upload method (lines 262-264)."""
+        backup = create_test_backup(size=100)
+        stream = create_mock_stream()
+
+        with (
+            patch.object(
+                agent, "_upload_backup_file", side_effect=B2Error("B2 API error")
+            ),
+            patch.object(agent, "_cleanup_failed_upload") as mock_cleanup,
+            pytest.raises(
+                BackupAgentError, match="Failed to upload backup to Backblaze B2"
+            ),
+        ):
+            await agent.async_upload_backup(open_stream=stream, backup=backup)
+
+        # Verify cleanup was called
+        mock_cleanup.assert_called_once()
+
+    async def test_b2_error_in_upload_file_method(self, agent, caplog):
+        """Test B2Error handling in _upload_backup_file (lines 307-312)."""
+
+        # Create a simple stream mock that won't interfere with _close_stream
+        stream_mock = Mock(spec=[])
+
+        async def mock_open_stream():
+            return stream_mock
+
+        mock_bucket = Mock()
+        # Make upload_file_obj raise B2Error
+        mock_bucket.upload_file_obj.side_effect = B2Error("B2 API connection error")
+
+        with (
+            patch.object(agent, "_bucket", mock_bucket),
+            patch(
+                "homeassistant.components.backblaze.backup.AsyncIteratorReader"
+            ) as mock_reader_class,
+            caplog.at_level(logging.ERROR),
+        ):
+            # Set up mock reader
+            mock_reader = Mock()
+            mock_reader.close = Mock()
+            mock_reader_class.return_value = mock_reader
+
+            with pytest.raises(B2Error, match="B2 API connection error"):
+                await agent._upload_backup_file(
+                    filename="test.tar",
+                    open_stream=mock_open_stream,
+                    file_info={},
+                )
+
+            # Verify cleanup was still called in finally block
+            mock_reader.close.assert_called_once()
+
+            # Verify the B2Error was logged appropriately
+            assert "B2 connection error during upload for test.tar" in caplog.text
+
+    async def test_generic_error_in_upload_file_method(self, agent, caplog):
+        """Test generic Exception handling in _upload_backup_file (lines 310-312)."""
+
+        # Create a simple stream mock that won't interfere with _close_stream
+        stream_mock = Mock(spec=[])
+
+        async def mock_open_stream():
+            return stream_mock
+
+        mock_bucket = Mock()
+        # Make upload_file_obj raise generic exception
+        mock_bucket.upload_file_obj.side_effect = RuntimeError("Generic upload error")
+
+        with (
+            patch.object(agent, "_bucket", mock_bucket),
+            patch(
+                "homeassistant.components.backblaze.backup.AsyncIteratorReader"
+            ) as mock_reader_class,
+            caplog.at_level(logging.ERROR),
+        ):
+            # Set up mock reader
+            mock_reader = Mock()
+            mock_reader.close = Mock()
+            mock_reader_class.return_value = mock_reader
+
+            with pytest.raises(RuntimeError, match="Generic upload error"):
+                await agent._upload_backup_file(
+                    filename="test.tar",
+                    open_stream=mock_open_stream,
+                    file_info={},
+                )
+
+            # Verify cleanup was still called in finally block
+            mock_reader.close.assert_called_once()
+
+            # Verify the generic error was logged appropriately
+            assert "An error occurred during upload for test.tar:" in caplog.text
+
     async def test_upload_metadata_failure(self, agent):
         """Test handling of metadata upload failure."""
         backup = create_test_backup(size=100)
         stream = create_mock_stream()
 
         mock_bucket = Mock()
-        mock_bucket.upload_bytes.side_effect = [
-            Mock(id_="main_file_id"),  # Success for main backup
-            RuntimeError("Unexpected error"),  # Error for metadata
-        ]
+        mock_bucket.upload_file_obj.return_value = Mock(
+            id_="main_file_id"
+        )  # Success for main backup
+        mock_bucket.upload_bytes.side_effect = RuntimeError(
+            "Unexpected error"
+        )  # Error for metadata
 
         with (
             patch.object(agent, "_bucket", mock_bucket),
             pytest.raises(BackupAgentError, match="An unexpected error occurred"),
         ):
             await agent.async_upload_backup(open_stream=stream, backup=backup)
-
-    async def test_multipart_upload_exception(self, agent, caplog):
-        """Test exception handling during multipart upload."""
-        large_backup = create_test_backup(size=MAX_SIMPLE_UPLOAD_SIZE + 1000)
-        stream = create_mock_stream()
-
-        with (
-            patch("tempfile.NamedTemporaryFile") as mock_temp,
-            patch(
-                "homeassistant.components.backblaze.backup.aiofiles.open",
-                side_effect=RuntimeError("File system error"),
-            ),
-            patch("os.chmod"),
-            caplog.at_level(logging.ERROR),
-            tempfile.NamedTemporaryFile(delete=False) as temp_file,
-        ):
-            mock_temp_file = Mock()
-            mock_temp_file.name = temp_file.name
-            mock_temp.return_value.__enter__.return_value = mock_temp_file
-
-            with pytest.raises(BackupAgentError):
-                await agent.async_upload_backup(open_stream=stream, backup=large_backup)
-
-            error_logs = [
-                r.message
-                for r in caplog.records
-                if "An error occurred during upload" in r.message
-            ]
-            assert len(error_logs) > 0
-
-    async def test_temp_file_cleanup_failure(self, agent, caplog):
-        """Test temp file cleanup with failure scenarios."""
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            temp_file_path = temp_file.name
-
-            with (
-                patch("os.unlink", side_effect=OSError("Permission denied")),
-                patch("os.path.exists", return_value=True),
-                patch("os.chmod"),
-                patch.object(
-                    agent, "_truncate_file", side_effect=OSError("Truncate failed")
-                ),
-                caplog.at_level(logging.ERROR),
-            ):
-                await agent._cleanup_temp_file(temp_file_path)
-
-                error_logs = [
-                    r.message
-                    for r in caplog.records
-                    if "Could not delete or truncate" in r.message
-                ]
-                assert len(error_logs) > 0
 
     async def test_delete_metadata_b2_error(self, agent):
         """Test B2Error during metadata file deletion."""
@@ -686,7 +677,7 @@ class TestBackblazeMetadataProcessing:
                 return_value=(mock_file, mock_metadata_file),
             ),
             patch(
-                "homeassistant.components.backblaze.backup._parse_and_validate_metadata",
+                "homeassistant.components.backblaze.backup._parse_metadata",
                 return_value=mock_metadata_content,
             ),
             patch.object(agent, "_backup_from_b2_metadata", return_value=test_backup),
@@ -826,32 +817,6 @@ class TestBackblazeAdditionalCoverage:
             ]
             assert len(manual_logs) > 0
 
-    async def test_temp_file_cleanup_file_not_exists(self, agent):
-        """Test temp file cleanup when file doesn't exist."""
-        with patch("os.path.exists", return_value=False):
-            await agent._cleanup_temp_file("nonexistent_file")  # Should return early
-
-    async def test_temp_file_cleanup_retry_success(self, agent):
-        """Test temp file cleanup retry mechanism."""
-        call_count = 0
-
-        def mock_unlink(path):
-            nonlocal call_count
-            call_count += 1
-            if call_count < 3:  # Fail first 2 times
-                raise OSError("Permission denied")
-            # Success on 3rd try
-
-        with (
-            patch("os.path.exists", return_value=True),
-            patch("os.chmod"),
-            patch("os.unlink", side_effect=mock_unlink),
-            tempfile.NamedTemporaryFile(delete=False) as temp_file,
-        ):
-            temp_retry_path = temp_file.name
-            await agent._cleanup_temp_file(temp_retry_path)
-            assert call_count == 3
-
     async def test_list_backups_empty_cache_miss(self, agent):
         """Test list backups when cache is expired and empty."""
         # Expire cache
@@ -888,7 +853,7 @@ class TestBackblazeAdditionalCoverage:
                 return_value=(mock_file, mock_metadata_file),
             ),
             patch(
-                "homeassistant.components.backblaze.backup._parse_and_validate_metadata",
+                "homeassistant.components.backblaze.backup._parse_metadata",
                 return_value=mock_metadata_content,
             ),
             patch.object(agent, "_backup_from_b2_metadata", return_value=test_backup),
@@ -965,103 +930,5 @@ class TestBackblazeAdditionalCoverage:
         mock_response = Mock()
         mock_response.close = Mock()
 
-        await agent._close_response(mock_response)
+        await agent._close_requests_response(mock_response)
         # Should have been called through executor
-
-    async def test_b2_error_during_multipart_upload(self, agent, caplog):
-        """Test B2Error during multipart upload."""
-        large_backup = create_test_backup(size=MAX_SIMPLE_UPLOAD_SIZE + 1000)
-        stream = create_mock_stream()
-
-        with (
-            patch("tempfile.NamedTemporaryFile") as mock_temp,
-            patch(
-                "homeassistant.components.backblaze.backup.aiofiles.open",
-                side_effect=B2Error("B2 upload error"),
-            ),
-            patch("os.chmod"),
-            caplog.at_level(logging.ERROR),
-            tempfile.NamedTemporaryFile(delete=False) as temp_file,
-        ):
-            mock_temp_file = Mock()
-            mock_temp_file.name = temp_file.name
-            mock_temp.return_value.__enter__.return_value = mock_temp_file
-
-            with pytest.raises(BackupAgentError):
-                await agent.async_upload_backup(open_stream=stream, backup=large_backup)
-
-            error_logs = [
-                r.message
-                for r in caplog.records
-                if "B2 connection error during upload" in r.message
-            ]
-            assert len(error_logs) > 0
-
-    async def test_temp_file_successful_deletion_after_retry(self, agent, caplog):
-        """Test successful temp file deletion after initial failure."""
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            temp_file_path = temp_file.name
-            call_count = 0
-
-            def mock_unlink(path):
-                nonlocal call_count
-                call_count += 1
-                if call_count == 1:  # Fail first time only
-                    raise OSError("Permission denied")
-                # Success on 2nd try - no exception
-
-            with (
-                patch("os.path.exists", return_value=True),
-                patch("os.chmod"),
-                patch("os.unlink", side_effect=mock_unlink),
-                caplog.at_level(logging.DEBUG),
-            ):
-                await agent._cleanup_temp_file(temp_file_path)
-
-                # Should log successful deletion
-                debug_logs = [
-                    r.message
-                    for r in caplog.records
-                    if "Successfully deleted temporary file" in r.message
-                ]
-                assert len(debug_logs) > 0
-
-    def test_truncate_file_operation(self, agent):
-        """Test the truncate file operation."""
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            test_file_path = temp_file.name
-
-            # Mock open with context manager support
-            mock_file = Mock()
-            mock_file.__enter__ = Mock(return_value=mock_file)
-            mock_file.__exit__ = Mock(return_value=None)
-
-            with patch("builtins.open", return_value=mock_file):
-                agent._truncate_file(test_file_path)
-                mock_file.__enter__.assert_called_once()
-                mock_file.__exit__.assert_called_once()
-
-    async def test_temp_file_cleanup_successful_truncation(self, agent, caplog):
-        """Test successful temp file truncation after delete failure."""
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            temp_file_path = temp_file.name
-
-            with (
-                patch("os.unlink", side_effect=OSError("Permission denied")),
-                patch("os.path.exists", return_value=True),
-                patch("os.chmod"),
-                patch.object(
-                    agent, "_truncate_file", return_value=None
-                ),  # Successful truncation
-                caplog.at_level(logging.INFO),
-            ):
-                await agent._cleanup_temp_file(temp_file_path)
-
-                # Should log successful truncation
-                info_logs = [
-                    r.message
-                    for r in caplog.records
-                    if "Truncated temporary file" in r.message
-                    and "as fallback" in r.message
-                ]
-                assert len(info_logs) > 0

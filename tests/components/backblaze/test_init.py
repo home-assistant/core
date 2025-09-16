@@ -53,8 +53,8 @@ async def test_setup_entry_invalid_auth(
     ("exception", "state"),
     [
         (exception.Unauthorized("msg", "code"), ConfigEntryState.SETUP_ERROR),
-        (exception.RestrictedBucket("testBucket"), ConfigEntryState.SETUP_ERROR),
-        (exception.NonExistentBucket(), ConfigEntryState.SETUP_ERROR),
+        (exception.RestrictedBucket("testBucket"), ConfigEntryState.SETUP_RETRY),
+        (exception.NonExistentBucket(), ConfigEntryState.SETUP_RETRY),
         (exception.ConnectionReset(), ConfigEntryState.SETUP_RETRY),
         (exception.MissingAccountData("key"), ConfigEntryState.SETUP_ERROR),
         (ValueError("simulated unexpected error"), ConfigEntryState.SETUP_RETRY),

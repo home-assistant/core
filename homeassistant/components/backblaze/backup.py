@@ -1,21 +1,19 @@
 """Backup platform for the Backblaze integration."""
 
+# pylint: disable=hass-component-root-import
+
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
-import contextlib
 import functools
 import json
 import logging
 import mimetypes
-import os
-import tempfile
-from time import time  # Import time for caching
+from time import time
 from typing import Any
 
-import aiofiles
-from b2sdk.v2 import DEFAULT_MIN_PART_SIZE, FileVersion
+from b2sdk.v2 import FileVersion
 from b2sdk.v2.exception import B2Error
-import voluptuous as vol
+import requests
 
 from homeassistant.components.backup import (
     AgentBackup,
@@ -24,6 +22,7 @@ from homeassistant.components.backup import (
     BackupNotFound,
     suggested_filename,
 )
+from homeassistant.components.backup.util import AsyncIteratorReader
 from homeassistant.core import HomeAssistant, callback
 
 from . import BackblazeConfigEntry
@@ -32,7 +31,6 @@ from .const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
     MAX_BACKUP_SIZE,
-    MAX_SIMPLE_UPLOAD_SIZE,
     METADATA_FILE_SUFFIX,
     METADATA_VERSION,
 )
@@ -42,27 +40,6 @@ _LOGGER = logging.getLogger(__name__)
 # Cache TTL for backup list (in seconds)
 CACHE_TTL = 300
 
-# Schema for validating metadata files
-METADATA_SCHEMA = vol.Schema(
-    {
-        vol.Required("metadata_version"): vol.Equal(METADATA_VERSION),
-        vol.Required("backup_id"): str,
-        vol.Required("backup_metadata"): {
-            vol.Required("backup_id"): str,
-            vol.Required("date"): str,
-            vol.Required("name"): str,
-            vol.Required("protected"): bool,
-            vol.Optional("size", default=0): int,
-            vol.Optional("addons", default=list): list,
-            vol.Optional("database_included", default=False): bool,
-            vol.Optional("folders", default=list): list,
-            vol.Optional("homeassistant_included", default=False): bool,
-            vol.Optional("homeassistant_version"): vol.Any(str, None),
-            vol.Optional("extra_metadata", default=dict): dict,
-        },
-    }
-)
-
 
 def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
     """Return the suggested filenames for the backup and metadata files."""
@@ -70,15 +47,16 @@ def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
     return f"{base_name}.tar", f"{base_name}.metadata.json"
 
 
-def _parse_and_validate_metadata(raw_content: str) -> dict[str, Any]:
-    """Parse and validate metadata content against schema."""
+def _parse_metadata(raw_content: str) -> dict[str, Any]:
+    """Parse metadata content from JSON."""
     try:
-        metadata_content = json.loads(raw_content)
-        validated_metadata: dict[str, Any] = METADATA_SCHEMA(metadata_content)
-    except (json.JSONDecodeError, vol.Invalid) as err:
-        raise ValueError(f"Invalid metadata format: {err}") from err
+        data = json.loads(raw_content)
+    except json.JSONDecodeError as err:
+        raise ValueError(f"Invalid JSON format: {err}") from err
     else:
-        return validated_metadata
+        if not isinstance(data, dict):
+            raise TypeError("JSON content is not a dictionary")
+        return data
 
 
 def handle_b2_errors[T](
@@ -157,14 +135,14 @@ class BackblazeBackupAgent(BackupAgent):
         self._backup_list_cache_lock = asyncio.Lock()
 
     async def _close_stream(self, stream: AsyncIterator[bytes]) -> None:
-        """Close a stream gracefully with both async and sync fallbacks."""
+        """Close a stream gracefully."""
+        # AsyncIterator protocol doesn't require close method.
+        # If the specific implementation has one, call it.
         if hasattr(stream, "aclose") and callable(stream.aclose):
             await stream.aclose()
-        elif hasattr(stream, "close") and callable(stream.close):
-            stream.close()
 
-    async def _close_response(self, response: Any) -> None:
-        """Close a response object gracefully."""
+    async def _close_requests_response(self, response: requests.Response) -> None:
+        """Close a requests Response object."""
         if hasattr(response, "close") and callable(response.close):
             await self._hass.async_add_executor_job(response.close)
 
@@ -186,12 +164,9 @@ class BackblazeBackupAgent(BackupAgent):
             )
         except Exception:
             _LOGGER.exception(
-                "Failed to clean up partially uploaded main backup file %s "
-                "due to unexpected error:",
-                filename,
-            )
-            _LOGGER.exception(
+                "Failed to clean up partially uploaded main backup file %s. "
                 "Manual intervention may be required to delete %s from Backblaze B2",
+                filename,
                 filename,
             )
 
@@ -214,8 +189,8 @@ class BackblazeBackupAgent(BackupAgent):
             """Stream the response into an AsyncIterator and ensure closure."""
             try:
                 # B2 SDK's response.iter_content is blocking, so stream it chunk by chunk
-                # within the executor.
-                iterator = response.iter_content(chunk_size=8192)
+                # within the executor. Use 1MB chunks for efficient thread switching.
+                iterator = response.iter_content(chunk_size=1024 * 1024)
                 while True:
                     chunk = await self._hass.async_add_executor_job(
                         next, iterator, None
@@ -226,7 +201,7 @@ class BackblazeBackupAgent(BackupAgent):
             finally:
                 _LOGGER.debug("Closing download stream for %s", file.file_name)
                 # Ensure the underlying response stream is closed
-                await self._close_response(response)
+                await self._close_requests_response(response)
 
         return stream_buffer_and_close()
 
@@ -251,8 +226,7 @@ class BackblazeBackupAgent(BackupAgent):
                 "metadata_version": METADATA_VERSION,
                 "backup_id": backup.backup_id,
                 "backup_metadata": backup.as_dict(),
-            },
-            indent=2,
+            }
         ).encode("utf-8")
 
         # Safety check: validate backup size
@@ -270,11 +244,8 @@ class BackblazeBackupAgent(BackupAgent):
 
         try:
             # --- Main Backup File Upload ---
-            # Use safe limits for simple upload to prevent memory exhaustion
-            if backup.size < min(DEFAULT_MIN_PART_SIZE, MAX_SIMPLE_UPLOAD_SIZE):
-                await self._upload_simple_b2(prefixed_tar_filename, open_stream, {})
-            else:
-                await self._upload_multipart_b2(prefixed_tar_filename, open_stream, {})
+            # Use streaming upload via AsyncIteratorReader (B2SDK handles simple vs multipart)
+            await self._upload_backup_file(prefixed_tar_filename, open_stream, {})
             _LOGGER.info(
                 "Main backup file upload finished for %s", prefixed_tar_filename
             )
@@ -311,84 +282,27 @@ class BackblazeBackupAgent(BackupAgent):
                 backup.backup_id, prefixed_tar_filename, prefixed_metadata_filename
             )
 
-    async def _upload_simple_b2(
+    async def _upload_backup_file(
         self,
         filename: str,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         file_info: dict[str, Any],
     ) -> None:
-        """Uploads a small file to B2 using a simple single-call upload."""
-        _LOGGER.debug("Reading entire backup stream into memory for %s", filename)
+        """Upload backup file to B2 using streaming."""
+        _LOGGER.debug("Starting streaming upload for %s", filename)
+
         stream = await open_stream()
-        file_data = bytearray()
-        async for chunk in stream:
-            file_data.extend(chunk)
+        reader = AsyncIteratorReader(self._hass, stream)
 
-        # Explicitly close the stream after reading all content
-        await self._close_stream(stream)
-
-        _LOGGER.info(
-            "Uploading main backup file %s (size: %d bytes) using simple upload",
-            filename,
-            len(file_data),
-        )
-
-        await self._hass.async_add_executor_job(
-            lambda: self._bucket.upload_bytes(
-                bytes(file_data),
-                filename,
-                content_type="application/x-tar",
-                file_info=file_info,
-            )
-        )
-        _LOGGER.info("Simple upload finished for %s", filename)
-
-    async def _upload_multipart_b2(
-        self,
-        filename: str,
-        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
-        file_info: dict[str, Any],
-    ) -> None:
-        """Uploads a large file to B2 using multipart upload via a temporary file."""
-        temp_file_path: str | None = None
         try:
-            # Create temporary file with more descriptive naming and secure permissions
-            with tempfile.NamedTemporaryFile(
-                delete=False,
-                suffix=".backblaze.tmp",
-                prefix="hass_backup_",
-                dir=tempfile.gettempdir(),
-            ) as tmp:
-                temp_file_path = tmp.name
-                # Ensure file permissions are secure (owner only)
-                os.chmod(temp_file_path, 0o600)
-
-            _LOGGER.debug("Created temporary file: %s", temp_file_path)
-
-            stream_to_disk = await open_stream()
-            try:
-                async with aiofiles.open(temp_file_path, mode="wb") as f:
-                    bytes_written = 0
-                    async for chunk in stream_to_disk:
-                        await f.write(chunk)
-                        bytes_written += len(chunk)
-                        # Log progress for large files
-                        if bytes_written % (50 * 1024 * 1024) == 0:  # Every 50MB
-                            _LOGGER.debug(
-                                "Written %d bytes to temp file", bytes_written
-                            )
-            finally:
-                # Explicitly close the stream after writing to disk
-                await self._close_stream(stream_to_disk)
-
-            _LOGGER.debug("Finished writing %d bytes to temp file", bytes_written)
+            _LOGGER.info("Uploading backup file %s with streaming", filename)
 
             content_type, _ = mimetypes.guess_type(filename)
             file_version = await self._hass.async_add_executor_job(
-                lambda: self._bucket.upload_local_file(
-                    local_file=temp_file_path,
-                    file_name=filename,
-                    content_type=content_type or "application/octet-stream",
+                lambda: self._bucket.upload_file_obj(
+                    reader,
+                    filename,
+                    content_type=content_type or "application/x-tar",
                     file_info=file_info,
                 )
             )
@@ -403,64 +317,9 @@ class BackblazeBackupAgent(BackupAgent):
             _LOGGER.exception("An error occurred during upload for %s:", filename)
             raise
         finally:
-            # Improved cleanup with multiple retry attempts
-            if temp_file_path:
-                await self._cleanup_temp_file(temp_file_path)
-
-    def _truncate_file(self, file_path: str) -> None:
-        """Truncate a file to zero bytes (blocking operation for executor)."""
-        with open(file_path, "w", encoding="utf-8"):
-            pass
-
-    async def _cleanup_temp_file(self, temp_file_path: str) -> None:
-        """Clean up temporary file with retries."""
-        if not os.path.exists(temp_file_path):
-            return
-
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                # Try to remove file permissions first (helps on Windows)
-                with contextlib.suppress(OSError):
-                    os.chmod(temp_file_path, 0o600)  # More restrictive permissions
-
-                os.unlink(temp_file_path)
-            except OSError as e:
-                if attempt < max_retries - 1:
-                    _LOGGER.debug(
-                        "Failed to delete temp file %s (attempt %d/%d): %s",
-                        temp_file_path,
-                        attempt + 1,
-                        max_retries,
-                        e,
-                    )
-                    # Brief delay before retry
-                    await asyncio.sleep(0.1)
-                else:
-                    _LOGGER.warning(
-                        "Failed to delete temporary file %s after %d attempts: %s",
-                        temp_file_path,
-                        max_retries,
-                        e,
-                    )
-                    # As a last resort, try to truncate the file to save space
-                    try:
-                        await self._hass.async_add_executor_job(
-                            self._truncate_file, temp_file_path
-                        )
-                        _LOGGER.info(
-                            "Truncated temporary file %s as fallback", temp_file_path
-                        )
-                    except OSError:
-                        _LOGGER.error(
-                            "Could not delete or truncate temporary file %s. "
-                            "Manual cleanup may be required",
-                            temp_file_path,
-                        )
-                    return
-            else:
-                _LOGGER.debug("Successfully deleted temporary file: %s", temp_file_path)
-                return
+            # Close the reader to clean up resources
+            reader.close()
+            await self._close_stream(stream)
 
     @handle_b2_errors
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
@@ -567,7 +426,7 @@ class BackblazeBackupAgent(BackupAgent):
             raise BackupNotFound(f"Backup {backup_id} not found")
 
         metadata_content = await self._hass.async_add_executor_job(
-            lambda: _parse_and_validate_metadata(
+            lambda: _parse_metadata(
                 metadata_file_version.download().response.content.decode("utf-8")
             )
         )
@@ -627,7 +486,7 @@ class BackblazeBackupAgent(BackupAgent):
             # Explicitly close the download response for metadata file in executor
             download_response = file_version.download().response
             try:
-                metadata_content = _parse_and_validate_metadata(
+                metadata_content = _parse_metadata(
                     download_response.content.decode("utf-8")
                 )
             except ValueError:
@@ -729,7 +588,7 @@ class BackblazeBackupAgent(BackupAgent):
             # Explicitly close the download response for metadata file in executor
             download_response = file_version.download().response
             try:
-                metadata_content = _parse_and_validate_metadata(
+                metadata_content = _parse_metadata(
                     download_response.content.decode("utf-8")
                 )
             except ValueError:
