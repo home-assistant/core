@@ -8,6 +8,9 @@
         "description": "Provide URL for the OpenThread Border Router's REST API"
       }
     },
+    "progress": {
+      "connect_addon": "Connecting to Open Thread Border Router"
+    },
     "error": {
       "already_configured": "The Thread border router is already configured",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"

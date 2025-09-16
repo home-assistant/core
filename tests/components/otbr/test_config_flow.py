@@ -18,8 +18,14 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningAddon,
 )
+from homeassistant.components.otbr.config_flow import (
+    OTBR_CONNECTION_TIMEOUT,
+    OTBR_RETRY_BACKOFF,
+    OTBRConfigFlow,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
 
@@ -394,21 +400,26 @@ async def test_hassio_discovery_flow(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
 
-    expected_data = {
-        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
-    }
+        assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+        assert result["step_id"] == "create_entry"
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Silicon Labs Multiprotocol"
-    assert result["data"] == expected_data
-    assert result["options"] == {}
-    assert len(mock_setup_entry.mock_calls) == 1
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
-    assert config_entry.data == expected_data
-    assert config_entry.options == {}
-    assert config_entry.title == "Silicon Labs Multiprotocol"
-    assert config_entry.unique_id == HASSIO_DATA.uuid
+        expected_data = {
+            "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        }
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "Silicon Labs Multiprotocol"
+        assert result["data"] == expected_data
+        assert result["options"] == {}
+        assert len(mock_setup_entry.mock_calls) == 1
+
+        config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+        assert config_entry.data == expected_data
+        assert config_entry.options == {}
+        assert config_entry.title == "Silicon Labs Multiprotocol"
+        assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
 @pytest.mark.usefixtures("get_border_agent_id")
@@ -433,21 +444,28 @@ async def test_hassio_discovery_flow_yellow(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
 
-    expected_data = {
-        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
-    }
+        assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+        assert result["step_id"] == "create_entry"
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home Assistant Yellow (Silicon Labs Multiprotocol)"
-    assert result["data"] == expected_data
-    assert result["options"] == {}
-    assert len(mock_setup_entry.mock_calls) == 1
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
-    assert config_entry.data == expected_data
-    assert config_entry.options == {}
-    assert config_entry.title == "Home Assistant Yellow (Silicon Labs Multiprotocol)"
-    assert config_entry.unique_id == HASSIO_DATA.uuid
+        expected_data = {
+            "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        }
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "Home Assistant Yellow (Silicon Labs Multiprotocol)"
+        assert result["data"] == expected_data
+        assert result["options"] == {}
+        assert len(mock_setup_entry.mock_calls) == 1
+
+        config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+        assert config_entry.data == expected_data
+        assert config_entry.options == {}
+        assert (
+            config_entry.title == "Home Assistant Yellow (Silicon Labs Multiprotocol)"
+        )
+        assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
 @pytest.mark.parametrize(
@@ -486,21 +504,26 @@ async def test_hassio_discovery_flow_sky_connect(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
 
-    expected_data = {
-        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
-    }
+        assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+        assert result["step_id"] == "create_entry"
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == title
-    assert result["data"] == expected_data
-    assert result["options"] == {}
-    assert len(mock_setup_entry.mock_calls) == 1
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
-    assert config_entry.data == expected_data
-    assert config_entry.options == {}
-    assert config_entry.title == title
-    assert config_entry.unique_id == HASSIO_DATA.uuid
+        expected_data = {
+            "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        }
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == title
+        assert result["data"] == expected_data
+        assert result["options"] == {}
+        assert len(mock_setup_entry.mock_calls) == 1
+
+        config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+        assert config_entry.data == expected_data
+        assert config_entry.options == {}
+        assert config_entry.title == title
+        assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
 @pytest.mark.usefixtures("get_active_dataset_tlvs", "get_extended_address")
@@ -544,6 +567,9 @@ async def test_hassio_discovery_flow_2x_addons(
     result2 = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA_2
     )
+    await hass.async_block_till_done()
+    result1 = await hass.config_entries.flow.async_configure(result1["flow_id"])
+    result2 = await hass.config_entries.flow.async_configure(result2["flow_id"])
 
     results = [result1, result2]
 
@@ -633,6 +659,8 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
     result1 = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
     )
+    await hass.async_block_till_done()
+    result1 = await hass.config_entries.flow.async_configure(result1["flow_id"])
     result2 = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA_2
     )
@@ -690,6 +718,8 @@ async def test_hassio_discovery_flow_router_not_setup(
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Check we create a dataset and enable the router
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
@@ -748,6 +778,8 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Check we create a dataset and enable the router
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
@@ -807,6 +839,8 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Check we create a dataset and enable the router
     assert aioclient_mock.mock_calls[-2][0] == "PUT"
@@ -948,6 +982,8 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
     result = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
     )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Another entry will be created
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -995,6 +1031,8 @@ async def test_config_flow_additional_entry(
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": source}, data=data
         )
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is expected_result
 
@@ -1033,9 +1071,11 @@ async def test_hassio_discovery_reload(
             ),
         ),
     ):
-        await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA_OTBR
         )
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
         # OTBR is set up and calls the firmware info notification callback
         assert len(callback.mock_calls) == 1
@@ -1049,3 +1089,38 @@ async def test_hassio_discovery_reload(
 
         assert len(callback.mock_calls) == 2
         assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 1
+
+
+async def test_connect_with_retry_timeout(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test _connect_with_retry times out after OTBR_CONNECTION_TIMEOUT seconds."""
+    # Create a config flow instance
+    flow = OTBRConfigFlow()
+    flow.hass = hass
+
+    url = "http://test-url:8080"
+
+    aioclient_mock.get(
+        f"{url}/node/ba-id", exc=aiohttp.ClientConnectionError("Connection failed")
+    )
+
+    # Mock the loop.time() to simulate time passing
+    # Sequence: start_time (0.0), first elapsed check (0.1), second elapsed check (OTBR_CONNECTION_TIMEOUT+0.1)
+    with (
+        patch.object(
+            flow.hass.loop,
+            "time",
+            side_effect=[0.0, 0.1, OTBR_CONNECTION_TIMEOUT + 0.1],
+        ),
+        patch("asyncio.sleep") as mock_sleep,
+    ):
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await flow._connect_with_retry(url)
+
+        assert (
+            f"Failed to connect to OTBR after {OTBR_CONNECTION_TIMEOUT} seconds"
+            in str(exc_info.value)
+        )
+
+        mock_sleep.assert_called_once_with(OTBR_RETRY_BACKOFF)

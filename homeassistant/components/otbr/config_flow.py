@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from contextlib import suppress
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 import python_otbr_api
@@ -39,6 +40,9 @@ if TYPE_CHECKING:
     from . import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+OTBR_CONNECTION_TIMEOUT = 10.0
+OTBR_RETRY_BACKOFF = 0.5
 
 
 class AlreadyConfigured(HomeAssistantError):
@@ -82,6 +86,15 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Open Thread Border Router."""
 
     VERSION = 1
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Instantiate otbr config flow."""
+        super().__init__(*args, **kwargs)
+
+        self._url: str | None = None
+        self._title = "Open Thread Border Router"
+        self._discovery_info: HassioServiceInfo | None = None
+        self._addon_connect_task: asyncio.Task[bytes] | None = None
 
     async def _set_dataset(self, api: python_otbr_api.OTBR, otbr_url: str) -> None:
         """Connect to the OTBR and create or apply a dataset if it doesn't have one."""
@@ -153,6 +166,41 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return border_agent_id
 
+    async def _connect_with_retry(self, url: str) -> bytes:
+        """Connect to OTBR with retry logic for up to 10 seconds."""
+        start_time = self.hass.loop.time()
+
+        while True:
+            elapsed_time = self.hass.loop.time() - start_time
+
+            if elapsed_time >= OTBR_CONNECTION_TIMEOUT:
+                raise HomeAssistantError(
+                    f"Failed to connect to OTBR after {OTBR_CONNECTION_TIMEOUT} seconds"
+                )
+
+            try:
+                return await self._connect_and_configure_router(url)
+            except aiohttp.ClientConnectionError as exc:
+                _LOGGER.debug(
+                    "ClientConnectorError after %.2f seconds, retrying in %.1fs: %s",
+                    elapsed_time,
+                    OTBR_RETRY_BACKOFF,
+                    exc,
+                )
+                await asyncio.sleep(OTBR_RETRY_BACKOFF)
+
+    async def _connect_addon_and_configure(self) -> bytes:
+        """Connect to the addon and configure it."""
+        assert self._url is not None
+        assert self._discovery_info is not None
+
+        border_agent_id = await self._connect_with_retry(self._url)
+
+        await self.async_set_unique_id(self._discovery_info.uuid)
+        self._title = await _title(self.hass, self._discovery_info)
+
+        return border_agent_id
+
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -160,9 +208,9 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            url = user_input[CONF_URL].rstrip("/")
+            self._url = user_input[CONF_URL].rstrip("/")
             try:
-                border_agent_id = await self._connect_and_configure_router(url)
+                border_agent_id = await self._connect_and_configure_router(self._url)
             except AlreadyConfigured:
                 errors["base"] = "already_configured"
             except (
@@ -170,13 +218,13 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 aiohttp.ClientError,
                 TimeoutError,
             ) as exc:
-                _LOGGER.debug("Failed to communicate with OTBR@%s: %s", url, exc)
+                _LOGGER.debug("Failed to communicate with OTBR@%s: %s", self._url, exc)
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(border_agent_id.hex())
                 return self.async_create_entry(
-                    title="Open Thread Border Router",
-                    data={CONF_URL: url},
+                    title=self._title,
+                    data={CONF_URL: self._url},
                 )
 
         data_schema = vol.Schema({CONF_URL: str})
@@ -188,11 +236,12 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
         """Handle hassio discovery."""
+        self._discovery_info = discovery_info
         config = discovery_info.config
-        url = f"http://{config['host']}:{config['port']}"
-        config_entry_data = {"url": url}
+        self._url = f"http://{config['host']}:{config['port']}"
 
         if current_entries := self._async_current_entries():
+            config_entry_data = {"url": self._url}
             for current_entry in current_entries:
                 if current_entry.source != SOURCE_HASSIO:
                     continue
@@ -228,20 +277,50 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="already_configured")
 
+        return await self.async_step_connect_addon()
+
+    async def async_step_connect_addon(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Connect to OTBR with retry logic."""
+        assert self._url
+
+        if not self._addon_connect_task:
+            self._addon_connect_task = self.hass.async_create_task(
+                self._connect_addon_and_configure()
+            )
+
+        if not self._addon_connect_task.done():
+            return self.async_show_progress(
+                step_id="connect_addon",
+                progress_action="connect_addon",
+                description_placeholders={},
+                progress_task=self._addon_connect_task,
+            )
+
         try:
-            await self._connect_and_configure_router(url)
+            await self._addon_connect_task
         except AlreadyConfigured:
             return self.async_abort(reason="already_configured")
         except (
             python_otbr_api.OTBRError,
             aiohttp.ClientError,
             TimeoutError,
+            HomeAssistantError,
         ) as exc:
-            _LOGGER.warning("Failed to communicate with OTBR@%s: %s", url, exc)
+            _LOGGER.warning("Failed to communicate with OTBR@%s: %s", self._url, exc)
             return self.async_abort(reason="unknown")
+        finally:
+            self._addon_connect_task = None
 
-        await self.async_set_unique_id(discovery_info.uuid)
+        return self.async_show_progress_done(next_step_id="create_entry")
+
+    async def async_step_create_entry(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Create an entry for the OTBR."""
+        assert self._url
         return self.async_create_entry(
-            title=await _title(self.hass, discovery_info),
-            data=config_entry_data,
+            title=self._title,
+            data={"url": self._url},
         )
