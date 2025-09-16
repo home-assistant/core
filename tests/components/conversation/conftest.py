@@ -1,18 +1,27 @@
 """Conversation test helpers."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.components import conversation
 from homeassistant.components.shopping_list import intent as sl_intent
 from homeassistant.const import MATCH_ALL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MockAgent
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_ulid() -> Generator[Mock]:
+    """Mock the ulid library."""
+    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
+        mock_ulid_now.return_value = "mock-ulid"
+        yield mock_ulid_now
 
 
 @pytest.fixture
@@ -23,6 +32,20 @@ def mock_agent_support_all(hass: HomeAssistant) -> MockAgent:
     agent = MockAgent(entry.entry_id, MATCH_ALL)
     conversation.async_set_agent(hass, entry, agent)
     return agent
+
+
+@pytest.fixture
+def mock_conversation_input(hass: HomeAssistant) -> conversation.ConversationInput:
+    """Return a conversation input instance."""
+    return conversation.ConversationInput(
+        text="Hello",
+        context=Context(),
+        conversation_id=None,
+        agent_id="mock-agent-id",
+        device_id=None,
+        satellite_id=None,
+        language="en",
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -51,4 +74,8 @@ async def sl_setup(hass: HomeAssistant):
 async def init_components(hass: HomeAssistant):
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "conversation", {conversation.DOMAIN: {}})
+
+    # Disable fuzzy matching by default for tests
+    agent = hass.data[conversation.DATA_DEFAULT_ENTITY]
+    agent.fuzzy_matching = False

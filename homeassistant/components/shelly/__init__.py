@@ -56,7 +56,10 @@ from .coordinator import (
     ShellyRpcCoordinator,
     ShellyRpcPollingCoordinator,
 )
-from .repairs import async_manage_ble_scanner_firmware_unsupported_issue
+from .repairs import (
+    async_manage_ble_scanner_firmware_unsupported_issue,
+    async_manage_outbound_websocket_incorrectly_enabled_issue,
+)
 from .utils import (
     async_create_issue_unsupported_firmware,
     get_coap_context,
@@ -64,6 +67,8 @@ from .utils import (
     get_http_port,
     get_rpc_scripts_event_types,
     get_ws_context,
+    remove_empty_sub_devices,
+    remove_stale_blu_trv_devices,
 )
 
 PLATFORMS: Final = [
@@ -219,6 +224,7 @@ async def _async_setup_block_entry(
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
+        remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None
         or device_entry is None
@@ -294,12 +300,13 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                     translation_key="firmware_unsupported",
                     translation_placeholders={"device": entry.title},
                 )
-            runtime_data.rpc_zigbee_enabled = device.zigbee_enabled
+            runtime_data.rpc_zigbee_firmware = device.zigbee_firmware
             runtime_data.rpc_supports_scripts = await device.supports_scripts()
             if runtime_data.rpc_supports_scripts:
                 runtime_data.rpc_script_events = await get_rpc_scripts_event_types(
                     device, ignore_scripts=[BLE_SCRIPT_NAME]
                 )
+            remove_stale_blu_trv_devices(hass, device, entry)
         except (DeviceConnectionError, MacAddressMismatchError, RpcCallError) as err:
             await device.shutdown()
             raise ConfigEntryNotReady(
@@ -325,6 +332,11 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             hass,
             entry,
         )
+        async_manage_outbound_websocket_incorrectly_enabled_issue(
+            hass,
+            entry,
+        )
+        remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None
         or device_entry is None

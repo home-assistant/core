@@ -258,6 +258,9 @@
     "not_valid_preset_mode": {
       "message": "Preset mode {mode} is not valid. Valid preset modes are: {modes}."
     },
+    "not_valid_hvac_mode": {
+      "message": "HVAC mode {mode} is not valid. Valid HVAC modes are: {modes}."
+    },
     "not_valid_swing_mode": {
       "message": "Swing mode {mode} is not valid. Valid swing modes are: {modes}."
     },
@@ -271,16 +274,16 @@
       "message": "Provided temperature {check_temp} is not valid. Accepted range is {min_temp} to {max_temp}."
     },
     "low_temp_higher_than_high_temp": {
-      "message": "Target temperature low can not be higher than Target temperature high."
+      "message": "'Lower target temperature' can not be higher than 'Upper target temperature'."
     },
     "humidity_out_of_range": {
       "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
     },
     "missing_target_temperature_entity_feature": {
-      "message": "Set temperature action was used with the target temperature parameter but the entity does not support it."
+      "message": "Set temperature action was used with the 'Target temperature' parameter but the entity does not support it."
     },
     "missing_target_temperature_range_entity_feature": {
-      "message": "Set temperature action was used with the target temperature low/high parameter but the entity does not support it."
+      "message": "Set temperature action was used with the 'Lower/Upper target temperature' parameter but the entity does not support it."
     }
   }
 }

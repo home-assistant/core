@@ -18,16 +18,16 @@
         }
       },
       "hubv1": {
-        "title": "Insteon Hub Version 1",
-        "description": "Configure the Insteon Hub Version 1 (pre-2014).",
+        "title": "Insteon Hub version 1",
+        "description": "Configure the Insteon Hub version 1 (pre-2014).",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]"
         }
       },
       "hubv2": {
-        "title": "Insteon Hub Version 2",
-        "description": "Configure the Insteon Hub Version 2.",
+        "title": "Insteon Hub version 2",
+        "description": "Configure the Insteon Hub version 2.",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -144,7 +144,7 @@
         },
         "reload": {
           "name": "[%key:common::action::reload%]",
-          "description": "If enabled, all current records are cleared from memory (does not effect the device) and reloaded. Otherwise the existing records are left in place and only missing records are added."
+          "description": "If enabled, all current records are cleared from memory (does not affect the device) and reloaded. Otherwise the existing records are left in place and only missing records are added."
         }
       }
     },

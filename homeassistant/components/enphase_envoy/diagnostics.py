@@ -6,6 +6,7 @@ import copy
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+from aiohttp import ClientResponse
 from attr import asdict
 from pyenphase.envoy import Envoy
 from pyenphase.exceptions import EnvoyError
@@ -64,19 +65,20 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
         "/ivp/ensemble/generator",
         "/ivp/meters",
         "/ivp/meters/readings",
+        "/ivp/pdm/device_data",
         "/home",
     ]
 
     for end_point in end_points:
         try:
-            response = await envoy.request(end_point)
-            fixture_data[end_point] = response.text.replace("\n", "").replace(
-                serial, CLEAN_TEXT
+            response: ClientResponse = await envoy.request(end_point)
+            fixture_data[end_point] = (
+                (await response.text()).replace("\n", "").replace(serial, CLEAN_TEXT)
             )
             fixture_data[f"{end_point}_log"] = json_dumps(
                 {
                     "headers": dict(response.headers.items()),
-                    "code": response.status_code,
+                    "code": response.status,
                 }
             )
         except EnvoyError as err:
@@ -114,6 +116,8 @@ async def async_get_config_entry_diagnostics(
             entities.append({"entity": entity_dict, "state": state_dict})
         device_dict = asdict(device)
         device_dict.pop("_cache", None)
+        # This can be removed when suggested_area is removed from DeviceEntry
+        device_dict.pop("_suggested_area")
         device_entities.append({"device": device_dict, "entities": entities})
 
     # remove envoy serial

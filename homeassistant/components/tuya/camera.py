@@ -17,12 +17,12 @@ from .entity import TuyaEntity
 # All descriptions can be found here:
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 CAMERAS: tuple[str, ...] = (
-    # Smart Camera (including doorbells)
-    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
-    "sp",
     # Smart Camera - Low power consumption camera
     # Undocumented, see https://github.com/home-assistant/core/issues/132844
     "dghsxj",
+    # Smart Camera (including doorbells)
+    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
+    "sp",
 )
 
 
