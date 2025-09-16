@@ -78,10 +78,9 @@
           'HDMI A',
         ]),
         'supported_features': 2095933,
-        'volume_level': 0.0,
       }),
       'entity_id': 'media_player.beosound_balance_11111111',
-      'state': 'idle',
+      'state': 'playing',
     }),
     'websocket_connected': False,
   })
