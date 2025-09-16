@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 from types import MappingProxyType
 
@@ -67,12 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
     try:
         async with asyncio.timeout(DEFAULT_TIMEOUT):
             await client.list()
-    except (
-        TimeoutError,
-        httpx.ConnectError,
-        json.JSONDecodeError,
-        httpx.HTTPError,
-    ) as err:
+    except (TimeoutError, httpx.ConnectError) as err:
         raise ConfigEntryNotReady(err) from err
 
     entry.runtime_data = client
