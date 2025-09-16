@@ -494,7 +494,7 @@ def temperature_to_states(temperature: float, unit: str) -> float:
 
 
 def density_to_air_quality(density: float) -> int:
-    """Map PM2.5 µg/m3 density to HomeKit AirQuality level."""
+    """Map PM2.5 μg/m3 density to HomeKit AirQuality level."""
     if density <= 9:  # US AQI 0-50 (HomeKit: Excellent)
         return 1
     if density <= 35.4:  # US AQI 51-100 (HomeKit: Good)
@@ -507,7 +507,7 @@ def density_to_air_quality(density: float) -> int:
 
 
 def density_to_air_quality_pm10(density: float) -> int:
-    """Map PM10 µg/m3 density to HomeKit AirQuality level."""
+    """Map PM10 μg/m3 density to HomeKit AirQuality level."""
     if density <= 54:  # US AQI 0-50 (HomeKit: Excellent)
         return 1
     if density <= 154:  # US AQI 51-100 (HomeKit: Good)
@@ -520,7 +520,7 @@ def density_to_air_quality_pm10(density: float) -> int:
 
 
 def density_to_air_quality_nitrogen_dioxide(density: float) -> int:
-    """Map nitrogen dioxide µg/m3 to HomeKit AirQuality level."""
+    """Map nitrogen dioxide μg/m3 to HomeKit AirQuality level."""
     if density <= 30:
         return 1
     if density <= 60:
@@ -533,7 +533,7 @@ def density_to_air_quality_nitrogen_dioxide(density: float) -> int:
 
 
 def density_to_air_quality_voc(density: float) -> int:
-    """Map VOCs µg/m3 to HomeKit AirQuality level.
+    """Map VOCs μg/m3 to HomeKit AirQuality level.
 
     The VOC mappings use the IAQ guidelines for Europe released by the WHO (World Health Organization).
     Referenced from Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf

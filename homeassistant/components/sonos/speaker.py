@@ -599,7 +599,12 @@ class SonosSpeaker:
 
         for enum_var in (ATTR_DIALOG_LEVEL,):
             if enum_var in variables:
-                setattr(self, f"{enum_var}_enum", variables[enum_var])
+                try:
+                    setattr(self, f"{enum_var}_enum", int(variables[enum_var]))
+                except ValueError:
+                    _LOGGER.error(
+                        "Invalid value for %s %s", enum_var, variables[enum_var]
+                    )
 
         self.async_write_entity_states()
 

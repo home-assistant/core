@@ -9,13 +9,18 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
-from homeassistant.components.ai_task import AITaskEntityFeature, async_generate_data
+from homeassistant.components.ai_task import (
+    AITaskEntityFeature,
+    async_generate_data,
+    async_generate_image,
+)
+from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE
 from homeassistant.components.camera import Image
 from homeassistant.components.conversation import async_get_chat_log
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session
+from homeassistant.helpers import chat_session, llm
 from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
@@ -73,10 +78,12 @@ async def test_generate_data_preferred_entity(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
+    llm_api = llm.AssistAPI(hass)
     result = await async_generate_data(
         hass,
         task_name="Test Task",
         instructions="Test prompt",
+        llm_api=llm_api,
     )
     assert result.data == "Mock result"
     as_dict = result.as_dict()
@@ -85,6 +92,12 @@ async def test_generate_data_preferred_entity(
     state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNKNOWN
+
+    with (
+        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert chat_log.llm_api.api is llm_api
 
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(
@@ -232,7 +245,7 @@ async def test_generate_data_mixed_attachments(
         hass,
         dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT + timedelta(seconds=1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify the temporary file cleaned up
     assert not camera_attachment.path.exists()
@@ -242,3 +255,67 @@ async def test_generate_data_mixed_attachments(
     assert media_attachment.media_content_id == "media-source://media_player/video.mp4"
     assert media_attachment.mime_type == "video/mp4"
     assert media_attachment.path == Path("/media/test.mp4")
+
+
+@freeze_time("2025-06-14 22:59:00")
+async def test_generate_image(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_ai_task_entity: MockAITaskEntity,
+) -> None:
+    """Test generating image service."""
+    with pytest.raises(
+        HomeAssistantError, match="AI Task entity ai_task.unknown not found"
+    ):
+        await async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.unknown",
+            instructions="Test prompt",
+        )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    with patch.object(
+        hass.data[DATA_MEDIA_SOURCE],
+        "async_upload_media",
+        return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
+    ) as mock_upload_media:
+        result = await async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id=TEST_ENTITY_ID,
+            instructions="Test prompt",
+        )
+    mock_upload_media.assert_called_once()
+    assert "image_data" not in result
+    assert (
+        result["media_source_id"]
+        == "media-source://ai_task/image/2025-06-14_225900_test_task.png"
+    )
+    assert result["url"].startswith(
+        "/ai_task/image/2025-06-14_225900_test_task.png?authSig="
+    )
+    assert result["mime_type"] == "image/png"
+    assert result["model"] == "mock_model"
+    assert result["revised_prompt"] == "mock_revised_prompt"
+    assert result["height"] == 1024
+    assert result["width"] == 1536
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNKNOWN
+
+    mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
+    with pytest.raises(
+        HomeAssistantError,
+        match="AI Task entity ai_task.test_task_entity does not support generating images",
+    ):
+        await async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id=TEST_ENTITY_ID,
+            instructions="Test prompt",
+        )

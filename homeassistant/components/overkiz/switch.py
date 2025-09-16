@@ -100,6 +100,15 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         ),
         entity_category=EntityCategory.CONFIG,
     ),
+    OverkizSwitchDescription(
+        key=UIWidget.DISCRETE_EXTERIOR_HEATING,
+        turn_on=OverkizCommand.ON,
+        turn_off=OverkizCommand.OFF,
+        icon="mdi:radiator",
+        is_on=lambda select_state: (
+            select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
+        ),
+    ),
 ]
 
 SUPPORTED_DEVICES = {

@@ -53,7 +53,7 @@
         "email": "Email",
         "host": "Host",
         "ip": "IP address",
-        "implementation": "Application Credentials",
+        "implementation": "Application credentials",
         "language": "Language",
         "latitude": "Latitude",
         "llm_hass_api": "Control Home Assistant",
