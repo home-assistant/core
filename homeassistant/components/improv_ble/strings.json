@@ -42,7 +42,7 @@
       "characteristic_missing": "The device is either already connected to Wi-Fi, or no longer able to connect to Wi-Fi. If you want to connect it to another network, try factory resetting it first.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "provision_successful": "The device has successfully connected to the Wi-Fi network.",
-      "provision_successful_url": "The device has successfully connected to the Wi-Fi network.\n\nPlease finish the setup by following the [device configuration flow]({url}).",
+      "provision_successful_url": "The device has successfully connected to the Wi-Fi network.\n\nPlease finish the setup by following the [setup instructions]({url}).",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
