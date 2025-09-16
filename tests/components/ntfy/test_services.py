@@ -196,7 +196,7 @@ async def test_send_message_exception(
                     {"action": "broadcast", "label": "4"},
                 ],
             },
-            "Too many actions defined. Only 3 allowed",
+            "Too many actions defined. A maximum of 3 is supported",
         ),
     ],
 )
