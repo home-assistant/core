@@ -183,19 +183,23 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["GetLiveContext"]
+    assert [tool.name for tool in api.tools] == ["GetDateTime", "GetLiveContext"]
 
     # Match all
     intent_handler.platforms = None
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["test_intent", "GetLiveContext"]
+    assert [tool.name for tool in api.tools] == [
+        "test_intent",
+        "GetDateTime",
+        "GetLiveContext",
+    ]
 
     # Match specific domain
     intent_handler.platforms = {"light"}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 2
+    assert len(api.tools) == 3
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
@@ -374,6 +378,7 @@ async def test_assist_api_tools(
         "HassUnpauseTimer",
         "HassTimerStatus",
         "Super_crazy_intent_with_unique_name",
+        "GetDateTime",
     ]
 
 
@@ -390,7 +395,7 @@ async def test_assist_api_description(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 1
+    assert len(api.tools) == 2
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
@@ -1475,7 +1480,7 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert api.tools == []
+    assert [tool.name for tool in api.tools] == ["GetDateTime"]
 
 
 async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
