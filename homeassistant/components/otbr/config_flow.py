@@ -301,7 +301,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await self._addon_connect_task
         except AlreadyConfigured:
-            return self.async_abort(reason="already_configured")
+            return self.async_show_progress_done(next_step_id="already_configured")
         except (
             python_otbr_api.OTBRError,
             aiohttp.ClientError,
@@ -314,6 +314,12 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             self._addon_connect_task = None
 
         return self.async_show_progress_done(next_step_id="create_entry")
+
+    async def async_step_already_configured(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Already configured."""
+        return self.async_abort(reason="already_configured")
 
     async def async_step_create_entry(
         self, user_input: dict[str, str] | None = None

@@ -666,6 +666,8 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
     result2 = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA_2
     )
+    assert result2["type"] is FlowResultType.SHOW_PROGRESS_DONE
+    result2 = await hass.config_entries.flow.async_configure(result2["flow_id"])
 
     results = [result1, result2]
 
