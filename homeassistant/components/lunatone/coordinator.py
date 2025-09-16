@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 
 import aiohttp
-from lunatone_rest_api_client import Devices, Info
+from lunatone_rest_api_client import Device, Devices, Info
 from lunatone_rest_api_client.models import DevicesData, InfoData
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,6 +17,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_DEVICES_SCAN_INTERVAL = timedelta(seconds=30)
 
 
 @dataclass
@@ -79,8 +82,10 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[DevicesData]):
             config_entry=config_entry,
             name=f"{DOMAIN}-devices",
             always_update=False,
+            update_interval=DEFAULT_DEVICES_SCAN_INTERVAL,
         )
         self.devices_api = devices_api
+        self.device_api_mapping: dict[int, Device] = {}
 
     async def _async_update_data(self) -> DevicesData:
         """Update devices data."""
@@ -93,4 +98,7 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[DevicesData]):
 
         if self.devices_api.data is None:
             raise UpdateFailed("Did not receive devices data from Lunatone REST API")
+
+        for device in self.devices_api.devices:
+            self.device_api_mapping.update({device.id: device})
         return self.devices_api.data

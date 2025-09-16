@@ -30,9 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     coordinator_info = LunatoneInfoDataUpdateCoordinator(hass, entry, info_api)
     await coordinator_info.async_config_entry_first_refresh()
 
-    coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices_api)
-    await coordinator_devices.async_config_entry_first_refresh()
-
     if info_api.serial_number is None:
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="missing_device_info"
@@ -52,6 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
             f"{info_api.data.device.article_number}{info_api.data.device.article_info}"
         ),
     )
+
+    coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices_api)
+    await coordinator_devices.async_config_entry_first_refresh()
 
     entry.runtime_data = LunatoneData(coordinator_info, coordinator_devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

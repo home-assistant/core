@@ -3,7 +3,16 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from lunatone_rest_api_client.models import DeviceInfoData, InfoData
+from lunatone_rest_api_client import Device
+from lunatone_rest_api_client.models import (
+    DeviceData,
+    DeviceInfoData,
+    DevicesData,
+    FeaturesStatus,
+    InfoData,
+)
+from lunatone_rest_api_client.models.common import ColorRGBData, ColorWAFData, Status
+from lunatone_rest_api_client.models.devices import DeviceStatus
 import pytest
 
 from homeassistant.components.lunatone.const import DOMAIN
@@ -11,6 +20,40 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+DEVICE_DATA: list[DeviceData] = [
+    DeviceData(
+        id=1,
+        name="Device 1",
+        available=True,
+        status=DeviceStatus(),
+        features=FeaturesStatus(
+            switchable=Status[bool](status=False),
+            dimmable=Status[float](status=0.0),
+            colorKelvin=Status[int](status=1000),
+            colorRGB=Status[ColorRGBData](status=ColorRGBData(r=0, g=0, b=0)),
+            colorWAF=Status[ColorWAFData](status=ColorWAFData(w=0, a=0, f=0)),
+        ),
+        address=0,
+        line=0,
+    ),
+    DeviceData(
+        id=2,
+        name="Device 2",
+        available=True,
+        status=DeviceStatus(),
+        features=FeaturesStatus(
+            switchable=Status[bool](status=False),
+            dimmable=Status[float](status=0.0),
+            colorKelvin=Status[int](status=1000),
+            colorRGB=Status[ColorRGBData](status=ColorRGBData(r=0, g=0, b=0)),
+            colorWAF=Status[ColorWAFData](status=ColorWAFData(w=0, a=0, f=0)),
+        ),
+        address=1,
+        line=0,
+    ),
+]
+DEVICES_DATA = DevicesData(devices=DEVICE_DATA)
 
 
 @pytest.fixture
@@ -49,6 +92,18 @@ def info_data(version: str, serial_number: int) -> InfoData:
 
 
 @pytest.fixture
+def device_data_list() -> list[DeviceData]:
+    """Device data list fixture."""
+    return DEVICE_DATA
+
+
+@pytest.fixture
+def devices_data() -> DevicesData:
+    """Device data list fixture."""
+    return DEVICES_DATA
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
@@ -77,7 +132,9 @@ def mock_lunatone_auth(base_url: str) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_lunatone_devices(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
+def mock_lunatone_devices(
+    mock_lunatone_auth: AsyncMock, devices_data: DevicesData
+) -> Generator[AsyncMock]:
     """Mock a Lunatone devices object."""
     with patch(
         "homeassistant.components.lunatone.Devices",
@@ -85,12 +142,17 @@ def mock_lunatone_devices(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]
     ) as mock_devices:
         devices = mock_devices.return_value
         devices._auth = mock_lunatone_auth
+        devices._data = devices_data
+        devices.data = devices._data
+        devices.devices = [
+            Device(devices._auth, device_data) for device_data in devices.data.devices
+        ]
         yield devices
 
 
 @pytest.fixture
 def mock_lunatone_info(
-    info_data: InfoData, mock_lunatone_auth: AsyncMock, version: str, serial_number: int
+    info_data: InfoData, mock_lunatone_auth: AsyncMock
 ) -> Generator[AsyncMock]:
     """Mock a Lunatone info object."""
     with (
@@ -113,13 +175,13 @@ def mock_lunatone_info(
 
 
 @pytest.fixture
-def mock_config_entry(base_url: str) -> MockConfigEntry:
+def mock_config_entry(base_url: str, serial_number: int) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="Lunatone 12345",
+        title=f"Lunatone {serial_number}",
         domain=DOMAIN,
         data={CONF_URL: base_url},
-        unique_id="12345",
+        unique_id=str(serial_number),
     )
 
 

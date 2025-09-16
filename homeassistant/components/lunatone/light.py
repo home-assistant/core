@@ -3,26 +3,21 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 from typing import Any
 
-import aiohttp
-from awesomeversion import AwesomeVersion
-from lunatone_rest_api_client import Device
-
 from homeassistant.components.light import ColorMode, LightEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import LunatoneConfigEntry
+from .coordinator import LunatoneConfigEntry, LunatoneDevicesDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 1
-SCAN_INTERVAL = timedelta(seconds=30)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -37,19 +32,19 @@ async def async_setup_entry(
     info_api = coordinator_info.info_api
     devices_api = coordinator_devices.devices_api
 
-    interface_version = AwesomeVersion(info_api.version.split("/")[0][1:])
-
     # Add devices
     async_add_entities(
         [
-            LunatoneLight(device, info_api.serial_number, interface_version)
+            LunatoneLight(coordinator_devices, device.id, info_api.serial_number)
             for device in devices_api.devices
         ],
         update_before_add=True,
     )
 
 
-class LunatoneLight(LightEntity):
+class LunatoneLight(
+    CoordinatorEntity[LunatoneDevicesDataUpdateCoordinator], LightEntity
+):
     """Representation of a Lunatone light."""
 
     unique_id: str
@@ -60,58 +55,58 @@ class LunatoneLight(LightEntity):
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_should_poll = True
+    _attr_should_poll = False
 
     def __init__(
         self,
-        device_api: Device,
+        coordinator: LunatoneDevicesDataUpdateCoordinator,
+        device_id: int,
         interface_serial_number: int,
-        interface_version: AwesomeVersion,
     ) -> None:
         """Initialize a LunatoneLight."""
-        self._interface_version = interface_version
+        super().__init__(coordinator=coordinator, context=device_id)
         self._interface_serial_number = interface_serial_number
-        self._device_api = device_api
-        self._attr_unique_id = f"{interface_serial_number}-device{self._device_api.id}"
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return bool(self._device_api.is_on)
+        self._device = self.coordinator.device_api_mapping.get(self.coordinator_context)
+        self._attr_unique_id = f"{interface_serial_number}-device{device_id}"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        name = self._device.name if self._device is not None else None
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self._device_api.name,
+            name=name,
             via_device=(DOMAIN, str(self._interface_serial_number)),
         )
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._device is not None
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if light is on."""
+        return bool(self._device.is_on) if self._device is not None else False
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._device = self.coordinator.device_api_mapping.get(self.coordinator_context)
+        self.async_write_ha_state()
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        await self._device_api.switch_on()
+        if self._device is None:
+            return
+        await self._device.switch_on()
+        await asyncio.sleep(0.02)
+        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        await self._device_api.switch_off()
-
-    async def async_update(self) -> None:
-        """Fetch new state data for this light.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        if self._interface_version < "1.15.0":
-            await asyncio.sleep(0.02)
-        try:
-            await self._device_api.async_update()
-        except aiohttp.ClientConnectionError as ex:
-            self._attr_available = False
-            if not self._unavailable_logged:
-                _LOGGER.info("Light %s is unavailable: %s", self.entity_id, ex)
-                self._unavailable_logged = True
-        else:
-            self._attr_available = True
-            if self._unavailable_logged:
-                _LOGGER.info("Light %s is back online", self.entity_id)
-                self._unavailable_logged = False
+        if self._device is None:
+            return
+        await self._device.switch_off()
+        await asyncio.sleep(0.02)
+        await self.coordinator.async_refresh()

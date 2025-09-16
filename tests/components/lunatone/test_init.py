@@ -96,6 +96,22 @@ async def test_config_entry_not_ready_no_devices_data(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_config_entry_not_ready_no_serial_number(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Lunatone configuration entry not ready."""
+    mock_lunatone_info.serial_number = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_lunatone_info.async_update.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_device_info(
     base_url: str,
     version: str,

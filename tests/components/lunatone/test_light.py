@@ -1,76 +1,91 @@
 """Tests for the Lunatone integration."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-import aiohttp
-from awesomeversion import AwesomeVersion
 from lunatone_rest_api_client import Device
-from lunatone_rest_api_client.models import DeviceData, DevicesData
+from lunatone_rest_api_client.models import ControlData, DeviceData
 import pytest
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.components.lunatone.light import LunatoneLight
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
-DEVICE_DATA: list[DeviceData] = [
-    DeviceData(id=1, name="Device 1"),
-    DeviceData(id=2, name="Device 2"),
-]
-DEVICES_DATA = DevicesData(devices=DEVICE_DATA)
-
 
 @pytest.fixture
-def mock_lunatone_device(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
+def mock_lunatone_device(
+    mock_lunatone_auth: AsyncMock, device_data_list: list[DeviceData]
+) -> Device:
     """Mock a Lunatone device object."""
-    device = AsyncMock(spec=Device)
-    device._auth = mock_lunatone_auth
-    device.id = DEVICE_DATA[0].id
-    device.name = DEVICE_DATA[0].name
-    device.data = DEVICE_DATA[0]
+    device = Device(mock_lunatone_auth, device_data_list[0])
+    device.async_update = AsyncMock()
+    device.async_control = AsyncMock()
     return device
 
 
 @pytest.fixture
-def mock_lunatone_device_list(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
-    """Mock a Lunatone device object list."""
-    devices: list[Device] = []
-    for device_data in DEVICE_DATA:
-        device = AsyncMock(spec=Device)
-        device._auth = mock_lunatone_auth
-        device.id = device_data.id
-        device.name = device_data.name
-        device.data = device_data
-        devices.append(device)
-    return devices
+def mock_lunatone_devices_coordinator(
+    mock_lunatone_devices: AsyncMock,
+) -> Generator[AsyncMock]:
+    """Mock a Lunatone devices coordinator object."""
+    with (
+        patch(
+            "homeassistant.components.lunatone.LunatoneDevicesDataUpdateCoordinator",
+            autospec=True,
+        ) as mock_coordinator,
+        patch(
+            "homeassistant.components.lunatone.light.LunatoneDevicesDataUpdateCoordinator",
+            new=mock_coordinator,
+        ),
+    ):
+        coordinator = mock_coordinator.return_value
+        coordinator.devices_api = mock_lunatone_devices
+        coordinator.device_api_mapping = {
+            device.id: device for device in mock_lunatone_devices.devices
+        }
+        coordinator.last_update_success = True
+        yield coordinator
+
+
+@pytest.fixture
+def light_entity(
+    mock_lunatone_devices_coordinator: AsyncMock,
+    mock_lunatone_device: Device,
+    serial_number: int,
+    device_data_list: list[DeviceData],
+):
+    """Create a LunatoneLight entity using the mock device."""
+
+    async def fake_control(control_data: ControlData):
+        if control_data.switchable is not None:
+            mock_lunatone_device._data.features.switchable.status = (
+                control_data.switchable
+            )
+
+    mock_lunatone_device.async_control.side_effect = fake_control
+
+    entity = LunatoneLight(
+        mock_lunatone_devices_coordinator, mock_lunatone_device.id, serial_number
+    )
+    entity._device = mock_lunatone_device
+    entity.async_write_ha_state = MagicMock()
+    return entity
 
 
 async def test_setup(
-    hass: HomeAssistant,
-    mock_lunatone_device_list: AsyncMock,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_info: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    setup_integration: MockConfigEntry,
+    device_data_list: list[DeviceData],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    serial_number: int,
 ) -> None:
     """Test the Lunatone configuration entry loading/unloading."""
-    mock_lunatone_devices.devices = mock_lunatone_device_list
+    for device_data in device_data_list:
+        expected_unique_id = f"{serial_number}-device{device_data.id}"
 
-    mock_config_entry.add_to_hass(hass)
-    with patch("asyncio.sleep"):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    for i, _ in enumerate(DEVICE_DATA, start=1):
-        expected_unique_id = f"12345-device{i}"
-
-        entry = entity_registry.async_get(f"light.device_{i}")
+        entry = entity_registry.async_get(f"light.device_{device_data.id}")
         assert entry
         assert entry.device_id
         assert entry.unique_id == expected_unique_id
@@ -78,73 +93,49 @@ async def test_setup(
         device_entry = device_registry.async_get(entry.device_id)
         assert device_entry
         assert device_entry.identifiers == {(DOMAIN, expected_unique_id)}
-        assert device_entry.name == f"Device {i}"
+        assert device_entry.name == f"Device {device_data.id}"
 
 
-async def test_switch_off(
-    hass: HomeAssistant,
-    mock_lunatone_device_list: AsyncMock,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_info: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
+async def test_turn_on_off(light_entity: LunatoneLight) -> None:
     """Test the light can be turned off."""
-    mock_lunatone_devices.devices = mock_lunatone_device_list
+    await light_entity.async_turn_on()
+    assert light_entity.is_on
 
-    mock_config_entry.add_to_hass(hass)
-    with patch("asyncio.sleep"):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await light_entity.async_turn_off()
+    assert not light_entity.is_on
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.device_1"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    mock_lunatone_devices.devices[0].switch_off.assert_called_once_with()
+    assert light_entity._device.async_control.call_count == 2
 
 
-async def test_switch_on(
-    hass: HomeAssistant,
-    mock_lunatone_device_list: AsyncMock,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_info: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+async def test_turn_on_off_not_doing_anything_because_device_is_none(
+    light_entity: LunatoneLight,
 ) -> None:
-    """Test the light can be turned off."""
-    mock_lunatone_devices.devices = mock_lunatone_device_list
+    """Test the light cannot be controlled."""
+    light_entity._device = None
 
-    mock_config_entry.add_to_hass(hass)
-    with patch("asyncio.sleep"):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await light_entity.async_turn_on()
+    assert not light_entity.is_on
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.device_1"},
-        blocking=True,
+    await light_entity.async_turn_off()
+    assert not light_entity.is_on
+
+
+async def test_coordinator_update_handling(light_entity: LunatoneLight) -> None:
+    """Test the coordinator update handling."""
+    light_entity.coordinator.devices_api.data.devices[
+        0
+    ].features.switchable.status = True
+    light_entity._handle_coordinator_update()
+    assert (
+        light_entity._device.data
+        == light_entity.coordinator.devices_api.data.devices[0]
     )
-    await hass.async_block_till_done()
 
-    mock_lunatone_devices.devices[0].switch_on.assert_called_once()
-
-
-async def test_availability_on_error(
-    hass: HomeAssistant,
-    mock_lunatone_device: AsyncMock,
-) -> None:
-    """Test the availability on error."""
-    version = AwesomeVersion("1.14.1")
-    entity = LunatoneLight(mock_lunatone_device, 12345, version)
-
-    mock_lunatone_device.async_update.side_effect = aiohttp.ClientConnectionError()
-    await entity.async_update()
-    assert not entity.available
-
-    mock_lunatone_device.async_update.side_effect = None
-    await entity.async_update()
-    assert entity.available
+    light_entity.coordinator.devices_api.data.devices[
+        0
+    ].features.switchable.status = False
+    light_entity._handle_coordinator_update()
+    assert (
+        light_entity._device.data
+        == light_entity.coordinator.devices_api.data.devices[0]
+    )
