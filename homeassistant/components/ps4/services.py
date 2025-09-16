@@ -5,7 +5,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.const import ATTR_COMMAND, ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import COMMANDS, DOMAIN, PS4_DATA
@@ -29,6 +29,7 @@ async def async_service_command(call: ServiceCall) -> None:
             await device.async_send_command(command)
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Handle for services."""
 

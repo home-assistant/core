@@ -2,17 +2,25 @@
   "config": {
     "step": {
       "user": {
-        "title": "Telegram bot setup",
-        "description": "Create a new Telegram bot",
+        "description": "To create a Telegram bot, follow these steps:\n\n1. Open Telegram and start a chat with [{botfather_username}]({botfather_url}).\n1. Send the command `/newbot`.\n1. Follow the instructions to create your bot and get your API token.",
         "data": {
           "platform": "Platform",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "proxy_url": "Proxy URL"
+          "api_key": "[%key:common::config_flow::data::api_token%]"
         },
         "data_description": {
           "platform": "Telegram bot implementation",
-          "api_key": "The API token of your bot.",
-          "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
+          "api_key": "The API token of your bot."
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "Advanced settings",
+            "data": {
+              "proxy_url": "Proxy URL"
+            },
+            "data_description": {
+              "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
+            }
+          }
         }
       },
       "webhooks": {
@@ -30,12 +38,21 @@
         "title": "Telegram bot setup",
         "description": "Reconfigure Telegram bot",
         "data": {
-          "platform": "[%key:component::telegram_bot::config::step::user::data::platform%]",
-          "proxy_url": "[%key:component::telegram_bot::config::step::user::data::proxy_url%]"
+          "platform": "[%key:component::telegram_bot::config::step::user::data::platform%]"
         },
         "data_description": {
-          "platform": "[%key:component::telegram_bot::config::step::user::data_description::platform%]",
-          "proxy_url": "[%key:component::telegram_bot::config::step::user::data_description::proxy_url%]"
+          "platform": "[%key:component::telegram_bot::config::step::user::data_description::platform%]"
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::name%]",
+            "data": {
+              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data::proxy_url%]"
+            },
+            "data_description": {
+              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data_description::proxy_url%]"
+            }
+          }
         }
       },
       "reauth_confirm": {
@@ -49,6 +66,7 @@
       }
     },
     "error": {
+      "telegram_error": "Error from Telegram: {error_message}",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "invalid_proxy_url": "{proxy_url_error}",
       "no_url_available": "URL is required since you have not configured an external URL in Home Assistant",
@@ -106,11 +124,34 @@
         "webhooks": "Webhooks"
       }
     },
-    "parsers": {
+    "parse_mode": {
       "options": {
         "markdown": "Markdown (Legacy)",
         "markdownv2": "MarkdownV2",
-        "html": "HTML"
+        "html": "HTML",
+        "plain_text": "Plain text"
+      }
+    },
+    "authentication": {
+      "options": {
+        "basic": "Basic",
+        "digest": "Digest",
+        "bearer_token": "Bearer token"
+      }
+    },
+    "chat_action": {
+      "options": {
+        "typing": "Typing",
+        "upload_photo": "Uploading photo",
+        "record_video": "Recording video",
+        "upload_video": "Uploading video",
+        "record_voice": "Recording voice",
+        "upload_voice": "Uploading voice",
+        "upload_document": "Uploading document",
+        "choose_sticker": "Choosing sticker",
+        "find_location": "Finding location",
+        "record_video_note": "Recording video note",
+        "upload_video_note": "Uploading video note"
       }
     }
   },
@@ -173,6 +214,28 @@
         }
       }
     },
+    "send_chat_action": {
+      "name": "Send chat action",
+      "description": "Sends a chat action.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to send the chat action."
+        },
+        "chat_action": {
+          "name": "Chat action",
+          "description": "Chat action to be sent."
+        },
+        "target": {
+          "name": "Target",
+          "description": "An array of pre-authorized chat IDs to send the chat action to. If not present, first allowed chat ID is the default."
+        },
+        "message_thread_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
+        }
+      }
+    },
     "send_photo": {
       "name": "Send photo",
       "description": "Sends a photo.",
@@ -195,15 +258,15 @@
         },
         "username": {
           "name": "[%key:common::config_flow::data::username%]",
-          "description": "Username for a URL which require HTTP authentication."
+          "description": "Username for a URL that requires 'Basic' or 'Digest' authentication."
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",
-          "description": "Password (or bearer token) for a URL which require HTTP authentication."
+          "description": "Password (or bearer token) for a URL that requires authentication."
         },
         "authentication": {
           "name": "Authentication method",
-          "description": "Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`."
+          "description": "Define which authentication method to use. Set to 'Basic' for HTTP basic authentication, 'Digest' for HTTP digest authentication, or 'Bearer token' for OAuth 2.0 bearer token authentication."
         },
         "target": {
           "name": "Target",
@@ -856,6 +919,32 @@
           "description": "Chat ID of the group from which the bot should be removed."
         }
       }
+    },
+    "set_message_reaction": {
+      "name": "Set message reaction",
+      "description": "Sets the bot's reaction for a given message.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to set the message reaction."
+        },
+        "message_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
+          "description": "ID of the message to react to."
+        },
+        "chat_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "ID of the chat containing the message."
+        },
+        "reaction": {
+          "name": "Reaction",
+          "description": "Emoji reaction to use."
+        },
+        "is_big": {
+          "name": "Large animation",
+          "description": "Whether the reaction animation should be large."
+        }
+      }
     }
   },
   "exceptions": {
@@ -867,6 +956,24 @@
     },
     "missing_allowed_chat_ids": {
       "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
+    },
+    "invalid_chat_ids": {
+      "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
+    },
+    "failed_chat_ids": {
+      "message": "Failed targets: {chat_ids}. Please verify that the chat IDs for {bot_name} have been configured."
+    },
+    "missing_input": {
+      "message": "{field} is required."
+    },
+    "failed_to_load_url": {
+      "message": "Failed to load URL: {error}"
+    },
+    "allowlist_external_dirs_error": {
+      "message": "File path has not been configured in allowlist_external_dirs."
+    },
+    "failed_to_load_file": {
+      "message": "Failed to load file: {error}"
     }
   },
   "issues": {
@@ -881,14 +988,6 @@
     "deprecated_yaml_import_issue_error": {
       "title": "YAML import failed due to invalid {error_field}",
       "description": "Configuring {integration_title} using YAML is being removed but there was an error while importing your existing configuration ({telegram_bot}): {error_message}.\nSetup will not proceed.\n\nVerify that your {telegram_bot} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
-    },
-    "proxy_params_auth_deprecation": {
-      "title": "{telegram_bot}: Proxy authentication should be moved to the URL",
-      "description": "Authentication details for the the proxy configured in the {telegram_bot} integration should be moved into the {proxy_url} instead. Please update your configuration and restart Home Assistant to fix this issue.\n\nThe {proxy_params} config key will be removed in a future release."
-    },
-    "proxy_params_deprecation": {
-      "title": "{telegram_bot}: Proxy params option will be removed",
-      "description": "The {proxy_params} config key for the {telegram_bot} integration will be removed in a future release.\n\nAuthentication can now be provided through the {proxy_url} key.\n\nThe underlying library has changed to {httpx} which is incompatible with previous parameters. If you still need this functionality for other options, please leave a comment on the learn more link.\n\nPlease update your configuration to remove the {proxy_params} key and restart Home Assistant to fix this issue."
     }
   }
 }

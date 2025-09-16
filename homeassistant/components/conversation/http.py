@@ -26,7 +26,11 @@ from .agent_manager import (
     get_agent_manager,
 )
 from .const import DATA_COMPONENT, DATA_DEFAULT_ENTITY
-from .default_agent import METADATA_CUSTOM_FILE, METADATA_CUSTOM_SENTENCE
+from .default_agent import (
+    METADATA_CUSTOM_FILE,
+    METADATA_CUSTOM_SENTENCE,
+    METADATA_FUZZY_MATCH,
+)
 from .entity import ConversationEntity
 from .models import ConversationInput
 
@@ -197,6 +201,7 @@ async def websocket_hass_agent_debug(
             context=connection.context(msg),
             conversation_id=None,
             device_id=msg.get("device_id"),
+            satellite_id=None,
             language=msg.get("language", hass.config.language),
             agent_id=agent.entity_id,
         )
@@ -240,6 +245,8 @@ async def websocket_hass_agent_debug(
                 "sentence_template": "",
                 # When match is incomplete, this will contain the best slot guesses
                 "unmatched_slots": _get_unmatched_slots(intent_result),
+                # True if match was not exact
+                "fuzzy_match": False,
             }
 
             if successful_match:
@@ -251,16 +258,19 @@ async def websocket_hass_agent_debug(
             if intent_result.intent_sentence is not None:
                 result_dict["sentence_template"] = intent_result.intent_sentence.text
 
-            # Inspect metadata to determine if this matched a custom sentence
-            if intent_result.intent_metadata and intent_result.intent_metadata.get(
-                METADATA_CUSTOM_SENTENCE
-            ):
-                result_dict["source"] = "custom"
-                result_dict["file"] = intent_result.intent_metadata.get(
-                    METADATA_CUSTOM_FILE
+            if intent_result.intent_metadata:
+                # Inspect metadata to determine if this matched a custom sentence
+                if intent_result.intent_metadata.get(METADATA_CUSTOM_SENTENCE):
+                    result_dict["source"] = "custom"
+                    result_dict["file"] = intent_result.intent_metadata.get(
+                        METADATA_CUSTOM_FILE
+                    )
+                else:
+                    result_dict["source"] = "builtin"
+
+                result_dict["fuzzy_match"] = intent_result.intent_metadata.get(
+                    METADATA_FUZZY_MATCH, False
                 )
-            else:
-                result_dict["source"] = "builtin"
 
         result_dicts.append(result_dict)
 

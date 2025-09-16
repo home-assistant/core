@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
 
 from deebot_client.capabilities import CapabilitySet
 from deebot_client.events import CleanCountEvent, CutDirectionEvent, VolumeEvent
+from deebot_client.events.base import Event
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -23,16 +23,14 @@ from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
     EcovacsEntity,
-    EventT,
 )
 from .util import get_supported_entities
 
 
 @dataclass(kw_only=True, frozen=True)
-class EcovacsNumberEntityDescription(
+class EcovacsNumberEntityDescription[EventT: Event](
     NumberEntityDescription,
     EcovacsCapabilityEntityDescription,
-    Generic[EventT],
 ):
     """Ecovacs number entity description."""
 
@@ -94,7 +92,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class EcovacsNumberEntity(
+class EcovacsNumberEntity[EventT: Event](
     EcovacsDescriptionEntity[CapabilitySet[EventT, [int]]],
     NumberEntity,
 ):

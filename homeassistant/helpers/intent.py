@@ -33,6 +33,7 @@ from . import (
     entity_registry,
     floor_registry,
 )
+from .deprecation import EnumWithDeprecatedMembers
 from .typing import VolSchemaType
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,6 +115,7 @@ async def async_handle(
     language: str | None = None,
     assistant: str | None = None,
     device_id: str | None = None,
+    satellite_id: str | None = None,
     conversation_agent_id: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
@@ -138,6 +140,7 @@ async def async_handle(
         language=language,
         assistant=assistant,
         device_id=device_id,
+        satellite_id=satellite_id,
         conversation_agent_id=conversation_agent_id,
     )
 
@@ -1264,22 +1267,11 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         return (self.domain, self.service)
 
 
-class IntentCategory(Enum):
-    """Category of an intent."""
-
-    ACTION = "action"
-    """Trigger an action like turning an entity on or off"""
-
-    QUERY = "query"
-    """Get information about the state of an entity"""
-
-
 class Intent:
     """Hold the intent."""
 
     __slots__ = [
         "assistant",
-        "category",
         "context",
         "conversation_agent_id",
         "device_id",
@@ -1287,6 +1279,7 @@ class Intent:
         "intent_type",
         "language",
         "platform",
+        "satellite_id",
         "slots",
         "text_input",
     ]
@@ -1300,9 +1293,9 @@ class Intent:
         text_input: str | None,
         context: Context,
         language: str,
-        category: IntentCategory | None = None,
         assistant: str | None = None,
         device_id: str | None = None,
+        satellite_id: str | None = None,
         conversation_agent_id: str | None = None,
     ) -> None:
         """Initialize an intent."""
@@ -1313,9 +1306,9 @@ class Intent:
         self.text_input = text_input
         self.context = context
         self.language = language
-        self.category = category
         self.assistant = assistant
         self.device_id = device_id
+        self.satellite_id = satellite_id
         self.conversation_agent_id = conversation_agent_id
 
     @callback
@@ -1324,14 +1317,23 @@ class Intent:
         return IntentResponse(language=self.language, intent=self)
 
 
-class IntentResponseType(Enum):
+class IntentResponseType(
+    Enum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "PARTIAL_ACTION_DONE": (
+            "IntentResponseType.ACTION_DONE or IntentResponseType.ERROR",
+            "2026.3.0",
+        ),
+    },
+):
     """Type of the intent response."""
 
     ACTION_DONE = "action_done"
     """Intent caused an action to occur"""
 
     PARTIAL_ACTION_DONE = "partial_action_done"
-    """Intent caused an action, but it could only be partially done"""
+    """Deprecated. Intent caused an action, but it could only be partially done"""
 
     QUERY_ANSWER = "query_answer"
     """Response is an answer to a query"""
@@ -1398,12 +1400,7 @@ class IntentResponse:
         self.matched_states: list[State] = []
         self.unmatched_states: list[State] = []
         self.speech_slots: dict[str, Any] = {}
-
-        if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
-            # speech will be the answer to the query
-            self.response_type = IntentResponseType.QUERY_ANSWER
-        else:
-            self.response_type = IntentResponseType.ACTION_DONE
+        self.response_type = IntentResponseType.ACTION_DONE
 
     @callback
     def async_set_speech(

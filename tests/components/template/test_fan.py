@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import fan, template
@@ -21,17 +22,37 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
-from tests.common import assert_setup_component
+from tests.common import MockConfigEntry, assert_setup_component
 from tests.components.fan import common
+from tests.typing import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_fan"
 TEST_ENTITY_ID = f"fan.{TEST_OBJECT_ID}"
+
 # Represent for fan's state
 _STATE_INPUT_BOOLEAN = "input_boolean.state"
-# Represent for fan's state
+# Represent for fan's percent
+_STATE_TEST_SENSOR = "sensor.test_sensor"
+# Represent for fan's availability
 _STATE_AVAILABILITY_BOOLEAN = "availability_boolean.state"
+
+TEST_STATE_TRIGGER = {
+    "trigger": {
+        "trigger": "state",
+        "entity_id": [
+            TEST_ENTITY_ID,
+            _STATE_INPUT_BOOLEAN,
+            _STATE_AVAILABILITY_BOOLEAN,
+            _STATE_TEST_SENSOR,
+        ],
+    },
+    "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
+    "action": [
+        {"event": "action_event", "event_data": {"what": "{{ triggering_entity }}"}}
+    ],
+}
 
 OPTIMISTIC_ON_OFF_ACTIONS = {
     "turn_on": {
@@ -177,61 +198,22 @@ async def async_setup_modern_format(
     await hass.async_block_till_done()
 
 
-async def async_setup_legacy_named_fan(
+async def async_setup_trigger_format(
     hass: HomeAssistant, count: int, fan_config: dict[str, Any]
-):
-    """Do setup of a named fan via legacy format."""
-    await async_setup_legacy_format(hass, count, {TEST_OBJECT_ID: fan_config})
-
-
-async def async_setup_modern_named_fan(
-    hass: HomeAssistant, count: int, fan_config: dict[str, Any]
-):
-    """Do setup of a named fan via legacy format."""
-    await async_setup_modern_format(hass, count, {"name": TEST_OBJECT_ID, **fan_config})
-
-
-async def async_setup_legacy_format_with_attribute(
-    hass: HomeAssistant,
-    count: int,
-    attribute: str,
-    attribute_template: str,
-    extra_config: dict,
 ) -> None:
-    """Do setup of a legacy fan that has a single templated attribute."""
-    extra = {attribute: attribute_template} if attribute and attribute_template else {}
-    await async_setup_legacy_format(
-        hass,
-        count,
-        {
-            TEST_OBJECT_ID: {
-                **extra_config,
-                "value_template": "{{ 1 == 1 }}",
-                **extra,
-            }
-        },
-    )
+    """Do setup of fan integration via trigger format."""
+    config = {"template": {"fan": fan_config, **TEST_STATE_TRIGGER}}
 
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            template.DOMAIN,
+            config,
+        )
 
-async def async_setup_modern_format_with_attribute(
-    hass: HomeAssistant,
-    count: int,
-    attribute: str,
-    attribute_template: str,
-    extra_config: dict,
-) -> None:
-    """Do setup of a modern fan that has a single templated attribute."""
-    extra = {attribute: attribute_template} if attribute and attribute_template else {}
-    await async_setup_modern_format(
-        hass,
-        count,
-        {
-            "name": TEST_OBJECT_ID,
-            **extra_config,
-            "state": "{{ 1 == 1 }}",
-            **extra,
-        },
-    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
@@ -246,6 +228,8 @@ async def setup_fan(
         await async_setup_legacy_format(hass, count, fan_config)
     elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format(hass, count, fan_config)
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(hass, count, fan_config)
 
 
 @pytest.fixture
@@ -257,9 +241,15 @@ async def setup_named_fan(
 ) -> None:
     """Do setup of fan integration."""
     if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_named_fan(hass, count, fan_config)
+        await async_setup_legacy_format(hass, count, {TEST_OBJECT_ID: fan_config})
     elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_named_fan(hass, count, fan_config)
+        await async_setup_modern_format(
+            hass, count, {"name": TEST_OBJECT_ID, **fan_config}
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass, count, {"name": TEST_OBJECT_ID, **fan_config}
+        )
 
 
 @pytest.fixture
@@ -290,6 +280,15 @@ async def setup_state_fan(
                 "state": state_template,
             },
         )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass,
+            count,
+            {
+                **NAMED_ON_OFF_ACTIONS,
+                "state": state_template,
+            },
+        )
 
 
 @pytest.fixture
@@ -309,6 +308,10 @@ async def setup_test_fan_with_extra_config(
         await async_setup_modern_format(
             hass, count, {"name": TEST_OBJECT_ID, **fan_config, **extra_config}
         )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass, count, {"name": TEST_OBJECT_ID, **fan_config, **extra_config}
+        )
 
 
 @pytest.fixture
@@ -320,12 +323,35 @@ async def setup_optimistic_fan_attribute(
 ) -> None:
     """Do setup of a non-optimistic fan with an optimistic attribute."""
     if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_format_with_attribute(
-            hass, count, "", "", extra_config
+        await async_setup_legacy_format(
+            hass,
+            count,
+            {
+                TEST_OBJECT_ID: {
+                    **extra_config,
+                    "value_template": "{{ 1 == 1 }}",
+                }
+            },
         )
     elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format_with_attribute(
-            hass, count, "", "", extra_config
+        await async_setup_modern_format(
+            hass,
+            count,
+            {
+                "name": TEST_OBJECT_ID,
+                **extra_config,
+                "state": "{{ 1 == 1 }}",
+            },
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass,
+            count,
+            {
+                "name": TEST_OBJECT_ID,
+                **extra_config,
+                "state": "{{ 1 == 1 }}",
+            },
         )
 
 
@@ -365,11 +391,23 @@ async def setup_single_attribute_state_fan(
                 **extra_config,
             },
         )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass,
+            count,
+            {
+                **NAMED_ON_OFF_ACTIONS,
+                "state": state_template,
+                **extra,
+                **extra_config,
+            },
+        )
 
 
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 'on' }}")])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_fan")
 async def test_missing_optional_config(hass: HomeAssistant) -> None:
@@ -379,7 +417,8 @@ async def test_missing_optional_config(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("count", [0])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     "fan_config",
@@ -404,7 +443,8 @@ async def test_wrong_template_config(hass: HomeAssistant) -> None:
     ("count", "state_template"), [(1, "{{ is_state('input_boolean.state', 'on') }}")]
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_fan")
 async def test_state_template(hass: HomeAssistant) -> None:
@@ -433,7 +473,8 @@ async def test_state_template(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_fan")
 async def test_state_template_states(hass: HomeAssistant, expected: str) -> None:
@@ -442,29 +483,28 @@ async def test_state_template_states(hass: HomeAssistant, expected: str) -> None
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template", "attribute_template", "extra_config"),
+    ("count", "state_template", "attribute_template", "extra_config", "attribute"),
     [
         (
             1,
             "{{ 1 == 1}}",
-            "{% if states.input_boolean.state.state %}/local/switch.png{% endif %}",
+            "{% if is_state('sensor.test_sensor', 'on') %}/local/switch.png{% endif %}",
             {},
+            "picture",
         )
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
-    [
-        (ConfigurationStyle.MODERN, "picture"),
-    ],
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_fan")
 async def test_picture_template(hass: HomeAssistant) -> None:
     """Test picture template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("entity_picture") in ("", None)
+    assert state.attributes.get("entity_picture") == ""
 
-    hass.states.async_set(_STATE_INPUT_BOOLEAN, STATE_ON)
+    hass.states.async_set(_STATE_TEST_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
@@ -472,27 +512,26 @@ async def test_picture_template(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template", "attribute_template", "extra_config"),
+    ("count", "state_template", "attribute_template", "extra_config", "attribute"),
     [
         (
             1,
             "{{ 1 == 1}}",
             "{% if states.input_boolean.state.state %}mdi:eye{% endif %}",
             {},
+            "icon",
         )
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute"),
-    [
-        (ConfigurationStyle.MODERN, "icon"),
-    ],
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_fan")
 async def test_icon_template(hass: HomeAssistant) -> None:
     """Test icon template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("icon") in ("", None)
+    assert state.attributes.get("icon") == ""
 
     hass.states.async_set(_STATE_INPUT_BOOLEAN, STATE_ON)
     await hass.async_block_till_done()
@@ -507,7 +546,7 @@ async def test_icon_template(hass: HomeAssistant) -> None:
         (
             1,
             "{{ 1 == 1 }}",
-            "{{ states('sensor.percentage') }}",
+            "{{ states('sensor.test_sensor') }}",
             PERCENTAGE_ACTION,
         )
     ],
@@ -517,6 +556,7 @@ async def test_icon_template(hass: HomeAssistant) -> None:
     [
         (ConfigurationStyle.LEGACY, "percentage_template"),
         (ConfigurationStyle.MODERN, "percentage"),
+        (ConfigurationStyle.TRIGGER, "percentage"),
     ],
 )
 @pytest.mark.parametrize(
@@ -534,7 +574,7 @@ async def test_percentage_template(
     hass: HomeAssistant, percent: str, expected: int, calls: list[ServiceCall]
 ) -> None:
     """Test templates with fan percentages from other entities."""
-    hass.states.async_set("sensor.percentage", percent)
+    hass.states.async_set(_STATE_TEST_SENSOR, percent)
     await hass.async_block_till_done()
     _verify(hass, STATE_ON, expected, None, None, None)
 
@@ -545,7 +585,7 @@ async def test_percentage_template(
         (
             1,
             "{{ 1 == 1 }}",
-            "{{ states('sensor.preset_mode') }}",
+            "{{ states('sensor.test_sensor') }}",
             {"preset_modes": ["auto", "smart"], **PRESET_MODE_ACTION},
         )
     ],
@@ -555,6 +595,7 @@ async def test_percentage_template(
     [
         (ConfigurationStyle.LEGACY, "preset_mode_template"),
         (ConfigurationStyle.MODERN, "preset_mode"),
+        (ConfigurationStyle.TRIGGER, "preset_mode"),
     ],
 )
 @pytest.mark.parametrize(
@@ -571,7 +612,7 @@ async def test_preset_mode_template(
     hass: HomeAssistant, preset_mode: str, expected: int
 ) -> None:
     """Test preset_mode template."""
-    hass.states.async_set("sensor.preset_mode", preset_mode)
+    hass.states.async_set(_STATE_TEST_SENSOR, preset_mode)
     await hass.async_block_till_done()
     _verify(hass, STATE_ON, None, None, None, expected)
 
@@ -582,7 +623,7 @@ async def test_preset_mode_template(
         (
             1,
             "{{ 1 == 1 }}",
-            "{{ is_state('binary_sensor.oscillating', 'on') }}",
+            "{{ is_state('sensor.test_sensor', 'on') }}",
             OSCILLATE_ACTION,
         )
     ],
@@ -592,6 +633,7 @@ async def test_preset_mode_template(
     [
         (ConfigurationStyle.LEGACY, "oscillating_template"),
         (ConfigurationStyle.MODERN, "oscillating"),
+        (ConfigurationStyle.TRIGGER, "oscillating"),
     ],
 )
 @pytest.mark.parametrize(
@@ -606,7 +648,7 @@ async def test_oscillating_template(
     hass: HomeAssistant, oscillating: str, expected: bool | None
 ) -> None:
     """Test oscillating template."""
-    hass.states.async_set("binary_sensor.oscillating", oscillating)
+    hass.states.async_set(_STATE_TEST_SENSOR, oscillating)
     await hass.async_block_till_done()
     _verify(hass, STATE_ON, None, expected, None, None)
 
@@ -617,7 +659,7 @@ async def test_oscillating_template(
         (
             1,
             "{{ 1 == 1 }}",
-            "{{ states('sensor.direction') }}",
+            "{{ states('sensor.test_sensor') }}",
             DIRECTION_ACTION,
         )
     ],
@@ -627,6 +669,7 @@ async def test_oscillating_template(
     [
         (ConfigurationStyle.LEGACY, "direction_template"),
         (ConfigurationStyle.MODERN, "direction"),
+        (ConfigurationStyle.TRIGGER, "direction"),
     ],
 )
 @pytest.mark.parametrize(
@@ -641,7 +684,7 @@ async def test_direction_template(
     hass: HomeAssistant, direction: str, expected: bool | None
 ) -> None:
     """Test direction template."""
-    hass.states.async_set("sensor.direction", direction)
+    hass.states.async_set(_STATE_TEST_SENSOR, direction)
     await hass.async_block_till_done()
     _verify(hass, STATE_ON, None, None, expected, None)
 
@@ -665,6 +708,17 @@ async def test_direction_template(
         ),
         (
             ConfigurationStyle.MODERN,
+            {
+                "availability": ("{{ is_state('availability_boolean.state', 'on') }}"),
+                "state": "{{ 'on' }}",
+                "oscillating": "{{ 1 == 1 }}",
+                "direction": "{{ 'forward' }}",
+                "turn_on": {"service": "script.fan_on"},
+                "turn_off": {"service": "script.fan_off"},
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
             {
                 "availability": ("{{ is_state('availability_boolean.state', 'on') }}"),
                 "state": "{{ 'on' }}",
@@ -708,6 +762,14 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
             [STATE_OFF, None, None, None],
         ),
         (
+            ConfigurationStyle.TRIGGER,
+            {
+                "state": "{{ 'unavailable' }}",
+                **OPTIMISTIC_ON_OFF_ACTIONS,
+            },
+            [STATE_OFF, None, None, None],
+        ),
+        (
             ConfigurationStyle.LEGACY,
             {
                 "value_template": "{{ 'on' }}",
@@ -722,6 +784,19 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
         ),
         (
             ConfigurationStyle.MODERN,
+            {
+                "state": "{{ 'on' }}",
+                "percentage": "{{ 0 }}",
+                **OPTIMISTIC_PERCENTAGE_CONFIG,
+                "oscillating": "{{ 'unavailable' }}",
+                **OSCILLATE_ACTION,
+                "direction": "{{ 'unavailable' }}",
+                **DIRECTION_ACTION,
+            },
+            [STATE_ON, 0, None, None],
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
             {
                 "state": "{{ 'on' }}",
                 "percentage": "{{ 0 }}",
@@ -760,6 +835,19 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
             [STATE_ON, 66, True, DIRECTION_FORWARD],
         ),
         (
+            ConfigurationStyle.TRIGGER,
+            {
+                "state": "{{ 'on' }}",
+                "percentage": "{{ 66 }}",
+                **OPTIMISTIC_PERCENTAGE_CONFIG,
+                "oscillating": "{{ 1 == 1 }}",
+                **OSCILLATE_ACTION,
+                "direction": "{{ 'forward' }}",
+                **DIRECTION_ACTION,
+            },
+            [STATE_ON, 66, True, DIRECTION_FORWARD],
+        ),
+        (
             ConfigurationStyle.LEGACY,
             {
                 "value_template": "{{ 'abc' }}",
@@ -774,6 +862,19 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
         ),
         (
             ConfigurationStyle.MODERN,
+            {
+                "state": "{{ 'abc' }}",
+                "percentage": "{{ 0 }}",
+                **OPTIMISTIC_PERCENTAGE_CONFIG,
+                "oscillating": "{{ 'xyz' }}",
+                **OSCILLATE_ACTION,
+                "direction": "{{ 'right' }}",
+                **DIRECTION_ACTION,
+            },
+            [STATE_OFF, 0, None, None],
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
             {
                 "state": "{{ 'abc' }}",
                 "percentage": "{{ 0 }}",
@@ -821,16 +922,33 @@ async def test_template_with_unavailable_entities(hass: HomeAssistant, states) -
                 "turn_off": {"service": "script.fan_off"},
             },
         ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "state": "{{ 'on' }}",
+                "availability": "{{ x - 12 }}",
+                "preset_mode": ("{{ states('input_select.preset_mode') }}"),
+                "oscillating": "{{ states('input_select.osc') }}",
+                "direction": "{{ states('input_select.direction') }}",
+                "turn_on": {"service": "script.fan_on"},
+                "turn_off": {"service": "script.fan_off"},
+            },
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_named_fan")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that an invalid availability keeps the device available."""
-    assert hass.states.get("fan.test_fan").state != STATE_UNAVAILABLE
-    assert "TemplateError" in caplog_setup_text
-    assert "x" in caplog_setup_text
+    # Ensure trigger entities update.
+    hass.states.async_set(_STATE_INPUT_BOOLEAN, STATE_ON)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEST_ENTITY_ID).state != STATE_UNAVAILABLE
+
+    err = "'x' is undefined"
+    assert err in caplog_setup_text or err in caplog.text
 
 
 @pytest.mark.parametrize(("count", "extra_config"), [(1, OPTIMISTIC_ON_OFF_ACTIONS)])
@@ -845,6 +963,12 @@ async def test_invalid_availability_template_keeps_component_available(
         ),
         (
             ConfigurationStyle.MODERN,
+            {
+                "state": "{{ 'off' }}",
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
             {
                 "state": "{{ 'off' }}",
             },
@@ -895,6 +1019,12 @@ async def test_on_off(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
         ),
         (
             ConfigurationStyle.MODERN,
+            {
+                "state": "{{ 'off' }}",
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
             {
                 "state": "{{ 'off' }}",
             },
@@ -981,6 +1111,12 @@ async def test_on_with_extra_attributes(
                 "state": "{{ 'on' }}",
             },
         ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
@@ -1004,6 +1140,12 @@ async def test_set_invalid_direction_from_initial_stage(hass: HomeAssistant) -> 
         ),
         (
             ConfigurationStyle.MODERN,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
             {
                 "state": "{{ 'on' }}",
             },
@@ -1045,6 +1187,12 @@ async def test_set_osc(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
                 "state": "{{ 'on' }}",
             },
         ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
@@ -1078,6 +1226,12 @@ async def test_set_direction(hass: HomeAssistant, calls: list[ServiceCall]) -> N
         ),
         (
             ConfigurationStyle.MODERN,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
             {
                 "state": "{{ 'on' }}",
             },
@@ -1117,6 +1271,12 @@ async def test_set_invalid_direction(
                 "state": "{{ 'on' }}",
             },
         ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
@@ -1150,6 +1310,12 @@ async def test_preset_modes(hass: HomeAssistant, calls: list[ServiceCall]) -> No
         ),
         (
             ConfigurationStyle.MODERN,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
             {
                 "state": "{{ 'on' }}",
             },
@@ -1198,6 +1364,12 @@ async def test_set_percentage(hass: HomeAssistant, calls: list[ServiceCall]) -> 
                 "state": "{{ 'on' }}",
             },
         ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
@@ -1236,7 +1408,7 @@ async def test_increase_decrease_speed(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN],
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_named_fan")
 async def test_optimistic_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -1307,7 +1479,8 @@ async def test_optimistic_state(hass: HomeAssistant, calls: list[ServiceCall]) -
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("extra_config", "attribute", "action", "verify_attr", "coro", "value"),
@@ -1383,6 +1556,12 @@ async def test_optimistic_attributes(
                 "state": "{{ 'on' }}",
             },
         ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
@@ -1420,6 +1599,12 @@ async def test_increase_decrease_speed_default_speed_count(
                 "state": "{{ 'on' }}",
             },
         ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
@@ -1451,6 +1636,12 @@ async def test_set_invalid_osc_from_initial_state(
                 "state": "{{ 'on' }}",
             },
         ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
@@ -1474,23 +1665,36 @@ async def test_set_invalid_osc(hass: HomeAssistant, calls: list[ServiceCall]) ->
     [
         (
             {
-                "test_template_cover_01": UNIQUE_ID_CONFIG,
-                "test_template_cover_02": UNIQUE_ID_CONFIG,
+                "test_template_fan_01": UNIQUE_ID_CONFIG,
+                "test_template_fan_02": UNIQUE_ID_CONFIG,
             },
             ConfigurationStyle.LEGACY,
         ),
         (
             [
                 {
-                    "name": "test_template_cover_01",
+                    "name": "test_template_fan_01",
                     **UNIQUE_ID_CONFIG,
                 },
                 {
-                    "name": "test_template_cover_02",
+                    "name": "test_template_fan_02",
                     **UNIQUE_ID_CONFIG,
                 },
             ],
             ConfigurationStyle.MODERN,
+        ),
+        (
+            [
+                {
+                    "name": "test_template_fan_01",
+                    **UNIQUE_ID_CONFIG,
+                },
+                {
+                    "name": "test_template_fan_02",
+                    **UNIQUE_ID_CONFIG,
+                },
+            ],
+            ConfigurationStyle.TRIGGER,
         ),
     ],
 )
@@ -1506,7 +1710,7 @@ async def test_unique_id(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN],
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("fan_config", "percentage_step"),
@@ -1529,7 +1733,7 @@ async def test_speed_percentage_step(hass: HomeAssistant, percentage_step) -> No
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN],
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_named_fan")
 async def test_preset_mode_supported_features(hass: HomeAssistant) -> None:
@@ -1541,25 +1745,12 @@ async def test_preset_mode_supported_features(hass: HomeAssistant) -> None:
     assert attributes.get("supported_features") & FanEntityFeature.PRESET_MODE
 
 
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("style", "fan_config"),
-    [
-        (
-            ConfigurationStyle.LEGACY,
-            {
-                "turn_on": [],
-                "turn_off": [],
-            },
-        ),
-        (
-            ConfigurationStyle.MODERN,
-            {
-                "turn_on": [],
-                "turn_off": [],
-            },
-        ),
-    ],
+    ("count", "fan_config"), [(1, {"turn_on": [], "turn_off": []})]
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("extra_config", "supported_features"),
@@ -1590,10 +1781,10 @@ async def test_preset_mode_supported_features(hass: HomeAssistant) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("setup_test_fan_with_extra_config")
 async def test_empty_action_config(
     hass: HomeAssistant,
     supported_features: FanEntityFeature,
-    setup_test_fan_with_extra_config,
 ) -> None:
     """Test configuration with empty script."""
     state = hass.states.get(TEST_ENTITY_ID)
@@ -1644,3 +1835,139 @@ async def test_nested_unique_id(
     entry = entity_registry.async_get("fan.test_b")
     assert entry
     assert entry.unique_id == "x-b"
+
+
+@pytest.mark.parametrize(
+    ("count", "fan_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ is_state('sensor.test_sensor', 'on') }}",
+                "turn_on": [],
+                "turn_off": [],
+                "optimistic": True,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_fan")
+async def test_optimistic_option(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option."""
+    hass.states.async_set(_STATE_TEST_SENSOR, STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        "turn_on",
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+
+    hass.states.async_set(_STATE_TEST_SENSOR, STATE_ON)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(_STATE_TEST_SENSOR, STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("count", "fan_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ is_state('sensor.test_sensor', 'on') }}",
+                "turn_on": [],
+                "turn_off": [],
+                "optimistic": False,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_fan")
+async def test_not_optimistic(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        fan.DOMAIN,
+        "turn_on",
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests creating a fan from a config entry."""
+
+    hass.states.async_set(
+        "sensor.test_sensor",
+        "on",
+        {},
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{ states('sensor.test_sensor') }}",
+            "turn_on": [],
+            "turn_off": [],
+            "template_type": fan.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.my_template")
+    assert state is not None
+    assert state == snapshot
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        fan.DOMAIN,
+        {
+            "name": "My template",
+            "state": "{{ 'on' }}",
+            "turn_on": [],
+            "turn_off": [],
+        },
+    )
+
+    assert state["state"] == STATE_ON
