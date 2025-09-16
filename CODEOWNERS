@@ -442,8 +442,6 @@ build.json @home-assistant/supervisor
 /tests/components/energyzero/ @klaasnicolaas
 /homeassistant/components/enigma2/ @autinerd
 /tests/components/enigma2/ @autinerd
-/homeassistant/components/enocean/ @bdurrer
-/tests/components/enocean/ @bdurrer
 /homeassistant/components/enphase_envoy/ @bdraco @cgarwood @catsmanac
 /tests/components/enphase_envoy/ @bdraco @cgarwood @catsmanac
 /homeassistant/components/entur_public_transport/ @hfurubotten
@@ -970,6 +968,8 @@ build.json @home-assistant/supervisor
 /tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core
 /tests/components/mobile_app/ @home-assistant/core
+/homeassistant/components/modbus/ @janiversen
+/tests/components/modbus/ @janiversen
 /homeassistant/components/modem_callerid/ @tkdrob
 /tests/components/modem_callerid/ @tkdrob
 /homeassistant/components/modern_forms/ @wonderslug
@@ -1017,7 +1017,8 @@ build.json @home-assistant/supervisor
 /tests/components/nanoleaf/ @milanmeu @joostlek
 /homeassistant/components/nasweb/ @nasWebio
 /tests/components/nasweb/ @nasWebio
-/homeassistant/components/nederlandse_spoorwegen/ @YarmoM
+/homeassistant/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
+/tests/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
 /homeassistant/components/ness_alarm/ @nickw444
 /tests/components/ness_alarm/ @nickw444
 /homeassistant/components/nest/ @allenporter
