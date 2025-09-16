@@ -18,7 +18,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DEVICES_SCAN_INTERVAL = timedelta(seconds=30)
+DEFAULT_DEVICES_SCAN_INTERVAL = timedelta(seconds=10)
 
 
 @dataclass
