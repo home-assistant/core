@@ -19,6 +19,41 @@
   timezone | US/Pacific
   config_dir | config
   
+  ## Active Integrations
+  
+  Built-in integrations: 15
+  Custom integrations: 1
+  
+  <details><summary>Built-in Integrations</summary>
+  
+  Domain | Name
+  --- | ---
+  auth | Auth
+  binary_sensor | Binary Sensor
+  cloud | Home Assistant Cloud
+  cloud.binary_sensor | Unknown
+  cloud.stt | Unknown
+  cloud.tts | Unknown
+  ffmpeg | FFmpeg
+  homeassistant | Home Assistant Core Integration
+  http | HTTP
+  mock_no_info_integration | mock_no_info_integration
+  repairs | Repairs
+  stt | Speech-to-text (STT)
+  system_health | System Health
+  tts | Text-to-speech (TTS)
+  webhook | Webhook
+  
+  </details>
+  
+  <details><summary>Custom Integrations</summary>
+  
+  Domain | Name | Version | Documentation
+  --- | --- | --- | ---
+  test | Test Components | 1.2.3 | http://example.com
+  
+  </details>
+  
   <details><summary>mock_no_info_integration</summary>
   
   No information available
@@ -50,6 +85,159 @@
   <details><summary>Logs</summary>
   
   ```logs
+  2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
+  2025-02-10 12:00:00.000 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
+  2025-02-10 12:00:00.000 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
+  ```
+  
+  </details>
+  
+  '''
+# ---
+# name: test_download_support_package_custom_components_error
+  '''
+  ## System Information
+  
+  version | core-2025.2.0
+  --- | ---
+  installation_type | Home Assistant Core
+  dev | False
+  hassio | False
+  docker | False
+  container_arch | None
+  user | hass
+  virtualenv | False
+  python_version | 3.13.1
+  os_name | Linux
+  os_version | 6.12.9
+  arch | x86_64
+  timezone | US/Pacific
+  config_dir | config
+  
+  ## Active Integrations
+  
+  Built-in integrations: 15
+  Custom integrations: 0
+  
+  <details><summary>Built-in Integrations</summary>
+  
+  Domain | Name
+  --- | ---
+  auth | Auth
+  binary_sensor | Binary Sensor
+  cloud | Home Assistant Cloud
+  cloud.binary_sensor | Unknown
+  cloud.stt | Unknown
+  cloud.tts | Unknown
+  ffmpeg | FFmpeg
+  homeassistant | Home Assistant Core Integration
+  http | HTTP
+  mock_no_info_integration | mock_no_info_integration
+  repairs | Repairs
+  stt | Speech-to-text (STT)
+  system_health | System Health
+  tts | Text-to-speech (TTS)
+  webhook | Webhook
+  
+  </details>
+  
+  <details><summary>mock_no_info_integration</summary>
+  
+  No information available
+  </details>
+  
+  <details><summary>cloud</summary>
+  
+  logged_in | True
+  --- | ---
+  subscription_expiration | 2025-01-17T11:19:31+00:00
+  relayer_connected | True
+  relayer_region | xx-earth-616
+  remote_enabled | True
+  remote_connected | False
+  alexa_enabled | True
+  google_enabled | False
+  cloud_ice_servers_enabled | True
+  remote_server | us-west-1
+  certificate_status | ready
+  instance_id | 12345678901234567890
+  can_reach_cert_server | Exception: Unexpected exception
+  can_reach_cloud_auth | Failed: unreachable
+  can_reach_cloud | ok
+  
+  </details>
+  
+  ## Full logs
+  
+  <details><summary>Logs</summary>
+  
+  ```logs
+  2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] This message will be dropped since this test patches MAX_RECORDS
+  2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
+  2025-02-10 12:00:00.000 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
+  2025-02-10 12:00:00.000 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
+  ```
+  
+  </details>
+  
+  '''
+# ---
+# name: test_download_support_package_integration_load_error
+  '''
+  ## System Information
+  
+  version | core-2025.2.0
+  --- | ---
+  installation_type | Home Assistant Core
+  dev | False
+  hassio | False
+  docker | False
+  container_arch | None
+  user | hass
+  virtualenv | False
+  python_version | 3.13.1
+  os_name | Linux
+  os_version | 6.12.9
+  arch | x86_64
+  timezone | US/Pacific
+  config_dir | config
+  
+  ## Active Integrations
+  
+  Unable to collect integration information
+  
+  <details><summary>mock_no_info_integration</summary>
+  
+  No information available
+  </details>
+  
+  <details><summary>cloud</summary>
+  
+  logged_in | True
+  --- | ---
+  subscription_expiration | 2025-01-17T11:19:31+00:00
+  relayer_connected | True
+  relayer_region | xx-earth-616
+  remote_enabled | True
+  remote_connected | False
+  alexa_enabled | True
+  google_enabled | False
+  cloud_ice_servers_enabled | True
+  remote_server | us-west-1
+  certificate_status | ready
+  instance_id | 12345678901234567890
+  can_reach_cert_server | Exception: Unexpected exception
+  can_reach_cloud_auth | Failed: unreachable
+  can_reach_cloud | ok
+  
+  </details>
+  
+  ## Full logs
+  
+  <details><summary>Logs</summary>
+  
+  ```logs
+  2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] This message will be dropped since this test patches MAX_RECORDS
   2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
   2025-02-10 12:00:00.000 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
   2025-02-10 12:00:00.000 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
