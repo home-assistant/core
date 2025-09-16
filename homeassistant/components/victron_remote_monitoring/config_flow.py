@@ -144,7 +144,7 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
-                        title=f"VRM Forecast for {site.name}",
+                        title=f"VRM for {site.name}",
                         data={CONF_API_KEY: self._api_key, CONF_SITE_ID: site.id},
                     )
                 return await self.async_step_select_site()
@@ -196,7 +196,7 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(str(site_id), raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=f"VRM Forecast for {site.name}",
+                title=f"VRM for {site.name}",
                 data={CONF_API_KEY: self._api_key, CONF_SITE_ID: site_id},
             )
 
