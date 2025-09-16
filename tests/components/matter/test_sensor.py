@@ -680,8 +680,8 @@ async def test_vacuum_operational_error_sensor(
     assert state
     assert state.state == "low_battery"
 
-    # test unknown error
-    set_node_attribute(matter_node, 1, 97, 5, {0: 255})
+    # test unknown errorStateID == 192 (0xC0)
+    set_node_attribute(matter_node, 1, 97, 5, {0: 192})
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.mock_vacuum_operational_error")
