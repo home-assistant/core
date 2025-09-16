@@ -199,7 +199,7 @@ class AreaInfo:
 
     area_id: str
     area_name: str | None = None
-    area_norm_name: str | None = None
+    area_normalized_name: str | None = None
 
 
 class PrometheusMetrics:
@@ -469,9 +469,9 @@ class PrometheusMetrics:
             "domain": state.domain,
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
             # Have to set the keys, because a metric cannot have variable labels
-            "area_id": "<no-area>",
-            "area_name": "<no-area>",
-            "area_norm_name": "<no-area>",
+            "area_id": "",
+            "area_name": "",
+            "area_normalized_name": "",
         }
 
         labels.update(**self._make_area_labels(state.entity_id))
@@ -487,9 +487,9 @@ class PrometheusMetrics:
     def _make_area_labels(self, entity_id: str) -> dict[str, str]:
         defaults = {
             # Have to set the keys, because a metric cannot have variable labels
-            "area_id": "<no-area>",
-            "area_name": "<no-area>",
-            "area_norm_name": "<no-area>",
+            "area_id": "",
+            "area_name": "",
+            "area_normalized_name": "",
         }
 
         if entity_id not in self.entity_area_cache:
