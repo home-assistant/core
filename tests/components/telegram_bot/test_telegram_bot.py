@@ -309,7 +309,6 @@ async def test_send_chat_action(
     mock_broadcast_config_entry: MockConfigEntry,
 ) -> None:
     """Test the send_chat_action service."""
-    context = Context()
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -327,7 +326,6 @@ async def test_send_chat_action(
                 ATTR_CHAT_ACTION: CHAT_ACTION_TYPING,
             },
             blocking=True,
-            context=context,
             return_response=True,
         )
 
