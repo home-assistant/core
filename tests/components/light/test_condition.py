@@ -18,6 +18,9 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+# remove when #151314 is merged
+CONF_OPTIONS = "options"
+
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
@@ -103,8 +106,7 @@ async def test_light_state_condition_behavior_one(
                     CONF_TARGET: {
                         ATTR_LABEL_ID: "test_label",
                     },
-                    "behavior": "one",
-                    CONF_STATE: condition_state,
+                    CONF_OPTIONS: {"behavior": "one", CONF_STATE: condition_state},
                 },
                 "action": {
                     "service": "test.automation",
@@ -160,8 +162,7 @@ async def test_light_state_condition_behavior_any(
                     CONF_TARGET: {
                         ATTR_LABEL_ID: "test_label",
                     },
-                    "behavior": "any",
-                    CONF_STATE: condition_state,
+                    CONF_OPTIONS: {"behavior": "any", CONF_STATE: condition_state},
                 },
                 "action": {
                     "service": "test.automation",
@@ -225,8 +226,7 @@ async def test_light_state_condition_behavior_all(
                     CONF_TARGET: {
                         ATTR_LABEL_ID: "test_label",
                     },
-                    "behavior": "all",
-                    CONF_STATE: condition_state,
+                    CONF_OPTIONS: {"behavior": "all", CONF_STATE: condition_state},
                 },
                 "action": {
                     "service": "test.automation",

@@ -22,6 +22,9 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import DOMAIN
 
+# remove when #151314 is merged
+CONF_OPTIONS: Final = "options"
+
 ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_ONE: Final = "one"
 BEHAVIOR_ANY: Final = "any"
@@ -32,10 +35,12 @@ STATE_CONDITION_SCHEMA = vol.Schema(
     {
         **cv.CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): f"{DOMAIN}.{STATE_CONDITION_TYPE}",
-        vol.Required(CONF_STATE): vol.In([STATE_ON, STATE_OFF]),
-        vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-            [BEHAVIOR_ONE, BEHAVIOR_ANY, BEHAVIOR_ALL]
-        ),
+        vol.Required(CONF_OPTIONS): {
+            vol.Required(CONF_STATE): vol.In([STATE_ON, STATE_OFF]),
+            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+                [BEHAVIOR_ONE, BEHAVIOR_ANY, BEHAVIOR_ALL]
+            ),
+        },
         vol.Required(CONF_TARGET): selector.TargetSelector.TARGET_SELECTION_SCHEMA,
     },
 )
@@ -60,8 +65,9 @@ class StateCondition(Condition):
     @override
     async def async_get_checker(self) -> ConditionCheckerType:
         """Wrap action method with zone based condition."""
-        state = self._config[CONF_STATE]
-        behavior = self._config.get(ATTR_BEHAVIOR)
+        options_config = self._config[CONF_OPTIONS]
+        state = options_config[CONF_STATE]
+        behavior = options_config[ATTR_BEHAVIOR]
 
         def check_any_match_state(entity_ids: set[str]) -> bool:
             """Test if any entity match the state."""
