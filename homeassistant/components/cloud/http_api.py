@@ -441,12 +441,9 @@ class DownloadSupportPackageView(HomeAssistantView):
         loaded_components = hass.config.components.copy()
 
         # Get custom integrations
-        try:
-            custom_integration_domains = await async_get_custom_components(hass)
-            custom_domains = set(custom_integration_domains)
-        except Exception:  # noqa: BLE001
-            # Broad exception catch for robustness in support package generation
-            custom_domains = set()
+        custom_domains = set()
+        with suppress(Exception):
+            custom_domains = set(await async_get_custom_components(hass))
 
         # Separate built-in and custom integrations
         builtin_integrations = []
@@ -536,7 +533,12 @@ class DownloadSupportPackageView(HomeAssistantView):
         # Add integration information
         try:
             integration_info = await self._get_integration_info(hass)
-
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            # If there's any error getting integration info, just note it
+            markdown += "## Active integrations\n\n"
+            markdown += "Unable to collect integration information\n\n"
+        else:
             markdown += "## Active Integrations\n\n"
             markdown += f"Built-in integrations: {integration_info['builtin_count']}\n"
             markdown += f"Custom integrations: {integration_info['custom_count']}\n\n"
@@ -559,12 +561,6 @@ class DownloadSupportPackageView(HomeAssistantView):
                     doc_url = integration.get("documentation") or "N/A"
                     markdown += f"{integration['domain']} | {integration['name']} | {integration['version']} | {doc_url}\n"
                 markdown += "\n</details>\n\n"
-
-        except Exception:  # noqa: BLE001
-            # Broad exception catch for robustness in support package generation
-            # If there's any error getting integration info, just note it
-            markdown += "## Active integrations\n\n"
-            markdown += "Unable to collect integration information\n\n"
 
         for domain, domain_info in domains_info.items():
             domain_info_md = get_domain_table_markdown(domain_info)
