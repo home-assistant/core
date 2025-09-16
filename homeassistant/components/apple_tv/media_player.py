@@ -201,6 +201,11 @@ class AppleTvMediaPlayer(
             if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
                 return MediaPlayerState.PAUSED
             return MediaPlayerState.IDLE  # Bad or unknown state?
+        if (
+            self._is_feature_available(FeatureName.PowerState)
+            and self.atv.power.power_state == PowerState.On
+        ):
+            return MediaPlayerState.ON
         return None
 
     @callback
@@ -443,7 +448,7 @@ class AppleTvMediaPlayer(
 
     def _is_feature_available(self, feature: FeatureName) -> bool:
         """Return if a feature is available."""
-        if self.atv and self._playing:
+        if self.atv:
             return self.atv.features.in_state(FeatureState.Available, feature)
         return False
 
