@@ -1,0 +1,11 @@
+{
+    "hostname": "admin",
+    "timezone": 480,
+    "type": "gl meter",
+    "sn": "SN1234567890",
+    "mac": "MAC123456789",
+    "fw": "LSW3_01_E030_SS_00_00.00.00.03",
+    "time": "2024-11-26 19:14:23",
+    "time_stamp": 1732648463,
+    "run_time": 839
+}
