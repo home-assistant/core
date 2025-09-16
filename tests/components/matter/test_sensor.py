@@ -370,6 +370,7 @@ async def test_operational_error_sensor(
         "unable_to_start_or_resume",
         "unable_to_complete_operation",
         "command_invalid_in_state",
+        "unknown",
     ]
     set_node_attribute(matter_node, 1, 96, 5, {0: 1})
     await trigger_subscription_callback(hass, matter_client)
@@ -661,6 +662,7 @@ async def test_vacuum_operational_error_sensor(
         "wheels_jammed",
         "brush_jammed",
         "navigation_sensor_obscured",
+        "unknown",
     ]
     # test Rvc error
     set_node_attribute(matter_node, 1, 97, 5, {0: 66})
