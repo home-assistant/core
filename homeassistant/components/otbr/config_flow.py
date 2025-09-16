@@ -167,7 +167,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         return border_agent_id
 
     async def _connect_with_retry(self, url: str) -> bytes:
-        """Connect to OTBR with retry logic for up to 10 seconds."""
+        """Connect to OTBR with retry logic for up to OTBR_CONNECTION_TIMEOUT seconds."""
         start_time = self.hass.loop.time()
 
         while True:
