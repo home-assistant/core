@@ -35,6 +35,18 @@
         "title": "Radio is not recommended",
         "description": "The radio you are using ({name}) is not recommended and support for it may be removed in the future. Please see the Zigbee Home Automation integration's documentation for [a list of recommended adapters]({docs_recommended_adapters_url})."
       },
+      "choose_setup_strategy": {
+        "title": "Set up Zigbee",
+        "description": "Choose how you want to set up Zigbee.",
+        "menu_options": {
+          "setup_strategy_recommended": "Set up automatically (recommended)",
+          "setup_strategy_advanced": "Advanced setup"
+        },
+        "menu_option_descriptions": {
+          "setup_strategy_recommended": "This is the quickest option to create a new network and get started",
+          "setup_strategy_advanced": "This will let you restore from a backup"
+        }
+      },
       "choose_migration_strategy": {
         "title": "Migrate to a new adapter",
         "description": "Choose how you want to migrate your Zigbee network backup from your old adapter to a new one.",
@@ -96,7 +108,8 @@
       "usb_probe_failed": "Failed to probe the USB device",
       "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this.",
       "invalid_zeroconf_data": "The coordinator has invalid Zeroconf service info and cannot be identified by ZHA",
-      "cannot_restore_backup": "The coordinator you are restoring to does not properly support backup restoration. Please upgrade the firmware.\n\nError: {error}"
+      "cannot_restore_backup": "The coordinator you are restoring to does not properly support backup restoration. Please upgrade the firmware.\n\nError: {error}",
+      "reconfigure_successful": "ZHA has successfully migrated from your old adapter to the new one. Give your Zigbee network a few minutes to stabilize.\n\nIf you no longer need the old adapter, you can now unplug it."
     }
   },
   "options": {

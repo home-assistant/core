@@ -51,9 +51,20 @@ from .radio_manager import (
 CONF_MANUAL_PATH = "Enter Manually"
 DECONZ_DOMAIN = "deconz"
 
+# The ZHA config flow takes different branches depending on if you are migrating to a
+# new adapter via discovery or setting it up from scratch
+
+# For the fast path, we automatically migrate everything and restore the most recent backup
 MIGRATION_STRATEGY_RECOMMENDED = "migration_strategy_recommended"
 MIGRATION_STRATEGY_ADVANCED = "migration_strategy_advanced"
 
+# Similarly, setup follows the same approach: we create a new network
+SETUP_STRATEGY_RECOMMENDED = "setup_strategy_recommended"
+SETUP_STRATEGY_ADVANCED = "setup_strategy_advanced"
+
+# For the advanced paths, we allow users to pick how to form a network: form a brand new
+# network, use the settings currently on the stick, restore from a database backup, or
+# restore from a JSON backup
 FORMATION_STRATEGY = "formation_strategy"
 FORMATION_FORM_NEW_NETWORK = "form_new_network"
 FORMATION_FORM_INITIAL_NETWORK = "form_initial_network"
@@ -319,7 +330,11 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         # Skip this step if we are using a recommended radio
         if user_input is not None or self._radio_mgr.radio_type in RECOMMENDED_RADIOS:
-            return await self.async_step_choose_migration_strategy()
+            # ZHA disables the single instance check and will decide at runtime if we
+            # are migrating or setting up from scratch
+            if self.hass.config_entries.async_entries(DOMAIN):
+                return await self.async_step_choose_migration_strategy()
+            return await self.async_step_choose_setup_strategy()
 
         return self.async_show_form(
             step_id="verify_radio",
@@ -329,6 +344,18 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                     "https://www.home-assistant.io/integrations/zha/#recommended-zigbee-radio-adapters-and-modules"
                 ),
             },
+        )
+
+    async def async_step_choose_setup_strategy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Choose how to set up the integration from scratch."""
+        return self.async_show_menu(
+            step_id="choose_setup_strategy",
+            menu_options=[
+                SETUP_STRATEGY_RECOMMENDED,
+                SETUP_STRATEGY_ADVANCED,
+            ],
         )
 
     async def async_step_choose_migration_strategy(
