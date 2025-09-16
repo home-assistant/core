@@ -24,16 +24,16 @@ PLATFORMS: Final[list[Platform]] = [Platform.LIGHT]
 async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
     """Set up Lunatone from a config entry."""
     auth = Auth(async_get_clientsession(hass), entry.data[CONF_URL])
-    info = Info(auth)
-    devices = Devices(auth)
+    info_api = Info(auth)
+    devices_api = Devices(auth)
 
-    coordinator_info = LunatoneInfoDataUpdateCoordinator(hass, entry, info)
+    coordinator_info = LunatoneInfoDataUpdateCoordinator(hass, entry, info_api)
     await coordinator_info.async_config_entry_first_refresh()
 
-    coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices)
+    coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices_api)
     await coordinator_devices.async_config_entry_first_refresh()
 
-    if info.serial_number is None:
+    if info_api.serial_number is None:
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="missing_device_info"
         )
@@ -41,14 +41,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, str(info.serial_number))},
-        name=info.name,
+        identifiers={(DOMAIN, str(info_api.serial_number))},
+        name=info_api.name,
         manufacturer="Lunatone",
-        sw_version=info.version,
-        hw_version=info.data.device.pcb,
+        sw_version=info_api.version,
+        hw_version=info_api.data.device.pcb,
         configuration_url=entry.data[CONF_URL],
-        serial_number=info.serial_number,
-        model_id=f"{info.data.device.article_number}{info.data.device.article_info}",
+        serial_number=info_api.serial_number,
+        model_id=(
+            f"{info_api.data.device.article_number}{info_api.data.device.article_info}"
+        ),
     )
 
     entry.runtime_data = LunatoneData(coordinator_info, coordinator_devices)

@@ -34,16 +34,16 @@ async def async_setup_entry(
     coordinator_info = config_entry.runtime_data.coordinator_info
     coordinator_devices = config_entry.runtime_data.coordinator_devices
 
-    info = coordinator_info.info
-    devices = coordinator_devices.devices
+    info_api = coordinator_info.info_api
+    devices_api = coordinator_devices.devices_api
 
-    interface_version = AwesomeVersion(info.version.split("/")[0][1:])
+    interface_version = AwesomeVersion(info_api.version.split("/")[0][1:])
 
     # Add devices
     async_add_entities(
         [
-            LunatoneLight(device, info.serial_number, interface_version)
-            for device in devices.devices
+            LunatoneLight(device, info_api.serial_number, interface_version)
+            for device in devices_api.devices
         ],
         update_before_add=True,
     )
@@ -64,37 +64,37 @@ class LunatoneLight(LightEntity):
 
     def __init__(
         self,
-        device: Device,
+        device_api: Device,
         interface_serial_number: int,
         interface_version: AwesomeVersion,
     ) -> None:
         """Initialize a LunatoneLight."""
         self._interface_version = interface_version
         self._interface_serial_number = interface_serial_number
-        self._device = device
-        self._attr_unique_id = f"{interface_serial_number}-device{self._device.id}"
+        self._device_api = device_api
+        self._attr_unique_id = f"{interface_serial_number}-device{self._device_api.id}"
 
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return bool(self._device.is_on)
+        return bool(self._device_api.is_on)
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self._device.name,
+            name=self._device_api.name,
             via_device=(DOMAIN, str(self._interface_serial_number)),
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        await self._device.switch_on()
+        await self._device_api.switch_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        await self._device.switch_off()
+        await self._device_api.switch_off()
 
     async def async_update(self) -> None:
         """Fetch new state data for this light.
@@ -104,7 +104,7 @@ class LunatoneLight(LightEntity):
         if self._interface_version < "1.15.0":
             await asyncio.sleep(0.02)
         try:
-            await self._device.async_update()
+            await self._device_api.async_update()
         except aiohttp.ClientConnectionError as ex:
             self._attr_available = False
             if not self._unavailable_logged:

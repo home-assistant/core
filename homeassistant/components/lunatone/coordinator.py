@@ -35,7 +35,7 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
     config_entry: LunatoneConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: LunatoneConfigEntry, info: Info
+        self, hass: HomeAssistant, config_entry: LunatoneConfigEntry, info_api: Info
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -45,20 +45,20 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
             name=f"{DOMAIN}-info",
             always_update=False,
         )
-        self.info = info
+        self.info_api = info_api
 
     async def _async_update_data(self) -> InfoData:
         """Update info data."""
         try:
-            await self.info.async_update()
+            await self.info_api.async_update()
         except aiohttp.ClientConnectionError as ex:
             raise UpdateFailed(
                 "Unable to retrieve info data from Lunatone REST API"
             ) from ex
 
-        if self.info.data is None:
+        if self.info_api.data is None:
             raise UpdateFailed("Did not receive info data from Lunatone REST API")
-        return self.info.data
+        return self.info_api.data
 
 
 class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[DevicesData]):
@@ -67,7 +67,10 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[DevicesData]):
     config_entry: LunatoneConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: LunatoneConfigEntry, devices: Devices
+        self,
+        hass: HomeAssistant,
+        config_entry: LunatoneConfigEntry,
+        devices_api: Devices,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -77,17 +80,17 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[DevicesData]):
             name=f"{DOMAIN}-devices",
             always_update=False,
         )
-        self.devices = devices
+        self.devices_api = devices_api
 
     async def _async_update_data(self) -> DevicesData:
         """Update devices data."""
         try:
-            await self.devices.async_update()
+            await self.devices_api.async_update()
         except aiohttp.ClientConnectionError as ex:
             raise UpdateFailed(
                 "Unable to retrieve devices data from Lunatone REST API"
             ) from ex
 
-        if self.devices.data is None:
+        if self.devices_api.data is None:
             raise UpdateFailed("Did not receive devices data from Lunatone REST API")
-        return self.devices.data
+        return self.devices_api.data

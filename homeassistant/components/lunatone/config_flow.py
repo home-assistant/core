@@ -49,28 +49,28 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 session=async_get_clientsession(self.hass),
                 base_url=url,
             )
-            info = Info(auth)
+            info_api = Info(auth)
             try:
-                await info.async_update()
+                await info_api.async_update()
             except aiohttp.InvalidUrlClientError:
                 errors["base"] = "invalid_url"
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                if info.data is None or info.serial_number is None:
+                if info_api.data is None or info_api.serial_number is None:
                     errors["base"] = "missing_device_info"
                 else:
-                    await self.async_set_unique_id(str(info.serial_number))
+                    await self.async_set_unique_id(str(info_api.serial_number))
                     if self.source == SOURCE_RECONFIGURE:
                         self._abort_if_unique_id_mismatch()
                         return self.async_update_reload_and_abort(
                             self._get_reconfigure_entry(),
                             data_updates=data,
-                            title=compose_title(info.name, info.serial_number),
+                            title=compose_title(info_api.name, info_api.serial_number),
                         )
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
-                        title=compose_title(info.name, info.serial_number),
+                        title=compose_title(info_api.name, info_api.serial_number),
                         data={CONF_URL: url},
                     )
         return self.async_show_form(
