@@ -10,12 +10,25 @@ import pytest
 
 from homeassistant.components.usage_prediction.common_control import (
     async_predict_common_control,
+    time_category,
 )
 from homeassistant.components.usage_prediction.models import EntityUsagePredictions
 from homeassistant.const import EVENT_CALL_SERVICE
 from homeassistant.core import Context, HomeAssistant
 
 from tests.components.recorder.common import async_wait_recording_done
+
+
+def test_time_category() -> None:
+    """Test the time category calculation logic."""
+    for hour in range(6):
+        assert time_category(hour) == "night", hour
+    for hour in range(7, 12):
+        assert time_category(hour) == "morning", hour
+    for hour in range(13, 18):
+        assert time_category(hour) == "afternoon", hour
+    for hour in range(19, 22):
+        assert time_category(hour) == "evening", hour
 
 
 @pytest.mark.usefixtures("recorder_mock")
