@@ -40,6 +40,17 @@ class MockProcess(Process):
             raise NoSuchProcess(1, self._name)
         return self._name
 
+    def num_fds(self):
+        """Return the number of file descriptors opened by this process."""
+        if self._ex:
+            raise NoSuchProcess(1, self._name)
+        # Return different values for different processes for testing
+        if self._name == "python3":
+            return 42
+        if self._name == "pip":
+            return 15
+        return 10
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:

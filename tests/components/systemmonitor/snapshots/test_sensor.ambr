@@ -114,16 +114,6 @@
 # name: test_sensor[System Monitor Last boot - state]
   '2024-02-24T15:00:00+00:00'
 # ---
-# name: test_sensor[System Monitor Load (15 min) - attributes]
-  ReadOnlyDict({
-    'friendly_name': 'System Monitor Load (15 min)',
-    'icon': 'mdi:cpu-64-bit',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-  })
-# ---
-# name: test_sensor[System Monitor Load (15 min) - state]
-  '3'
-# ---
 # name: test_sensor[System Monitor Load (1 min) - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Load (1 min)',
@@ -133,6 +123,16 @@
 # ---
 # name: test_sensor[System Monitor Load (1 min) - state]
   '1'
+# ---
+# name: test_sensor[System Monitor Load (15 min) - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor Load (15 min)',
+    'icon': 'mdi:cpu-64-bit',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+  })
+# ---
+# name: test_sensor[System Monitor Load (15 min) - state]
+  '3'
 # ---
 # name: test_sensor[System Monitor Load (5 min) - attributes]
   ReadOnlyDict({
@@ -263,6 +263,15 @@
 # ---
 # name: test_sensor[System Monitor Network throughput out eth1 - state]
   'unknown'
+# ---
+# name: test_sensor[System Monitor None - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor None',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+  })
+# ---
+# name: test_sensor[System Monitor None - state]
+  '15'
 # ---
 # name: test_sensor[System Monitor Packets in eth0 - attributes]
   ReadOnlyDict({
