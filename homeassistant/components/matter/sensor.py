@@ -1215,10 +1215,15 @@ DISCOVERY_SCHEMAS = [
             translation_key="operational_error",
             device_class=SensorDeviceClass.ENUM,
             options=list(RVC_OPERATIONAL_STATE_ERROR_MAP.values()),
-            device_to_ha=lambda x: RVC_OPERATIONAL_STATE_ERROR_MAP.get(
-                x.errorStateID,  # We retrieve the error ID from the ErrorStateStruct structure
-                "no_error",  # Default value
-            ),
+                device_to_ha=lambda x: (
+                    RVC_OPERATIONAL_STATE_ERROR_MAP[x.errorStateID]
+                    if x.errorStateID in RVC_OPERATIONAL_STATE_ERROR_MAP
+                    else (
+                        x.ErrorStateLabel
+                        if 0x80 <= x.errorStateID <= 0xBF and getattr(x, "ErrorStateLabel", None)
+                        else "unknown"
+                    )
+                ),
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.RvcOperationalState.Attributes.OperationalError,),
