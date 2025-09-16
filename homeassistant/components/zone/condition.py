@@ -8,7 +8,6 @@ from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    CONF_CONDITION,
     CONF_ENTITY_ID,
     CONF_ZONE,
     STATE_UNAVAILABLE,
@@ -29,7 +28,6 @@ from . import in_zone
 _CONDITION_SCHEMA = vol.Schema(
     {
         **cv.CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "zone",
         vol.Required(CONF_ENTITY_ID): cv.entity_ids,
         vol.Required("zone"): cv.entity_ids,
         # To support use_trigger_value in automation

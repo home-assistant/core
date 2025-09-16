@@ -1502,16 +1502,21 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
     vol.All(str, entity_domain(["input_number", "number", "sensor", "zone"])),
 )
 
-CONDITION_BASE_SCHEMA: VolDictType = {
+
+_CONDITION_COMMON_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
+}
+
+CONDITION_BASE_SCHEMA: VolDictType = {
+    **_CONDITION_COMMON_SCHEMA,
+    vol.Required(CONF_CONDITION): str,
 }
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
             **CONDITION_BASE_SCHEMA,
-            vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids_or_uuids,
             vol.Optional(CONF_ATTRIBUTE): str,
             CONF_BELOW: NUMERIC_STATE_THRESHOLD_SCHEMA,
@@ -1524,7 +1529,6 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
 
 STATE_CONDITION_BASE_SCHEMA = {
     **CONDITION_BASE_SCHEMA,
-    vol.Required(CONF_CONDITION): "state",
     vol.Required(CONF_ENTITY_ID): entity_ids_or_uuids,
     vol.Optional(CONF_MATCH, default=ENTITY_MATCH_ALL): vol.All(
         vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_ANY)
@@ -1567,7 +1571,6 @@ def STATE_CONDITION_SCHEMA(value: Any) -> dict[str, Any]:
 TEMPLATE_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "template",
         vol.Required(CONF_VALUE_TEMPLATE): template,
     }
 )
@@ -1576,7 +1579,6 @@ TIME_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
             **CONDITION_BASE_SCHEMA,
-            vol.Required(CONF_CONDITION): "time",
             vol.Optional("before"): vol.Any(
                 time, vol.All(str, entity_domain(["input_datetime", "time", "sensor"]))
             ),
@@ -1592,7 +1594,6 @@ TIME_CONDITION_SCHEMA = vol.All(
 TRIGGER_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "trigger",
         vol.Required(CONF_ID): vol.All(ensure_list, [string]),
     }
 )
@@ -1600,7 +1601,6 @@ TRIGGER_CONDITION_SCHEMA = vol.Schema(
 AND_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "and",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable-next=unnecessary-lambda
@@ -1611,7 +1611,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
 
 AND_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
     {
-        **CONDITION_BASE_SCHEMA,
+        **_CONDITION_COMMON_SCHEMA,
         vol.Required("and"): vol.All(
             ensure_list,
             # pylint: disable-next=unnecessary-lambda
@@ -1623,7 +1623,6 @@ AND_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
 OR_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "or",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable-next=unnecessary-lambda
@@ -1634,7 +1633,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
 
 OR_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
     {
-        **CONDITION_BASE_SCHEMA,
+        **_CONDITION_COMMON_SCHEMA,
         vol.Required("or"): vol.All(
             ensure_list,
             # pylint: disable-next=unnecessary-lambda
@@ -1646,7 +1645,6 @@ OR_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
 NOT_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "not",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
             # pylint: disable-next=unnecessary-lambda
@@ -1657,7 +1655,7 @@ NOT_CONDITION_SCHEMA = vol.Schema(
 
 NOT_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
     {
-        **CONDITION_BASE_SCHEMA,
+        **_CONDITION_COMMON_SCHEMA,
         vol.Required("not"): vol.All(
             ensure_list,
             # pylint: disable-next=unnecessary-lambda
@@ -1669,7 +1667,6 @@ NOT_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
 DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "device",
         vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
         vol.Remove("metadata"): dict,
@@ -1725,7 +1722,7 @@ dynamic_template_condition = vol.All(
 
 CONDITION_SHORTHAND_SCHEMA = vol.Schema(
     {
-        **CONDITION_BASE_SCHEMA,
+        **_CONDITION_COMMON_SCHEMA,
         vol.Required(CONF_CONDITION): vol.All(
             ensure_list,
             # pylint: disable-next=unnecessary-lambda
@@ -1752,7 +1749,7 @@ BUILT_IN_CONDITIONS: ValueSchemas = {
 def _base_condition_validator(value: Any) -> Any:
     vol.Schema(
         {
-            **CONDITION_BASE_SCHEMA,
+            **_CONDITION_COMMON_SCHEMA,
             CONF_CONDITION: vol.NotIn(BUILT_IN_CONDITIONS),
         },
         extra=vol.ALLOW_EXTRA,
@@ -1779,7 +1776,7 @@ CONDITIONS_SCHEMA = vol.All(ensure_list, [CONDITION_SCHEMA])
 dynamic_template_condition_action = vol.All(
     # Wrap a shorthand template condition action in a template condition
     vol.Schema(
-        {**CONDITION_BASE_SCHEMA, vol.Required(CONF_CONDITION): dynamic_template}
+        {**_CONDITION_COMMON_SCHEMA, vol.Required(CONF_CONDITION): dynamic_template}
     ),
     lambda config: {
         **config,
