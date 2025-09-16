@@ -140,7 +140,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             incl_filters=service.data.get(CONF_INCL_FILTER, DEFAULT_FILTER),
             excl_filters=service.data.get(CONF_EXCL_FILTER, DEFAULT_FILTER),
         )
-        return {"routes": [vars(route) for route in response]} if response else {"routes": []}
+        return (
+            {"routes": [vars(route) for route in response]}
+            if response
+            else {"routes": []}
+        )
 
     hass.services.async_register(
         DOMAIN,
