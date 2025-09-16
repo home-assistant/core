@@ -1136,9 +1136,19 @@ DISCOVERY_SCHEMAS = [
             translation_key="operational_error",
             device_class=SensorDeviceClass.ENUM,
             options=list(OPERATIONAL_STATE_ERROR_MAP.values()),
-            device_to_ha=lambda x: OPERATIONAL_STATE_ERROR_MAP.get(
-                x.errorStateID,  # We retrieve the error ID from the ErrorStateStruct structure
-                "no_error",  # Default value
+            device_to_ha=lambda x: (
+                # Determine the error label for the RVC operational state:
+                # 1. If errorStateID is known in the mapping, return the mapped value.
+                # 2. If errorStateID is in the manufacturer range (0x80 to 0xBF) and ErrorStateLabel is present, return that label.
+                # 3. Otherwise, return "unknown".
+                OPERATIONAL_STATE_ERROR_MAP[x.errorStateID]
+                if x.errorStateID in OPERATIONAL_STATE_ERROR_MAP
+                else (
+                    x.ErrorStateLabel
+                    if 0x80 <= x.errorStateID <= 0xBF
+                    and getattr(x, "ErrorStateLabel", None)
+                    else "unknown"
+                )
             ),
         ),
         entity_class=MatterSensor,
@@ -1215,15 +1225,20 @@ DISCOVERY_SCHEMAS = [
             translation_key="operational_error",
             device_class=SensorDeviceClass.ENUM,
             options=list(RVC_OPERATIONAL_STATE_ERROR_MAP.values()),
-                device_to_ha=lambda x: (
-                    RVC_OPERATIONAL_STATE_ERROR_MAP[x.errorStateID]
-                    if x.errorStateID in RVC_OPERATIONAL_STATE_ERROR_MAP
-                    else (
-                        x.ErrorStateLabel
-                        if 0x80 <= x.errorStateID <= 0xBF and getattr(x, "ErrorStateLabel", None)
-                        else "unknown"
-                    )
-                ),
+            device_to_ha=lambda x: (
+                # Determine the error label for the RVC operational state:
+                # 1. If errorStateID is known in the mapping, return the mapped value.
+                # 2. If errorStateID is in the manufacturer range (0x80 to 0xBF) and ErrorStateLabel is present, return that label.
+                # 3. Otherwise, return "unknown".
+                RVC_OPERATIONAL_STATE_ERROR_MAP[x.errorStateID]
+                if x.errorStateID in RVC_OPERATIONAL_STATE_ERROR_MAP
+                else (
+                    x.ErrorStateLabel
+                    if 0x80 <= x.errorStateID <= 0xBF
+                    and getattr(x, "ErrorStateLabel", None)
+                    else "unknown"
+                )
+            ),
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.RvcOperationalState.Attributes.OperationalError,),
