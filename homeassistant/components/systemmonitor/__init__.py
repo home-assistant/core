@@ -49,8 +49,12 @@ async def async_setup_entry(
 
     _LOGGER.debug("disk arguments to be added: %s", disk_arguments)
 
+    # Get list of processes that need FD monitoring from binary_sensor configuration
+    monitor_processes = entry.options.get("binary_sensor", {}).get("process", [])
+    _LOGGER.debug("processes to monitor for FDs: %s", monitor_processes)
+
     coordinator: SystemMonitorCoordinator = SystemMonitorCoordinator(
-        hass, entry, psutil_wrapper, disk_arguments
+        hass, entry, psutil_wrapper, disk_arguments, monitor_processes
     )
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = SystemMonitorData(coordinator, psutil_wrapper)

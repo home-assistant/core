@@ -91,6 +91,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         config_entry: SystemMonitorConfigEntry,
         psutil_wrapper: ha_psutil.PsutilWrapper,
         arguments: list[str],
+        monitor_processes: list[str] | None = None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -103,6 +104,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         )
         self._psutil = psutil_wrapper.psutil
         self._arguments = arguments
+        self._monitor_processes = set(monitor_processes or [])
         self.boot_time: datetime | None = None
 
         self._initial_update: bool = True
@@ -212,13 +214,18 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             _LOGGER.debug("processes: %s", processes)
             processes = list(processes)
 
-        # Collect file descriptor counts for each process
+        # Collect file descriptor counts only for monitored processes
         process_fds: dict[str, int] = {}
-        if self.update_subscribers[("processes", "")] or self._initial_update:
-            if processes:
-                for proc in processes:
-                    try:
-                        process_name = proc.name()
+        if (
+            (self.update_subscribers[("processes", "")] or self._initial_update)
+            and self._monitor_processes
+            and processes
+        ):
+            for proc in processes:
+                try:
+                    process_name = proc.name()
+                    # Only collect FD data for processes we're monitoring
+                    if process_name in self._monitor_processes:
                         if hasattr(proc, "num_fds"):
                             process_fds[process_name] = proc.num_fds()
                             _LOGGER.debug(
@@ -231,17 +238,17 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
                                 "Process %s does not support num_fds() method (likely Windows)",
                                 process_name,
                             )
-                    except (NoSuchProcess, AccessDenied):
-                        _LOGGER.debug(
-                            "Failed to get file descriptor count for process %s: access denied or process not found",
-                            proc.pid,
-                        )
-                    except OSError as err:
-                        _LOGGER.debug(
-                            "OS error getting file descriptor count for process %s: %s",
-                            proc.pid,
-                            err,
-                        )
+                except (NoSuchProcess, AccessDenied):
+                    _LOGGER.debug(
+                        "Failed to get file descriptor count for process %s: access denied or process not found",
+                        proc.pid,
+                    )
+                except OSError as err:
+                    _LOGGER.debug(
+                        "OS error getting file descriptor count for process %s: %s",
+                        proc.pid,
+                        err,
+                    )
 
         temps: dict[str, list[shwtemp]] = {}
         if self.update_subscribers[("temperatures", "")] or self._initial_update:
