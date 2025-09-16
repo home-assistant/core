@@ -171,22 +171,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""
-        assert self._radio_mgr.radio_type is not None
-        assert self._radio_mgr.device_path is not None
-        assert self._radio_mgr.device_settings is not None
-
-        device_settings = self._radio_mgr.device_settings.copy()
-        device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, self._radio_mgr.device_path
-        )
-
-        return self.async_create_entry(
-            title=self._title,
-            data={
-                CONF_DEVICE: DEVICE_SCHEMA(device_settings),
-                CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
-            },
-        )
+        raise NotImplementedError
 
     async def async_step_choose_serial_port(
         self, user_input: dict[str, Any] | None = None
@@ -330,6 +315,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Add a warning step to dissuade the use of deprecated radios."""
         assert self._radio_mgr.radio_type is not None
+        await self._radio_mgr.async_read_backups_from_database()
 
         # Skip this step if we are using a recommended radio
         if user_input is not None or self._radio_mgr.radio_type in RECOMMENDED_RADIOS:
@@ -361,8 +347,6 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Recommended migration strategy: automatically migrate everything."""
-
-        await self._radio_mgr.async_read_backups_from_database()
 
         # Assume the most recent backup is the correct one
         self._radio_mgr.chosen_backup = self._radio_mgr.backups[0]
@@ -586,7 +570,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovery."""
-        self._set_confirm_only()
 
         # Without confirmation, discovery can automatically progress into parts of the
         # config flow logic that interacts with hardware.
@@ -745,6 +728,43 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {CONF_NAME: name}
 
         return await self.async_step_confirm()
+
+    async def _async_create_radio_entry(self) -> ConfigFlowResult:
+        """Create a config entry with the current flow state."""
+        assert self._radio_mgr.radio_type is not None
+        assert self._radio_mgr.device_path is not None
+        assert self._radio_mgr.device_settings is not None
+
+        device_settings = self._radio_mgr.device_settings.copy()
+        device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, self._radio_mgr.device_path
+        )
+
+        # ZHA is still single instance only, even though we use discovery to allow for
+        # migrating to a new radio
+        zha_config_entries = self.hass.config_entries.async_entries(DOMAIN)
+
+        if len(zha_config_entries) == 1:
+            return self.async_update_reload_and_abort(
+                entry=zha_config_entries[0],
+                title=self._title,
+                data={
+                    CONF_DEVICE: DEVICE_SCHEMA(device_settings),
+                    CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
+                },
+                reload_even_if_entry_is_unchanged=True,
+                reason="reconfigure_successful",
+            )
+        if len(zha_config_entries) == 0:
+            return self.async_create_entry(
+                title=self._title,
+                data={
+                    CONF_DEVICE: DEVICE_SCHEMA(device_settings),
+                    CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
+                },
+            )
+        # This should never be reached
+        return self.async_abort(reason="single_instance_allowed")
 
 
 class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
