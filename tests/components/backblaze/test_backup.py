@@ -336,13 +336,13 @@ class TestBackblazeBackupOperations:
 
         mock_bucket = Mock()
         mock_file_version = Mock(id_="test_file_id")
-        mock_bucket.upload_file_obj.return_value = mock_file_version
+        mock_bucket.upload_unbound_stream.return_value = mock_file_version
         mock_bucket.upload_bytes.return_value = mock_file_version
 
         with patch.object(agent, "_bucket", mock_bucket):
             await agent.async_upload_backup(open_stream=stream, backup=backup)
-            # Main backup file uses streaming (upload_file_obj)
-            mock_bucket.upload_file_obj.assert_called_once()
+            # Main backup file uses streaming (upload_unbound_stream)
+            mock_bucket.upload_unbound_stream.assert_called_once()
             # Metadata file uses upload_bytes
             mock_bucket.upload_bytes.assert_called_once()
 
@@ -465,8 +465,10 @@ class TestBackblazeErrorHandling:
             return stream_mock
 
         mock_bucket = Mock()
-        # Make upload_file_obj raise B2Error
-        mock_bucket.upload_file_obj.side_effect = B2Error("B2 API connection error")
+        # Make upload_unbound_stream raise B2Error
+        mock_bucket.upload_unbound_stream.side_effect = B2Error(
+            "B2 API connection error"
+        )
 
         with (
             patch.object(agent, "_bucket", mock_bucket),
@@ -503,8 +505,10 @@ class TestBackblazeErrorHandling:
             return stream_mock
 
         mock_bucket = Mock()
-        # Make upload_file_obj raise generic exception
-        mock_bucket.upload_file_obj.side_effect = RuntimeError("Generic upload error")
+        # Make upload_unbound_stream raise generic exception
+        mock_bucket.upload_unbound_stream.side_effect = RuntimeError(
+            "Generic upload error"
+        )
 
         with (
             patch.object(agent, "_bucket", mock_bucket),
@@ -537,7 +541,7 @@ class TestBackblazeErrorHandling:
         stream = create_mock_stream()
 
         mock_bucket = Mock()
-        mock_bucket.upload_file_obj.return_value = Mock(
+        mock_bucket.upload_unbound_stream.return_value = Mock(
             id_="main_file_id"
         )  # Success for main backup
         mock_bucket.upload_bytes.side_effect = RuntimeError(
