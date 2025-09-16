@@ -26,9 +26,9 @@ class WeatherFlowEventEntityDescription(EventEntityDescription):
 
 EVENT_DESCRIPTIONS: list[WeatherFlowEventEntityDescription] = [
     WeatherFlowEventEntityDescription(
-        key="rain_start_event",
-        translation_key="rain_start_event",
-        event_types=["rain_start"],
+        key="precip_start_event",
+        translation_key="precip_start_event",
+        event_types=["precip_start"],
         wf_event=EVENT_RAIN_START,
     ),
     WeatherFlowEventEntityDescription(
