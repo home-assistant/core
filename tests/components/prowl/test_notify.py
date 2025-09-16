@@ -8,7 +8,6 @@ import pytest
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.prowl.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryAuthFailed
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -112,7 +111,7 @@ async def test_send_notification_timeout(
     mock_prowlpy.send.side_effect = TimeoutError
 
     assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
-    with pytest.raises(TimeoutError):
+    with pytest.raises(HomeAssistantError, match="Timeout accessing Prowl API"):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             DOMAIN,
@@ -149,7 +148,7 @@ async def test_forbidden_send_notification(
     mock_prowlpy.send.side_effect = prowlpy.APIError(f"Invalid API key: {TEST_API_KEY}")
 
     assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
-    with pytest.raises(ConfigEntryAuthFailed):
+    with pytest.raises(HomeAssistantError, match="Invalid API key for Prowl service"):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             DOMAIN,
@@ -188,7 +187,7 @@ async def test_rate_limited_send_notification(
     )
 
     assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
-    with pytest.raises(ConfigEntryAuthFailed):
+    with pytest.raises(HomeAssistantError, match="Prowl service reported: exceeded rate limit"):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             DOMAIN,
