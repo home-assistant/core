@@ -6,6 +6,7 @@ from lunatone_rest_api_client import Auth, Devices, Info
 
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -32,7 +33,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices)
     await coordinator_devices.async_config_entry_first_refresh()
 
-    assert info.serial_number
+    if info.serial_number is None:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="missing_device_info"
+        )
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(

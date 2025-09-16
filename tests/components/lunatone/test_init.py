@@ -114,7 +114,7 @@ async def test_device_info(
     assert device_entry.configuration_url == base_url
 
 
-async def test_unique_id_missing(
+async def test_serial_number_is_missing(
     hass: HomeAssistant,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
