@@ -4,7 +4,7 @@
       "user": {
         "description": "Enter your VRM API token. We will then fetch your available sites.",
         "data": {
-          "api_key": "VRM API Key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "The API key for your VRM account"
@@ -13,7 +13,7 @@
       "select_site": {
         "description": "Select the VRM site to use for forecasts",
         "data": {
-          "site_id": "VRM Site"
+          "site_id": "VRM site"
         },
         "data_description": {
           "site_id": "Select one of your VRM sites"
