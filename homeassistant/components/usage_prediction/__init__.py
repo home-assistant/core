@@ -18,9 +18,6 @@ from .models import EntityUsageDataCache, EntityUsagePredictions
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-# Storage configuration
-STORAGE_VERSION = 1
-STORAGE_KEY_PREFIX = f"{DOMAIN}.common_control"
 CACHE_DURATION = timedelta(hours=24)
 
 
