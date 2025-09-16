@@ -106,7 +106,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     _supported_run_modes: (
         dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
-    _attr_matter_areas: dict[str, Any] | None = None
+    matter_areas: dict[str, Any] | None = None
     _attr_current_area: int | None = None
     _attr_current_area_name: str | None = None
     _attr_selected_areas: list[int] | None = None
@@ -237,8 +237,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Get available area and map IDs from vacuum appliance."""
         # Group by area_id: {area_id: {"map_id": ..., "name": ...}}
         areas = {}
-        if self._attr_matter_areas is not None:
-            for area in self._attr_matter_areas:
+        if self.matter_areas is not None:
+            for area in self.matter_areas:
                 area_id = getattr(area, "areaID", None)
                 map_id = getattr(area, "mapID", None)
                 location_name = None
@@ -312,7 +312,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Update from device."""
         self._calculate_features()
         # ServiceArea: get areas from the device
-        self._attr_matter_areas = self.get_matter_attribute_value(
+        self.matter_areas = self.get_matter_attribute_value(
             clusters.ServiceArea.Attributes.SupportedAreas
         )
         # optional CurrentArea attribute
@@ -323,8 +323,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             )
             # get areaInfo.locationInfo.locationName for current_area in SupportedAreas list
             area_name = None
-            if self._attr_matter_areas:
-                for area in self._attr_matter_areas:
+            if self.matter_areas:
+                for area in self.matter_areas:
                     if getattr(area, "areaID", None) == current_area:
                         area_info = getattr(area, "areaInfo", None)
                         if area_info is not None:
