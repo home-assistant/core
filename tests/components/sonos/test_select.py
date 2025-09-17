@@ -88,6 +88,13 @@ async def test_select_dialog_invalid_level(
     assert dialog_level_state.state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    ("value", "result"),
+    [
+        ("invalid_integer", "Invalid value for dialog_level_enum invalid_integer"),
+        (None, "Missing value for dialog_level_enum"),
+    ],
+)
 async def test_select_dialog_value_error(
     hass: HomeAssistant,
     async_setup_sonos,
@@ -95,16 +102,18 @@ async def test_select_dialog_value_error(
     entity_registry: er.EntityRegistry,
     speaker_info: dict[str, str],
     caplog: pytest.LogCaptureFixture,
+    value: str | None,
+    result: str,
 ) -> None:
     """Test receiving a value from Sonos that is not convertible to an integer."""
 
     speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = "invalid_integer"
+    soco.dialog_level = value
 
     with caplog.at_level(logging.WARNING):
         await async_setup_sonos()
-    assert "Invalid value for dialog_level_enum invalid_integer" in caplog.text
+    assert result in caplog.text
 
     assert SELECT_DIALOG_LEVEL_ENTITY not in entity_registry.entities
 
