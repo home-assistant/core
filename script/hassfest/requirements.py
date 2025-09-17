@@ -66,6 +66,14 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/GClunies/noaa_coops/pull/69
         "noaa-coops": {"pandas"}
     },
+    "smarty": {
+        # Current has an upper bound on major >=3.11.0,<4.0.0
+        "pysmarty2": {"pymodbus"}
+    },
+    "stiebel_eltron": {
+        # Current has an upper bound on major >=3.10.0,<4.0.0
+        "pystiebeleltron": {"pymodbus"}
+    },
 }
 
 PACKAGE_REGEX = re.compile(
