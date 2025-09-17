@@ -27,18 +27,17 @@ SERVICE_CODE = "code"
 
 # Panel model to zone count mapping
 PANEL_MODEL_ZONES = {
-    "D8PLUS": 8,
+    # 8 Zone Variants
     "D8X": 8,
-    "D8XL": 8,
-    "D16PLUS": 16,
+    "D8X_CEL_3G": 8,
+    "D8X_CEL_4G": 8,
+    "D8PLUS": 8,
+    # 16 Zone Variants
     "D16X": 16,
-    "D16XL": 16,
-    "D24X": 24,
-    "D24XL": 24,
-    "DPLUS8": 8,
-    "DPLUS16": 16,
-    "DPLUS24": 24,
-    "DPLUS32": 32,
+    "D16X_CEL_3G": 16,
+    "D16X_CEL_4G": 16,
+    # 32 Zone Variants
+    "D32X": 32,
 }
 
 TOTAL_ZONES = 32
