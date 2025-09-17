@@ -31,7 +31,7 @@ DEFAULT_VERIFY_SSL = True
 
 CONF_DHCP_SOFTWARE = "dhcp_software"
 DEFAULT_DHCP_SOFTWARE = "dnsmasq"
-DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "ethers", "none"]
+DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "none"]
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -57,8 +57,6 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None
         scanner = DnsmasqUbusDeviceScanner(config)
     elif dhcp_sw == "odhcpd":
         scanner = OdhcpdUbusDeviceScanner(config)
-    elif dhcp_sw == "ethers":
-        scanner = EthersUbusDeviceScanner(config)
     else:
         scanner = UbusDeviceScanner(config)
 
@@ -103,7 +101,7 @@ class UbusDeviceScanner(DeviceScanner):
 
         self.ubus = Ubus(self.url, self.username, self.password, verify=self.verify_ssl)
         self.hostapd = []
-        self.mac2name = None
+        self.mac2attrs = None
         self.success_init = self.ubus.connect() is not None
 
     def scan_devices(self):
@@ -111,23 +109,38 @@ class UbusDeviceScanner(DeviceScanner):
         self._update_info()
         return self.last_results
 
-    def _generate_mac2name(self):
-        """Return empty MAC to name dict. Overridden if DHCP server is set."""
-        self.mac2name = {}
+    def _generate_mac2attrs(self):
+        """Return empty MAC to attributes dict. Overridden if DHCP server is set."""
+        self.mac2attrs = {}
 
     @_refresh_on_access_denied
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        if self.mac2name is None:
-            self._generate_mac2name()
-        if self.mac2name is None:
-            # Generation of mac2name dictionary failed
+        if self.mac2attrs is None:
+            self._generate_mac2attrs()
+        if self.mac2attrs is None:
+            # Generation of mac2attrs dictionary failed
             return None
-        return self.mac2name.get(device.upper(), None)
+        attrs = self.mac2attrs.get(device.upper(), None)
+        if attrs is None:
+            return None
+        return attrs.get("name", None)
 
-    async def async_get_extra_attributes(self, device: str) -> dict[str, str]:
-        """Return the host to distinguish between multiple routers and the MAC address."""
-        return {"host": self.host, "mac": device.upper()}
+    #async def async_get_extra_attributes(self, device: str) -> dict[str, str]:
+    #    """Return the host to distinguish between multiple routers and the MAC address."""
+    #    return {"host": self.host, "mac": device.upper()}
+
+    def get_extra_attributes(self, device: str) -> dict[str, str]:            
+        """Return the host (to distinguish between multiple routers), the MAC address and the IP address (or None if we don't know)."""
+        if self.mac2attrs is None:
+            self._generate_mac2attrs()
+        if self.mac2attrs is None:
+            # Generation of mac2attrs dictionary failed
+            ip = None
+        else:
+            attrs = self.mac2attrs.get(device.upper(), None)
+            ip = None if attrs is None else attrs.get("ip", None)
+        return {"host": self.host, "mac": device.upper(), "ip": ip}
 
     @_refresh_on_access_denied
     def _update_info(self):
@@ -165,54 +178,37 @@ class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         super().__init__(config)
-        self.leasefile = None
+        self.leasefiles = None
 
-    def _generate_mac2name(self):
-        if self.leasefile is None:
+    def _generate_mac2attrs(self):
+        if self.leasefiles is None:
             if result := self.ubus.get_uci_config("dhcp", "dnsmasq"):
                 values = result["values"].values()
-                self.leasefile = next(iter(values))["leasefile"]
+                self.leasefiles = [value["leasefile"] for value in values if "leasefile" in value]
             else:
                 return
 
-        result = self.ubus.file_read(self.leasefile)
-        if result:
-            self.mac2name = {}
-            for line in result["data"].splitlines():
-                hosts = line.split(" ")
-                self.mac2name[hosts[1].upper()] = hosts[3]
-        else:
-            # Error, handled in the ubus.file_read()
-            return
+        for i, leasefile in enumerate(self.leasefiles):
+            result = self.ubus.file_read(leasefile)
+            if result:
+                if i == 0: self.mac2attrs = {}
+                for line in result["data"].splitlines():
+                    hosts = line.split(" ")
+                    self.mac2attrs[hosts[1].upper()] = {"name": hosts[3], "ip": hosts[2]}
 
 
 class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
     """Implement the Ubus device scanning for the odhcp DHCP server."""
 
-    def _generate_mac2name(self):
+    def _generate_mac2attrs(self):
         if result := self.ubus.get_dhcp_method("ipv4leases"):
-            self.mac2name = {}
+            self.mac2attrs = {}
             for device in result["device"].values():
                 for lease in device["leases"]:
                     mac = lease["mac"]  # mac = aabbccddeeff
                     # Convert it to expected format with colon
                     mac = ":".join(mac[i : i + 2] for i in range(0, len(mac), 2))
-                    self.mac2name[mac.upper()] = lease["hostname"]
+                    self.mac2attrs[mac.upper()] = {"name": lease["hostname"], "ip": lease["address"]}
         else:
             # Error, handled in the ubus.get_dhcp_method()
-            return
-
-
-class EthersUbusDeviceScanner(UbusDeviceScanner):
-    """Implement the Ubus device scanning for /etc/ethers"""
-
-    def _generate_mac2name(self):
-        result = self.ubus.file_read("/etc/ethers")
-        if result:
-            self.mac2name = {}
-            for line in result["data"].splitlines():
-                hosts = line.split(" ")
-                self.mac2name[hosts[0].upper()] = hosts[1]
-        else:
-            # Error, handled in the ubus.file_read()
             return
