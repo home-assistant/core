@@ -126,10 +126,6 @@ class UbusDeviceScanner(DeviceScanner):
             return None
         return attrs.get("name", None)
 
-    #async def async_get_extra_attributes(self, device: str) -> dict[str, str]:
-    #    """Return the host to distinguish between multiple routers and the MAC address."""
-    #    return {"host": self.host, "mac": device.upper()}
-
     def get_extra_attributes(self, device: str) -> dict[str, str]:            
         """Return the host (to distinguish between multiple routers), the MAC address and the IP address (or None if we don't know)."""
         if self.mac2attrs is None:
