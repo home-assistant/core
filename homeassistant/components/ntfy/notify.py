@@ -128,21 +128,24 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                     translation_key="attach_url_xor_local",
                 )
             media_content_id: str = file["media_content_id"]
-            media = await async_resolve_media(self.hass, file["media_content_id"], None)
-
-            if media.path is not None:
-                async with aiofiles.open(media.path, mode="rb") as f:
-                    attachment = await f.read()
-                params["filename"] = media.path.name
-            elif media_content_id.startswith("media-source://camera/"):
+            if media_content_id.startswith("media-source://camera/"):
                 entity_id = media_content_id.removeprefix("media-source://camera/")
                 img = await camera.async_get_image(self.hass, entity_id)
                 attachment = img.content
             else:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="only_local_attachments_supported",
+                media = await async_resolve_media(
+                    self.hass, file["media_content_id"], None
                 )
+
+                if media.path is None:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="only_local_attachments_supported",
+                    )
+                async with aiofiles.open(media.path, mode="rb") as f:
+                    attachment = await f.read()
+                params["filename"] = media.path.name
+
         msg = Message(topic=self.topic, **params)
         try:
             await self.ntfy.publish(msg, attachment)
