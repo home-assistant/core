@@ -20,17 +20,16 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CONF_ID,
     CONF_INFER_ARMING_STATE,
-    CONF_MAX_SUPPORTED_ZONES,
     CONF_NAME,
     CONF_SUPPORT_HOME_ARM,
     CONF_TYPE,
     CONF_ZONES,
     DEFAULT_INFER_ARMING_STATE,
-    DEFAULT_MAX_SUPPORTED_ZONES,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SUPPORT_HOME_ARM,
     DOMAIN,
+    PANEL_MODEL_ZONES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +44,7 @@ class NessAlarmConnectionError(HomeAssistantError):
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input."""
+    """Validate the user input and get panel info."""
 
     host = data[CONF_HOST]
     port = data[CONF_PORT]
@@ -55,6 +54,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     try:
         keepalive_task = asyncio.create_task(client.keepalive())
 
+        # Try to get panel info
         panel_info = await asyncio.wait_for(client.get_panel_info(), timeout=5.0)
 
         keepalive_task.cancel()
@@ -72,10 +72,26 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         await client.close()
         raise NessAlarmConnectionError(f"Cannot connect to {host}:{port}") from err
     else:
+        panel_model = panel_info.model.value if panel_info else "UNKNOWN"
+
+        # Log the detected model and its zone capacity
+        if panel_model in PANEL_MODEL_ZONES:
+            zone_count = PANEL_MODEL_ZONES[panel_model]
+            _LOGGER.info(
+                "Detected panel model %s with %s zone capacity",
+                panel_model,
+                zone_count,
+            )
+        else:
+            _LOGGER.warning(
+                "Unknown panel model %s, will default to 16 zones enabled",
+                panel_model,
+            )
+
         return {
-            "title": f"Ness Alarm {panel_info.model.value} ({host})",
-            "model": panel_info.model.value,
-            "version": panel_info.version,
+            "title": f"Ness Alarm {panel_model} ({host})",
+            "model": panel_model,
+            "version": panel_info.version if panel_info else "Unknown",
         }
 
 
@@ -99,6 +115,9 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 unique_id = f"{info['model']}_{info['version']}_{user_input.get(CONF_PORT, DEFAULT_PORT)}"
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
+
+                # Store panel model in data for use by binary_sensor
+                user_input["panel_model"] = info["model"]
 
                 return self.async_create_entry(
                     title=info["title"],
@@ -136,17 +155,12 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             scan_interval = int(scan_interval)
 
         zones = import_config.get(CONF_ZONES, [])
-        if zones:
-            zone_ids = [zone.get(CONF_ID, 0) for zone in zones]
-            max_zone_id = max(zone_ids) if zone_ids else DEFAULT_MAX_SUPPORTED_ZONES
-        else:
-            max_zone_id = DEFAULT_MAX_SUPPORTED_ZONES
 
         data = {
             CONF_HOST: import_config[CONF_HOST],
             CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
-            CONF_MAX_SUPPORTED_ZONES: max_zone_id,
         }
+
         options = {
             CONF_SCAN_INTERVAL: scan_interval,
             CONF_INFER_ARMING_STATE: import_config.get(
@@ -165,18 +179,14 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if zone.get(CONF_ID) and zone.get(CONF_NAME)
             ]
 
-        options = {
-            CONF_SCAN_INTERVAL: scan_interval,
-            CONF_INFER_ARMING_STATE: import_config.get(
-                CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE
-            ),
-        }
-
         try:
             info = await validate_input(self.hass, data)
             unique_id = f"{info['model']}_{info['version']}_{data[CONF_PORT]}"
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
+
+            # Store panel model
+            data["panel_model"] = info["model"]
 
             return self.async_create_entry(
                 title=info["title"],
@@ -211,6 +221,27 @@ class OptionsFlow(config_entries.OptionsFlow):
             return self.async_abort(reason="entry_not_found")
 
         if user_input is not None:
+            # Update the config entry data with new zone count if changed
+            if "enabled_zones" in user_input:
+                new_data = dict(entry.data)
+                # Map the zone count to a panel model for consistency
+                zone_count = user_input["enabled_zones"]
+                if zone_count == 8:
+                    new_data["panel_model"] = "MANUAL_8"
+                elif zone_count == 16:
+                    new_data["panel_model"] = "MANUAL_16"
+                elif zone_count == 24:
+                    new_data["panel_model"] = "MANUAL_24"
+                else:
+                    new_data["panel_model"] = "MANUAL_32"
+
+                self.hass.config_entries.async_update_entry(entry, data=new_data)
+
+                # Remove enabled_zones from options as it's stored in data
+                options = dict(user_input)
+                options.pop("enabled_zones", None)
+                return self.async_create_entry(title="", data=options)
+
             return self.async_create_entry(title="", data=user_input)
 
         # Build options schema with current values
@@ -226,10 +257,10 @@ class OptionsFlow(config_entries.OptionsFlow):
             CONF_SUPPORT_HOME_ARM,
             entry.data.get(CONF_SUPPORT_HOME_ARM, DEFAULT_SUPPORT_HOME_ARM),
         )
-        current_max_zones = entry.options.get(
-            CONF_MAX_SUPPORTED_ZONES,
-            entry.data.get(CONF_MAX_SUPPORTED_ZONES, DEFAULT_MAX_SUPPORTED_ZONES),
-        )
+
+        # Get current zone count from panel model
+        panel_model = entry.data.get("panel_model", "UNKNOWN")
+        current_zones = PANEL_MODEL_ZONES.get(panel_model, 16)
 
         schema = vol.Schema(
             {
@@ -238,7 +269,9 @@ class OptionsFlow(config_entries.OptionsFlow):
                 ),
                 vol.Optional(CONF_INFER_ARMING_STATE, default=current_infer): bool,
                 vol.Optional(CONF_SUPPORT_HOME_ARM, default=current_home): bool,
-                vol.Optional(CONF_MAX_SUPPORTED_ZONES, default=current_max_zones): int,
+                vol.Optional("enabled_zones", default=current_zones): vol.In(
+                    {8: "8 zones", 16: "16 zones", 24: "24 zones", 32: "32 zones"}
+                ),
             }
         )
 
