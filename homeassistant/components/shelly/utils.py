@@ -654,6 +654,13 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
     return ids
 
 
+def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> bool:
+    """Return true if the virtual component view match the platform."""
+    component = VIRTUAL_COMPONENTS_MAP[platform]
+    view = config[key]["meta"]["ui"]["view"]
+    return view in component["modes"]
+
+
 def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
     """Return the unit of a virtual component.
 

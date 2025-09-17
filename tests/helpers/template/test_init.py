@@ -15,7 +15,6 @@ from unittest.mock import patch
 from freezegun import freeze_time
 import orjson
 import pytest
-from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
@@ -514,114 +513,6 @@ def test_isnumber(hass: HomeAssistant, value, expected) -> None:
     )
 
 
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        ([1, 2], True),
-        ({1, 2}, False),
-        ({"a": 1, "b": 2}, False),
-        (ReadOnlyDict({"a": 1, "b": 2}), False),
-        (MappingProxyType({"a": 1, "b": 2}), False),
-        ("abc", False),
-        (b"abc", False),
-        ((1, 2), False),
-        (datetime(2024, 1, 1, 0, 0, 0), False),
-    ],
-)
-def test_is_list(hass: HomeAssistant, value: Any, expected: bool) -> None:
-    """Test is list."""
-    assert (
-        template.Template("{{ value is list }}", hass).async_render({"value": value})
-        == expected
-    )
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        ([1, 2], False),
-        ({1, 2}, True),
-        ({"a": 1, "b": 2}, False),
-        (ReadOnlyDict({"a": 1, "b": 2}), False),
-        (MappingProxyType({"a": 1, "b": 2}), False),
-        ("abc", False),
-        (b"abc", False),
-        ((1, 2), False),
-        (datetime(2024, 1, 1, 0, 0, 0), False),
-    ],
-)
-def test_is_set(hass: HomeAssistant, value: Any, expected: bool) -> None:
-    """Test is set."""
-    assert (
-        template.Template("{{ value is set }}", hass).async_render({"value": value})
-        == expected
-    )
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        ([1, 2], False),
-        ({1, 2}, False),
-        ({"a": 1, "b": 2}, False),
-        (ReadOnlyDict({"a": 1, "b": 2}), False),
-        (MappingProxyType({"a": 1, "b": 2}), False),
-        ("abc", False),
-        (b"abc", False),
-        ((1, 2), True),
-        (datetime(2024, 1, 1, 0, 0, 0), False),
-    ],
-)
-def test_is_tuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
-    """Test is tuple."""
-    assert (
-        template.Template("{{ value is tuple }}", hass).async_render({"value": value})
-        == expected
-    )
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        ([1, 2], {1, 2}),
-        ({1, 2}, {1, 2}),
-        ({"a": 1, "b": 2}, {"a", "b"}),
-        (ReadOnlyDict({"a": 1, "b": 2}), {"a", "b"}),
-        (MappingProxyType({"a": 1, "b": 2}), {"a", "b"}),
-        ("abc", {"a", "b", "c"}),
-        (b"abc", {97, 98, 99}),
-        ((1, 2), {1, 2}),
-    ],
-)
-def test_set(hass: HomeAssistant, value: Any, expected: bool) -> None:
-    """Test convert to set function."""
-    assert (
-        template.Template("{{ set(value) }}", hass).async_render({"value": value})
-        == expected
-    )
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        ([1, 2], (1, 2)),
-        ({1, 2}, (1, 2)),
-        ({"a": 1, "b": 2}, ("a", "b")),
-        (ReadOnlyDict({"a": 1, "b": 2}), ("a", "b")),
-        (MappingProxyType({"a": 1, "b": 2}), ("a", "b")),
-        ("abc", ("a", "b", "c")),
-        (b"abc", (97, 98, 99)),
-        ((1, 2), (1, 2)),
-    ],
-)
-def test_tuple(hass: HomeAssistant, value: Any, expected: bool) -> None:
-    """Test convert to tuple function."""
-    assert (
-        template.Template("{{ tuple(value) }}", hass).async_render({"value": value})
-        == expected
-    )
-
-
 def test_converting_datetime_to_iterable(hass: HomeAssistant) -> None:
     """Test converting a datetime to an iterable raises an error."""
     dt_ = datetime(2020, 1, 1, 0, 0, 0)
@@ -649,30 +540,6 @@ def test_is_datetime(hass: HomeAssistant, value, expected) -> None:
     """Test is datetime."""
     assert (
         template.Template("{{ value is datetime }}", hass).async_render(
-            {"value": value}
-        )
-        == expected
-    )
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        ([1, 2], False),
-        ({1, 2}, False),
-        ({"a": 1, "b": 2}, False),
-        (ReadOnlyDict({"a": 1, "b": 2}), False),
-        (MappingProxyType({"a": 1, "b": 2}), False),
-        ("abc", True),
-        (b"abc", True),
-        ((1, 2), False),
-        (datetime(2024, 1, 1, 0, 0, 0), False),
-    ],
-)
-def test_is_string_like(hass: HomeAssistant, value, expected) -> None:
-    """Test is string_like."""
-    assert (
-        template.Template("{{ value is string_like }}", hass).async_render(
             {"value": value}
         )
         == expected
@@ -795,37 +662,46 @@ def test_apply(hass: HomeAssistant) -> None:
 def test_apply_macro_with_arguments(hass: HomeAssistant) -> None:
     """Test apply macro with positional, named, and mixed arguments."""
     # Test macro with positional arguments
-    assert template.Template(
-        """
-        {%- macro greet(name, greeting) -%}
-        {{ greeting }}, {{ name }}!
-        {%- endmacro %}
-        {{ ["Alice", "Bob"] | map('apply', greet, "Hello") | list }}
+    assert (
+        template.Template(
+            """
+        {%- macro add_numbers(a, b, c) -%}
+        {{ a + b + c }}
+        {%- endmacro -%}
+        {{ apply(5, add_numbers, 10, 15) }}
         """,
-        hass,
-    ).async_render() == ["Hello, Alice!", "Hello, Bob!"]
+            hass,
+        ).async_render()
+        == 30
+    )
 
     # Test macro with named arguments
-    assert template.Template(
-        """
-        {%- macro greet(name, greeting="Hi") -%}
+    assert (
+        template.Template(
+            """
+        {%- macro greet(name, greeting="Hello") -%}
         {{ greeting }}, {{ name }}!
-        {%- endmacro %}
-        {{ ["Alice", "Bob"] | map('apply', greet, greeting="Hello") | list }}
+        {%- endmacro -%}
+        {{ apply("World", greet, greeting="Hi") }}
         """,
-        hass,
-    ).async_render() == ["Hello, Alice!", "Hello, Bob!"]
+            hass,
+        ).async_render()
+        == "Hi, World!"
+    )
 
-    # Test macro with mixed positional and named arguments
-    assert template.Template(
-        """
-        {%- macro greet(name, separator, greeting="Hi") -%}
-        {{ greeting }}{{separator}} {{ name }}!
-        {%- endmacro %}
-        {{ ["Alice", "Bob"] | map('apply', greet, "," , greeting="Hey") | list }}
+    # Test macro with mixed arguments
+    assert (
+        template.Template(
+            """
+        {%- macro format_message(prefix, name, suffix="!") -%}
+        {{ prefix }} {{ name }}{{ suffix }}
+        {%- endmacro -%}
+        {{ apply("Welcome", format_message, "John", suffix="...") }}
         """,
-        hass,
-    ).async_render() == ["Hey, Alice!", "Hey, Bob!"]
+            hass,
+        ).async_render()
+        == "Welcome John..."
+    )
 
 
 def test_as_function(hass: HomeAssistant) -> None:
@@ -1200,46 +1076,6 @@ def test_from_hex(hass: HomeAssistant) -> None:
         template.Template("{{ '0F010003' | from_hex }}", hass).async_render()
         == b"\x0f\x01\x00\x03"
     )
-
-
-def test_slugify(hass: HomeAssistant) -> None:
-    """Test the slugify filter."""
-    assert (
-        template.Template('{{ slugify("Home Assistant") }}', hass).async_render()
-        == "home_assistant"
-    )
-    assert (
-        template.Template('{{ "Home Assistant" | slugify }}', hass).async_render()
-        == "home_assistant"
-    )
-    assert (
-        template.Template('{{ slugify("Home Assistant", "-") }}', hass).async_render()
-        == "home-assistant"
-    )
-    assert (
-        template.Template('{{ "Home Assistant" | slugify("-") }}', hass).async_render()
-        == "home-assistant"
-    )
-
-
-def test_ordinal(hass: HomeAssistant) -> None:
-    """Test the ordinal filter."""
-    tests = [
-        (1, "1st"),
-        (2, "2nd"),
-        (3, "3rd"),
-        (4, "4th"),
-        (5, "5th"),
-        (12, "12th"),
-        (100, "100th"),
-        (101, "101st"),
-    ]
-
-    for value, expected in tests:
-        assert (
-            template.Template(f"{{{{ {value} | ordinal }}}}", hass).async_render()
-            == expected
-        )
 
 
 def test_timestamp_utc(hass: HomeAssistant) -> None:
@@ -2391,155 +2227,6 @@ def test_version(hass: HomeAssistant) -> None:
             "{{ version(None) < '2099.9.10' }}",
             hass,
         ).async_render()
-
-
-def test_regex_match(hass: HomeAssistant) -> None:
-    """Test regex_match method."""
-    tpl = template.Template(
-        r"""
-{{ '123-456-7890' | regex_match('(\\d{3})-(\\d{3})-(\\d{4})') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-{{ 'Home Assistant test' | regex_match('home', True) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-    {{ 'Another Home Assistant test' | regex_match('Home') }}
-                    """,
-        hass,
-    )
-    assert tpl.async_render() is False
-
-    tpl = template.Template(
-        """
-{{ ['Home Assistant test'] | regex_match('.*Assist') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-
-def test_match_test(hass: HomeAssistant) -> None:
-    """Test match test."""
-    tpl = template.Template(
-        r"""
-{{ '123-456-7890' is match('(\\d{3})-(\\d{3})-(\\d{4})') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-
-def test_regex_search(hass: HomeAssistant) -> None:
-    """Test regex_search method."""
-    tpl = template.Template(
-        r"""
-{{ '123-456-7890' | regex_search('(\\d{3})-(\\d{3})-(\\d{4})') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-{{ 'Home Assistant test' | regex_search('home', True) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-    {{ 'Another Home Assistant test' | regex_search('Home') }}
-                    """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-    tpl = template.Template(
-        """
-{{ ['Home Assistant test'] | regex_search('Assist') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-
-def test_search_test(hass: HomeAssistant) -> None:
-    """Test search test."""
-    tpl = template.Template(
-        r"""
-{{ '123-456-7890' is search('(\\d{3})-(\\d{3})-(\\d{4})') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() is True
-
-
-def test_regex_replace(hass: HomeAssistant) -> None:
-    """Test regex_replace method."""
-    tpl = template.Template(
-        r"""
-{{ 'Hello World' | regex_replace('(Hello\\s)',) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() == "World"
-
-    tpl = template.Template(
-        """
-{{ ['Home hinderant test'] | regex_replace('hinder', 'Assist') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() == ["Home Assistant test"]
-
-
-def test_regex_findall(hass: HomeAssistant) -> None:
-    """Test regex_findall method."""
-    tpl = template.Template(
-        """
-{{ 'Flight from JFK to LHR' | regex_findall('([A-Z]{3})') }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() == ["JFK", "LHR"]
-
-
-def test_regex_findall_index(hass: HomeAssistant) -> None:
-    """Test regex_findall_index method."""
-    tpl = template.Template(
-        """
-{{ 'Flight from JFK to LHR' | regex_findall_index('([A-Z]{3})', 0) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() == "JFK"
-
-    tpl = template.Template(
-        """
-{{ 'Flight from JFK to LHR' | regex_findall_index('([A-Z]{3})', 1) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() == "LHR"
-
-    tpl = template.Template(
-        """
-{{ ['JFK', 'LHR'] | regex_findall_index('([A-Z]{3})', 1) }}
-            """,
-        hass,
-    )
-    assert tpl.async_render() == "LHR"
 
 
 def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
@@ -4070,7 +3757,7 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(
     template_complex_str = r"""
 
 {% for state in states.cover %}
-  {% if state.entity_id | regex_match('.*\\.office_') %}
+  {% if 'office_' in state.entity_id %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}
@@ -4094,7 +3781,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(
     template_complex_str = """
 
 {% for state in states %}
-  {% if state.state | regex_match('ope.*') %}
+  {% if state.state.startswith('ope') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}
@@ -4125,7 +3812,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(
     template_cover_str = """
 
 {% for state in states.cover %}
-  {% if state.state | regex_match('ope.*') %}
+  {% if state.state.startswith('ope') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}
@@ -4642,20 +4329,6 @@ def test_render_complex_handling_non_template_values(hass: HomeAssistant) -> Non
     assert template.render_complex(
         {True: 1, False: template.Template("{{ hello }}", hass)}, {"hello": 2}
     ) == {True: 1, False: 2}
-
-
-def test_urlencode(hass: HomeAssistant) -> None:
-    """Test the urlencode method."""
-    tpl = template.Template(
-        "{% set dict = {'foo': 'x&y', 'bar': 42} %}{{ dict | urlencode }}",
-        hass,
-    )
-    assert tpl.async_render() == "foo=x%26y&bar=42"
-    tpl = template.Template(
-        "{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}",
-        hass,
-    )
-    assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
 
 
 def test_as_timedelta(hass: HomeAssistant) -> None:
@@ -5898,51 +5571,6 @@ async def test_template_thread_safety_checks(hass: HomeAssistant) -> None:
     assert template_obj.async_render_to_info().result() == 23
 
 
-@pytest.mark.parametrize(
-    ("cola", "colb", "expected"),
-    [
-        ([1, 2], [3, 4], [(1, 3), (2, 4)]),
-        ([1, 2], [3, 4, 5], [(1, 3), (2, 4)]),
-        ([1, 2, 3, 4], [3, 4], [(1, 3), (2, 4)]),
-    ],
-)
-def test_zip(hass: HomeAssistant, cola, colb, expected) -> None:
-    """Test zip."""
-    assert (
-        template.Template("{{ zip(cola, colb) | list }}", hass).async_render(
-            {"cola": cola, "colb": colb}
-        )
-        == expected
-    )
-    assert (
-        template.Template(
-            "[{% for a, b in zip(cola, colb) %}({{a}}, {{b}}), {% endfor %}]", hass
-        ).async_render({"cola": cola, "colb": colb})
-        == expected
-    )
-
-
-@pytest.mark.parametrize(
-    ("col", "expected"),
-    [
-        ([(1, 3), (2, 4)], [(1, 2), (3, 4)]),
-        (["ax", "by", "cz"], [("a", "b", "c"), ("x", "y", "z")]),
-    ],
-)
-def test_unzip(hass: HomeAssistant, col, expected) -> None:
-    """Test unzipping using zip."""
-    assert (
-        template.Template("{{ zip(*col) | list }}", hass).async_render({"col": col})
-        == expected
-    )
-    assert (
-        template.Template(
-            "{% set a, b = zip(*col) %}[{{a}}, {{b}}]", hass
-        ).async_render({"col": col})
-        == expected
-    )
-
-
 def test_template_output_exceeds_maximum_size(hass: HomeAssistant) -> None:
     """Test template output exceeds maximum size."""
     tpl = template.Template("{{ 'a' * 1024 * 257 }}", hass)
@@ -6243,57 +5871,6 @@ async def test_merge_response_not_mutate_original_object(
     assert tpl.async_render()
 
 
-def test_shuffle(hass: HomeAssistant) -> None:
-    """Test the shuffle function and filter."""
-    assert list(
-        template.Template("{{ [1, 2, 3] | shuffle }}", hass).async_render()
-    ) == unordered([1, 2, 3])
-
-    assert list(
-        template.Template("{{ shuffle([1, 2, 3]) }}", hass).async_render()
-    ) == unordered([1, 2, 3])
-
-    assert list(
-        template.Template("{{ shuffle(1, 2, 3) }}", hass).async_render()
-    ) == unordered([1, 2, 3])
-
-    assert list(template.Template("{{ shuffle([]) }}", hass).async_render()) == []
-
-    assert list(template.Template("{{ [] | shuffle }}", hass).async_render()) == []
-
-    # Testing using seed
-    assert list(
-        template.Template("{{ shuffle([1, 2, 3], 'seed') }}", hass).async_render()
-    ) == [2, 3, 1]
-
-    assert list(
-        template.Template(
-            "{{ shuffle([1, 2, 3], seed='seed') }}",
-            hass,
-        ).async_render()
-    ) == [2, 3, 1]
-
-    assert list(
-        template.Template(
-            "{{ [1, 2, 3] | shuffle('seed') }}",
-            hass,
-        ).async_render()
-    ) == [2, 3, 1]
-
-    assert list(
-        template.Template(
-            "{{ [1, 2, 3] | shuffle(seed='seed') }}",
-            hass,
-        ).async_render()
-    ) == [2, 3, 1]
-
-    with pytest.raises(TemplateError):
-        template.Template("{{ 1 | shuffle }}", hass).async_render()
-
-    with pytest.raises(TemplateError):
-        template.Template("{{ shuffle() }}", hass).async_render()
-
-
 def test_typeof(hass: HomeAssistant) -> None:
     """Test the typeof debug filter/function."""
     assert template.Template("{{ True | typeof }}", hass).async_render() == "bool"
@@ -6319,221 +5896,6 @@ def test_typeof(hass: HomeAssistant) -> None:
         template.Template("{{ typeof('Home Assistant') }}", hass).async_render()
         == "str"
     )
-
-
-def test_flatten(hass: HomeAssistant) -> None:
-    """Test the flatten function and filter."""
-    assert template.Template(
-        "{{ flatten([1, [2, [3]], 4, [5 , 6]]) }}", hass
-    ).async_render() == [1, 2, 3, 4, 5, 6]
-
-    assert template.Template(
-        "{{ [1, [2, [3]], 4, [5 , 6]] | flatten }}", hass
-    ).async_render() == [1, 2, 3, 4, 5, 6]
-
-    assert template.Template(
-        "{{ flatten([1, [2, [3]], 4, [5 , 6]], 1) }}", hass
-    ).async_render() == [1, 2, [3], 4, 5, 6]
-
-    assert template.Template(
-        "{{ flatten([1, [2, [3]], 4, [5 , 6]], levels=1) }}", hass
-    ).async_render() == [1, 2, [3], 4, 5, 6]
-
-    assert template.Template(
-        "{{ [1, [2, [3]], 4, [5 , 6]] | flatten(1) }}", hass
-    ).async_render() == [1, 2, [3], 4, 5, 6]
-
-    assert template.Template(
-        "{{ [1, [2, [3]], 4, [5 , 6]] | flatten(levels=1) }}", hass
-    ).async_render() == [1, 2, [3], 4, 5, 6]
-
-    assert template.Template("{{ flatten([]) }}", hass).async_render() == []
-
-    assert template.Template("{{ [] | flatten }}", hass).async_render() == []
-
-    with pytest.raises(TemplateError):
-        template.Template("{{ 'string' | flatten }}", hass).async_render()
-
-    with pytest.raises(TemplateError):
-        template.Template("{{ flatten() }}", hass).async_render()
-
-
-def test_intersect(hass: HomeAssistant) -> None:
-    """Test the intersect function and filter."""
-    assert list(
-        template.Template(
-            "{{ intersect([1, 2, 5, 3, 4, 10], [1, 2, 3, 4, 5, 11, 99]) }}", hass
-        ).async_render()
-    ) == unordered([1, 2, 3, 4, 5])
-
-    assert list(
-        template.Template(
-            "{{ [1, 2, 5, 3, 4, 10] | intersect([1, 2, 3, 4, 5, 11, 99]) }}", hass
-        ).async_render()
-    ) == unordered([1, 2, 3, 4, 5])
-
-    assert list(
-        template.Template(
-            "{{ intersect(['a', 'b', 'c'], ['b', 'c', 'd']) }}", hass
-        ).async_render()
-    ) == unordered(["b", "c"])
-
-    assert list(
-        template.Template(
-            "{{ ['a', 'b', 'c'] | intersect(['b', 'c', 'd']) }}", hass
-        ).async_render()
-    ) == unordered(["b", "c"])
-
-    assert (
-        template.Template("{{ intersect([], [1, 2, 3]) }}", hass).async_render() == []
-    )
-
-    assert (
-        template.Template("{{ [] | intersect([1, 2, 3]) }}", hass).async_render() == []
-    )
-
-    with pytest.raises(TemplateError, match="intersect expected a list, got str"):
-        template.Template("{{ 'string' | intersect([1, 2, 3]) }}", hass).async_render()
-
-    with pytest.raises(TemplateError, match="intersect expected a list, got str"):
-        template.Template("{{ [1, 2, 3] | intersect('string') }}", hass).async_render()
-
-
-def test_difference(hass: HomeAssistant) -> None:
-    """Test the difference function and filter."""
-    assert list(
-        template.Template(
-            "{{ difference([1, 2, 5, 3, 4, 10], [1, 2, 3, 4, 5, 11, 99]) }}", hass
-        ).async_render()
-    ) == [10]
-
-    assert list(
-        template.Template(
-            "{{ [1, 2, 5, 3, 4, 10] | difference([1, 2, 3, 4, 5, 11, 99]) }}", hass
-        ).async_render()
-    ) == [10]
-
-    assert list(
-        template.Template(
-            "{{ difference(['a', 'b', 'c'], ['b', 'c', 'd']) }}", hass
-        ).async_render()
-    ) == ["a"]
-
-    assert list(
-        template.Template(
-            "{{ ['a', 'b', 'c'] | difference(['b', 'c', 'd']) }}", hass
-        ).async_render()
-    ) == ["a"]
-
-    assert (
-        template.Template("{{ difference([], [1, 2, 3]) }}", hass).async_render() == []
-    )
-
-    assert (
-        template.Template("{{ [] | difference([1, 2, 3]) }}", hass).async_render() == []
-    )
-
-    with pytest.raises(TemplateError, match="difference expected a list, got str"):
-        template.Template("{{ 'string' | difference([1, 2, 3]) }}", hass).async_render()
-
-    with pytest.raises(TemplateError, match="difference expected a list, got str"):
-        template.Template("{{ [1, 2, 3] | difference('string') }}", hass).async_render()
-
-
-def test_union(hass: HomeAssistant) -> None:
-    """Test the union function and filter."""
-    assert list(
-        template.Template(
-            "{{ union([1, 2, 5, 3, 4, 10], [1, 2, 3, 4, 5, 11, 99]) }}", hass
-        ).async_render()
-    ) == unordered([1, 2, 3, 4, 5, 10, 11, 99])
-
-    assert list(
-        template.Template(
-            "{{ [1, 2, 5, 3, 4, 10] | union([1, 2, 3, 4, 5, 11, 99]) }}", hass
-        ).async_render()
-    ) == unordered([1, 2, 3, 4, 5, 10, 11, 99])
-
-    assert list(
-        template.Template(
-            "{{ union(['a', 'b', 'c'], ['b', 'c', 'd']) }}", hass
-        ).async_render()
-    ) == unordered(["a", "b", "c", "d"])
-
-    assert list(
-        template.Template(
-            "{{ ['a', 'b', 'c'] | union(['b', 'c', 'd']) }}", hass
-        ).async_render()
-    ) == unordered(["a", "b", "c", "d"])
-
-    assert list(
-        template.Template("{{ union([], [1, 2, 3]) }}", hass).async_render()
-    ) == unordered([1, 2, 3])
-
-    assert list(
-        template.Template("{{ [] | union([1, 2, 3]) }}", hass).async_render()
-    ) == unordered([1, 2, 3])
-
-    with pytest.raises(TemplateError, match="union expected a list, got str"):
-        template.Template("{{ 'string' | union([1, 2, 3]) }}", hass).async_render()
-
-    with pytest.raises(TemplateError, match="union expected a list, got str"):
-        template.Template("{{ [1, 2, 3] | union('string') }}", hass).async_render()
-
-
-def test_symmetric_difference(hass: HomeAssistant) -> None:
-    """Test the symmetric_difference function and filter."""
-    assert list(
-        template.Template(
-            "{{ symmetric_difference([1, 2, 5, 3, 4, 10], [1, 2, 3, 4, 5, 11, 99]) }}",
-            hass,
-        ).async_render()
-    ) == unordered([10, 11, 99])
-
-    assert list(
-        template.Template(
-            "{{ [1, 2, 5, 3, 4, 10] | symmetric_difference([1, 2, 3, 4, 5, 11, 99]) }}",
-            hass,
-        ).async_render()
-    ) == unordered([10, 11, 99])
-
-    assert list(
-        template.Template(
-            "{{ symmetric_difference(['a', 'b', 'c'], ['b', 'c', 'd']) }}", hass
-        ).async_render()
-    ) == unordered(["a", "d"])
-
-    assert list(
-        template.Template(
-            "{{ ['a', 'b', 'c'] | symmetric_difference(['b', 'c', 'd']) }}", hass
-        ).async_render()
-    ) == unordered(["a", "d"])
-
-    assert list(
-        template.Template(
-            "{{ symmetric_difference([], [1, 2, 3]) }}", hass
-        ).async_render()
-    ) == unordered([1, 2, 3])
-
-    assert list(
-        template.Template(
-            "{{ [] | symmetric_difference([1, 2, 3]) }}", hass
-        ).async_render()
-    ) == unordered([1, 2, 3])
-
-    with pytest.raises(
-        TemplateError, match="symmetric_difference expected a list, got str"
-    ):
-        template.Template(
-            "{{ 'string' | symmetric_difference([1, 2, 3]) }}", hass
-        ).async_render()
-
-    with pytest.raises(
-        TemplateError, match="symmetric_difference expected a list, got str"
-    ):
-        template.Template(
-            "{{ [1, 2, 3] | symmetric_difference('string') }}", hass
-        ).async_render()
 
 
 def test_combine(hass: HomeAssistant) -> None:
