@@ -13,6 +13,7 @@ import voluptuous as vol
 from zha.application.const import RadioType
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.exceptions import CannotWriteNetworkSettings, DestructiveWriteNetworkSettings
 
 from homeassistant.components import onboarding, usb
 from homeassistant.components.file_upload import process_uploaded_file
@@ -540,8 +541,17 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm restore for EZSP radios that require permanent IEEE writes."""
-        call_step_2 = await self._radio_mgr.async_restore_backup_step_1()
-        if not call_step_2:
+        try:
+            await self._radio_mgr.restore_backup()
+        except DestructiveWriteNetworkSettings:
+            # Restore cannot happen automatically, we need to ask for permission
+            pass
+        except CannotWriteNetworkSettings as exc:
+            return self.async_abort(
+                reason="cannot_restore_backup",
+                description_placeholders={"error": str(exc)},
+            )
+        else:
             return await self._async_create_radio_entry()
 
         if user_input is not None:
@@ -553,7 +563,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                     },
                 )
 
-            await self._radio_mgr.async_restore_backup_step_2(overwrite_ieee=True)
+            await self._radio_mgr.restore_backup(overwrite_ieee=True)
             return await self._async_create_radio_entry()
 
         return self.async_show_form(
