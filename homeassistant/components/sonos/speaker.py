@@ -283,10 +283,9 @@ class SonosSpeaker:
         Returns the integer value if successful, otherwise None. Do not call from
         async context as it is a blocking function.
         """
-        value: int | None
+        value: int | None = None
         if (state := getattr(self.soco, soco_attribute, None)) is None:
             _LOGGER.error("Missing value for %s", speaker_attribute)
-            value = None
         else:
             try:
                 value = int(state)
@@ -296,7 +295,6 @@ class SonosSpeaker:
                     speaker_attribute,
                     state,
                 )
-                value = None
         setattr(self, speaker_attribute, value)
         return value
 
