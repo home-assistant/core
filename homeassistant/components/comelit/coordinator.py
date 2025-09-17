@@ -120,13 +120,13 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
     async def _async_update_system_data(self) -> T:
         """Class method for updating data."""
 
-    async def _async_remove_device_stale(
+    async def _async_remove_stale_devices(
         self,
         previous_list: dict[int, Any],
         current_list: dict[int, Any],
         dev_type: str,
     ) -> None:
-        """Remove stale device."""
+        """Remove stale devices."""
         device_registry = dr.async_get(self.hass)
 
         for i in range(max(previous_list.keys(), default=0) + 1):
@@ -177,7 +177,7 @@ class ComelitSerialBridge(
 
         if self.previous_devices:
             for dev_type in (CLIMATE, COVER, LIGHT, IRRIGATION, OTHER, SCENARIO):
-                await self._async_remove_device_stale(
+                await self._async_remove_stale_devices(
                     self.previous_devices[dev_type], data[dev_type], dev_type
                 )
 
@@ -203,7 +203,6 @@ class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):
         """Initialize the scanner."""
         self.api = ComelitVedoApi(host, port, pin, session)
         super().__init__(hass, entry, VEDO, host)
-        self.previous_devices: AlarmDataObject | None = None
 
     async def _async_update_system_data(
         self,
@@ -211,13 +210,12 @@ class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):
         """Specific method for updating data."""
         data = await self.api.get_all_areas_and_zones()
 
-        if self.previous_devices:
+        if self.data:
             for obj_type in ("alarm_areas", "alarm_zones"):
-                await self._async_remove_device_stale(
-                    self.previous_devices[obj_type],
+                await self._async_remove_stale_devices(
+                    self.data[obj_type],
                     data[obj_type],
                     "area" if obj_type == "alarm_areas" else "zone",
                 )
 
-        self.previous_devices = data.copy()
         return data
