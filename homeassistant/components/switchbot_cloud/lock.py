@@ -44,9 +44,10 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
-        self.__set_features()
         if coord_data := self.coordinator.data:
             self._attr_is_locked = coord_data["lockState"] == "locked"
+        if self.__model in LockV2Commands.get_supported_devices():
+            self._attr_supported_features = LockEntityFeature.OPEN
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
@@ -65,8 +66,3 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         await self.send_api_command(LockV2Commands.DEADBOLT)
         self._attr_is_locked = False
         self.async_write_ha_state()
-
-    def __set_features(self) -> None:
-        """Set features ConfigFlow options."""
-        if self.device_entry and self.__model in LockV2Commands.get_supported_devices():
-            self._attr_supported_features = LockEntityFeature.OPEN
