@@ -287,6 +287,7 @@ class SonosSpeaker:
         assert isinstance(state, str), (
             f"Expected state to be str, got {type(state).__name__}"
         )
+        value: int | None
         try:
             value = int(state)
         except ValueError:
@@ -295,8 +296,7 @@ class SonosSpeaker:
                 speaker_attribute,
                 state,
             )
-            setattr(self, speaker_attribute, None)
-            return None
+            value = None
         setattr(self, speaker_attribute, value)
         return value
 
