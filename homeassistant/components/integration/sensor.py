@@ -463,7 +463,7 @@ class IntegrationSensor(RestoreSensor):
     ) -> None:
         """Handle sensor state update when sub interval is configured."""
         self._integrate_on_state_update_with_max_sub_interval(
-            None, event.data["old_state"], event.data["new_state"]
+            None, None, event.data["old_state"], event.data["new_state"]
         )
 
     @callback
@@ -472,13 +472,17 @@ class IntegrationSensor(RestoreSensor):
     ) -> None:
         """Handle sensor state report when sub interval is configured."""
         self._integrate_on_state_update_with_max_sub_interval(
-            event.data["old_last_reported"], None, event.data["new_state"]
+            event.data["old_last_reported"],
+            event.data["last_reported"],
+            None,
+            event.data["new_state"],
         )
 
     @callback
     def _integrate_on_state_update_with_max_sub_interval(
         self,
-        old_last_reported: datetime | None,
+        old_timestamp: datetime | None,
+        new_timestamp: datetime | None,
         old_state: State | None,
         new_state: State | None,
     ) -> None:
@@ -489,7 +493,9 @@ class IntegrationSensor(RestoreSensor):
         """
         self._cancel_max_sub_interval_exceeded_callback()
         try:
-            self._integrate_on_state_change(old_last_reported, old_state, new_state)
+            self._integrate_on_state_change(
+                old_timestamp, new_timestamp, old_state, new_state
+            )
             self._last_integration_trigger = _IntegrationTrigger.StateEvent
             self._last_integration_time = datetime.now(tz=UTC)
         finally:
@@ -503,7 +509,7 @@ class IntegrationSensor(RestoreSensor):
     ) -> None:
         """Handle sensor state change."""
         return self._integrate_on_state_change(
-            None, event.data["old_state"], event.data["new_state"]
+            None, None, event.data["old_state"], event.data["new_state"]
         )
 
     @callback
@@ -512,12 +518,16 @@ class IntegrationSensor(RestoreSensor):
     ) -> None:
         """Handle sensor state report."""
         return self._integrate_on_state_change(
-            event.data["old_last_reported"], None, event.data["new_state"]
+            event.data["old_last_reported"],
+            event.data["last_reported"],
+            None,
+            event.data["new_state"],
         )
 
     def _integrate_on_state_change(
         self,
-        old_last_reported: datetime | None,
+        old_timestamp: datetime | None,
+        new_timestamp: datetime | None,
         old_state: State | None,
         new_state: State | None,
     ) -> None:
@@ -531,16 +541,17 @@ class IntegrationSensor(RestoreSensor):
 
         if old_state:
             # state has changed, we recover old_state from the event
+            new_timestamp = new_state.last_updated
             old_state_state = old_state.state
-            old_last_reported = old_state.last_reported
+            old_timestamp = old_state.last_reported
         else:
-            # event state reported without any state change
+            # first state or event state reported without any state change
             old_state_state = new_state.state
 
         self._attr_available = True
         self._derive_and_set_attributes_from_state(new_state)
 
-        if old_last_reported is None and old_state is None:
+        if old_timestamp is None and old_state is None:
             self.async_write_ha_state()
             return
 
@@ -551,11 +562,12 @@ class IntegrationSensor(RestoreSensor):
             return
 
         if TYPE_CHECKING:
-            assert old_last_reported is not None
+            assert new_timestamp is not None
+            assert old_timestamp is not None
         elapsed_seconds = Decimal(
-            (new_state.last_reported - old_last_reported).total_seconds()
+            (new_timestamp - old_timestamp).total_seconds()
             if self._last_integration_trigger == _IntegrationTrigger.StateEvent
-            else (new_state.last_reported - self._last_integration_time).total_seconds()
+            else (new_timestamp - self._last_integration_time).total_seconds()
         )
 
         area = self._method.calculate_area_with_two_states(elapsed_seconds, *states)

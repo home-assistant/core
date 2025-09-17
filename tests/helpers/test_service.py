@@ -36,7 +36,9 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -55,6 +57,7 @@ from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import (
     MockEntity,
+    MockEntityPlatform,
     MockModule,
     MockUser,
     RegistryEntryWithDefaults,
@@ -358,6 +361,13 @@ def label_mock(hass: HomeAssistant) -> None:
         labels={"my-label"},
         entity_category=EntityCategory.CONFIG,
     )
+    diag_entity_with_my_label = RegistryEntryWithDefaults(
+        entity_id="light.diag_with_my_label",
+        unique_id="diag_with_my_label",
+        platform="test",
+        labels={"my-label"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
     entity_with_label1_from_device = RegistryEntryWithDefaults(
         entity_id="light.with_label1_from_device",
         unique_id="with_label1_from_device",
@@ -395,6 +405,7 @@ def label_mock(hass: HomeAssistant) -> None:
         hass,
         {
             config_entity_with_my_label.entity_id: config_entity_with_my_label,
+            diag_entity_with_my_label.entity_id: diag_entity_with_my_label,
             entity_with_label1_and_label2_from_device.entity_id: entity_with_label1_and_label2_from_device,
             entity_with_label1_from_device.entity_id: entity_with_label1_from_device,
             entity_with_label1_from_device_and_different_area.entity_id: entity_with_label1_from_device_and_different_area,
@@ -778,6 +789,8 @@ async def test_extract_entity_ids_from_labels(hass: HomeAssistant) -> None:
 
     assert {
         "light.with_my_label",
+        "light.config_with_my_label",
+        "light.diag_with_my_label",
     } == await service.async_extract_entity_ids(hass, call)
 
     call = ServiceCall(hass, "light", "turn_on", {"label_id": "label1"})
@@ -987,7 +1000,16 @@ async def test_async_get_all_descriptions_dot_keys(hass: HomeAssistant) -> None:
         "test_domain": {
             "test_service": {
                 "description": "",
-                "fields": {"test": {"selector": {"text": {}}}},
+                "fields": {
+                    "test": {
+                        "selector": {
+                            "text": {
+                                "multiline": False,
+                                "multiple": False,
+                            }
+                        }
+                    }
+                },
                 "name": "",
             }
         }
@@ -1079,7 +1101,12 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                             "attribute": {"supported_color_modes": ["color_temp"]},
                             "supported_features": [1],
                         },
-                        "selector": {"number": {}},
+                        "selector": {
+                            "number": {
+                                "mode": "box",
+                                "step": 1.0,
+                            }
+                        },
                     },
                     "entity": {
                         "selector": {
@@ -1091,6 +1118,7 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                                     }
                                 ],
                                 "multiple": False,
+                                "reorder": False,
                             },
                         },
                     },
@@ -1101,7 +1129,12 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                     "attribute": {"supported_color_modes": ["color_temp"]},
                     "supported_features": [1],
                 },
-                "selector": {"number": {}},
+                "selector": {
+                    "number": {
+                        "mode": "box",
+                        "step": 1.0,
+                    }
+                },
             },
             "entity": {
                 "selector": {
@@ -1113,6 +1146,7 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                             }
                         ],
                         "multiple": False,
+                        "reorder": False,
                     },
                 },
             },
@@ -2440,3 +2474,327 @@ async def test_deprecated_async_extract_referenced_entity_ids(
         assert args[0][2] is False
 
         assert dataclasses.asdict(result) == dataclasses.asdict(mock_selected)
+
+
+async def test_register_platform_entity_service(
+    hass: HomeAssistant,
+) -> None:
+    """Test registering a platform entity service."""
+    entities = []
+
+    @callback
+    def handle_service(entity, *_):
+        entities.append(entity)
+
+    service.async_register_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello",
+        entity_domain="mock_integration",
+        schema={},
+        func=handle_service,
+    )
+
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+    assert entities == []
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id="mock_integration.entity1")
+    entity2 = MockEntity(entity_id="mock_integration.entity2")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+
+    assert entities == unordered([entity1, entity2])
+
+
+async def test_register_platform_entity_service_response_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test an entity service that supports response data."""
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        assert call.return_response
+        return {"response-key": "response-value"}
+
+    service.async_register_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello",
+        entity_domain="mock_integration",
+        schema={"some": str},
+        func=generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity = MockEntity(entity_id="mock_integration.entity")
+    await entity_platform.async_add_entities([entity])
+
+    response_data = await hass.services.async_call(
+        "mock_platform",
+        "hello",
+        service_data={"some": "data"},
+        target={"entity_id": [entity.entity_id]},
+        blocking=True,
+        return_response=True,
+    )
+    assert response_data == {
+        "mock_integration.entity": {"response-key": "response-value"}
+    }
+
+
+async def test_register_platform_entity_service_response_data_multiple_matches(
+    hass: HomeAssistant,
+) -> None:
+    """Test an entity service with response data and matching many entities."""
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        assert call.return_response
+        return {"response-key": f"response-value-{target.entity_id}"}
+
+    service.async_register_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello",
+        entity_domain="mock_integration",
+        schema={"some": str},
+        func=generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id="mock_integration.entity1")
+    entity2 = MockEntity(entity_id="mock_integration.entity2")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    response_data = await hass.services.async_call(
+        "mock_platform",
+        "hello",
+        service_data={"some": "data"},
+        target={"entity_id": [entity1.entity_id, entity2.entity_id]},
+        blocking=True,
+        return_response=True,
+    )
+    assert response_data == {
+        "mock_integration.entity1": {
+            "response-key": "response-value-mock_integration.entity1"
+        },
+        "mock_integration.entity2": {
+            "response-key": "response-value-mock_integration.entity2"
+        },
+    }
+
+
+async def test_register_platform_entity_service_response_data_multiple_matches_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test entity service response matching many entities raises."""
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        assert call.return_response
+        if target.entity_id == "mock_integration.entity1":
+            raise RuntimeError("Something went wrong")
+        return {"response-key": f"response-value-{target.entity_id}"}
+
+    service.async_register_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello",
+        entity_domain="mock_integration",
+        schema={"some": str},
+        func=generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id="mock_integration.entity1")
+    entity2 = MockEntity(entity_id="mock_integration.entity2")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    with pytest.raises(RuntimeError, match="Something went wrong"):
+        await hass.services.async_call(
+            "mock_platform",
+            "hello",
+            service_data={"some": "data"},
+            target={"entity_id": [entity1.entity_id, entity2.entity_id]},
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_register_platform_entity_service_limited_to_matching_platforms(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test entity services only target entities for the platform and domain."""
+
+    mock_area = area_registry.async_get_or_create("mock_area")
+
+    entity1_entry = entity_registry.async_get_or_create(
+        "base_platform", "mock_platform", "1234", suggested_object_id="entity1"
+    )
+    entity_registry.async_update_entity(entity1_entry.entity_id, area_id=mock_area.id)
+    entity2_entry = entity_registry.async_get_or_create(
+        "base_platform", "mock_platform", "5678", suggested_object_id="entity2"
+    )
+    entity_registry.async_update_entity(entity2_entry.entity_id, area_id=mock_area.id)
+    entity3_entry = entity_registry.async_get_or_create(
+        "base_platform", "other_mock_platform", "7891", suggested_object_id="entity3"
+    )
+    entity_registry.async_update_entity(entity3_entry.entity_id, area_id=mock_area.id)
+    entity4_entry = entity_registry.async_get_or_create(
+        "base_platform", "other_mock_platform", "1433", suggested_object_id="entity4"
+    )
+    entity_registry.async_update_entity(entity4_entry.entity_id, area_id=mock_area.id)
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        assert call.return_response
+        return {"response-key": f"response-value-{target.entity_id}"}
+
+    service.async_register_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello",
+        entity_domain="base_platform",
+        schema={"some": str},
+        func=generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="base_platform", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(
+        entity_id=entity1_entry.entity_id, unique_id=entity1_entry.unique_id
+    )
+    entity2 = MockEntity(
+        entity_id=entity2_entry.entity_id, unique_id=entity2_entry.unique_id
+    )
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    other_entity_platform = MockEntityPlatform(
+        hass, domain="base_platform", platform_name="other_mock_platform", platform=None
+    )
+    entity3 = MockEntity(
+        entity_id=entity3_entry.entity_id, unique_id=entity3_entry.unique_id
+    )
+    entity4 = MockEntity(
+        entity_id=entity4_entry.entity_id, unique_id=entity4_entry.unique_id
+    )
+    await other_entity_platform.async_add_entities([entity3, entity4])
+
+    response_data = await hass.services.async_call(
+        "mock_platform",
+        "hello",
+        service_data={"some": "data"},
+        target={"area_id": [mock_area.id]},
+        blocking=True,
+        return_response=True,
+    )
+    # We should not target entity3 and entity4 even though they are in the area
+    # because they are only part of the domain and not the platform
+    assert response_data == {
+        "base_platform.entity1": {
+            "response-key": "response-value-base_platform.entity1"
+        },
+        "base_platform.entity2": {
+            "response-key": "response-value-base_platform.entity2"
+        },
+    }
+
+
+async def test_register_platform_entity_service_none_schema(
+    hass: HomeAssistant,
+) -> None:
+    """Test registering a service with schema set to None."""
+    entities = []
+
+    @callback
+    def handle_service(entity, *_):
+        entities.append(entity)
+
+    service.async_register_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello",
+        entity_domain="mock_integration",
+        schema=None,
+        func=handle_service,
+    )
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(name="entity_1")
+    entity2 = MockEntity(name="entity_1")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+
+    assert len(entities) == 2
+    assert entity1 in entities
+    assert entity2 in entities
+
+
+async def test_register_platform_entity_service_non_entity_service_schema(
+    hass: HomeAssistant,
+) -> None:
+    """Test attempting to register a service with a non entity service schema."""
+    expected_message = "registers an entity service with a non entity service schema"
+
+    for idx, schema in enumerate(
+        (
+            vol.Schema({"some": str}),
+            vol.All(vol.Schema({"some": str})),
+            vol.Any(vol.Schema({"some": str})),
+        )
+    ):
+        with pytest.raises(HomeAssistantError, match=expected_message):
+            service.async_register_platform_entity_service(
+                hass,
+                "mock_platform",
+                f"hello_{idx}",
+                entity_domain="mock_integration",
+                schema=schema,
+                func=Mock(),
+            )
+
+    for idx, schema in enumerate(
+        (
+            cv.make_entity_service_schema({"some": str}),
+            vol.Schema(cv.make_entity_service_schema({"some": str})),
+            vol.All(cv.make_entity_service_schema({"some": str})),
+        )
+    ):
+        service.async_register_platform_entity_service(
+            hass,
+            "mock_platform",
+            f"test_service_{idx}",
+            entity_domain="mock_integration",
+            schema=schema,
+            func=Mock(),
+        )

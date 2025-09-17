@@ -63,7 +63,7 @@ ATTR_SOURCE_ID = "source"
 UNIT_PREFIXES = {
     None: 1,
     "n": 1e-9,
-    "µ": 1e-6,
+    "μ": 1e-6,
     "m": 1e-3,
     "k": 1e3,
     "M": 1e6,
@@ -320,7 +320,12 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 # changed state, then we know it will still be zero.
                 return
             schedule_max_sub_interval_exceeded(new_state)
-            calc_derivative(new_state, new_state.state, event.data["old_last_reported"])
+            calc_derivative(
+                new_state,
+                new_state.state,
+                event.data["last_reported"],
+                event.data["old_last_reported"],
+            )
 
         @callback
         def on_state_changed(event: Event[EventStateChangedData]) -> None:
@@ -334,19 +339,27 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             schedule_max_sub_interval_exceeded(new_state)
             old_state = event.data["old_state"]
             if old_state is not None:
-                calc_derivative(new_state, old_state.state, old_state.last_reported)
+                calc_derivative(
+                    new_state,
+                    old_state.state,
+                    new_state.last_updated,
+                    old_state.last_reported,
+                )
             else:
                 # On first state change from none, update availability
                 self.async_write_ha_state()
 
         def calc_derivative(
-            new_state: State, old_value: str, old_last_reported: datetime
+            new_state: State,
+            old_value: str,
+            new_timestamp: datetime,
+            old_timestamp: datetime,
         ) -> None:
             """Handle the sensor state changes."""
             if not _is_decimal_state(old_value):
                 if self._last_valid_state_time:
                     old_value = self._last_valid_state_time[0]
-                    old_last_reported = self._last_valid_state_time[1]
+                    old_timestamp = self._last_valid_state_time[1]
                 else:
                     # Sensor becomes valid for the first time, just keep the restored value
                     self.async_write_ha_state()
@@ -358,12 +371,10 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     "" if unit is None else unit
                 )
 
-            self._prune_state_list(new_state.last_reported)
+            self._prune_state_list(new_timestamp)
 
             try:
-                elapsed_time = (
-                    new_state.last_reported - old_last_reported
-                ).total_seconds()
+                elapsed_time = (new_timestamp - old_timestamp).total_seconds()
                 delta_value = Decimal(new_state.state) - Decimal(old_value)
                 new_derivative = (
                     delta_value
@@ -392,12 +403,10 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 return
 
             # add latest derivative to the window list
-            self._state_list.append(
-                (old_last_reported, new_state.last_reported, new_derivative)
-            )
+            self._state_list.append((old_timestamp, new_timestamp, new_derivative))
             self._last_valid_state_time = (
                 new_state.state,
-                new_state.last_reported,
+                new_timestamp,
             )
 
             # If outside of time window just report derivative (is the same as modeling it in the window),
@@ -405,9 +414,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if elapsed_time > self._time_window:
                 derivative = new_derivative
             else:
-                derivative = self._calc_derivative_from_state_list(
-                    new_state.last_reported
-                )
+                derivative = self._calc_derivative_from_state_list(new_timestamp)
             self._write_native_value(derivative)
 
         source_state = self.hass.states.get(self._sensor_source_id)

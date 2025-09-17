@@ -14,9 +14,9 @@ from homeassistant.components.button import (
     ButtonEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_DEVICE_ID, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -24,29 +24,31 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_PRESS, DOMAIN
-from .helpers import async_setup_template_platform
-from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
+from .helpers import async_setup_template_entry, async_setup_template_platform
+from .schemas import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    make_template_entity_common_modern_schema,
+)
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Template Button"
 DEFAULT_OPTIMISTIC = False
 
-BUTTON_SCHEMA = vol.Schema(
+BUTTON_YAML_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
-).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+).extend(make_template_entity_common_modern_schema(BUTTON_DOMAIN, DEFAULT_NAME).schema)
 
-CONFIG_BUTTON_SCHEMA = vol.Schema(
+BUTTON_CONFIG_ENTRY_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): cv.template,
         vol.Optional(CONF_PRESS): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }
-)
+).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 
 
 async def async_setup_platform(
@@ -73,11 +75,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = CONFIG_BUTTON_SCHEMA(_options)
-    async_add_entities(
-        [StateButtonEntity(hass, validated_config, config_entry.entry_id)]
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateButtonEntity,
+        BUTTON_CONFIG_ENTRY_SCHEMA,
     )
 
 

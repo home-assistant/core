@@ -20,6 +20,7 @@ from homeassistant.components.fan import (
     FanEntity,
     FanEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
@@ -34,18 +35,27 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_platform
-from .template_entity import (
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
+from .schemas import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
-    TemplateEntity,
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_modern_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,27 +91,29 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Fan"
 
-FAN_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_DIRECTION): cv.template,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_OSCILLATING): cv.template,
-            vol.Optional(CONF_PERCENTAGE): cv.template,
-            vol.Optional(CONF_PRESET_MODE): cv.template,
-            vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
-            vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
-            vol.Optional(CONF_STATE): cv.template,
-        }
-    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+FAN_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DIRECTION): cv.template,
+        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_OSCILLATING): cv.template,
+        vol.Optional(CONF_PERCENTAGE): cv.template,
+        vol.Optional(CONF_PRESET_MODE): cv.template,
+        vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
+        vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
+        vol.Optional(CONF_STATE): cv.template,
+    }
 )
 
-LEGACY_FAN_SCHEMA = vol.All(
+FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
+    make_template_entity_common_modern_schema(FAN_DOMAIN, DEFAULT_NAME).schema
+)
+
+FAN_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
@@ -126,7 +138,11 @@ LEGACY_FAN_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_FANS): cv.schema_with_slug_keys(LEGACY_FAN_SCHEMA)}
+    {vol.Required(CONF_FANS): cv.schema_with_slug_keys(FAN_LEGACY_YAML_SCHEMA)}
+)
+
+FAN_CONFIG_ENTRY_SCHEMA = FAN_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
 
@@ -150,17 +166,45 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateFanEntity,
+        FAN_CONFIG_ENTRY_SCHEMA,
+    )
+
+
+@callback
+def async_create_preview_fan(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateFanEntity:
+    """Create a preview."""
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateFanEntity,
+        FAN_CONFIG_ENTRY_SCHEMA,
+    )
+
+
 class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
     """Representation of a template fan features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-
-        self._template = config.get(CONF_STATE)
         self._percentage_template = config.get(CONF_PERCENTAGE)
         self._preset_mode_template = config.get(CONF_PRESET_MODE)
         self._oscillating_template = config.get(CONF_OSCILLATING)
@@ -177,7 +221,6 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
 
         # List of valid preset modes
         self._preset_modes: list[str] | None = config.get(CONF_PRESET_MODES)
-        self._attr_assumed_state = self._template is None
 
         self._attr_supported_features |= (
             FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
@@ -339,7 +382,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if percentage is not None:
             await self.async_set_percentage(percentage)
 
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = True
             self.async_write_ha_state()
 
@@ -349,7 +392,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             self._action_scripts[CONF_OFF_ACTION], context=self._context
         )
 
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = False
             self.async_write_ha_state()
 
@@ -364,10 +407,10 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
                 context=self._context,
             )
 
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = percentage != 0
 
-        if self._template is None or self._percentage_template is None:
+        if self._attr_assumed_state or self._percentage_template is None:
             self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -381,10 +424,10 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
                 context=self._context,
             )
 
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = True
 
-        if self._template is None or self._preset_mode_template is None:
+        if self._attr_assumed_state or self._preset_mode_template is None:
             self.async_write_ha_state()
 
     async def async_oscillate(self, oscillating: bool) -> None:
@@ -561,5 +604,4 @@ class TriggerFanEntity(TriggerEntity, AbstractTemplateFan):
             write_ha_state = True
 
         if write_ha_state:
-            self.async_set_context(self.coordinator.data["context"])
             self.async_write_ha_state()

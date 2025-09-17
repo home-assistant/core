@@ -22,6 +22,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import EnumTypeData
+from .util import get_dpcode
 
 
 @dataclass(frozen=True)
@@ -140,7 +141,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
             self._master_state = enum_type
 
         # Determine alarm message
-        if dp_code := self.find_dpcode(description.alarm_msg, prefer_function=True):
+        if dp_code := get_dpcode(self.device, description.alarm_msg):
             self._alarm_msg_dpcode = dp_code
 
     @property

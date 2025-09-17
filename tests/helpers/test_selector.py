@@ -1,5 +1,6 @@
 """Test selectors."""
 
+from collections.abc import Callable, Iterable
 from enum import Enum
 from typing import Any
 
@@ -42,7 +43,11 @@ def test_invalid_base_schema(schema) -> None:
 
 
 def _test_selector(
-    selector_type, schema, valid_selections, invalid_selections, converter=None
+    selector_type: str,
+    schema: dict,
+    valid_selections: Iterable[Any],
+    invalid_selections: Iterable[Any],
+    converter: Callable[[Any], Any] | None = None,
 ):
     """Help test a selector."""
 
@@ -230,6 +235,11 @@ def test_device_selector_schema_error(schema) -> None:
                 ["sensor.abc123", "sensor.jkl123"],
                 ["sensor.abc123", "sensor.ghi789"],
             ),
+        ),
+        (
+            {"multiple": True, "reorder": True},
+            ((["sensor.abc123", "sensor.def456"],)),
+            (None, "abc123", ["sensor.abc123", None]),
         ),
         (
             {"filter": {"domain": "light"}},
@@ -558,7 +568,17 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections) -> N
         (
             {"entity_id": "sensor.abc"},
             ("on", "armed"),
-            (None, True, 1),
+            (None, True, 1, ["on"]),
+        ),
+        (
+            {"entity_id": "sensor.abc", "multiple": True},
+            (["on"], ["on", "off"], []),
+            (None, True, 1, [True], [1], "on"),
+        ),
+        (
+            {"hide_states": ["unknown", "unavailable"]},
+            (),
+            (),
         ),
     ],
 )
@@ -1145,6 +1165,7 @@ def test_constant_selector_schema(schema, valid_selections, invalid_selections) 
 @pytest.mark.parametrize(
     "schema",
     [
+        None,  # Value is mandatory
         {},  # Value is mandatory
         {"value": []},  # Value must be str, int or bool
         {"value": 123, "label": 123},  # Label must be str

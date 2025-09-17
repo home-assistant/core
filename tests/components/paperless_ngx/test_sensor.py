@@ -29,6 +29,7 @@ from tests.common import (
 )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_platform(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

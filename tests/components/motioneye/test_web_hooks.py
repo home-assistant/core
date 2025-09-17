@@ -116,7 +116,6 @@ async def test_setup_camera_with_wrong_webhook(
     )
     assert not client.async_set_camera.called
 
-    # Update the options, which will trigger a reload with the new behavior.
     with patch(
         "homeassistant.components.motioneye.MotionEyeClient",
         return_value=client,
@@ -124,6 +123,7 @@ async def test_setup_camera_with_wrong_webhook(
         hass.config_entries.async_update_entry(
             config_entry, options={CONF_WEBHOOK_SET_OVERWRITE: True}
         )
+        await hass.config_entries.async_reload(config_entry.entry_id)
         await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
