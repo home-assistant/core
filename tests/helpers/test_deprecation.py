@@ -712,3 +712,4 @@ def test_deprecated_hass_argument(
     # Ensure that the two calls are the same, as the second call should have been
     # modified to remove the hass argument.
     assert calls[0] == calls[1]
+    assert calls[0] == calls[2]
