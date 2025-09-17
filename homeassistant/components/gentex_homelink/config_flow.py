@@ -1,6 +1,5 @@
 """Config flow for homelink."""
 
-import asyncio
 import logging
 from typing import Any
 
@@ -42,10 +41,8 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
 
             srp_auth = SRPAuth()
-            loop = asyncio.get_running_loop()
             try:
-                tokens = await loop.run_in_executor(
-                    None,
+                tokens = await self.hass.async_add_executor_job(
                     srp_auth.async_get_access_token,
                     user_input[CONF_EMAIL],
                     user_input[CONF_PASSWORD],

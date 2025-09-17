@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from typing import Any
 
@@ -15,7 +14,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, EVENT_OFF, EVENT_PRESSED, EVENT_TIMEOUT
+from .const import DOMAIN, EVENT_PRESSED
 
 # Import keeps mypy happy but is a circular reference otherwise
 from .coordinator import HomeLinkCoordinator
@@ -42,10 +41,7 @@ class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
     """Event Entity."""
 
     _attr_has_entity_name = True
-    _attr_event_types = [
-        EVENT_PRESSED,
-        EVENT_OFF,
-    ]
+    _attr_event_types = [EVENT_PRESSED]
     _attr_device_class = EventDeviceClass.BUTTON
 
     def __init__(
@@ -73,7 +69,6 @@ class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
         self.name: str = param_name
         self.unique_id: str = id
         self.last_request_id: str | None = None
-        self.button_off_task: asyncio.Task[Any] | None = None
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -81,32 +76,12 @@ class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
         if self.id not in self.coordinator.data:
             # Not for us
             return
-        # Handles debounce case - if we're pressed again, and we have an active stop timer, cancel the previous timer and restart it
-        if (
-            self.state_attributes["event_type"] == EVENT_PRESSED
-            and self.button_off_task
-        ):
-            self.button_off_task.cancel()
-            self.button_off_task = asyncio.create_task(self.button_off())
-            return
 
-        # If this is the first press, set to off before setting pressed
-
-        if self.last_request_id is None:
-            self._trigger_event(EVENT_OFF)
         data: Mapping[str, Any] = self.coordinator.data
         latest_update = data[self.id]
         # Set button to pressed and then schedule the turnoff
         if latest_update["requestId"] != self.last_request_id:
             self._trigger_event(EVENT_PRESSED)
             self.last_request_id = latest_update["requestId"]
-            self.button_off_task = asyncio.create_task(self.button_off())
 
-        self.async_write_ha_state()
-
-    async def button_off(self):
-        """Wait for the specific time then turn the pressed button off."""
-        await asyncio.sleep(EVENT_TIMEOUT)
-        self._trigger_event(EVENT_OFF)
-        self.button_off_task = None
         self.async_write_ha_state()
