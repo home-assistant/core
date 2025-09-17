@@ -26,16 +26,16 @@ async def test_full_user_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
     )
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "Brussels"
-    assert result2.get("data") == {
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Brussels"
+    assert result.get("data") == {
         CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456},
         CONF_UNIQUE_ID: "brussels be",
     }
@@ -57,7 +57,7 @@ async def test_user_flow_home(
         result["flow_id"],
         user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
     )
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Brussels"
 
 
@@ -71,14 +71,14 @@ async def test_config_flow_location_out_benelux(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_LOCATION: {ATTR_LATITUDE: 0.123, ATTR_LONGITUDE: 0.456}},
     )
 
-    assert result2.get("type") == FlowResultType.FORM
-    assert result2.get("step_id") == "user"
-    assert CONF_LOCATION in result2.get("errors")
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert CONF_LOCATION in result.get("errors")
 
 
 async def test_config_flow_with_api_error(
@@ -91,14 +91,14 @@ async def test_config_flow_with_api_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
     )
 
-    assert result2.get("type") == FlowResultType.FORM
-    assert result2.get("step_id") == "user"
-    assert "base" in result2.get("errors")
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert "base" in result.get("errors")
 
 
 async def test_option_flow(
@@ -113,12 +113,12 @@ async def test_option_flow(
         mock_config_entry.entry_id, data=None
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_LANGUAGE_OVERRIDE: "none"}
