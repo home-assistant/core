@@ -159,6 +159,19 @@ def deprecated_hass_argument[**_P, _T](
                     log_when_no_integration_is_found=True,
                 )
                 args = args[1:]  # type: ignore[assignment]
+
+            if "hass" in kwargs and isinstance(kwargs["hass"], HomeAssistant):
+                _print_deprecation_warning_internal(
+                    "hass",
+                    func.__module__,
+                    f"{func.__name__} without hass argument",
+                    "argument",
+                    f"passed to {func.__name__}",
+                    breaks_in_ha_version,
+                    log_when_no_integration_is_found=True,
+                )
+                kwargs.pop("hass")
+
             return func(*args, **kwargs)
 
         return _inner
