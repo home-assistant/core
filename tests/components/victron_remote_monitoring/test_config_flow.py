@@ -73,7 +73,8 @@ async def test_user_step_no_sites(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    mock_vrm_client.users.list_sites = AsyncMock(return_value=[])
+    # Reuse existing async mock instead of replacing it
+    mock_vrm_client.users.list_sites.return_value = []
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_TOKEN: "token"}
     )
@@ -83,7 +84,10 @@ async def test_user_step_no_sites(
 
     # Provide a site afterwards and resubmit to complete the flow
     site = _make_site(999999, "Only Site")
-    mock_vrm_client.users.list_sites = AsyncMock(return_value=[site])
+    mock_vrm_client.users.list_sites.return_value = [site]
+    mock_vrm_client.users.list_sites.side_effect = (
+        None  # ensure no leftover side effect
+    )
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_TOKEN: "token"}
     )
@@ -114,7 +118,8 @@ async def test_user_step_errors_then_success(
         DOMAIN, context={"source": SOURCE_USER}
     )
     flow_id = result["flow_id"]
-    mock_vrm_client.users.list_sites = AsyncMock(side_effect=side_effect)
+    # First call raises/returns error via side_effect, we then clear and set return value
+    mock_vrm_client.users.list_sites.side_effect = side_effect
     result_err = await hass.config_entries.flow.async_configure(
         flow_id, {CONF_API_TOKEN: "token"}
     )
@@ -124,7 +129,8 @@ async def test_user_step_errors_then_success(
 
     # Now make it succeed with a single site, which should auto-complete
     site = _make_site(24680, "AutoSite")
-    mock_vrm_client.users.list_sites = AsyncMock(return_value=[site])
+    mock_vrm_client.users.list_sites.side_effect = None
+    mock_vrm_client.users.list_sites.return_value = [site]
     result_ok = await hass.config_entries.flow.async_configure(
         flow_id, {CONF_API_TOKEN: "token"}
     )

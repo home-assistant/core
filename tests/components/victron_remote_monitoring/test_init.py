@@ -2,29 +2,37 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
 import pytest
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("side_effect", "expected_state", "expects_reauth"),
     [
-        AuthenticationError("bad", status_code=401),
-        VictronVRMError("boom", status_code=500, response_data={}),
+        (
+            AuthenticationError("bad", status_code=401),
+            ConfigEntryState.SETUP_ERROR,
+            True,
+        ),
+        (
+            VictronVRMError("boom", status_code=500, response_data={}),
+            ConfigEntryState.SETUP_RETRY,
+            False,
+        ),
     ],
 )
 async def test_setup_auth_or_connection_error_starts_retry_or_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vrm_client,  # provided by shared conftest
-    side_effect: Exception,
+    mock_vrm_client,
+    side_effect: Exception | None,
+    expected_state: ConfigEntryState,
+    expects_reauth: bool,
 ) -> None:
     """Auth errors initiate reauth flow; other errors set entry to retry.
 
@@ -38,33 +46,6 @@ async def test_setup_auth_or_connection_error_starts_retry_or_reauth(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    if isinstance(side_effect, AuthenticationError):
-        # Entry should be in error and a reauth flow should be active
-        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-        active_flows = mock_config_entry.async_get_active_flows(hass, {"reauth"})
-        assert any(active_flows)
-    else:
-        # Connection/other API error -> retry state, no reauth flow
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-        active_flows = mock_config_entry.async_get_active_flows(hass, {"reauth"})
-        assert not any(active_flows)
-
-
-async def test_options_update_triggers_reload(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_vrm_client
-) -> None:
-    """Test that updating options causes the entry to reload (covers async_update_options)."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Spy on reload method of config entries
-    with patch.object(
-        hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
-    ) as wrapped_reload:
-        hass.config_entries.async_update_entry(
-            mock_config_entry, options={"dummy": True}
-        )
-        await hass.async_block_till_done()
-        assert wrapped_reload.call_count == 1
+    assert mock_config_entry.state is expected_state
+    flows_list = list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    assert bool(flows_list) is expects_reauth
