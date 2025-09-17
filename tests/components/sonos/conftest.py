@@ -856,7 +856,7 @@ def tv_event_fixture(soco):
 
 @pytest.fixture(name="media_event")
 def media_event_fixture(soco):
-    """Create alarm_event fixture."""
+    """Create media event fixture."""
     variables = {
         "transport_state": "PLAYING",
         "current_play_mode": "NORMAL",
@@ -864,7 +864,7 @@ def media_event_fixture(soco):
         "number_of_tracks": "1",
         "current_track": "1",
         "current_section": "0",
-        "current_track_uri": "x-file-cifs://192.168.50.70/music/iTunes/iTunes%20Media/Music/Ah%20Nee%20Mah/Native%20Spirit_%20A%20Native%20American%20Music%20E/01%20The%20Sacred%20Fire.m4a",
+        "current_track_uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
         "current_track_duration": "360",
         "current_track_meta_data": DidlMusicTrack(
             album="Abbey Road",
