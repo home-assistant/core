@@ -4767,14 +4767,14 @@ async def test_import_statistics_with_last_reset(
     }
 
 
-async def test_record_entity_ws(
+async def test_recorded_entities_ws(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test record entity WS commands."""
+    """Test recorded entities WS commands."""
     client = await hass_ws_client()
 
     # Prime entity registry
@@ -4789,7 +4789,7 @@ async def test_record_entity_ws(
 
     await client.send_json_auto_id(
         {
-            "type": "homeassistant/record_entity/list",
+            "type": "recorder/recorded_entities/list",
         }
     )
     response = await client.receive_json()
@@ -4803,7 +4803,7 @@ async def test_record_entity_ws(
     # Change setting of an entity
     await client.send_json_auto_id(
         {
-            "type": "homeassistant/record_entity/set_options",
+            "type": "recorder/recorded_entities/set_options",
             "entity_ids": ["test.recorder"],
             "recording_disabled_by": None,
         }
@@ -4813,7 +4813,7 @@ async def test_record_entity_ws(
 
     await client.send_json_auto_id(
         {
-            "type": "homeassistant/record_entity/list",
+            "type": "recorder/recorded_entities/list",
         }
     )
     response = await client.receive_json()
@@ -4827,7 +4827,7 @@ async def test_record_entity_ws(
     # Change setting of an entity
     await client.send_json_auto_id(
         {
-            "type": "homeassistant/record_entity/set_options",
+            "type": "recorder/recorded_entities/set_options",
             "entity_ids": ["test2.recorder"],
             "recording_disabled_by": "user",
         }
@@ -4837,7 +4837,7 @@ async def test_record_entity_ws(
 
     await client.send_json_auto_id(
         {
-            "type": "homeassistant/record_entity/list",
+            "type": "recorder/recorded_entities/list",
         }
     )
     response = await client.receive_json()
@@ -4851,7 +4851,7 @@ async def test_record_entity_ws(
     # Change setting of an entity
     await client.send_json_auto_id(
         {
-            "type": "homeassistant/record_entity/set_options",
+            "type": "recorder/recorded_entities/set_options",
             "entity_ids": ["test2.recorder"],
             "recording_disabled_by": "my dog",
         }
@@ -4870,7 +4870,7 @@ async def test_record_entity_ws(
 
     await client.send_json_auto_id(
         {
-            "type": "homeassistant/record_entity/list",
+            "type": "recorder/recorded_entities/list",
         }
     )
     response = await client.receive_json()
@@ -4884,7 +4884,7 @@ async def test_record_entity_ws(
     # Change setting of an unknown entity
     await client.send_json_auto_id(
         {
-            "type": "homeassistant/record_entity/set_options",
+            "type": "recorder/recorded_entities/set_options",
             "entity_ids": ["test.test"],
             "recording_disabled_by": None,
         }
@@ -4894,7 +4894,7 @@ async def test_record_entity_ws(
 
     await client.send_json_auto_id(
         {
-            "type": "homeassistant/record_entity/list",
+            "type": "recorder/recorded_entities/list",
         }
     )
     response = await client.receive_json()
@@ -4909,7 +4909,7 @@ async def test_record_entity_ws(
     # Test getting a single entity's settings
     await client.send_json_auto_id(
         {
-            "type": "homeassistant/record_entity/get",
+            "type": "recorder/recorded_entities/get",
             "entity_id": "test.recorder",
         }
     )
@@ -4918,7 +4918,7 @@ async def test_record_entity_ws(
 
     await client.send_json_auto_id(
         {
-            "type": "homeassistant/record_entity/get",
+            "type": "recorder/recorded_entities/get",
             "entity_id": "test2.recorder",
         }
     )
@@ -4928,7 +4928,7 @@ async def test_record_entity_ws(
     # Test getting settings for an unknown entity
     await client.send_json_auto_id(
         {
-            "type": "homeassistant/record_entity/get",
+            "type": "recorder/recorded_entities/get",
             "entity_id": "unknown.entity",
         }
     )
