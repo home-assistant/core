@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 
+from homeassistant.components.victron_remote_monitoring.config_flow import SiteNotFound
 from homeassistant.components.victron_remote_monitoring.const import (
     CONF_API_TOKEN,
     CONF_SITE_ID,
@@ -91,9 +92,58 @@ async def test_user_step_no_sites(
 
 
 @pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (AuthenticationError("bad", status_code=401), "invalid_auth"),
+        (VictronVRMError("auth", status_code=401, response_data={}), "invalid_auth"),
+        (
+            VictronVRMError("server", status_code=500, response_data={}),
+            "cannot_connect",
+        ),
+        (ValueError("boom"), "unknown"),
+    ],
+)
+async def test_user_step_errors_then_success(
+    hass: HomeAssistant,
+    mock_vrm_client: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test token validation errors (user step) and eventual success."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    flow_id = result["flow_id"]
+    mock_vrm_client.users.list_sites = AsyncMock(side_effect=side_effect)
+    result_err = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_API_TOKEN: "token"}
+    )
+    assert result_err["type"] is FlowResultType.FORM
+    assert result_err["step_id"] == "user"
+    assert result_err["errors"] == {"base": expected_error}
+
+    # Now make it succeed with a single site, which should auto-complete
+    site = _make_site(24680, "AutoSite")
+    mock_vrm_client.users.list_sites = AsyncMock(return_value=[site])
+    result_ok = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_API_TOKEN: "token"}
+    )
+    assert result_ok["type"] is FlowResultType.CREATE_ENTRY
+    assert result_ok["data"] == {
+        CONF_API_TOKEN: "token",
+        CONF_SITE_ID: site.id,
+    }
+
+
+@pytest.mark.parametrize(
     ("side_effect", "return_value", "expected_error"),
     [
         (AuthenticationError("ExpiredToken", status_code=403), None, "invalid_auth"),
+        (
+            VictronVRMError("forbidden", status_code=403, response_data={}),
+            None,
+            "invalid_auth",
+        ),
         (
             VictronVRMError("Internal server error", status_code=500, response_data={}),
             None,
@@ -234,6 +284,7 @@ async def test_reauth_flow_success(
     [
         (AuthenticationError("bad", status_code=401), "invalid_auth"),
         (VictronVRMError("down", status_code=500, response_data={}), "cannot_connect"),
+        (SiteNotFound(), "site_not_found"),
     ],
 )
 async def test_reauth_flow_errors(
