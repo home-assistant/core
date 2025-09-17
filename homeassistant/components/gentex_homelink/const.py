@@ -5,5 +5,3 @@ OAUTH2_TOKEN = "https://auth.homelinkcloud.com/oauth2/token"
 POLLING_INTERVAL = 5
 
 EVENT_PRESSED = "Pressed"
-EVENT_OFF = "Off"
-EVENT_TIMEOUT = 10
