@@ -87,6 +87,30 @@ def mock_irm_kmi_api(request: pytest.FixtureRequest) -> Generator[None, MagicMoc
 
 
 @pytest.fixture
+def mock_irm_kmi_api_nl():
+    """Mock a call to IrmKmiApiClientHa.get_forecasts_coord() to return a forecast in The Netherlands."""
+    fixture: str = "forecast_nl.json"
+    forecast = json.loads(load_fixture(fixture, "irm_kmi"))
+    with patch(
+        "homeassistant.components.irm_kmi.coordinator.IrmKmiApiClientHa.get_forecasts_coord",
+        return_value=forecast,
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_irm_kmi_api_high_low_temp():
+    """Mock a call to IrmKmiApiClientHa.get_forecasts_coord() to return high_low_temp.json forecast."""
+    fixture: str = "high_low_temp.json"
+    forecast = json.loads(load_fixture(fixture, "irm_kmi"))
+    with patch(
+        "homeassistant.components.irm_kmi.coordinator.IrmKmiApiClientHa.get_forecasts_coord",
+        return_value=forecast,
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_exception_irm_kmi_api(
     request: pytest.FixtureRequest,
 ) -> Generator[None, MagicMock]:
