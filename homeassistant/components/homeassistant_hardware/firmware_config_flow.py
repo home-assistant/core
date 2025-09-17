@@ -332,19 +332,19 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         return self.async_show_menu(
             step_id="zigbee_integration",
             menu_options=[
-                "zigbee_zha_integration",
-                "zigbee_other_integration",
+                "zigbee_integration_zha",
+                "zigbee_integration_other",
             ],
         )
 
-    async def async_step_zigbee_zha_integration(
+    async def async_step_zigbee_integration_zha(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select ZHA integration."""
         self._zigbee_integration = ZigbeeIntegration.ZHA
         return await self._async_continue_picked_firmware()
 
-    async def async_step_zigbee_other_integration(
+    async def async_step_zigbee_integration_other(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select other Zigbee integration."""
