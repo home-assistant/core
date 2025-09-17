@@ -121,31 +121,34 @@ STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
     }
 )
 
+TOPIC_FILTER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_PRIORITY): SelectSelector(
+            SelectSelectorConfig(
+                multiple=True,
+                options=["5", "4", "3", "2", "1"],
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="priority",
+            )
+        ),
+        vol.Optional(CONF_TAGS): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
+            ),
+        ),
+        vol.Optional(CONF_TITLE): str,
+        vol.Optional(CONF_MESSAGE): str,
+    }
+)
+
+
 STEP_USER_TOPIC_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOPIC): str,
         vol.Optional(CONF_NAME): str,
         vol.Required(SECTION_FILTER): data_entry_flow.section(
-            vol.Schema(
-                {
-                    vol.Optional(CONF_PRIORITY): SelectSelector(
-                        SelectSelectorConfig(
-                            multiple=True,
-                            options=["5", "4", "3", "2", "1"],
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="priority",
-                        )
-                    ),
-                    vol.Optional(CONF_TAGS): TextSelector(
-                        TextSelectorConfig(
-                            type=TextSelectorType.TEXT,
-                            multiple=True,
-                        ),
-                    ),
-                    vol.Optional(CONF_TITLE): str,
-                    vol.Optional(CONF_MESSAGE): str,
-                }
-            ),
+            TOPIC_FILTER_SCHEMA,
             {"collapsed": True},
         ),
     }
@@ -456,4 +459,28 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
                 data_schema=STEP_USER_TOPIC_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure flow to modify an existing topic."""
+        entry = self._get_entry()
+        subentry = self._get_reconfigure_subentry()
+        subentry_data = entry.subentries[subentry.subentry_id].data
+
+        if user_input is not None:
+            return self.async_update_and_abort(
+                entry=entry,
+                subentry=subentry,
+                data_updates=user_input,
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=TOPIC_FILTER_SCHEMA,
+                suggested_values=subentry_data,
+            ),
+            description_placeholders={CONF_TOPIC: subentry_data[CONF_TOPIC]},
         )

@@ -999,3 +999,109 @@ FLOOR_LAMP_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+RGBICWW_STRIP_LIGHT_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="RGBICWW Strip Light",
+    manufacturer_data={
+        2409: b'(7/L\x94\xb2\x0c\x9e"\x00\x11:\x00',
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb3"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="RGBICWW Strip Light",
+        manufacturer_data={
+            2409: b'(7/L\x94\xb2\x0c\x9e"\x00\x11:\x00',
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb3"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "RGBICWW Strip Light"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+RGBICWW_FLOOR_LAMP_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="RGBICWW Floor Lamp",
+    manufacturer_data={
+        2409: b'\xdc\x06u\xa6\xfb\xb2y\x9e"\x00\x11\xb8\x00',
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb4"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="RGBICWW Floor Lamp",
+        manufacturer_data={
+            2409: b'\xdc\x06u\xa6\xfb\xb2y\x9e"\x00\x11\xb8\x00',
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb4"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "RGBICWW Floor Lamp"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+PLUG_MINI_EU_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Plug Mini (EU)",
+    manufacturer_data={
+        2409: b"\x94\xa9\x90T\x85^?\xa1\x00\x00\x04\xe6\x00\x00\x00\x00",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"?\x00\x00\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Plug Mini (EU)",
+        manufacturer_data={
+            2409: b"\x94\xa9\x90T\x85^?\xa1\x00\x00\x04\xe6\x00\x00\x00\x00",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"?\x00\x00\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Plug Mini (EU)"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+RELAY_SWITCH_2PM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Relay Switch 2PM",
+    manufacturer_data={
+        2409: b"\xc0N0\xdd\xb9\xf2\x8a\xc1\x00\x00\x00\x00\x00F\x00\x00"
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"=\x00\x00\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Relay Switch 2PM",
+        manufacturer_data={
+            2409: b"\xc0N0\xdd\xb9\xf2\x8a\xc1\x00\x00\x00\x00\x00F\x00\x00"
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"=\x00\x00\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Relay Switch 2PM"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)

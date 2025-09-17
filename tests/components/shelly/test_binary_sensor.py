@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -21,6 +21,7 @@ from . import (
     mutate_rpc_device_status,
     register_device,
     register_entity,
+    register_sub_device,
 )
 
 from tests.common import mock_restore_cache
@@ -434,6 +435,7 @@ async def test_rpc_device_virtual_binary_sensor(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -475,8 +477,10 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
 ) -> None:
     """Check whether the virtual binary sensor will be removed if it has been removed from the device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
+
+    # create orphaned entity on main device
     device_entry = register_device(device_registry, config_entry)
-    entity_id = register_entity(
+    entity_id1 = register_entity(
         hass,
         BINARY_SENSOR_DOMAIN,
         "test_name_boolean_200",
@@ -485,10 +489,29 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
         device_id=device_entry.id,
     )
 
+    # create orphaned entity on sub device
+    sub_device_entry = register_sub_device(
+        device_registry,
+        config_entry,
+        "boolean:201-boolean",
+    )
+    entity_id2 = register_entity(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "boolean_201",
+        "boolean:201-boolean",
+        config_entry,
+        device_id=sub_device_entry.id,
+    )
+
+    assert entity_registry.async_get(entity_id1) is not None
+    assert entity_registry.async_get(entity_id2) is not None
+
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get(entity_id) is None
+    assert entity_registry.async_get(entity_id1) is None
+    assert entity_registry.async_get(entity_id2) is None
 
 
 async def test_blu_trv_binary_sensor_entity(
@@ -527,3 +550,44 @@ async def test_rpc_flood_entities(
 
         entry = entity_registry.async_get(entity_id)
         assert entry == snapshot(name=f"{entity_id}-entry")
+
+
+async def test_rpc_presence_component(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test RPC binary sensor entity for presence component."""
+    config = deepcopy(mock_rpc_device.config)
+    config["presence"] = {"enable": True}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["presence"] = {"num_objects": 2}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    mock_config_entry = await init_integration(hass, 4)
+
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_occupancy"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-presence-presence_num_objects"
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "presence", "num_objects", 0)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    config = deepcopy(mock_rpc_device.config)
+    config["presence"] = {"enable": False}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
