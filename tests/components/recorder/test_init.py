@@ -1927,6 +1927,45 @@ async def test_entity_id_filter(
             assert len(db_events) == idx + 1, data
 
 
+@pytest.mark.parametrize(
+    "hass_storage_data",
+    [
+        {
+            "recorder.recorded_entities": {
+                "data": {
+                    "recorded_entities": {},
+                    "recorder_preferences": {
+                        "entity_filter_imported": True,
+                    },
+                },
+                "key": "recorder.recorded_entities",
+                "minor_version": 1,
+                "version": 1,
+            },
+        }
+    ],
+)
+async def test_entity_id_filter_imported_once(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test saving and restoring a state."""
+    # Prime entity registry
+    entity_registry.async_get_or_create(
+        "test", "mock", "1234", suggested_object_id="recorder"
+    )
+    entity_registry.async_get_or_create(
+        "test2", "mock", "1234", suggested_object_id="recorder"
+    )
+
+    await async_setup_recorder_instance(hass, {"include": {"domains": "test2"}})
+    states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
+    assert len(states) == 2
+    assert _state_with_context(hass, "test.recorder").as_dict() == states[0].as_dict()
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[1].as_dict()
+
+
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
