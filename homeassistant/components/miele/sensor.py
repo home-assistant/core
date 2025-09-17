@@ -1042,9 +1042,9 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
 
-        # return cached value if differs only of 90s as debounching,
-        # since API is reporting at minute precision, in order to
-        # avoid changing value too frequently, or if program ended
+        # The API reports with minute precision, to avoid changing
+        # the value too often, we keep the cached value if it differs
+        # less than 90s from the new value
         if (
             self._previous_value is not None
             and current_value is not None
