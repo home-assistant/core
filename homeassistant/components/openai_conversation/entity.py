@@ -223,15 +223,17 @@ def _convert_content_to_param(
                     ResponseReasoningItemParam(
                         type="reasoning",
                         id=content.native.id,
-                        summary=[
-                            {
-                                "type": "summary_text",
-                                "text": summary,
-                            }
-                            for summary in reasoning_summary
-                        ]
-                        if content.thinking_content
-                        else [],
+                        summary=(
+                            [
+                                {
+                                    "type": "summary_text",
+                                    "text": summary,
+                                }
+                                for summary in reasoning_summary
+                            ]
+                            if content.thinking_content
+                            else []
+                        ),
                         encrypted_content=content.native.encrypted_content,
                     )
                 )
@@ -308,9 +310,11 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "tool_call_id": event.item.id,
                     "tool_name": "code_interpreter",
                     "tool_result": {
-                        "output": [output.to_dict() for output in event.item.outputs]  # type: ignore[misc]
-                        if event.item.outputs is not None
-                        else None
+                        "output": (
+                            [output.to_dict() for output in event.item.outputs]  # type: ignore[misc]
+                            if event.item.outputs is not None
+                            else None
+                        )
                     },
                 }
                 last_role = "tool_result"
@@ -529,7 +533,7 @@ class OpenAIBaseLLMEntity(Entity):
         if last_content.role == "user" and last_content.attachments:
             files = await async_prepare_files_for_prompt(
                 self.hass,
-                [a.path for a in last_content.attachments],
+                [(a.path, a.mime_type) for a in last_content.attachments],
             )
             last_message = messages[-1]
             assert (
@@ -601,7 +605,7 @@ class OpenAIBaseLLMEntity(Entity):
 
 
 async def async_prepare_files_for_prompt(
-    hass: HomeAssistant, files: list[Path]
+    hass: HomeAssistant, files: list[tuple[Path, str | None]]
 ) -> ResponseInputMessageContentListParam:
     """Append files to a prompt.
 
@@ -611,11 +615,12 @@ async def async_prepare_files_for_prompt(
     def append_files_to_content() -> ResponseInputMessageContentListParam:
         content: ResponseInputMessageContentListParam = []
 
-        for file_path in files:
+        for file_path, mime_type in files:
             if not file_path.exists():
                 raise HomeAssistantError(f"`{file_path}` does not exist")
 
-            mime_type, _ = guess_file_type(file_path)
+            if mime_type is None:
+                mime_type = guess_file_type(file_path)[0]
 
             if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
                 raise HomeAssistantError(

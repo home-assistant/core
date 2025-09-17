@@ -12,6 +12,7 @@ import pytest
 
 from .common import (
     ASUSWRT_BASE,
+    HOST,
     MOCK_MACS,
     PROTOCOL_HTTP,
     PROTOCOL_SSH,
@@ -154,6 +155,9 @@ def mock_controller_connect_http(mock_devices_http):
 
         # Simulate connection status
         instance.connected = True
+
+        # Set the webpanel address
+        instance.webpanel = f"http://{HOST}:80"
 
         # Identity
         instance.async_get_identity.return_value = AsusDevice(
