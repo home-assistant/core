@@ -15,6 +15,7 @@ from tadoasync.models import (
     TemperatureOffset,
     Weather,
     Zone,
+    ZoneState,
     ZoneStates,
 )
 
@@ -57,6 +58,9 @@ async def mock_tado_api(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
         for zone in zone_states.zone_states.values():
             await tado.update_zone_data(zone)
         client.get_zone_states.return_value = dict(zone_states.zone_states.items())
+        client.get_zone_state.return_value = ZoneState.from_dict(
+            await async_load_json_object_fixture(hass, "zone_state.json", DOMAIN)
+        )
         client.get_weather.return_value = Weather.from_dict(
             await async_load_json_object_fixture(hass, "weather.json", DOMAIN)
         )

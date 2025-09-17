@@ -165,28 +165,41 @@ async def create_climate_entity(
     if zone_type == TYPE_AIR_CONDITIONING:
         # Heat is preferred as it generally has a lower minimum temperature
         for mode in ORDERED_KNOWN_TADO_MODES:
-            if mode not in capabilities:
+            mode_attr = getattr(capabilities, mode.lower(), None)
+            if mode_attr is None:
+                _LOGGER.debug(
+                    "ERWIN: Skipping mode %s for zone %s since not in capabilities",
+                    mode,
+                    name,
+                )
                 continue
+
+            _LOGGER.debug(
+                "ERWIN: Adding mode %s for zone %s since in capabilities", mode, name
+            )
 
             supported_hvac_modes.append(TADO_TO_HA_HVAC_MODE_MAP[mode])
             if (
-                TADO_SWING_SETTING in capabilities[mode]
-                or TADO_VERTICAL_SWING_SETTING in capabilities[mode]
-                or TADO_VERTICAL_SWING_SETTING in capabilities[mode]
+                mode_attr.vertical_swing is not None
+                or mode_attr.horizontal_swing is not None
+                # or TADO_SWING_SETTING in capabilities[mode]
+                # or TADO_VERTICAL_SWING_SETTING in capabilities[mode]
+                # or TADO_VERTICAL_SWING_SETTING in capabilities[mode]
             ):
                 support_flags |= ClimateEntityFeature.SWING_MODE
                 supported_swing_modes = []
-                if TADO_SWING_SETTING in capabilities[mode]:
-                    supported_swing_modes.append(
-                        TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_ON]
-                    )
-                if TADO_VERTICAL_SWING_SETTING in capabilities[mode]:
+                # TODO: this seems deprecated with the new swing modes
+                # if TADO_SWING_SETTING in capabilities[mode]:
+                #     supported_swing_modes.append(
+                #         TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_ON]
+                #     )
+                if mode_attr.vertical_swing is not None:
                     supported_swing_modes.append(SWING_VERTICAL)
-                if TADO_HORIZONTAL_SWING_SETTING in capabilities[mode]:
+                if mode_attr.horizontal_swing is not None:
                     supported_swing_modes.append(SWING_HORIZONTAL)
                 if (
-                    SWING_HORIZONTAL in supported_swing_modes
-                    and SWING_VERTICAL in supported_swing_modes
+                    mode_attr.vertical_swing is not None
+                    and mode_attr.horizontal_swing is not None
                 ):
                     supported_swing_modes.append(SWING_BOTH)
                 supported_swing_modes.append(TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_OFF])
