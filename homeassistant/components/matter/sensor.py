@@ -1141,14 +1141,14 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: (
                 # Determine the error label for the RVC operational state:
                 # 1. If errorStateID is known in the mapping, return the mapped value.
-                # 2. If errorStateID is in the manufacturer range (0x80 to 0xBF) and ErrorStateLabel is present, return that label.
+                # 2. If errorStateID is in the manufacturer range (0x80 to 0xBF) and errorStateLabel is present, return that label.
                 # 3. Otherwise, return "unknown".
                 OPERATIONAL_STATE_ERROR_MAP[x.errorStateID]
                 if x.errorStateID in OPERATIONAL_STATE_ERROR_MAP
                 else (
-                    x.ErrorStateLabel
+                    x.errorStateLabel
                     if 0x80 <= x.errorStateID <= 0xBF
-                    and getattr(x, "ErrorStateLabel", None)
+                    and getattr(x, "errorStateLabel", None)
                     else "unknown"
                 )
             ),
@@ -1230,14 +1230,14 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: (
                 # Determine the error label for the RVC operational state:
                 # 1. If errorStateID is known in the mapping, return the mapped value.
-                # 2. If errorStateID is in the manufacturer range (0x80 to 0xBF) and ErrorStateLabel is present, return that label.
+                # 2. If errorStateID is in the manufacturer range (0x80 to 0xBF) and errorStateLabel is present, return that label.
                 # 3. Otherwise, return "unknown".
                 RVC_OPERATIONAL_STATE_ERROR_MAP[x.errorStateID]
                 if x.errorStateID in RVC_OPERATIONAL_STATE_ERROR_MAP
                 else (
-                    x.ErrorStateLabel
+                    x.errorStateLabel
                     if 0x80 <= x.errorStateID <= 0xBF
-                    and getattr(x, "ErrorStateLabel", None)
+                    and getattr(x, "errorStateLabel", None)
                     else "unknown"
                 )
             ),
