@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry, load_fixture
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         title="Home",
         domain=DOMAIN,
         data={
@@ -30,8 +30,6 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="50.84-4.35",
     )
-    entry.runtime_data = MagicMock()
-    return entry
 
 
 @pytest.fixture

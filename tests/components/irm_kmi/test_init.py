@@ -15,8 +15,6 @@ async def test_load_unload_config_entry(
     mock_irm_kmi_api: AsyncMock,
 ) -> None:
     """Test the IRM KMI configuration entry loading/unloading."""
-    mock_config_entry.runtime_data.api_client = mock_irm_kmi_api
-
     hass.states.async_set(
         "zone.home",
         0,
@@ -49,7 +47,6 @@ async def test_config_entry_not_ready(
         {"latitude": 50.738681639, "longitude": 4.054077148},
     )
 
-    mock_config_entry.runtime_data.api_client = mock_exception_irm_kmi_api
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
