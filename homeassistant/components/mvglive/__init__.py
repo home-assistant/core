@@ -1,1 +1,1 @@
-"""The mvg component."""
+"""The mvglive component."""

@@ -2,31 +2,29 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from mvg import MvgApi, TransportType
+from mvg import MvgApi, MvgApiError, TransportType
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.components.sensor.const import SensorStateClass
-from homeassistant.const import CONF_NAME, UnitOfTime
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NEXT_DEPARTURE = "nextdeparture"
+
 CONF_STATION = "station"
 CONF_DESTINATIONS = "destinations"
 CONF_DIRECTIONS = "directions"
@@ -37,7 +35,16 @@ CONF_NUMBER = "number"
 
 DEFAULT_PRODUCT = ["U-Bahn", "Tram", "Bus", "ExpressBus", "S-Bahn", "Nachteule"]
 
-NONE_ICON = "mdi:clock"
+ICONS = {
+    "U-Bahn": "mdi:subway",
+    "Tram": "mdi:tram",
+    "Bus": "mdi:bus",
+    "ExpressBus": "mdi:bus",
+    "S-Bahn": "mdi:train",
+    "Nachteule": "mdi:owl",
+    "SEV": "mdi:checkbox-blank-circle-outline",
+    "-": "mdi:clock",
+}
 
 ATTRIBUTION = "Data provided by mvg.de"
 
@@ -66,54 +73,34 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities_callback: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MVGLive sensor."""
-    sensors = []
-    for nextdeparture in config[CONF_NEXT_DEPARTURE]:
-        station_name = nextdeparture.get(CONF_STATION)
-
-        def setup_sensor(station_name: str) -> tuple[dict, MvgApi] | None:
-            """Set up station metadata and API in a single executor job."""
-            station_metadata = MvgApi.station(station_name)
-            if station_metadata is None:
-                return None
-            api = MvgApi(station_metadata["id"])
-            return station_metadata, api
-
-        result = await hass.async_add_executor_job(setup_sensor, station_name)
-        if result is None:
-            raise ConfigEntryError(f"Invalid station name: {station_name}")
-
-        station_metadata, api = result
-        sensors.append(
-            MVGSensor(
-                hass,
-                api,
-                station_metadata["name"],
-                nextdeparture.get(CONF_DESTINATIONS),
-                nextdeparture.get(CONF_LINES),
-                nextdeparture.get(CONF_PRODUCTS),
-                nextdeparture.get(CONF_TIMEOFFSET),
-                nextdeparture.get(CONF_NUMBER),
-                nextdeparture.get(CONF_NAME),
-            )
+    sensors = [
+        MVGLiveSensor(
+            hass,
+            nextdeparture.get(CONF_STATION),
+            nextdeparture.get(CONF_DESTINATIONS),
+            nextdeparture.get(CONF_LINES),
+            nextdeparture.get(CONF_PRODUCTS),
+            nextdeparture.get(CONF_TIMEOFFSET),
+            nextdeparture.get(CONF_NUMBER),
+            nextdeparture.get(CONF_NAME),
         )
-    async_add_entities_callback(sensors, True)
+        for nextdeparture in config[CONF_NEXT_DEPARTURE]
+    ]
+    add_entities(sensors, True)
 
 
-class MVGSensor(SensorEntity):
-    """Implementation of an MVG sensor."""
+class MVGLiveSensor(SensorEntity):
+    """Implementation of an MVG Live sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
         self,
         hass: HomeAssistant,
-        api: MvgApi,
         station_name,
         destinations,
         lines,
@@ -123,14 +110,13 @@ class MVGSensor(SensorEntity):
         name,
     ) -> None:
         """Initialize the sensor."""
-        self._api = api
-        self._station_name = station_name
         self._name = name
-        self.data = MVGData(
-            hass, api, destinations, lines, products, timeoffset, number
+        self._station_name = station_name
+        self.data = MVGLiveData(
+            hass, station_name, destinations, lines, products, timeoffset, number
         )
-        self._state = None
-        self._icon = NONE_ICON
+        self._state = "-"
+        self._icon = ICONS["-"]
 
     @property
     def name(self) -> str | None:
@@ -140,7 +126,7 @@ class MVGSensor(SensorEntity):
         return self._station_name
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> str:
         """Return the next departure time."""
         return self._state
 
@@ -149,8 +135,8 @@ class MVGSensor(SensorEntity):
         """Return the state attributes."""
         if not (dep := self.data.departures):
             return None
-        attr = dep[0]
-        attr["departures"] = deepcopy(dep)
+        attr = dep[0]  # next depature attributes
+        attr["departures"] = deepcopy(dep)  # all departures dictionary
         return attr
 
     @property
@@ -162,11 +148,11 @@ class MVGSensor(SensorEntity):
         """Get the latest data and update the state."""
         await self.data.update()
         if not self.data.departures:
-            self._state = None
-            self._icon = NONE_ICON
+            self._state = "-"
+            self._icon = ICONS["-"]
         else:
             self._state = self.data.departures[0].get("time_in_mins", "-")
-            self._icon = self.data.departures[0]["icon"]
+            self._icon = self.data.departures[0].get("icon", ICONS["-"])
 
 
 def _get_minutes_until_departure(departure_time: int) -> int:
@@ -185,13 +171,13 @@ def _get_minutes_until_departure(departure_time: int) -> int:
     return int(time_difference / 60.0)
 
 
-class MVGData:
+class MVGLiveData:
     """Pull data from the mvg.de web page."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        api: MvgApi,
+        station_name,
         destinations,
         lines,
         products,
@@ -200,43 +186,41 @@ class MVGData:
     ) -> None:
         """Initialize the sensor."""
         self._hass = hass
+        self._station_name = station_name
+        self._station_id = None
         self._destinations = destinations
         self._lines = lines
         self._products = products
         self._timeoffset = timeoffset
         self._number = number
-        self.mvg = api
         self.departures: list[dict[str, Any]] = []
 
     async def update(self):
         """Update the connection data."""
-        try:
-
-            def get_departures():
-                """Get departures synchronously in executor."""
-                # Create a new event loop for this thread if needed
-                try:
-                    loop = asyncio.get_event_loop()
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-
-                return loop.run_until_complete(
-                    self.mvg.departures_async(
-                        station_id=self.mvg.station_id,
-                        offset=self._timeoffset,
-                        limit=self._number,
-                        transport_types=[
-                            transport_type
-                            for transport_type in TransportType
-                            if transport_type.value[0] in self._products
-                        ]
-                        if self._products
-                        else None,
-                    )
+        if self._station_id is None:
+            try:
+                station = await MvgApi.station_async(self._station_name)
+                self._station_id = station["id"]
+            except MvgApiError as err:
+                _LOGGER.error(
+                    "Failed to resolve station %s: %s", self._station_name, err
                 )
+                self.departures = []
+                return
 
-            _departures = await self._hass.async_add_executor_job(get_departures)
+        try:
+            _departures = await MvgApi.departures_async(
+                station_id=self._station_id,
+                offset=self._timeoffset,
+                limit=self._number,
+                transport_types=[
+                    transport_type
+                    for transport_type in TransportType
+                    if transport_type.value[0] in self._products
+                ]
+                if self._products
+                else None,
+            )
         except ValueError:
             self.departures = []
             _LOGGER.warning("Returned data not understood")
