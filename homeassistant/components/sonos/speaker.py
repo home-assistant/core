@@ -275,6 +275,31 @@ class SonosSpeaker:
         """Write states for associated SonosEntity instances."""
         async_dispatcher_send(self.hass, f"{SONOS_STATE_UPDATED}-{self.soco.uid}")
 
+    def update_soco_int_attribute(
+        self, soco_attribute: str, speaker_attribute: str
+    ) -> int | None:
+        """Update an integer attribute from SoCo and set it on the speaker.
+
+        Returns the integer value if successful, otherwise None. Do not call from
+        async context as it is a blocking function.
+        """
+        state = getattr(self.soco, soco_attribute, None)
+        assert isinstance(state, str), (
+            f"Expected state to be str, got {type(state).__name__}"
+        )
+        try:
+            value = int(state)
+        except ValueError:
+            _LOGGER.error(
+                "Invalid value for %s %s",
+                speaker_attribute,
+                state,
+            )
+            setattr(self, speaker_attribute, None)
+            return None
+        setattr(self, speaker_attribute, value)
+        return value
+
     #
     # Properties
     #
