@@ -543,11 +543,11 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
-        if: steps.cache-apt-restore.outputs.cache-hit != 'true'
+        if: steps.cache-venv.outputs.cache-hit != 'true' || steps.cache-apt-restore.outputs.cache-hit != 'true'
         timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          if [[ "${{ steps.cache-apt.outputs.cache-hit }}" != 'true' ]]; then
+          if [[ "${{ steps.cache-apt-restore.outputs.cache-hit }}" != 'true' ]]; then
             mkdir -p ${{ env.APT_CACHE_DIR }}
             mkdir -p ${{ env.APT_LIST_CACHE_DIR }}
           fi
@@ -572,7 +572,7 @@ jobs:
             libswscale-dev \
             libudev-dev
 
-          if [[ "${{ steps.cache-apt.outputs.cache-hit }}" != 'true' ]]; then
+          if [[ "${{ steps.cache-apt-restore.outputs.cache-hit }}" != 'true' ]]; then
             sudo chmod -R 755 ${{ env.APT_CACHE_BASE }}
           fi
       - name: Create Python virtual environment
