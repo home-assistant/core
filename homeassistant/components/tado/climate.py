@@ -204,6 +204,7 @@ async def create_climate_entity(
                     supported_swing_modes.append(SWING_BOTH)
                 supported_swing_modes.append(TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_OFF])
 
+            # TODO: @ERWIN: hier verder gaan!
             if (
                 TADO_FANSPEED_SETTING not in capabilities[mode]
                 and TADO_FANLEVEL_SETTING not in capabilities[mode]
