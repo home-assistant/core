@@ -10,6 +10,7 @@ from togrill_bluetooth.packets import (
     PacketA0Notify,
     PacketA6Write,
     PacketA8Notify,
+    PacketA300Write,
     PacketA301Write,
 )
 
@@ -87,7 +88,7 @@ async def test_setup(
                     temperature_1=50.0,
                 ),
             ],
-            "number.pro_05_target_1",
+            "number.probe_1_target_temperature",
             100.0,
             PacketA301Write(probe=1, target=100),
             id="probe",
@@ -100,10 +101,66 @@ async def test_setup(
                     temperature_1=50.0,
                 ),
             ],
-            "number.pro_05_target_1",
+            "number.probe_1_target_temperature",
             0.0,
             PacketA301Write(probe=1, target=None),
             id="probe_clear",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=50.0,
+                    temperature_2=80.0,
+                ),
+            ],
+            "number.probe_1_minimum_temperature",
+            100.0,
+            PacketA300Write(probe=1, minimum=100.0, maximum=80.0),
+            id="minimum",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=None,
+                    temperature_2=80.0,
+                ),
+            ],
+            "number.probe_1_minimum_temperature",
+            0.0,
+            PacketA300Write(probe=1, minimum=None, maximum=80.0),
+            id="minimum_clear",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=50.0,
+                    temperature_2=80.0,
+                ),
+            ],
+            "number.probe_1_maximum_temperature",
+            100.0,
+            PacketA300Write(probe=1, minimum=50.0, maximum=100.0),
+            id="maximum",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=50.0,
+                    temperature_2=None,
+                ),
+            ],
+            "number.probe_1_maximum_temperature",
+            0.0,
+            PacketA300Write(probe=1, minimum=50.0, maximum=None),
+            id="maximum_clear",
         ),
         pytest.param(
             [
@@ -203,7 +260,7 @@ async def test_set_number_write_error(
                 ATTR_VALUE: 100,
             },
             target={
-                ATTR_ENTITY_ID: "number.pro_05_target_1",
+                ATTR_ENTITY_ID: "number.probe_1_target_temperature",
             },
             blocking=True,
         )
@@ -237,7 +294,7 @@ async def test_set_number_disconnected(
                 ATTR_VALUE: 100,
             },
             target={
-                ATTR_ENTITY_ID: "number.pro_05_target_1",
+                ATTR_ENTITY_ID: "number.probe_1_target_temperature",
             },
             blocking=True,
         )

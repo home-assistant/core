@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import AirOSConfigEntry, AirOSData, AirOSDataUpdateCoordinator
+from .coordinator import AirOS8Data, AirOSConfigEntry, AirOSDataUpdateCoordinator
 from .entity import AirOSEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ PARALLEL_UPDATES = 0
 class AirOSBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe an AirOS binary sensor."""
 
-    value_fn: Callable[[AirOSData], bool]
+    value_fn: Callable[[AirOS8Data], bool]
 
 
 BINARY_SENSORS: tuple[AirOSBinarySensorEntityDescription, ...] = (

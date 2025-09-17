@@ -43,10 +43,7 @@ rules:
     status: exempt
     comment: |
       The integration does not require authentication.
-  test-coverage:
-    status: todo
-    comment: |
-      Patch `aioapcaccess.request_status` where we use it.
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done

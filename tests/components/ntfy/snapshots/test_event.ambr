@@ -1,0 +1,75 @@
+# serializer version: 1
+# name: test_event_platform[event.mytopic-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'Title: Hello',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.mytopic',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ntfy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'subscribe',
+    'unique_id': '123456789_ABCDEF_subscribe',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_platform[event.mytopic-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'actions': list([
+      ]),
+      'attachment': None,
+      'click': 'https://example.com/',
+      'content_type': None,
+      'entity_picture': 'https://example.com/icon.png',
+      'event': <Event.MESSAGE: 'message'>,
+      'event_type': 'Title: Hello',
+      'event_types': list([
+        'Title: Hello',
+      ]),
+      'expires': datetime.datetime(2025, 3, 29, 5, 58, 46, tzinfo=datetime.timezone.utc),
+      'friendly_name': 'mytopic',
+      'icon': 'https://example.com/icon.png',
+      'id': 'h6Y2hKA5sy0U',
+      'message': 'Hello',
+      'priority': 3,
+      'tags': list([
+        'octopus',
+      ]),
+      'time': datetime.datetime(2025, 3, 28, 17, 58, 46, tzinfo=datetime.timezone.utc),
+      'title': 'Title',
+      'topic': 'mytopic',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.mytopic',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-03T22:00:00.000+00:00',
+  })
+# ---

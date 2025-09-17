@@ -52,7 +52,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '25.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_consumed-entry]
@@ -108,7 +108,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '500.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_power-entry]
@@ -164,7 +164,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2500.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_state_of_charge-entry]
@@ -217,7 +217,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '78.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_status-entry]
@@ -277,7 +277,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'charging',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_stored-entry]
@@ -333,7 +333,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '10200.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_building_consumption-entry]
@@ -389,7 +389,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '50.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_charging_current_limit-entry]
@@ -445,7 +445,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '50',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_component_temperature-entry]
@@ -501,7 +501,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '45.5',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_consumption-entry]
@@ -557,7 +557,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '8.3',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_current_l1-entry]
@@ -613,7 +613,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '12.5',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_current_l2-entry]
@@ -669,7 +669,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '10.8',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_current_l3-entry]
@@ -725,7 +725,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '11.2',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_frequency-entry]
@@ -781,7 +781,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '50.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_injection-entry]
@@ -837,7 +837,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '11.7',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_power_flow-entry]
@@ -893,7 +893,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-3.4',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_voltage_l1-entry]
@@ -949,7 +949,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '230.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_voltage_l2-entry]
@@ -1005,7 +1005,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '229.5',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_voltage_l3-entry]
@@ -1061,7 +1061,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '230.1',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_injection_power_limit-entry]
@@ -1117,7 +1117,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '5000.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_input_power_l1-entry]
@@ -1173,7 +1173,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1000.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_input_power_l2-entry]
@@ -1229,7 +1229,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '950.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_input_power_l3-entry]
@@ -1285,7 +1285,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '980.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_input_power_total-entry]
@@ -1341,7 +1341,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2930.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_inverter_state-entry]
@@ -1351,10 +1351,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'not_connected',
         'unsynchronized',
         'grid_consumption',
         'grid_injection',
-        'grid_synchronised_but_not_used',
+        'grid_synchronized_but_not_used',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1392,10 +1393,11 @@
       'device_class': 'enum',
       'friendly_name': 'Imeon inverter Inverter state',
       'options': list([
+        'not_connected',
         'unsynchronized',
         'grid_consumption',
         'grid_injection',
-        'grid_synchronised_but_not_used',
+        'grid_synchronized_but_not_used',
       ]),
     }),
     'context': <ANY>,
@@ -1403,7 +1405,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'grid_consumption',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_meter_power-entry]
@@ -1459,7 +1461,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2000.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_current_l1-entry]
@@ -1515,7 +1517,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '15.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_current_l2-entry]
@@ -1571,7 +1573,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '14.5',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_current_l3-entry]
@@ -1627,7 +1629,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '15.2',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_frequency-entry]
@@ -1683,7 +1685,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '49.9',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_power_l1-entry]
@@ -1739,7 +1741,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1100.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_power_l2-entry]
@@ -1795,7 +1797,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1080.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_power_l3-entry]
@@ -1851,7 +1853,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1120.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_power_total-entry]
@@ -1907,7 +1909,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3300.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_voltage_l1-entry]
@@ -1963,7 +1965,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '231.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_voltage_l2-entry]
@@ -2019,7 +2021,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '229.8',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_voltage_l3-entry]
@@ -2075,7 +2077,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '230.2',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_consumed-entry]
@@ -2131,7 +2133,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1500.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_injected-entry]
@@ -2187,7 +2189,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '800.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_power_1-entry]
@@ -2243,7 +2245,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1200.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_power_2-entry]
@@ -2299,7 +2301,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1300.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_power_total-entry]
@@ -2355,7 +2357,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2500.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_self_consumption-entry]
@@ -2410,7 +2412,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '85.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_self_sufficiency-entry]
@@ -2465,7 +2467,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '90.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_solar_production-entry]
@@ -2521,7 +2523,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '43.3',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_timeline_status-entry]
@@ -2603,7 +2605,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'info_bat',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_today_battery_consumed_energy-entry]
@@ -2659,7 +2661,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2000.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_today_battery_stored_energy-entry]
@@ -2715,7 +2717,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '8000.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_today_building_consumption-entry]
@@ -2771,7 +2773,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '15000.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_today_grid_consumed_energy-entry]
@@ -2827,7 +2829,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '6000.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_today_grid_injected_energy-entry]
@@ -2883,7 +2885,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '5000.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_today_pv_energy-entry]
@@ -2939,6 +2941,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '12000.0',
   })
 # ---

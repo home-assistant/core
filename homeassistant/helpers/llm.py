@@ -687,6 +687,11 @@ def _get_exposed_entities(
         if include_state:
             info["state"] = state.state
 
+            # Convert timestamp device_class states from UTC to local time
+            if state.attributes.get("device_class") == "timestamp" and state.state:
+                if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
+                    info["state"] = dt_util.as_local(parsed_utc).isoformat()
+
         if description:
             info["description"] = description
 
@@ -828,7 +833,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "enum": options}
 
     if isinstance(schema, selector.TargetSelector):
-        return convert(cv.TARGET_SERVICE_FIELDS)
+        return convert(cv.TARGET_FIELDS)
 
     if isinstance(schema, selector.TemplateSelector):
         return {"type": "string", "format": "jinja2"}

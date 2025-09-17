@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_devices
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://192.168.1.100/index.html',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '539187',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'pooldose',
+        'TEST123456789',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'SEKO',
+    'model': 'POOL DOSE',
+    'model_id': 'PDPR1H1HAW100',
+    'name': 'Pool Device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'TEST123456789',
+    'sw_version': '1.30 (SW v2.10, API v1)',
+    'via_device_id': None,
+  })
+# ---

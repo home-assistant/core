@@ -5,7 +5,7 @@ import http
 import time
 from unittest.mock import MagicMock
 
-from aiohttp import ClientConnectionError
+from aiohttp import ClientConnectionError, ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 from pymiele import OAUTH2_TOKEN
 import pytest
@@ -210,3 +210,29 @@ async def test_setup_all_platforms(
     # Check a sample sensor for each new device
     assert hass.states.get("sensor.dishwasher").state == "in_use"
     assert hass.states.get("sensor.oven_temperature_2").state == "175.0"
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        ClientResponseError("test", "Test"),
+        TimeoutError,
+    ],
+    ids=[
+        "ClientResponseError",
+        "TimeoutError",
+    ],
+)
+async def test_load_entry_with_action_error(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+) -> None:
+    """Test load with error from actions endpoint."""
+    mock_miele_client.get_actions.side_effect = side_effect
+    await setup_integration(hass, mock_config_entry)
+    entry = mock_config_entry
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert mock_miele_client.get_actions.call_count == 5

@@ -477,6 +477,7 @@ DISCOVERY_SCHEMAS = [
             device_types.ColorTemperatureLight,
             device_types.DimmableLight,
             device_types.DimmablePlugInUnit,
+            device_types.MountedDimmableLoadControl,
             device_types.ExtendedColorLight,
             device_types.OnOffLight,
             device_types.DimmerSwitch,

@@ -49,7 +49,7 @@ class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):
             name=self.data.name,
             identifiers={(DOMAIN, self.ain)},
             configuration_url=self.coordinator.configuration_url,
-            manufacturer="AVM",
+            manufacturer="FRITZ!",
             model="SmartHome Template",
         )
 

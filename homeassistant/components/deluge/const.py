@@ -43,3 +43,5 @@ class DelugeSensorType(enum.StrEnum):
     UPLOAD_SPEED_SENSOR = "upload_speed"
     PROTOCOL_TRAFFIC_UPLOAD_SPEED_SENSOR = "protocol_traffic_upload_speed"
     PROTOCOL_TRAFFIC_DOWNLOAD_SPEED_SENSOR = "protocol_traffic_download_speed"
+    DOWNLOADING_COUNT_SENSOR = "downloading_count"
+    SEEDING_COUNT_SENSOR = "seeding_count"

@@ -39,6 +39,14 @@
       "wdr_switch": {
         "default": "mdi:alpha-w-box"
       }
+    },
+    "number": {
+      "device_volume": {
+        "default": "mdi:volume-source"
+      },
+      "speak_volume": {
+        "default": "mdi:account-voice"
+      }
     }
   }
 }

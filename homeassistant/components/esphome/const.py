@@ -25,3 +25,5 @@ PROJECT_URLS = {
 # ESPHome always uses .0 for the changelog URL
 STABLE_BLE_URL_VERSION = f"{STABLE_BLE_VERSION.major}.{STABLE_BLE_VERSION.minor}.0"
 DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_URL_VERSION}.html"
+
+NO_WAKE_WORD: Final[str] = "no_wake_word"

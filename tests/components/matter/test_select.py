@@ -282,3 +282,23 @@ async def test_microwave_oven(
             wattSettingIndex=8
         ),
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_door_window_p2"])
+async def test_aqara_door_window_p2(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entity for Aqara contact sensor fixture."""
+    # SensitivityLevel attribute
+    state = hass.states.get("select.aqara_door_and_window_sensor_p2_sensitivity")
+    assert state
+    assert state.state == "30 mm"
+    assert state.attributes["options"] == ["10 mm", "20 mm", "30 mm"]
+
+    # Change SensitivityLevel to 20 mm
+    set_node_attribute(matter_node, 1, 128, 0, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("select.aqara_door_and_window_sensor_p2_sensitivity")
+    assert state.state == "20 mm"

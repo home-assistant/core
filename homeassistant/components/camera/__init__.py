@@ -81,7 +81,11 @@ from .const import (
 )
 from .helper import get_camera_from_entity_id
 from .img_util import scale_jpeg_camera_image
-from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
+from .prefs import (
+    CameraPreferences,
+    DynamicStreamSettings,  # noqa: F401
+    get_dynamic_camera_stream_settings,
+)
 from .webrtc import (
     DATA_ICE_SERVERS,
     CameraWebRTCProvider,
@@ -550,9 +554,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                     self.hass,
                     source,
                     options=self.stream_options,
-                    dynamic_stream_settings=await self.hass.data[
-                        DATA_CAMERA_PREFS
-                    ].get_dynamic_stream_settings(self.entity_id),
+                    dynamic_stream_settings=await get_dynamic_camera_stream_settings(
+                        self.hass, self.entity_id
+                    ),
                     stream_label=self.entity_id,
                 )
                 self.stream.set_update_callback(self.async_write_ha_state)
@@ -942,9 +946,7 @@ async def websocket_get_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
-    stream_prefs = await hass.data[DATA_CAMERA_PREFS].get_dynamic_stream_settings(
-        msg["entity_id"]
-    )
+    stream_prefs = await get_dynamic_camera_stream_settings(hass, msg["entity_id"])
     connection.send_result(msg["id"], asdict(stream_prefs))
 
 

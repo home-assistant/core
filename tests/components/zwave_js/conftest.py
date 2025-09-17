@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Generator
 import copy
 import io
+import logging
 from typing import Any, cast
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
@@ -925,6 +926,7 @@ async def integration_fixture(
     hass: HomeAssistant,
     client: MagicMock,
     platforms: list[Platform],
+    caplog: pytest.LogCaptureFixture,
 ) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(
@@ -938,6 +940,11 @@ async def integration_fixture(
         await hass.async_block_till_done()
 
     client.async_send_command.reset_mock()
+
+    # Make sure no errors logged during setup.
+    # Eg. unique id collisions are only logged as errors and not raised,
+    # and may not cause tests to fail otherwise.
+    assert not any(record.levelno == logging.ERROR for record in caplog.records)
 
     return entry
 

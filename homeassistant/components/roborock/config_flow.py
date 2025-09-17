@@ -35,6 +35,7 @@ from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
+    CONF_SHOW_BACKGROUND,
     CONF_USER_DATA,
     DEFAULT_DRAWABLES,
     DOMAIN,
@@ -215,6 +216,7 @@ class RoborockOptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage the map object drawable options."""
         if user_input is not None:
+            self.options[CONF_SHOW_BACKGROUND] = user_input.pop(CONF_SHOW_BACKGROUND)
             self.options.setdefault(DRAWABLES, {}).update(user_input)
             return self.async_create_entry(title="", data=self.options)
         data_schema = {}
@@ -227,6 +229,12 @@ class RoborockOptionsFlowHandler(OptionsFlowWithReload):
                     ),
                 )
             ] = bool
+        data_schema[
+            vol.Required(
+                CONF_SHOW_BACKGROUND,
+                default=self.config_entry.options.get(CONF_SHOW_BACKGROUND, False),
+            )
+        ] = bool
         return self.async_show_form(
             step_id=DRAWABLES,
             data_schema=vol.Schema(data_schema),

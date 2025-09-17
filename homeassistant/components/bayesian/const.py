@@ -1,5 +1,9 @@
 """Consts for using in modules."""
 
+from homeassistant.const import Platform
+
+DOMAIN = "bayesian"
+PLATFORMS = [Platform.BINARY_SENSOR]
 ATTR_OBSERVATIONS = "observations"
 ATTR_OCCURRED_OBSERVATION_ENTITIES = "occurred_observation_entities"
 ATTR_PROBABILITY = "probability"

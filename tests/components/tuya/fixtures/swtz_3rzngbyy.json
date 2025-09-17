@@ -1,0 +1,116 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Grillh\u0151m\u00e9r\u0151",
+  "category": "swtz",
+  "product_id": "3rzngbyy",
+  "product_name": "Cooking Thermometer",
+  "online": false,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-08-17T19:59:22+00:00",
+  "create_time": "2025-08-17T19:59:22+00:00",
+  "update_time": "2025-08-17T19:59:22+00:00",
+  "function": {
+    "cook_temperature": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -300,
+        "max": 3000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "cook_temperature_2": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -300,
+        "max": 3000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    },
+    "alarm_switch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -300,
+        "max": 3000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "temp_current_2": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -300,
+        "max": 3000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "cook_temperature": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -300,
+        "max": 3000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "cook_temperature_2": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -300,
+        "max": 3000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    }
+  },
+  "status": {
+    "battery_percentage": 100,
+    "temp_current": 290,
+    "temp_current_2": 290,
+    "cook_temperature": -300,
+    "cook_temperature_2": -300,
+    "temp_unit_convert": "c"
+  },
+  "set_up": false,
+  "support_local": true
+}

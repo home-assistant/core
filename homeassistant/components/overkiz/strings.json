@@ -21,7 +21,7 @@
         }
       },
       "cloud": {
-        "description": "Enter your application credentials.",
+        "description": "Enter your credentials.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"

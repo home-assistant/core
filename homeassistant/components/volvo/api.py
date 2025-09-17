@@ -1,11 +1,16 @@
 """API for Volvo bound to Home Assistant OAuth."""
 
+import logging
 from typing import cast
 
 from aiohttp import ClientSession
 from volvocarsapi.auth import AccessTokenManager
 
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers.redact import async_redact_data
+
+_LOGGER = logging.getLogger(__name__)
+_TO_REDACT = ["access_token", "id_token", "refresh_token"]
 
 
 class VolvoAuth(AccessTokenManager):
@@ -18,7 +23,20 @@ class VolvoAuth(AccessTokenManager):
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
+        current_access_token = self._oauth_session.token["access_token"]
+        current_refresh_token = self._oauth_session.token["refresh_token"]
+
         await self._oauth_session.async_ensure_token_valid()
+
+        _LOGGER.debug(
+            "Token: %s", async_redact_data(self._oauth_session.token, _TO_REDACT)
+        )
+        _LOGGER.debug(
+            "Token changed: access %s, refresh %s",
+            current_access_token != self._oauth_session.token["access_token"],
+            current_refresh_token != self._oauth_session.token["refresh_token"],
+        )
+
         return cast(str, self._oauth_session.token["access_token"])
 
 

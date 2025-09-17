@@ -14,7 +14,9 @@ from homeassistant.components.person import (
     DOMAIN,
 )
 from homeassistant.const import (
+    ATTR_EDITABLE,
     ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
     ATTR_GPS_ACCURACY,
     ATTR_ID,
     ATTR_LATITUDE,
@@ -112,14 +114,19 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     }
     assert await async_setup_component(hass, DOMAIN, config)
 
+    expected_attributes = {
+        ATTR_DEVICE_TRACKERS: [DEVICE_TRACKER],
+        ATTR_EDITABLE: False,
+        ATTR_FRIENDLY_NAME: "tracked person",
+        ATTR_ID: "1234",
+        ATTR_USER_ID: user_id,
+    }
+
     state = hass.states.get("person.tracked_person")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) is None
-    assert state.attributes.get(ATTR_LONGITUDE) is None
-    assert state.attributes.get(ATTR_SOURCE) is None
-    assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes == expected_attributes
 
+    # Test home without coordinates
     hass.states.async_set(DEVICE_TRACKER, "home")
     await hass.async_block_till_done()
 
@@ -131,13 +138,41 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
 
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
-    assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) is None
-    assert state.attributes.get(ATTR_LONGITUDE) is None
-    assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
-    assert state.attributes.get(ATTR_USER_ID) == user_id
-    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
+    assert state.attributes == expected_attributes | {
+        ATTR_LATITUDE: 32.87336,
+        ATTR_LONGITUDE: -117.22743,
+        ATTR_SOURCE: DEVICE_TRACKER,
+    }
 
+    # Test home with coordinates
+    hass.states.async_set(
+        DEVICE_TRACKER,
+        "home",
+        {ATTR_LATITUDE: 10.123456, ATTR_LONGITUDE: 11.123456, ATTR_GPS_ACCURACY: 10},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("person.tracked_person")
+    assert state.state == "home"
+    assert state.attributes == expected_attributes | {
+        ATTR_GPS_ACCURACY: 10,
+        ATTR_LATITUDE: 10.123456,
+        ATTR_LONGITUDE: 11.123456,
+        ATTR_SOURCE: DEVICE_TRACKER,
+    }
+
+    # Test not_home without coordinates
+    hass.states.async_set(
+        DEVICE_TRACKER,
+        "not_home",
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("person.tracked_person")
+    assert state.state == "not_home"
+    assert state.attributes == expected_attributes | {ATTR_SOURCE: DEVICE_TRACKER}
+
+    # Test not_home with coordinates
     hass.states.async_set(
         DEVICE_TRACKER,
         "not_home",
@@ -147,13 +182,12 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
 
     state = hass.states.get("person.tracked_person")
     assert state.state == "not_home"
-    assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) == 10.123456
-    assert state.attributes.get(ATTR_LONGITUDE) == 11.123456
-    assert state.attributes.get(ATTR_GPS_ACCURACY) == 10
-    assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
-    assert state.attributes.get(ATTR_USER_ID) == user_id
-    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
+    assert state.attributes == expected_attributes | {
+        ATTR_GPS_ACCURACY: 10,
+        ATTR_LATITUDE: 10.123456,
+        ATTR_LONGITUDE: 11.123456,
+        ATTR_SOURCE: DEVICE_TRACKER,
+    }
 
 
 async def test_setup_two_trackers(
@@ -188,8 +222,8 @@ async def test_setup_two_trackers(
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) is None
-    assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_LATITUDE) == 32.87336
+    assert state.attributes.get(ATTR_LONGITUDE) == -117.22743
     assert state.attributes.get(ATTR_GPS_ACCURACY) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
@@ -453,8 +487,8 @@ async def test_load_person_storage(
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) is None
-    assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_LATITUDE) == 32.87336
+    assert state.attributes.get(ATTR_LONGITUDE) == -117.22743
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == hass_admin_user.id
 
@@ -817,7 +851,7 @@ async def test_reload(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
         },
     )
 
-    assert len(hass.states.async_entity_ids()) == 2
+    assert len(hass.states.async_entity_ids()) == 3  # Person1, Person2, zone.home
 
     state_1 = hass.states.get("person.person_1")
     state_2 = hass.states.get("person.person_2")
@@ -847,7 +881,7 @@ async def test_reload(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
         )
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids()) == 2
+    assert len(hass.states.async_entity_ids()) == 3  # Person1, Person2, zone.home
 
     state_1 = hass.states.get("person.person_1")
     state_2 = hass.states.get("person.person_2")

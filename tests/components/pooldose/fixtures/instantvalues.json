@@ -1,0 +1,126 @@
+{
+  "sensor": {
+    "temperature": {
+      "value": 25,
+      "unit": "°C"
+    },
+    "ph": {
+      "value": 6.8,
+      "unit": null
+    },
+    "orp": {
+      "value": 718,
+      "unit": "mV"
+    },
+    "ph_type_dosing": {
+      "value": "alcalyne",
+      "unit": null
+    },
+    "peristaltic_ph_dosing": {
+      "value": "proportional",
+      "unit": null
+    },
+    "ofa_ph_value": {
+      "value": 0,
+      "unit": "min"
+    },
+    "orp_type_dosing": {
+      "value": "low",
+      "unit": null
+    },
+    "peristaltic_orp_dosing": {
+      "value": "proportional",
+      "unit": null
+    },
+    "ofa_orp_value": {
+      "value": 0,
+      "unit": "min"
+    },
+    "ph_calibration_type": {
+      "value": "2_points",
+      "unit": null
+    },
+    "ph_calibration_offset": {
+      "value": 8,
+      "unit": "mV"
+    },
+    "ph_calibration_slope": {
+      "value": 57.34,
+      "unit": "mV"
+    },
+    "orp_calibration_type": {
+      "value": "1_point",
+      "unit": null
+    },
+    "orp_calibration_offset": {
+      "value": 0,
+      "unit": "mV"
+    },
+    "orp_calibration_slope": {
+      "value": 0.96,
+      "unit": "mV"
+    }
+  },
+  "binary_sensor": {
+    "pump_running": {
+      "value": true
+    },
+    "ph_level_ok": {
+      "value": false
+    },
+    "orp_level_ok": {
+      "value": false
+    },
+    "flow_rate_ok": {
+      "value": false
+    },
+    "alarm_relay": {
+      "value": true
+    },
+    "relay_aux1_ph": {
+      "value": false
+    },
+    "relay_aux2_orpcl": {
+      "value": false
+    }
+  },
+  "number": {
+    "ph_target": {
+      "value": 6.5,
+      "unit": null,
+      "min": 6,
+      "max": 8,
+      "step": 0.1
+    },
+    "orp_target": {
+      "value": 680,
+      "unit": "mV",
+      "min": 400,
+      "max": 850,
+      "step": 1
+    },
+    "cl_target": {
+      "value": 1,
+      "unit": "ppm",
+      "min": 0,
+      "max": 65535,
+      "step": 0.01
+    }
+  },
+  "switch": {
+    "stop_pool_dosing": {
+      "value": false
+    },
+    "pump_detection": {
+      "value": true
+    },
+    "frequency_input": {
+      "value": false
+    }
+  },
+  "select": {
+    "water_meter_unit": {
+      "value": "m³"
+    }
+  }
+}

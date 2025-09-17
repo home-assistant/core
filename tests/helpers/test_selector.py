@@ -1,5 +1,6 @@
 """Test selectors."""
 
+from collections.abc import Callable, Iterable
 from enum import Enum
 from typing import Any
 
@@ -42,7 +43,11 @@ def test_invalid_base_schema(schema) -> None:
 
 
 def _test_selector(
-    selector_type, schema, valid_selections, invalid_selections, converter=None
+    selector_type: str,
+    schema: dict,
+    valid_selections: Iterable[Any],
+    invalid_selections: Iterable[Any],
+    converter: Callable[[Any], Any] | None = None,
 ):
     """Help test a selector."""
 
@@ -1160,6 +1165,7 @@ def test_constant_selector_schema(schema, valid_selections, invalid_selections) 
 @pytest.mark.parametrize(
     "schema",
     [
+        None,  # Value is mandatory
         {},  # Value is mandatory
         {"value": []},  # Value must be str, int or bool
         {"value": 123, "label": 123},  # Label must be str

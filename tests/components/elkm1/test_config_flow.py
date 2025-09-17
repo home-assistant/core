@@ -1,5 +1,7 @@
 """Test the Elk-M1 Control config flow."""
 
+from __future__ import annotations
+
 from dataclasses import asdict
 from unittest.mock import patch
 
@@ -7,8 +9,15 @@ from elkm1_lib.discovery import ElkSystem
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.elkm1.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.components.elkm1.const import CONF_AUTO_CONFIGURE, DOMAIN
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PREFIX,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -34,6 +43,21 @@ ELK_DISCOVERY_INFO = asdict(ELK_DISCOVERY)
 ELK_DISCOVERY_INFO_NON_STANDARD_PORT = asdict(ELK_DISCOVERY_NON_STANDARD_PORT)
 
 MODULE = "homeassistant.components.elkm1"
+
+
+@pytest.fixture
+def mock_config_entry():
+    """Create a mock config entry for testing."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: f"elks://{MOCK_IP_ADDRESS}",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_PREFIX: "",
+        },
+        unique_id=MOCK_MAC,
+    )
 
 
 async def test_discovery_ignored_entry(hass: HomeAssistant) -> None:
@@ -86,11 +110,11 @@ async def test_form_user_with_secure_elk_no_discovery(hass: HomeAssistant) -> No
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "secure",
-                "address": "1.2.3.4",
-                "username": "test-username",
-                "password": "test-password",
-                "prefix": "",
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
             },
         )
         await hass.async_block_till_done()
@@ -98,11 +122,11 @@ async def test_form_user_with_secure_elk_no_discovery(hass: HomeAssistant) -> No
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "elks://1.2.3.4",
-        "password": "test-password",
-        "prefix": "",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://1.2.3.4",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -143,11 +167,11 @@ async def test_form_user_with_insecure_elk_skip_discovery(hass: HomeAssistant) -
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "non-secure",
-                "address": "1.2.3.4",
-                "username": "test-username",
-                "password": "test-password",
-                "prefix": "",
+                CONF_PROTOCOL: "non-secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
             },
         )
         await hass.async_block_till_done()
@@ -155,11 +179,11 @@ async def test_form_user_with_insecure_elk_skip_discovery(hass: HomeAssistant) -
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "elk://1.2.3.4",
-        "password": "test-password",
-        "prefix": "",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elk://1.2.3.4",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -200,11 +224,11 @@ async def test_form_user_with_insecure_elk_no_discovery(hass: HomeAssistant) -> 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "non-secure",
-                "address": "1.2.3.4",
-                "username": "test-username",
-                "password": "test-password",
-                "prefix": "",
+                CONF_PROTOCOL: "non-secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
             },
         )
         await hass.async_block_till_done()
@@ -212,11 +236,11 @@ async def test_form_user_with_insecure_elk_no_discovery(hass: HomeAssistant) -> 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "elk://1.2.3.4",
-        "password": "test-password",
-        "prefix": "",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elk://1.2.3.4",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -255,17 +279,55 @@ async def test_form_user_with_insecure_elk_times_out(hass: HomeAssistant) -> Non
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "non-secure",
-                "address": "1.2.3.4",
-                "username": "test-username",
-                "password": "test-password",
-                "prefix": "",
+                CONF_PROTOCOL: "non-secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    # Retry with successful connection
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with (
+        _patch_discovery(),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROTOCOL: "non-secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "ElkM1"
+    assert result3["data"] == {
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elk://1.2.3.4",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_user_with_secure_elk_no_discovery_ip_already_configured(
@@ -295,11 +357,11 @@ async def test_form_user_with_secure_elk_no_discovery_ip_already_configured(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "secure",
-                "address": "127.0.0.1",
-                "username": "test-username",
-                "password": "test-password",
-                "prefix": "",
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "127.0.0.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
             },
         )
         await hass.async_block_till_done()
@@ -344,8 +406,8 @@ async def test_form_user_with_secure_elk_with_discovery(hass: HomeAssistant) -> 
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
@@ -353,11 +415,11 @@ async def test_form_user_with_secure_elk_with_discovery(hass: HomeAssistant) -> 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1 ddeeff"
     assert result3["data"] == {
-        "auto_configure": True,
-        "host": "elks://127.0.0.1",
-        "password": "test-password",
-        "prefix": "",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://127.0.0.1",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
     }
     assert result3["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup.mock_calls) == 1
@@ -402,11 +464,11 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual(
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "protocol": "secure",
-                "address": "1.2.3.4",
-                "username": "test-username",
-                "password": "test-password",
-                "prefix": "",
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
             },
         )
         await hass.async_block_till_done()
@@ -414,11 +476,11 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1"
     assert result3["data"] == {
-        "auto_configure": True,
-        "host": "elks://1.2.3.4",
-        "password": "test-password",
-        "prefix": "",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://1.2.3.4",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
     }
     assert result3["result"].unique_id is None
     assert len(mock_setup.mock_calls) == 1
@@ -463,11 +525,11 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual_direct_disco
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "protocol": "secure",
-                "address": "127.0.0.1",
-                "username": "test-username",
-                "password": "test-password",
-                "prefix": "",
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "127.0.0.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
             },
         )
         await hass.async_block_till_done()
@@ -475,11 +537,11 @@ async def test_form_user_with_secure_elk_with_discovery_pick_manual_direct_disco
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1 ddeeff"
     assert result3["data"] == {
-        "auto_configure": True,
-        "host": "elks://127.0.0.1",
-        "password": "test-password",
-        "prefix": "",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://127.0.0.1",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
     }
     assert result3["result"].unique_id == MOCK_MAC
     assert len(mock_setup.mock_calls) == 1
@@ -515,11 +577,11 @@ async def test_form_user_with_tls_elk_no_discovery(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "TLS 1.2",
-                "address": "1.2.3.4",
-                "username": "test-username",
-                "password": "test-password",
-                "prefix": "",
+                CONF_PROTOCOL: "TLS 1.2",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
             },
         )
         await hass.async_block_till_done()
@@ -527,11 +589,11 @@ async def test_form_user_with_tls_elk_no_discovery(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "elksv1_2://1.2.3.4",
-        "password": "test-password",
-        "prefix": "",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elksv1_2://1.2.3.4",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -566,9 +628,9 @@ async def test_form_user_with_non_secure_elk_no_discovery(hass: HomeAssistant) -
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "non-secure",
-                "address": "1.2.3.4",
-                "prefix": "guest_house",
+                CONF_PROTOCOL: "non-secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_PREFIX: "guest_house",
             },
         )
         await hass.async_block_till_done()
@@ -576,11 +638,11 @@ async def test_form_user_with_non_secure_elk_no_discovery(hass: HomeAssistant) -
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "guest_house"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "elk://1.2.3.4",
-        "prefix": "guest_house",
-        "username": "",
-        "password": "",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elk://1.2.3.4",
+        CONF_PREFIX: "guest_house",
+        CONF_USERNAME: "",
+        CONF_PASSWORD: "",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -615,9 +677,9 @@ async def test_form_user_with_serial_elk_no_discovery(hass: HomeAssistant) -> No
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "serial",
-                "address": "/dev/ttyS0:115200",
-                "prefix": "",
+                CONF_PROTOCOL: "serial",
+                CONF_ADDRESS: "/dev/ttyS0:115200",
+                CONF_PREFIX: "",
             },
         )
         await hass.async_block_till_done()
@@ -625,11 +687,11 @@ async def test_form_user_with_serial_elk_no_discovery(hass: HomeAssistant) -> No
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "serial:///dev/ttyS0:115200",
-        "prefix": "",
-        "username": "",
-        "password": "",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "serial:///dev/ttyS0:115200",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "",
+        CONF_PASSWORD: "",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -659,16 +721,54 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "secure",
-                "address": "1.2.3.4",
-                "username": "test-username",
-                "password": "test-password",
-                "prefix": "",
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
             },
         )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    # Retry with successful connection
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "ElkM1"
+    assert result3["data"] == {
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://1.2.3.4",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_unknown_exception(hass: HomeAssistant) -> None:
@@ -695,16 +795,55 @@ async def test_unknown_exception(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "secure",
-                "address": "1.2.3.4",
-                "username": "test-username",
-                "password": "test-password",
-                "prefix": "",
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
             },
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # Simulate an unexpected exception (ValueError) and verify the flow returns an "unknown" error
     assert result2["errors"] == {"base": "unknown"}
+
+    # Retry with successful connection
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "ElkM1"
+    assert result3["data"] == {
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://1.2.3.4",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -722,16 +861,54 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "secure",
-                "address": "1.2.3.4",
-                "username": "test-username",
-                "password": "test-password",
-                "prefix": "",
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_PREFIX: "",
             },
         )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    # Retry with valid auth
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "correct-password",
+                CONF_PREFIX: "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "ElkM1"
+    assert result3["data"] == {
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://1.2.3.4",
+        CONF_PASSWORD: "correct-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_auth_no_password(hass: HomeAssistant) -> None:
@@ -749,16 +926,54 @@ async def test_form_invalid_auth_no_password(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "secure",
-                "address": "1.2.3.4",
-                "username": "test-username",
-                "password": "",
-                "prefix": "",
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "",
+                CONF_PREFIX: "",
             },
         )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    # Retry with valid password
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "correct-password",
+                CONF_PREFIX: "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "ElkM1"
+    assert result3["data"] == {
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://1.2.3.4",
+        CONF_PASSWORD: "correct-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_import(hass: HomeAssistant) -> None:
@@ -780,11 +995,11 @@ async def test_form_import(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={
-                "host": "elks://1.2.3.4",
-                "username": "friend",
-                "password": "love",
+                CONF_HOST: "elks://1.2.3.4",
+                CONF_USERNAME: "friend",
+                CONF_PASSWORD: "love",
                 "temperature_unit": "C",
-                "auto_configure": False,
+                CONF_AUTO_CONFIGURE: False,
                 "keypad": {
                     "enabled": True,
                     "exclude": [],
@@ -793,7 +1008,7 @@ async def test_form_import(hass: HomeAssistant) -> None:
                 "output": {"enabled": False, "exclude": [], "include": []},
                 "counter": {"enabled": False, "exclude": [], "include": []},
                 "plc": {"enabled": False, "exclude": [], "include": []},
-                "prefix": "ohana",
+                CONF_PREFIX: "ohana",
                 "setting": {"enabled": False, "exclude": [], "include": []},
                 "area": {"enabled": False, "exclude": [], "include": []},
                 "task": {"enabled": False, "exclude": [], "include": []},
@@ -811,20 +1026,20 @@ async def test_form_import(hass: HomeAssistant) -> None:
     assert result["title"] == "ohana"
 
     assert result["data"] == {
-        "auto_configure": False,
-        "host": "elks://1.2.3.4",
+        CONF_AUTO_CONFIGURE: False,
+        CONF_HOST: "elks://1.2.3.4",
         "keypad": {"enabled": True, "exclude": [], "include": [[1, 1], [2, 2], [3, 3]]},
         "output": {"enabled": False, "exclude": [], "include": []},
-        "password": "love",
+        CONF_PASSWORD: "love",
         "plc": {"enabled": False, "exclude": [], "include": []},
-        "prefix": "ohana",
+        CONF_PREFIX: "ohana",
         "setting": {"enabled": False, "exclude": [], "include": []},
         "area": {"enabled": False, "exclude": [], "include": []},
         "counter": {"enabled": False, "exclude": [], "include": []},
         "task": {"enabled": False, "exclude": [], "include": []},
         "temperature_unit": "C",
         "thermostat": {"enabled": False, "exclude": [], "include": []},
-        "username": "friend",
+        CONF_USERNAME: "friend",
         "zone": {"enabled": True, "exclude": [[15, 15], [28, 208]], "include": []},
     }
     assert len(mock_setup.mock_calls) == 1
@@ -850,11 +1065,11 @@ async def test_form_import_device_discovered(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={
-                "host": "elks://127.0.0.1",
-                "username": "friend",
-                "password": "love",
+                CONF_HOST: "elks://127.0.0.1",
+                CONF_USERNAME: "friend",
+                CONF_PASSWORD: "love",
                 "temperature_unit": "C",
-                "auto_configure": False,
+                CONF_AUTO_CONFIGURE: False,
                 "keypad": {
                     "enabled": True,
                     "exclude": [],
@@ -863,7 +1078,7 @@ async def test_form_import_device_discovered(hass: HomeAssistant) -> None:
                 "output": {"enabled": False, "exclude": [], "include": []},
                 "counter": {"enabled": False, "exclude": [], "include": []},
                 "plc": {"enabled": False, "exclude": [], "include": []},
-                "prefix": "ohana",
+                CONF_PREFIX: "ohana",
                 "setting": {"enabled": False, "exclude": [], "include": []},
                 "area": {"enabled": False, "exclude": [], "include": []},
                 "task": {"enabled": False, "exclude": [], "include": []},
@@ -881,20 +1096,20 @@ async def test_form_import_device_discovered(hass: HomeAssistant) -> None:
     assert result["title"] == "ohana"
     assert result["result"].unique_id == MOCK_MAC
     assert result["data"] == {
-        "auto_configure": False,
-        "host": "elks://127.0.0.1",
+        CONF_AUTO_CONFIGURE: False,
+        CONF_HOST: "elks://127.0.0.1",
         "keypad": {"enabled": True, "exclude": [], "include": [[1, 1], [2, 2], [3, 3]]},
         "output": {"enabled": False, "exclude": [], "include": []},
-        "password": "love",
+        CONF_PASSWORD: "love",
         "plc": {"enabled": False, "exclude": [], "include": []},
-        "prefix": "ohana",
+        CONF_PREFIX: "ohana",
         "setting": {"enabled": False, "exclude": [], "include": []},
         "area": {"enabled": False, "exclude": [], "include": []},
         "counter": {"enabled": False, "exclude": [], "include": []},
         "task": {"enabled": False, "exclude": [], "include": []},
         "temperature_unit": "C",
         "thermostat": {"enabled": False, "exclude": [], "include": []},
-        "username": "friend",
+        CONF_USERNAME: "friend",
         "zone": {"enabled": True, "exclude": [[15, 15], [28, 208]], "include": []},
     }
     assert len(mock_setup.mock_calls) == 1
@@ -920,11 +1135,11 @@ async def test_form_import_non_secure_device_discovered(hass: HomeAssistant) -> 
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={
-                "host": "elk://127.0.0.1:2101",
-                "username": "",
-                "password": "",
-                "auto_configure": True,
-                "prefix": "ohana",
+                CONF_HOST: "elk://127.0.0.1:2101",
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+                CONF_AUTO_CONFIGURE: True,
+                CONF_PREFIX: "ohana",
             },
         )
         await hass.async_block_till_done()
@@ -933,11 +1148,11 @@ async def test_form_import_non_secure_device_discovered(hass: HomeAssistant) -> 
     assert result["title"] == "ohana"
     assert result["result"].unique_id == MOCK_MAC
     assert result["data"] == {
-        "auto_configure": True,
-        "host": "elk://127.0.0.1:2101",
-        "password": "",
-        "prefix": "ohana",
-        "username": "",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elk://127.0.0.1:2101",
+        CONF_PASSWORD: "",
+        CONF_PREFIX: "ohana",
+        CONF_USERNAME: "",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -964,11 +1179,11 @@ async def test_form_import_non_secure_non_stanadard_port_device_discovered(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={
-                "host": "elk://127.0.0.1:444",
-                "username": "",
-                "password": "",
-                "auto_configure": True,
-                "prefix": "ohana",
+                CONF_HOST: "elk://127.0.0.1:444",
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+                CONF_AUTO_CONFIGURE: True,
+                CONF_PREFIX: "ohana",
             },
         )
         await hass.async_block_till_done()
@@ -977,11 +1192,11 @@ async def test_form_import_non_secure_non_stanadard_port_device_discovered(
     assert result["title"] == "ohana"
     assert result["result"].unique_id == MOCK_MAC
     assert result["data"] == {
-        "auto_configure": True,
-        "host": "elk://127.0.0.1:444",
-        "password": "",
-        "prefix": "ohana",
-        "username": "",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elk://127.0.0.1:444",
+        CONF_PASSWORD: "",
+        CONF_PREFIX: "ohana",
+        CONF_USERNAME: "",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -998,11 +1213,11 @@ async def test_form_import_non_secure_device_discovered_invalid_auth(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={
-                "host": "elks://127.0.0.1",
-                "username": "invalid",
-                "password": "",
-                "auto_configure": False,
-                "prefix": "ohana",
+                CONF_HOST: "elks://127.0.0.1",
+                CONF_USERNAME: "invalid",
+                CONF_PASSWORD: "",
+                CONF_AUTO_CONFIGURE: False,
+                CONF_PREFIX: "ohana",
             },
         )
         await hass.async_block_till_done()
@@ -1024,11 +1239,11 @@ async def test_form_import_existing(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
         data={
-            "host": f"elks://{MOCK_IP_ADDRESS}",
-            "username": "friend",
-            "password": "love",
+            CONF_HOST: f"elks://{MOCK_IP_ADDRESS}",
+            CONF_USERNAME: "friend",
+            CONF_PASSWORD: "love",
             "temperature_unit": "C",
-            "auto_configure": False,
+            CONF_AUTO_CONFIGURE: False,
             "keypad": {
                 "enabled": True,
                 "exclude": [],
@@ -1037,7 +1252,7 @@ async def test_form_import_existing(hass: HomeAssistant) -> None:
             "output": {"enabled": False, "exclude": [], "include": []},
             "counter": {"enabled": False, "exclude": [], "include": []},
             "plc": {"enabled": False, "exclude": [], "include": []},
-            "prefix": "ohana",
+            CONF_PREFIX: "ohana",
             "setting": {"enabled": False, "exclude": [], "include": []},
             "area": {"enabled": False, "exclude": [], "include": []},
             "task": {"enabled": False, "exclude": [], "include": []},
@@ -1183,8 +1398,8 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
@@ -1192,11 +1407,11 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "elks://127.0.0.1",
-        "password": "test-password",
-        "prefix": "",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://127.0.0.1",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -1233,8 +1448,8 @@ async def test_discovered_by_discovery_non_standard_port(hass: HomeAssistant) ->
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
@@ -1242,11 +1457,11 @@ async def test_discovered_by_discovery_non_standard_port(hass: HomeAssistant) ->
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "elks://127.0.0.1:444",
-        "password": "test-password",
-        "prefix": "",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://127.0.0.1:444",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -1304,8 +1519,8 @@ async def test_discovered_by_dhcp_udp_responds(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
@@ -1313,11 +1528,11 @@ async def test_discovered_by_dhcp_udp_responds(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "elks://127.0.0.1",
-        "password": "test-password",
-        "prefix": "",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://127.0.0.1",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -1354,7 +1569,7 @@ async def test_discovered_by_dhcp_udp_responds_with_nonsecure_port(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "non-secure",
+                CONF_PROTOCOL: "non-secure",
             },
         )
         await hass.async_block_till_done()
@@ -1362,11 +1577,11 @@ async def test_discovered_by_dhcp_udp_responds_with_nonsecure_port(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "elk://127.0.0.1",
-        "password": "",
-        "prefix": "",
-        "username": "",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elk://127.0.0.1",
+        CONF_PASSWORD: "",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -1408,18 +1623,18 @@ async def test_discovered_by_dhcp_udp_responds_existing_config_entry(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
+            {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "elks://127.0.0.1",
-        "password": "test-password",
-        "prefix": "ddeeff",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://127.0.0.1",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "ddeeff",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 2
@@ -1477,8 +1692,8 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
@@ -1486,11 +1701,11 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1 ddeeff"
     assert result3["data"] == {
-        "auto_configure": True,
-        "host": "elks://127.0.0.1",
-        "password": "test-password",
-        "prefix": "",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://127.0.0.1",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -1526,8 +1741,8 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
@@ -1535,11 +1750,11 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1 ddeefe"
     assert result3["data"] == {
-        "auto_configure": True,
-        "host": "elks://127.0.0.2",
-        "password": "test-password",
-        "prefix": "ddeefe",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elks://127.0.0.2",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "ddeefe",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1568,9 +1783,9 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "non-secure",
-                "address": "1.2.3.4",
-                "prefix": "guest_house",
+                CONF_PROTOCOL: "non-secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_PREFIX: "guest_house",
             },
         )
         await hass.async_block_till_done()
@@ -1578,11 +1793,11 @@ async def test_multiple_instances_with_discovery(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "guest_house"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "elk://1.2.3.4",
-        "prefix": "guest_house",
-        "username": "",
-        "password": "",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elk://1.2.3.4",
+        CONF_PREFIX: "guest_house",
+        CONF_USERNAME: "",
+        CONF_PASSWORD: "",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1629,9 +1844,9 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "protocol": "TLS 1.2",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_PROTOCOL: "TLS 1.2",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
@@ -1639,11 +1854,11 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1 ddeeff"
     assert result3["data"] == {
-        "auto_configure": True,
-        "host": "elksv1_2://127.0.0.1",
-        "password": "test-password",
-        "prefix": "",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elksv1_2://127.0.0.1",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -1679,9 +1894,9 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "protocol": "TLS 1.2",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_PROTOCOL: "TLS 1.2",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
@@ -1689,11 +1904,11 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ElkM1 ddeefe"
     assert result3["data"] == {
-        "auto_configure": True,
-        "host": "elksv1_2://127.0.0.2",
-        "password": "test-password",
-        "prefix": "ddeefe",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elksv1_2://127.0.0.2",
+        CONF_PASSWORD: "test-password",
+        CONF_PREFIX: "ddeefe",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1722,11 +1937,11 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "protocol": "TLS 1.2",
-                "address": "1.2.3.4",
-                "prefix": "guest_house",
-                "password": "test-password",
-                "username": "test-username",
+                CONF_PROTOCOL: "TLS 1.2",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_PREFIX: "guest_house",
+                CONF_PASSWORD: "test-password",
+                CONF_USERNAME: "test-username",
             },
         )
         await hass.async_block_till_done()
@@ -1734,10 +1949,392 @@ async def test_multiple_instances_with_tls_v12(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "guest_house"
     assert result2["data"] == {
-        "auto_configure": True,
-        "host": "elksv1_2://1.2.3.4",
-        "prefix": "guest_house",
-        "password": "test-password",
-        "username": "test-username",
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elksv1_2://1.2.3.4",
+        CONF_PREFIX: "guest_house",
+        CONF_PASSWORD: "test-password",
+        CONF_USERNAME: "test-username",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_nonsecure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow switching to non-secure protocol."""
+    # Add mock_config_entry to hass before updating
+    mock_config_entry.add_to_hass(hass)
+
+    # Update mock_config_entry.data using async_update_entry
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            CONF_AUTO_CONFIGURE: True,
+            CONF_HOST: "elk://localhost",
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_PREFIX: "",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Mock elk library to simulate successful connection
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with (
+        _patch_elk(mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROTOCOL: "non-secure",
+                CONF_ADDRESS: "1.2.3.4",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
+    # Verify the config entry was updated with the new data
+    assert dict(mock_config_entry.data) == {
+        CONF_AUTO_CONFIGURE: True,
+        CONF_HOST: "elk://1.2.3.4",
+        CONF_USERNAME: "",
+        CONF_PASSWORD: "",
+        CONF_PREFIX: "",
+    }
+
+    # Verify the setup was called during reload
+    mock_setup_entry.assert_called_once()
+
+    # Verify the elk library was initialized and connected
+    assert mocked_elk.connect.call_count == 1
+    assert mocked_elk.disconnect.call_count == 1
+
+
+async def test_reconfigure_tls(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow switching to TLS 1.2 protocol, validating host, username, and password update."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with (
+        _patch_discovery(no_device=True),  # ensure no UDP/DNS work
+        _patch_elk(mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ADDRESS: "127.0.0.1",
+                CONF_PROTOCOL: "TLS 1.2",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "elksv1_2://127.0.0.1"
+    assert mock_config_entry.data[CONF_USERNAME] == "test-username"
+    assert mock_config_entry.data[CONF_PASSWORD] == "test-password"
+    mock_setup_entry.assert_called_once()
+
+
+async def test_reconfigure_device_offline(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow fails when device is offline."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mocked_elk = mock_elk(invalid_auth=None, sync_complete=None)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch("homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT", 0),
+        patch("homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT", 0),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+    # Retry with successful connection
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+    mock_setup_entry.assert_called_once()
+
+
+async def test_reconfigure_invalid_auth(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow with invalid authentication."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    elk = mock_elk(invalid_auth=True, sync_complete=True)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=elk),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "wronguser",
+                CONF_PASSWORD: "wrongpass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    # Retry with correct auth
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "127.0.0.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+    mock_setup_entry.assert_called_once()
+
+
+async def test_reconfigure_different_device(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Abort reconfigure if the device unique_id differs."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=MOCK_MAC)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    different_device = ElkSystem("bb:cc:dd:ee:ff:aa", "1.2.3.4", 2601)
+    elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_discovery(device=different_device), _patch_elk(elk):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test",
+                CONF_PASSWORD: "test",
+            },
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    # Abort occurs when the discovered device's unique_id does not match the existing config entry.
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unique_id_mismatch"
+
+
+async def test_reconfigure_unknown_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow with an unexpected exception."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    elk = mock_elk(invalid_auth=None, sync_complete=None, exception=OSError)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=elk),
+        patch("homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT", 0),
+        patch("homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT", 0),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "1.2.3.4",
+                CONF_USERNAME: "test",
+                CONF_PASSWORD: "test",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+    # Retry with successful connection
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(elk=mocked_elk),
+        patch(
+            "homeassistant.components.elkm1.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROTOCOL: "secure",
+                CONF_ADDRESS: "127.0.0.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+    mock_setup_entry.assert_called_once()
+
+
+async def test_reconfigure_preserves_existing_config_entry_fields(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfigure only updates changed fields and preserves existing config entry data."""
+    # Simulate a config entry imported from yaml with extra fields
+    initial_data = {
+        CONF_HOST: "elks://1.2.3.4",
+        CONF_USERNAME: "olduser",
+        CONF_PASSWORD: "oldpass",
+        CONF_PREFIX: "oldprefix",
+        CONF_AUTO_CONFIGURE: False,
+        "extra_field": "should_be_preserved",
+        "another_field": 42,
+    }
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=initial_data,
+        unique_id=MOCK_MAC,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+    with (
+        _patch_discovery(no_device=True),
+        _patch_elk(mocked_elk),
+        patch("homeassistant.components.elkm1.async_setup_entry", return_value=True),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "newuser",
+                CONF_PASSWORD: "newpass",
+                CONF_ADDRESS: "5.6.7.8",
+                CONF_PROTOCOL: "secure",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
+    await hass.async_block_till_done()
+    updated_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+    assert updated_entry is not None
+    assert updated_entry.data[CONF_HOST] == "elks://5.6.7.8"
+    assert updated_entry.data[CONF_USERNAME] == "newuser"
+    assert updated_entry.data[CONF_PASSWORD] == "newpass"
+    assert updated_entry.data[CONF_AUTO_CONFIGURE] is False
+    assert updated_entry.data[CONF_PREFIX] == "oldprefix"
+    assert updated_entry.data["extra_field"] == "should_be_preserved"
+    assert updated_entry.data["another_field"] == 42

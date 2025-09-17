@@ -37,6 +37,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.loader import (
+    async_get_custom_components,
+    async_get_loaded_integration,
+)
 from homeassistant.util.location import async_detect_location_info
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
@@ -431,6 +435,79 @@ class DownloadSupportPackageView(HomeAssistantView):
     url = "/api/cloud/support_package"
     name = "api:cloud:support_package"
 
+    async def _get_integration_info(self, hass: HomeAssistant) -> dict[str, Any]:
+        """Collect information about active and custom integrations."""
+        # Get loaded components from hass.config.components
+        loaded_components = hass.config.components.copy()
+
+        # Get custom integrations
+        custom_domains = set()
+        with suppress(Exception):
+            custom_domains = set(await async_get_custom_components(hass))
+
+        # Separate built-in and custom integrations
+        builtin_integrations = []
+        custom_integrations = []
+
+        for domain in sorted(loaded_components):
+            try:
+                integration = async_get_loaded_integration(hass, domain)
+            except Exception:  # noqa: BLE001
+                # Broad exception catch for robustness in support package
+                # generation. If we can't get integration info,
+                # just add the domain
+                if domain in custom_domains:
+                    custom_integrations.append(
+                        {
+                            "domain": domain,
+                            "name": "Unknown",
+                            "version": "Unknown",
+                            "documentation": "Unknown",
+                        }
+                    )
+                else:
+                    builtin_integrations.append(
+                        {
+                            "domain": domain,
+                            "name": "Unknown",
+                        }
+                    )
+            else:
+                if domain in custom_domains:
+                    # This is a custom integration
+                    # include version and documentation link
+                    version = (
+                        str(integration.version) if integration.version else "Unknown"
+                    )
+                    if not (documentation := integration.documentation):
+                        documentation = "Unknown"
+
+                    custom_integrations.append(
+                        {
+                            "domain": domain,
+                            "name": integration.name,
+                            "version": version,
+                            "documentation": documentation,
+                        }
+                    )
+                else:
+                    # This is a built-in integration.
+                    # No version needed, as it is always the same as the
+                    # Home Assistant version
+                    builtin_integrations.append(
+                        {
+                            "domain": domain,
+                            "name": integration.name,
+                        }
+                    )
+
+        return {
+            "builtin_count": len(builtin_integrations),
+            "builtin_integrations": builtin_integrations,
+            "custom_count": len(custom_integrations),
+            "custom_integrations": custom_integrations,
+        }
+
     async def _generate_markdown(
         self,
         hass: HomeAssistant,
@@ -452,6 +529,38 @@ class DownloadSupportPackageView(HomeAssistantView):
 
         markdown = "## System Information\n\n"
         markdown += get_domain_table_markdown(hass_info)
+
+        # Add integration information
+        try:
+            integration_info = await self._get_integration_info(hass)
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            # If there's any error getting integration info, just note it
+            markdown += "## Active integrations\n\n"
+            markdown += "Unable to collect integration information\n\n"
+        else:
+            markdown += "## Active Integrations\n\n"
+            markdown += f"Built-in integrations: {integration_info['builtin_count']}\n"
+            markdown += f"Custom integrations: {integration_info['custom_count']}\n\n"
+
+            # Built-in integrations
+            if integration_info["builtin_integrations"]:
+                markdown += "<details><summary>Built-in integrations</summary>\n\n"
+                markdown += "Domain | Name\n"
+                markdown += "--- | ---\n"
+                for integration in integration_info["builtin_integrations"]:
+                    markdown += f"{integration['domain']} | {integration['name']}\n"
+                markdown += "\n</details>\n\n"
+
+            # Custom integrations
+            if integration_info["custom_integrations"]:
+                markdown += "<details><summary>Custom integrations</summary>\n\n"
+                markdown += "Domain | Name | Version | Documentation\n"
+                markdown += "--- | --- | --- | ---\n"
+                for integration in integration_info["custom_integrations"]:
+                    doc_url = integration.get("documentation") or "N/A"
+                    markdown += f"{integration['domain']} | {integration['name']} | {integration['version']} | {doc_url}\n"
+                markdown += "\n</details>\n\n"
 
         for domain, domain_info in domains_info.items():
             domain_info_md = get_domain_table_markdown(domain_info)

@@ -631,6 +631,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device events."""
         events: list[dict[str, Any]] = event_data["events"]
         for event in events:
+            # filter out button events as they are triggered by button entities
+            component = event.get("component")
+            if component is not None and component.startswith("button"):
+                continue
+
             event_type = event.get("event")
             if event_type is None:
                 continue

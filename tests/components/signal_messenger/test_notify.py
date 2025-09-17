@@ -64,6 +64,27 @@ def test_send_message(
     assert_sending_requests(signal_requests_mock)
 
 
+def test_send_message_with_custom_recipients(
+    signal_notification_service: SignalNotificationService,
+    signal_requests_mock_factory: Mocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test send message with custom recipients."""
+    signal_requests_mock = signal_requests_mock_factory()
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+    ):
+        signal_notification_service.send_message(
+            MESSAGE, target=["+49111111111", "+49222222222"]
+        )
+    assert "Sending signal message" in caplog.text
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 2
+    assert_sending_requests(
+        signal_requests_mock, recipients=["+49111111111", "+49222222222"]
+    )
+
+
 def test_send_message_styled(
     signal_notification_service: SignalNotificationService,
     signal_requests_mock_factory: Mocker,
@@ -416,7 +437,9 @@ def test_get_attachments_with_verify_set_garbage(
 
 
 def assert_sending_requests(
-    signal_requests_mock_factory: Mocker, attachments_num: int = 0
+    signal_requests_mock_factory: Mocker,
+    attachments_num: int = 0,
+    recipients: list[str] | None = None,
 ) -> None:
     """Assert message was send with correct parameters."""
     send_request = signal_requests_mock_factory.request_history[-1]
@@ -425,7 +448,7 @@ def assert_sending_requests(
     body_request = json.loads(send_request.text)
     assert body_request["message"] == MESSAGE
     assert body_request["number"] == NUMBER_FROM
-    assert body_request["recipients"] == NUMBERS_TO
+    assert body_request["recipients"] == (recipients if recipients else NUMBERS_TO)
     assert len(body_request["base64_attachments"]) == attachments_num
 
     for attachment in body_request["base64_attachments"]:

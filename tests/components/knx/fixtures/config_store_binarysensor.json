@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "minor_version": 1,
+  "minor_version": 2,
   "key": "knx/config_store.json",
   "data": {
     "entities": {
@@ -17,7 +17,6 @@
               "state": "3/2/21",
               "passive": []
             },
-            "respond_to_read": false,
             "sync_state": true
           }
         }

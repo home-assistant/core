@@ -27,6 +27,11 @@ def value_map_brightness(value: int) -> int:
     return int(value / 255 * 100)
 
 
+def brightness_map_value(value: int) -> int:
+    """Return brightness from map value."""
+    return int(value * 255 / 100)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
@@ -52,13 +57,14 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-
         power: str | None = self.coordinator.data.get("power")
         brightness: int | None = self.coordinator.data.get("brightness")
         color: str | None = self.coordinator.data.get("color")
         color_temperature: int | None = self.coordinator.data.get("colorTemperature")
         self._attr_is_on = power == "on" if power else None
-        self._attr_brightness: int | None = brightness if brightness else None
+        self._attr_brightness: int | None = (
+            brightness_map_value(brightness) if brightness else None
+        )
         self._attr_rgb_color: tuple | None = (
             (tuple(int(i) for i in color.split(":"))) if color else None
         )

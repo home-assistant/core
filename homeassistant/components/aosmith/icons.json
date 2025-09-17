@@ -1,5 +1,10 @@
 {
   "entity": {
+    "select": {
+      "hot_water_plus_level": {
+        "default": "mdi:water-plus"
+      }
+    },
     "sensor": {
       "hot_water_availability": {
         "default": "mdi:water-thermometer"

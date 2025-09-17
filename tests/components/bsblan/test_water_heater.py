@@ -50,6 +50,33 @@ async def test_water_heater_states(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_water_heater_no_dhw_capability(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that no water heater entity is created when DHW capability is missing."""
+    # Mock DHW data to simulate no water heater capability
+    mock_bsblan.hot_water_state.return_value.operating_mode = None
+    mock_bsblan.hot_water_state.return_value.nominal_setpoint = None
+    mock_bsblan.hot_water_state.return_value.dhw_actual_value_top_temperature = None
+
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    # Verify no water heater entity was created
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    water_heater_entities = [
+        entity for entity in entities if entity.domain == Platform.WATER_HEATER
+    ]
+
+    assert len(water_heater_entities) == 0
+
+
 async def test_water_heater_entity_properties(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
@@ -208,3 +235,31 @@ async def test_operation_mode_error(
             },
             blocking=True,
         )
+
+
+async def test_water_heater_no_sensors(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test water heater when sensors are not available."""
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    # Set all sensors to None to simulate missing sensors
+    mock_bsblan.hot_water_state.return_value.operating_mode = None
+    mock_bsblan.hot_water_state.return_value.dhw_actual_value_top_temperature = None
+    mock_bsblan.hot_water_state.return_value.nominal_setpoint = None
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Should not crash and properties should return None
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("current_operation") is None
+    assert state.attributes.get("current_temperature") is None
+    assert state.attributes.get("temperature") is None

@@ -78,6 +78,13 @@ def async_discover_entities(
         ):
             continue
 
+        # check product_id
+        if (
+            schema.product_id is not None
+            and device_info.productID not in schema.product_id
+        ):
+            continue
+
         # check product_name
         if (
             schema.product_name is not None

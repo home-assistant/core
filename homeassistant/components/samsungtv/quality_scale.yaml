@@ -32,9 +32,7 @@ rules:
     status: exempt
     comment: no configuration options so far
   docs-installation-parameters: done
-  entity-unavailable:
-    status: todo
-    comment: check super().unavailable
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done

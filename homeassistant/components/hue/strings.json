@@ -21,7 +21,7 @@
       },
       "link": {
         "title": "Link Hub",
-        "description": "Press the button on the bridge to register Philips Hue with Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)"
+        "description": "Press the button on the bridge to register Philips Hue with Home Assistant."
       }
     },
     "error": {

@@ -1,0 +1,94 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register any service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: todo
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register any service actions.
+  docs-high-level-description: done
+  docs-installation-instructions:
+    status: todo
+    comment: Documentation needs to be created.
+  docs-removal-instructions:
+    status: todo
+    comment: Documentation needs to be created.
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to external events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: todo
+    comment: Config flow does not currently test connection during setup.
+  test-before-setup: todo
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: todo
+    comment: Documentation needs to be created.
+  docs-installation-parameters:
+    status: todo
+    comment: Documentation needs to be created.
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: Platform tests for cover and sensor need to be implemented to reach 95% coverage.
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery: todo
+  discovery-update-info: todo
+  docs-data-update:
+    status: todo
+    comment: Documentation needs to be created.
+  docs-examples:
+    status: todo
+    comment: Documentation needs to be created.
+  docs-known-limitations:
+    status: todo
+    comment: Documentation needs to be created.
+  docs-supported-devices:
+    status: todo
+    comment: Documentation needs to be created.
+  docs-supported-functions:
+    status: todo
+    comment: Documentation needs to be created.
+  docs-troubleshooting:
+    status: todo
+    comment: Documentation needs to be created.
+  docs-use-cases:
+    status: todo
+    comment: Documentation needs to be created.
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices:
+    status: todo
+    comment: Stale devices can be done dynamically
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: done
+  strict-typing: done

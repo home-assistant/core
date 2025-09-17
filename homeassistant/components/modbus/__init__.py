@@ -267,8 +267,8 @@ CLIMATE_SCHEMA = vol.All(
         {
             vol.Required(CONF_TARGET_TEMP): hvac_fixedsize_reglist_validator,
             vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
-            vol.Optional(CONF_MAX_TEMP, default=35): vol.Coerce(float),
-            vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(float),
+            vol.Optional(CONF_MAX_TEMP, default=35): vol.Coerce(int),
+            vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(int),
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Exclusive(CONF_HVAC_ONOFF_COIL, "hvac_onoff_type"): cv.positive_int,
@@ -479,7 +479,8 @@ MODBUS_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 SERIAL_SCHEMA = MODBUS_SCHEMA.extend(

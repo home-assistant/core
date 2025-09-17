@@ -14,46 +14,49 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import (
+from .const import (
     CONF_ARM_HOME_MODE,
-    CONF_DEVICE_PARTITIONS,
-    CONF_ZONE_NAME,
-    DATA_SATEL,
+    CONF_PARTITION_NUMBER,
     SIGNAL_PANEL_MESSAGE,
+    SUBENTRY_TYPE_PARTITION,
+    SatelConfigEntry,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: SatelConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up for Satel Integra alarm panels."""
-    if not discovery_info:
-        return
 
-    configured_partitions = discovery_info[CONF_DEVICE_PARTITIONS]
-    controller = hass.data[DATA_SATEL]
+    controller = config_entry.runtime_data
 
-    devices = []
+    partition_subentries = filter(
+        lambda entry: entry.subentry_type == SUBENTRY_TYPE_PARTITION,
+        config_entry.subentries.values(),
+    )
 
-    for partition_num, device_config_data in configured_partitions.items():
-        zone_name = device_config_data[CONF_ZONE_NAME]
-        arm_home_mode = device_config_data.get(CONF_ARM_HOME_MODE)
-        device = SatelIntegraAlarmPanel(
-            controller, zone_name, arm_home_mode, partition_num
+    for subentry in partition_subentries:
+        partition_num = subentry.data[CONF_PARTITION_NUMBER]
+        zone_name = subentry.data[CONF_NAME]
+        arm_home_mode = subentry.data[CONF_ARM_HOME_MODE]
+
+        async_add_entities(
+            [
+                SatelIntegraAlarmPanel(
+                    controller, zone_name, arm_home_mode, partition_num
+                )
+            ],
+            config_subentry_id=subentry.subentry_id,
         )
-        devices.append(device)
-
-    async_add_entities(devices)
 
 
 class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
@@ -66,7 +69,7 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    def __init__(self, controller, name, arm_home_mode, partition_id):
+    def __init__(self, controller, name, arm_home_mode, partition_id) -> None:
         """Initialize the alarm panel."""
         self._attr_name = name
         self._attr_unique_id = f"satel_alarm_panel_{partition_id}"

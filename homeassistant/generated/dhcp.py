@@ -27,6 +27,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "E84F25*",
     },
     {
+        "domain": "aladdin_connect",
+        "hostname": "gdocntl-*",
+    },
+    {
         "domain": "august",
         "hostname": "connect",
         "macaddress": "D86162*",

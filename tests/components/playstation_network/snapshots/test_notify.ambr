@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_notify_platform[notify.testuser_direct_message-entry]
+# name: test_notify_platform[notify.testuser_direct_message_publicuniversalfriend-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'notify',
     'entity_category': None,
-    'entity_id': 'notify.testuser_direct_message',
+    'entity_id': 'notify.testuser_direct_message_publicuniversalfriend',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,24 +24,24 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Direct message',
+    'original_name': 'Direct message: PublicUniversalFriend',
     'platform': 'playstation_network',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PlaystationNetworkNotify.DIRECT_MESSAGE: 'direct_message'>,
-    'unique_id': 'fren-psn-id_direct_message',
+    'unique_id': 'my-psn-id_fren-psn-id_direct_message',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_notify_platform[notify.testuser_direct_message-state]
+# name: test_notify_platform[notify.testuser_direct_message_publicuniversalfriend-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testuser Direct message',
+      'friendly_name': 'testuser Direct message: PublicUniversalFriend',
       'supported_features': <NotifyEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'notify.testuser_direct_message',
+    'entity_id': 'notify.testuser_direct_message_publicuniversalfriend',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

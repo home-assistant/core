@@ -388,6 +388,18 @@
             "count": 20
           }
         },
+        "boss": {
+          "name": "boss name",
+          "hp": 500,
+          "rage": {
+            "title": "rage skill name",
+            "description": "description",
+            "value": 50,
+            "effect": "skill effect"
+          },
+          "str": 1,
+          "def": 1
+        },
         "drop": {
           "items": [
             {

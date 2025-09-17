@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from airos.airos8 import AirOS
+from airos.airos8 import AirOS8
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
     # with no option in the web UI to change or upload a custom certificate.
     session = async_get_clientsession(hass, verify_ssl=False)
 
-    airos_device = AirOS(
+    airos_device = AirOS8(
         host=entry.data[CONF_HOST],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],

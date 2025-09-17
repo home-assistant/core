@@ -168,7 +168,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovered_infos = {}
         discovered_names = {}
-        current_unique_ids = self._async_current_ids()
+        current_unique_ids = self._async_current_ids(include_ignore=False)
         for info in infos:
             if info.identifier in current_unique_ids:
                 continue

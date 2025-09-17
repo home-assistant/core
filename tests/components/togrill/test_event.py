@@ -6,9 +6,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from togrill_bluetooth.packets import PacketA1Notify, PacketA5Notify
 
-from homeassistant.const import Platform
+from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import slugify
 
 from . import TOGRILL_SERVICE_INFO, setup_entry
 
@@ -48,7 +50,7 @@ async def test_setup(
 @pytest.mark.freeze_time("2023-10-21")
 @pytest.mark.parametrize(
     "message",
-    list(PacketA5Notify.Message),
+    [pytest.param(message, id=message.name) for message in PacketA5Notify.Message],
 )
 async def test_events(
     hass: HomeAssistant,
@@ -56,7 +58,7 @@ async def test_events(
     snapshot: SnapshotAssertion,
     mock_entry: MockConfigEntry,
     mock_client: Mock,
-    message,
+    message: PacketA5Notify.Message,
 ) -> None:
     """Test all possible events."""
 
@@ -66,4 +68,11 @@ async def test_events(
 
     mock_client.mocked_notify(PacketA5Notify(probe=1, message=message))
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_entry.entry_id)
+    state = hass.states.get("event.probe_2_event")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("event.probe_1_event")
+    assert state
+    assert state.state == "2023-10-21T00:00:00.000+00:00"
+    assert state.attributes.get(ATTR_EVENT_TYPE) == slugify(message.name)

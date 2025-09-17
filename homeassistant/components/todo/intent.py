@@ -65,7 +65,6 @@ class ListAddItemIntent(intent.IntentHandler):
         )
 
         response: intent.IntentResponse = intent_obj.create_response()
-        response.response_type = intent.IntentResponseType.ACTION_DONE
         response.async_set_results(
             [
                 intent.IntentResponseTarget(
@@ -141,7 +140,6 @@ class ListCompleteItemIntent(intent.IntentHandler):
         )
 
         response: intent.IntentResponse = intent_obj.create_response()
-        response.response_type = intent.IntentResponseType.ACTION_DONE
         response.async_set_results(
             [
                 intent.IntentResponseTarget(

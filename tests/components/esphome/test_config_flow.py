@@ -2529,7 +2529,7 @@ async def test_discovery_dhcp_no_probe_same_host_port_none(
     service_info = DhcpServiceInfo(
         ip="192.168.43.183",
         hostname="test8266",
-        macaddress="11:22:33:44:55:aa",  # Same MAC as configured
+        macaddress="1122334455aa",  # Same MAC as configured
     )
 
     result = await hass.config_entries.flow.async_init(

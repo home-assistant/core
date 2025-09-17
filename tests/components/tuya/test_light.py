@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tuya_sharing import CustomerDevice
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -16,7 +16,6 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.tuya import ManagerCompat
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -29,7 +28,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.LIGHT])
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
@@ -92,7 +91,7 @@ async def test_platform_setup_and_discovery(
 )
 async def test_turn_on_white(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
     turn_on_input: dict[str, Any],
@@ -125,7 +124,7 @@ async def test_turn_on_white(
 )
 async def test_turn_off(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:

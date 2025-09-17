@@ -3,8 +3,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/base:debian
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN \
-    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && apt-get update \
+    apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         # Additional library needed by some tests and accordingly by VScode Tests Discovery
         bluez \

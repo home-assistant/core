@@ -1,9 +1,11 @@
 """Test ZHA light."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
 from zha.application.platforms.light.const import FLASH_EFFECTS
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, lighting
@@ -114,8 +116,8 @@ def light_platform_only():
 )
 async def test_light(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
     device,
     reporting,
 ) -> None:
@@ -193,7 +195,9 @@ async def test_light(
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 async def test_on_with_off_color(
-    hass: HomeAssistant, setup_zha, zigpy_device_mock
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test turning on the light and sending color commands before on/level commands for supporting lights."""
 
@@ -576,8 +580,8 @@ async def async_test_flash_from_hass(
 )
 async def test_light_exception_on_creation(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test ZHA light entity creation exception."""

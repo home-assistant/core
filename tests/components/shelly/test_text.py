@@ -77,6 +77,7 @@ async def test_rpc_device_virtual_text(
     assert state.state == "sed do eiusmod"
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_virtual_text_when_mode_label(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,

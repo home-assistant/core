@@ -66,6 +66,10 @@
     }),
     'firmware': '1.2.3',
     'info': dict({
+      'advanced_settings': dict({
+        'community': 'public',
+        'port': 161,
+      }),
       'host': 'localhost',
       'type': 'laser',
     }),

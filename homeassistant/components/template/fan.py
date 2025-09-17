@@ -49,13 +49,13 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
-from .template_entity import (
+from .schemas import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    TemplateEntity,
     make_template_entity_common_modern_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,7 +110,7 @@ FAN_COMMON_SCHEMA = vol.Schema(
 )
 
 FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
-    make_template_entity_common_modern_schema(DEFAULT_NAME).schema
+    make_template_entity_common_modern_schema(FAN_DOMAIN, DEFAULT_NAME).schema
 )
 
 FAN_LEGACY_YAML_SCHEMA = vol.All(

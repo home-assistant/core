@@ -127,6 +127,13 @@ effect_colorloop:
           min: 1
           max: 100
           unit_of_measurement: "%"
+    transition:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
     period:
       default: 60
       selector:

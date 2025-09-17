@@ -14,7 +14,7 @@ from homeassistant.components.onkyo.const import (
     OPTION_MAX_VOLUME_DEFAULT,
     OPTION_VOLUME_RESOLUTION,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -238,6 +238,57 @@ async def test_eiscp_discovery_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == error_reason
+
+
+async def test_eiscp_discovery_replace_ignored_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test eiscp discovery can replace an ignored config entry."""
+    mock_config_entry.source = SOURCE_IGNORE
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "eiscp_discovery"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "eiscp_discovery"
+
+    devices = result["data_schema"].schema["device"].container
+    assert devices == {
+        RECEIVER_INFO.identifier: _receiver_display_name(RECEIVER_INFO),
+        RECEIVER_INFO_2.identifier: _receiver_display_name(RECEIVER_INFO_2),
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"device": RECEIVER_INFO.identifier}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_receiver"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_VOLUME_RESOLUTION: 200,
+            OPTION_INPUT_SOURCES: ["TV"],
+            OPTION_LISTENING_MODES: ["THX"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == RECEIVER_INFO.host
+    assert result["result"].unique_id == RECEIVER_INFO.identifier
+    assert result["title"] == RECEIVER_INFO.model_name
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

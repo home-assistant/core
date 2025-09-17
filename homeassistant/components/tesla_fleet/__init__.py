@@ -179,7 +179,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             )
 
             await live_coordinator.async_config_entry_first_refresh()
-            await history_coordinator.async_config_entry_first_refresh()
             await info_coordinator.async_config_entry_first_refresh()
 
             # Create energy site model

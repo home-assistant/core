@@ -121,7 +121,6 @@ async def async_setup_entry(
     """Set up foscam switch from a config entry."""
 
     coordinator = config_entry.runtime_data
-    await coordinator.async_config_entry_first_refresh()
 
     entities = []
 
@@ -146,7 +145,6 @@ async def async_setup_entry(
 class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
     """A generic switch class for Foscam entities."""
 
-    _attr_has_entity_name = True
     entity_description: FoscamSwitchEntityDescription
 
     def __init__(

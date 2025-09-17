@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
@@ -278,13 +279,18 @@ class MinMaxSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
+        attributes: dict[str, list[str] | str | None] = {
+            ATTR_ENTITY_ID: self._entity_ids
+        }
+
         if self._sensor_type == "min":
-            return {ATTR_MIN_ENTITY_ID: self.min_entity_id}
-        if self._sensor_type == "max":
-            return {ATTR_MAX_ENTITY_ID: self.max_entity_id}
-        if self._sensor_type == "last":
-            return {ATTR_LAST_ENTITY_ID: self.last_entity_id}
-        return None
+            attributes[ATTR_MIN_ENTITY_ID] = self.min_entity_id
+        elif self._sensor_type == "max":
+            attributes[ATTR_MAX_ENTITY_ID] = self.max_entity_id
+        elif self._sensor_type == "last":
+            attributes[ATTR_LAST_ENTITY_ID] = self.last_entity_id
+
+        return attributes
 
     @callback
     def _async_min_max_sensor_state_listener(

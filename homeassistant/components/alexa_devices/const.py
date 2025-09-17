@@ -6,22 +6,23 @@ _LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "alexa_devices"
 CONF_LOGIN_DATA = "login_data"
+CONF_SITE = "site"
 
-DEFAULT_DOMAIN = {"domain": "com"}
+DEFAULT_DOMAIN = "com"
 COUNTRY_DOMAINS = {
     "ar": DEFAULT_DOMAIN,
     "at": DEFAULT_DOMAIN,
-    "au": {"domain": "com.au"},
-    "be": {"domain": "com.be"},
+    "au": "com.au",
+    "be": "com.be",
     "br": DEFAULT_DOMAIN,
-    "gb": {"domain": "co.uk"},
+    "gb": "co.uk",
     "il": DEFAULT_DOMAIN,
-    "jp": {"domain": "co.jp"},
-    "mx": {"domain": "com.mx"},
+    "jp": "co.jp",
+    "mx": "com.mx",
     "no": DEFAULT_DOMAIN,
-    "nz": {"domain": "com.au"},
+    "nz": "com.au",
     "pl": DEFAULT_DOMAIN,
-    "tr": {"domain": "com.tr"},
+    "tr": "com.tr",
     "us": DEFAULT_DOMAIN,
-    "za": {"domain": "co.za"},
+    "za": "co.za",
 }

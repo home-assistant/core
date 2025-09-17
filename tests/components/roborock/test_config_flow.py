@@ -230,12 +230,7 @@ async def test_reauth_flow(
     hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
 ) -> None:
     """Test reauth flow."""
-    # Start reauth
-    result = mock_roborock_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    [result] = flows
+    result = await mock_roborock_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
 
     # Request a new code
@@ -311,12 +306,7 @@ async def test_reauth_wrong_account(
 ) -> None:
     """Ensure that reauthentication must use the same account."""
 
-    # Start reauth
-    result = mock_roborock_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    [result] = flows
+    result = await mock_roborock_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
 
     with patch(

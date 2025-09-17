@@ -21,7 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN, KNX_MODULE_KEY
+from .const import DOMAIN, KNX_MODULE_KEY, SUPPORTED_PLATFORMS_UI
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
 from .storage.entity_store_schema import (
@@ -44,7 +44,7 @@ URL_BASE: Final = "/knx_static"
 
 async def register_panel(hass: HomeAssistant) -> None:
     """Register the KNX Panel and Websocket API."""
-    websocket_api.async_register_command(hass, ws_info)
+    websocket_api.async_register_command(hass, ws_get_base_data)
     websocket_api.async_register_command(hass, ws_project_file_process)
     websocket_api.async_register_command(hass, ws_project_file_remove)
     websocket_api.async_register_command(hass, ws_group_monitor_info)
@@ -156,12 +156,12 @@ def provide_knx(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/info",
+        vol.Required("type"): "knx/get_base_data",
     }
 )
 @provide_knx
 @callback
-def ws_info(
+def ws_get_base_data(
     hass: HomeAssistant,
     knx: KNXModule,
     connection: websocket_api.ActiveConnection,
@@ -176,14 +176,18 @@ def ws_info(
             "tool_version": project_info["tool_version"],
             "xknxproject_version": project_info["xknxproject_version"],
         }
+    connection_info = {
+        "version": knx.xknx.version,
+        "connected": knx.xknx.connection_manager.connected.is_set(),
+        "current_address": str(knx.xknx.current_address),
+    }
 
     connection.send_result(
         msg["id"],
         {
-            "version": knx.xknx.version,
-            "connected": knx.xknx.connection_manager.connected.is_set(),
-            "current_address": str(knx.xknx.current_address),
-            "project": _project_info,
+            "connection_info": connection_info,
+            "project_info": _project_info,
+            "supported_platforms": sorted(SUPPORTED_PLATFORMS_UI),
         },
     )
 
@@ -206,10 +210,7 @@ async def ws_get_knx_project(
     knxproject = await knx.project.get_knxproject()
     connection.send_result(
         msg["id"],
-        {
-            "project_loaded": knx.project.loaded,
-            "knxproject": knxproject,
-        },
+        knxproject,
     )
 
 

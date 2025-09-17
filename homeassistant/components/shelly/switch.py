@@ -37,6 +37,7 @@ from .utils import (
     get_virtual_component_ids,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
+    is_view_for_platform,
 )
 
 PARALLEL_UPDATES = 0
@@ -89,6 +90,9 @@ RPC_SWITCHES = {
     "boolean": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, SWITCH_PLATFORM
+        ),
         is_on=lambda status: bool(status["value"]),
         method_on="Boolean.Set",
         method_off="Boolean.Set",

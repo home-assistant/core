@@ -14,7 +14,6 @@ from pydeconz.models.event import EventType
 from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import CONF_MASTER_GATEWAY, DOMAIN, HASSIO_CONFIGURATION_URL, PLATFORMS
@@ -169,16 +168,7 @@ class DeconzHub:
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
-        if self.api.config.mac is None:
-            return
-
         device_registry = dr.async_get(self.hass)
-
-        # Host device
-        device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            connections={(CONNECTION_NETWORK_MAC, self.api.config.mac)},
-        )
 
         # Gateway service
         configuration_url = f"http://{self.config.host}:{self.config.port}"
@@ -189,11 +179,10 @@ class DeconzHub:
             configuration_url=configuration_url,
             entry_type=dr.DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.api.config.bridge_id)},
-            manufacturer="Dresden Elektronik",
+            manufacturer="dresden elektronik",
             model=self.api.config.model_id,
             name=self.api.config.name,
             sw_version=self.api.config.software_version,
-            via_device=(CONNECTION_NETWORK_MAC, self.api.config.mac),
         )
 
     @staticmethod

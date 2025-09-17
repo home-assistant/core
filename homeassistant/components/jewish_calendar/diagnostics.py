@@ -24,5 +24,5 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT),
-        "data": async_redact_data(asdict(entry.runtime_data.data), TO_REDACT),
+        "data": async_redact_data(asdict(entry.runtime_data), TO_REDACT),
     }

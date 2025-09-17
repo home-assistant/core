@@ -30,24 +30,6 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_api_key_too_short(hass: HomeAssistant) -> None:
-    """Test that errors are shown when API key is too short."""
-    # The API key length check is done by the library without polling the AccuWeather
-    # server so we don't need to patch the library method.
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
-            CONF_NAME: "abcd",
-            CONF_API_KEY: "foo",
-            CONF_LATITUDE: 55.55,
-            CONF_LONGITUDE: 122.12,
-        },
-    )
-
-    assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
-
-
 async def test_invalid_api_key(
     hass: HomeAssistant, mock_accuweather_client: AsyncMock
 ) -> None:
@@ -105,7 +87,7 @@ async def test_integration_already_exists(
     """Test we only allow a single config flow."""
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="123456",
+        unique_id="0123456",
         data=VALID_CONFIG,
     ).add_to_hass(hass)
 
@@ -116,7 +98,7 @@ async def test_integration_already_exists(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
 async def test_create_entry(

@@ -38,6 +38,14 @@
           "337.5": "mdi:arrow-up"
         }
       }
+    },
+    "event": {
+      "lightning_strike_event": {
+        "default": "mdi:weather-lightning"
+      },
+      "precip_start_event": {
+        "default": "mdi:weather-rainy"
+      }
     }
   }
 }

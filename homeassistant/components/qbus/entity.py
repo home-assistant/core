@@ -78,7 +78,7 @@ def create_unique_id(serial_number: str, suffix: str) -> str:
     return f"ctd_{serial_number}_{suffix}"
 
 
-class QbusEntity(Entity, Generic[StateT], ABC):
+class QbusEntity(Entity, ABC, Generic[StateT]):
     """Representation of a Qbus entity."""
 
     _state_cls: type[StateT] = cast(type[StateT], QbusMqttState)

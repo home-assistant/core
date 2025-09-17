@@ -47,6 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch("sharkiq.AylaApi.async_sign_in", return_value=True),
+        patch("sharkiq.AylaApi.async_set_cookie"),
         patch(
             "homeassistant.components.sharkiq.async_setup_entry",
             return_value=True,
@@ -84,7 +85,10 @@ async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str) 
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch.object(AylaApi, "async_sign_in", side_effect=exc):
+    with (
+        patch.object(AylaApi, "async_sign_in", side_effect=exc),
+        patch("sharkiq.AylaApi.async_set_cookie"),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,
@@ -101,7 +105,10 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
 
     result = await mock_config.start_reauth_flow(hass)
 
-    with patch("sharkiq.AylaApi.async_sign_in", return_value=True):
+    with (
+        patch("sharkiq.AylaApi.async_sign_in", return_value=True),
+        patch("sharkiq.AylaApi.async_set_cookie"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONFIG
         )
@@ -132,7 +139,10 @@ async def test_reauth(
 
     result = await mock_config.start_reauth_flow(hass)
 
-    with patch("sharkiq.AylaApi.async_sign_in", side_effect=side_effect):
+    with (
+        patch("sharkiq.AylaApi.async_sign_in", side_effect=side_effect),
+        patch("sharkiq.AylaApi.async_set_cookie"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONFIG
         )

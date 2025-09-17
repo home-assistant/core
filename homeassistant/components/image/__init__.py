@@ -105,6 +105,20 @@ async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
     raise HomeAssistantError("Unable to get image")
 
 
+async def async_get_image(
+    hass: HomeAssistant,
+    entity_id: str,
+    timeout: int = 10,
+) -> Image:
+    """Fetch an image from an image entity."""
+    component = hass.data[DATA_COMPONENT]
+
+    if (image := component.get_entity(entity_id)) is None:
+        raise HomeAssistantError(f"Image entity {entity_id} not found")
+
+    return await _async_get_image(image, timeout)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the image component."""
     component = hass.data[DATA_COMPONENT] = EntityComponent[ImageEntity](

@@ -68,6 +68,16 @@
       "type": "Json",
       "value": {}
     },
+    "power_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": -99999999,
+        "max": 999999999,
+        "scale": 3,
+        "step": 1
+      }
+    },
     "fault": {
       "type": "Bitmap",
       "value": {
@@ -192,6 +202,7 @@
       "power": 6.912,
       "voltage": 52.7
     },
+    "power_total": 1500,
     "fault": 0,
     "frozen_time_set": {
       "day": 158,

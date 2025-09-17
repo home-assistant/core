@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
+from zwave_js_server.const import CommandClass
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -14,8 +15,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
-from .discovery import ZwaveDiscoveryInfo
 from .helpers import get_unique_id, get_valueless_base_unique_id
+from .models import PlatformZwaveDiscoveryInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,7 +141,7 @@ def async_migrate_discovered_value(
     registered_unique_ids: set[str],
     device: dr.DeviceEntry,
     driver: Driver,
-    disc_info: ZwaveDiscoveryInfo,
+    disc_info: PlatformZwaveDiscoveryInfo,
 ) -> None:
     """Migrate unique ID for entity/entities tied to discovered value."""
 
@@ -162,7 +163,7 @@ def async_migrate_discovered_value(
 
     if (
         disc_info.platform == Platform.BINARY_SENSOR
-        and disc_info.platform_hint == "notification"
+        and disc_info.primary_value.command_class == CommandClass.NOTIFICATION
     ):
         for state_key in disc_info.primary_value.metadata.states:
             # ignore idle key (0)

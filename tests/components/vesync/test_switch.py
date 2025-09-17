@@ -4,7 +4,6 @@ from contextlib import nullcontext
 from unittest.mock import patch
 
 import pytest
-import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -16,6 +15,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .common import ALL_DEVICE_NAMES, ENTITY_SWITCH_DISPLAY, mock_devices_response
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 NoException = nullcontext()
 
@@ -27,13 +27,13 @@ async def test_switch_state(
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    requests_mock: requests_mock.Mocker,
+    aioclient_mock: AiohttpClientMocker,
     device_name: str,
 ) -> None:
     """Test the resulting setup state is as expected for the platform."""
 
     # Configure the API devices call for device_name
-    mock_devices_response(requests_mock, device_name)
+    mock_devices_response(aioclient_mock, device_name)
 
     # setup platform - only including the named device
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -61,17 +61,26 @@ async def test_switch_state(
 @pytest.mark.parametrize(
     ("action", "command"),
     [
-        (SERVICE_TURN_ON, "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on_display"),
-        (SERVICE_TURN_OFF, "pyvesync.vesyncfan.VeSyncHumid200300S.turn_off_display"),
+        (
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+        ),
+        (
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+        ),
     ],
 )
 async def test_turn_on_off_display_success(
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
     action: str,
     command: str,
 ) -> None:
     """Test switch turn on and off command with success response."""
+
+    mock_devices_response(aioclient_mock, "Humidifier 200s")
 
     with (
         patch(
@@ -97,17 +106,26 @@ async def test_turn_on_off_display_success(
 @pytest.mark.parametrize(
     ("action", "command"),
     [
-        (SERVICE_TURN_ON, "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on_display"),
-        (SERVICE_TURN_OFF, "pyvesync.vesyncfan.VeSyncHumid200300S.turn_off_display"),
+        (
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+        ),
+        (
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+        ),
     ],
 )
 async def test_turn_on_off_display_raises_error(
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
     action: str,
     command: str,
 ) -> None:
     """Test switch turn on and off command raises HomeAssistantError."""
+
+    mock_devices_response(aioclient_mock, "Humidifier 200s")
 
     with (
         patch(

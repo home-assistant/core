@@ -212,6 +212,11 @@
           }
         }
       }
+    },
+    "calendar": {
+      "workday": {
+        "name": "[%key:component::calendar::title%]"
+      }
     }
   },
   "services": {

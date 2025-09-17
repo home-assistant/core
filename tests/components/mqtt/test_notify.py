@@ -54,7 +54,7 @@ DEFAULT_CONFIG = {
                 notify.DOMAIN: {
                     "command_topic": "command-topic",
                     "name": "test",
-                    "object_id": "test_notify",
+                    "default_entity_id": "notify.test_notify",
                     "qos": "2",
                 }
             }

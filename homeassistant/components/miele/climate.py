@@ -8,7 +8,7 @@ import logging
 from typing import Any, Final, cast
 
 import aiohttp
-from pymiele import MieleDevice
+from pymiele import MieleDevice, MieleTemperature
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -29,6 +29,15 @@ from .entity import MieleEntity
 PARALLEL_UPDATES = 1
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_temperature_value(
+    temperatures: list[MieleTemperature], index: int
+) -> float | None:
+    """Return the temperature value for the given index."""
+    if len(temperatures) > index:
+        return cast(int, temperatures[index].temperature) / 100.0
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -62,11 +71,10 @@ CLIMATE_TYPES: Final[tuple[MieleClimateDefinition, ...]] = (
         description=MieleClimateDescription(
             key="thermostat",
             value_fn=(
-                lambda value: cast(int, value.state_temperatures[0].temperature) / 100.0
+                lambda value: _get_temperature_value(value.state_temperatures, 0)
             ),
             target_fn=(
-                lambda value: cast(int, value.state_target_temperature[0].temperature)
-                / 100.0
+                lambda value: _get_temperature_value(value.state_target_temperature, 0)
             ),
             zone=1,
         ),
@@ -84,11 +92,10 @@ CLIMATE_TYPES: Final[tuple[MieleClimateDefinition, ...]] = (
         description=MieleClimateDescription(
             key="thermostat2",
             value_fn=(
-                lambda value: cast(int, value.state_temperatures[1].temperature) / 100.0
+                lambda value: _get_temperature_value(value.state_temperatures, 1)
             ),
             target_fn=(
-                lambda value: cast(int, value.state_target_temperature[1].temperature)
-                / 100.0
+                lambda value: _get_temperature_value(value.state_target_temperature, 1)
             ),
             translation_key="zone_2",
             zone=2,
@@ -107,11 +114,10 @@ CLIMATE_TYPES: Final[tuple[MieleClimateDefinition, ...]] = (
         description=MieleClimateDescription(
             key="thermostat3",
             value_fn=(
-                lambda value: cast(int, value.state_temperatures[2].temperature) / 100.0
+                lambda value: _get_temperature_value(value.state_temperatures, 2)
             ),
             target_fn=(
-                lambda value: cast(int, value.state_target_temperature[2].temperature)
-                / 100.0
+                lambda value: _get_temperature_value(value.state_target_temperature, 2)
             ),
             translation_key="zone_3",
             zone=3,
@@ -219,6 +225,8 @@ class MieleClimate(MieleEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Return the maximum target temperature."""
+        if len(self.action.target_temperature) < self.entity_description.zone:
+            return super().max_temp
         return cast(
             float,
             self.action.target_temperature[self.entity_description.zone - 1].max,
@@ -227,6 +235,8 @@ class MieleClimate(MieleEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum target temperature."""
+        if len(self.action.target_temperature) < self.entity_description.zone:
+            return super().min_temp
         return cast(
             float,
             self.action.target_temperature[self.entity_description.zone - 1].min,
