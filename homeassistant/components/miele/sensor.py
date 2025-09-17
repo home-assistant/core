@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
     UnitOfEnergy,
@@ -779,7 +780,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
 
         # recover last value from cache when adding entity
         last_value = await self.async_get_last_state()
-        if last_value and last_value.state != STATE_UNKNOWN:
+        if last_value and last_value.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self._last_value = last_value.state
 
     @property
@@ -941,7 +942,8 @@ class MieleConsumptionSensor(MieleRestorableSensor):
         current_status = StateStatus(self.device.state_status)
         last_value = (
             float(cast(str, self._last_value))
-            if self._last_value is not None and self._last_value != STATE_UNKNOWN
+            if self._last_value is not None
+            and self._last_value not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             else 0
         )
 
@@ -972,6 +974,7 @@ class MieleConsumptionSensor(MieleRestorableSensor):
             current_status in (StateStatus.IN_USE, StateStatus.PAUSE)
             and not self._is_reporting
             and current_value is not None
+            and current_value not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             and cast(int, current_value) > 0
         ):
             self._last_value = 0
