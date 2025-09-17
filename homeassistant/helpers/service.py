@@ -7,6 +7,7 @@ from collections.abc import Callable, Coroutine, Iterable
 import dataclasses
 from enum import Enum
 from functools import cache, partial
+import inspect
 import logging
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, TypedDict, cast, override
@@ -18,6 +19,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ACTION,
     CONF_ENTITY_ID,
+    CONF_SELECTOR,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
@@ -53,6 +55,7 @@ from . import (
     config_validation as cv,
     device_registry,
     entity_registry,
+    selector,
     target as target_helpers,
     template,
     translation,
@@ -165,6 +168,7 @@ def validate_supported_feature(supported_feature: str) -> Any:
 # to their values. Full validation is done by hassfest.services
 _FIELD_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_SELECTOR): selector.validate_selector,
         vol.Optional("filter"): {
             vol.Optional("attribute"): {
                 vol.Required(str): [vol.All(str, validate_attribute_option)],
@@ -186,7 +190,7 @@ _SECTION_SCHEMA = vol.Schema(
 
 _SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
+        vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
         vol.Optional("fields"): vol.Schema(
             {str: vol.Any(_SECTION_SCHEMA, _FIELD_SCHEMA)}
         ),
@@ -756,7 +760,7 @@ def _get_permissible_entity_candidates(
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistant,
-    registered_entities: dict[str, Entity],
+    registered_entities: dict[str, Entity] | Callable[[], dict[str, Entity]],
     func: str | HassJob,
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
@@ -795,10 +799,15 @@ async def entity_service_call(
     else:
         data = call
 
+    if callable(registered_entities):
+        _registered_entities = registered_entities()
+    else:
+        _registered_entities = registered_entities
+
     # A list with entities to call the service on.
     entity_candidates = _get_permissible_entity_candidates(
         call,
-        registered_entities,
+        _registered_entities,
         entity_perms,
         target_all_entities,
         all_referenced,
@@ -997,7 +1006,7 @@ def verify_domain_control(
         service_handler: Callable[[ServiceCall], Any],
     ) -> Callable[[ServiceCall], Any]:
         """Decorate."""
-        if not asyncio.iscoroutinefunction(service_handler):
+        if not inspect.iscoroutinefunction(service_handler):
             raise HomeAssistantError("Can only decorate async functions.")
 
         async def check_permissions(call: ServiceCall) -> Any:
@@ -1108,6 +1117,19 @@ class ReloadServiceHelper[_T]:
                 self._service_condition.notify_all()
 
 
+def _validate_entity_service_schema(
+    schema: VolDictType | VolSchemaType | None, service: str
+) -> VolSchemaType:
+    """Validate that a schema is an entity service schema."""
+    if schema is None or isinstance(schema, dict):
+        return cv.make_entity_service_schema(schema)
+    if not cv.is_entity_service_schema(schema):
+        raise HomeAssistantError(
+            f"The {service} service registers an entity service with a non entity service schema"
+        )
+    return schema
+
+
 @callback
 def async_register_entity_service(
     hass: HomeAssistant,
@@ -1127,16 +1149,7 @@ def async_register_entity_service(
     EntityPlatform.async_register_entity_service and should not be called
     directly by integrations.
     """
-    if schema is None or isinstance(schema, dict):
-        schema = cv.make_entity_service_schema(schema)
-    elif not cv.is_entity_service_schema(schema):
-        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
-
-        report_usage(
-            "registers an entity service with a non entity service schema",
-            core_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2025.9",
-        )
+    schema = _validate_entity_service_schema(schema, f"{domain}.{name}")
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
@@ -1154,4 +1167,48 @@ def async_register_entity_service(
         schema,
         supports_response,
         job_type=job_type,
+    )
+
+
+@callback
+def async_register_platform_entity_service(
+    hass: HomeAssistant,
+    service_domain: str,
+    service_name: str,
+    *,
+    entity_domain: str,
+    func: str | Callable[..., Any],
+    required_features: Iterable[int] | None = None,
+    schema: VolDictType | VolSchemaType | None,
+    supports_response: SupportsResponse = SupportsResponse.NONE,
+) -> None:
+    """Help registering a platform entity service."""
+    from .entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES  # noqa: PLC0415
+
+    schema = _validate_entity_service_schema(schema, f"{service_domain}.{service_name}")
+
+    service_func: str | HassJob[..., Any]
+    service_func = func if isinstance(func, str) else HassJob(func)
+
+    def get_entities() -> dict[str, Entity]:
+        entities = hass.data.get(DATA_DOMAIN_PLATFORM_ENTITIES, {}).get(
+            (entity_domain, service_domain)
+        )
+        if entities is None:
+            return {}
+        return entities
+
+    hass.services.async_register(
+        service_domain,
+        service_name,
+        partial(
+            entity_service_call,
+            hass,
+            get_entities,
+            service_func,
+            required_features=required_features,
+        ),
+        schema,
+        supports_response,
+        job_type=HassJobType.Coroutinefunction,
     )

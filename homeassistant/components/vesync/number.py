@@ -1,10 +1,10 @@
 """Support for VeSync numeric entities."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -13,11 +13,12 @@ from homeassistant.components.number import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import is_humidifier
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -28,22 +29,24 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncNumberEntityDescription(NumberEntityDescription):
     """Class to describe a Vesync number entity."""
 
-    exists_fn: Callable[[VeSyncBaseDevice], bool]
+    exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda _: True
     value_fn: Callable[[VeSyncBaseDevice], float]
-    set_value_fn: Callable[[VeSyncBaseDevice, float], bool]
+    native_min_value_fn: Callable[[VeSyncBaseDevice], float]
+    native_max_value_fn: Callable[[VeSyncBaseDevice], float]
+    set_value_fn: Callable[[VeSyncBaseDevice, float], Awaitable[bool]]
 
 
 NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
     VeSyncNumberEntityDescription(
         key="mist_level",
         translation_key="mist_level",
-        native_min_value=1,
-        native_max_value=9,
+        native_min_value_fn=lambda device: min(device.mist_levels),
+        native_max_value_fn=lambda device: max(device.mist_levels),
         native_step=1,
         mode=NumberMode.SLIDER,
         exists_fn=is_humidifier,
         set_value_fn=lambda device, value: device.set_mist_level(value),
-        value_fn=lambda device: device.mist_level,
+        value_fn=lambda device: device.state.mist_level,
     )
 ]
 
@@ -66,7 +69,9 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
+    _setup_entities(
+        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+    )
 
 
 @callback
@@ -106,9 +111,18 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
         """Return the value reported by the number."""
         return self.entity_description.value_fn(self.device)
 
+    @property
+    def native_min_value(self) -> float:
+        """Return the value reported by the number."""
+        return self.entity_description.native_min_value_fn(self.device)
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the value reported by the number."""
+        return self.entity_description.native_max_value_fn(self.device)
+
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        if await self.hass.async_add_executor_job(
-            self.entity_description.set_value_fn, self.device, value
-        ):
-            await self.coordinator.async_request_refresh()
+        if not await self.entity_description.set_value_fn(self.device, value):
+            raise HomeAssistantError(self.device.last_response.message)
+        self.schedule_update_ha_state()

@@ -80,8 +80,8 @@
       "description": "Sets how long automatic irrigation is turned off.",
       "fields": {
         "config_entry_id": {
-          "name": "Rainbird Controller Configuration Entry",
-          "description": "The setting will be adjusted on the specified controller."
+          "name": "Rain Bird controller",
+          "description": "The configuration entry of the controller to adjust the setting."
         },
         "duration": {
           "name": "Duration",

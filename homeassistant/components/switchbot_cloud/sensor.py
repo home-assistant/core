@@ -1,5 +1,9 @@
 """Platform for sensor integration."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
 from switchbot_api import Device, SwitchBotAPI
 
 from homeassistant.components.sensor import (
@@ -14,6 +18,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
@@ -35,6 +40,25 @@ SENSOR_TYPE_VOLTAGE = "voltage"
 SENSOR_TYPE_CURRENT = "electricCurrent"
 SENSOR_TYPE_POWER_CONSUMPTION = "weight"
 SENSOR_TYPE_DURATION_OF_USED = "electricityOfDay"
+SENSOR_TYPE_USED_ELECTRICITY = "usedElectricity"
+SENSOR_TYPE_LIGHTLEVEL = "lightLevel"
+
+
+@dataclass(frozen=True, kw_only=True)
+class SwitchbotCloudSensorEntityDescription(SensorEntityDescription):
+    """Plug Mini Eu UsedElectricity Sensor EntityDescription."""
+
+    value_fn: Callable[[Any], Any] = lambda value: value
+
+
+USED_ELECTRICITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
+    key=SENSOR_TYPE_USED_ELECTRICITY,
+    device_class=SensorDeviceClass.ENERGY,
+    state_class=SensorStateClass.TOTAL_INCREASING,
+    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    suggested_display_precision=2,
+    value_fn=lambda data: (data.get(SENSOR_TYPE_USED_ELECTRICITY) or 0) / 60000,
+)
 
 TEMPERATURE_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
@@ -104,10 +128,16 @@ DURATION_OF_USED_DESCRIPTION = SensorEntityDescription(
     device_class=SensorDeviceClass.DURATION,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTime.MINUTES,
+
+LIGHTLEVEL_DESCRIPTION = SensorEntityDescription(
+    key="lightLevel",
+    translation_key="light_level",
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BATTERY_DESCRIPTION,),
+    "Battery Circulator Fan": (BATTERY_DESCRIPTION,),
     "Meter": (
         TEMPERATURE_DESCRIPTION,
         HUMIDITY_DESCRIPTION,
@@ -140,6 +170,12 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         POWER_CONSUMPTION_DESCRIPTION,
         DURATION_OF_USED_DESCRIPTION,
     ),
+    "Plug Mini (EU)": (
+        POWER_DESCRIPTION,
+        VOLTAGE_DESCRIPTION,
+        CURRENT_DESCRIPTION_IN_MA,
+        USED_ELECTRICITY_DESCRIPTION,
+    ),
     "Hub 2": (
         TEMPERATURE_DESCRIPTION,
         HUMIDITY_DESCRIPTION,
@@ -159,6 +195,24 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock Lite": (BATTERY_DESCRIPTION,),
     "Smart Lock Pro": (BATTERY_DESCRIPTION,),
     "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
+    "Curtain": (BATTERY_DESCRIPTION,),
+    "Curtain3": (BATTERY_DESCRIPTION,),
+    "Roller Shade": (BATTERY_DESCRIPTION,),
+    "Blind Tilt": (BATTERY_DESCRIPTION,),
+    "Hub 3": (
+        TEMPERATURE_DESCRIPTION,
+        HUMIDITY_DESCRIPTION,
+        LIGHTLEVEL_DESCRIPTION,
+    ),
+    "Motion Sensor": (BATTERY_DESCRIPTION,),
+    "Contact Sensor": (BATTERY_DESCRIPTION,),
+    "Water Detector": (BATTERY_DESCRIPTION,),
+    "Humidifier": (TEMPERATURE_DESCRIPTION,),
+    "Climate Panel": (
+        TEMPERATURE_DESCRIPTION,
+        HUMIDITY_DESCRIPTION,
+        BATTERY_DESCRIPTION,
+    ),
 }
 
 
@@ -196,4 +250,14 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-        self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+        if isinstance(
+            self.entity_description,
+            SwitchbotCloudSensorEntityDescription,
+        ):
+            self._attr_native_value = self.entity_description.value_fn(
+                self.coordinator.data
+            )
+        else:
+            self._attr_native_value = self.coordinator.data.get(
+                self.entity_description.key
+            )

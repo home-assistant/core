@@ -1,4 +1,63 @@
 # serializer version: 1
+# name: test_selects[aqara_door_window_p2][select.aqara_door_and_window_sensor_p2_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '10 mm',
+        '20 mm',
+        '30 mm',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_door_and_window_sensor_p2_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-000000000000005B-MatterNodeDevice-1-AqaraBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_door_window_p2][select.aqara_door_and_window_sensor_p2_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara Door and Window Sensor P2 Sensitivity',
+      'options': list([
+        '10 mm',
+        '20 mm',
+        '30 mm',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_door_and_window_sensor_p2_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30 mm',
+  })
+# ---
 # name: test_selects[color_temperature_light][select.mock_color_temperature_light_lighting-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -979,6 +1038,79 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Low',
+  })
+# ---
+# name: test_selects[microwave_oven][select.microwave_oven_power_level_w-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '100',
+        '200',
+        '300',
+        '400',
+        '500',
+        '600',
+        '700',
+        '800',
+        '900',
+        '1000',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.microwave_oven_power_level_w',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power level (W)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_level',
+    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-MicrowaveOvenControlSelectedWattIndex-95-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[microwave_oven][select.microwave_oven_power_level_w-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Microwave Oven Power level (W)',
+      'options': list([
+        '100',
+        '200',
+        '300',
+        '400',
+        '500',
+        '600',
+        '700',
+        '800',
+        '900',
+        '1000',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.microwave_oven_power_level_w',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1000',
   })
 # ---
 # name: test_selects[mounted_dimmable_load_control_fixture][select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup-entry]
