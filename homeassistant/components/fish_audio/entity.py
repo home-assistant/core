@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from fish_audio_sdk import Session
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -16,10 +14,10 @@ class FishAudioEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, entry: ConfigEntry, session: Session) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the entity."""
         super().__init__()
-        self._session = session
+        self._session = entry.runtime_data
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Fish Audio",
