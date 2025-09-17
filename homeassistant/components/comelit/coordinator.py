@@ -129,8 +129,8 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
         """Remove stale devices."""
         device_registry = dr.async_get(self.hass)
 
-        for i in range(max(previous_list.keys(), default=0) + 1):
-            if previous_list.get(i) and not current_list.get(i):
+        for i in previous_list:
+            if i not in current_list:
                 _LOGGER.debug(
                     "Detected change in %s devices: index %s removed",
                     dev_type,
