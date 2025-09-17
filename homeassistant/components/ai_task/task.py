@@ -12,7 +12,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import camera, conversation, media_source
+from homeassistant.components import camera, conversation, image, media_source
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -31,14 +31,14 @@ from .const import (
 )
 
 
-def _save_camera_snapshot(image: camera.Image) -> Path:
+def _save_camera_snapshot(image_data: camera.Image | image.Image) -> Path:
     """Save camera snapshot to temp file."""
     with tempfile.NamedTemporaryFile(
         mode="wb",
-        suffix=mimetypes.guess_extension(image.content_type, False),
+        suffix=mimetypes.guess_extension(image_data.content_type, False),
         delete=False,
     ) as temp_file:
-        temp_file.write(image.content)
+        temp_file.write(image_data.content)
         return Path(temp_file.name)
 
 
@@ -54,26 +54,29 @@ async def _resolve_attachments(
     for attachment in attachments or []:
         media_content_id = attachment["media_content_id"]
 
-        # Special case for camera media sources
-        if media_content_id.startswith("media-source://camera/"):
-            # Extract entity_id from the media content ID
-            entity_id = media_content_id.removeprefix("media-source://camera/")
+        # Special case for certain media sources
+        for integration in camera, image:
+            media_source_prefix = f"media-source://{integration.DOMAIN}/"
+            if media_content_id.startswith(media_source_prefix):
+                # Extract entity_id from the media content ID
+                entity_id = media_content_id.removeprefix(media_source_prefix)
 
-            # Get snapshot from camera
-            image = await camera.async_get_image(hass, entity_id)
+                # Get snapshot from entity
+                image_data = await integration.async_get_image(hass, entity_id)
 
-            temp_filename = await hass.async_add_executor_job(
-                _save_camera_snapshot, image
-            )
-            created_files.append(temp_filename)
-
-            resolved_attachments.append(
-                conversation.Attachment(
-                    media_content_id=media_content_id,
-                    mime_type=image.content_type,
-                    path=temp_filename,
+                temp_filename = await hass.async_add_executor_job(
+                    _save_camera_snapshot, image_data
                 )
-            )
+                created_files.append(temp_filename)
+
+                resolved_attachments.append(
+                    conversation.Attachment(
+                        media_content_id=media_content_id,
+                        mime_type=image_data.content_type,
+                        path=temp_filename,
+                    )
+                )
+                break
         else:
             # Handle regular media sources
             media = await media_source.async_resolve_media(hass, media_content_id, None)
