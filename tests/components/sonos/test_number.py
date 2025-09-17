@@ -320,45 +320,59 @@ class _FakeSpeaker:
 
 async def test_group_fanout_unsubscribe_and_resubscribe_on_group_change(
     hass: HomeAssistant,
+    async_setup_sonos,
+    soco,
 ) -> None:
-    """When group uid changes, old fanout unsubscribes and new one subscribes."""
-    speaker = _FakeSpeaker(uid="S-1", coord_uid="C-1", group_uid="G-1")
-    entity = SonosGroupVolumeEntity(speaker, MagicMock())
-    entity.hass = hass
+    """When group uid changes, entity rebinds to the new fanout signal."""
+    # Start grouped with G-1 and bring up the platform
+    gid1 = _force_grouped(soco)
+    if gid1 != "G-1":
+        soco.group.uid = "G-1"
+        gid1 = "G-1"
 
-    # Existing subscription so the unsubscribe branch executes
-    unsub_called = False
+    await _setup_numbers_only(async_setup_sonos)
 
-    def _fake_unsubscribe():
-        nonlocal unsub_called
-        unsub_called = True
+    # Prove we are subscribed to G-1
+    soco.group.volume = 11
+    async_dispatcher_send(hass, f"{SONOS_GROUP_VOLUME_REFRESHED}-{gid1}", (gid1, 11))
+    await hass.async_block_till_done()
+    state = hass.states.get(GROUP_VOLUME_ENTITY_ID)
+    assert state is not None and int(float(state.state)) == 11
 
-    entity._unsubscribe_gv_signal = _fake_unsubscribe
+    # Change the topology: patch SoCo.group to a new object with uid G-2
+    member2 = MagicMock()
+    member2.uid = "M-TEST"
+    member2.is_visible = True
 
-    created_unsub = False
+    new_group = MagicMock()
+    new_group.uid = "G-2"
+    new_group.coordinator = soco.group.coordinator
+    new_group.members = [soco, member2]
+    new_group.volume = soco.group.volume
 
-    def _connect(hass_arg, signal, cb):
-        nonlocal created_unsub
-        created_unsub = True
+    type(soco).group = PropertyMock(return_value=new_group)
 
-        def _unsub():
-            pass
+    # Trigger the integration to notice the topology change
+    async_dispatcher_send(hass, f"{SONOS_STATE_UPDATED}-{soco.uid}")
+    await hass.async_block_till_done()
 
-        return _unsub
+    # Let delayed refresh complete
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
 
-    with (
-        patch(
-            "homeassistant.components.sonos.number.async_dispatcher_connect",
-            side_effect=_connect,
-        ),
-        patch.object(SonosGroupVolumeEntity, "_current_group_uid", return_value="G-2"),
-    ):
-        entity._group_uid = "G-1"
-        entity._rebind_for_topology_change()
+    # Send fanout for the new group and ensure the entity updated from it
+    new_group.volume = 66
+    async_dispatcher_send(hass, f"{SONOS_GROUP_VOLUME_REFRESHED}-G-2", ("G-2", 66))
+    await hass.async_block_till_done()
 
-    assert unsub_called is True
-    assert created_unsub is True
-    assert entity._group_uid == "G-2"
+    state = hass.states.get(GROUP_VOLUME_ENTITY_ID)
+    assert state is not None and int(float(state.state)) == 66
+
+    # Old gid should not alter state anymore
+    async_dispatcher_send(hass, f"{SONOS_GROUP_VOLUME_REFRESHED}-{gid1}", (gid1, 22))
+    await hass.async_block_till_done()
+    state2 = hass.states.get(GROUP_VOLUME_ENTITY_ID)
+    assert state2 is not None and int(float(state2.state)) == 66
 
 
 async def test_coordinator_listener_rebinds_on_coord_change(
