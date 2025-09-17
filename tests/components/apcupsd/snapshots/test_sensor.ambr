@@ -32,14 +32,14 @@
     'is_fixable': False,
     'is_persistent': False,
     'issue_domain': None,
-    'issue_id': 'available_via_device_info_sensor.myups_model_2',
+    'issue_id': 'available_via_device_info_sensor.myups_model',
     'learn_more_url': None,
     'severity': <IssueSeverity.WARNING: 'warning'>,
     'translation_key': 'available_via_device_info',
     'translation_placeholders': dict({
       'available_via_device_attr': 'model',
       'device_id': '<ANY>',
-      'entity_id': 'sensor.myups_model_2',
+      'entity_id': 'sensor.myups_model',
       'entity_name': 'Model',
     }),
   })
@@ -122,14 +122,14 @@
     'is_fixable': False,
     'is_persistent': False,
     'issue_domain': None,
-    'issue_id': 'available_via_device_info_sensor.myups_model',
+    'issue_id': 'available_via_device_info_sensor.myups_model_2',
     'learn_more_url': None,
     'severity': <IssueSeverity.WARNING: 'warning'>,
     'translation_key': 'available_via_device_info',
     'translation_placeholders': dict({
       'available_via_device_attr': 'model',
       'device_id': '<ANY>',
-      'entity_id': 'sensor.myups_model',
+      'entity_id': 'sensor.myups_model_2',
       'entity_name': 'Model',
     }),
   })
@@ -1138,8 +1138,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'model',
-    'unique_id': 'XXXXXXXXXXXX_model',
+    'translation_key': 'apc_model',
+    'unique_id': 'XXXXXXXXXXXX_apcmodel',
     'unit_of_measurement': None,
   })
 # ---
@@ -1186,8 +1186,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'apc_model',
-    'unique_id': 'XXXXXXXXXXXX_apcmodel',
+    'translation_key': 'model',
+    'unique_id': 'XXXXXXXXXXXX_model',
     'unit_of_measurement': None,
   })
 # ---
