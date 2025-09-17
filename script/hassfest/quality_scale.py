@@ -152,7 +152,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "analytics",
     "android_ip_webcam",
     "androidtv",
-    "androidtv_remote",
     "anel_pwrctrl",
     "anova",
     "anthemav",
@@ -487,7 +486,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hp_ilo",
     "html5",
     "http",
-    "huawei_lte",
     "hue",
     "huisbaasje",
     "hunterdouglas_powerview",
@@ -531,7 +529,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "itunes",
     "izone",
     "jellyfin",
-    "jewish_calendar",
     "joaoapps_join",
     "juicenet",
     "justnimbus",
@@ -739,7 +736,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "openuv",
     "openweathermap",
     "opnsense",
-    "opower",
     "opple",
     "oralb",
     "oru",
@@ -1178,7 +1174,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "analytics_insights",
     "android_ip_webcam",
     "androidtv",
-    "androidtv_remote",
     "anel_pwrctrl",
     "anova",
     "anthemav",
@@ -1781,7 +1776,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "openuv",
     "openweathermap",
     "opnsense",
-    "opower",
     "opple",
     "oralb",
     "oru",
@@ -2249,6 +2243,7 @@ NO_QUALITY_SCALE = [
     "tag",
     "timer",
     "trace",
+    "usage_prediction",
     "webhook",
     "websocket_api",
     "zone",
@@ -2297,7 +2292,11 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         ):
             integration.add_error(
                 "quality_scale",
-                "Quality scale definition not found. New integrations are required to at least reach the Bronze tier.",
+                (
+                    "New integrations marked as internal should be added to INTEGRATIONS_WITHOUT_SCALE in script/hassfest/quality_scale.py."
+                    if integration.quality_scale == "internal"
+                    else "Quality scale definition not found. New integrations are required to at least reach the Bronze tier."
+                ),
             )
             return
         if declared_quality_scale is not None:
@@ -2342,7 +2341,11 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     ):
         integration.add_error(
             "quality_scale",
-            "New integrations are required to at least reach the Bronze tier.",
+            (
+                "New integrations marked as internal should be added to INTEGRATIONS_WITHOUT_SCALE in script/hassfest/quality_scale.py."
+                if integration.quality_scale == "internal"
+                else "New integrations are required to at least reach the Bronze tier."
+            ),
         )
         return
     name = str(iqs_file)
