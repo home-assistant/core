@@ -148,19 +148,10 @@ def deprecated_hass_argument[**_P, _T](
         def _inner(*args: _P.args, **kwargs: _P.kwargs) -> _T:
             from homeassistant.core import HomeAssistant  # noqa: PLC0415
 
-            if len(args) > 0 and isinstance(args[0], HomeAssistant):
-                _print_deprecation_warning_internal(
-                    "hass",
-                    func.__module__,
-                    f"{func.__name__} without hass argument",
-                    "argument",
-                    f"passed to {func.__name__}",
-                    breaks_in_ha_version,
-                    log_when_no_integration_is_found=True,
-                )
-                args = args[1:]  # type: ignore[assignment]
+            in_arg = len(args) > 0 and isinstance(args[0], HomeAssistant)
+            in_kwarg = "hass" in kwargs and isinstance(kwargs["hass"], HomeAssistant)
 
-            if "hass" in kwargs and isinstance(kwargs["hass"], HomeAssistant):
+            if in_arg or in_kwarg:
                 _print_deprecation_warning_internal(
                     "hass",
                     func.__module__,
@@ -170,7 +161,10 @@ def deprecated_hass_argument[**_P, _T](
                     breaks_in_ha_version,
                     log_when_no_integration_is_found=True,
                 )
-                kwargs.pop("hass")
+                if in_arg:
+                    args = args[1:]  # type: ignore[assignment]
+                if in_kwarg:
+                    kwargs.pop("hass")
 
             return func(*args, **kwargs)
 
