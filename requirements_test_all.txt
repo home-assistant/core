@@ -1884,7 +1884,7 @@ pypalazzetti==0.1.19
 pypaperless==4.1.1
 
 # homeassistant.components.lcn
-pypck==0.8.12
+pypck==0.9.2
 
 # homeassistant.components.pglab
 pypglab==0.0.5
