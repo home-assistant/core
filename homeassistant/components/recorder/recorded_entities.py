@@ -276,7 +276,7 @@ class RecordedEntities:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "homeassistant/record_entity/set_options",
+        vol.Required("type"): "recorder/recorded_entities/set_options",
         vol.Required("entity_ids"): [str],
         vol.Required("recording_disabled_by"): vol.Any(
             None,
@@ -304,7 +304,7 @@ def ws_record_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "homeassistant/record_entity/list",
+        vol.Required("type"): "recorder/recorded_entities/list",
     }
 )
 def ws_list_recorded_entities(
@@ -324,7 +324,7 @@ def ws_list_recorded_entities(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "homeassistant/record_entity/get",
+        vol.Required("type"): "recorder/recorded_entities/get",
         vol.Required("entity_id"): str,
     }
 )
