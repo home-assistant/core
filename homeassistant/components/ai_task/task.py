@@ -57,26 +57,28 @@ async def _resolve_attachments(
         # Special case for certain media sources
         for integration in camera, image:
             media_source_prefix = f"media-source://{integration.DOMAIN}/"
-            if media_content_id.startswith(media_source_prefix):
-                # Extract entity_id from the media content ID
-                entity_id = media_content_id.removeprefix(media_source_prefix)
+            if not media_content_id.startswith(media_source_prefix):
+                continue
 
-                # Get snapshot from entity
-                image_data = await integration.async_get_image(hass, entity_id)
+            # Extract entity_id from the media content ID
+            entity_id = media_content_id.removeprefix(media_source_prefix)
 
-                temp_filename = await hass.async_add_executor_job(
-                    _save_camera_snapshot, image_data
+            # Get snapshot from entity
+            image_data = await integration.async_get_image(hass, entity_id)
+
+            temp_filename = await hass.async_add_executor_job(
+                _save_camera_snapshot, image_data
+            )
+            created_files.append(temp_filename)
+
+            resolved_attachments.append(
+                conversation.Attachment(
+                    media_content_id=media_content_id,
+                    mime_type=image_data.content_type,
+                    path=temp_filename,
                 )
-                created_files.append(temp_filename)
-
-                resolved_attachments.append(
-                    conversation.Attachment(
-                        media_content_id=media_content_id,
-                        mime_type=image_data.content_type,
-                        path=temp_filename,
-                    )
-                )
-                break
+            )
+            break
         else:
             # Handle regular media sources
             media = await media_source.async_resolve_media(hass, media_content_id, None)
