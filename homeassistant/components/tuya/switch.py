@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -1010,22 +1010,11 @@ async def async_setup_entry(
             device = hass_data.manager.device_map[device_id]
             if descriptions := SWITCHES.get(device.category):
                 entities.extend(
-                    TuyaSwitchEntity(device, hass_data.manager, description)
-                    for description in descriptions
-                    if description.key in device.status and not description.deprecated
-                )
-
-        # Check for deprecated entities
-        for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
-            if descriptions := SWITCHES.get(device.category):
-                entities.extend(
-                    deprecated_entity
+                    new_entity
                     for description in descriptions
                     if description.key in device.status
-                    and description.deprecated
                     and (
-                        deprecated_entity := _discover_deprecated_entity(
+                        new_entity := _create_entity(
                             hass,
                             device,
                             hass_data.manager,
@@ -1044,18 +1033,19 @@ async def async_setup_entry(
     )
 
 
-def _discover_deprecated_entity(
+def _create_entity(
     hass: HomeAssistant,
     device: CustomerDevice,
     manager: Manager,
     description: TuyaSwitchEntityDescription,
     entity_registry: er.EntityRegistry,
 ) -> TuyaSwitchEntity | None:
+    """Create a Tuya switch entity, with deprecation checks."""
+    if not description.deprecated:
+        return TuyaSwitchEntity(device, manager, description)
+
     unique_id = f"tuya.{device.id}{description.key}"
     entity_id = entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, unique_id)
-
-    if TYPE_CHECKING:
-        assert description.deprecated is not None
 
     if not entity_id or not (entity_entry := entity_registry.async_get(entity_id)):
         return None
