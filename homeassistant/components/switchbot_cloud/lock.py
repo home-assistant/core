@@ -71,7 +71,7 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Latch open the lock."""
         await self.send_api_command(LockV2Commands.DEADBOLT)
-        self._attr_is_locked = True
+        self._attr_is_locked = False
         self.async_write_ha_state()
 
     def __set_features(self) -> None:
