@@ -103,7 +103,7 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
     VERSION = 1
     MINOR_VERSION = 1
-    BAUDRATE = 460800
+    ZIGBEE_BAUDRATE = 460800
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the config flow."""

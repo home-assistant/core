@@ -69,7 +69,7 @@ class ZigbeeIntegration(StrEnum):
 class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
-    BAUDRATE = 115200  # Default, subclasses may override
+    ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
     _failed_addon_name: str
     _failed_addon_reason: str
     _picked_firmware_type: PickedFirmwareType
@@ -423,7 +423,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 "name": self._hardware_name,
                 "port": {
                     "path": self._device,
-                    "baudrate": self.BAUDRATE,
+                    "baudrate": self.ZIGBEE_BAUDRATE,
                     "flow_control": "hardware",
                 },
                 "radio_type": "ezsp",
