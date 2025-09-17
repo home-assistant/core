@@ -330,14 +330,3 @@ def _async_make_entity(
 ) -> SwitchBotCloudSensor:
     """Make a SwitchBotCloudSensor or SwitchBotCloudRelaySwitch2PMSensor."""
     return SwitchBotCloudSensor(api, device, coordinator, description)
-        if isinstance(
-            self.entity_description,
-            SwitchbotCloudSensorEntityDescription,
-        ):
-            self._attr_native_value = self.entity_description.value_fn(
-                self.coordinator.data
-            )
-        else:
-            self._attr_native_value = self.coordinator.data.get(
-                self.entity_description.key
-            )
