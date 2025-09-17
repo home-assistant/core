@@ -322,7 +322,7 @@ async def test_switch_functionality(
 )
 async def test_switch_exception_handling(
     hass: HomeAssistant,
-    client_with_exception: MagicMock,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
@@ -331,8 +331,8 @@ async def test_switch_exception_handling(
     exception_match: str,
 ) -> None:
     """Test exception handling."""
-    client_with_exception.get_settings.side_effect = None
-    client_with_exception.get_settings.return_value = ArrayOfSettings(
+    client.get_settings.side_effect = None
+    client.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
                 key=SettingKey.BSH_COMMON_CHILD_LOCK,
@@ -350,18 +350,17 @@ async def test_switch_exception_handling(
         ]
     )
 
-    assert await integration_setup(client_with_exception)
+    assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    # Assert that an exception is called.
-    with pytest.raises(HomeConnectError):
-        await getattr(client_with_exception, mock_attr)()
+    mock = AsyncMock(side_effect=HomeConnectError("error.key"))
+    setattr(client, mock_attr, mock)
 
     with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
-    assert getattr(client_with_exception, mock_attr).call_count == 2
+    mock.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -429,7 +428,7 @@ async def test_ent_desc_switch_functionality(
 )
 async def test_ent_desc_switch_exception_handling(
     hass: HomeAssistant,
-    client_with_exception: MagicMock,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
@@ -438,8 +437,8 @@ async def test_ent_desc_switch_exception_handling(
     exception_match: str,
 ) -> None:
     """Test switch exception handling - entity description setup."""
-    client_with_exception.get_settings.side_effect = None
-    client_with_exception.get_settings.return_value = ArrayOfSettings(
+    client.get_settings.side_effect = None
+    client.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
                 key=key,
@@ -449,17 +448,15 @@ async def test_ent_desc_switch_exception_handling(
             for key, value in status.items()
         ]
     )
-    assert await integration_setup(client_with_exception)
+    assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    # Assert that an exception is called.
-    with pytest.raises(HomeConnectError):
-        await client_with_exception.set_setting()
+    client.set_setting = AsyncMock(side_effect=HomeConnectError("error.key"))
     with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
-    assert client_with_exception.set_setting.call_count == 2
+    client.set_setting.assert_awaited_once()
 
 
 @pytest.mark.parametrize(

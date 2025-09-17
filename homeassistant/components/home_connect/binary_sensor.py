@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
 from .const import REFRIGERATION_STATUS_DOOR_CLOSED, REFRIGERATION_STATUS_DOOR_OPEN
-from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 
 PARALLEL_UPDATES = 0
@@ -140,19 +140,18 @@ CONNECTED_BINARY_ENTITY_DESCRIPTION = BinarySensorEntityDescription(
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     entities: list[HomeConnectEntity] = [
         HomeConnectConnectivityBinarySensor(
-            entry.runtime_data, appliance, CONNECTED_BINARY_ENTITY_DESCRIPTION
+            appliance_coordinator, CONNECTED_BINARY_ENTITY_DESCRIPTION
         )
     ]
     entities.extend(
-        HomeConnectBinarySensor(entry.runtime_data, appliance, description)
+        HomeConnectBinarySensor(appliance_coordinator, description)
         for description in BINARY_SENSORS
-        if description.key in appliance.status
+        if description.key in appliance_coordinator.data.status
     )
     return entities
 

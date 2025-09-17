@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .common import setup_home_connect_entry
 from .const import BSH_POWER_OFF, BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
-from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity
 from .utils import get_dict_from_home_connect_error
 
@@ -136,34 +136,30 @@ SWITCH_OPTIONS = (
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     entities: list[HomeConnectEntity] = []
-    if SettingKey.BSH_COMMON_POWER_STATE in appliance.settings:
+    if SettingKey.BSH_COMMON_POWER_STATE in appliance_coordinator.data.settings:
         entities.append(
-            HomeConnectPowerSwitch(
-                entry.runtime_data, appliance, POWER_SWITCH_DESCRIPTION
-            )
+            HomeConnectPowerSwitch(appliance_coordinator, POWER_SWITCH_DESCRIPTION)
         )
     entities.extend(
-        HomeConnectSwitch(entry.runtime_data, appliance, description)
+        HomeConnectSwitch(appliance_coordinator, description)
         for description in SWITCHES
-        if description.key in appliance.settings
+        if description.key in appliance_coordinator.data.settings
     )
     return entities
 
 
 def _get_option_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectOptionEntity]:
     """Get a list of currently available option entities."""
     return [
-        HomeConnectSwitchOptionEntity(entry.runtime_data, appliance, description)
+        HomeConnectSwitchOptionEntity(appliance_coordinator, description)
         for description in SWITCH_OPTIONS
-        if description.key in appliance.options
+        if description.key in appliance_coordinator.data.options
     ]
 
 

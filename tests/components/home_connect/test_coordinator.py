@@ -23,6 +23,7 @@ from aiohomeconnect.model.error import (
     HomeConnectApiError,
     HomeConnectError,
     HomeConnectRequestError,
+    UnauthorizedError,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -101,7 +102,7 @@ async def test_coordinator_failure_refresh_and_stream(
     assert state
     assert state.state != STATE_UNAVAILABLE
 
-    client.get_home_appliances.side_effect = HomeConnectError()
+    client.get_specific_appliance.side_effect = HomeConnectError()
 
     # Force a coordinator refresh.
     await hass.services.async_call(
@@ -118,10 +119,8 @@ async def test_coordinator_failure_refresh_and_stream(
 
     # Test that the entity becomes available again after a successful update.
 
-    client.get_home_appliances.side_effect = None
-    client.get_home_appliances.return_value = ArrayOfHomeAppliances(
-        [HomeAppliance.from_json(appliance_data)]
-    )
+    client.get_specific_appliance.side_effect = None
+    client.get_specific_appliance.return_value = HomeAppliance.from_json(appliance_data)
 
     # Move time forward to pass the debounce time.
     freezer.tick(timedelta(hours=1))
@@ -144,7 +143,7 @@ async def test_coordinator_failure_refresh_and_stream(
     # Test that the event stream makes the entity go available too.
 
     # First make the entity unavailable.
-    client.get_home_appliances.side_effect = HomeConnectError()
+    client.get_specific_appliance.side_effect = HomeConnectError()
 
     # Move time forward to pass the debounce time
     freezer.tick(timedelta(hours=1))
@@ -165,10 +164,8 @@ async def test_coordinator_failure_refresh_and_stream(
     assert state.state == STATE_UNAVAILABLE
 
     # Now make the entity available again.
-    client.get_home_appliances.side_effect = None
-    client.get_home_appliances.return_value = ArrayOfHomeAppliances(
-        [HomeAppliance.from_json(appliance_data)]
-    )
+    client.get_specific_appliance.side_effect = None
+    client.get_specific_appliance.return_value = HomeAppliance.from_json(appliance_data)
 
     # One event should make all entities for this appliance available again.
     event_message = EventMessage(
@@ -390,12 +387,12 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
 
 async def test_event_listener_error(
     hass: HomeAssistant,
-    client_with_exception: MagicMock,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
     """Test that the configuration entry is reloaded when the event stream raises an API error."""
-    client_with_exception.stream_all_events = MagicMock(
+    client.stream_all_events = MagicMock(
         side_effect=HomeConnectApiError("error.key", "error description")
     )
 
@@ -403,10 +400,10 @@ async def test_event_listener_error(
         ConfigEntries,
         "async_schedule_reload",
     ) as mock_schedule_reload:
-        await integration_setup(client_with_exception)
+        await integration_setup(client)
         await hass.async_block_till_done()
 
-    client_with_exception.stream_all_events.assert_called_once()
+    client.stream_all_events.assert_called_once()
     mock_schedule_reload.assert_called_once_with(config_entry.entry_id)
     assert not config_entry._background_tasks
 
@@ -509,6 +506,7 @@ async def test_devices_updated_on_refresh(
     client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    platforms: list[str],
 ) -> None:
     """Test handling of devices added or deleted while event stream is down."""
     appliances: list[HomeAppliance] = (
@@ -530,12 +528,15 @@ async def test_devices_updated_on_refresh(
     client.get_home_appliances = AsyncMock(
         return_value=ArrayOfHomeAppliances(appliances[1:3]),
     )
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "switch.dishwasher_power"},
-        blocking=True,
-    )
+    with (
+        patch("homeassistant.components.home_connect.PLATFORMS", platforms),
+        patch(
+            "homeassistant.components.home_connect.HomeConnectClient",
+            return_value=client,
+        ),
+    ):
+        await client.add_events([HomeConnectApiError("error.key", "error description")])
+        await hass.async_block_till_done()
 
     assert not device_registry.async_get_device({(DOMAIN, appliances[0].ha_id)})
     for appliance in appliances[2:3]:
@@ -757,3 +758,35 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
     await hass.async_block_till_done()
 
     assert hass.states.is_state("switch.dishwasher_power", STATE_OFF)
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+async def test_auth_error_while_updating_appliance(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+) -> None:
+    """Test that the configuration entry is set to require reauth when an auth error happens."""
+    entity_id = "switch.dishwasher_power"
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(entity_id)
+
+    client.get_settings = AsyncMock(side_effect=UnauthorizedError("unauthorized"))
+
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    flows_in_progress = hass.config_entries.flow.async_progress()
+    assert len(flows_in_progress) == 1
+    result = flows_in_progress[0]
+    assert result["step_id"] == "reauth_confirm"
+    assert result["context"]["entry_id"] == config_entry.entry_id
+    assert result["context"]["source"] == "reauth"

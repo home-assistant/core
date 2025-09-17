@@ -23,34 +23,34 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import API_DEFAULT_RETRY_AFTER, DOMAIN
-from .coordinator import HomeConnectApplianceData, HomeConnectCoordinator
+from .coordinator import HomeConnectApplianceCoordinator
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
+class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
     """Generic Home Connect entity (base class)."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: EntityDescription,
         context_override: Any | None = None,
     ) -> None:
         """Initialize the entity."""
-        context = (appliance.info.ha_id, EventKey(desc.key))
+        appliance_ha_id = appliance_coordinator.data.info.ha_id
+        context = EventKey(desc.key)
         if context_override is not None:
             context = context_override
-        super().__init__(coordinator, context)
-        self.appliance = appliance
+        super().__init__(appliance_coordinator, context)
+        self.appliance = appliance_coordinator.data
         self.entity_description = desc
-        self._attr_unique_id = f"{appliance.info.ha_id}-{desc.key}"
+        self._attr_unique_id = f"{appliance_ha_id}-{desc.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, appliance.info.ha_id)},
+            identifiers={(DOMAIN, appliance_ha_id)},
         )
         self.update_native_value()
 

@@ -556,7 +556,7 @@ async def test_light_color_different_than_custom(
 )
 async def test_light_exception_handling(
     hass: HomeAssistant,
-    client_with_exception: MagicMock,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
@@ -567,8 +567,8 @@ async def test_light_exception_handling(
     exception_match: str,
 ) -> None:
     """Test light exception handling."""
-    client_with_exception.get_settings.side_effect = None
-    client_with_exception.get_settings.return_value = ArrayOfSettings(
+    client.get_settings.side_effect = None
+    client.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
                 key=setting_key,
@@ -578,19 +578,19 @@ async def test_light_exception_handling(
             for setting_key, value in setting.items()
         ]
     )
-    client_with_exception.set_setting.side_effect = [
+    client.set_setting.side_effect = [
         exception() if exception else None for exception in attr_side_effect
     ]
-    assert await integration_setup(client_with_exception)
+    assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
     # Assert that an exception is called.
     with pytest.raises(HomeConnectError):
-        await client_with_exception.set_setting()
+        await client.set_setting()
 
     service_data[ATTR_ENTITY_ID] = entity_id
     with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             LIGHT_DOMAIN, service, service_data, blocking=True
         )
-    assert client_with_exception.set_setting.call_count == len(attr_side_effect)
+    assert client.set_setting.call_count == len(attr_side_effect)

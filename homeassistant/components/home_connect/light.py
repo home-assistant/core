@@ -22,11 +22,7 @@ from homeassistant.util import color as color_util
 
 from .common import setup_home_connect_entry
 from .const import BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR, DOMAIN
-from .coordinator import (
-    HomeConnectApplianceData,
-    HomeConnectConfigEntry,
-    HomeConnectCoordinator,
-)
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
 
@@ -78,14 +74,13 @@ LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
-        HomeConnectLight(entry.runtime_data, appliance, description)
+        HomeConnectLight(appliance_coordinator, description)
         for description in LIGHTS
-        if description.key in appliance.settings
+        if description.key in appliance_coordinator.data.settings
     ]
 
 
@@ -109,8 +104,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: HomeConnectLightEntityDescription,
     ) -> None:
         """Initialize the entity."""
@@ -118,7 +112,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         def get_setting_key_if_setting_exists(
             setting_key: SettingKey | None,
         ) -> SettingKey | None:
-            if setting_key and setting_key in appliance.settings:
+            if setting_key and setting_key in appliance_coordinator.data.settings:
                 return setting_key
             return None
 
@@ -133,7 +127,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         )
         self._brightness_scale = desc.brightness_scale
 
-        super().__init__(coordinator, appliance, desc)
+        super().__init__(appliance_coordinator, desc)
 
         match (self._brightness_key, self._custom_color_key):
             case (None, None):
@@ -286,10 +280,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             self.async_on_remove(
                 self.coordinator.async_add_listener(
                     self._handle_coordinator_update,
-                    (
-                        self.appliance.info.ha_id,
-                        EventKey(key),
-                    ),
+                    EventKey(key),
                 )
             )
 
