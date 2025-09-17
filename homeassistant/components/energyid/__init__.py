@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import datetime as dt
 import functools
 import logging
+from typing import Any  # noqa: F401
 
 from energyid_webhooks.client_v2 import WebhookClient
 
@@ -95,11 +96,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
             try:
                 await client.synchronize_sensors()
                 if entry.runtime_data.unavailable_logged:
-                    _LOGGER.info("Connection to EnergyID re-established")
+                    _LOGGER.debug("Connection to EnergyID re-established")
                     entry.runtime_data.unavailable_logged = False
             except (OSError, RuntimeError) as err:
                 if not entry.runtime_data.unavailable_logged:
-                    _LOGGER.info("EnergyID is unavailable: %s", err)
+                    _LOGGER.debug("EnergyID is unavailable: %s", err)
                     entry.runtime_data.unavailable_logged = True
             upload_interval = DEFAULT_UPLOAD_INTERVAL_SECONDS
             if client.webhook_policy:
@@ -127,7 +128,7 @@ async def config_entry_update_listener(
 ) -> None:
     """Handle config entry updates, including subentry changes."""
     _LOGGER.debug("Config entry updated for %s, reloading listeners", entry.entry_id)
-    update_listeners(hass, entry)  # Call the sync function
+    update_listeners(hass, entry)
 
 
 @callback
@@ -210,12 +211,12 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
                         current_state.state,
                     )
 
-    # Update entity registry tracking listener if tracked entities changed
+    # Clean up old entity registry listener
     if runtime_data.registry_tracking_listener:
-        # Remove old listener
         runtime_data.registry_tracking_listener()
         runtime_data.registry_tracking_listener = None
 
+    # Set up listeners for entity registry changes
     if tracked_entity_ids:
         _LOGGER.debug("Setting up entity registry tracking for: %s", tracked_entity_ids)
 
@@ -223,30 +224,29 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
             event: Event[er.EventEntityRegistryUpdatedData],
         ) -> None:
             """Handle entity registry changes for our tracked entities."""
-            _LOGGER.info("REGISTRY EVENT: %s", event)
+            _LOGGER.debug("Registry event for tracked entity: %s", event.data)
 
-            action = getattr(event, "action", None)
-            changed_entity_id = getattr(event, "entity_id", None)
-            changes = getattr(event, "changes", {})
+            action = event.data["action"]
+            changed_entity_id = event.data["entity_id"]
 
-            if action == "update" and changed_entity_id and "entity_id" in changes:
-                old_entity_id = changes["entity_id"]
-                new_entity_id = changed_entity_id
+            if action == "update":
+                event_data = event.data  # type: Any
+                if "changes" in event_data and "entity_id" in event_data["changes"]:
+                    old_entity_id = event_data["changes"]["entity_id"]
+                    new_entity_id = changed_entity_id
 
-                _LOGGER.info(
-                    "Entity ID changed: %s -> %s", old_entity_id, new_entity_id
-                )
-
-                # Check if this was one of our tracked entities
-                if old_entity_id in runtime_data.mappings:
-                    _LOGGER.info("Tracked entity renamed, reloading listeners")
+                    _LOGGER.debug(
+                        "Tracked entity ID changed: %s -> %s",
+                        old_entity_id,
+                        new_entity_id,
+                    )
+                    # Entity ID changed, need to reload listeners to track new ID
                     update_listeners(hass, entry)
-                    return
 
-            elif action == "remove" and changed_entity_id:
-                if changed_entity_id in runtime_data.mappings:
-                    _LOGGER.info("Tracked entity removed: %s", changed_entity_id)
-                    update_listeners(hass, entry)
+            elif action == "remove":
+                _LOGGER.debug("Tracked entity removed: %s", changed_entity_id)
+                # reminder for next PR: Create repair issue to notify user about removed entity
+                update_listeners(hass, entry)
 
         # Track the specific entity IDs we care about
         unsub_entity_registry = async_track_entity_registry_updated_event(
@@ -294,17 +294,12 @@ def _async_handle_state_change(
         new_state.state if new_state else "None",
     )
 
-    # Skip if entity was removed (new_state=None) or event data incomplete
-    if not entity_id or not new_state:
-        return
-
-    if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+    if not new_state or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
         return
 
     entry = hass.config_entries.async_get_entry(entry_id)
-    # Guard against race condition: state change events may be processed
-    # after config entry starts unloading or during reload
     if not entry or not hasattr(entry, "runtime_data"):
+        # Entry is being unloaded or not yet fully initialized
         return
 
     runtime_data = entry.runtime_data
