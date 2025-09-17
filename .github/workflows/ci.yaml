@@ -543,7 +543,9 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
-        if: steps.cache-venv.outputs.cache-hit != 'true' || steps.cache-apt-check.outputs.cache-hit != 'true'
+        if: |
+          steps.cache-venv.outputs.cache-hit != 'true'
+          || steps.cache-apt-check.outputs.cache-hit != 'true'
         timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
