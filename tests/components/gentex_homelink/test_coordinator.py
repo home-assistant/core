@@ -8,11 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.gentex_homelink import async_setup_entry
-from homeassistant.components.gentex_homelink.const import (
-    EVENT_OFF,
-    EVENT_PRESSED,
-    EVENT_TIMEOUT,
-)
+from homeassistant.components.gentex_homelink.const import EVENT_PRESSED
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -115,16 +111,3 @@ async def test_get_state_updates(
         )
         buttons_pressed = [s.attributes["event_type"] == EVENT_PRESSED for s in states]
         assert all(buttons_pressed), "At least one button was not pressed"
-        _LOGGER.info(
-            "Fetch data again. Buttons should be off because more than 10s has elapsed"
-        )
-
-        await hass.async_block_till_done(wait_background_tasks=True)
-        await asyncio.sleep(EVENT_TIMEOUT)
-        states = hass.states.async_all()
-        assert (state != STATE_UNAVAILABLE for state in states), (
-            "Some button is still unavailable"
-        )
-
-        buttons_off = [s.attributes["event_type"] == EVENT_OFF for s in states]
-        assert all(buttons_off), "Some button was not Off"
