@@ -38,6 +38,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pillow": "SemVer",
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
+    "pymodbus": "Custom",
     "pytz": "CalVer",
     "requests": "SemVer",
     "typing_extensions": "SemVer",
