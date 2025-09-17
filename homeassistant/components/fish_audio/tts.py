@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FishAudioConfigEntry
@@ -37,23 +38,36 @@ async def async_setup_entry(
         _LOGGER.debug("Subentry: %s", subentry)
         if subentry.subentry_type != "tts":
             continue
-        async_add_entities([FishAudioTTSEntity(entry, subentry)])
+        async_add_entities(
+            [FishAudioTTSEntity(entry, subentry)],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class FishAudioTTSEntity(TextToSpeechEntity):
     """Fish Audio TTS entity."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_options = [CONF_VOICE_ID, CONF_BACKEND]
 
     def __init__(self, entry: FishAudioConfigEntry, sub_entry: ConfigSubentry) -> None:
         """Initialize the TTS entity."""
         super().__init__()
-        self._session = entry.runtime_data
+        self.session = entry.runtime_data
         self.sub_entry = sub_entry
-
         self._attr_unique_id = sub_entry.subentry_id
-        self._attr_name = sub_entry.title
+        title = sub_entry.title
+        backend = sub_entry.data.get(CONF_BACKEND)
+        self.entity_id = f"tts.{title}_{backend}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, sub_entry.subentry_id)},
+            manufacturer="Fish Audio",
+            model=backend,
+            name=title,
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def default_language(self) -> str:
@@ -87,7 +101,7 @@ class FishAudioTTSEntity(TextToSpeechEntity):
             return None, None
 
         request = TTSRequest(text=message, reference_id=voice_id)
-        func = partial(self._session.tts, request=request, backend=backend)
+        func = partial(self.session.tts, request=request, backend=backend)
         try:
             response = await self.hass.async_add_executor_job(func)
         except HttpCodeErr as err:
