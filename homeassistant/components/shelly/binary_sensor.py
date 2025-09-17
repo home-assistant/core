@@ -37,7 +37,6 @@ from .utils import (
     async_remove_orphaned_entities,
     get_blu_trv_device_info,
     get_device_entry_gen,
-    get_virtual_component_ids,
     is_block_momentary_input,
     is_rpc_momentary_input,
     is_view_for_platform,
@@ -346,20 +345,6 @@ async def async_setup_entry(
                 coordinator.mac,
                 BINARY_SENSOR_PLATFORM,
                 coordinator.device.status,
-            )
-
-            # the user can remove virtual components from the device configuration, so
-            # we need to remove orphaned entities
-            virtual_binary_sensor_ids = get_virtual_component_ids(
-                coordinator.device.config, BINARY_SENSOR_PLATFORM
-            )
-            async_remove_orphaned_entities(
-                hass,
-                config_entry.entry_id,
-                coordinator.mac,
-                BINARY_SENSOR_PLATFORM,
-                virtual_binary_sensor_ids,
-                "boolean",
             )
         return
 
