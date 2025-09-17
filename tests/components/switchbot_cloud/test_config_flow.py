@@ -13,9 +13,6 @@ from homeassistant.components.switchbot_cloud.const import DOMAIN, ENTRY_TITLE
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import selector
-
-from . import configure_integration
 
 
 async def _fill_out_form_and_assert_entry_created(
@@ -92,32 +89,3 @@ async def test_form_fails(
     await _fill_out_form_and_assert_entry_created(
         hass, result_init["flow_id"], mock_setup_entry
     )
-
-
-async def test_options_flow_handle(hass: HomeAssistant) -> None:
-    """Test options flow handle."""
-
-    entry = await configure_integration(hass)
-    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert "data_schema" in result
-
-    schema = result["data_schema"].schema
-    assert "SetNightLatchMode" in schema
-    device_selector = schema["SetNightLatchMode"]
-    assert isinstance(device_selector, selector.DeviceSelector)
-
-
-async def test_options_flow_handle_user_input_is_not_none(hass: HomeAssistant) -> None:
-    """Test options flow handle user input is not none."""
-
-    entry = await configure_integration(hass)
-    result = await hass.config_entries.options.async_init(
-        entry.entry_id,
-        data={},
-    )
-    await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
