@@ -178,6 +178,8 @@ build.json @home-assistant/supervisor
 /tests/components/auth/ @home-assistant/core
 /homeassistant/components/automation/ @home-assistant/core
 /tests/components/automation/ @home-assistant/core
+/homeassistant/components/autoskope/ @mcisk
+/tests/components/autoskope/ @mcisk
 /homeassistant/components/avea/ @pattyland
 /homeassistant/components/awair/ @ahayworth @danielsjf
 /tests/components/awair/ @ahayworth @danielsjf

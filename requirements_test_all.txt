@@ -523,6 +523,9 @@ autarco==3.1.0
 # homeassistant.components.husqvarna_automower_ble
 automower-ble==0.2.7
 
+# homeassistant.components.autoskope
+autoskope_client==1.0.0
+
 # homeassistant.components.generic
 # homeassistant.components.stream
 av==13.1.0
