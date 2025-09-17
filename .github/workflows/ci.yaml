@@ -627,6 +627,7 @@ jobs:
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
@@ -939,6 +940,7 @@ jobs:
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
@@ -1012,6 +1014,7 @@ jobs:
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
@@ -1158,6 +1161,7 @@ jobs:
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
@@ -1311,6 +1315,7 @@ jobs:
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
@@ -1485,6 +1490,7 @@ jobs:
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
