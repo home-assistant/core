@@ -33,6 +33,3 @@ async def test_local_media_source(hass: HomeAssistant, init_components: None) ->
         match="AI Task media source requires at least one media directory configured",
     ):
         await async_get_media_source(hass)
-
-
-# The following is from media_source/__init__.py for reference
