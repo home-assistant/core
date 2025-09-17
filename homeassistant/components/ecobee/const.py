@@ -20,7 +20,6 @@ from homeassistant.const import Platform
 _LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "ecobee"
-ATTR_CONFIG_ENTRY_ID = "entry_id"
 ATTR_AVAILABLE_SENSORS = "available_sensors"
 ATTR_ACTIVE_SENSORS = "active_sensors"
 

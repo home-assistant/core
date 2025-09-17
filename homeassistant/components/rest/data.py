@@ -45,6 +45,7 @@ class RestData:
         self._method = method
         self._resource = resource
         self._encoding = encoding
+        self._force_use_set_encoding = False
 
         # Convert auth tuple to aiohttp.BasicAuth if needed
         if isinstance(auth, tuple) and len(auth) == 2:
@@ -115,6 +116,16 @@ class RestData:
             for key, value in rendered_params.items():
                 if isinstance(value, bool):
                     rendered_params[key] = str(value).lower()
+                elif not isinstance(value, (str, int, float, type(None))):
+                    # For backward compatibility with httpx behavior, convert non-primitive
+                    # types to strings. This maintains compatibility after switching from
+                    # httpx to aiohttp. See https://github.com/home-assistant/core/issues/148153
+                    _LOGGER.debug(
+                        "REST query parameter '%s' has type %s, converting to string",
+                        key,
+                        type(value).__name__,
+                    )
+                    rendered_params[key] = str(value)
 
         _LOGGER.debug("Updating from %s", self._resource)
         # Create request kwargs
@@ -140,7 +151,23 @@ class RestData:
                 self._method, self._resource, **request_kwargs
             ) as response:
                 # Read the response
-                self.data = await response.text(encoding=self._encoding)
+                # Only use configured encoding if no charset in Content-Type header
+                # If charset is present in Content-Type, let aiohttp use it
+                if self._force_use_set_encoding is False and response.charset:
+                    # Let aiohttp use the charset from Content-Type header
+                    try:
+                        self.data = await response.text()
+                    except UnicodeDecodeError as ex:
+                        self._force_use_set_encoding = True
+                        _LOGGER.debug(
+                            "Response charset came back as %s but could not be decoded, continue with configured encoding %s. %s",
+                            response.charset,
+                            self._encoding,
+                            ex,
+                        )
+                if self._force_use_set_encoding or not response.charset:
+                    # Use configured encoding as fallback
+                    self.data = await response.text(encoding=self._encoding)
                 self.headers = response.headers
 
         except TimeoutError as ex:

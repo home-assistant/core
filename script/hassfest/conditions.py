@@ -38,6 +38,7 @@ FIELD_SCHEMA = vol.Schema(
 CONDITION_SCHEMA = vol.Any(
     vol.Schema(
         {
+            vol.Optional("target"): selector.TargetSelector.CONFIG_SCHEMA,
             vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
         }
     ),
@@ -47,13 +48,14 @@ CONDITION_SCHEMA = vol.Any(
 CONDITIONS_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, condition.starts_with_dot)): object,
-        cv.slug: CONDITION_SCHEMA,
+        cv.underscore_slug: CONDITION_SCHEMA,
     }
 )
 
 NON_MIGRATED_INTEGRATIONS = {
     "device_automation",
     "sun",
+    "zone",
 }
 
 

@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_API_VERSION,
     CONF_HOST,
     CONF_LOCATION,
     CONF_NAME,
@@ -145,7 +144,6 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 await pi_hole.authenticate()
                 _LOGGER.debug("Success authenticating with pihole API version: %s", 6)
-                self._config[CONF_API_VERSION] = 6
             except HoleError:
                 _LOGGER.debug("Failed authenticating with pihole API version: %s", 6)
                 return {CONF_API_KEY: "invalid_auth"}
@@ -171,7 +169,6 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                     "Success connecting to, but necessarily authenticating with, pihole, API version is: %s",
                     5,
                 )
-                self._config[CONF_API_VERSION] = 5
             # the v5 API returns an empty list to unauthenticated requests.
             if not isinstance(pi_hole.data, dict):
                 _LOGGER.debug(

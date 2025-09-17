@@ -22,11 +22,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     CONF_DEVICE_CLASS,
-    CONF_DEVICE_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_FRIENDLY_NAME,
     CONF_FRIENDLY_NAME_TEMPLATE,
-    CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
     CONF_SENSORS,
@@ -40,9 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, selector, template
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
-from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -53,36 +48,32 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
-from .const import (
-    CONF_ATTRIBUTES,
-    CONF_AVAILABILITY,
-    CONF_AVAILABILITY_TEMPLATE,
-    CONF_OBJECT_ID,
-    CONF_PICTURE,
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
 )
-from .template_entity import (
-    TEMPLATE_ENTITY_COMMON_SCHEMA,
-    TemplateEntity,
-    rewrite_common_legacy_to_modern_conf,
+from .schemas import (
+    TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    make_template_entity_common_modern_attributes_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
+
+DEFAULT_NAME = "Template Binary Sensor"
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
 CONF_AUTO_OFF = "auto_off"
-CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
 LEGACY_FIELDS = {
-    CONF_ICON_TEMPLATE: CONF_ICON,
-    CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
-    CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
-    CONF_ATTRIBUTE_TEMPLATES: CONF_ATTRIBUTES,
     CONF_FRIENDLY_NAME_TEMPLATE: CONF_NAME,
-    CONF_FRIENDLY_NAME: CONF_NAME,
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-BINARY_SENSOR_SCHEMA = vol.Schema(
+BINARY_SENSOR_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_AUTO_OFF): vol.Any(cv.positive_time_period, cv.template),
         vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
@@ -91,25 +82,25 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Required(CONF_STATE): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
-).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
-
-BINARY_SENSOR_CONFIG_SCHEMA = BINARY_SENSOR_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-    }
 )
 
-LEGACY_BINARY_SENSOR_SCHEMA = vol.All(
+BINARY_SENSOR_YAML_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
+    make_template_entity_common_modern_attributes_schema(
+        BINARY_SENSOR_DOMAIN, DEFAULT_NAME
+    ).schema
+)
+
+BINARY_SENSOR_CONFIG_ENTRY_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
+
+BINARY_SENSOR_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
     vol.Schema(
         {
             vol.Required(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_ICON_TEMPLATE): cv.template,
             vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-            vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema(
-                {cv.string: cv.template}
-            ),
             vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -117,65 +108,19 @@ LEGACY_BINARY_SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
-    ),
+    )
+    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY.schema)
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
 )
-
-
-def rewrite_legacy_to_modern_conf(
-    hass: HomeAssistant, cfg: dict[str, dict]
-) -> list[dict]:
-    """Rewrite legacy binary sensor definitions to modern ones."""
-    sensors = []
-
-    for object_id, entity_cfg in cfg.items():
-        entity_cfg = {**entity_cfg, CONF_OBJECT_ID: object_id}
-
-        entity_cfg = rewrite_common_legacy_to_modern_conf(
-            hass, entity_cfg, LEGACY_FIELDS
-        )
-
-        if CONF_NAME not in entity_cfg:
-            entity_cfg[CONF_NAME] = template.Template(object_id, hass)
-
-        sensors.append(entity_cfg)
-
-    return sensors
 
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(
-            LEGACY_BINARY_SENSOR_SCHEMA
+            BINARY_SENSOR_LEGACY_YAML_SCHEMA
         ),
     }
 )
-
-
-@callback
-def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the template binary sensors."""
-    sensors = []
-
-    for entity_conf in definitions:
-        unique_id = entity_conf.get(CONF_UNIQUE_ID)
-
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        sensors.append(
-            BinarySensorTemplate(
-                hass,
-                entity_conf,
-                unique_id,
-            )
-        )
-
-    async_add_entities(sensors)
 
 
 async def async_setup_platform(
@@ -185,27 +130,16 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template binary sensors."""
-    if discovery_info is None:
-        _async_create_template_tracking_entities(
-            async_add_entities,
-            hass,
-            rewrite_legacy_to_modern_conf(hass, config[CONF_SENSORS]),
-            None,
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerBinarySensorEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    _async_create_template_tracking_entities(
-        async_add_entities,
+    await async_setup_template_platform(
         hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
+        BINARY_SENSOR_DOMAIN,
+        config,
+        StateBinarySensorEntity,
+        TriggerBinarySensorEntity,
+        async_add_entities,
+        discovery_info,
+        LEGACY_FIELDS,
+        legacy_key=CONF_SENSORS,
     )
 
 
@@ -215,27 +149,30 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = BINARY_SENSOR_CONFIG_SCHEMA(_options)
-    async_add_entities(
-        [BinarySensorTemplate(hass, validated_config, config_entry.entry_id)]
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateBinarySensorEntity,
+        BINARY_SENSOR_CONFIG_ENTRY_SCHEMA,
     )
 
 
 @callback
 def async_create_preview_binary_sensor(
     hass: HomeAssistant, name: str, config: dict[str, Any]
-) -> BinarySensorTemplate:
+) -> StateBinarySensorEntity:
     """Create a preview sensor."""
-    validated_config = BINARY_SENSOR_CONFIG_SCHEMA(config | {CONF_NAME: name})
-    return BinarySensorTemplate(hass, validated_config, None)
+    return async_setup_template_preview(
+        hass, name, config, StateBinarySensorEntity, BINARY_SENSOR_CONFIG_ENTRY_SCHEMA
+    )
 
 
-class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
+class StateBinarySensorEntity(TemplateEntity, BinarySensorEntity, RestoreEntity):
     """A virtual binary sensor that triggers from another sensor."""
 
     _attr_should_poll = False
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -244,23 +181,15 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template binary sensor."""
-        super().__init__(hass, config=config, unique_id=unique_id)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
+        TemplateEntity.__init__(self, hass, config, unique_id)
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        self._template = config[CONF_STATE]
+        self._template: template.Template = config[CONF_STATE]
         self._delay_cancel = None
         self._delay_on = None
         self._delay_on_raw = config.get(CONF_DELAY_ON)
         self._delay_off = None
         self._delay_off_raw = config.get(CONF_DELAY_OFF)
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     async def async_added_to_hass(self) -> None:
         """Restore state."""
@@ -333,6 +262,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
 class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity):
     """Sensor entity based on trigger data."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     domain = BINARY_SENSOR_DOMAIN
     extra_template_keys = (CONF_STATE,)
 
@@ -442,7 +372,6 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
     def _set_state(self, state, _=None):
         """Set up auto off."""
         self._attr_is_on = state
-        self.async_set_context(self.coordinator.data["context"])
         self.async_write_ha_state()
 
         if not state:

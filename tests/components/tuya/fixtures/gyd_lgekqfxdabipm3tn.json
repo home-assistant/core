@@ -1,0 +1,263 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Colorful PIR Night Light",
+  "category": "gyd",
+  "product_id": "lgekqfxdabipm3tn",
+  "product_name": "Colorful PIR Night Light",
+  "online": true,
+  "sub": false,
+  "time_zone": "+07:00",
+  "active_time": "2024-07-18T12:02:37+00:00",
+  "create_time": "2024-07-18T12:02:37+00:00",
+  "update_time": "2024-07-18T12:02:37+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "colour_data": {
+      "type": "Json",
+      "value": {}
+    },
+    "scene_data": {
+      "type": "Json",
+      "value": {}
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "control_data": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "device_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "manual"]
+      }
+    },
+    "cds": {
+      "type": "Enum",
+      "value": {
+        "range": ["2000lux", "300lux", "50lux", "10lux", "5lux"]
+      }
+    },
+    "pir_sensitivity": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    },
+    "pir_delay": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 5,
+        "max": 3600,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "switch_pir": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "standby_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 480,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "standby_bright": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "colour_data": {
+      "type": "Json",
+      "value": {}
+    },
+    "scene_data": {
+      "type": "Json",
+      "value": {}
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "device_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "manual"]
+      }
+    },
+    "pir_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["pir", "none"]
+      }
+    },
+    "cds": {
+      "type": "Enum",
+      "value": {
+        "range": ["2000lux", "300lux", "50lux", "10lux", "5lux"]
+      }
+    },
+    "pir_sensitivity": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    },
+    "pir_delay": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 5,
+        "max": 3600,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "switch_pir": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "standby_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 480,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "standby_bright": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch_led": false,
+    "work_mode": "white",
+    "bright_value": 1000,
+    "temp_value": 1,
+    "colour_data": {
+      "h": 0,
+      "s": 1000,
+      "v": 1000
+    },
+    "scene_data": {
+      "scene_num": 1,
+      "scene_units": [
+        {
+          "bright": 200,
+          "h": 0,
+          "s": 0,
+          "temperature": 0,
+          "unit_change_mode": "static",
+          "unit_gradient_duration": 13,
+          "unit_switch_duration": 14,
+          "v": 0
+        }
+      ]
+    },
+    "countdown": 0,
+    "device_mode": "auto",
+    "pir_state": "none",
+    "cds": "5lux",
+    "pir_sensitivity": "middle",
+    "pir_delay": 30,
+    "switch_pir": true,
+    "standby_time": 1,
+    "standby_bright": 146
+  },
+  "set_up": true,
+  "support_local": true
+}

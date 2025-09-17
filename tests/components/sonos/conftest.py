@@ -167,16 +167,26 @@ async def async_autosetup_sonos(async_setup_sonos):
     await async_setup_sonos()
 
 
+def reset_sonos_alarms(alarm_event: SonosMockEvent) -> None:
+    """Reset the Sonos alarms to a known state."""
+    sonos_alarms = Alarms()
+    sonos_alarms.alarms = {}
+    sonos_alarms._last_zone_used = None
+    sonos_alarms._last_alarm_list_version = None
+    sonos_alarms.last_uid = None
+    sonos_alarms.last_id = 0
+    alarm_event.variables["alarm_list_version"] = "RINCON_test:0"
+
+
 @pytest.fixture
 def async_setup_sonos(
-    hass: HomeAssistant, config_entry: MockConfigEntry, fire_zgs_event
+    hass: HomeAssistant, config_entry: MockConfigEntry, fire_zgs_event, alarm_event
 ) -> Callable[[], Coroutine[Any, Any, None]]:
     """Return a coroutine to set up a Sonos integration instance on demand."""
 
     async def _wrapper():
         config_entry.add_to_hass(hass)
-        sonos_alarms = Alarms()
-        sonos_alarms.last_alarm_list_version = "RINCON_test:0"
+        reset_sonos_alarms(alarm_event)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
         await fire_zgs_event()
@@ -223,11 +233,12 @@ class MockSoCo(MagicMock):
 
     @property
     def all_zones(self) -> set[MockSoCo]:
-        """Return a set of all mock zones, or just self if no factory or zones."""
-        if self.factory is not None:
-            if zones := self.factory.mock_all_zones:
-                return zones
-        return {self}
+        """Return all mock zones if a factory is set and enabled, else just self."""
+        return (
+            self.factory.mock_all_zones
+            if self.factory and self.factory.mock_all_zones
+            else {self}
+        )
 
     def set_factory(self, factory: SoCoMockFactory) -> None:
         """Set the factory for this mock."""
@@ -256,13 +267,12 @@ class SoCoMockFactory:
         self.alarm_clock = alarm_clock
         self.sonos_playlists = sonos_playlists
         self.sonos_queue = sonos_queue
+        self.mock_zones: bool = False
 
     @property
-    def mock_all_zones(self) -> set[MockSoCo]:
-        """Return a set of all mock zones."""
-        return {
-            mock for mock in self.mock_list.values() if mock.mock_include_in_all_zones
-        }
+    def mock_all_zones(self) -> set[MockSoCo] | None:
+        """Return a set of all mock zones, or None if not enabled."""
+        return set(self.mock_list.values()) if self.mock_zones else None
 
     def cache_mock(
         self, mock_soco: MockSoCo, ip_address: str, name: str = "Zone A"
@@ -278,6 +288,7 @@ class SoCoMockFactory:
         mock_soco.music_source_from_uri = SoCo.music_source_from_uri
         mock_soco.get_sonos_playlists.return_value = self.sonos_playlists
         mock_soco.get_queue.return_value = self.sonos_queue
+        mock_soco._player_name = name
         my_speaker_info = self.speaker_info.copy()
         my_speaker_info["zone_name"] = name
         my_speaker_info["uid"] = mock_soco.uid
@@ -304,7 +315,6 @@ class SoCoMockFactory:
 
         mock_soco.alarmClock = self.alarm_clock
         mock_soco.get_battery_info.return_value = self.battery_info
-        mock_soco.mock_include_in_all_zones = True
         mock_soco.group.coordinator = mock_soco
         mock_soco.household_id = "test_household_id"
         self.mock_list[ip_address] = mock_soco
@@ -850,11 +860,15 @@ def zgs_event_fixture(
 
 @pytest.fixture(name="sonos_setup_two_speakers")
 async def sonos_setup_two_speakers(
-    hass: HomeAssistant, soco_factory: SoCoMockFactory
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    alarm_event: SonosMockEvent,
 ) -> list[MockSoCo]:
     """Set up home assistant with two Sonos Speakers."""
     soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
     soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    reset_sonos_alarms(alarm_event)
+
     await async_setup_component(
         hass,
         DOMAIN,
@@ -908,3 +922,23 @@ def ungroup_speakers(coordinator: MockSoCo, group_member: MockSoCo) -> None:
     )
     coordinator.zoneGroupTopology.subscribe.return_value._callback(event)
     group_member.zoneGroupTopology.subscribe.return_value._callback(event)
+
+
+def create_rendering_control_event(
+    soco: MockSoCo,
+) -> SonosMockEvent:
+    """Create a Sonos Event for speaker rendering control."""
+    variables = {
+        "dialog_level": 1,
+        "speech_enhance_enable": 1,
+        "surround_level": 6,
+        "music_surround_level": 4,
+        "audio_delay": 0,
+        "audio_delay_left_rear": 0,
+        "audio_delay_right_rear": 0,
+        "night_mode": 0,
+        "surround_enabled": 1,
+        "surround_mode": 1,
+        "height_channel_level": 1,
+    }
+    return SonosMockEvent(soco, soco.renderingControl, variables)

@@ -26,7 +26,6 @@ async def test_generic_date_entity(
             object_id="mydate",
             key=1,
             name="my date",
-            unique_id="my_date",
         )
     ]
     states = [DateState(key=1, year=2024, month=12, day=31)]
@@ -47,7 +46,7 @@ async def test_generic_date_entity(
         {ATTR_ENTITY_ID: "date.test_my_date", ATTR_DATE: "1999-01-01"},
         blocking=True,
     )
-    mock_client.date_command.assert_has_calls([call(1, 1999, 1, 1)])
+    mock_client.date_command.assert_has_calls([call(1, 1999, 1, 1, device_id=0)])
     mock_client.date_command.reset_mock()
 
 
@@ -62,7 +61,6 @@ async def test_generic_date_missing_state(
             object_id="mydate",
             key=1,
             name="my date",
-            unique_id="my_date",
         )
     ]
     states = [DateState(key=1, missing_state=True)]
