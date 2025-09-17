@@ -11,7 +11,12 @@ from homeassistant.config_entries import (
     OptionsFlow,
     OptionsFlowWithReload,
 )
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_LOCATION
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_LOCATION,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -77,8 +82,10 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 name: str = api_data["cityName"]
                 country: str = api_data["country"]
-                await self.async_set_unique_id(f"{name.lower()} {country.lower()}")
+                unique_id: str = f"{name.lower()} {country.lower()}"
+                await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
+                user_input[CONF_UNIQUE_ID] = unique_id
 
                 return self.async_create_entry(title=name, data=user_input)
 

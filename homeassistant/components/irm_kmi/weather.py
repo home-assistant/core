@@ -8,6 +8,7 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 from homeassistant.const import (
+    CONF_UNIQUE_ID,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
@@ -51,7 +52,7 @@ class IrmKmiWeather(
         IrmKmiBaseEntity.__init__(self, entry)
         SingleCoordinatorWeatherEntity.__init__(self, entry.runtime_data)
         self._name = entry.title
-        self._attr_unique_id = entry.entry_id
+        self._attr_unique_id = entry.data[CONF_UNIQUE_ID]
 
     @property
     def name(self) -> str:

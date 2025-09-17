@@ -8,7 +8,12 @@ from irm_kmi_api import IrmKmiApiError
 import pytest
 
 from homeassistant.components.irm_kmi.const import DOMAIN
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_LOCATION
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_LOCATION,
+    CONF_UNIQUE_ID,
+)
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -19,7 +24,10 @@ def mock_config_entry() -> MockConfigEntry:
     entry = MockConfigEntry(
         title="Home",
         domain=DOMAIN,
-        data={CONF_LOCATION: {ATTR_LATITUDE: 50.84, ATTR_LONGITUDE: 4.35}},
+        data={
+            CONF_LOCATION: {ATTR_LATITUDE: 50.84, ATTR_LONGITUDE: 4.35},
+            CONF_UNIQUE_ID: "city country",
+        },
         unique_id="50.84-4.35",
     )
     entry.runtime_data = MagicMock()

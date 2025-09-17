@@ -4,7 +4,12 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_LOCATION
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_LOCATION,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -31,7 +36,8 @@ async def test_full_user_flow(
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Brussels"
     assert result2.get("data") == {
-        CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}
+        CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456},
+        CONF_UNIQUE_ID: "brussels be",
     }
 
 
