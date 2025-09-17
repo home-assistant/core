@@ -50,8 +50,6 @@ async def test_user_flow_home(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    hass.config.latitude = 50.123
-    hass.config.longitude = 4.456
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -102,6 +100,34 @@ async def test_config_flow_with_api_error(
         user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
     )
 
+    assert result.get("type") is FlowResultType.ABORT
+
+
+async def test_setup_twice_same_location(
+    hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
+    mock_get_forecast_in_benelux: MagicMock,
+) -> None:
+    """Test when the user tries to set up the weather twice for the same location."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.5, ATTR_LONGITUDE: 4.6}},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+
+    # Set up a second time
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.5, ATTR_LONGITUDE: 4.6}},
+    )
     assert result.get("type") is FlowResultType.ABORT
 
 
