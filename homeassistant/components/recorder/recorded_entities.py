@@ -16,6 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -165,6 +166,9 @@ class RecordedEntities:
             return
 
         entity_registry.async_update_entity_options(entity_id, DOMAIN, recorder_options)
+        get_instance(
+            self._hass
+        ).unrecorded_entities = self.async_get_unrecorded_entities()
 
     def _async_set_legacy_entity_option(
         self,
@@ -199,7 +203,11 @@ class RecordedEntities:
 
         if registry_entry := entity_registry.async_get(entity_id):
             options: dict[str, Any] = registry_entry.options.get(DOMAIN, {})
-            return RecordedEntity(**options)
+            return RecordedEntity(
+                recording_disabled_by=try_parse_enum(
+                    EntityRecordingDisabler, options.get("recording_disabled_by")
+                )
+            )
         if recorded_entity := self.entities.get(entity_id):
             return recorded_entity
 
@@ -237,7 +245,9 @@ class RecordedEntities:
         if data and "recorded_entities" in data:
             for entity_id, preferences in data["recorded_entities"].items():
                 recorded_entities[entity_id] = RecordedEntity(
-                    recording_disabled_by=preferences["recording_disabled_by"]
+                    recording_disabled_by=try_parse_enum(
+                        EntityRecordingDisabler, preferences["recording_disabled_by"]
+                    )
                 )
         if data and "recorder_preferences" in data:
             recorder_preferences_data = data["recorder_preferences"]
