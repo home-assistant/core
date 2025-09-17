@@ -524,7 +524,16 @@ jobs:
             env.UV_CACHE_VERSION }}-${{ steps.generate-uv-key.outputs.version }}-${{
             env.HA_SHORT_VERSION }}-
       - name: Restore apt cache
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+        id: cache-apt-restore
+        uses: actions/cache/restore@v4.2.4
+        with:
+          path: |
+            ${{ env.APT_CACHE_DIR }}
+            ${{ env.APT_LIST_CACHE_DIR }}
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
+      - name: Initialize apt cache
+        if: steps.cache-apt-restore.outputs.cache-hit != 'true'
         id: cache-apt
         uses: actions/cache@v4.2.4
         with:
@@ -534,7 +543,7 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+        if: steps.cache-apt-restore.outputs.cache-hit != 'true'
         timeout-minutes: 10
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
@@ -929,7 +938,6 @@ jobs:
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
@@ -1003,7 +1011,6 @@ jobs:
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
@@ -1150,7 +1157,6 @@ jobs:
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
@@ -1304,7 +1310,6 @@ jobs:
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
@@ -1479,7 +1484,6 @@ jobs:
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
