@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate
 
-from httpx import HTTPError
+from aiohttp import ClientError
 from pyenphase import EnvoyData
 from pyenphase.exceptions import EnvoyError
 
@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
 
-ACTIONERRORS = (EnvoyError, HTTPError)
+ACTIONERRORS = (EnvoyError, ClientError)
 
 
 class EnvoyBaseEntity(CoordinatorEntity[EnphaseUpdateCoordinator]):

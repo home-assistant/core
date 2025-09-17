@@ -4,10 +4,11 @@ from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
+from matter_server.common.models import EventType, MatterNodeEvent
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lock import LockEntityFeature, LockState
+from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntityFeature, LockState
 from homeassistant.const import ATTR_CODE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -111,6 +112,26 @@ async def test_lock(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("lock.mock_door_lock")
     assert state.attributes["supported_features"] & LockEntityFeature.OPEN
+
+    # test handling of a node LockOperation event
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=257,
+            event_id=2,
+            event_number=0,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"operationSource": 3},
+        ),
+    )
+    state = hass.states.get("lock.mock_door_lock")
+    assert state.attributes[ATTR_CHANGED_BY] == "Keypad"
 
 
 @pytest.mark.parametrize("node_fixture", ["door_lock"])

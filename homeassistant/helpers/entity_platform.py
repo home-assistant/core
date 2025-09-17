@@ -44,6 +44,7 @@ from . import (
     service,
     translation,
 )
+from .deprecation import deprecated_function
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later
 from .issue_registry import IssueSeverity, async_create_issue
@@ -126,6 +127,77 @@ class EntityPlatformModule(Protocol):
         """Set up an integration platform from a config entry."""
 
 
+class PlatformData:
+    """Information about a platform, used by entities."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        *,
+        domain: str,
+        platform_name: str,
+    ) -> None:
+        """Initialize the base entity platform."""
+        self.hass = hass
+        self.domain = domain
+        self.platform_name = platform_name
+        self.component_translations: dict[str, str] = {}
+        self.platform_translations: dict[str, str] = {}
+        self.object_id_component_translations: dict[str, str] = {}
+        self.object_id_platform_translations: dict[str, str] = {}
+        self.default_language_platform_translations: dict[str, str] = {}
+
+    async def _async_get_translations(
+        self, language: str, category: str, integration: str
+    ) -> dict[str, str]:
+        """Get translations for a language, category, and integration."""
+        try:
+            return await translation.async_get_translations(
+                self.hass, language, category, {integration}
+            )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug(
+                "Could not load translations for %s",
+                integration,
+                exc_info=err,
+            )
+        return {}
+
+    async def async_load_translations(self) -> None:
+        """Load translations."""
+        hass = self.hass
+        object_id_language = (
+            hass.config.language
+            if hass.config.language in languages.NATIVE_ENTITY_IDS
+            else languages.DEFAULT_LANGUAGE
+        )
+        config_language = hass.config.language
+        self.component_translations = await self._async_get_translations(
+            config_language, "entity_component", self.domain
+        )
+        self.platform_translations = await self._async_get_translations(
+            config_language, "entity", self.platform_name
+        )
+        if object_id_language == config_language:
+            self.object_id_component_translations = self.component_translations
+            self.object_id_platform_translations = self.platform_translations
+        else:
+            self.object_id_component_translations = await self._async_get_translations(
+                object_id_language, "entity_component", self.domain
+            )
+            self.object_id_platform_translations = await self._async_get_translations(
+                object_id_language, "entity", self.platform_name
+            )
+        if config_language == languages.DEFAULT_LANGUAGE:
+            self.default_language_platform_translations = self.platform_translations
+        else:
+            self.default_language_platform_translations = (
+                await self._async_get_translations(
+                    languages.DEFAULT_LANGUAGE, "entity", self.platform_name
+                )
+            )
+
+
 class EntityPlatform:
     """Manage the entities for a single platform.
 
@@ -147,8 +219,6 @@ class EntityPlatform:
         """Initialize the entity platform."""
         self.hass = hass
         self.logger = logger
-        self.domain = domain
-        self.platform_name = platform_name
         self.platform = platform
         self.scan_interval = scan_interval
         self.scan_interval_seconds = scan_interval.total_seconds()
@@ -157,11 +227,6 @@ class EntityPlatform:
         # Storage for entities for this specific platform only
         # which are indexed by entity_id
         self.entities: dict[str, Entity] = {}
-        self.component_translations: dict[str, str] = {}
-        self.platform_translations: dict[str, str] = {}
-        self.object_id_component_translations: dict[str, str] = {}
-        self.object_id_platform_translations: dict[str, str] = {}
-        self.default_language_platform_translations: dict[str, str] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -194,6 +259,10 @@ class EntityPlatform:
         self.domain_platform_entities = hass.data.setdefault(
             DATA_DOMAIN_PLATFORM_ENTITIES, {}
         ).setdefault(key, {})
+
+        self.platform_data = PlatformData(
+            hass, domain=domain, platform_name=platform_name
+        )
 
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
@@ -362,7 +431,7 @@ class EntityPlatform:
         hass = self.hass
         full_name = f"{self.platform_name}.{self.domain}"
 
-        await self.async_load_translations()
+        await self.platform_data.async_load_translations()
 
         logger.info("Setting up %s", full_name)
         warn_task = hass.loop.call_at(
@@ -456,56 +525,6 @@ class EntityPlatform:
             return True
         finally:
             warn_task.cancel()
-
-    async def _async_get_translations(
-        self, language: str, category: str, integration: str
-    ) -> dict[str, str]:
-        """Get translations for a language, category, and integration."""
-        try:
-            return await translation.async_get_translations(
-                self.hass, language, category, {integration}
-            )
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.debug(
-                "Could not load translations for %s",
-                integration,
-                exc_info=err,
-            )
-        return {}
-
-    async def async_load_translations(self) -> None:
-        """Load translations."""
-        hass = self.hass
-        object_id_language = (
-            hass.config.language
-            if hass.config.language in languages.NATIVE_ENTITY_IDS
-            else languages.DEFAULT_LANGUAGE
-        )
-        config_language = hass.config.language
-        self.component_translations = await self._async_get_translations(
-            config_language, "entity_component", self.domain
-        )
-        self.platform_translations = await self._async_get_translations(
-            config_language, "entity", self.platform_name
-        )
-        if object_id_language == config_language:
-            self.object_id_component_translations = self.component_translations
-            self.object_id_platform_translations = self.platform_translations
-        else:
-            self.object_id_component_translations = await self._async_get_translations(
-                object_id_language, "entity_component", self.domain
-            )
-            self.object_id_platform_translations = await self._async_get_translations(
-                object_id_language, "entity", self.platform_name
-            )
-        if config_language == languages.DEFAULT_LANGUAGE:
-            self.default_language_platform_translations = self.platform_translations
-        else:
-            self.default_language_platform_translations = (
-                await self._async_get_translations(
-                    languages.DEFAULT_LANGUAGE, "entity", self.platform_name
-                )
-            )
 
     def _schedule_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
@@ -825,42 +844,45 @@ class EntityPlatform:
                     entity.add_to_platform_abort()
                     return
 
-            if self.config_entry and (device_info := entity.device_info):
-                try:
-                    device = dev_reg.async_get(self.hass).async_get_or_create(
-                        config_entry_id=self.config_entry.entry_id,
-                        config_subentry_id=config_subentry_id,
-                        **device_info,
-                    )
-                except dev_reg.DeviceInfoError as exc:
-                    self.logger.error(
-                        "%s: Not adding entity with invalid device info: %s",
-                        self.platform_name,
-                        str(exc),
-                    )
-                    entity.add_to_platform_abort()
-                    return
+            device: dev_reg.DeviceEntry | None
+            if self.config_entry:
+                if device_info := entity.device_info:
+                    try:
+                        device = dev_reg.async_get(self.hass).async_get_or_create(
+                            config_entry_id=self.config_entry.entry_id,
+                            config_subentry_id=config_subentry_id,
+                            **device_info,
+                        )
+                    except dev_reg.DeviceInfoError as exc:
+                        self.logger.error(
+                            "%s: Not adding entity with invalid device info: %s",
+                            self.platform_name,
+                            str(exc),
+                        )
+                        entity.add_to_platform_abort()
+                        return
+                else:
+                    device = entity.device_entry
             else:
                 device = None
 
+            calculated_object_id: str | None = None
             # An entity may suggest the entity_id by setting entity_id itself
             suggested_entity_id: str | None = entity.entity_id
             if suggested_entity_id is not None:
                 suggested_object_id = split_entity_id(entity.entity_id)[1]
-            else:
-                if device and entity.has_entity_name:
-                    device_name = device.name_by_user or device.name
-                    if entity.use_device_name:
-                        suggested_object_id = device_name
-                    else:
-                        suggested_object_id = (
-                            f"{device_name} {entity.suggested_object_id}"
-                        )
-                if not suggested_object_id:
-                    suggested_object_id = entity.suggested_object_id
-
-            if self.entity_namespace is not None:
-                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
+                if self.entity_namespace is not None:
+                    suggested_object_id = (
+                        f"{self.entity_namespace} {suggested_object_id}"
+                    )
+            if not registered_entity_id and suggested_entity_id is None:
+                # Do not bother working out a suggested_object_id
+                # if the entity is already registered as it will
+                # be ignored.
+                #
+                calculated_object_id = async_calculate_suggested_object_id(
+                    entity, device
+                )
 
             disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
@@ -874,6 +896,7 @@ class EntityPlatform:
                 self.domain,
                 self.platform_name,
                 entity.unique_id,
+                calculated_object_id=calculated_object_id,
                 capabilities=entity.capability_attributes,
                 config_entry=self.config_entry,
                 config_subentry_id=config_subentry_id,
@@ -883,7 +906,6 @@ class EntityPlatform:
                 get_initial_options=entity.get_initial_entity_options,
                 has_entity_name=entity.has_entity_name,
                 hidden_by=hidden_by,
-                known_object_ids=self.entities,
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
                 original_name=entity_name,
@@ -927,7 +949,7 @@ class EntityPlatform:
                         f"{self.entity_namespace} {suggested_object_id}"
                     )
                 entity.entity_id = entity_registry.async_generate_entity_id(
-                    self.domain, suggested_object_id, self.entities
+                    self.domain, suggested_object_id
                 )
 
             # Make sure it is valid in case an entity set the value themselves
@@ -1116,6 +1138,108 @@ class EntityPlatform:
                 if entity.should_poll
             ]:
                 await asyncio.gather(*tasks)
+
+    @property
+    def domain(self) -> str:
+        """Return the domain (e.g. light)."""
+        return self.platform_data.domain
+
+    @property
+    def platform_name(self) -> str:
+        """Return the platform name (e.g hue)."""
+        return self.platform_data.platform_name
+
+    @property
+    @deprecated_function(
+        "platform_data.component_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def component_translations(self) -> dict[str, str]:
+        """Return the component translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.component_translations
+
+    @property
+    @deprecated_function(
+        "platform_data.platform_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def platform_translations(self) -> dict[str, str]:
+        """Return the platform translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.platform_translations
+
+    @property
+    @deprecated_function(
+        "platform_data.object_id_component_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def object_id_component_translations(self) -> dict[str, str]:
+        """Return the object ID component translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.object_id_component_translations
+
+    @property
+    @deprecated_function(
+        "platform_data.object_id_platform_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def object_id_platform_translations(self) -> dict[str, str]:
+        """Return the object ID platform translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.object_id_platform_translations
+
+    @property
+    @deprecated_function(
+        "platform_data.default_language_platform_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def default_language_platform_translations(self) -> dict[str, str]:
+        """Return the default language platform translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.default_language_platform_translations
+
+    @deprecated_function(
+        "platform_data.async_load_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    async def async_load_translations(self) -> None:
+        """Load translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return await self.platform_data.async_load_translations()
+
+
+@callback
+def async_calculate_suggested_object_id(
+    entity: Entity, device: dev_reg.DeviceEntry | None
+) -> str | None:
+    """Calculate the suggested object ID for an entity."""
+    calculated_object_id: str | None = None
+    if device and entity.has_entity_name:
+        device_name = device.name_by_user or device.name
+        if entity.use_device_name:
+            calculated_object_id = device_name
+        else:
+            calculated_object_id = f"{device_name} {entity.suggested_object_id}"
+    if not calculated_object_id:
+        calculated_object_id = entity.suggested_object_id
+
+    if (platform := entity.platform) and platform.entity_namespace is not None:
+        calculated_object_id = f"{platform.entity_namespace} {calculated_object_id}"
+
+    return calculated_object_id
 
 
 current_platform: ContextVar[EntityPlatform | None] = ContextVar(

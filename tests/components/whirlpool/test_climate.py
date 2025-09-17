@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 import whirlpool
 
 from homeassistant.components.climate import (
@@ -36,10 +36,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration, snapshot_whirlpool_entities
+from . import init_integration, snapshot_whirlpool_entities, trigger_attr_callback
 
 
 @pytest.fixture(
@@ -60,10 +60,7 @@ async def update_ac_state(
     mock_aircon_api_instance: MagicMock,
 ):
     """Simulate an update trigger from the API."""
-    for call in mock_aircon_api_instance.register_attr_callback.call_args_list:
-        update_ha_state_cb = call[0][0]
-        update_ha_state_cb()
-        await hass.async_block_till_done()
+    await trigger_attr_callback(hass, mock_aircon_api_instance)
     return hass.states.get(entity_id)
 
 
@@ -247,6 +244,41 @@ async def test_service_calls(
 
 
 @pytest.mark.parametrize(
+    ("service", "service_data", "request_method"),
+    [
+        (SERVICE_TURN_OFF, {}, "set_power_on"),
+        (SERVICE_TURN_ON, {}, "set_power_on"),
+        (SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: HVACMode.COOL}, "set_mode"),
+        (SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: HVACMode.OFF}, "set_power_on"),
+        (SERVICE_SET_TEMPERATURE, {ATTR_TEMPERATURE: 20}, "set_temp"),
+        (SERVICE_SET_FAN_MODE, {ATTR_FAN_MODE: FAN_AUTO}, "set_fanspeed"),
+        (SERVICE_SET_SWING_MODE, {ATTR_SWING_MODE: SWING_OFF}, "set_h_louver_swing"),
+    ],
+)
+async def test_service_request_failure(
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict,
+    request_method: str,
+    multiple_climate_entities: tuple[str, str],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test controlling the entity through service calls."""
+    await init_integration(hass)
+    entity_id, mock_fixture = multiple_climate_entities
+    mock_instance = request.getfixturevalue(mock_fixture)
+    getattr(mock_instance, request_method).return_value = False
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
     ("service", "service_data"),
     [
         (
@@ -303,7 +335,7 @@ async def test_service_hvac_mode_turn_on(
         (
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.DRY},
-            ValueError,
+            ServiceValidationError,
         ),
         (
             SERVICE_SET_FAN_MODE,

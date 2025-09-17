@@ -8,7 +8,7 @@ import threading
 from typing import IO, cast
 
 from aiohttp import BodyPartReader
-from aiohttp.hdrs import CONTENT_DISPOSITION
+from aiohttp.hdrs import CONTENT_DISPOSITION, CONTENT_TYPE
 from aiohttp.web import FileResponse, Request, Response, StreamResponse
 from multidict import istr
 
@@ -22,7 +22,7 @@ from . import util
 from .agent import BackupAgent
 from .const import DATA_MANAGER
 from .manager import BackupManager
-from .models import BackupNotFound
+from .models import AgentBackup, BackupNotFound
 
 
 @callback
@@ -76,7 +76,8 @@ class DownloadBackupView(HomeAssistantView):
             return Response(status=HTTPStatus.NOT_FOUND)
 
         headers = {
-            CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar"
+            CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar",
+            CONTENT_TYPE: "application/x-tar",
         }
 
         try:
@@ -85,7 +86,15 @@ class DownloadBackupView(HomeAssistantView):
                     request, headers, backup_id, agent_id, agent, manager
                 )
             return await self._send_backup_with_password(
-                hass, request, headers, backup_id, agent_id, password, agent, manager
+                hass,
+                backup,
+                request,
+                headers,
+                backup_id,
+                agent_id,
+                password,
+                agent,
+                manager,
             )
         except BackupNotFound:
             return Response(status=HTTPStatus.NOT_FOUND)
@@ -116,6 +125,7 @@ class DownloadBackupView(HomeAssistantView):
     async def _send_backup_with_password(
         self,
         hass: HomeAssistant,
+        backup: AgentBackup,
         request: Request,
         headers: dict[istr, str],
         backup_id: str,
@@ -144,7 +154,8 @@ class DownloadBackupView(HomeAssistantView):
 
         stream = util.AsyncIteratorWriter(hass)
         worker = threading.Thread(
-            target=util.decrypt_backup, args=[reader, stream, password, on_done, 0, []]
+            target=util.decrypt_backup,
+            args=[backup, reader, stream, password, on_done, 0, []],
         )
         try:
             worker.start()

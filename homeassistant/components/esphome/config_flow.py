@@ -22,6 +22,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -31,6 +32,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -49,6 +51,7 @@ from .const import (
     DOMAIN,
 )
 from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
+from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry
 from .manager import async_replace_device
 
@@ -157,7 +160,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle reauthorization flow."""
         errors = {}
 
-        if await self._retrieve_encryption_key_from_dashboard():
+        if (
+            await self._retrieve_encryption_key_from_storage()
+            or await self._retrieve_encryption_key_from_dashboard()
+        ):
             error = await self.fetch_device_info()
             if error is None:
                 return await self._async_authenticate_or_add()
@@ -224,9 +230,12 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 response = await self.fetch_device_info()
                 self._noise_psk = None
 
+            # Try to retrieve an existing key from dashboard or storage.
             if (
                 self._device_name
                 and await self._retrieve_encryption_key_from_dashboard()
+            ) or (
+                self._device_mac and await self._retrieve_encryption_key_from_storage()
             ):
                 response = await self.fetch_device_info()
 
@@ -282,6 +291,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._name = discovery_info.properties.get("friendly_name", device_name)
         self._host = discovery_info.host
         self._port = discovery_info.port
+        self._device_mac = mac_address
         self._noise_required = bool(discovery_info.properties.get("api_encryption"))
 
         # Check if already configured
@@ -302,7 +312,16 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         ):
             return
-        configured_port: int | None = entry.data.get(CONF_PORT)
+        if entry.source == SOURCE_IGNORE:
+            # Don't call _fetch_device_info() for ignored entries
+            raise AbortFlow("already_configured")
+        configured_host: str | None = entry.data.get(CONF_HOST)
+        configured_port: int = entry.data.get(CONF_PORT, DEFAULT_PORT)
+        # When port is None (from DHCP discovery), only compare hosts
+        if configured_host == host and (port is None or configured_port == port):
+            # Don't probe to verify the mac is correct since
+            # the host matches (and port matches if provided).
+            raise AbortFlow("already_configured")
         configured_psk: str | None = entry.data.get(CONF_NOISE_PSK)
         await self._fetch_device_info(host, port or configured_port, configured_psk)
         updates: dict[str, Any] = {}
@@ -761,6 +780,26 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._noise_psk = noise_psk
         return True
+
+    async def _retrieve_encryption_key_from_storage(self) -> bool:
+        """Try to retrieve the encryption key from storage.
+
+        Return boolean if a key was retrieved.
+        """
+        # Try to get MAC address from current flow state or reauth entry
+        mac_address = self._device_mac
+        if mac_address is None and self._reauth_entry is not None:
+            # In reauth flow, get MAC from the existing entry's unique_id
+            mac_address = self._reauth_entry.unique_id
+
+        assert mac_address is not None
+
+        storage = await async_get_encryption_key_storage(self.hass)
+        if stored_key := await storage.async_get_key(mac_address):
+            self._noise_psk = stored_key
+            return True
+
+        return False
 
     @staticmethod
     @callback

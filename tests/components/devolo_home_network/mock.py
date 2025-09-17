@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api.deviceapi import DeviceApi
+from devolo_plc_api.exceptions.device import DevicePasswordProtected
 from devolo_plc_api.plcnet_api.plcnetapi import PlcNetApi
 import httpx
 from zeroconf import Zeroconf
@@ -81,3 +82,16 @@ class MockDevice(Device):
         self.plcnet.async_get_network_overview = AsyncMock(return_value=PLCNET)
         self.plcnet.async_identify_device_start = AsyncMock(return_value=True)
         self.plcnet.async_pair_device = AsyncMock(return_value=True)
+
+
+class MockDeviceWrongPassword(MockDevice):
+    """Mock of a devolo Home Network device, that always complains about a wrong password."""
+
+    def __init__(
+        self,
+        ip: str,
+        zeroconf_instance: AsyncZeroconf | Zeroconf | None = None,
+    ) -> None:
+        """Bring mock in a well defined state."""
+        super().__init__(ip, zeroconf_instance)
+        self.device.async_uptime = AsyncMock(side_effect=DevicePasswordProtected)

@@ -37,7 +37,7 @@ rules:
   docs-installation-parameters:
     status: exempt
     comment: No parameters needed during installation
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo

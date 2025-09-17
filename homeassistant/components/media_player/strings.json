@@ -242,13 +242,9 @@
       "name": "Play media",
       "description": "Starts playing specified media.",
       "fields": {
-        "media_content_id": {
-          "name": "Content ID",
-          "description": "The ID of the content to play. Platform dependent."
-        },
-        "media_content_type": {
-          "name": "Content type",
-          "description": "The type of the content to play, such as image, music, tv show, video, episode, channel, or playlist."
+        "media": {
+          "name": "Media",
+          "description": "The media selected to play."
         },
         "enqueue": {
           "name": "Enqueue",
@@ -270,7 +266,7 @@
         },
         "media_content_type": {
           "name": "Content type",
-          "description": "The type of the content to browse, such as image, music, tv show, video, episode, channel, or playlist."
+          "description": "The type of the content to browse, such as image, music, TV show, video, episode, channel, or playlist."
         }
       }
     },
@@ -291,7 +287,7 @@
           "description": "The term to search for."
         },
         "media_filter_classes": {
-          "name": "Media filter classes",
+          "name": "Media class filter",
           "description": "List of media classes to filter the search results by."
         }
       }

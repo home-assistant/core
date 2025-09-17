@@ -111,11 +111,9 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         """Write the state to the HASS state machine."""
         if self.data.holiday_active:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
-            self._attr_hvac_modes = [HVACMode.HEAT]
             self._attr_preset_modes = [PRESET_HOLIDAY]
         elif self.data.summer_active:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
-            self._attr_hvac_modes = [HVACMode.OFF]
             self._attr_preset_modes = [PRESET_SUMMER]
         else:
             self._attr_supported_features = SUPPORTED_FEATURES
@@ -144,6 +142,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        self.check_active_or_lock_mode()
         if kwargs.get(ATTR_HVAC_MODE) is HVACMode.OFF:
             await self.async_set_hkr_state("off")
         elif (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
@@ -168,11 +167,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
-        if self.data.holiday_active or self.data.summer_active:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="change_hvac_while_active_mode",
-            )
+        self.check_active_or_lock_mode()
         if self.hvac_mode is hvac_mode:
             LOGGER.debug(
                 "%s is already in requested hvac mode %s", self.name, hvac_mode
@@ -204,16 +199,13 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        if self.data.holiday_active or self.data.summer_active:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="change_preset_while_active_mode",
-            )
+        self.check_active_or_lock_mode()
         await self.async_set_hkr_state(PRESET_API_HKR_STATE_MAPPING[preset_mode])
 
     @property
     def extra_state_attributes(self) -> ClimateExtraAttributes:
         """Return the device specific state attributes."""
+        # deprecated with #143394, can be removed in 2025.11
         attrs: ClimateExtraAttributes = {
             ATTR_STATE_BATTERY_LOW: self.data.battery_low,
         }
@@ -229,3 +221,17 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             attrs[ATTR_STATE_WINDOW_OPEN] = self.data.window_open
 
         return attrs
+
+    def check_active_or_lock_mode(self) -> None:
+        """Check if in summer/vacation mode or lock enabled."""
+        if self.data.holiday_active or self.data.summer_active:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_settings_while_active_mode",
+            )
+
+        if self.data.lock:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_settings_while_lock_enabled",
+            )

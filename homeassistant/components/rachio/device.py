@@ -57,11 +57,13 @@ RESUME_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
 
 STOP_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
 
+type RachioConfigEntry = ConfigEntry[RachioPerson]
+
 
 class RachioPerson:
     """Represent a Rachio user."""
 
-    def __init__(self, rachio: Rachio, config_entry: ConfigEntry) -> None:
+    def __init__(self, rachio: Rachio, config_entry: RachioConfigEntry) -> None:
         """Create an object from the provided API instance."""
         # Use API token to get user ID
         self.rachio = rachio

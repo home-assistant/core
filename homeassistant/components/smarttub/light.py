@@ -12,29 +12,24 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    ATTR_LIGHTS,
-    DEFAULT_LIGHT_BRIGHTNESS,
-    DEFAULT_LIGHT_EFFECT,
-    DOMAIN,
-    SMARTTUB_CONTROLLER,
-)
+from .const import ATTR_LIGHTS, DEFAULT_LIGHT_BRIGHTNESS, DEFAULT_LIGHT_EFFECT
+from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SmartTubConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for any lights in the tub."""
 
-    controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
+    controller = entry.runtime_data
 
     entities = [
         SmartTubLight(controller.coordinator, light)
@@ -52,7 +47,9 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_supported_features = LightEntityFeature.EFFECT
 
-    def __init__(self, coordinator, light):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[dict[str, Any]], light: SpaLight
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, light.spa, "light")
         self.light_zone = light.zone

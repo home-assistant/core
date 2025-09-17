@@ -60,7 +60,8 @@
           "room_names": "Room names",
           "vacuum_position": "Vacuum position",
           "virtual_walls": "Virtual walls",
-          "zones": "Zones"
+          "zones": "Zones",
+          "show_background": "Show background"
         },
         "data_description": {
           "charger": "Show the charger on the map.",
@@ -79,7 +80,8 @@
           "room_names": "Show room names on the map.",
           "vacuum_position": "Show the vacuum position on the map.",
           "virtual_walls": "Show virtual walls on the map.",
-          "zones": "Show zones on the map."
+          "zones": "Show zones on the map.",
+          "show_background": "Add a background to the map."
         }
       }
     }
@@ -156,10 +158,10 @@
           "ready": "Ready",
           "charging": "[%key:common::state::charging%]",
           "mop_washing": "Washing mop",
-          "self_clean_cleaning": "Self clean cleaning",
-          "self_clean_deep_cleaning": "Self clean deep cleaning",
-          "self_clean_rinsing": "Self clean rinsing",
-          "self_clean_dehydrating": "Self clean drying",
+          "self_clean_cleaning": "Self-clean cleaning",
+          "self_clean_deep_cleaning": "Self-clean deep cleaning",
+          "self_clean_rinsing": "Self-clean rinsing",
+          "self_clean_dehydrating": "Self-clean drying",
           "drying": "Drying",
           "ventilating": "Ventilating",
           "reserving": "Reserving",

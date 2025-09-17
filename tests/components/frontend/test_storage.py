@@ -79,11 +79,45 @@ async def test_get_user_data(
     assert res["result"]["value"]["test-complex"][0]["foo"] == "bar"
 
 
+@pytest.mark.parametrize(
+    ("subscriptions", "events"),
+    [
+        ([], []),
+        ([(1, {}, {})], [(1, {"test-key": "test-value"})]),
+        ([(1, {"key": "test-key"}, None)], [(1, "test-value")]),
+        ([(1, {"key": "other-key"}, None)], []),
+    ],
+)
 async def test_set_user_data_empty(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    subscriptions: list[tuple[int, dict[str, str], Any]],
+    events: list[tuple[int, Any]],
 ) -> None:
-    """Test set_user_data command."""
+    """Test set_user_data command.
+
+    Also test subscribing.
+    """
     client = await hass_ws_client(hass)
+
+    for msg_id, key, event_data in subscriptions:
+        await client.send_json(
+            {
+                "id": msg_id,
+                "type": "frontend/subscribe_user_data",
+            }
+            | key
+        )
+
+        event = await client.receive_json()
+        assert event == {
+            "id": msg_id,
+            "type": "event",
+            "event": {"value": event_data},
+        }
+
+        res = await client.receive_json()
+        assert res["success"], res
 
     # test creating
 
@@ -104,6 +138,10 @@ async def test_set_user_data_empty(
         }
     )
 
+    for msg_id, event_data in events:
+        event = await client.receive_json()
+        assert event == {"id": msg_id, "type": "event", "event": {"value": event_data}}
+
     res = await client.receive_json()
     assert res["success"], res
 
@@ -116,11 +154,63 @@ async def test_set_user_data_empty(
     assert res["result"]["value"] == "test-value"
 
 
+@pytest.mark.parametrize(
+    ("subscriptions", "events"),
+    [
+        (
+            [],
+            [[], []],
+        ),
+        (
+            [(1, {}, {"test-key": "test-value", "test-complex": "string"})],
+            [
+                [
+                    (
+                        1,
+                        {
+                            "test-complex": "string",
+                            "test-key": "test-value",
+                            "test-non-existent-key": "test-value-new",
+                        },
+                    )
+                ],
+                [
+                    (
+                        1,
+                        {
+                            "test-complex": [{"foo": "bar"}],
+                            "test-key": "test-value",
+                            "test-non-existent-key": "test-value-new",
+                        },
+                    )
+                ],
+            ],
+        ),
+        (
+            [(1, {"key": "test-key"}, "test-value")],
+            [[], []],
+        ),
+        (
+            [(1, {"key": "test-non-existent-key"}, None)],
+            [[(1, "test-value-new")], []],
+        ),
+        (
+            [(1, {"key": "test-complex"}, "string")],
+            [[], [(1, [{"foo": "bar"}])]],
+        ),
+        (
+            [(1, {"key": "other-key"}, None)],
+            [[], []],
+        ),
+    ],
+)
 async def test_set_user_data(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
     hass_admin_user: MockUser,
+    subscriptions: list[tuple[int, dict[str, str], Any]],
+    events: list[list[tuple[int, Any]]],
 ) -> None:
     """Test set_user_data command with initial data."""
     storage_key = f"{DOMAIN}.user_data_{hass_admin_user.id}"
@@ -130,6 +220,25 @@ async def test_set_user_data(
     }
 
     client = await hass_ws_client(hass)
+
+    for msg_id, key, event_data in subscriptions:
+        await client.send_json(
+            {
+                "id": msg_id,
+                "type": "frontend/subscribe_user_data",
+            }
+            | key
+        )
+
+        event = await client.receive_json()
+        assert event == {
+            "id": msg_id,
+            "type": "event",
+            "event": {"value": event_data},
+        }
+
+        res = await client.receive_json()
+        assert res["success"], res
 
     # test creating
 
@@ -141,6 +250,10 @@ async def test_set_user_data(
             "value": "test-value-new",
         }
     )
+
+    for msg_id, event_data in events[0]:
+        event = await client.receive_json()
+        assert event == {"id": msg_id, "type": "event", "event": {"value": event_data}}
 
     res = await client.receive_json()
     assert res["success"], res
@@ -163,6 +276,10 @@ async def test_set_user_data(
             "value": [{"foo": "bar"}],
         }
     )
+
+    for msg_id, event_data in events[1]:
+        event = await client.receive_json()
+        assert event == {"id": msg_id, "type": "event", "event": {"value": event_data}}
 
     res = await client.receive_json()
     assert res["success"], res

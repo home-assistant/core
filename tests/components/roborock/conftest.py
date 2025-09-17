@@ -72,7 +72,7 @@ def bypass_api_client_fixture() -> None:
     """Skip calls to the API client."""
     with (
         patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
             return_value=HOME_DATA,
         ),
         patch(
@@ -183,7 +183,7 @@ def bypass_api_fixture_v1_only(bypass_api_fixture) -> None:
     home_data_copy = deepcopy(HOME_DATA)
     home_data_copy.received_devices = []
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         return_value=home_data_copy,
     ):
         yield

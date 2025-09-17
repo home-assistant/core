@@ -6,6 +6,7 @@ from typing import NamedTuple
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
+from hdate.translator import set_language
 import pytest
 
 from homeassistant.components.jewish_calendar.const import (
@@ -48,7 +49,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def location_data(request: pytest.FixtureRequest) -> _LocationData | None:
     """Return data based on location name."""
-    if not hasattr(request, "param"):
+    if not hasattr(request, "param") or request.param is None:
         return None
 
     return LOCATIONS[request.param]
@@ -74,18 +75,29 @@ def _test_time(
 
 
 @pytest.fixture
-def results(request: pytest.FixtureRequest, tz_info: dt.tzinfo) -> Iterable:
+def results(
+    request: pytest.FixtureRequest, tz_info: dt.tzinfo, language: str
+) -> Iterable:
     """Return localized results."""
     if not hasattr(request, "param"):
         return None
 
+    # If results are generated, by using the HDate library, we need to set the language
+    set_language(language)
+
     if isinstance(request.param, dict):
-        return {
+        result = {
             key: value.replace(tzinfo=tz_info)
             if isinstance(value, dt.datetime)
             else value
             for key, value in request.param.items()
         }
+        if "attr" in result and isinstance(result["attr"], dict):
+            result["attr"] = {
+                key: value() if callable(value) else value
+                for key, value in result["attr"].items()
+            }
+        return result
     return request.param
 
 
@@ -98,7 +110,7 @@ def havdalah_offset() -> int | None:
 @pytest.fixture
 def language() -> str:
     """Return default language value, unless language is parametrized."""
-    return "english"
+    return "en"
 
 
 @pytest.fixture(autouse=True)

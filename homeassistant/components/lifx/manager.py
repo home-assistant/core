@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiolifx_effects
 from aiolifx_themes.painter import ThemePainter
@@ -28,11 +28,17 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.target import (
+    TargetSelectorData,
+    async_extract_referenced_entity_ids,
+)
 
-from .const import _ATTR_COLOR_TEMP, ATTR_THEME, DATA_LIFX_MANAGER, DOMAIN
-from .coordinator import LIFXUpdateCoordinator, Light
+from .const import _ATTR_COLOR_TEMP, ATTR_THEME, DOMAIN
+from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .util import convert_8_to_16, find_hsbk
+
+if TYPE_CHECKING:
+    from aiolifx.aiolifx import Light
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -265,7 +271,9 @@ class LIFXManager:
 
         async def service_handler(service: ServiceCall) -> None:
             """Apply a service, i.e. start an effect."""
-            referenced = async_extract_referenced_entity_ids(self.hass, service)
+            referenced = async_extract_referenced_entity_ids(
+                self.hass, TargetSelectorData(service.data)
+            )
             all_referenced = referenced.referenced | referenced.indirectly_referenced
             if all_referenced:
                 await self.start_effect(all_referenced, service.service, **service.data)
@@ -426,8 +434,8 @@ class LIFXManager:
     ) -> None:
         """Start the firmware-based Sky effect."""
         palette = kwargs.get(ATTR_PALETTE)
+        theme = Theme()
         if palette is not None:
-            theme = Theme()
             for hsbk in palette:
                 theme.add_hsbk(hsbk[0], hsbk[1], hsbk[2], hsbk[3])
 
@@ -491,13 +499,10 @@ class LIFXManager:
         coordinators: list[LIFXUpdateCoordinator] = []
         bulbs: list[Light] = []
 
-        for entry_id, coordinator in self.hass.data[DOMAIN].items():
-            if (
-                entry_id != DATA_LIFX_MANAGER
-                and self.entry_id_to_entity_id[entry_id] in entity_ids
-            ):
-                coordinators.append(coordinator)
-                bulbs.append(coordinator.device)
-
+        entry: LIFXConfigEntry
+        for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            if self.entry_id_to_entity_id[entry.entry_id] in entity_ids:
+                coordinators.append(entry.runtime_data)
+                bulbs.append(entry.runtime_data.device)
         if start_effect_func := self._effect_dispatch.get(service):
             await start_effect_func(self, bulbs, coordinators, **kwargs)

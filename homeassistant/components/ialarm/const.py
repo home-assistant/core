@@ -4,8 +4,6 @@ from pyialarm import IAlarm
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 
-DATA_COORDINATOR = "ialarm"
-
 DEFAULT_PORT = 18034
 
 DOMAIN = "ialarm"

@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/forecast_solar",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["forecast-solar==4.1.0"]
+  "requirements": ["forecast-solar==4.2.0"]
 }

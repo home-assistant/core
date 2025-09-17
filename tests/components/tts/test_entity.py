@@ -1,5 +1,7 @@
 """Tests for the TTS entity."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components import tts
@@ -142,3 +144,62 @@ async def test_tts_entity_subclass_properties(
             if record.exc_info is not None
         ]
     )
+
+
+def test_streaming_supported() -> None:
+    """Test streaming support."""
+    base_entity = tts.TextToSpeechEntity()
+    assert base_entity.async_supports_streaming_input() is False
+
+    class StreamingEntity(tts.TextToSpeechEntity):
+        async def async_stream_tts_audio(self) -> None:
+            pass
+
+    streaming_entity = StreamingEntity()
+    assert streaming_entity.async_supports_streaming_input() is True
+
+    class NonStreamingEntity(tts.TextToSpeechEntity):
+        async def async_get_tts_audio(
+            self, message: str, language: str, options: dict[str, Any]
+        ) -> tts.TtsAudioType:
+            pass
+
+    non_streaming_entity = NonStreamingEntity()
+    assert non_streaming_entity.async_supports_streaming_input() is False
+
+    class SyncNonStreamingEntity(tts.TextToSpeechEntity):
+        def get_tts_audio(
+            self, message: str, language: str, options: dict[str, Any]
+        ) -> tts.TtsAudioType:
+            pass
+
+    sync_non_streaming_entity = SyncNonStreamingEntity()
+    assert sync_non_streaming_entity.async_supports_streaming_input() is False
+
+
+async def test_internal_get_tts_audio_writes_state(
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test that only async_internal_get_tts_audio updates and writes the state."""
+
+    entity_id = f"{tts.DOMAIN}.{TEST_DOMAIN}"
+
+    config_entry = await mock_config_entry_setup(hass, mock_tts_entity)
+    assert config_entry.state is ConfigEntryState.LOADED
+    state1 = hass.states.get(entity_id)
+    assert state1 is not None
+
+    # State should *not* change with external method
+    await mock_tts_entity.async_get_tts_audio("test message", hass.config.language, {})
+    state2 = hass.states.get(entity_id)
+    assert state2 is not None
+    assert state1.state == state2.state
+
+    # State *should* change with internal method
+    await mock_tts_entity.async_internal_get_tts_audio(
+        "test message", hass.config.language, {}
+    )
+    state3 = hass.states.get(entity_id)
+    assert state3 is not None
+    assert state1.state != state3.state

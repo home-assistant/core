@@ -136,7 +136,7 @@
   "services": {
     "fetch": {
       "name": "Fetch message",
-      "description": "Fetch an email message from the server.",
+      "description": "Fetches an email message from the server.",
       "fields": {
         "entry": {
           "name": "Entry",
@@ -150,7 +150,7 @@
     },
     "seen": {
       "name": "Mark message as seen",
-      "description": "Mark an email as seen.",
+      "description": "Marks an email as seen.",
       "fields": {
         "entry": {
           "name": "Entry",
@@ -164,7 +164,7 @@
     },
     "move": {
       "name": "Move message",
-      "description": "Move an email to a target folder.",
+      "description": "Moves an email to a target folder.",
       "fields": {
         "entry": {
           "name": "[%key:component::imap::services::seen::fields::entry::name%]",
@@ -186,7 +186,7 @@
     },
     "delete": {
       "name": "Delete message",
-      "description": "Delete an email.",
+      "description": "Deletes an email.",
       "fields": {
         "entry": {
           "name": "[%key:component::imap::services::seen::fields::entry::name%]",

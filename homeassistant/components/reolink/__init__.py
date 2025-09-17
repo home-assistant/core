@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import logging
+from time import time
 from typing import Any
 
 from reolink_aio.api import RETRY_ATTEMPTS
@@ -23,12 +25,19 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
+from .const import (
+    BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
+    CONF_BC_ONLY,
+    CONF_BC_PORT,
+    CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_USE_HTTPS,
+    DOMAIN,
+)
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
@@ -50,7 +59,7 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
-FIRMWARE_UPDATE_INTERVAL = timedelta(hours=12)
+FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
 NUM_CRED_ERRORS = 3
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -99,6 +108,7 @@ async def async_setup_entry(
         or host.api.supported(None, "privacy_mode")
         != config_entry.data.get(CONF_SUPPORTS_PRIVACY_MODE)
         or host.api.baichuan.port != config_entry.data.get(CONF_BC_PORT)
+        or host.api.baichuan_only != config_entry.data.get(CONF_BC_ONLY)
     ):
         if host.api.port != config_entry.data[CONF_PORT]:
             _LOGGER.warning(
@@ -122,6 +132,7 @@ async def async_setup_entry(
             CONF_PORT: host.api.port,
             CONF_USE_HTTPS: host.api.use_https,
             CONF_BC_PORT: host.api.baichuan.port,
+            CONF_BC_ONLY: host.api.baichuan_only,
             CONF_SUPPORTS_PRIVACY_MODE: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
@@ -150,6 +161,10 @@ async def async_setup_entry(
 
         if host.api.new_devices and config_entry.state == ConfigEntryState.LOADED:
             # Their are new cameras/chimes connected, reload to add them.
+            _LOGGER.debug(
+                "Reloading Reolink %s to add new device (capabilities)",
+                host.api.nvr_name,
+            )
             hass.async_create_task(
                 hass.config_entries.async_reload(config_entry.entry_id)
             )
@@ -216,6 +231,28 @@ async def async_setup_entry(
 
     hass.http.register_view(PlaybackProxyView(hass))
 
+    await register_callbacks(host, device_coordinator, hass)
+
+    # ensure host device is setup before connected camera devices that use via_device
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, host.unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, host.api.mac_address)},
+    )
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    return True
+
+
+async def register_callbacks(
+    host: ReolinkHost,
+    device_coordinator: DataUpdateCoordinator[None],
+    hass: HomeAssistant,
+) -> None:
+    """Register update callbacks."""
+
     async def refresh(*args: Any) -> None:
         """Request refresh of coordinator."""
         await device_coordinator.async_request_refresh()
@@ -229,24 +266,29 @@ async def async_setup_entry(
                 host.cancel_refresh_privacy_mode = async_call_later(hass, 2, refresh)
         host.privacy_mode = host.api.baichuan.privacy_mode()
 
+    def generate_async_camera_wake(channel: int) -> Callable[[], None]:
+        def async_camera_wake() -> None:
+            """Request update when a battery camera wakes up."""
+            if (
+                not host.api.sleeping(channel)
+                and time() - host.last_wake[channel]
+                > BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
+            ):
+                hass.loop.create_task(device_coordinator.async_request_refresh())
+
+        return async_camera_wake
+
     host.api.baichuan.register_callback(
         "privacy_mode_change", async_privacy_mode_change, 623
     )
-
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(entry_update_listener)
-    )
-
-    return True
-
-
-async def entry_update_listener(
-    hass: HomeAssistant, config_entry: ReolinkConfigEntry
-) -> None:
-    """Update the configuration of the host entity."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    for channel in host.api.channels:
+        if host.api.supported(channel, "battery"):
+            host.api.baichuan.register_callback(
+                f"camera_{channel}_wake",
+                generate_async_camera_wake(channel),
+                145,
+                channel,
+            )
 
 
 async def async_unload_entry(
@@ -258,6 +300,9 @@ async def async_unload_entry(
     await host.stop()
 
     host.api.baichuan.unregister_callback("privacy_mode_change")
+    for channel in host.api.channels:
+        if host.api.supported(channel, "battery"):
+            host.api.baichuan.unregister_callback(f"camera_{channel}_wake")
     if host.cancel_refresh_privacy_mode is not None:
         host.cancel_refresh_privacy_mode()
 
@@ -277,7 +322,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a device from a config entry."""
     host: ReolinkHost = config_entry.runtime_data.host
-    (device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
+    (_device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
 
     if is_chime:
         await host.api.get_state(cmd="GetDingDongList")
@@ -372,13 +417,56 @@ def migrate_entity_ids(
             else:
                 new_device_id = f"{host.unique_id}_{device_uid[1]}"
             _LOGGER.debug(
-                "Updating Reolink device UID from %s to %s", device_uid, new_device_id
+                "Updating Reolink device UID from %s to %s",
+                device_uid,
+                new_device_id,
             )
             new_identifiers = {(DOMAIN, new_device_id)}
             device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
 
+        # Check for wrongfully combined entities in one device
+        # Can be removed in HA 2025.12
+        new_identifiers = device.identifiers.copy()
+        remove_ids = False
+        if (DOMAIN, host.unique_id) in device.identifiers:
+            remove_ids = True  # NVR/Hub in identifiers, keep that one, remove others
+        for old_id in device.identifiers:
+            (old_device_uid, _old_ch, _old_is_chime) = get_device_uid_and_ch(
+                old_id, host
+            )
+            if (
+                not old_device_uid
+                or old_device_uid[0] != host.unique_id
+                or old_id[1] == host.unique_id
+            ):
+                continue
+            if remove_ids:
+                new_identifiers.remove(old_id)
+            remove_ids = True  # after the first identifier, remove the others
+        if new_identifiers != device.identifiers:
+            _LOGGER.debug(
+                "Updating Reolink device identifiers from %s to %s",
+                device.identifiers,
+                new_identifiers,
+            )
+            device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+            break
+
         if ch is None or is_chime:
             continue  # Do not consider the NVR itself or chimes
+
+        # Check for wrongfully added MAC of the NVR/Hub to the camera
+        # Can be removed in HA 2025.12
+        host_connnection = (CONNECTION_NETWORK_MAC, host.api.mac_address)
+        if host_connnection in device.connections:
+            new_connections = device.connections.copy()
+            new_connections.remove(host_connnection)
+            _LOGGER.debug(
+                "Updating Reolink device connections from %s to %s",
+                device.connections,
+                new_connections,
+            )
+            device_reg.async_update_device(device.id, new_connections=new_connections)
 
         ch_device_ids[device.id] = ch
         if host.api.supported(ch, "UID") and device_uid[1] != host.api.camera_uid(ch):
@@ -387,7 +475,9 @@ def migrate_entity_ids(
             else:
                 new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
             _LOGGER.debug(
-                "Updating Reolink device UID from %s to %s", device_uid, new_device_id
+                "Updating Reolink device UID from %s to %s",
+                device_uid,
+                new_device_id,
             )
             new_identifiers = {(DOMAIN, new_device_id)}
             existing_device = device_reg.async_get_device(identifiers=new_identifiers)

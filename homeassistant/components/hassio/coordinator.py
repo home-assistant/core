@@ -261,7 +261,7 @@ def async_register_supervisor_in_dev_reg(
     params = DeviceInfo(
         identifiers={(DOMAIN, "supervisor")},
         manufacturer="Home Assistant",
-        model=SupervisorEntityModel.SUPERVIOSR,
+        model=SupervisorEntityModel.SUPERVISOR,
         sw_version=supervisor_dict[ATTR_VERSION],
         name="Home Assistant Supervisor",
         entry_type=dr.DeviceEntryType.SERVICE,
@@ -406,11 +406,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             return {}
 
         return new_data
-
-    async def force_info_update_supervisor(self) -> None:
-        """Force update of the supervisor info."""
-        self.hass.data[DATA_SUPERVISOR_INFO] = await self.hassio.get_supervisor_info()
-        await self.async_refresh()
 
     async def get_changelog(self, addon_slug: str) -> str | None:
         """Get the changelog for an add-on."""

@@ -7,21 +7,15 @@ rules:
     status: exempt
     comment: the integration does not poll
   brands: done
-  common-modules:
-    status: exempt
-    comment: the integration currently implements only one platform and has no coordinator
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: integration has only entity actions
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup:
-    status: exempt
-    comment: the integration does not subscribe to events
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -36,20 +30,16 @@ rules:
     status: exempt
     comment: the integration has no options
   docs-installation-parameters: done
-  entity-unavailable:
-    status: exempt
-    comment: the integration only implements a stateless notify entity.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: the integration only integrates state-less entities
+  log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: todo
   discovery: todo
   docs-data-update: todo
@@ -72,10 +62,8 @@ rules:
     comment: the notify entity uses the device name as entity name, no translation required
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: the integration has no repairs
+  reconfiguration-flow: done
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: only one device per entry, is deleted with the entry.

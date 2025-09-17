@@ -41,10 +41,11 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
+    OWM_MODE_AIRPOLLUTION,
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
 )
-from .coordinator import WeatherUpdateCoordinator
+from .coordinator import OWMUpdateCoordinator
 
 SERVICE_GET_MINUTE_FORECAST = "get_minute_forecast"
 
@@ -58,27 +59,31 @@ async def async_setup_entry(
     domain_data = config_entry.runtime_data
     name = domain_data.name
     mode = domain_data.mode
-    weather_coordinator = domain_data.coordinator
 
-    unique_id = f"{config_entry.unique_id}"
-    owm_weather = OpenWeatherMapWeather(name, unique_id, mode, weather_coordinator)
+    if mode != OWM_MODE_AIRPOLLUTION:
+        weather_coordinator = domain_data.coordinator
 
-    async_add_entities([owm_weather], False)
+        unique_id = f"{config_entry.unique_id}"
+        owm_weather = OpenWeatherMapWeather(name, unique_id, mode, weather_coordinator)
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        name=SERVICE_GET_MINUTE_FORECAST,
-        schema=None,
-        func="async_get_minute_forecast",
-        supports_response=SupportsResponse.ONLY,
-    )
+        async_add_entities([owm_weather], False)
+
+        platform = entity_platform.async_get_current_platform()
+        platform.async_register_entity_service(
+            name=SERVICE_GET_MINUTE_FORECAST,
+            schema=None,
+            func="async_get_minute_forecast",
+            supports_response=SupportsResponse.ONLY,
+        )
 
 
-class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordinator]):
+class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[OWMUpdateCoordinator]):
     """Implementation of an OpenWeatherMap sensor."""
 
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
@@ -91,17 +96,16 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
         name: str,
         unique_id: str,
         mode: str,
-        weather_coordinator: WeatherUpdateCoordinator,
+        weather_coordinator: OWMUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(weather_coordinator)
-        self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
-            name=DEFAULT_NAME,
+            name=name,
         )
         self.mode = mode
 
@@ -177,7 +181,7 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_WIND_BEARING)
 
     @property
-    def visibility(self) -> float | str | None:
+    def native_visibility(self) -> float | None:
         """Return visibility."""
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_VISIBILITY_DISTANCE)
 

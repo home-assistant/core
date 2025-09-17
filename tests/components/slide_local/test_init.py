@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 from goslideapi.goslideapi import ClientConnectionError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform

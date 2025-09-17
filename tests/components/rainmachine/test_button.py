@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rainmachine import DOMAIN
 from homeassistant.const import Platform

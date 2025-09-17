@@ -51,6 +51,7 @@ POSITION_DEVICE_MAP = {
     BlindType.CurtainRight: CoverDeviceClass.CURTAIN,
     BlindType.SkylightBlind: CoverDeviceClass.SHADE,
     BlindType.InsectScreen: CoverDeviceClass.SHADE,
+    BlindType.RadioReceiver: CoverDeviceClass.SHADE,
 }
 
 TILT_DEVICE_MAP = {
@@ -61,6 +62,7 @@ TILT_DEVICE_MAP = {
     BlindType.VerticalBlind: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindRight: CoverDeviceClass.BLIND,
+    BlindType.RollerTiltMotor: CoverDeviceClass.BLIND,
 }
 
 TILT_ONLY_DEVICE_MAP = {
@@ -287,16 +289,22 @@ class MotionTiltDevice(MotionPositionDevice):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Set_angle, 180)
 
+        await self.async_request_position_till_stop()
+
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Set_angle, 0)
+
+        await self.async_request_position_till_stop()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         angle = kwargs[ATTR_TILT_POSITION] * 180 / 100
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Set_angle, angle)
+
+        await self.async_request_position_till_stop()
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover."""
@@ -358,10 +366,14 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Open)
 
+        await self.async_request_position_till_stop()
+
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Close)
+
+        await self.async_request_position_till_stop()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
@@ -373,6 +385,8 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
         else:
             async with self._api_lock:
                 await self.hass.async_add_executor_job(self._blind.Set_position, angle)
+
+        await self.async_request_position_till_stop()
 
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
@@ -387,6 +401,8 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
         else:
             async with self._api_lock:
                 await self.hass.async_add_executor_job(self._blind.Set_position, angle)
+
+        await self.async_request_position_till_stop()
 
 
 class MotionTDBUDevice(MotionBaseDevice):

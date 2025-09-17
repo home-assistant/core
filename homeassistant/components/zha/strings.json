@@ -182,9 +182,9 @@
       "group_members_assume_state": "Group members assume state of group",
       "enable_identify_on_join": "Enable identify effect when devices join the network",
       "default_light_transition": "Default light transition time (seconds)",
-      "consider_unavailable_mains": "Consider mains powered devices unavailable after (seconds)",
-      "enable_mains_startup_polling": "Refresh state for mains powered devices on startup",
-      "consider_unavailable_battery": "Consider battery powered devices unavailable after (seconds)"
+      "consider_unavailable_mains": "Consider mains-powered devices unavailable after (seconds)",
+      "enable_mains_startup_polling": "Refresh state for mains-powered devices on startup",
+      "consider_unavailable_battery": "Consider battery-powered devices unavailable after (seconds)"
     },
     "zha_alarm_options": {
       "title": "Alarm control panel options",
@@ -616,6 +616,18 @@
       },
       "water_supply": {
         "name": "Water supply"
+      },
+      "frient_in_1": {
+        "name": "IN1"
+      },
+      "frient_in_2": {
+        "name": "IN2"
+      },
+      "frient_in_3": {
+        "name": "IN3"
+      },
+      "frient_in_4": {
+        "name": "IN4"
       }
     },
     "button": {
@@ -639,6 +651,12 @@
       },
       "frost_lock_reset": {
         "name": "Frost lock reset"
+      },
+      "reset_alarm": {
+        "name": "Reset alarm"
+      },
+      "calibrate_valve": {
+        "name": "Calibrate valve"
       }
     },
     "climate": {
@@ -659,7 +677,15 @@
     },
     "fan": {
       "fan": {
-        "name": "[%key:component::fan::title%]"
+        "name": "[%key:component::fan::title%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "smart": "Smart"
+            }
+          }
+        }
       },
       "fan_group": {
         "name": "Fan group"
@@ -667,7 +693,14 @@
     },
     "light": {
       "light": {
-        "name": "[%key:component::light::title%]"
+        "name": "[%key:component::light::title%]",
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "colorloop": "Color loop"
+            }
+          }
+        }
       },
       "light_group": {
         "name": "Light group"
@@ -905,7 +938,7 @@
         "name": "Fade time"
       },
       "regulator_set_point": {
-        "name": "Regulator set point"
+        "name": "Regulator setpoint"
       },
       "detection_delay": {
         "name": "Detection delay"
@@ -1103,7 +1136,7 @@
         "name": "Comfort temperature"
       },
       "valve_state_auto_shutdown": {
-        "name": "Valve state auto shutdown"
+        "name": "Valve state auto-shutdown"
       },
       "shutdown_timer": {
         "name": "Shutdown timer"
@@ -1128,6 +1161,60 @@
       },
       "water_interval": {
         "name": "Water interval"
+      },
+      "hush_duration": {
+        "name": "Hush duration"
+      },
+      "temperature_control_accuracy": {
+        "name": "Temperature control accuracy"
+      },
+      "external_temperature_sensor_value": {
+        "name": "External temperature sensor value"
+      },
+      "update_frequency": {
+        "name": "Update frequency"
+      },
+      "sound_volume": {
+        "name": "Sound volume"
+      },
+      "lift_drive_up_time": {
+        "name": "Lift drive up time"
+      },
+      "lift_drive_down_time": {
+        "name": "Lift drive down time"
+      },
+      "tilt_open_close_and_step_time": {
+        "name": "Tilt open close and step time"
+      },
+      "tilt_position_percentage_after_move_to_level": {
+        "name": "Tilt position percentage after move to level"
+      },
+      "display_on_time": {
+        "name": "Display on-time"
+      },
+      "closing_duration": {
+        "name": "Closing duration"
+      },
+      "opening_duration": {
+        "name": "Opening duration"
+      },
+      "long_press_duration": {
+        "name": "Long press duration"
+      },
+      "motor_start_delay": {
+        "name": "Motor start delay"
+      },
+      "max_brightness": {
+        "name": "Maximum brightness"
+      },
+      "min_brightness": {
+        "name": "Minimum brightness"
+      },
+      "reporting_interval": {
+        "name": "Reporting interval"
+      },
+      "sensitivity": {
+        "name": "Sensitivity"
       }
     },
     "select": {
@@ -1177,7 +1264,7 @@
         "name": "Smart fan LED display levels"
       },
       "increased_non_neutral_output": {
-        "name": "Non neutral output"
+        "name": "Increased non-neutral output"
       },
       "leading_or_trailing_edge": {
         "name": "Dimming mode"
@@ -1198,7 +1285,7 @@
         "name": "Decoupled mode"
       },
       "detection_sensitivity": {
-        "name": "Detection Sensitivity"
+        "name": "Detection sensitivity"
       },
       "keypad_lockout": {
         "name": "Keypad lockout"
@@ -1349,6 +1436,39 @@
       },
       "speed": {
         "name": "Speed"
+      },
+      "led_brightness": {
+        "name": "LED brightness"
+      },
+      "alarm_sound_level": {
+        "name": "Alarm sound level"
+      },
+      "alarm_sound_mode": {
+        "name": "Alarm sound mode"
+      },
+      "external_switch_type": {
+        "name": "External switch type"
+      },
+      "switch_indication": {
+        "name": "Switch indication"
+      },
+      "switch_actions": {
+        "name": "Switch actions"
+      },
+      "ctrl_sequence_of_oper": {
+        "name": "Control sequence"
+      },
+      "displayed_temperature": {
+        "name": "Displayed temperature"
+      },
+      "calibration_mode": {
+        "name": "Calibration mode"
+      },
+      "mode_switch": {
+        "name": "Mode switch"
+      },
+      "phase": {
+        "name": "Phase"
       }
     },
     "sensor": {
@@ -1411,6 +1531,9 @@
       },
       "tier6_summation_delivered": {
         "name": "Tier 6 summation delivered"
+      },
+      "total_active_power": {
+        "name": "Total power"
       },
       "summation_received": {
         "name": "Summation received"
@@ -1590,7 +1713,7 @@
         "name": "Floor temperature"
       },
       "self_test": {
-        "name": "Self test result"
+        "name": "Self-test result"
       },
       "voc_index": {
         "name": "VOC index"
@@ -1620,7 +1743,7 @@
         "name": "Total power factor"
       },
       "self_test_result": {
-        "name": "Self test result"
+        "name": "Self-test result"
       },
       "lower_explosive_limit": {
         "name": "% Lower explosive limit"
@@ -1699,6 +1822,44 @@
       },
       "device_status": {
         "name": "Device status"
+      },
+      "lifetime": {
+        "name": "Lifetime"
+      },
+      "last_action_source": {
+        "name": "Last action source",
+        "state": {
+          "zigbee": "Zigbee",
+          "keypad": "Keypad",
+          "fingerprint": "Fingerprint",
+          "rfid": "RFID",
+          "self": "Self"
+        }
+      },
+      "last_action": {
+        "name": "Last action",
+        "state": {
+          "lock": "[%key:common::state::locked%]",
+          "unlock": "[%key:common::state::unlocked%]"
+        }
+      },
+      "last_action_user": {
+        "name": "Last action user"
+      },
+      "last_pin_code": {
+        "name": "Last PIN code"
+      },
+      "opening": {
+        "name": "Opening"
+      },
+      "operating_mode": {
+        "name": "Operating mode"
+      },
+      "valve_adapt_status": {
+        "name": "Valve adaptation status"
+      },
+      "motor_state": {
+        "name": "Motor state"
       }
     },
     "switch": {
@@ -1841,7 +2002,7 @@
         "name": "Mute siren"
       },
       "self_test_switch": {
-        "name": "Self test"
+        "name": "Self-test"
       },
       "output_switch": {
         "name": "Output switch"
@@ -1907,7 +2068,43 @@
         "name": "Schedule mode"
       },
       "auto_clean": {
-        "name": "Auto clean"
+        "name": "Autoclean"
+      },
+      "test_mode": {
+        "name": "Test mode"
+      },
+      "external_temperature_sensor": {
+        "name": "External temperature sensor"
+      },
+      "auto_relock": {
+        "name": "Autorelock"
+      },
+      "distance_tracking": {
+        "name": "Distance tracking"
+      },
+      "water_shortage_auto_close": {
+        "name": "Water shortage auto-close"
+      },
+      "frient_com_1": {
+        "name": "COM 1"
+      },
+      "frient_com_2": {
+        "name": "COM 2"
+      },
+      "window_open": {
+        "name": "Window open"
+      },
+      "turn_on_led_when_off": {
+        "name": "Turn on LED when off"
+      },
+      "turn_on_led_when_on": {
+        "name": "Turn on LED when on"
+      },
+      "dimmer_mode": {
+        "name": "Dimmer mode"
+      },
+      "flip_indicator_light": {
+        "name": "Flip indicator light"
       }
     }
   }

@@ -5,7 +5,7 @@
       "step": {
         "init": {
           "title": "Set up two-factor authentication using TOTP",
-          "description": "To activate two factor authentication using time-based one-time passwords, scan the QR code with your authentication app. If you don't have one, we recommend either [Google Authenticator](https://support.google.com/accounts/answer/1066447) or [Authy](https://authy.com/).\n\n{qr_code}\n\nAfter scanning the code, enter the six digit code from your app to verify the setup. If you have problems scanning the QR code, do a manual setup with code **`{code}`**."
+          "description": "To activate two-factor authentication using time-based one-time passwords, scan the QR code with your authentication app. If you don't have one, we recommend either [Google Authenticator](https://support.google.com/accounts/answer/1066447) or [Authy](https://authy.com/).\n\n{qr_code}\n\nAfter scanning the code, enter the six-digit code from your app to verify the setup. If you have problems scanning the QR code, do a manual setup with code **`{code}`**."
         }
       },
       "error": {
@@ -13,7 +13,7 @@
       }
     },
     "notify": {
-      "title": "Notify One-Time Password",
+      "title": "Notify one-time password",
       "step": {
         "init": {
           "title": "Set up one-time password delivered by notify component",

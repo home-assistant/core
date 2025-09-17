@@ -32,10 +32,11 @@
     'original_name': 'Carbon monoxide',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co',
     'unique_id': '123-456-co',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_carbon_monoxide-state]
@@ -46,7 +47,7 @@
       'limit': 4000,
       'percent': 4,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_carbon_monoxide',
@@ -87,6 +88,7 @@
     'original_name': 'Common air quality index',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'caqi',
     'unique_id': '123-456-caqi',
@@ -144,6 +146,7 @@
     'original_name': 'Humidity',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-humidity',
@@ -200,10 +203,11 @@
     'original_name': 'Nitrogen dioxide',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-no2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_nitrogen_dioxide-state]
@@ -215,7 +219,7 @@
       'limit': 25,
       'percent': 64,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_dioxide',
@@ -258,10 +262,11 @@
     'original_name': 'Ozone',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-o3',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_ozone-state]
@@ -273,7 +278,7 @@
       'limit': 100,
       'percent': 42,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_ozone',
@@ -316,10 +321,11 @@
     'original_name': 'PM1',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-pm1',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_pm1-state]
@@ -329,7 +335,7 @@
       'device_class': 'pm1',
       'friendly_name': 'Home PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm1',
@@ -372,10 +378,11 @@
     'original_name': 'PM10',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-pm10',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_pm10-state]
@@ -387,7 +394,7 @@
       'limit': 45,
       'percent': 14,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm10',
@@ -430,10 +437,11 @@
     'original_name': 'PM2.5',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-pm25',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_pm2_5-state]
@@ -445,7 +453,7 @@
       'limit': 15,
       'percent': 29,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm2_5',
@@ -488,6 +496,7 @@
     'original_name': 'Pressure',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-pressure',
@@ -544,10 +553,11 @@
     'original_name': 'Sulphur dioxide',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-so2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_sulphur_dioxide-state]
@@ -559,7 +569,7 @@
       'limit': 40,
       'percent': 35,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_sulphur_dioxide',
@@ -602,6 +612,7 @@
     'original_name': 'Temperature',
     'platform': 'airly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-456-temperature',
