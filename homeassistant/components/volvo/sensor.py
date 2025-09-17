@@ -36,7 +36,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import API_NONE_VALUE, DATA_BATTERY_CAPACITY
-from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
+from .coordinator import VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_key
 
 PARALLEL_UPDATES = 0
@@ -358,12 +358,6 @@ async def async_setup_entry(
     entities: list[VolvoSensor] = []
     added_keys: set[str] = set()
 
-    def _add_entity(
-        coordinator: VolvoBaseCoordinator, description: VolvoSensorDescription
-    ) -> None:
-        entities.append(VolvoSensor(coordinator, description))
-        added_keys.add(description.key)
-
     coordinators = entry.runtime_data
 
     for coordinator in coordinators:
@@ -372,7 +366,8 @@ async def async_setup_entry(
                 continue
 
             if description.api_field in coordinator.data:
-                _add_entity(coordinator, description)
+                entities.append(VolvoSensor(coordinator, description))
+                added_keys.add(description.key)
 
     async_add_entities(entities)
 
