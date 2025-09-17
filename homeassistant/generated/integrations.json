@@ -5728,8 +5728,9 @@
     "satel_integra": {
       "name": "Satel Integra",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "schlage": {
       "name": "Schlage",
@@ -7248,6 +7249,12 @@
     "vicare": {
       "name": "Viessmann ViCare",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "victron_remote_monitoring": {
+      "name": "Victron Remote Monitoring",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
