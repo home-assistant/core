@@ -211,11 +211,37 @@ async def test_relay_switch_2pm_control(
 
 
 @pytest.mark.parametrize(
-    ("exception", "error_message"),
+    ("sensor_type", "service_info", "entity_id", "mock_class"),
     [
         (
-            SwitchbotOperationError("Operation failed"),
-            "An error occurred while performing the action: Operation failed",
+            "relay_switch_1",
+            RELAY_SWITCH_1_SERVICE_INFO,
+            "switch.test_name",
+            "SwitchbotRelaySwitch",
+        ),
+        (
+            "relay_switch_1pm",
+            WORELAY_SWITCH_1PM_SERVICE_INFO,
+            "switch.test_name",
+            "SwitchbotRelaySwitch",
+        ),
+        (
+            "plug_mini_eu",
+            PLUG_MINI_EU_SERVICE_INFO,
+            "switch.test_name",
+            "SwitchbotRelaySwitch",
+        ),
+        (
+            "relay_switch_2pm",
+            RELAY_SWITCH_2PM_SERVICE_INFO,
+            "switch.test_name_channel_1",
+            "SwitchbotRelaySwitch2PM",
+        ),
+        (
+            "relay_switch_2pm",
+            RELAY_SWITCH_2PM_SERVICE_INFO,
+            "switch.test_name_channel_2",
+            "SwitchbotRelaySwitch2PM",
         ),
     ],
 )
@@ -227,29 +253,34 @@ async def test_relay_switch_2pm_control(
     ],
 )
 @pytest.mark.parametrize(
-    "entry_id",
+    ("exception", "error_message"),
     [
-        "switch.test_name_channel_1",
-        "switch.test_name_channel_2",
+        (
+            SwitchbotOperationError("Operation failed"),
+            "An error occurred while performing the action: Operation failed",
+        ),
     ],
 )
-async def test_relay_switch_2pm_exception(
+async def test_relay_switch_control_with_exception(
     hass: HomeAssistant,
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
-    exception: Exception,
-    error_message: str,
+    sensor_type: str,
+    service_info: BluetoothServiceInfoBleak,
+    entity_id: str,
+    mock_class: str,
     service: str,
     mock_method: str,
-    entry_id: str,
+    exception: Exception,
+    error_message: str,
 ) -> None:
-    """Test Relay Switch 2PM exception handling."""
-    inject_bluetooth_service_info(hass, RELAY_SWITCH_2PM_SERVICE_INFO)
+    """Test Relay Switch control with exception."""
+    inject_bluetooth_service_info(hass, service_info)
 
-    entry = mock_entry_encrypted_factory(sensor_type="relay_switch_2pm")
+    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
     entry.add_to_hass(hass)
 
     with patch.multiple(
-        "homeassistant.components.switchbot.switch.switchbot.SwitchbotRelaySwitch2PM",
+        f"homeassistant.components.switchbot.switch.switchbot.{mock_class}",
         update=AsyncMock(return_value=None),
         **{mock_method: AsyncMock(side_effect=exception)},
     ):
@@ -260,6 +291,6 @@ async def test_relay_switch_2pm_exception(
             await hass.services.async_call(
                 SWITCH_DOMAIN,
                 service,
-                {ATTR_ENTITY_ID: entry_id},
+                {ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
