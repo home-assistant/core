@@ -166,6 +166,18 @@
         "title": "[%key:component::zha::config::step::verify_radio::title%]",
         "description": "[%key:component::zha::config::step::verify_radio::description%]"
       },
+      "choose_migration_strategy": {
+        "title": "[%key:component::zha::config::step::choose_migration_strategy::title%]",
+        "description": "[%key:component::zha::config::step::choose_migration_strategy::description%]",
+        "menu_options": {
+          "migration_strategy_recommended": "[%key:component::zha::config::step::choose_migration_strategy::menu_options::migration_strategy_recommended%]",
+          "migration_strategy_advanced": "[%key:component::zha::config::step::choose_migration_strategy::menu_options::migration_strategy_advanced%]"
+        },
+        "menu_option_descriptions": {
+          "migration_strategy_recommended": "[%key:component::zha::config::step::choose_migration_strategy::menu_option_descriptions::migration_strategy_recommended%]",
+          "migration_strategy_advanced": "[%key:component::zha::config::step::choose_migration_strategy::menu_option_descriptions::migration_strategy_advanced%]"
+        }
+      },
       "choose_formation_strategy": {
         "title": "[%key:component::zha::config::step::choose_formation_strategy::title%]",
         "description": "[%key:component::zha::config::step::choose_formation_strategy::description%]",
