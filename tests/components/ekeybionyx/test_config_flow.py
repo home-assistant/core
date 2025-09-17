@@ -294,8 +294,7 @@ async def test_cleanup(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
-    assert flow2.get("type") is FlowResultType.ABORT
-    assert flow2.get("reason") == "webhook_deletion_requested"
+    assert flow2.get("type") is FlowResultType.SHOW_PROGRESS
 
 
 @pytest.mark.usefixtures("current_request_with_host")

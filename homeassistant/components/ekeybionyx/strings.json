@@ -36,6 +36,9 @@
         "description": "Webhook configuration inconsistent. Webhooks with Home Assistant were already configured. If you continue they will be marked for removal."
       }
     },
+    "progress": {
+      "check_deletion_status": "Please go to the ekey Bionyx app and confirm the deletion of the webhooks. This may take a few minutes."
+    },
     "error": {
       "invalid_name": "Name is invalid",
       "invalid_url": "URL is invalid",
@@ -54,7 +57,6 @@
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "no_available_webhooks": "There are no available webhooks in the ekey Bionyx plattform. Please delete some and try again.",
       "no_own_systems": "Your account does not have admin access to any systems",
-      "webhook_deletion_requested": "Please go to the ekey Bionyx app and confirm the deletion of the webhooks. Afterwards set up the integration again.",
       "cannot_connect": "Connection to ekey Bionyx failed. Please check your Internet connection and try again."
     },
     "create_entry": {

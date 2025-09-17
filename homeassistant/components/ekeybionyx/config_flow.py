@@ -1,5 +1,6 @@
 """Config flow for Ekey Bionyx."""
 
+import asyncio
 import json
 import logging
 import re
@@ -50,6 +51,7 @@ class ConfigFlowEkeyApi(ekey_bionyxpy.AbstractAuth):
 class EkeyFlowData(TypedDict):
     """Type for Flow Data."""
 
+    api: NotRequired[ekey_bionyxpy.BionyxAPI]
     system: NotRequired[ekey_bionyxpy.System]
     systems: NotRequired[list[ekey_bionyxpy.System]]
 
@@ -60,6 +62,8 @@ class OAuth2FlowHandler(
     """Config flow to handle Ekey Bionyx OAuth2 authentication."""
 
     DOMAIN = DOMAIN
+
+    check_deletion_task: asyncio.Task[None] | None = None
 
     def __init__(self) -> None:
         """Initialize OAuth2FlowHandler."""
@@ -80,6 +84,7 @@ class OAuth2FlowHandler(
         """Start the user facing flow by initializing the API and getting the systems."""
         client = ConfigFlowEkeyApi(async_get_clientsession(self.hass), data[CONF_TOKEN])
         ap = ekey_bionyxpy.BionyxAPI(client)
+        self._data["api"] = ap
         try:
             system_res = await ap.get_systems()
         except aiohttp.ClientResponseError:
@@ -91,7 +96,7 @@ class OAuth2FlowHandler(
         if len(system) == 1:
             # skipping choose_system since there is only one
             self._data["system"] = system[0]
-            return await self.async_step_webhooks(user_input=None)
+            return await self.async_step_check_system(user_input=None)
         return await self.async_step_choose_system(user_input=None)
 
     async def async_step_choose_system(
@@ -110,12 +115,12 @@ class OAuth2FlowHandler(
         self._data["system"] = [
             s for s in self._data["systems"] if s.system_id == user_input["system"]
         ][0]
-        return await self.async_step_webhooks(user_input=None)
+        return await self.async_step_check_system(user_input=None)
 
-    async def async_step_webhooks(
-        self, user_input: dict[str, Any] | None
+    async def async_step_check_system(
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Dialog to setup webhooks."""
+        """Check if system has open webhooks."""
         system = self._data["system"]
         await self.async_set_unique_id(system.system_id)
         self._abort_if_unique_id_configured()
@@ -128,6 +133,13 @@ class OAuth2FlowHandler(
 
         if system.function_webhook_quotas["used"] > 0:
             return await self.async_step_delete_webhooks()
+        return await self.async_step_webhooks(user_input=None)
+
+    async def async_step_webhooks(
+        self, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Dialog to setup webhooks."""
+        system = self._data["system"]
 
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -206,4 +218,39 @@ class OAuth2FlowHandler(
             return self.async_show_form(step_id="delete_webhooks")
         for webhook in await self._data["system"].get_webhooks():
             await webhook.delete()
-        return self.async_abort(reason="webhook_deletion_requested")
+        return await self.async_step_wait_for_deletion(user_input=None)
+
+    async def async_step_wait_for_deletion(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Wait for webhooks to be deleted in another flow."""
+        uncompleted_task: asyncio.Task[None] | None = None
+
+        if not self.check_deletion_task:
+            self.check_deletion_task = self.hass.async_create_task(
+                self.async_check_deletion_status()
+            )
+        if not self.check_deletion_task.done():
+            progress_action = "check_deletion_status"
+            uncompleted_task = self.check_deletion_task
+        if uncompleted_task:
+            return self.async_show_progress(
+                step_id="wait_for_deletion",
+                progress_action=progress_action,
+                progress_task=uncompleted_task,
+            )
+        self.check_deletion_task = None
+        return self.async_show_progress_done(next_step_id="webhooks")
+
+    async def async_check_deletion_status(self) -> None:
+        """Check if webhooks have been deleted."""
+        while True:
+            self._data["systems"] = await self._data["api"].get_systems()
+            system = [
+                s
+                for s in self._data["systems"]
+                if s.system_id == self._data["system"].system_id
+            ][0]
+            if system.function_webhook_quotas["used"] == 0:
+                break
+            await asyncio.sleep(5)
