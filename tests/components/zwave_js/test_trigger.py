@@ -65,9 +65,11 @@ async def test_zwave_js_value_updated(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "command_class": CommandClass.DOOR_LOCK.value,
-                        "property": "latchStatus",
+                        "options": {
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "command_class": CommandClass.DOOR_LOCK.value,
+                            "property": "latchStatus",
+                        },
                     },
                     "action": {
                         "event": "no_value_filter",
@@ -77,10 +79,12 @@ async def test_zwave_js_value_updated(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "device_id": device.id,
-                        "command_class": CommandClass.DOOR_LOCK.value,
-                        "property": "latchStatus",
-                        "from": "ajar",
+                        "options": {
+                            "device_id": device.id,
+                            "command_class": CommandClass.DOOR_LOCK.value,
+                            "property": "latchStatus",
+                            "from": "ajar",
+                        },
                     },
                     "action": {
                         "event": "single_from_value_filter",
@@ -90,10 +94,12 @@ async def test_zwave_js_value_updated(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "command_class": CommandClass.DOOR_LOCK.value,
-                        "property": "latchStatus",
-                        "from": ["closed", "opened"],
+                        "options": {
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "command_class": CommandClass.DOOR_LOCK.value,
+                            "property": "latchStatus",
+                            "from": ["closed", "opened"],
+                        },
                     },
                     "action": {
                         "event": "multiple_from_value_filters",
@@ -103,11 +109,13 @@ async def test_zwave_js_value_updated(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "command_class": CommandClass.DOOR_LOCK.value,
-                        "property": "latchStatus",
-                        "from": ["closed", "opened"],
-                        "to": ["opened"],
+                        "options": {
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "command_class": CommandClass.DOOR_LOCK.value,
+                            "property": "latchStatus",
+                            "from": ["closed", "opened"],
+                            "to": ["opened"],
+                        },
                     },
                     "action": {
                         "event": "from_and_to_value_filters",
@@ -117,9 +125,11 @@ async def test_zwave_js_value_updated(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "command_class": CommandClass.DOOR_LOCK.value,
-                        "property": "boltStatus",
+                        "options": {
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "command_class": CommandClass.DOOR_LOCK.value,
+                            "property": "boltStatus",
+                        },
                     },
                     "action": {
                         "event": "different_value",
@@ -299,9 +309,11 @@ async def test_zwave_js_value_updated_bypass_dynamic_validation(
                     {
                         "trigger": {
                             "platform": trigger_type,
-                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                            "command_class": CommandClass.DOOR_LOCK.value,
-                            "property": "latchStatus",
+                            "options": {
+                                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                                "command_class": CommandClass.DOOR_LOCK.value,
+                                "property": "latchStatus",
+                            },
                         },
                         "action": {
                             "event": "no_value_filter",
@@ -357,9 +369,11 @@ async def test_zwave_js_value_updated_bypass_dynamic_validation_no_nodes(
                     {
                         "trigger": {
                             "platform": trigger_type,
-                            "entity_id": "sensor.test",
-                            "command_class": CommandClass.DOOR_LOCK.value,
-                            "property": "latchStatus",
+                            "options": {
+                                "entity_id": "sensor.test",
+                                "command_class": CommandClass.DOOR_LOCK.value,
+                                "property": "latchStatus",
+                            },
                         },
                         "action": {
                             "event": "no_value_filter",
@@ -413,9 +427,11 @@ async def test_zwave_js_value_updated_bypass_dynamic_validation_no_driver(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "command_class": CommandClass.DOOR_LOCK.value,
-                        "property": "latchStatus",
+                        "options": {
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "command_class": CommandClass.DOOR_LOCK.value,
+                            "property": "latchStatus",
+                        },
                     },
                     "action": {
                         "event": "no_value_filter",
@@ -506,9 +522,11 @@ async def test_zwave_js_event(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "event_source": "node",
-                        "event": "interview stage completed",
+                        "options": {
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "event_source": "node",
+                            "event": "interview stage completed",
+                        },
                     },
                     "action": {
                         "event": "node_no_event_data_filter",
@@ -518,10 +536,12 @@ async def test_zwave_js_event(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "device_id": device.id,
-                        "event_source": "node",
-                        "event": "interview stage completed",
-                        "event_data": {"stageName": "ProtocolInfo"},
+                        "options": {
+                            "device_id": device.id,
+                            "event_source": "node",
+                            "event": "interview stage completed",
+                            "event_data": {"stageName": "ProtocolInfo"},
+                        },
                     },
                     "action": {
                         "event": "node_event_data_filter",
@@ -531,9 +551,11 @@ async def test_zwave_js_event(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "config_entry_id": integration.entry_id,
-                        "event_source": "controller",
-                        "event": "inclusion started",
+                        "options": {
+                            "config_entry_id": integration.entry_id,
+                            "event_source": "controller",
+                            "event": "inclusion started",
+                        },
                     },
                     "action": {
                         "event": "controller_no_event_data_filter",
@@ -543,10 +565,12 @@ async def test_zwave_js_event(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "config_entry_id": integration.entry_id,
-                        "event_source": "controller",
-                        "event": "inclusion started",
-                        "event_data": {"strategy": 0},
+                        "options": {
+                            "config_entry_id": integration.entry_id,
+                            "event_source": "controller",
+                            "event": "inclusion started",
+                            "event_data": {"strategy": 0},
+                        },
                     },
                     "action": {
                         "event": "controller_event_data_filter",
@@ -556,9 +580,11 @@ async def test_zwave_js_event(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "config_entry_id": integration.entry_id,
-                        "event_source": "driver",
-                        "event": "logging",
+                        "options": {
+                            "config_entry_id": integration.entry_id,
+                            "event_source": "driver",
+                            "event": "logging",
+                        },
                     },
                     "action": {
                         "event": "driver_no_event_data_filter",
@@ -568,10 +594,12 @@ async def test_zwave_js_event(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "config_entry_id": integration.entry_id,
-                        "event_source": "driver",
-                        "event": "logging",
-                        "event_data": {"message": "test"},
+                        "options": {
+                            "config_entry_id": integration.entry_id,
+                            "event_source": "driver",
+                            "event": "logging",
+                            "event_data": {"message": "test"},
+                        },
                     },
                     "action": {
                         "event": "driver_event_data_filter",
@@ -581,10 +609,12 @@ async def test_zwave_js_event(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "event_source": "node",
-                        "event": "value updated",
-                        "event_data": {"args": {"commandClassName": "Door Lock"}},
+                        "options": {
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "event_source": "node",
+                            "event": "value updated",
+                            "event_data": {"args": {"commandClassName": "Door Lock"}},
+                        },
                     },
                     "action": {
                         "event": "node_event_data_no_partial_dict_match_filter",
@@ -594,11 +624,13 @@ async def test_zwave_js_event(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "event_source": "node",
-                        "event": "value updated",
-                        "event_data": {"args": {"commandClassName": "Door Lock"}},
-                        "partial_dict_match": True,
+                        "options": {
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "event_source": "node",
+                            "event": "value updated",
+                            "event_data": {"args": {"commandClassName": "Door Lock"}},
+                            "partial_dict_match": True,
+                        },
                     },
                     "action": {
                         "event": "node_event_data_partial_dict_match_filter",
@@ -864,9 +896,11 @@ async def test_zwave_js_event_bypass_dynamic_validation(
                     {
                         "trigger": {
                             "platform": trigger_type,
-                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                            "event_source": "node",
-                            "event": "interview stage completed",
+                            "options": {
+                                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                                "event_source": "node",
+                                "event": "interview stage completed",
+                            },
                         },
                         "action": {
                             "event": "node_no_event_data_filter",
@@ -915,9 +949,11 @@ async def test_zwave_js_event_bypass_dynamic_validation_no_nodes(
                     {
                         "trigger": {
                             "platform": trigger_type,
-                            "entity_id": "sensor.fake",
-                            "event_source": "node",
-                            "event": "interview stage completed",
+                            "options": {
+                                "entity_id": "sensor.fake",
+                                "event_source": "node",
+                                "event": "interview stage completed",
+                            },
                         },
                         "action": {
                             "event": "node_no_event_data_filter",
@@ -958,9 +994,11 @@ async def test_zwave_js_event_invalid_config_entry_id(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "config_entry_id": "not_real_entry_id",
-                        "event_source": "controller",
-                        "event": "inclusion started",
+                        "options": {
+                            "config_entry_id": "not_real_entry_id",
+                            "event_source": "controller",
+                            "event": "inclusion started",
+                        },
                     },
                     "action": {
                         "event": "node_no_event_data_filter",
@@ -981,9 +1019,11 @@ async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
             hass,
             {
                 "platform": f"{DOMAIN}.event",
-                "entity_id": "fake.entity",
-                "event_source": "node",
-                "event": "value updated",
+                "options": {
+                    "entity_id": "fake.entity",
+                    "event_source": "node",
+                    "event": "value updated",
+                },
             },
         )
 
@@ -992,9 +1032,11 @@ async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
             hass,
             {
                 "platform": f"{DOMAIN}.value_updated",
-                "entity_id": "fake.entity",
-                "command_class": CommandClass.DOOR_LOCK.value,
-                "property": "latchStatus",
+                "options": {
+                    "entity_id": "fake.entity",
+                    "command_class": CommandClass.DOOR_LOCK.value,
+                    "property": "latchStatus",
+                },
             },
         )
 
@@ -1017,9 +1059,11 @@ async def test_zwave_js_trigger_config_entry_unloaded(
         hass,
         {
             "platform": f"{DOMAIN}.value_updated",
-            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-            "command_class": CommandClass.DOOR_LOCK.value,
-            "property": "latchStatus",
+            "options": {
+                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                "command_class": CommandClass.DOOR_LOCK.value,
+                "property": "latchStatus",
+            },
         },
     )
 
@@ -1030,9 +1074,11 @@ async def test_zwave_js_trigger_config_entry_unloaded(
         hass,
         {
             "platform": f"{DOMAIN}.value_updated",
-            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-            "command_class": CommandClass.DOOR_LOCK.value,
-            "property": "latchStatus",
+            "options": {
+                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                "command_class": CommandClass.DOOR_LOCK.value,
+                "property": "latchStatus",
+            },
         },
     )
 
@@ -1040,9 +1086,11 @@ async def test_zwave_js_trigger_config_entry_unloaded(
         hass,
         {
             "platform": f"{DOMAIN}.event",
-            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-            "event_source": "node",
-            "event": "interview stage completed",
+            "options": {
+                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                "event_source": "node",
+                "event": "interview stage completed",
+            },
         },
     )
 
@@ -1051,9 +1099,11 @@ async def test_zwave_js_trigger_config_entry_unloaded(
         hass,
         {
             "platform": f"{DOMAIN}.value_updated",
-            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-            "command_class": CommandClass.DOOR_LOCK.value,
-            "property": "latchStatus",
+            "options": {
+                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                "command_class": CommandClass.DOOR_LOCK.value,
+                "property": "latchStatus",
+            },
         },
     )
 
@@ -1061,10 +1111,12 @@ async def test_zwave_js_trigger_config_entry_unloaded(
         hass,
         {
             "platform": f"{DOMAIN}.value_updated",
-            "device_id": device.id,
-            "command_class": CommandClass.DOOR_LOCK.value,
-            "property": "latchStatus",
-            "from": "ajar",
+            "options": {
+                "device_id": device.id,
+                "command_class": CommandClass.DOOR_LOCK.value,
+                "property": "latchStatus",
+                "from": "ajar",
+            },
         },
     )
 
@@ -1072,9 +1124,11 @@ async def test_zwave_js_trigger_config_entry_unloaded(
         hass,
         {
             "platform": f"{DOMAIN}.event",
-            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-            "event_source": "node",
-            "event": "interview stage completed",
+            "options": {
+                "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                "event_source": "node",
+                "event": "interview stage completed",
+            },
         },
     )
 
@@ -1082,10 +1136,12 @@ async def test_zwave_js_trigger_config_entry_unloaded(
         hass,
         {
             "platform": f"{DOMAIN}.event",
-            "device_id": device.id,
-            "event_source": "node",
-            "event": "interview stage completed",
-            "event_data": {"stageName": "ProtocolInfo"},
+            "options": {
+                "device_id": device.id,
+                "event_source": "node",
+                "event": "interview stage completed",
+                "event_data": {"stageName": "ProtocolInfo"},
+            },
         },
     )
 
@@ -1093,9 +1149,11 @@ async def test_zwave_js_trigger_config_entry_unloaded(
         hass,
         {
             "platform": f"{DOMAIN}.event",
-            "config_entry_id": integration.entry_id,
-            "event_source": "controller",
-            "event": "nvm convert progress",
+            "options": {
+                "config_entry_id": integration.entry_id,
+                "event_source": "controller",
+                "event": "nvm convert progress",
+            },
         },
     )
 
@@ -1125,9 +1183,11 @@ async def test_server_reconnect_event(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "event_source": "node",
-                        "event": event_name,
+                        "options": {
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "event_source": "node",
+                            "event": event_name,
+                        },
                     },
                     "action": {
                         "event": "blah",
@@ -1205,9 +1265,11 @@ async def test_server_reconnect_value_updated(
                 {
                     "trigger": {
                         "platform": trigger_type,
-                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
-                        "command_class": CommandClass.DOOR_LOCK.value,
-                        "property": "latchStatus",
+                        "options": {
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "command_class": CommandClass.DOOR_LOCK.value,
+                            "property": "latchStatus",
+                        },
                     },
                     "action": {
                         "event": "no_value_filter",
@@ -1258,3 +1320,78 @@ async def test_server_reconnect_value_updated(
 
     # Make sure the old listener is no longer referenced
     assert old_listener not in new_node._listeners.get(event_name, [])
+
+
+async def test_zwave_js_old_syntax(
+    hass: HomeAssistant, client, lock_schlage_be469, integration
+) -> None:
+    """Test zwave_js triggers work with the old syntax."""
+    node: Node = lock_schlage_be469
+
+    zwavejs_event = async_capture_events(hass, "zwavejs_event")
+    zwavejs_value_updated = async_capture_events(hass, "zwavejs_value_updated")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": f"{DOMAIN}.value_updated",
+                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                        "command_class": CommandClass.DOOR_LOCK.value,
+                        "property": "latchStatus",
+                    },
+                    "action": {
+                        "event": "zwavejs_event",
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": f"{DOMAIN}.event",
+                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                        "event_source": "node",
+                        "event": "interview stage completed",
+                    },
+                    "action": {
+                        "event": "zwavejs_value_updated",
+                    },
+                },
+            ]
+        },
+    )
+
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Door Lock",
+                "commandClass": 98,
+                "endpoint": 0,
+                "property": "latchStatus",
+                "newValue": "boo",
+                "prevValue": "hiss",
+                "propertyName": "latchStatus",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(zwavejs_event) == 1
+
+    event = Event(
+        type="interview stage completed",
+        data={
+            "source": "node",
+            "event": "interview stage completed",
+            "stageName": "NodeInfo",
+            "nodeId": node.node_id,
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(zwavejs_value_updated) == 1
