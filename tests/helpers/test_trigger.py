@@ -599,6 +599,53 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
         await async_initialize_triggers(hass, config_3, cb_action, "test", "", log_cb)
 
 
+async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
+    """Test a trigger platform with a migration."""
+
+    OPTIONS_SCHEMA_DICT = {
+        vol.Required("option_1"): str,
+        vol.Optional("option_2"): int,
+    }
+
+    class MockTrigger(Trigger):
+        """Mock trigger."""
+
+        @classmethod
+        async def async_validate_complete_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate complete config."""
+            config = move_top_level_schema_fields_to_options(
+                config, OPTIONS_SCHEMA_DICT
+            )
+            return await super().async_validate_complete_config(hass, config)
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "_": MockTrigger,
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    config_1 = [{"platform": "test", "option_1": "value_1", "option_2": 2}]
+    config_2 = [{"platform": "test", "option_1": "value_1"}]
+    config_3 = [{"platform": "test", "options": {"option_1": "value_1", "option_2": 2}}]
+    config_4 = [{"platform": "test", "options": {"option_1": "value_1"}}]
+
+    assert await async_validate_trigger_config(hass, config_1) == config_3
+    assert await async_validate_trigger_config(hass, config_2) == config_4
+    assert await async_validate_trigger_config(hass, config_3) == config_3
+    assert await async_validate_trigger_config(hass, config_4) == config_4
+
+
 @pytest.mark.parametrize(
     "sun_trigger_descriptions",
     [

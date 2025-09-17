@@ -398,7 +398,11 @@ def move_top_level_schema_fields_to_options(
     """Move top-level fields to options.
 
     This function is used to help migrating old-style configs to new-style configs.
+    If options is already present, the config is returned as-is.
     """
+    if CONF_OPTIONS in config:
+        return config
+
     config = config.copy()
     options = config.setdefault(CONF_OPTIONS, {})
 
@@ -406,10 +410,6 @@ def move_top_level_schema_fields_to_options(
     for key_marked in options_schema_dict:
         key = key_marked.schema
         if key in config:
-            if key in options:
-                raise vol.Invalid(
-                    f"'{key}' cannot be specified in both top-level and options"
-                )
             options[key] = config.pop(key)
 
     return config
