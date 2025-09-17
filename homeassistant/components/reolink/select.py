@@ -16,6 +16,7 @@ from reolink_aio.api import (
     HDREnum,
     Host,
     HubToneEnum,
+    SpotlightEventModeEnum,
     SpotlightModeEnum,
     StatusLedEnum,
     TrackMethodEnum,
@@ -91,6 +92,20 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         value=lambda api, ch: SpotlightModeEnum(api.whiteled_mode(ch)).name,
         method=lambda api, ch, name: api.set_whiteled(ch, mode=name),
+    ),
+    ReolinkSelectEntityDescription(
+        key="floodlight_event_mode",
+        cmd_key="GetWhiteLed",
+        translation_key="floodlight_event_mode",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[mode.name for mode in SpotlightEventModeEnum],
+        supported=lambda api, ch: api.supported(ch, "floodlight_event"),
+        value=lambda api, ch: SpotlightEventModeEnum(api.whiteled_event_mode(ch)).name,
+        method=lambda api, ch, name: (
+            api.baichuan.set_floodlight(
+                ch, event_mode=SpotlightEventModeEnum[name].value
+            )
+        ),
     ),
     ReolinkSelectEntityDescription(
         key="day_night_mode",
