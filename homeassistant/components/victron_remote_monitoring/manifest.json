@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["victron-vrm==0.1.6"]
+  "requirements": ["victron-vrm==0.1.7"]
 }
