@@ -167,7 +167,6 @@ class ComelitSerialBridge(
         """Initialize the scanner."""
         self.api = ComeliteSerialBridgeApi(host, port, pin, session)
         super().__init__(hass, entry, BRIDGE, host)
-        self.previous_devices: dict[str, dict[int, ComelitSerialBridgeObject]] = {}
 
     async def _async_update_system_data(
         self,
@@ -175,13 +174,12 @@ class ComelitSerialBridge(
         """Specific method for updating data."""
         data = await self.api.get_all_devices()
 
-        if self.previous_devices:
+        if self.data:
             for dev_type in (CLIMATE, COVER, LIGHT, IRRIGATION, OTHER, SCENARIO):
                 await self._async_remove_stale_devices(
-                    self.previous_devices[dev_type], data[dev_type], dev_type
+                    self.data[dev_type], data[dev_type], dev_type
                 )
 
-        self.previous_devices = data.copy()
         return data
 
 
