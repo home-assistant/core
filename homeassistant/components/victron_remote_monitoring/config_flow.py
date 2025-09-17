@@ -226,9 +226,9 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             new_token = user_input[CONF_API_TOKEN]
+            site_id: int = reauth_entry.data[CONF_SITE_ID]
             try:
                 # Validate the token by fetching the site for the existing entry
-                site_id: int = reauth_entry.data[CONF_SITE_ID]
                 await self._async_validate_selected_site(new_token, site_id)
             except InvalidAuth:
                 errors["base"] = "invalid_auth"

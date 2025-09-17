@@ -1,149 +1,985 @@
 # serializer version: 1
-# name: test_sensors_snapshot
-  dict({
-    '123456|consumption_highest_peak_time_today': dict({
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_current_hour-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_current_hour',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Estimated energy consumption - Current hour',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_consumption_current_hour',
+    'unique_id': '123456|energy_consumption_current_hour',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_current_hour-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Victron Remote Monitoring Estimated energy consumption - Current hour',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_current_hour',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.2503',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_next_hour-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_next_hour',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Estimated energy consumption - Next hour',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_consumption_next_hour',
+    'unique_id': '123456|energy_consumption_next_hour',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_next_hour-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Victron Remote Monitoring Estimated energy consumption - Next hour',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_next_hour',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0004',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Estimated energy consumption - Today',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_consumption_estimate_today',
+    'unique_id': '123456|energy_consumption_estimate_today',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Victron Remote Monitoring Estimated energy consumption - Today',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.2507',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_today_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_today_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Estimated energy consumption - Today remaining',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_consumption_estimate_today_remaining',
+    'unique_id': '123456|energy_consumption_estimate_today_remaining',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_today_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Victron Remote Monitoring Estimated energy consumption - Today remaining',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_today_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0004',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_tomorrow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_tomorrow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Estimated energy consumption - Tomorrow',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_consumption_estimate_tomorrow',
+    'unique_id': '123456|energy_consumption_estimate_tomorrow',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_tomorrow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Victron Remote Monitoring Estimated energy consumption - Tomorrow',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_tomorrow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.5011',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_yesterday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_yesterday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Estimated energy consumption - Yesterday',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_consumption_estimate_yesterday',
+    'unique_id': '123456|energy_consumption_estimate_yesterday',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_yesterday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Victron Remote Monitoring Estimated energy consumption - Yesterday',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_yesterday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.0503',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_current_hour-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_current_hour',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Estimated energy production - Current hour',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_production_current_hour',
+    'unique_id': '123456|energy_production_current_hour',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_current_hour-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Victron Remote Monitoring Estimated energy production - Current hour',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_current_hour',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.2503',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_next_hour-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_next_hour',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Estimated energy production - Next hour',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_production_next_hour',
+    'unique_id': '123456|energy_production_next_hour',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_next_hour-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Victron Remote Monitoring Estimated energy production - Next hour',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_next_hour',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0004',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Estimated energy production - Today',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_production_estimate_today',
+    'unique_id': '123456|energy_production_estimate_today',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Victron Remote Monitoring Estimated energy production - Today',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.2507',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_today_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_today_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Estimated energy production - Today remaining',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_production_estimate_today_remaining',
+    'unique_id': '123456|energy_production_estimate_today_remaining',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_today_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Victron Remote Monitoring Estimated energy production - Today remaining',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_today_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0004',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_tomorrow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_tomorrow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Estimated energy production - Tomorrow',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_production_estimate_tomorrow',
+    'unique_id': '123456|energy_production_estimate_tomorrow',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_tomorrow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Victron Remote Monitoring Estimated energy production - Tomorrow',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_tomorrow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.5011',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_yesterday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_yesterday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Estimated energy production - Yesterday',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_production_estimate_yesterday',
+    'unique_id': '123456|energy_production_estimate_yesterday',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_yesterday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Victron Remote Monitoring Estimated energy production - Yesterday',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_yesterday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.0503',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_consumption_peak_time_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_highest_consumption_peak_time_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Highest consumption peak time - Today',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'consumption_highest_peak_time_today',
+    'unique_id': '123456|consumption_highest_peak_time_today',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_consumption_peak_time_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'entity_id': 'sensor.victron_remote_monitoring_highest_consumption_peak_time_today',
-      'state': '2025-04-24T10:00:00+00:00',
-      'state_class': None,
-      'suggested_display_precision': None,
-      'unit_of_measurement': None,
+      'friendly_name': 'Victron Remote Monitoring Highest consumption peak time - Today',
     }),
-    '123456|consumption_highest_peak_time_tomorrow': dict({
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_highest_consumption_peak_time_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-24T10:00:00+00:00',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_consumption_peak_time_tomorrow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_highest_consumption_peak_time_tomorrow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Highest consumption peak time - Tomorrow',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'consumption_highest_peak_time_tomorrow',
+    'unique_id': '123456|consumption_highest_peak_time_tomorrow',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_consumption_peak_time_tomorrow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'entity_id': 'sensor.victron_remote_monitoring_highest_consumption_peak_time_tomorrow',
-      'state': '2025-04-25T10:00:00+00:00',
-      'state_class': None,
-      'suggested_display_precision': None,
-      'unit_of_measurement': None,
+      'friendly_name': 'Victron Remote Monitoring Highest consumption peak time - Tomorrow',
     }),
-    '123456|consumption_highest_peak_time_yesterday': dict({
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_highest_consumption_peak_time_tomorrow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-25T10:00:00+00:00',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_consumption_peak_time_yesterday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_highest_consumption_peak_time_yesterday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Highest consumption peak time - Yesterday',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'consumption_highest_peak_time_yesterday',
+    'unique_id': '123456|consumption_highest_peak_time_yesterday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_consumption_peak_time_yesterday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'entity_id': 'sensor.victron_remote_monitoring_highest_consumption_peak_time_yesterday',
-      'state': '2025-04-23T10:00:00+00:00',
-      'state_class': None,
-      'suggested_display_precision': None,
-      'unit_of_measurement': None,
+      'friendly_name': 'Victron Remote Monitoring Highest consumption peak time - Yesterday',
     }),
-    '123456|energy_consumption_current_hour': dict({
-      'device_class': 'energy',
-      'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_current_hour',
-      'state': '2.2503',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'suggested_display_precision': None,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_highest_consumption_peak_time_yesterday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-23T10:00:00+00:00',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_peak_time_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
     }),
-    '123456|energy_consumption_estimate_today': dict({
-      'device_class': 'energy',
-      'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_today',
-      'state': '4.2507',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'suggested_display_precision': None,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_highest_peak_time_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
     }),
-    '123456|energy_consumption_estimate_today_remaining': dict({
-      'device_class': 'energy',
-      'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_today_remaining',
-      'state': '2.0004',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'suggested_display_precision': None,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    'name': None,
+    'options': dict({
     }),
-    '123456|energy_consumption_estimate_tomorrow': dict({
-      'device_class': 'energy',
-      'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_tomorrow',
-      'state': '1.5011',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'suggested_display_precision': None,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    '123456|energy_consumption_estimate_yesterday': dict({
-      'device_class': 'energy',
-      'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_yesterday',
-      'state': '10.0503',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'suggested_display_precision': None,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    '123456|energy_consumption_next_hour': dict({
-      'device_class': 'energy',
-      'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_next_hour',
-      'state': '2.0004',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'suggested_display_precision': None,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    '123456|energy_production_current_hour': dict({
-      'device_class': 'energy',
-      'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_current_hour',
-      'state': '2.2503',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'suggested_display_precision': None,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    '123456|energy_production_estimate_today': dict({
-      'device_class': 'energy',
-      'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_today',
-      'state': '4.2507',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'suggested_display_precision': None,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    '123456|energy_production_estimate_today_remaining': dict({
-      'device_class': 'energy',
-      'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_today_remaining',
-      'state': '2.0004',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'suggested_display_precision': None,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    '123456|energy_production_estimate_tomorrow': dict({
-      'device_class': 'energy',
-      'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_tomorrow',
-      'state': '1.5011',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'suggested_display_precision': None,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    '123456|energy_production_estimate_yesterday': dict({
-      'device_class': 'energy',
-      'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_yesterday',
-      'state': '10.0503',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'suggested_display_precision': None,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    '123456|energy_production_next_hour': dict({
-      'device_class': 'energy',
-      'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_next_hour',
-      'state': '2.0004',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'suggested_display_precision': None,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    '123456|power_highest_peak_time_today': dict({
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Highest peak time - Today',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_highest_peak_time_today',
+    'unique_id': '123456|power_highest_peak_time_today',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_peak_time_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'entity_id': 'sensor.victron_remote_monitoring_highest_peak_time_today',
-      'state': '2025-04-24T10:00:00+00:00',
-      'state_class': None,
-      'suggested_display_precision': None,
-      'unit_of_measurement': None,
+      'friendly_name': 'Victron Remote Monitoring Highest peak time - Today',
     }),
-    '123456|power_highest_peak_time_tomorrow': dict({
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_highest_peak_time_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-24T10:00:00+00:00',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_peak_time_tomorrow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_highest_peak_time_tomorrow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Highest peak time - Tomorrow',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_highest_peak_time_tomorrow',
+    'unique_id': '123456|power_highest_peak_time_tomorrow',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_peak_time_tomorrow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'entity_id': 'sensor.victron_remote_monitoring_highest_peak_time_tomorrow',
-      'state': '2025-04-25T10:00:00+00:00',
-      'state_class': None,
-      'suggested_display_precision': None,
-      'unit_of_measurement': None,
+      'friendly_name': 'Victron Remote Monitoring Highest peak time - Tomorrow',
     }),
-    '123456|power_highest_peak_time_yesterday': dict({
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_highest_peak_time_tomorrow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-25T10:00:00+00:00',
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_peak_time_yesterday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.victron_remote_monitoring_highest_peak_time_yesterday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Highest peak time - Yesterday',
+    'platform': 'victron_remote_monitoring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_highest_peak_time_yesterday',
+    'unique_id': '123456|power_highest_peak_time_yesterday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_peak_time_yesterday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'entity_id': 'sensor.victron_remote_monitoring_highest_peak_time_yesterday',
-      'state': '2025-04-23T10:00:00+00:00',
-      'state_class': None,
-      'suggested_display_precision': None,
-      'unit_of_measurement': None,
+      'friendly_name': 'Victron Remote Monitoring Highest peak time - Yesterday',
     }),
+    'context': <ANY>,
+    'entity_id': 'sensor.victron_remote_monitoring_highest_peak_time_yesterday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-23T10:00:00+00:00',
   })
 # ---
