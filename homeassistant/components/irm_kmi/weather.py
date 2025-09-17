@@ -51,13 +51,7 @@ class IrmKmiWeather(
         """Create a new instance of the weather entity from a configuration entry."""
         IrmKmiBaseEntity.__init__(self, entry)
         SingleCoordinatorWeatherEntity.__init__(self, entry.runtime_data)
-        self._name = entry.title
         self._attr_unique_id = entry.data[CONF_UNIQUE_ID]
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     @property
     def current_weather(self) -> CurrentWeatherData:
