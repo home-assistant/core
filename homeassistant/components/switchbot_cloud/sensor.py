@@ -128,6 +128,7 @@ DURATION_OF_USED_DESCRIPTION = SensorEntityDescription(
     device_class=SensorDeviceClass.DURATION,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTime.MINUTES,
+)
 
 LIGHTLEVEL_DESCRIPTION = SensorEntityDescription(
     key="lightLevel",
