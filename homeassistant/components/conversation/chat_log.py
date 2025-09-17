@@ -569,7 +569,7 @@ class ChatLog:
         if llm_api:
             prompt_parts.append(llm_api.api_prompt)
 
-        api_ids = (
+        llm_api_ids = (
             (
                 [api.id for api in llm_api.api.llm_apis]
                 if hasattr(llm_api.api, "llm_apis")
@@ -579,7 +579,7 @@ class ChatLog:
             else []
         )
 
-        if llm.LLM_API_ASSIST not in api_ids:
+        if llm.LLM_API_ASSIST not in llm_api_ids:
             prompt_parts.append(
                 await self._async_expand_prompt_template(
                     llm_context,
