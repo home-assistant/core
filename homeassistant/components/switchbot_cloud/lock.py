@@ -21,9 +21,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
-    entry_options: list = config.options.get("SetNightLatchMode", [])
     async_add_entities(
-        SwitchBotCloudLock(data.api, device, coordinator, entry_options)
+        SwitchBotCloudLock(data.api, device, coordinator)
         for device, coordinator in data.devices.locks
     )
 
@@ -46,12 +45,10 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         api: SwitchBotAPI,
         device: Device | Remote,
         coordinator: SwitchBotCoordinator,
-        entry_options: list,
     ) -> None:
         """Init devices."""
         super().__init__(api, device, coordinator)
         self.__model = device.device_type
-        self.__entry_options = entry_options
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
@@ -79,9 +76,5 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
 
     def __set_features(self) -> None:
         """Set features ConfigFlow options."""
-        if (
-            self.device_entry
-            and self.device_entry.id in self.__entry_options
-            and self.__model in LockV2Commands.get_supported_devices()
-        ):
+        if self.device_entry and self.__model in LockV2Commands.get_supported_devices():
             self._attr_supported_features = LockEntityFeature.OPEN
