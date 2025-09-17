@@ -204,8 +204,10 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
 
         target_temperature = self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
         if target_temperature:
-            return target_temperature.value_as_float
-
+            try:
+                return target_temperature.value_as_float
+            except TypeError:
+                return target_temperature.value_as_int
         return None
 
     @property
