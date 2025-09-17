@@ -284,19 +284,20 @@ class SonosSpeaker:
         async context as it is a blocking function.
         """
         state = getattr(self.soco, soco_attribute, None)
-        assert isinstance(state, str), (
-            f"Expected state to be str, got {type(state).__name__}"
-        )
         value: int | None
-        try:
-            value = int(state)
-        except ValueError:
-            _LOGGER.error(
-                "Invalid value for %s %s",
-                speaker_attribute,
-                state,
-            )
+        if state is None:
+            _LOGGER.error("Missing value for %s", speaker_attribute)
             value = None
+        else:
+            try:
+                value = int(state)
+            except (TypeError, ValueError):
+                _LOGGER.error(
+                    "Invalid value for %s %s",
+                    speaker_attribute,
+                    state,
+                )
+                value = None
         setattr(self, speaker_attribute, value)
         return value
 
