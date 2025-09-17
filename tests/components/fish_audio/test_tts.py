@@ -6,12 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.fish_audio.const import (
-    CONF_API_KEY,
-    CONF_BACKEND,
-    CONF_VOICE_ID,
-    DOMAIN,
-)
+from homeassistant.components.fish_audio.const import CONF_BACKEND, CONF_VOICE_ID
 import homeassistant.components.fish_audio.tts as tts_mod
 from homeassistant.core import HomeAssistant
 
@@ -23,17 +18,11 @@ async def test_tts_happy_path_builds_request_and_returns_audio(
     hass: HomeAssistant,
     mock_async_client: MagicMock,  # patched constructor => returns session double
     monkeypatch: pytest.MonkeyPatch,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Entity builds TTSRequest, passes backend, and returns concatenated audio."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "key123"},
-        options={CONF_VOICE_ID: "voice-123", CONF_BACKEND: "s1"},
-        title="Fish Audio",
-    )
-
     session = mock_async_client.return_value
-    entry.runtime_data = session
+    mock_config_entry.runtime_data = session
 
     captured: dict[str, object] = {}
 
@@ -52,10 +41,10 @@ async def test_tts_happy_path_builds_request_and_returns_audio(
     added: list = []
 
     # NOTE: sync callback (NOT async)!
-    def add_entities(entities):
+    def add_entities(entities, **kwargs):
         added.extend(entities)
 
-    await tts_mod.async_setup_entry(hass, entry, add_entities)
+    await tts_mod.async_setup_entry(hass, mock_config_entry, add_entities)
     assert len(added) == 1
     entity = added[0]
 
@@ -80,16 +69,13 @@ async def test_tts_missing_voice_id_returns_none(
     hass: HomeAssistant,
     mock_async_client: MagicMock,
     monkeypatch: pytest.MonkeyPatch,
+    mock_config_entry: MockConfigEntry,
+    mock_tts_subentry: MagicMock,
 ) -> None:
     """If voice_id is missing, entity returns None and does not call session.tts."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "key123"},
-        options={CONF_BACKEND: "s1"},  # voice id intentionally missing
-        title="Fish Audio",
-    )
+    mock_tts_subentry.data = {CONF_BACKEND: "s1"}  # voice id intentionally missing
     session = mock_async_client.return_value
-    entry.runtime_data = session
+    mock_config_entry.runtime_data = session
 
     session.tts = MagicMock()
 
@@ -100,10 +86,10 @@ async def test_tts_missing_voice_id_returns_none(
 
     added: list = []
 
-    def add_entities(entities):
+    def add_entities(entities, **kwargs):
         added.extend(entities)
 
-    await tts_mod.async_setup_entry(hass, entry, add_entities)
+    await tts_mod.async_setup_entry(hass, mock_config_entry, add_entities)
     assert len(added) == 1
     entity = added[0]
     entity.hass = hass  # attach hass
@@ -118,16 +104,15 @@ async def test_tts_missing_backend_returns_none(
     hass: HomeAssistant,
     mock_async_client: MagicMock,
     monkeypatch: pytest.MonkeyPatch,
+    mock_config_entry: MockConfigEntry,
+    mock_tts_subentry: MagicMock,
 ) -> None:
     """If backend is missing, entity returns None and does not call session.tts."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "key123"},
-        options={CONF_VOICE_ID: "voice-123"},  # backend intentionally missing
-        title="Fish Audio",
-    )
+    mock_tts_subentry.data = {
+        CONF_VOICE_ID: "voice-123"
+    }  # backend intentionally missing
     session = mock_async_client.return_value
-    entry.runtime_data = session
+    mock_config_entry.runtime_data = session
 
     session.tts = MagicMock()
 
@@ -138,10 +123,10 @@ async def test_tts_missing_backend_returns_none(
 
     added: list = []
 
-    def add_entities(entities):
+    def add_entities(entities, **kwargs):
         added.extend(entities)
 
-    await tts_mod.async_setup_entry(hass, entry, add_entities)
+    await tts_mod.async_setup_entry(hass, mock_config_entry, add_entities)
     assert len(added) == 1
     entity = added[0]
     entity.hass = hass  # attach hass
@@ -156,16 +141,11 @@ async def test_tts_api_failure_returns_none(
     hass: HomeAssistant,
     mock_async_client: MagicMock,
     monkeypatch: pytest.MonkeyPatch,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Configured correctly, but underlying API call fails -> return None (graceful)."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "key123"},
-        options={CONF_VOICE_ID: "voice-xyz", CONF_BACKEND: "s1"},
-        title="Fish Audio",
-    )
     session = mock_async_client.return_value
-    entry.runtime_data = session
+    mock_config_entry.runtime_data = session
 
     # Simulate API error from session.tts
     def boom(*, request, backend):
@@ -181,10 +161,10 @@ async def test_tts_api_failure_returns_none(
 
     added: list = []
 
-    def add_entities(entities):
+    def add_entities(entities, **kwargs):
         added.extend(entities)
 
-    await tts_mod.async_setup_entry(hass, entry, add_entities)
+    await tts_mod.async_setup_entry(hass, mock_config_entry, add_entities)
     assert len(added) == 1
     entity = added[0]
     entity.hass = hass
