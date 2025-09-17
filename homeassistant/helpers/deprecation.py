@@ -138,7 +138,7 @@ def deprecated_function[**_P, _R](
     return deprecated_decorator
 
 
-def deprecated_hass_binding[**_P, _T](
+def deprecated_hass_argument[**_P, _T](
     breaks_in_ha_version: str | None = None,
 ) -> Callable[[Callable[_P, _T]], Callable[_P, _T]]:
     """Decorate function to indicate that first argument hass will be ignored."""

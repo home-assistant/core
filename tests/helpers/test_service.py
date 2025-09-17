@@ -1787,7 +1787,7 @@ async def test_register_admin_service_return_response(
 
 _DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE = (
     "The deprecated argument hass was passed to verify_domain_control. It will be"
-    " removed in HA Core 2026.2. Use verify_domain_control without hass argument"
+    " removed in HA Core 2026.10. Use verify_domain_control without hass argument"
     " instead"
 )
 

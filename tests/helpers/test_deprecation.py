@@ -17,7 +17,7 @@ from homeassistant.helpers.deprecation import (
     check_if_deprecated_constant,
     deprecated_class,
     deprecated_function,
-    deprecated_hass_binding,
+    deprecated_hass_argument,
     deprecated_substitute,
     dir_with_deprecated_constants,
     get_deprecated,
@@ -667,7 +667,7 @@ def test_deprecated_hass_binding(
 
     calls = []
 
-    @deprecated_hass_binding(breaks_in_ha_version=breaks_in_ha_version)
+    @deprecated_hass_argument(breaks_in_ha_version=breaks_in_ha_version)
     def mock_deprecated_function(*args: str) -> None:
         calls.append(args)
 

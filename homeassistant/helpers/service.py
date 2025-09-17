@@ -60,7 +60,7 @@ from . import (
     template,
     translation,
 )
-from .deprecation import deprecated_class, deprecated_function, deprecated_hass_binding
+from .deprecation import deprecated_class, deprecated_function, deprecated_hass_argument
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
@@ -995,7 +995,7 @@ def async_register_admin_service(
     )
 
 
-@deprecated_hass_binding(breaks_in_ha_version="2026.2")
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 @callback
 def verify_domain_control(
     domain: str,
