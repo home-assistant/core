@@ -53,7 +53,7 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
         """Define the user step of the configuration flow."""
         errors: dict = {}
 
-        home_location = {
+        default_location = {
             ATTR_LATITUDE: self.hass.config.latitude,
             ATTR_LONGITUDE: self.hass.config.longitude,
         }
@@ -64,19 +64,18 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
             lat: float = user_input[CONF_LOCATION][ATTR_LATITUDE]
             lon: float = user_input[CONF_LOCATION][ATTR_LONGITUDE]
 
-            api_data = {}
             try:
                 api_data = await IrmKmiApiClient(
                     session=async_get_clientsession(self.hass),
                     user_agent=USER_AGENT,
                 ).get_forecasts_coord({"lat": lat, "long": lon})
             except IrmKmiApiError:
-                errors["base"] = "api_error"
                 _LOGGER.exception(
                     "Encountered an unexpected error while configuring the integration"
                 )
+                return self.async_abort(reason="api_error")
 
-            if not errors and api_data["cityName"] in OUT_OF_BENELUX:
+            if api_data["cityName"] in OUT_OF_BENELUX:
                 errors[CONF_LOCATION] = "out_of_benelux"
 
             if not errors:
@@ -89,10 +88,15 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(title=name, data=user_input)
 
+            default_location = user_input[CONF_LOCATION]
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_LOCATION, default=home_location): LocationSelector()}
+                {
+                    vol.Required(
+                        CONF_LOCATION, default=default_location
+                    ): LocationSelector()
+                }
             ),
             errors=errors,
         )

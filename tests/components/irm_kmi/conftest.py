@@ -50,11 +50,14 @@ def mock_get_forecast_in_benelux():
 
 
 @pytest.fixture
-def mock_get_forecast_out_benelux():
+def mock_get_forecast_out_benelux_then_in_belgium():
     """Mock a call to IrmKmiApiClient.get_forecasts_coord() so that it returns something outside Benelux."""
     with patch(
         "homeassistant.components.irm_kmi.config_flow.IrmKmiApiClient.get_forecasts_coord",
-        return_value={"cityName": "Outside the Benelux (Brussels)", "country": "BE"},
+        side_effect=[
+            {"cityName": "Outside the Benelux (Brussels)", "country": "BE"},
+            {"cityName": "Brussels", "country": "BE"},
+        ],
     ):
         yield
 

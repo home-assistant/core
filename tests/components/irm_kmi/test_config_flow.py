@@ -64,7 +64,7 @@ async def test_user_flow_home(
 async def test_config_flow_location_out_benelux(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
-    mock_get_forecast_out_benelux: MagicMock,
+    mock_get_forecast_out_benelux_then_in_belgium: MagicMock,
 ) -> None:
     """Test configuration flow with a zone outside of Benelux."""
     result = await hass.config_entries.flow.async_init(
@@ -79,6 +79,12 @@ async def test_config_flow_location_out_benelux(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert CONF_LOCATION in result.get("errors")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_with_api_error(
@@ -96,9 +102,7 @@ async def test_config_flow_with_api_error(
         user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
     )
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
-    assert "base" in result.get("errors")
+    assert result.get("type") is FlowResultType.ABORT
 
 
 async def test_option_flow(
