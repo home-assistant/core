@@ -993,6 +993,9 @@
       }
     },
     "valve": {
+      "valve": {
+        "name": "Valve"
+      },
       "indexed_valve": {
         "name": "Valve {index}"
       }
