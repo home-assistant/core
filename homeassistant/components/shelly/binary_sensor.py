@@ -340,6 +340,14 @@ async def async_setup_entry(
                 hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
             )
 
+            async_remove_orphaned_entities(
+                hass,
+                config_entry.entry_id,
+                coordinator.mac,
+                BINARY_SENSOR_PLATFORM,
+                coordinator.device.status,
+            )
+
             # the user can remove virtual components from the device configuration, so
             # we need to remove orphaned entities
             virtual_binary_sensor_ids = get_virtual_component_ids(
