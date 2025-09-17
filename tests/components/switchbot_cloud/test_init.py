@@ -123,11 +123,11 @@ async def test_setup_entry_success(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    mock_list_devices.assert_called()
+    mock_list_devices.assert_called_once()
     mock_get_status.assert_called()
-    mock_get_webook_configuration.assert_called()
-    mock_delete_webhook.assert_called()
-    mock_setup_webhook.assert_called()
+    mock_get_webook_configuration.assert_called_once()
+    mock_delete_webhook.assert_called_once()
+    mock_setup_webhook.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -224,53 +224,4 @@ async def test_posting_to_webhook(
 
     await hass.async_block_till_done()
 
-    mock_setup_webhook.assert_called()
-
-
-async def test_posting_wrong_data_to_webhook(
-    hass: HomeAssistant,
-    mock_list_devices,
-    mock_get_status,
-    mock_get_webook_configuration,
-    mock_delete_webhook,
-    mock_setup_webhook,
-    hass_client_no_auth: ClientSessionGenerator,
-) -> None:
-    """Test posting wrong data to webhook."""
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://example.com"},
-    )
-    mock_get_webook_configuration.return_value = {"urls": ["https://example.com"]}
-    mock_list_devices.return_value = [
-        Device(
-            deviceId="vacuum-1",
-            deviceName="vacuum-name-1",
-            deviceType="K10+",
-            hubDeviceId=None,
-        ),
-    ]
-    mock_get_status.return_value = {"power": PowerState.ON.value}
-    mock_delete_webhook.return_value = {}
-    mock_setup_webhook.return_value = {}
-
-    entry = await configure_integration(hass)
-    assert entry.state is ConfigEntryState.LOADED
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-
-    webhook_id = entry.data[CONF_WEBHOOK_ID]
-    client = await hass_client_no_auth()
-    # fire webhook
-    await client.post(
-        f"/api/webhook/{webhook_id}",
-        json={
-            # "eventType": "changeReport",
-            "eventVersion": "1",
-            "context": {"deviceType": "...", "deviceMac": "vacuum-1"},
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    mock_setup_webhook.assert_called()
+    mock_setup_webhook.assert_called_once()

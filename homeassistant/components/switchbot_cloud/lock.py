@@ -26,14 +26,6 @@ async def async_setup_entry(
         for device, coordinator in data.devices.locks
     )
 
-    config.async_on_unload(config.add_update_listener(_async_update_listener))
-
-
-async def _async_update_listener(hass: HomeAssistant, config: ConfigEntry) -> None:
-    """Deal with entry update."""
-    await hass.data[DOMAIN][config.entry_id].api.close()
-    await hass.config_entries.async_reload(config.entry_id)
-
 
 class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
     """Representation of a SwitchBot lock."""
