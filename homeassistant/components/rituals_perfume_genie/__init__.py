@@ -80,12 +80,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # The API provided by Rituals is currently rate limited to 30 requests
     # per hour per IP address. To avoid hitting this limit, we will adjust
     # the polling interval based on the number of diffusers one has.
-    update_interval = UPDATE_INTERVAL * len(account_devices)
+    update_interval = UPDATE_INTERVAL * max(1, len(account_devices))
 
     # Create a coordinator for each diffuser
     coordinators = {
         diffuser.hublot: RitualsDataUpdateCoordinator(
-            hass, entry, diffuser, update_interval
+            hass, entry, account, diffuser, update_interval
         )
         for diffuser in account_devices
     }

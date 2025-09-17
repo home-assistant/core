@@ -53,25 +53,33 @@ class RitualsPerfumeGenieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await account.authenticate()
-        except ClientResponseError:
-            _LOGGER.exception("Unexpected response")
+            _LOGGER.debug("CF:user authenticate OK for %s", account.email)
+        except ClientResponseError as err:
+            _LOGGER.warning(
+                "CF:user HTTP error during auth: status=%s url=%s",
+                getattr(err, "status", "?"),
+                getattr(getattr(err, "request_info", None), "real_url", None),
+            )
             errors["base"] = "cannot_connect"
-        except AuthenticationException:
+            _LOGGER.debug("CF:user returning form with error=Cannot connect")
+        except AuthenticationException as err:
+            _LOGGER.debug("CF:user invalid_auth: %r", err)
             errors["base"] = "invalid_auth"
+            _LOGGER.debug("CF:user returning form with error=Invalid auth")
         except Exception:
-            _LOGGER.exception("Unexpected exception")
+            _LOGGER.exception("CF:user unexpected exception")
             errors["base"] = "unknown"
+            _LOGGER.debug("CF:user returning form with error=Unknown")
         else:
             await self.async_set_unique_id(account.email)
             self._abort_if_unique_id_configured()
-
-            # In V2 we store email + password instead of account_hash
+            _LOGGER.debug("CF:user creating entry for %s", account.email)
             return self.async_create_entry(
                 title=account.email,
                 data={
                     USERNAME: user_input[CONF_EMAIL],
                     PASSWORD: user_input[CONF_PASSWORD],
-                    ACCOUNT_HASH: "",  # keep legacy field so existing tests/setup don’t break
+                    ACCOUNT_HASH: "",
                 },
             )
 
