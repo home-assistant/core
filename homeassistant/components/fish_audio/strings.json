@@ -95,7 +95,8 @@
         "no_model_selected": "You must select a voice to continue."
       },
       "abort": {
-        "already_configured": "This TTS voice is already configured."
+        "already_configured": "This TTS voice is already configured.",
+        "reconfigure_successful": "Your TTS voice has been updated successfully. The integration will now reload with the new settings."
       }
     }
   },
