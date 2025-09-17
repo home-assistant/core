@@ -567,7 +567,7 @@ class ThinQEnergySensorEntityDescription(SensorEntityDescription):
     state_class = SensorStateClass.TOTAL
     native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     suggested_display_precision = 0
-    usage_period: str = USAGE_MONTHLY
+    usage_period: str
     start_date_fn: Callable[[datetime], datetime]
     end_date_fn: Callable[[datetime], datetime]
     update_interval: timedelta = timedelta(days=1)
@@ -584,12 +584,14 @@ ENERGY_USAGE_SENSORS: tuple[ThinQEnergySensorEntityDescription, ...] = (
     ThinQEnergySensorEntityDescription(
         key="this_month",
         translation_key="energy_usage_this_month",
+        usage_period=USAGE_MONTHLY,
         start_date_fn=lambda today: today,
         end_date_fn=lambda today: today,
     ),
     ThinQEnergySensorEntityDescription(
         key="last_month",
         translation_key="energy_usage_last_month",
+        usage_period=USAGE_MONTHLY,
         start_date_fn=lambda today: today.replace(day=1) - timedelta(days=1),
         end_date_fn=lambda today: today.replace(day=1) - timedelta(days=1),
     ),
@@ -754,15 +756,15 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         await super().async_added_to_hass()
-        if self.coordinator.update_energy_in_time is None:
+        if self.coordinator.update_energy_at_time_of_day is None:
             # random time 01:00:00 ~ 02:59:00
-            self.coordinator.update_energy_in_time = time(
+            self.coordinator.update_energy_at_time_of_day = time(
                 hour=random.randint(1, 2), minute=random.randint(0, 59)
             )
             _LOGGER.debug(
                 "[%s] Set energy update time: %s",
                 self.coordinator.device_name,
-                self.coordinator.update_energy_in_time,
+                self.coordinator.update_energy_at_time_of_day,
             )
 
         await self._async_update_and_schedule()
@@ -789,11 +791,11 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
             dt_util.get_time_zone(self.coordinator.hass.config.time_zone)
         )
         next_update = local_now + self.entity_description.update_interval
-        if self.coordinator.update_energy_in_time is not None:
-            # calculate next_update time by combine tomorrow and update_energy_in_time
+        if self.coordinator.update_energy_at_time_of_day is not None:
+            # calculate next_update time by combining tomorrow and update_energy_at_time_of_day
             next_update = datetime.combine(
                 (next_update).date(),
-                self.coordinator.update_energy_in_time,
+                self.coordinator.update_energy_at_time_of_day,
                 next_update.tzinfo,
             )
         try:
@@ -806,14 +808,14 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
             )
         except ThinQAPIException as exc:
             _LOGGER.warning(
-                "[%s:%s] Failed to fetch. reason=%s",
+                "[%s:%s] Failed to fetch energy usage data. reason=%s",
                 self.coordinator.device_name,
                 self.entity_description.key,
                 exc,
             )
         finally:
             _LOGGER.debug(
-                "[%s:%s] async_update_and_schedule next: %s, native_value: %s",
+                "[%s:%s] async_update_and_schedule next_update: %s, native_value: %s",
                 self.coordinator.device_name,
                 self.entity_description.key,
                 next_update,
