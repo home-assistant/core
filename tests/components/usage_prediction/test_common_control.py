@@ -144,6 +144,12 @@ async def test_multiple_entities_in_one_call(hass: HomeAssistant) -> None:
         suggested_object_id="living_room",
         hidden_by=er.RegistryEntryHider.USER,
     )
+    ent_reg.async_get_or_create(
+        "light",
+        "test",
+        "kitchen",
+        suggested_object_id="kitchen",
+    )
 
     with freeze_time("2023-07-01 10:00:00+00:00"):  # Morning
         hass.bus.async_fire(
