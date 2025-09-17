@@ -36,8 +36,8 @@ async def platform_binary_sensor_fixture():
 @pytest.mark.parametrize(
     ("level", "result"),
     [
-        (0, "off"),
-        (1, "low"),
+        ("0", "off"),
+        ("1", "low"),
         ("2", "medium"),
         ("3", "high"),
         ("4", "max"),
@@ -77,7 +77,7 @@ async def test_select_dialog_invalid_level(
 
     speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = 10
+    soco.dialog_level = "10"
 
     with caplog.at_level(logging.WARNING):
         await async_setup_sonos()
@@ -131,7 +131,7 @@ async def test_select_dialog_level_set(
 
     speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = 0
+    soco.dialog_level = "0"
 
     await async_setup_sonos()
 
@@ -170,12 +170,12 @@ async def test_select_dialog_level_event(
 
     speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = 0
+    soco.dialog_level = "0"
 
     await async_setup_sonos()
 
     event = create_rendering_control_event(soco)
-    event.variables[ATTR_DIALOG_LEVEL] = 3
+    event.variables[ATTR_DIALOG_LEVEL] = "3"
     soco.renderingControl.subscribe.return_value._callback(event)
     await hass.async_block_till_done(wait_background_tasks=True)
 
