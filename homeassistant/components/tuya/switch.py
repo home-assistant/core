@@ -1041,15 +1041,18 @@ def _check_deprecation(
     Returns:
         `True` if the entity should be created, `False` otherwise.
     """
+    # Not deprecated, just create it
     if not isinstance(description, TuyaDeprecatedSwitchEntityDescription):
         return True
 
     unique_id = f"tuya.{device.id}{description.key}"
     entity_id = entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, unique_id)
 
+    # Deprecated and not present in registry, skip creation
     if not entity_id or not (entity_entry := entity_registry.async_get(entity_id)):
         return False
 
+    # Deprecated and present in registry but disabled, remove it and skip creation
     if entity_entry.disabled:
         entity_registry.async_remove(entity_id)
         async_delete_issue(
@@ -1059,6 +1062,7 @@ def _check_deprecation(
         )
         return False
 
+    # Deprecated and present in registry and enabled, raise issue and create it
     async_create_issue(
         hass,
         DOMAIN,
