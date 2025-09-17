@@ -193,7 +193,7 @@
     },
     "unsupported_docker_version": {
       "title": "Unsupported system - Docker version",
-      "description": "System is unsupported because the wrong version of Docker is in use. Use the link to learn the correct version and how to fix this."
+      "description": "System is unsupported because the Docker version is out of date. For information about the required version and how to fix this, select Learn more."
     },
     "unsupported_job_conditions": {
       "title": "Unsupported system - Protections disabled",
@@ -209,7 +209,7 @@
     },
     "unsupported_os": {
       "title": "Unsupported system - Operating System",
-      "description": "System is unsupported because the operating system in use is not tested or maintained for use with Supervisor. Use the link to which operating systems are supported and how to fix this."
+      "description": "System is unsupported because the operating system in use is not tested or maintained for use with Supervisor. For information about supported operating systems and how to fix this, select Learn more."
     },
     "unsupported_os_agent": {
       "title": "Unsupported system - OS-Agent issues",
