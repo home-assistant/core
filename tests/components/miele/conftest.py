@@ -186,7 +186,7 @@ async def push_data_and_actions(
 
 @pytest.fixture
 def mock_now() -> Generator[MagicMock]:
-    """Fixture to mock homeassistant.util.dt.now()."""
+    """Fixture to mock homeassistant.util.dt.utcnow()."""
     fixed_now = datetime(2025, 5, 31, 12, 30, tzinfo=UTC)
-    with patch("homeassistant.util.dt.now", return_value=fixed_now) as mock:
+    with patch("homeassistant.util.dt.utcnow", return_value=fixed_now) as mock:
         yield mock

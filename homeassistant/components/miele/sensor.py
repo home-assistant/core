@@ -109,7 +109,7 @@ def _convert_start_timestamp(
     elapsed_time_list: list[int], start_time_list: list[int]
 ) -> datetime | None:
     """Convert raw values representing time into start timestamp."""
-    now = dt_util.now()
+    now = dt_util.utcnow()
     elapsed_duration = _convert_duration(elapsed_time_list)
     delayed_start_duration = _convert_duration(start_time_list)
     if (elapsed_duration is None or elapsed_duration == 0) and (
@@ -128,7 +128,7 @@ def _convert_finish_timestamp(
     remaining_time_list: list[int], start_time_list: list[int]
 ) -> datetime | None:
     """Convert raw values representing time into finish timestamp."""
-    now = dt_util.now()
+    now = dt_util.utcnow()
     program_duration = _convert_duration(remaining_time_list)
     delayed_start_duration = _convert_duration(start_time_list)
     if program_duration is None or program_duration == 0:
