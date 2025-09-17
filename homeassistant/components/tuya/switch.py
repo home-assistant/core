@@ -1036,10 +1036,10 @@ def _check_deprecation(
     description: SwitchEntityDescription,
     entity_registry: er.EntityRegistry,
 ) -> bool:
-    r"""Check entity deprecation.
+    """Check entity deprecation.
 
     Returns:
-        True if the entity should be created, or False if the entity is deprecated and should not be created.
+        `True` if the entity should be created, `False` otherwise.
     """
     if not isinstance(description, TuyaDeprecatedSwitchEntityDescription):
         return True
