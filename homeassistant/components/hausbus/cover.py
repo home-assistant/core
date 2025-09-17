@@ -50,12 +50,6 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
-        "cover_toggle",
-        {},
-        "async_cover_toggle",
-    )
-
-    platform.async_register_entity_service(
         "cover_set_configuration",
         {
             vol.Required("close_time", default=30): vol.All(
@@ -183,11 +177,6 @@ class HausbusCover(HausbusEntity, CoverEntity):
             self._attr_extra_state_attributes["invert_direction"] = (
                 data.getOptions().isInvertDirection()
             )
-
-    async def async_cover_toggle(self):
-        """Starts the cover in the opposite direction than last time."""
-        LOGGER.debug("async_cover_toggle")
-        self._channel.start(EDirection.TOGGLE)
 
     async def async_cover_set_configuration(
         self, close_time: int, open_time: int, invert_direction: bool

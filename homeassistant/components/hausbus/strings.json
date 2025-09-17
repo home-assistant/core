@@ -345,11 +345,6 @@
         }
       }
     },
-    "cover_toggle": {
-      "name": "Toggle cover",
-      "description": "Start the cover in the opposite direction than last time",
-      "fields": {}
-    },
     "cover_set_configuration": {
       "name": "Configure cover",
       "description": "Set configuration values for a cover channel",

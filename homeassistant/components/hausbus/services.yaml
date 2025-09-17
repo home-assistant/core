@@ -8,12 +8,7 @@ reset_device:
       integration: hausbus
   fields: {}
 
-# Rolladen Services
-cover_toggle:
-  target:
-    entity:
-      domain: cover
-
+# Cover Services
 cover_set_configuration:
   target:
     entity:

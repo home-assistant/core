@@ -51,7 +51,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
 
     # Creates a button to manually start device discovery
     hass.async_create_task(gateway.createDiscoveryButton())
-
     return True
 
 
