@@ -385,7 +385,7 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             if (voice_id := user_input.get(CONF_VOICE_ID)) and (
-                user_input.get(CONF_BACKEND)
+                backend := user_input.get(CONF_BACKEND)
             ):
                 self.config_data.update(user_input)
                 if self._is_new:
@@ -396,10 +396,13 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
 
                     return await self.async_step_name(default=voice_name)
 
+                unique_id = f"{voice_id}-{backend}"
+
                 return self.async_update_and_abort(
                     self._get_entry(),
                     self._get_reconfigure_subentry(),
                     data=self.config_data,
+                    unique_id=unique_id,
                 )
             errors["base"] = "no_model_selected"
 
