@@ -3,62 +3,36 @@
 import pytest
 
 from homeassistant.components import media_source
-from homeassistant.components.ai_task import ImageData
+from homeassistant.components.ai_task.media_source import async_get_media_source
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 
-@pytest.fixture(name="image_id")
-async def mock_image_generate(hass: HomeAssistant) -> str:
-    """Mock image generation and return the image_id."""
-    image_storage = hass.data.setdefault("ai_task_images", {})
-    filename = "2025-06-15_150640_test_task.png"
-    image_storage[filename] = ImageData(
-        data=b"A",
-        timestamp=1750000000,
-        mime_type="image/png",
-        title="Mock Image",
+async def test_local_media_source(hass: HomeAssistant, init_components: None) -> None:
+    """Test that the image media source is created."""
+    item = await media_source.async_browse_media(hass, "media-source://")
+
+    assert any(c.title == "AI Generated Images" for c in item.children)
+
+    source = await async_get_media_source(hass)
+    assert isinstance(source, media_source.local_source.LocalSource)
+    assert source.name == "AI Generated Images"
+    assert source.domain == "ai_task"
+    assert list(source.media_dirs) == ["image"]
+    # Depending on Docker, the default is one of the two paths
+    assert source.media_dirs["image"] in (
+        "/media/ai_task/image",
+        hass.config.path("media/ai_task/image"),
     )
-    return filename
+    assert source.url_prefix == "/ai_task"
 
-
-async def test_browsing(
-    hass: HomeAssistant, init_components: None, image_id: str
-) -> None:
-    """Test browsing image media source."""
-    item = await media_source.async_browse_media(hass, "media-source://ai_task")
-
-    assert item is not None
-    assert item.title == "AI Generated Images"
-    assert len(item.children) == 1
-    assert item.children[0].media_content_type == "image/png"
-    assert item.children[0].identifier == image_id
-    assert item.children[0].title == "Mock Image"
+    hass.config.media_dirs = {}
 
     with pytest.raises(
-        media_source.BrowseError,
-        match="Unknown item",
+        HomeAssistantError,
+        match="AI Task media source requires at least one media directory configured",
     ):
-        await media_source.async_browse_media(
-            hass, "media-source://ai_task/invalid_path"
-        )
+        await async_get_media_source(hass)
 
 
-async def test_resolving(
-    hass: HomeAssistant, init_components: None, image_id: str
-) -> None:
-    """Test resolving."""
-    item = await media_source.async_resolve_media(
-        hass, f"media-source://ai_task/{image_id}", None
-    )
-    assert item is not None
-    assert item.url.startswith(f"/api/ai_task/images/{image_id}?authSig=")
-    assert item.mime_type == "image/png"
-
-    invalid_id = "aabbccddeeff"
-    with pytest.raises(
-        media_source.Unresolvable,
-        match=f"Could not resolve media item: {invalid_id}",
-    ):
-        await media_source.async_resolve_media(
-            hass, f"media-source://ai_task/{invalid_id}", None
-        )
+# The following is from media_source/__init__.py for reference

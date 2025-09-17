@@ -106,7 +106,10 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
                 return
             except NtfyForbiddenError:
                 if self._attr_available:
-                    _LOGGER.error("Failed to subscribe to topic. Topic is protected")
+                    _LOGGER.error(
+                        "Failed to subscribe to topic %s. Topic is protected",
+                        self.topic,
+                    )
                 self._attr_available = False
                 ir.async_create_issue(
                     self.hass,

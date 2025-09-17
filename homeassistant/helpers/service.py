@@ -1118,18 +1118,14 @@ class ReloadServiceHelper[_T]:
 
 
 def _validate_entity_service_schema(
-    schema: VolDictType | VolSchemaType | None,
+    schema: VolDictType | VolSchemaType | None, service: str
 ) -> VolSchemaType:
     """Validate that a schema is an entity service schema."""
     if schema is None or isinstance(schema, dict):
         return cv.make_entity_service_schema(schema)
     if not cv.is_entity_service_schema(schema):
-        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
-
-        report_usage(
-            "registers an entity service with a non entity service schema",
-            core_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2025.9",
+        raise HomeAssistantError(
+            f"The {service} service registers an entity service with a non entity service schema"
         )
     return schema
 
@@ -1153,7 +1149,7 @@ def async_register_entity_service(
     EntityPlatform.async_register_entity_service and should not be called
     directly by integrations.
     """
-    schema = _validate_entity_service_schema(schema)
+    schema = _validate_entity_service_schema(schema, f"{domain}.{name}")
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
@@ -1189,7 +1185,7 @@ def async_register_platform_entity_service(
     """Help registering a platform entity service."""
     from .entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES  # noqa: PLC0415
 
-    schema = _validate_entity_service_schema(schema)
+    schema = _validate_entity_service_schema(schema, f"{service_domain}.{service_name}")
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)

@@ -534,6 +534,14 @@
           "level_4": "Level 4"
         }
       },
+      "desk_up_down": {
+        "name": "Up/Down",
+        "state": {
+          "up": "Up",
+          "down": "Down",
+          "stop": "Stop"
+        }
+      },
       "inverter_work_mode": {
         "name": "Inverter work mode",
         "state": {
@@ -612,6 +620,36 @@
       },
       "battery_state": {
         "name": "Battery state"
+      },
+      "battery_soc": {
+        "name": "Battery SOC"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "total_pv_power": {
+        "name": "Total PV power"
+      },
+      "pv_channel_power": {
+        "name": "PV channel {index} power"
+      },
+      "inverter_output_power": {
+        "name": "Inverter output power"
+      },
+      "lifetime_pv_energy": {
+        "name": "Lifetime PV energy"
+      },
+      "lifetime_inverter_output_energy": {
+        "name": "Lifetime inverter output energy"
+      },
+      "lifetime_battery_discharge_energy": {
+        "name": "Lifetime battery discharge energy"
+      },
+      "lifetime_battery_charge_energy": {
+        "name": "Lifetime battery charge energy"
+      },
+      "lifetime_offgrid_port_energy": {
+        "name": "Lifetime off-grid port energy"
       },
       "gas": {
         "name": "Gas"
@@ -812,6 +850,9 @@
       },
       "supply_frequency": {
         "name": "Supply frequency"
+      },
+      "total_dissolved_solids": {
+        "name": "Total dissolved solids"
       }
     },
     "switch": {
@@ -973,6 +1014,12 @@
       },
       "output_power_limit": {
         "name": "Output power limit"
+      },
+      "music": {
+        "name": "Music"
+      },
+      "snooze": {
+        "name": "Snooze"
       }
     },
     "valve": {
