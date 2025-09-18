@@ -1067,7 +1067,6 @@ async def test_devices_payload_no_entities(
                     {
                         "entities": [],
                         "entry_type": None,
-                        "extra": None,
                         "has_configuration_url": True,
                         "hw_version": "test-hw-version",
                         "manufacturer": "test-manufacturer",
@@ -1079,7 +1078,6 @@ async def test_devices_payload_no_entities(
                     {
                         "entities": [],
                         "entry_type": "service",
-                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer",
@@ -1091,7 +1089,6 @@ async def test_devices_payload_no_entities(
                     {
                         "entities": [],
                         "entry_type": None,
-                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer",
@@ -1103,7 +1100,6 @@ async def test_devices_payload_no_entities(
                     {
                         "entities": [],
                         "entry_type": None,
-                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": None,
@@ -1115,7 +1111,6 @@ async def test_devices_payload_no_entities(
                     {
                         "entities": [],
                         "entry_type": None,
-                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer6",
@@ -1133,7 +1128,6 @@ async def test_devices_payload_no_entities(
                     {
                         "entities": [],
                         "entry_type": None,
-                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer7",
@@ -1245,7 +1239,6 @@ async def test_devices_payload_with_entities(
                                 },
                                 "domain": "light",
                                 "entity_category": None,
-                                "extra": None,
                                 "has_entity_name": True,
                                 "modified_by_integration": None,
                                 "original_device_class": None,
@@ -1256,7 +1249,6 @@ async def test_devices_payload_with_entities(
                                 "capabilities": None,
                                 "domain": "number",
                                 "entity_category": "config",
-                                "extra": None,
                                 "has_entity_name": True,
                                 "modified_by_integration": None,
                                 "original_device_class": "temperature",
@@ -1264,7 +1256,6 @@ async def test_devices_payload_with_entities(
                             },
                         ],
                         "entry_type": None,
-                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer",
@@ -1280,7 +1271,6 @@ async def test_devices_payload_with_entities(
                                 "capabilities": None,
                                 "domain": "light",
                                 "entity_category": None,
-                                "extra": None,
                                 "has_entity_name": False,
                                 "modified_by_integration": None,
                                 "original_device_class": None,
@@ -1288,7 +1278,6 @@ async def test_devices_payload_with_entities(
                             },
                         ],
                         "entry_type": None,
-                        "extra": None,
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer",
@@ -1304,7 +1293,6 @@ async def test_devices_payload_with_entities(
                         "capabilities": {"state_class": "measurement"},
                         "domain": "sensor",
                         "entity_category": None,
-                        "extra": None,
                         "has_entity_name": False,
                         "modified_by_integration": None,
                         "original_device_class": "temperature",
@@ -1321,7 +1309,6 @@ async def test_devices_payload_with_entities(
                         "capabilities": None,
                         "domain": "light",
                         "entity_category": None,
-                        "extra": None,
                         "has_entity_name": True,
                         "modified_by_integration": None,
                         "original_device_class": None,
@@ -1383,7 +1370,6 @@ async def test_analytics_platforms(
             devices_configs[device_id] = device_config
             if first:
                 first = False
-                device_config.extra = {"device_test_key": "device_test_value"}
             else:
                 device_config.remove = True
 
@@ -1399,7 +1385,6 @@ async def test_analytics_platforms(
                 entity_config.capabilities["options"] = len(
                     entity_config.capabilities["options"]
                 )
-                entity_config.extra = {"entity_test_key": "entity_test_value"}
             else:
                 entity_config.remove = True
 
@@ -1423,7 +1408,6 @@ async def test_analytics_platforms(
                     {
                         "entities": [],
                         "entry_type": None,
-                        "extra": {"device_test_key": "device_test_value"},
                         "has_configuration_url": False,
                         "hw_version": None,
                         "manufacturer": "test-manufacturer",
@@ -1439,7 +1423,6 @@ async def test_analytics_platforms(
                         "capabilities": {"options": 2},
                         "domain": "sensor",
                         "entity_category": None,
-                        "extra": {"entity_test_key": "entity_test_value"},
                         "has_entity_name": False,
                         "modified_by_integration": ["capabilities"],
                         "original_device_class": None,

@@ -132,7 +132,6 @@ class DeviceAnalyticsModifications:
     """
 
     remove: bool = False
-    extra: dict[str, Any] | None = None
 
 
 @dataclass
@@ -144,7 +143,6 @@ class EntityAnalyticsModifications:
 
     remove: bool = False
     capabilities: dict[str, Any] | None | UndefinedType = UNDEFINED
-    extra: dict[str, Any] | None = None
 
 
 class AnalyticsPlatformProtocol(Protocol):
@@ -610,7 +608,6 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                 {
                     "entities": [],
                     "entry_type": device_entry.entry_type,
-                    "extra": device_config.extra,
                     "has_configuration_url": device_entry.configuration_url is not None,
                     "hw_version": device_entry.hw_version,
                     "manufacturer": device_entry.manufacturer,
@@ -671,7 +668,6 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                 else entity_entry.capabilities,
                 "domain": entity_entry.domain,
                 "entity_category": entity_entry.entity_category,
-                "extra": entity_config.extra,
                 "has_entity_name": entity_entry.has_entity_name,
                 "modified_by_integration": ["capabilities"]
                 if entity_config.capabilities is not UNDEFINED
