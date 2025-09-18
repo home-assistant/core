@@ -17,8 +17,12 @@
           "description": "State to write."
         },
         "slave": {
-          "name": "Server",
-          "description": "Address of the Modbus unit/server."
+          "name": "device address",
+          "description": "Address of the Modbus device (please rename to device_address, will soon be removed)."
+        },
+        "device_address": {
+          "name": "device address",
+          "description": "Address of the Modbus device."
         },
         "hub": {
           "name": "Hub",
@@ -31,12 +35,16 @@
       "description": "Writes to a Modbus holding register.",
       "fields": {
         "address": {
-          "name": "[%key:component::modbus::services::write_coil::fields::address::name%]",
+          "name": "Address",
           "description": "Address of the holding register to write to."
         },
         "slave": {
-          "name": "[%key:component::modbus::services::write_coil::fields::slave::name%]",
-          "description": "[%key:component::modbus::services::write_coil::fields::slave::description%]"
+          "name": "Device address",
+          "description": "Address of the Modbus device (please rename to device_address, will soon be removed)."
+        },
+        "device_address": {
+          "name": "Device address",
+          "description": "Address of the Modbus device."
         },
         "value": {
           "name": "Value",
@@ -44,7 +52,7 @@
         },
         "hub": {
           "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]",
-          "description": "[%key:component::modbus::services::write_coil::fields::hub::description%]"
+          "description": "hub containing the device with the holding register being written to."
         }
       }
     },
@@ -54,7 +62,7 @@
       "fields": {
         "hub": {
           "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]",
-          "description": "[%key:component::modbus::services::write_coil::fields::hub::description%]"
+          "description": "hub to be stopped."
         }
       }
     },
@@ -64,7 +72,7 @@
       "fields": {
         "hub": {
           "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]",
-          "description": "[%key:component::modbus::services::write_coil::fields::hub::description%]"
+          "description": "hub to be restarted."
         }
       }
     }
