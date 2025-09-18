@@ -116,7 +116,7 @@ def run(script_args: list) -> int:
             exit_code = max(exit_code, 1)
         return exit_code
 
-    # Human-readable output starts here
+        # Human-readable output starts here
     print(color("bold", "Testing configuration at", config_dir))
 
     domain_info: list[str] = []
