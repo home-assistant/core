@@ -8,7 +8,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_DOMAINS,
+    CONF_ENTITIES,
     CONF_EXCLUDE,
+    CONF_INCLUDE,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
     EVENT_STATE_CHANGED,
@@ -16,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import (
+    CONF_ENTITY_GLOBS,
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
     convert_include_exclude_filter,
@@ -71,8 +75,13 @@ CONF_EVENT_TYPES = "event_types"
 CONF_COMMIT_INTERVAL = "commit_interval"
 
 
-EXCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
-    {vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string])}
+EXCLUDE_SCHEMA = vol.All(
+    cv.deprecated(CONF_DOMAINS),
+    cv.deprecated(CONF_ENTITY_GLOBS),
+    cv.deprecated(CONF_ENTITIES),
+    INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
+        {vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string])}
+    ),
 )
 
 FILTER_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
@@ -100,6 +109,7 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(DOMAIN, default=dict): vol.All(
             cv.deprecated(CONF_PURGE_INTERVAL),
             cv.deprecated(CONF_DB_INTEGRITY_CHECK),
+            cv.deprecated(CONF_INCLUDE),
             FILTER_SCHEMA.extend(
                 {
                     vol.Optional(CONF_AUTO_PURGE, default=True): cv.boolean,
