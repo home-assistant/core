@@ -572,7 +572,7 @@ class ChatLog:
         llm_api_ids = (
             (
                 [api.id for api in llm_api.api.llm_apis]
-                if hasattr(llm_api.api, "llm_apis")
+                if isinstance(llm_api.api, llm.MergedAPI)
                 else [llm_api.api.id]
             )
             if llm_api
