@@ -175,7 +175,9 @@ async def test_api_error(
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result2.get("type") == FlowResultType.FORM
-        assert result2.get("errors", {}).get("base") == "invalid_auth"
+        errors = result2.get("errors")
+        assert errors is not None
+        assert errors.get("base") == "invalid_auth"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
