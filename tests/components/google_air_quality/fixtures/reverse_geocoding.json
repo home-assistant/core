@@ -1,0 +1,159 @@
+{
+  "results": [
+    {
+      "place": "//places.googleapis.com/places/ChIJ41tlyVtsmkcRjM3xQYYTiB8",
+      "placeId": "ChIJ41tlyVtsmkcRjM3xQYYTiB8",
+      "location": {
+        "latitude": 48.0002263,
+        "longitude": 8.9992729999999987
+      },
+      "granularity": "GEOMETRIC_CENTER",
+      "viewport": {
+        "low": {
+          "latitude": 47.9988721697085,
+          "longitude": 8.9979237197084974
+        },
+        "high": {
+          "latitude": 48.0015701302915,
+          "longitude": 9.000621680291502
+        }
+      },
+      "bounds": {
+        "low": {
+          "latitude": 48.0001829,
+          "longitude": 8.9983465
+        },
+        "high": {
+          "latitude": 48.0002594,
+          "longitude": 9.0001989
+        }
+      },
+      "formattedAddress": "Straße Ohne Straßennamen, 88637 Buchheim, Deutschland",
+      "addressComponents": [
+        {
+          "longText": "Straße Ohne Straßennamen",
+          "shortText": "Straße Ohne Straßennamen",
+          "types": ["route"],
+          "languageCode": "de"
+        },
+        {
+          "longText": "Buchheim",
+          "shortText": "Buchheim",
+          "types": ["locality", "political"],
+          "languageCode": "de"
+        },
+        {
+          "longText": "Landkreis Tuttlingen",
+          "shortText": "TUT",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "de"
+        },
+        {
+          "longText": "Freiburg",
+          "shortText": "Freiburg",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "de"
+        },
+        {
+          "longText": "Baden-Württemberg",
+          "shortText": "BW",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "de"
+        },
+        {
+          "longText": "Deutschland",
+          "shortText": "DE",
+          "types": ["country", "political"],
+          "languageCode": "de"
+        },
+        {
+          "longText": "88637",
+          "shortText": "88637",
+          "types": ["postal_code"]
+        }
+      ],
+      "types": ["route"]
+    },
+    {
+      "place": "//places.googleapis.com/places/GhIJAQAAAAAASEARAAAAAAAAIkA",
+      "placeId": "GhIJAQAAAAAASEARAAAAAAAAIkA",
+      "location": {
+        "latitude": 48.000000000000007,
+        "longitude": 9
+      },
+      "granularity": "GEOMETRIC_CENTER",
+      "viewport": {
+        "low": {
+          "latitude": 47.9987135197085,
+          "longitude": 8.9987135197084971
+        },
+        "high": {
+          "latitude": 48.0014114802915,
+          "longitude": 9.0014114802915017
+        }
+      },
+      "bounds": {
+        "low": {
+          "latitude": 48.000000000000007,
+          "longitude": 9
+        },
+        "high": {
+          "latitude": 48.000125,
+          "longitude": 9.0001249999999988
+        }
+      },
+      "formattedAddress": "2222+22, 88637 Buchheim, Deutschland",
+      "addressComponents": [
+        {
+          "longText": "2222+22",
+          "shortText": "2222+22",
+          "types": ["plus_code"]
+        },
+        {
+          "longText": "Buchheim",
+          "shortText": "Buchheim",
+          "types": ["locality", "political"],
+          "languageCode": "de"
+        },
+        {
+          "longText": "Landkreis Tuttlingen",
+          "shortText": "TUT",
+          "types": ["administrative_area_level_3", "political"],
+          "languageCode": "de"
+        },
+        {
+          "longText": "Freiburg",
+          "shortText": "Freiburg",
+          "types": ["administrative_area_level_2", "political"],
+          "languageCode": "de"
+        },
+        {
+          "longText": "Baden-Württemberg",
+          "shortText": "BW",
+          "types": ["administrative_area_level_1", "political"],
+          "languageCode": "de"
+        },
+        {
+          "longText": "Deutschland",
+          "shortText": "DE",
+          "types": ["country", "political"],
+          "languageCode": "de"
+        },
+        {
+          "longText": "88637",
+          "shortText": "88637",
+          "types": ["postal_code"]
+        }
+      ],
+      "types": ["plus_code"],
+      "plusCode": {
+        "globalCode": "8FWF2222+22",
+        "compoundCode": "2222+22 Buchheim, Deutschland"
+      }
+    }
+  ],
+  "plusCode": {
+    "globalCode": "8FWF2222+222",
+    "compoundCode": "2222+222 Buchheim, Deutschland"
+  }
+}
