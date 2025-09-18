@@ -44,6 +44,7 @@ from .const import (
     ATTR_AUTHENTICATION,
     ATTR_CALLBACK_QUERY_ID,
     ATTR_CAPTION,
+    ATTR_CHAT_ACTION,
     ATTR_CHAT_ID,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
@@ -73,6 +74,17 @@ from .const import (
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CHAT_ACTION_CHOOSE_STICKER,
+    CHAT_ACTION_FIND_LOCATION,
+    CHAT_ACTION_RECORD_VIDEO,
+    CHAT_ACTION_RECORD_VIDEO_NOTE,
+    CHAT_ACTION_RECORD_VOICE,
+    CHAT_ACTION_TYPING,
+    CHAT_ACTION_UPLOAD_DOCUMENT,
+    CHAT_ACTION_UPLOAD_PHOTO,
+    CHAT_ACTION_UPLOAD_VIDEO,
+    CHAT_ACTION_UPLOAD_VIDEO_NOTE,
+    CHAT_ACTION_UPLOAD_VOICE,
     CONF_ALLOWED_CHAT_IDS,
     CONF_BOT_COUNT,
     CONF_CONFIG_ENTRY_ID,
@@ -92,6 +104,7 @@ from .const import (
     SERVICE_EDIT_REPLYMARKUP,
     SERVICE_LEAVE_CHAT,
     SERVICE_SEND_ANIMATION,
+    SERVICE_SEND_CHAT_ACTION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
     SERVICE_SEND_MESSAGE,
@@ -154,6 +167,26 @@ BASE_SERVICE_SCHEMA = vol.Schema(
 
 SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_MESSAGE): cv.string, vol.Optional(ATTR_TITLE): cv.string}
+)
+
+SERVICE_SCHEMA_SEND_CHAT_ACTION = BASE_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_CHAT_ACTION): vol.In(
+            (
+                CHAT_ACTION_TYPING,
+                CHAT_ACTION_UPLOAD_PHOTO,
+                CHAT_ACTION_RECORD_VIDEO,
+                CHAT_ACTION_UPLOAD_VIDEO,
+                CHAT_ACTION_RECORD_VOICE,
+                CHAT_ACTION_UPLOAD_VOICE,
+                CHAT_ACTION_UPLOAD_DOCUMENT,
+                CHAT_ACTION_CHOOSE_STICKER,
+                CHAT_ACTION_FIND_LOCATION,
+                CHAT_ACTION_RECORD_VIDEO_NOTE,
+                CHAT_ACTION_UPLOAD_VIDEO_NOTE,
+            )
+        ),
+    }
 )
 
 SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
@@ -300,6 +333,7 @@ SERVICE_SCHEMA_SET_MESSAGE_REACTION = vol.Schema(
 
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
+    SERVICE_SEND_CHAT_ACTION: SERVICE_SCHEMA_SEND_CHAT_ACTION,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_STICKER,
     SERVICE_SEND_ANIMATION: SERVICE_SCHEMA_SEND_FILE,
@@ -400,6 +434,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             messages = await notify_service.send_message(
                 context=service.context, **kwargs
             )
+        elif msgtype == SERVICE_SEND_CHAT_ACTION:
+            messages = await notify_service.send_chat_action(
+                context=service.context, **kwargs
+            )
         elif msgtype in [
             SERVICE_SEND_PHOTO,
             SERVICE_SEND_ANIMATION,
@@ -468,6 +506,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if service_notif in [
             SERVICE_SEND_MESSAGE,
+            SERVICE_SEND_CHAT_ACTION,
             SERVICE_SEND_PHOTO,
             SERVICE_SEND_ANIMATION,
             SERVICE_SEND_VIDEO,
