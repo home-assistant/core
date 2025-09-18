@@ -41,8 +41,8 @@
       "disk_use_percent": {
         "name": "Disk usage {mount_point}"
       },
-      "fan_rpm": {
-        "name": "{fan_name} fan RPM"
+      "fan_speed": {
+        "name": "{fan_name} fan speed"
       },
       "ipv4_address": {
         "name": "IPv4 address {ip_address}"
