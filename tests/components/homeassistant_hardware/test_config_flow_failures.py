@@ -39,18 +39,9 @@ async def fixture_mock_supervisor_client(supervisor_client: AsyncMock):
     "ignore_translations_for_mock_domains",
     ["test_firmware_domain"],
 )
-@pytest.mark.parametrize(
-    "next_step",
-    [
-        STEP_PICK_FIRMWARE_ZIGBEE,
-        STEP_PICK_FIRMWARE_THREAD,
-    ],
-)
 @pytest.mark.usefixtures("addon_store_info")
-async def test_config_flow_cannot_probe_firmware(
-    next_step: str, hass: HomeAssistant
-) -> None:
-    """Test failure case when firmware cannot be probed."""
+async def test_config_flow_cannot_probe_firmware_zigbee(hass: HomeAssistant) -> None:
+    """Test failure case when firmware cannot be probed for zigbee."""
 
     with mock_firmware_info(
         hass,
@@ -61,13 +52,174 @@ async def test_config_flow_cannot_probe_firmware(
             TEST_DOMAIN, context={"source": "hardware"}
         )
 
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "pick_firmware"
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"next_step_id": next_step},
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "zigbee_installation_type"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": "zigbee_intent_recommended"},
         )
 
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "unsupported_firmware"
+
+
+@pytest.mark.parametrize(
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
+)
+async def test_cannot_probe_after_install_zigbee(hass: HomeAssistant) -> None:
+    """Test unsupported firmware after install for Zigbee."""
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    assert init_result["type"] is FlowResultType.MENU
+    assert init_result["step_id"] == "pick_firmware"
+
+    with mock_firmware_info(
+        hass,
+        probe_app_type=ApplicationType.SPINEL,
+        flash_app_type=ApplicationType.EZSP,
+    ):
+        # Pick the menu option: we are flashing the firmware
+        pick_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+
+        assert pick_result["type"] is FlowResultType.MENU
+        assert pick_result["step_id"] == "zigbee_installation_type"
+
+        pick_result = await hass.config_entries.flow.async_configure(
+            pick_result["flow_id"],
+            user_input={"next_step_id": "zigbee_intent_recommended"},
+        )
+
+        assert pick_result["type"] is FlowResultType.SHOW_PROGRESS
+        assert pick_result["progress_action"] == "install_firmware"
+        assert pick_result["step_id"] == "install_zigbee_firmware"
+
+    with mock_firmware_info(
+        hass,
+        probe_app_type=None,
+        flash_app_type=ApplicationType.EZSP,
+    ):
+        create_result = await consume_progress_flow(
+            hass,
+            flow_id=pick_result["flow_id"],
+            valid_step_ids=("install_zigbee_firmware",),
+        )
+
+    assert create_result["type"] is FlowResultType.ABORT
+    assert create_result["reason"] == "unsupported_firmware"
+
+
+@pytest.mark.parametrize(
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
+)
+@pytest.mark.usefixtures("addon_store_info")
+async def test_config_flow_cannot_probe_firmware_thread(hass: HomeAssistant) -> None:
+    """Test failure case when firmware cannot be probed for thread."""
+
+    with mock_firmware_info(
+        hass,
+        probe_app_type=None,
+    ):
+        # Start the flow
+        result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": "hardware"}
+        )
+
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "pick_firmware"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
+        )
+
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "unsupported_firmware"
+
+
+@pytest.mark.parametrize(
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
+)
+@pytest.mark.usefixtures("addon_store_info")
+async def test_cannot_probe_after_install_thread(hass: HomeAssistant) -> None:
+    """Test unsupported firmware after install for thread."""
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    assert init_result["type"] is FlowResultType.MENU
+    assert init_result["step_id"] == "pick_firmware"
+
+    with mock_firmware_info(
+        hass,
+        probe_app_type=ApplicationType.EZSP,
+        flash_app_type=ApplicationType.SPINEL,
+    ) as (mock_otbr_manager, _):
+        # Pick the menu option
+        pick_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
+        )
+
+        assert pick_result["type"] is FlowResultType.SHOW_PROGRESS
+        assert pick_result["progress_action"] == "install_addon"
+        assert pick_result["step_id"] == "install_otbr_addon"
+        description_placeholders = pick_result["description_placeholders"]
+        assert description_placeholders is not None
+        assert description_placeholders["firmware_type"] == "ezsp"
+        assert description_placeholders["model"] == TEST_HARDWARE_NAME
+
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        mock_otbr_manager.async_get_addon_info.return_value = AddonInfo(
+            available=True,
+            hostname=None,
+            options={
+                "device": "",
+                "baudrate": 460800,
+                "flow_control": True,
+                "autoflash_firmware": False,
+            },
+            state=AddonState.NOT_RUNNING,
+            update_available=False,
+            version="1.2.3",
+        )
+
+    with mock_firmware_info(
+        hass,
+        probe_app_type=None,
+        flash_app_type=ApplicationType.SPINEL,
+    ):
+        # Progress the flow, it is now installing firmware
+        result = await consume_progress_flow(
+            hass,
+            flow_id=pick_result["flow_id"],
+            valid_step_ids=(
+                "pick_firmware_thread",
+                "install_otbr_addon",
+                "install_thread_firmware",
+                "start_otbr_addon",
+            ),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_firmware"
 
 
 @pytest.mark.parametrize(
@@ -123,47 +275,6 @@ async def test_config_flow_thread_addon_info_fails(hass: HomeAssistant) -> None:
         # Cannot get addon info
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "addon_info_failed"
-
-
-@pytest.mark.parametrize(
-    "ignore_translations_for_mock_domains",
-    ["test_firmware_domain"],
-)
-async def test_config_flow_thread_addon_already_configured(hass: HomeAssistant) -> None:
-    """Test failure case when the Thread addon is already running."""
-    result = await hass.config_entries.flow.async_init(
-        TEST_DOMAIN, context={"source": "hardware"}
-    )
-
-    with mock_firmware_info(
-        hass,
-        probe_app_type=ApplicationType.EZSP,
-        otbr_addon_info=AddonInfo(
-            available=True,
-            hostname=None,
-            options={
-                "device": TEST_DEVICE + "2",  # A different device
-            },
-            state=AddonState.RUNNING,
-            update_available=False,
-            version="1.0.0",
-        ),
-    ) as (mock_otbr_manager, _):
-        mock_otbr_manager.async_install_addon_waiting = AsyncMock(
-            side_effect=AddonError()
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
-        )
-
-        # Cannot install addon
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "otbr_addon_already_running"
 
 
 @pytest.mark.parametrize(
@@ -339,7 +450,7 @@ async def test_config_flow_thread_confirmation_fails(hass: HomeAssistant) -> Non
         )
 
         assert pick_thread_progress_result["type"] is FlowResultType.ABORT
-        assert pick_thread_progress_result["reason"] == "unsupported_firmware"
+        assert pick_thread_progress_result["reason"] == "fw_install_failed"
 
 
 @pytest.mark.parametrize(
@@ -353,6 +464,9 @@ async def test_config_flow_firmware_index_download_fails_and_required(
         TEST_DOMAIN, context={"source": "hardware"}
     )
 
+    assert init_result["type"] is FlowResultType.MENU
+    assert init_result["step_id"] == "pick_firmware"
+
     with (
         mock_firmware_info(
             hass,
@@ -365,6 +479,14 @@ async def test_config_flow_firmware_index_download_fails_and_required(
         pick_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+
+        assert pick_result["type"] is FlowResultType.MENU
+        assert pick_result["step_id"] == "zigbee_installation_type"
+
+        pick_result = await hass.config_entries.flow.async_configure(
+            pick_result["flow_id"],
+            user_input={"next_step_id": "zigbee_intent_recommended"},
         )
 
         assert pick_result["type"] is FlowResultType.ABORT
@@ -382,6 +504,9 @@ async def test_config_flow_firmware_download_fails_and_required(
         TEST_DOMAIN, context={"source": "hardware"}
     )
 
+    assert init_result["type"] is FlowResultType.MENU
+    assert init_result["step_id"] == "pick_firmware"
+
     with (
         mock_firmware_info(
             hass,
@@ -394,6 +519,14 @@ async def test_config_flow_firmware_download_fails_and_required(
         pick_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+
+        assert pick_result["type"] is FlowResultType.MENU
+        assert pick_result["step_id"] == "zigbee_installation_type"
+
+        pick_result = await hass.config_entries.flow.async_configure(
+            pick_result["flow_id"],
+            user_input={"next_step_id": "zigbee_intent_recommended"},
         )
 
         assert pick_result["type"] is FlowResultType.ABORT

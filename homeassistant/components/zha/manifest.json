@@ -21,7 +21,7 @@
     "zha",
     "universal_silabs_flasher"
   ],
-  "requirements": ["zha==0.0.61"],
+  "requirements": ["zha==0.0.71"],
   "usb": [
     {
       "vid": "10C4",
@@ -106,6 +106,12 @@
       "pid": "EA60",
       "description": "*sonoff*max*",
       "known_devices": ["SONOFF Dongle Max MG24"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*sonoff*lite*mg21*",
+      "known_devices": ["sonoff zigbee dongle lite mg21"]
     }
   ],
   "zeroconf": [

@@ -1847,7 +1847,7 @@ async def test_services_call_return_response_requires_blocking(
             return_response=True,
         )
     assert str(exc.value) == (
-        "A non blocking action call with argument blocking=False "
+        "A non-blocking action call with argument blocking=False "
         "can't be used together with argument return_response=True"
     )
 

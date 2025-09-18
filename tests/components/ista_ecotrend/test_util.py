@@ -52,16 +52,21 @@ def test_get_values_by_type(
             {
                 "type": "heating",
                 "value": "35",
+                "unit": "Einheiten",
                 "additionalValue": "38,0",
+                "additionalUnit": "kWh",
             },
             {
                 "type": "warmwater",
                 "value": "1,0",
+                "unit": "m³",
                 "additionalValue": "57,0",
+                "additionalUnit": "kWh",
             },
             {
                 "type": "water",
                 "value": "5,0",
+                "unit": "m³",
             },
         ],
     }

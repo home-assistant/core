@@ -17,6 +17,7 @@ from .common import (
 )
 
 
+@pytest.mark.freeze_time("2025-01-01T14:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "matter_devices")
 async def test_sensors(
     hass: HomeAssistant,
@@ -381,6 +382,21 @@ async def test_draft_electrical_measurement_sensor(
     assert state.state == "unknown"
 
 
+@pytest.mark.freeze_time("2025-01-01T14:00:00+00:00")
+@pytest.mark.parametrize("node_fixture", ["microwave_oven"])
+async def test_countdown_time_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test CountdownTime sensor."""
+    # OperationalState Cluster / CountdownTime (1/96/2)
+    state = hass.states.get("sensor.microwave_oven_estimated_end_time")
+    assert state
+    # 1/96/2 = 30 seconds, so 30 s should be added to the current time.
+    assert state.state == "2025-01-01T14:00:30+00:00"
+
+
 @pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
 async def test_list_sensor(
     hass: HomeAssistant,
@@ -567,3 +583,23 @@ async def test_pump(
     state = hass.states.get("sensor.mock_pump_rotation_speed")
     assert state
     assert state.state == "500"
+
+
+@pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
+async def test_vacuum_actions(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test vacuum sensors."""
+    # EstimatedEndTime
+    state = hass.states.get("sensor.mock_vacuum_estimated_end_time")
+    assert state
+    assert state.state == "2025-08-29T21:00:00+00:00"
+
+    set_node_attribute(matter_node, 1, 336, 4, 1756502000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_vacuum_estimated_end_time")
+    assert state
+    assert state.state == "2025-08-29T21:13:20+00:00"

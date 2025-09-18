@@ -124,6 +124,7 @@ async def test_diagnostics_with_bluetooth(
         "storage_data": {
             "api_version": {"major": 99, "minor": 99},
             "device_info": {
+                "api_encryption_supported": False,
                 "area": {"area_id": 0, "name": ""},
                 "areas": [],
                 "bluetooth_mac_address": "**REDACTED**",
@@ -145,6 +146,7 @@ async def test_diagnostics_with_bluetooth(
                 "legacy_voice_assistant_version": 0,
                 "voice_assistant_feature_flags": 0,
                 "webserver_port": 0,
+                "zwave_proxy_feature_flags": 0,
             },
             "services": [],
         },
