@@ -128,6 +128,7 @@ class UbusDeviceScanner(DeviceScanner):
             return None
         return attrs.get("name", None)
 
+    @_refresh_on_access_denied
     def get_extra_attributes(self, device: str) -> dict[str, str]:            
         """Return the attributes of the given device or {} if we don't know."""
         if self.mac2attrs is None:
