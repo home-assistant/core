@@ -90,5 +90,13 @@
         }
       }
     }
+  },
+  "selector": {
+    "answers": {
+      "fields": {
+        "id": "Answer ID",
+        "sentences": "Sentences"
+      }
+    }
   }
 }

@@ -24,7 +24,7 @@ class ReolinkEntityDescription(EntityDescription):
     """A class that describes entities for Reolink."""
 
     cmd_key: str | None = None
-    cmd_id: int | None = None
+    cmd_id: int | list[int] | None = None
     always_available: bool = False
 
 
@@ -120,12 +120,15 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         """Entity created."""
         await super().async_added_to_hass()
         cmd_key = self.entity_description.cmd_key
-        cmd_id = self.entity_description.cmd_id
+        cmd_ids = self.entity_description.cmd_id
         callback_id = f"{self.platform.domain}_{self._attr_unique_id}"
         if cmd_key is not None:
             self._host.async_register_update_cmd(cmd_key)
-        if cmd_id is not None:
-            self.register_callback(callback_id, cmd_id)
+        if isinstance(cmd_ids, int):
+            self.register_callback(callback_id, cmd_ids)
+        elif isinstance(cmd_ids, list):
+            for cmd_id in cmd_ids:
+                self.register_callback(callback_id, cmd_id)
         # Privacy mode
         self.register_callback(f"{callback_id}_623", 623)
 
@@ -164,7 +167,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         super().__init__(reolink_data, coordinator)
 
         self._channel = channel
-        if self._host.api.supported(channel, "UID"):
+        if self._host.api.is_nvr and self._host.api.supported(channel, "UID"):
             self._attr_unique_id = f"{self._host.unique_id}_{self._host.api.camera_uid(channel)}_{self.entity_description.key}"
         else:
             self._attr_unique_id = (
@@ -250,6 +253,7 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
         coordinator: DataUpdateCoordinator[None] | None = None,
     ) -> None:
         """Initialize ReolinkChimeCoordinatorEntity for a chime."""
+        assert chime.channel is not None
         super().__init__(reolink_data, chime.channel, coordinator)
 
         self._chime = chime

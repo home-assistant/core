@@ -54,6 +54,11 @@
       "turn_on_volume": {
         "name": "Turn-on volume"
       }
+    },
+    "switch": {
+      "loudness": {
+        "name": "Loudness"
+      }
     }
   },
   "exceptions": {
@@ -62,6 +67,15 @@
     },
     "command_error": {
       "message": "Error executing {function_name} on entity {entity_id}"
+    },
+    "unsupported_media_type": {
+      "message": "Unsupported media type for Russound zone: {media_type}"
+    },
+    "missing_preset": {
+      "message": "The specified preset is not available for this source: {preset_id}"
+    },
+    "preset_non_integer": {
+      "message": "Preset must be an integer, got: {preset_id}"
     }
   }
 }

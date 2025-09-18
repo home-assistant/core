@@ -18,7 +18,6 @@
           '12345678',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'mock make',
@@ -28,7 +27,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': '12345678',
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),

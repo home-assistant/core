@@ -13,7 +13,6 @@ import logging
 import operator
 import os
 from pathlib import Path
-import re
 import shutil
 from types import ModuleType
 from typing import TYPE_CHECKING, Any
@@ -39,8 +38,6 @@ from .util.yaml.objects import NodeStrClass
 
 _LOGGER = logging.getLogger(__name__)
 
-RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
-RE_ASCII = re.compile(r"\033\[[^m]*m")
 YAML_CONFIG_FILE = "configuration.yaml"
 VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"

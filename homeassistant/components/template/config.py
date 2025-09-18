@@ -17,6 +17,7 @@ from homeassistant.components.blueprint import (
 )
 from homeassistant.components.button import DOMAIN as DOMAIN_BUTTON
 from homeassistant.components.cover import DOMAIN as DOMAIN_COVER
+from homeassistant.components.event import DOMAIN as DOMAIN_EVENT
 from homeassistant.components.fan import DOMAIN as DOMAIN_FAN
 from homeassistant.components.image import DOMAIN as DOMAIN_IMAGE
 from homeassistant.components.light import DOMAIN as DOMAIN_LIGHT
@@ -25,6 +26,7 @@ from homeassistant.components.number import DOMAIN as DOMAIN_NUMBER
 from homeassistant.components.select import DOMAIN as DOMAIN_SELECT
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
+from homeassistant.components.update import DOMAIN as DOMAIN_UPDATE
 from homeassistant.components.vacuum import DOMAIN as DOMAIN_VACUUM
 from homeassistant.components.weather import DOMAIN as DOMAIN_WEATHER
 from homeassistant.config import async_log_schema_error, config_without_domain
@@ -53,6 +55,7 @@ from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     cover as cover_platform,
+    event as event_platform,
     fan as fan_platform,
     image as image_platform,
     light as light_platform,
@@ -61,11 +64,12 @@ from . import (
     select as select_platform,
     sensor as sensor_platform,
     switch as switch_platform,
+    update as update_platform,
     vacuum as vacuum_platform,
     weather as weather_platform,
 )
 from .const import DOMAIN, PLATFORMS, TemplateConfig
-from .helpers import async_get_blueprints
+from .helpers import async_get_blueprints, rewrite_legacy_to_modern_configs
 
 PACKAGE_MERGE_HINT = "list"
 
@@ -102,66 +106,68 @@ CONFIG_SECTION_SCHEMA = vol.All(
         {
             vol.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
-                binary_sensor_platform.LEGACY_BINARY_SENSOR_SCHEMA
+                binary_sensor_platform.BINARY_SENSOR_LEGACY_YAML_SCHEMA
             ),
             vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
             vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
-                sensor_platform.LEGACY_SENSOR_SCHEMA
+                sensor_platform.SENSOR_LEGACY_YAML_SCHEMA
             ),
             vol.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Optional(DOMAIN_ALARM_CONTROL_PANEL): vol.All(
                 cv.ensure_list,
-                [alarm_control_panel_platform.ALARM_CONTROL_PANEL_SCHEMA],
+                [alarm_control_panel_platform.ALARM_CONTROL_PANEL_YAML_SCHEMA],
             ),
             vol.Optional(DOMAIN_BINARY_SENSOR): vol.All(
-                cv.ensure_list, [binary_sensor_platform.BINARY_SENSOR_SCHEMA]
+                cv.ensure_list, [binary_sensor_platform.BINARY_SENSOR_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_BUTTON): vol.All(
-                cv.ensure_list, [button_platform.BUTTON_SCHEMA]
+                cv.ensure_list, [button_platform.BUTTON_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_COVER): vol.All(
-                cv.ensure_list, [cover_platform.COVER_SCHEMA]
+                cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_EVENT): vol.All(
+                cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_FAN): vol.All(
-                cv.ensure_list, [fan_platform.FAN_SCHEMA]
+                cv.ensure_list, [fan_platform.FAN_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_IMAGE): vol.All(
-                cv.ensure_list, [image_platform.IMAGE_SCHEMA]
+                cv.ensure_list, [image_platform.IMAGE_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_LIGHT): vol.All(
-                cv.ensure_list, [light_platform.LIGHT_SCHEMA]
+                cv.ensure_list, [light_platform.LIGHT_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_LOCK): vol.All(
-                cv.ensure_list, [lock_platform.LOCK_SCHEMA]
+                cv.ensure_list, [lock_platform.LOCK_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_NUMBER): vol.All(
-                cv.ensure_list, [number_platform.NUMBER_SCHEMA]
+                cv.ensure_list, [number_platform.NUMBER_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_SELECT): vol.All(
-                cv.ensure_list, [select_platform.SELECT_SCHEMA]
+                cv.ensure_list, [select_platform.SELECT_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_SENSOR): vol.All(
-                cv.ensure_list, [sensor_platform.SENSOR_SCHEMA]
+                cv.ensure_list, [sensor_platform.SENSOR_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_SWITCH): vol.All(
-                cv.ensure_list, [switch_platform.SWITCH_SCHEMA]
+                cv.ensure_list, [switch_platform.SWITCH_YAML_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_UPDATE): vol.All(
+                cv.ensure_list, [update_platform.UPDATE_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_VACUUM): vol.All(
-                cv.ensure_list, [vacuum_platform.VACUUM_SCHEMA]
+                cv.ensure_list, [vacuum_platform.VACUUM_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_WEATHER): vol.All(
-                cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
+                cv.ensure_list, [weather_platform.WEATHER_YAML_SCHEMA]
             ),
         },
     ),
     ensure_domains_do_not_have_trigger_or_action(
-        DOMAIN_ALARM_CONTROL_PANEL,
         DOMAIN_BUTTON,
-        DOMAIN_FAN,
-        DOMAIN_LOCK,
-        DOMAIN_VACUUM,
     ),
 )
 
@@ -253,16 +259,16 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
 
         legacy_warn_printed = False
 
-        for old_key, new_key, transform in (
+        for old_key, new_key, legacy_fields in (
             (
                 CONF_SENSORS,
                 DOMAIN_SENSOR,
-                sensor_platform.rewrite_legacy_to_modern_conf,
+                sensor_platform.LEGACY_FIELDS,
             ),
             (
                 CONF_BINARY_SENSORS,
                 DOMAIN_BINARY_SENSOR,
-                binary_sensor_platform.rewrite_legacy_to_modern_conf,
+                binary_sensor_platform.LEGACY_FIELDS,
             ),
         ):
             if old_key not in template_config:
@@ -280,7 +286,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             definitions = (
                 list(template_config[new_key]) if new_key in template_config else []
             )
-            definitions.extend(transform(hass, template_config[old_key]))
+            definitions.extend(
+                rewrite_legacy_to_modern_configs(
+                    hass, new_key, template_config[old_key], legacy_fields
+                )
+            )
             template_config = TemplateConfig({**template_config, new_key: definitions})
 
         config_sections.append(template_config)
