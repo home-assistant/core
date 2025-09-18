@@ -133,6 +133,13 @@
     }
   },
   "selector": {
+    "behavior": {
+      "options": {
+        "first": "First",
+        "last": "Last",
+        "any": "Any"
+      }
+    },
     "color_name": {
       "options": {
         "homeassistant": "Home Assistant",
@@ -289,6 +296,12 @@
       "options": {
         "short": "Short",
         "long": "Long"
+      }
+    },
+    "state": {
+      "options": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
       }
     }
   },
@@ -459,6 +472,23 @@
       "sections": {
         "advanced_fields": {
           "name": "[%key:component::light::common::section_advanced_fields_name%]"
+        }
+      }
+    }
+  },
+  "triggers": {
+    "state": {
+      "name": "State",
+      "description": "When the state of a light changes, such as turning on or off.",
+      "description_configured": "When the state of a light changes",
+      "fields": {
+        "state": {
+          "name": "State",
+          "description": "The state to trigger on."
+        },
+        "behavior": {
+          "name": "Behavior",
+          "description": "The behavior of the targeted entities to trigger on."
         }
       }
     }
