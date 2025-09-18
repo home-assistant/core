@@ -166,6 +166,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.get_privacy_mode = AsyncMock()
     host_mock.baichuan.set_privacy_mode = AsyncMock()
     host_mock.baichuan.set_scene = AsyncMock()
+    host_mock.baichuan.set_floodlight = AsyncMock()
     host_mock.baichuan.mac_address.return_value = TEST_MAC_CAM
     host_mock.baichuan.privacy_mode.return_value = False
     host_mock.baichuan.day_night_state.return_value = "day"
