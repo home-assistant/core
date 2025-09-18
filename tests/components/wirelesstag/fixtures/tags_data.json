@@ -1,0 +1,50 @@
+{
+  "tag_1": {
+    "uuid": "12345678-1234-1234-1234-123456789abc",
+    "tag_id": 1,
+    "tag_manager_mac": "AA:BB:CC:DD:EE:FF",
+    "name": "Living Room Sensor",
+    "is_alive": true,
+    "is_in_range": true,
+    "battery_remaining": 0.85,
+    "battery_volts": 3.2,
+    "signal_strength": -45,
+    "power_consumption": 12.5,
+    "temperature": 22.5,
+    "humidity": 45.2,
+    "allowed_monitoring_types": ["temperature", "humidity", "motion", "light"],
+    "is_temperature_sensor_armed": false,
+    "is_humidity_sensor_armed": true,
+    "is_motion_sensor_armed": false,
+    "is_light_sensor_armed": true,
+    "event": {
+      "temperature": false,
+      "humidity": true,
+      "motion": false,
+      "light": false
+    }
+  },
+  "tag_2": {
+    "uuid": "87654321-4321-4321-4321-cba987654321",
+    "tag_id": 2,
+    "tag_manager_mac": "FF:EE:DD:CC:BB:AA",
+    "name": "Bedroom Sensor",
+    "is_alive": false,
+    "is_in_range": false,
+    "battery_remaining": 0.15,
+    "battery_volts": 2.8,
+    "signal_strength": -85,
+    "power_consumption": 8.2,
+    "temperature": 20.1,
+    "humidity": 38.5,
+    "allowed_monitoring_types": ["temperature", "humidity", "moisture"],
+    "is_temperature_sensor_armed": true,
+    "is_humidity_sensor_armed": false,
+    "is_moisture_sensor_armed": true,
+    "event": {
+      "temperature": true,
+      "humidity": false,
+      "moisture": false
+    }
+  }
+}
