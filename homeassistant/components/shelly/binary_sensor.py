@@ -298,6 +298,13 @@ RPC_SENSORS: Final = {
         name="Mute",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "flood_cable_unplugged": RpcBinarySensorDescription(
+        key="flood",
+        sub_key="errors",
+        value=lambda status, _: "cable_unplugged" in status,
+        name="Cable unplugged",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
     "presence_num_objects": RpcBinarySensorDescription(
         key="presence",
         sub_key="num_objects",
