@@ -62,7 +62,6 @@ from .const import (
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
-    SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
     DataType,
 )
@@ -95,18 +94,10 @@ class BasePlatform(Entity):
         self._attr_name = entry[CONF_NAME]
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
 
-        def get_optional_numeric_config(config_name: str) -> int | float | None:
-            if (val := entry.get(config_name)) is None:
-                return None
-            assert isinstance(val, (float, int)), (
-                f"Expected float or int but {config_name} was {type(val)}"
-            )
-            return val
-
-        self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
-        self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
+        self._min_value = entry.get(CONF_MIN_VALUE)
+        self._max_value = entry.get(CONF_MAX_VALUE)
         self._nan_value = entry.get(CONF_NAN_VALUE)
-        self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
+        self._zero_suppress = entry.get(CONF_ZERO_SUPPRESS)
 
     @abstractmethod
     async def _async_update(self) -> None:
@@ -143,7 +134,6 @@ class BasePlatform(Entity):
             self._cancel_call()
             self._cancel_call = None
         self._attr_available = False
-        self.async_write_ha_state()
 
     async def async_await_connection(self, _now: Any) -> None:
         """Wait for first connect."""
@@ -161,11 +151,6 @@ class BasePlatform(Entity):
         )
         self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_disable)
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_START_ENTITY, self.async_local_update
-            )
         )
 
 
@@ -352,7 +337,6 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             return
 
         if self._verify_delay:
-            assert self._verify_delay == 1
             if self._cancel_call:
                 self._cancel_call()
                 self._cancel_call = None
