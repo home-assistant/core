@@ -1,0 +1,102 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter your VRM API access token. We will then fetch your available sites.",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "The API access token for your VRM account"
+        }
+      },
+      "select_site": {
+        "description": "Select the VRM site",
+        "data": {
+          "site_id": "VRM site"
+        },
+        "data_description": {
+          "site_id": "Select one of your VRM sites"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Your existing token is no longer valid. Please enter a new VRM API access token to reauthenticate.",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "The new API access token for your VRM account"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_sites": "No sites found for this account",
+      "site_not_found": "Site ID not found. Please check the ID and try again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_production_estimate_yesterday": {
+        "name": "Estimated energy production - Yesterday"
+      },
+      "energy_production_estimate_today": {
+        "name": "Estimated energy production - Today"
+      },
+      "energy_production_estimate_today_remaining": {
+        "name": "Estimated energy production - Today remaining"
+      },
+      "energy_production_estimate_tomorrow": {
+        "name": "Estimated energy production - Tomorrow"
+      },
+      "power_highest_peak_time_yesterday": {
+        "name": "Highest peak time - Yesterday"
+      },
+      "power_highest_peak_time_today": {
+        "name": "Highest peak time - Today"
+      },
+      "power_highest_peak_time_tomorrow": {
+        "name": "Highest peak time - Tomorrow"
+      },
+      "energy_production_current_hour": {
+        "name": "Estimated energy production - Current hour"
+      },
+      "energy_production_next_hour": {
+        "name": "Estimated energy production - Next hour"
+      },
+      "energy_consumption_estimate_yesterday": {
+        "name": "Estimated energy consumption - Yesterday"
+      },
+      "energy_consumption_estimate_today": {
+        "name": "Estimated energy consumption - Today"
+      },
+      "energy_consumption_estimate_today_remaining": {
+        "name": "Estimated energy consumption - Today remaining"
+      },
+      "energy_consumption_estimate_tomorrow": {
+        "name": "Estimated energy consumption - Tomorrow"
+      },
+      "consumption_highest_peak_time_yesterday": {
+        "name": "Highest consumption peak time - Yesterday"
+      },
+      "consumption_highest_peak_time_today": {
+        "name": "Highest consumption peak time - Today"
+      },
+      "consumption_highest_peak_time_tomorrow": {
+        "name": "Highest consumption peak time - Tomorrow"
+      },
+      "energy_consumption_current_hour": {
+        "name": "Estimated energy consumption - Current hour"
+      },
+      "energy_consumption_next_hour": {
+        "name": "Estimated energy consumption - Next hour"
+      }
+    }
+  }
+}

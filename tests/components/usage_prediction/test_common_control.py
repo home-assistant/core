@@ -15,6 +15,7 @@ from homeassistant.components.usage_prediction.common_control import (
 from homeassistant.components.usage_prediction.models import EntityUsagePredictions
 from homeassistant.const import EVENT_CALL_SERVICE
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.components.recorder.common import async_wait_recording_done
 
@@ -135,6 +136,21 @@ async def test_multiple_entities_in_one_call(hass: HomeAssistant) -> None:
     """Test handling of service calls with multiple entity IDs."""
     user_id = str(uuid.uuid4())
 
+    ent_reg = er.async_get(hass)
+    ent_reg.async_get_or_create(
+        "light",
+        "test",
+        "living_room",
+        suggested_object_id="living_room",
+        hidden_by=er.RegistryEntryHider.USER,
+    )
+    ent_reg.async_get_or_create(
+        "light",
+        "test",
+        "kitchen",
+        suggested_object_id="kitchen",
+    )
+
     with freeze_time("2023-07-01 10:00:00+00:00"):  # Morning
         hass.bus.async_fire(
             EVENT_CALL_SERVICE,
@@ -159,8 +175,9 @@ async def test_multiple_entities_in_one_call(hass: HomeAssistant) -> None:
     with freeze_time("2023-07-02 10:00:00+00:00"):  # Next day, so events are recent
         results = await async_predict_common_control(hass, user_id)
 
-    # All three lights should be counted (10:00 UTC = 02:00 local = night)
-    assert results.night == ["light.living_room", "light.kitchen", "light.hallway"]
+    # Two lights should be counted (10:00 UTC = 02:00 local = night)
+    # Living room is hidden via entity registry
+    assert results.night == ["light.kitchen", "light.hallway"]
     assert results.morning == []
     assert results.afternoon == []
     assert results.evening == []

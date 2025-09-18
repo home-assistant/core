@@ -3,11 +3,15 @@
     "options": {
       "step": {
         "pick_firmware": {
-          "title": "Pick your firmware",
-          "description": "Let's get started with setting up your {model}. Do you want to use it to set up a Zigbee or Thread network?",
+          "title": "Pick your protocol",
+          "description": "You can use your {model} for a Zigbee or Thread network. Please check what type of devices you want to add to Home Assistant. You can always change this later.",
           "menu_options": {
-            "pick_firmware_zigbee": "Zigbee",
-            "pick_firmware_thread": "Thread"
+            "pick_firmware_zigbee": "Use as Zigbee adapter",
+            "pick_firmware_thread": "Use as Thread adapter"
+          },
+          "menu_option_descriptions": {
+            "pick_firmware_zigbee": "Most common protocol.",
+            "pick_firmware_thread": "Often used for Matter over Thread devices."
           }
         },
         "confirm_zigbee": {
@@ -29,6 +33,29 @@
         "confirm_otbr": {
           "title": "OpenThread Border Router setup complete",
           "description": "Your {model} is now an OpenThread Border Router and will show up in the Thread integration."
+        },
+        "zigbee_installation_type": {
+          "title": "Set up Zigbee",
+          "description": "Choose the installation type for the Zigbee adapter.",
+          "menu_options": {
+            "zigbee_intent_recommended": "Recommended installation",
+            "zigbee_intent_custom": "Custom"
+          },
+          "menu_option_descriptions": {
+            "zigbee_intent_recommended": "Automatically install and configure Zigbee.",
+            "zigbee_intent_custom": "Manually install and configure Zigbee, for example with Zigbee2MQTT."
+          }
+        },
+        "zigbee_integration": {
+          "title": "Select Zigbee method",
+          "menu_options": {
+            "zigbee_integration_zha": "Zigbee Home Automation",
+            "zigbee_integration_other": "Other"
+          },
+          "menu_option_descriptions": {
+            "zigbee_integration_zha": "Lets Home Assistant control a Zigbee network.",
+            "zigbee_integration_other": "For example if you want to use the adapter with Zigbee2MQTT."
+          }
         }
       },
       "abort": {
