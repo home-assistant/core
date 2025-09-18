@@ -13,7 +13,6 @@ from typing import Any
 
 from b2sdk.v2 import FileVersion
 from b2sdk.v2.exception import B2Error
-import requests
 
 from homeassistant.components.backup import (
     AgentBackup,
@@ -134,18 +133,6 @@ class BackblazeBackupAgent(BackupAgent):
         self._all_files_cache_lock = asyncio.Lock()
         self._backup_list_cache_lock = asyncio.Lock()
 
-    async def _close_stream(self, stream: AsyncIterator[bytes]) -> None:
-        """Close a stream gracefully."""
-        # AsyncIterator protocol doesn't require close method.
-        # If the specific implementation has one, call it.
-        if hasattr(stream, "aclose") and callable(stream.aclose):
-            await stream.aclose()
-
-    async def _close_requests_response(self, response: requests.Response) -> None:
-        """Close a requests Response object."""
-        if hasattr(response, "close") and callable(response.close):
-            await self._hass.async_add_executor_job(response.close)
-
     async def _cleanup_failed_upload(self, filename: str) -> None:
         """Clean up a partially uploaded file after upload failure."""
         _LOGGER.warning(
@@ -181,15 +168,13 @@ class BackblazeBackupAgent(BackupAgent):
 
         _LOGGER.debug("Downloading %s", file.file_name)
 
-        # File download is a synchronous (blocking) operation, so run in executor.
         downloaded_file = await self._hass.async_add_executor_job(file.download)
         response = downloaded_file.response
 
-        async def stream_buffer_and_close() -> AsyncIterator[bytes]:
-            """Stream the response into an AsyncIterator and ensure closure."""
+        async def stream_response() -> AsyncIterator[bytes]:
+            """Stream the response into an AsyncIterator."""
             try:
-                # B2 SDK's response.iter_content is blocking, so stream it chunk by chunk
-                # within the executor. Use 1MB chunks for efficient thread switching.
+                # Use 1MB chunks for efficient thread switching.
                 iterator = response.iter_content(chunk_size=1024 * 1024)
                 while True:
                     chunk = await self._hass.async_add_executor_job(
@@ -199,11 +184,9 @@ class BackblazeBackupAgent(BackupAgent):
                         break
                     yield chunk
             finally:
-                _LOGGER.debug("Closing download stream for %s", file.file_name)
-                # Ensure the underlying response stream is closed
-                await self._close_requests_response(response)
+                _LOGGER.debug("Finished streaming download for %s", file.file_name)
 
-        return stream_buffer_and_close()
+        return stream_response()
 
     @handle_b2_errors
     async def async_upload_backup(
@@ -229,7 +212,6 @@ class BackblazeBackupAgent(BackupAgent):
             }
         ).encode("utf-8")
 
-        # Safety check: validate backup size
         if backup.size > MAX_BACKUP_SIZE:
             raise BackupAgentError(
                 f"Backup size ({backup.size} bytes) exceeds maximum allowed size "
@@ -244,7 +226,6 @@ class BackblazeBackupAgent(BackupAgent):
 
         try:
             # --- Main Backup File Upload ---
-            # Use streaming upload via AsyncIteratorReader (B2SDK handles simple vs multipart)
             await self._upload_backup_file(prefixed_tar_filename, open_stream, {})
             _LOGGER.info(
                 "Main backup file upload finished for %s", prefixed_tar_filename
@@ -277,7 +258,6 @@ class BackblazeBackupAgent(BackupAgent):
             ) from err
         else:
             _LOGGER.info("Backup upload complete: %s", prefixed_tar_filename)
-            # Invalidate cache after successful upload
             self._invalidate_caches(
                 backup.backup_id, prefixed_tar_filename, prefixed_metadata_filename
             )
@@ -317,9 +297,7 @@ class BackblazeBackupAgent(BackupAgent):
             _LOGGER.exception("An error occurred during upload for %s:", filename)
             raise
         finally:
-            # Close the reader to clean up resources
             reader.close()
-            await self._close_stream(stream)
 
     @handle_b2_errors
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
@@ -336,10 +314,8 @@ class BackblazeBackupAgent(BackupAgent):
             metadata_file.file_name if metadata_file else "None",
         )
 
-        # Delete the main backup file.
         await self._hass.async_add_executor_job(file.delete)
 
-        # Attempt to delete the metadata file if it exists.
         if metadata_file:
             try:
                 await self._hass.async_add_executor_job(metadata_file.delete)
@@ -358,7 +334,6 @@ class BackblazeBackupAgent(BackupAgent):
                 "Metadata file for backup %s not found for deletion", backup_id
             )
 
-        # Invalidate cache after successful deletion - remove specific files
         self._invalidate_caches(
             backup_id,
             file.file_name,
@@ -398,10 +373,8 @@ class BackblazeBackupAgent(BackupAgent):
                 if file_name.endswith(METADATA_FILE_SUFFIX)
             ]
 
-            # Run metadata downloads and parsing concurrently.
             results = await asyncio.gather(*tasks)
 
-            # Filter out None results and store in cache
             backups = {backup.backup_id: backup for backup in results if backup}
             self._backup_list_cache = backups
             self._backup_list_cache_expiration = time() + CACHE_TTL
@@ -463,7 +436,6 @@ class BackblazeBackupAgent(BackupAgent):
         ]
 
         results = await asyncio.gather(*tasks)
-        # Return the first matching backup and metadata file found.
         for result_backup_file, result_metadata_file_version in results:
             if result_backup_file and result_metadata_file_version:
                 return result_backup_file, result_metadata_file_version
@@ -483,24 +455,13 @@ class BackblazeBackupAgent(BackupAgent):
         Called within a thread pool executor.
         """
         try:
-            # Explicitly close the download response for metadata file in executor
             download_response = file_version.download().response
             try:
                 metadata_content = _parse_metadata(
                     download_response.content.decode("utf-8")
                 )
             except ValueError:
-                # Invalid metadata, skip this file
-                if hasattr(download_response, "close") and callable(
-                    download_response.close
-                ):
-                    download_response.close()
                 return None, None
-            finally:
-                if hasattr(download_response, "close") and callable(
-                    download_response.close
-                ):
-                    download_response.close()
 
             if metadata_content.get("backup_id") == target_backup_id:
                 base_name = file_name.removesuffix(METADATA_FILE_SUFFIX)
@@ -585,24 +546,13 @@ class BackblazeBackupAgent(BackupAgent):
     ) -> AgentBackup | None:
         """Synchronously process a single metadata file and return an AgentBackup if valid."""
         try:
-            # Explicitly close the download response for metadata file in executor
             download_response = file_version.download().response
             try:
                 metadata_content = _parse_metadata(
                     download_response.content.decode("utf-8")
                 )
             except ValueError:
-                # Invalid metadata, skip this file
-                if hasattr(download_response, "close") and callable(
-                    download_response.close
-                ):
-                    download_response.close()
                 return None
-            finally:
-                if hasattr(download_response, "close") and callable(
-                    download_response.close
-                ):
-                    download_response.close()
 
             # Schema validation already checked required fields, so we can proceed
             # Derive the expected main backup file name from the metadata file name.

@@ -24,6 +24,46 @@ ISSUE_BUCKET_ACCESS_RESTRICTED = "bucket_access_restricted"
 ISSUE_BUCKET_NOT_FOUND = "bucket_not_found"
 
 
+def create_bucket_access_restricted_issue(
+    hass: HomeAssistant, entry: ConfigEntry, bucket_name: str
+) -> None:
+    """Create a repair issue for restricted bucket access."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"{ISSUE_BUCKET_ACCESS_RESTRICTED}_{entry.entry_id}",
+        is_fixable=True,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key=ISSUE_BUCKET_ACCESS_RESTRICTED,
+        translation_placeholders={
+            "title": entry.title,
+            "bucket_name": bucket_name,
+            "entry_id": entry.entry_id,
+        },
+    )
+
+
+def create_bucket_not_found_issue(
+    hass: HomeAssistant, entry: ConfigEntry, bucket_name: str
+) -> None:
+    """Create a repair issue for non-existent bucket."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"{ISSUE_BUCKET_NOT_FOUND}_{entry.entry_id}",
+        is_fixable=True,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key=ISSUE_BUCKET_NOT_FOUND,
+        translation_placeholders={
+            "title": entry.title,
+            "bucket_name": bucket_name,
+            "entry_id": entry.entry_id,
+        },
+    )
+
+
 async def async_check_for_repair_issues(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
@@ -34,8 +74,7 @@ async def async_check_for_repair_issues(
         # Test basic connectivity and permissions
         await hass.async_add_executor_job(bucket.api.account_info.get_allowed)
     except Unauthorized:
-        # Authentication failures are handled via reauth flow in setup
-        pass
+        entry.async_start_reauth(hass)
     except RestrictedBucket as err:
         ir.async_create_issue(
             hass,
