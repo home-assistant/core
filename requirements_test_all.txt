@@ -235,7 +235,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.0.0
+aioesphomeapi==41.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -331,7 +331,7 @@ aiopulse==0.4.6
 aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==3.1.1
+aiopvapi==3.2.1
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==4.2.2
@@ -351,7 +351,7 @@ aioraven==0.7.1
 aiorecollect==2023.09.0
 
 # homeassistant.components.ridwell
-aioridwell==2024.01.0
+aioridwell==2025.09.0
 
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.42
@@ -366,7 +366,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.9.0
+aioshelly==13.10.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -399,7 +399,7 @@ aiotedee==0.2.25
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==86
+aiounifi==87
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.1
@@ -930,7 +930,7 @@ google-cloud-speech==2.31.1
 google-cloud-texttospeech==2.25.1
 
 # homeassistant.components.google_generative_ai_conversation
-google-genai==1.29.0
+google-genai==1.38.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
@@ -1080,7 +1080,7 @@ igloohome-api==0.1.1
 imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.5.4
+imgw_pib==1.5.6
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.9
@@ -1463,6 +1463,9 @@ prayer-times-calculator-offline==1.0.3
 # homeassistant.components.prometheus
 prometheus-client==0.21.0
 
+# homeassistant.components.prowl
+prowlpy==1.0.2
+
 # homeassistant.components.hardware
 # homeassistant.components.recorder
 # homeassistant.components.systemmonitor
@@ -1648,7 +1651,7 @@ pyegps==0.2.5
 
 # homeassistant.components.emoncms
 # homeassistant.components.emoncms_history
-pyemoncms==0.1.2
+pyemoncms==0.1.3
 
 # homeassistant.components.enphase_envoy
 pyenphase==2.3.0
@@ -1759,7 +1762,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.11
+pylamarzocco==2.1.0
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1780,7 +1783,7 @@ pylitejet==0.6.3
 pylitterbot==2024.2.4
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.24.0
+pylutron-caseta==0.25.0
 
 # homeassistant.components.lutron
 pylutron==0.2.18
@@ -2269,6 +2272,9 @@ samsungtvws[async,encrypted]==2.7.2
 # homeassistant.components.sanix
 sanix==1.0.6
 
+# homeassistant.components.satel_integra
+satel-integra==0.3.7
+
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
 
@@ -2334,7 +2340,7 @@ snapcast==2.3.6
 soco==0.30.11
 
 # homeassistant.components.solarlog
-solarlog_cli==0.5.0
+solarlog_cli==0.6.0
 
 # homeassistant.components.solax
 solax==3.2.3
@@ -2537,6 +2543,9 @@ velbus-aio==2025.8.0
 # homeassistant.components.venstar
 venstarcolortouch==0.21
 
+# homeassistant.components.victron_remote_monitoring
+victron-vrm==0.1.7
+
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
 
@@ -2630,7 +2639,7 @@ yalexs-ble==3.1.2
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==9.0.1
+yalexs==9.1.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.16
@@ -2660,7 +2669,7 @@ zeroconf==0.147.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.70
+zha==0.0.71
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.67.1
