@@ -133,10 +133,7 @@ def load_ac_power_sensor(
 ) -> None:
     """Load AC power sensor."""
     ac_power_state = (
-        "on"
-        if coordinator.data.device_state.get("powerAC") == "ok"
-        or coordinator.data.device_state.get("power", {}).get("AC") == "1"
-        else "off"
+        "on" if coordinator.data.device_state.get("powerAC") == "ok" else "off"
     )
     sensors.append(
         OlarmBinarySensor(
