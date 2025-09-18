@@ -107,8 +107,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/ambient_station/ @bachya
 /tests/components/ambient_station/ @bachya
 /homeassistant/components/amcrest/ @flacjacket
-/homeassistant/components/analytics/ @home-assistant/core @ludeeus
-/tests/components/analytics/ @home-assistant/core @ludeeus
+/homeassistant/components/analytics/ @home-assistant/core
+/tests/components/analytics/ @home-assistant/core
 /homeassistant/components/analytics_insights/ @joostlek
 /tests/components/analytics_insights/ @joostlek
 /homeassistant/components/android_ip_webcam/ @engrbm87
@@ -1533,8 +1533,8 @@ build.json @home-assistant/supervisor
 /tests/components/switchbee/ @jafar-atili
 /homeassistant/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski @zerzhang
 /tests/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski @zerzhang
-/homeassistant/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur
-/tests/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur
+/homeassistant/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur @XiaoLing-git
+/tests/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur @XiaoLing-git
 /homeassistant/components/switcher_kis/ @thecode @YogevBokobza
 /tests/components/switcher_kis/ @thecode @YogevBokobza
 /homeassistant/components/switchmate/ @danielhiversen @qiz-li
