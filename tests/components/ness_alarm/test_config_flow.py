@@ -7,6 +7,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.ness_alarm.config_flow import OptionsFlow
 from homeassistant.components.ness_alarm.const import (
     CONF_ID,
     CONF_INFER_ARMING_STATE,
@@ -501,3 +502,202 @@ async def test_import_connection_failure(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_form_unknown_panel_model(hass: HomeAssistant) -> None:
+    """Test handling of unknown panel model."""
+    # Create panel_info with unknown model
+    panel_info = MagicMock()
+    panel_info.model.value = "UNKNOWN_MODEL"
+    panel_info.version = "1.0"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.ness_alarm.config_flow.Client"
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.ness_alarm.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        mock_client = AsyncMock(spec=Client)
+        mock_client_class.return_value = mock_client
+        mock_client.get_panel_info = AsyncMock(return_value=panel_info)
+        mock_client.keepalive = AsyncMock()
+        mock_client.close = AsyncMock()
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_PORT: 2401,
+                CONF_SCAN_INTERVAL: 60,
+                CONF_INFER_ARMING_STATE: False,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Ness Alarm UNKNOWN_MODEL (192.168.1.100)"
+    assert result2["data"]["panel_model"] == "UNKNOWN_MODEL"
+
+
+async def test_options_flow_zone_count_16(hass: HomeAssistant) -> None:
+    """Test options flow with 16 zones."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 2401,
+            "panel_model": "D8X",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SCAN_INTERVAL: 120,
+            CONF_INFER_ARMING_STATE: True,
+            CONF_SUPPORT_HOME_ARM: False,
+            "enabled_zones": 16,
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    # Check that the entry data was updated with MANUAL_16
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry.data["panel_model"] == "MANUAL_16"
+
+
+async def test_options_flow_zone_count_24(hass: HomeAssistant) -> None:
+    """Test options flow with 24 zones."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 2401,
+            "panel_model": "D8X",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SCAN_INTERVAL: 120,
+            CONF_INFER_ARMING_STATE: True,
+            CONF_SUPPORT_HOME_ARM: False,
+            "enabled_zones": 24,
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    # Check that the entry data was updated with MANUAL_24
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry.data["panel_model"] == "MANUAL_24"
+
+
+async def test_options_flow_zone_count_32(hass: HomeAssistant) -> None:
+    """Test options flow with 32 zones."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 2401,
+            "panel_model": "D8X",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SCAN_INTERVAL: 120,
+            CONF_INFER_ARMING_STATE: True,
+            CONF_SUPPORT_HOME_ARM: False,
+            "enabled_zones": 32,
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    # Check that the entry data was updated with MANUAL_32
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry.data["panel_model"] == "MANUAL_32"
+
+
+async def test_options_flow_entry_not_found(hass: HomeAssistant) -> None:
+    """Test options flow when entry is not found during step."""
+
+    # Create a mock entry but don't add it to hass
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 2401,
+            "panel_model": "D16X",
+        },
+    )
+
+    # Create the options flow with a non-existent entry_id
+    options_flow = OptionsFlow(entry)
+    options_flow.hass = hass
+    options_flow._entry_id = "non_existent_entry_id"  # Set a fake entry_id
+
+    # Call async_step_init - should abort because entry doesn't exist
+    result = await options_flow.async_step_init(
+        user_input={
+            CONF_SCAN_INTERVAL: 120,
+            CONF_INFER_ARMING_STATE: True,
+            CONF_SUPPORT_HOME_ARM: False,
+            "enabled_zones": 16,
+        }
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "entry_not_found"
+
+
+async def test_options_flow_without_enabled_zones(hass: HomeAssistant) -> None:
+    """Test options flow without enabled_zones in user_input."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 2401,
+            "panel_model": "D16X",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Create the options flow directly
+    options_flow = OptionsFlow(entry)
+    options_flow.hass = hass
+
+    # Call async_step_init with user_input that doesn't have enabled_zones
+    result = await options_flow.async_step_init(
+        user_input={
+            CONF_SCAN_INTERVAL: 120,
+            CONF_INFER_ARMING_STATE: True,
+            CONF_SUPPORT_HOME_ARM: True,
+            # No "enabled_zones" key
+        }
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_SCAN_INTERVAL: 120,
+        CONF_INFER_ARMING_STATE: True,
+        CONF_SUPPORT_HOME_ARM: True,
+    }
+    # Panel model should remain unchanged
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry.data["panel_model"] == "D16X"
