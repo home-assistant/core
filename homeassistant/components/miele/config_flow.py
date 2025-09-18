@@ -4,6 +4,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from pymiele import OAUTH2_SCOPE_NEW as OAUTH2_SCOPE
+
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
@@ -25,6 +27,13 @@ class OAuth2FlowHandler(
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
+
+    @property
+    def extra_authorize_data(self) -> dict[str, Any]:
+        """Extra data that needs to be appended to the authorize url."""
+        return (
+            {"scope": " ".join(sorted(OAUTH2_SCOPE))} if len(OAUTH2_SCOPE) > 0 else {}
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

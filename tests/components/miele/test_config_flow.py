@@ -3,7 +3,10 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock
 
-from pymiele import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from pymiele import (
+    OAUTH2_AUTHORIZE_NEW as OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN_NEW as OAUTH2_TOKEN,
+)
 import pytest
 
 from homeassistant.components.miele.const import DOMAIN
@@ -19,6 +22,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 REDIRECT_URL = "https://example.com/auth/external/callback"
+CURRENT_SCOPE = "mcs_thirdparty_media mcs_thirdparty_read mcs_thirdparty_write openid"
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -46,6 +50,7 @@ async def test_full_flow(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
+        f"&scope={CURRENT_SCOPE.replace(' ', '+')}"
     )
 
     client = await hass_client_no_auth()
@@ -60,6 +65,7 @@ async def test_full_flow(
             "access_token": "mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
+            "scope": "openid devices basic mcs_thirdparty_read mcs_thirdparty_write mcs_thirdparty_media",
         },
     )
 
@@ -89,6 +95,7 @@ async def test_flow_reauth_abort(
             "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
             "token_type": "Bearer",
             "expires_at": expires_at,
+            "scope": "openid mcs_thirdparty_read mcs_thirdparty_write mcs_thirdparty_media",
         },
     }
     assert hass.config_entries.async_update_entry(
@@ -117,6 +124,7 @@ async def test_flow_reauth_abort(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
+        f"&scope={CURRENT_SCOPE.replace(' ', '+')}"
     )
 
     client = await hass_client_no_auth()
@@ -162,6 +170,7 @@ async def test_flow_reconfigure_abort(
             "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
             "token_type": "Bearer",
             "expires_at": expires_at,
+            "scope": "openid devices basic mcs_thirdparty_read mcs_thirdparty_write mcs_thirdparty_media",
         },
     }
     assert hass.config_entries.async_update_entry(
@@ -185,6 +194,7 @@ async def test_flow_reconfigure_abort(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
+        f"&scope={CURRENT_SCOPE.replace(' ', '+')}"
     )
 
     client = await hass_client_no_auth()
@@ -244,6 +254,7 @@ async def test_zeroconf_flow(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
+        f"&scope={CURRENT_SCOPE.replace(' ', '+')}"
     )
 
     client = await hass_client_no_auth()
@@ -258,6 +269,7 @@ async def test_zeroconf_flow(
             "access_token": "mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
+            "scope": "openid devices basic mcs_thirdparty_read mcs_thirdparty_write mcs_thirdparty_media",
         },
     )
 

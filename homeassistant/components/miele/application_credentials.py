@@ -1,6 +1,9 @@
 """Application credentials platform for the Miele integration."""
 
-from pymiele import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from pymiele import (
+    OAUTH2_AUTHORIZE_NEW as OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN_NEW as OAUTH2_TOKEN,
+)
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant

@@ -46,6 +46,7 @@ def mock_config_entry(hass: HomeAssistant, expires_at: float) -> MockConfigEntry
                 "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
                 "token_type": "Bearer",
                 "expires_at": expires_at,
+                "scope": "openid devices basic mcs_thirdparty_read mcs_thirdparty_write mcs_thirdparty_media",
             },
         },
         entry_id="miele_test",
