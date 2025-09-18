@@ -101,52 +101,46 @@ async def async_setup_entry(
 
 def load_zone_sensors(coordinator, config_entry, sensors):
     """Load zone sensors and bypass sensors."""
-    if (
-        coordinator.data
-        and coordinator.data.device_profile is not None
-        and coordinator.data.device_state is not None
-    ):
-        device_id = config_entry.data["device_id"]
-        zones = coordinator.data.device_state.get("zones", [])
-        labels = coordinator.data.device_profile.get("zonesLabels")
-        types = coordinator.data.device_profile.get("zonesTypes")
-        for zone_index, zone_state in enumerate(zones):
-            zone_label = labels[zone_index]
-            zone_class = types[zone_index]
-            for sensor_type in ("zone", "zone_bypass"):
-                sensors.append(
-                    OlarmBinarySensor(
-                        coordinator,
-                        SENSOR_DESCRIPTIONS[sensor_type],
-                        device_id,
-                        zone_index,
-                        zone_state,
-                        zone_label,
-                        zone_class,
-                    )
+    device_id = config_entry.data["device_id"]
+    zones = coordinator.data.device_state.get("zones", [])
+    labels = coordinator.data.device_profile.get("zonesLabels")
+    types = coordinator.data.device_profile.get("zonesTypes")
+    for zone_index, zone_state in enumerate(zones):
+        zone_label = labels[zone_index]
+        zone_class = types[zone_index]
+        for sensor_type in ("zone", "zone_bypass"):
+            sensors.append(
+                OlarmBinarySensor(
+                    coordinator,
+                    SENSOR_DESCRIPTIONS[sensor_type],
+                    device_id,
+                    zone_index,
+                    zone_state,
+                    zone_label,
+                    zone_class,
                 )
+            )
 
 
 def load_ac_power_sensor(coordinator, config_entry, sensors):
     """Load AC power sensor."""
-    if coordinator.data and coordinator.data.device_state is not None:
-        ac_power_state = (
-            "on"
-            if coordinator.data.device_state.get("powerAC") == "ok"
-            or coordinator.data.device_state.get("power", {}).get("AC") == "1"
-            else "off"
+    ac_power_state = (
+        "on"
+        if coordinator.data.device_state.get("powerAC") == "ok"
+        or coordinator.data.device_state.get("power", {}).get("AC") == "1"
+        else "off"
+    )
+    sensors.append(
+        OlarmBinarySensor(
+            coordinator,
+            SENSOR_DESCRIPTIONS["ac_power"],
+            config_entry.data["device_id"],
+            0,
+            ac_power_state,
+            "AC Power",
+            None,
         )
-        sensors.append(
-            OlarmBinarySensor(
-                coordinator,
-                SENSOR_DESCRIPTIONS["ac_power"],
-                config_entry.data["device_id"],
-                0,
-                ac_power_state,
-                "AC Power",
-                None,
-            )
-        )
+    )
 
 
 class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
