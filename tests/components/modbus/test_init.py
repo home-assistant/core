@@ -904,74 +904,86 @@ async def test_pb_service_write(
     ],
 )
 @pytest.mark.parametrize(
-    "do_read",
+    ("do_read", "do_return"),
     [
-        {
-            DATA: {
+        (
+            {
                 ATTR_ADDRESS: 14,
                 ATTR_COUNT: 1,
                 ATTR_TYPE: CALL_TYPE_REGISTER_INPUT,
             },
-            FUNC: CALL_TYPE_REGISTER_INPUT,
-            RETURN_VALUE: ReadResult([0x0001]),
-            EXPECTED_RESULT: {"values": [0x0001]},
-        },
-        {
-            DATA: {
+            {
+                FUNC: CALL_TYPE_REGISTER_INPUT,
+                RETURN_VALUE: ReadResult([0x0001]),
+                EXPECTED_RESULT: {"values": [0x0001]},
+            },
+        ),
+        (
+            {
                 ATTR_ADDRESS: 15,
                 ATTR_TYPE: CALL_TYPE_REGISTER_INPUT,
             },
-            FUNC: CALL_TYPE_REGISTER_INPUT,
-            RETURN_VALUE: ReadResult([0x1000]),
-            EXPECTED_RESULT: {"values": [0x1000]},
-        },
-        {
-            DATA: {
+            {
+                FUNC: CALL_TYPE_REGISTER_INPUT,
+                RETURN_VALUE: ReadResult([0x1000]),
+                EXPECTED_RESULT: {"values": [0x1000]},
+            },
+        ),
+        (
+            {
                 ATTR_ADDRESS: 16,
                 ATTR_COUNT: 2,
                 ATTR_TYPE: CALL_TYPE_REGISTER_INPUT,
             },
-            FUNC: CALL_TYPE_REGISTER_INPUT,
-            RETURN_VALUE: ReadResult([0x0003, 0x0002]),
-            EXPECTED_RESULT: {"values": [0x0003, 0x0002]},
-        },
-        {
-            DATA: {
+            {
+                FUNC: CALL_TYPE_REGISTER_INPUT,
+                RETURN_VALUE: ReadResult([0x0003, 0x0002]),
+                EXPECTED_RESULT: {"values": [0x0003, 0x0002]},
+            },
+        ),
+        (
+            {
                 ATTR_ADDRESS: 17,
                 ATTR_COUNT: 1,
                 ATTR_TYPE: CALL_TYPE_REGISTER_HOLDING,
             },
-            FUNC: CALL_TYPE_REGISTER_HOLDING,
-            RETURN_VALUE: ReadResult([0x0004]),
-            EXPECTED_RESULT: {"values": [0x0004]},
-        },
-        {
-            DATA: {
+            {
+                FUNC: CALL_TYPE_REGISTER_HOLDING,
+                RETURN_VALUE: ReadResult([0x0004]),
+                EXPECTED_RESULT: {"values": [0x0004]},
+            },
+        ),
+        (
+            {
                 ATTR_ADDRESS: 18,
                 ATTR_TYPE: CALL_TYPE_REGISTER_HOLDING,
             },
-            FUNC: CALL_TYPE_REGISTER_HOLDING,
-            RETURN_VALUE: ReadResult([0x0005]),
-            EXPECTED_RESULT: {"values": [0x0005]},
-        },
-        {
-            DATA: {
+            {
+                FUNC: CALL_TYPE_REGISTER_HOLDING,
+                RETURN_VALUE: ReadResult([0x0005]),
+                EXPECTED_RESULT: {"values": [0x0005]},
+            },
+        ),
+        (
+            {
                 ATTR_ADDRESS: 19,
                 ATTR_COUNT: 2,
                 ATTR_TYPE: CALL_TYPE_REGISTER_HOLDING,
             },
-            FUNC: CALL_TYPE_REGISTER_HOLDING,
-            RETURN_VALUE: ReadResult([0x0006, 0x0007]),
-            EXPECTED_RESULT: {"values": [0x0006, 0x0007]},
-        },
+            {
+                FUNC: CALL_TYPE_REGISTER_HOLDING,
+                RETURN_VALUE: ReadResult([0x0006, 0x0007]),
+                EXPECTED_RESULT: {"values": [0x0006, 0x0007]},
+            },
+        ),
     ],
 )
 @pytest.mark.parametrize(
-    "do_return",
+    "do_exception",
     [
-        {VALUE: None, DATA: ""},  # None: RETURN_VALUE from do_read will be used
-        {VALUE: ExceptionResponse(0x06), DATA: "Pymodbus:"},
-        {VALUE: ModbusException("fail read_"), DATA: "Pymodbus:"},
+        None,
+        ExceptionResponse(0x06),
+        ModbusException("fail read_"),
     ],
 )
 @pytest.mark.parametrize(
@@ -985,6 +997,7 @@ async def test_pb_service_read(
     hass: HomeAssistant,
     do_read,
     do_return,
+    do_exception,
     do_slave,
     caplog: pytest.LogCaptureFixture,
     mock_modbus_with_pymodbus,
@@ -999,20 +1012,20 @@ async def test_pb_service_read(
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
         do_slave: 17,
-        ATTR_ADDRESS: do_read[DATA][ATTR_ADDRESS],
-        ATTR_TYPE: do_read[DATA][ATTR_TYPE],
+        ATTR_ADDRESS: do_read[ATTR_ADDRESS],
+        ATTR_TYPE: do_read[ATTR_TYPE],
     }
-    if ATTR_COUNT in do_read[DATA]:
-        data[ATTR_COUNT] = do_read[DATA][ATTR_COUNT]
+    if ATTR_COUNT in do_read:
+        data[ATTR_COUNT] = do_read[ATTR_COUNT]
     mock_modbus_with_pymodbus.reset_mock()
     caplog.clear()
     caplog.set_level(logging.DEBUG)
-    return_value = do_return[VALUE]
+    return_value = do_exception
     if return_value is None:
-        return_value = do_read[RETURN_VALUE]
-    func_name[do_read[FUNC]].return_value = return_value
+        return_value = do_return[RETURN_VALUE]
+    func_name[do_return[FUNC]].return_value = return_value
 
-    error_expected = bool(do_return[DATA])
+    error_expected = do_exception is not None
     if error_expected:
         with pytest.raises(HomeAssistantError):
             service_result = await hass.services.async_call(
@@ -1027,9 +1040,9 @@ async def test_pb_service_read(
             DOMAIN, SERVICE_READ_REGISTERS, data, blocking=True, return_response=True
         )
 
-    assert func_name[do_read[FUNC]].called
-    assert func_name[do_read[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
-    assert func_name[do_read[FUNC]].call_args.kwargs == {
+    assert func_name[do_return[FUNC]].called
+    assert func_name[do_return[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
+    assert func_name[do_return[FUNC]].call_args.kwargs == {
         DEVICE_ID: 17,
         ATTR_COUNT: data.get(ATTR_COUNT, 1),
     }
@@ -1037,7 +1050,7 @@ async def test_pb_service_read(
     if error_expected:
         assert any(message.startswith("Pymodbus:") for message in caplog.messages)
     else:
-        assert service_result == do_read[EXPECTED_RESULT]
+        assert service_result == do_return[EXPECTED_RESULT]
 
 
 @pytest.fixture(name="mock_modbus_read_pymodbus")
