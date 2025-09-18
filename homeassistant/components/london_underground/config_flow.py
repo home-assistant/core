@@ -87,7 +87,7 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        _: ConfigEntry,
     ) -> LondonUndergroundOptionsFlow:
         """Get the options flow for this handler."""
         return LondonUndergroundOptionsFlow()
