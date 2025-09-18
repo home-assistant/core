@@ -107,11 +107,11 @@ def load_zone_sensors(
     """Load zone sensors and bypass sensors."""
     device_id = config_entry.data["device_id"]
     zones = coordinator.data.device_state.get("zones", [])
-    labels = coordinator.data.device_profile.get("zonesLabels")
-    types = coordinator.data.device_profile.get("zonesTypes")
+    labels = coordinator.data.device_profile.get("zonesLabels", [])
+    types = coordinator.data.device_profile.get("zonesTypes", [])
     for zone_index, zone_state in enumerate(zones):
-        zone_label = labels[zone_index]
-        zone_class = types[zone_index]
+        zone_label = labels.get(zone_index, "")
+        zone_class = types.get(zone_index, 0)
         sensors.extend(
             OlarmBinarySensor(
                 coordinator,
