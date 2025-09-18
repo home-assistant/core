@@ -223,28 +223,24 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         ):
             for proc in processes:
                 try:
+                    if not hasattr(proc, "num_fds"):
+                        _LOGGER.debug(
+                            "Process %s does not support num_fds() method",
+                            proc.name(),
+                        )
+                        continue
+
                     process_name = proc.name()
                     # Only collect FD data for processes we're monitoring
                     if process_name in self._monitor_processes:
-                        if hasattr(proc, "num_fds"):
-                            process_fds[process_name] = proc.num_fds()
-                            _LOGGER.debug(
-                                "Process %s has %d file descriptors",
-                                process_name,
-                                process_fds[process_name],
-                            )
-                        else:
-                            _LOGGER.debug(
-                                "Process %s does not support num_fds() method (likely Windows)",
-                                process_name,
-                            )
+                        process_fds[process_name] = proc.num_fds()
                 except (NoSuchProcess, AccessDenied):
-                    _LOGGER.debug(
+                    _LOGGER.warning(
                         "Failed to get file descriptor count for process %s: access denied or process not found",
                         proc.pid,
                     )
                 except OSError as err:
-                    _LOGGER.debug(
+                    _LOGGER.warning(
                         "OS error getting file descriptor count for process %s: %s",
                         proc.pid,
                         err,
