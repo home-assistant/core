@@ -32,7 +32,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HassJobType, HomeAssistant
 from homeassistant.generated.mqtt import MQTT
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -66,10 +70,297 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "configuration_url": "http://example.com",
 }
 
+MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_LOCAL_CODE = {
+    "4b06357ef8654e8d9c54cee5bb0e9391": {
+        "platform": "alarm_control_panel",
+        "name": "Alarm",
+        "entity_category": "config",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{action}}",
+        "value_template": "{{ value_json.value }}",
+        "code": "1234",
+        "code_arm_required": True,
+        "code_disarm_required": True,
+        "code_trigger_required": True,
+        "payload_arm_away": "ARM_AWAY",
+        "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+        "payload_arm_home": "ARM_HOME",
+        "payload_arm_night": "ARM_NIGHT",
+        "payload_arm_vacation": "ARM_VACATION",
+        "payload_trigger": "TRIGGER",
+        "supported_features": ["arm_home", "arm_away", "trigger"],
+        "retain": False,
+        "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9391",
+    },
+}
+MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE = {
+    "4b06357ef8654e8d9c54cee5bb0e9392": {
+        "platform": "alarm_control_panel",
+        "name": "Alarm",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{action}}",
+        "value_template": "{{ value_json.value }}",
+        "code": "REMOTE_CODE",
+        "code_arm_required": True,
+        "code_disarm_required": True,
+        "code_trigger_required": True,
+        "payload_arm_away": "ARM_AWAY",
+        "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+        "payload_arm_home": "ARM_HOME",
+        "payload_arm_night": "ARM_NIGHT",
+        "payload_arm_vacation": "ARM_VACATION",
+        "payload_trigger": "TRIGGER",
+        "supported_features": ["arm_home", "arm_away", "arm_custom_bypass"],
+        "retain": False,
+        "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9392",
+    },
+}
+MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE_TEXT = {
+    "4b06357ef8654e8d9c54cee5bb0e9393": {
+        "platform": "alarm_control_panel",
+        "name": "Alarm",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{action}}",
+        "value_template": "{{ value_json.value }}",
+        "code": "REMOTE_CODE_TEXT",
+        "code_arm_required": True,
+        "code_disarm_required": True,
+        "code_trigger_required": True,
+        "payload_arm_away": "ARM_AWAY",
+        "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+        "payload_arm_home": "ARM_HOME",
+        "payload_arm_night": "ARM_NIGHT",
+        "payload_arm_vacation": "ARM_VACATION",
+        "payload_trigger": "TRIGGER",
+        "supported_features": ["arm_home", "arm_away", "arm_vacation"],
+        "retain": False,
+        "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9393",
+    },
+}
+MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT = {
+    "5b06357ef8654e8d9c54cee5bb0e939b": {
+        "platform": "binary_sensor",
+        "name": "Hatch",
+        "device_class": "door",
+        "entity_category": None,
+        "state_topic": "test-topic",
+        "payload_on": "ON",
+        "payload_off": "OFF",
+        "expire_after": 1200,
+        "off_delay": 5,
+        "value_template": "{{ value_json.value }}",
+        "entity_picture": "https://example.com/5b06357ef8654e8d9c54cee5bb0e939b",
+    },
+}
+MOCK_SUBENTRY_BUTTON_COMPONENT = {
+    "365d05e6607c4dfb8ae915cff71a954b": {
+        "platform": "button",
+        "name": "Restart",
+        "device_class": "restart",
+        "command_topic": "test-topic",
+        "entity_category": None,
+        "payload_press": "PRESS",
+        "command_template": "{{ value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/365d05e6607c4dfb8ae915cff71a954b",
+    },
+}
+MOCK_SUBENTRY_CLIMATE_COMPONENT = {
+    "b085c09efba7ec76acd94e2e0f851386": {
+        "platform": "climate",
+        "name": "Cooler",
+        "entity_category": None,
+        "entity_picture": "https://example.com/b085c09efba7ec76acd94e2e0f851386",
+        "temperature_unit": "C",
+        "mode_command_topic": "mode-command-topic",
+        "mode_command_template": "{{ value }}",
+        "mode_state_topic": "mode-state-topic",
+        "mode_state_template": "{{ value_json.mode }}",
+        "modes": ["off", "heat", "cool", "auto"],
+        # single target temperature
+        "temperature_command_topic": "temperature-command-topic",
+        "temperature_command_template": "{{ value }}",
+        "temperature_state_topic": "temperature-state-topic",
+        "temperature_state_template": "{{ value_json.temperature }}",
+        "min_temp": 8,
+        "max_temp": 28,
+        "precision": "0.1",
+        "temp_step": 1.0,
+        "initial": 19.0,
+        # power settings
+        "power_command_topic": "power-command-topic",
+        "power_command_template": "{{ value }}",
+        "payload_on": "ON",
+        "payload_off": "OFF",
+        # current action settings
+        "action_topic": "action-topic",
+        "action_template": "{{ value_json.current_action }}",
+        # target humidity
+        "target_humidity_command_topic": "target-humidity-command-topic",
+        "target_humidity_command_template": "{{ value }}",
+        "target_humidity_state_topic": "target-humidity-state-topic",
+        "target_humidity_state_template": "{{ value_json.target_humidity }}",
+        "min_humidity": 20,
+        "max_humidity": 80,
+        # current temperature
+        "current_temperature_topic": "current-temperature-topic",
+        "current_temperature_template": "{{ value_json.temperature }}",
+        # current humidity
+        "current_humidity_topic": "current-humidity-topic",
+        "current_humidity_template": "{{ value_json.humidity }}",
+        # preset mode
+        "preset_mode_command_topic": "preset-mode-command-topic",
+        "preset_mode_command_template": "{{ value }}",
+        "preset_mode_state_topic": "preset-mode-state-topic",
+        "preset_mode_value_template": "{{ value_json.preset_mode }}",
+        "preset_modes": ["auto", "eco"],
+        # fan mode
+        "fan_mode_command_topic": "fan-mode-command-topic",
+        "fan_mode_command_template": "{{ value }}",
+        "fan_mode_state_topic": "fan-mode-state-topic",
+        "fan_mode_state_template": "{{ value_json.fan_mode }}",
+        "fan_modes": ["off", "low", "medium", "high"],
+        # swing mode
+        "swing_mode_command_topic": "swing-mode-command-topic",
+        "swing_mode_command_template": "{{ value }}",
+        "swing_mode_state_topic": "swing-mode-state-topic",
+        "swing_mode_state_template": "{{ value_json.swing_mode }}",
+        "swing_modes": ["off", "on"],
+        # swing horizontal mode
+        "swing_horizontal_mode_command_topic": "swing-horizontal-mode-command-topic",
+        "swing_horizontal_mode_command_template": "{{ value }}",
+        "swing_horizontal_mode_state_topic": "swing-horizontal-mode-state-topic",
+        "swing_horizontal_mode_state_template": "{{ value_json.swing_horizontal_mode }}",
+        "swing_horizontal_modes": ["off", "on"],
+    },
+}
+MOCK_SUBENTRY_CLIMATE_HIGH_LOW_COMPONENT = {
+    "b085c09efba7ec76acd94e2e0f851387": {
+        "platform": "climate",
+        "name": "Cooler",
+        "entity_category": None,
+        "entity_picture": "https://example.com/b085c09efba7ec76acd94e2e0f851387",
+        "temperature_unit": "C",
+        "mode_command_topic": "mode-command-topic",
+        "mode_command_template": "{{ value }}",
+        "mode_state_topic": "mode-state-topic",
+        "mode_state_template": "{{ value_json.mode }}",
+        "modes": ["off", "heat", "cool", "auto"],
+        # high/low target temperature
+        "temperature_low_command_topic": "temperature-low-command-topic",
+        "temperature_low_command_template": "{{ value }}",
+        "temperature_low_state_topic": "temperature-low-state-topic",
+        "temperature_low_state_template": "{{ value_json.temperature_low }}",
+        "temperature_high_command_topic": "temperature-high-command-topic",
+        "temperature_high_command_template": "{{ value }}",
+        "temperature_high_state_topic": "temperature-high-state-topic",
+        "temperature_high_state_template": "{{ value_json.temperature_high }}",
+        "min_temp": 8,
+        "max_temp": 28,
+        "precision": "0.1",
+        "temp_step": 1.0,
+        "initial": 19.0,
+    },
+}
+MOCK_SUBENTRY_CLIMATE_NO_TARGET_TEMP_COMPONENT = {
+    "b085c09efba7ec76acd94e2e0f851388": {
+        "platform": "climate",
+        "name": "Cooler",
+        "entity_category": None,
+        "entity_picture": "https://example.com/b085c09efba7ec76acd94e2e0f851388",
+        "temperature_unit": "C",
+        "mode_command_topic": "mode-command-topic",
+        "mode_command_template": "{{ value }}",
+        "mode_state_topic": "mode-state-topic",
+        "mode_state_template": "{{ value_json.mode }}",
+        "modes": ["off", "heat", "cool", "auto"],
+    },
+}
+MOCK_SUBENTRY_COVER_COMPONENT = {
+    "b37acf667fa04c688ad7dfb27de2178b": {
+        "platform": "cover",
+        "name": "Blind",
+        "device_class": "blind",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "payload_stop": None,
+        "payload_stop_tilt": "STOP",
+        "payload_open": "OPEN",
+        "payload_close": "CLOSE",
+        "position_closed": 0,
+        "position_open": 100,
+        "position_template": "{{ value_json.position }}",
+        "position_topic": "test-topic/position",
+        "set_position_template": "{{ value }}",
+        "set_position_topic": "test-topic/position-set",
+        "state_closed": "closed",
+        "state_closing": "closing",
+        "state_open": "open",
+        "state_opening": "opening",
+        "state_stopped": "stopped",
+        "state_topic": "test-topic",
+        "tilt_closed_value": 0,
+        "tilt_max": 100,
+        "tilt_min": 0,
+        "tilt_opened_value": 100,
+        "tilt_optimistic": False,
+        "tilt_command_topic": "test-topic/tilt-set",
+        "tilt_command_template": "{{ value }}",
+        "tilt_status_topic": "test-topic/tilt",
+        "tilt_status_template": "{{ value_json.position }}",
+        "retain": False,
+        "entity_picture": "https://example.com/b37acf667fa04c688ad7dfb27de2178b",
+    },
+}
+MOCK_SUBENTRY_FAN_COMPONENT = {
+    "717f924ae9ca4fe9864d845d75d23c9f": {
+        "platform": "fan",
+        "name": "Breezer",
+        "command_topic": "test-topic",
+        "entity_category": None,
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "percentage_command_topic": "test-topic/pct",
+        "percentage_state_topic": "test-topic/pct",
+        "percentage_command_template": "{{ value }}",
+        "percentage_value_template": "{{ value_json.percentage }}",
+        "payload_reset_percentage": "None",
+        "preset_modes": ["eco", "auto"],
+        "preset_mode_command_topic": "test-topic/prm",
+        "preset_mode_state_topic": "test-topic/prm",
+        "preset_mode_command_template": "{{ value }}",
+        "preset_mode_value_template": "{{ value_json.preset_mode }}",
+        "payload_reset_preset_mode": "None",
+        "oscillation_command_topic": "test-topic/osc",
+        "oscillation_state_topic": "test-topic/osc",
+        "oscillation_command_template": "{{ value }}",
+        "oscillation_value_template": "{{ value_json.oscillation }}",
+        "payload_oscillation_off": "oscillate_off",
+        "payload_oscillation_on": "oscillate_on",
+        "direction_command_topic": "test-topic/dir",
+        "direction_state_topic": "test-topic/dir",
+        "direction_command_template": "{{ value }}",
+        "direction_value_template": "{{ value_json.direction }}",
+        "payload_off": "OFF",
+        "payload_on": "ON",
+        "entity_picture": "https://example.com/717f924ae9ca4fe9864d845d75d23c9f",
+        "optimistic": False,
+        "retain": False,
+        "speed_range_max": 100,
+        "speed_range_min": 1,
+    },
+}
 MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     "363a7ecad6be4a19b939a016ea93e994": {
         "platform": "notify",
         "name": "Milkman alert",
+        "entity_category": None,
         "command_topic": "test-topic",
         "command_template": "{{ value }}",
         "entity_picture": "https://example.com/363a7ecad6be4a19b939a016ea93e994",
@@ -80,6 +371,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
     "6494827dac294fa0827c54b02459d309": {
         "platform": "notify",
         "name": "The second notifier",
+        "entity_category": None,
         "command_topic": "test-topic2",
         "entity_picture": "https://example.com/6494827dac294fa0827c54b02459d309",
     },
@@ -87,6 +379,8 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
 MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
     "5269352dd9534c908d22812ea5d714cd": {
         "platform": "notify",
+        "name": None,
+        "entity_category": None,
         "command_topic": "test-topic",
         "command_template": "{{ value }}",
         "entity_picture": "https://example.com/5269352dd9534c908d22812ea5d714cd",
@@ -94,10 +388,36 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
     },
 }
 
+MOCK_SUBENTRY_LOCK_COMPONENT = {
+    "3faf1318016c46c5aea26707eeb6f100": {
+        "platform": "lock",
+        "name": "Lock",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "code_format": "^\\d{4}$",
+        "payload_open": "OPEN",
+        "payload_lock": "LOCK",
+        "payload_unlock": "UNLOCK",
+        "payload_reset": "None",
+        "state_jammed": "JAMMED",
+        "state_locked": "LOCKED",
+        "state_locking": "LOCKING",
+        "state_unlocked": "UNLOCKED",
+        "state_unlocking": "UNLOCKING",
+        "retain": False,
+        "entity_category": None,
+        "entity_picture": "https://example.com/3faf1318016c46c5aea26707eeb6f100",
+        "optimistic": True,
+    },
+}
+
 MOCK_SUBENTRY_SENSOR_COMPONENT = {
     "e9261f6feed443e7b7d5f3fbe2a47412": {
         "platform": "sensor",
         "name": "Energy",
+        "entity_category": None,
         "device_class": "enum",
         "state_topic": "test-topic",
         "options": ["low", "medium", "high"],
@@ -110,6 +430,7 @@ MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS = {
     "a0f85790a95d4889924602effff06b6e": {
         "platform": "sensor",
         "name": "Energy",
+        "entity_category": None,
         "state_class": "measurement",
         "state_topic": "test-topic",
         "entity_picture": "https://example.com/a0f85790a95d4889924602effff06b6e",
@@ -119,6 +440,7 @@ MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET = {
     "e9261f6feed443e7b7d5f3fbe2a47412": {
         "platform": "sensor",
         "name": "Energy",
+        "entity_category": None,
         "state_class": "total",
         "last_reset_value_template": "{{ value_json.value }}",
         "state_topic": "test-topic",
@@ -129,11 +451,14 @@ MOCK_SUBENTRY_SWITCH_COMPONENT = {
     "3faf1318016c46c5aea26707eeb6f12e": {
         "platform": "switch",
         "name": "Outlet",
+        "entity_category": None,
         "device_class": "outlet",
         "command_topic": "test-topic",
         "state_topic": "test-topic",
         "command_template": "{{ value }}",
         "value_template": "{{ value_json.value }}",
+        "payload_off": "OFF",
+        "payload_on": "ON",
         "entity_picture": "https://example.com/3faf1318016c46c5aea26707eeb6f12e",
         "optimistic": True,
     },
@@ -148,10 +473,15 @@ MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
         "payload_off": "OFF",
         "payload_on": "ON",
         "command_topic": "test-topic",
+        "entity_category": None,
         "schema": "basic",
         "state_topic": "test-topic",
         "color_temp_kelvin": True,
         "state_value_template": "{{ value_json.value }}",
+        "brightness_scale": 255,
+        "max_kelvin": 6535,
+        "min_kelvin": 2000,
+        "white_scale": 255,
         "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
     },
 }
@@ -186,6 +516,46 @@ MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 
+MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_LOCAL_CODE,
+}
+MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_TEXT_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
+    "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE_TEXT,
+}
+MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
+    "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE,
+}
+MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
+    "components": MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT,
+}
+MOCK_BUTTON_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
+    "components": MOCK_SUBENTRY_BUTTON_COMPONENT,
+}
+MOCK_CLIMATE_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_CLIMATE_COMPONENT,
+}
+MOCK_CLIMATE_HIGH_LOW_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
+    "components": MOCK_SUBENTRY_CLIMATE_HIGH_LOW_COMPONENT,
+}
+MOCK_CLIMATE_NO_TARGET_TEMP_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
+    "components": MOCK_SUBENTRY_CLIMATE_NO_TARGET_TEMP_COMPONENT,
+}
+MOCK_COVER_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_COVER_COMPONENT,
+}
+MOCK_FAN_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_FAN_COMPONENT,
+}
 MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
@@ -197,6 +567,10 @@ MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME = {
 MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT,
+}
+MOCK_LOCK_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_LOCK_COMPONENT,
 }
 MOCK_SENSOR_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
@@ -1158,13 +1532,14 @@ async def help_test_entity_device_info_with_identifier(
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
-    registry = dr.async_get(hass)
+    area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert device.identifiers == {("mqtt", "helloworld")}
     assert device.manufacturer == "Whatever"
@@ -1173,7 +1548,7 @@ async def help_test_entity_device_info_with_identifier(
     assert device.model_id == "XYZ001"
     assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
-    assert device.suggested_area == "default_area"
+    assert device.area_id == area_registry.async_get_area_by_name("default_area").id
     assert device.configuration_url == "http://example.com"
 
 
@@ -1193,13 +1568,14 @@ async def help_test_entity_device_info_with_connection(
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_MAC)
     config["unique_id"] = "veryunique"
 
-    registry = dr.async_get(hass)
+    area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(
+    device = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
     )
     assert device is not None
@@ -1210,7 +1586,7 @@ async def help_test_entity_device_info_with_connection(
     assert device.model_id == "XYZ001"
     assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
-    assert device.suggested_area == "default_area"
+    assert device.area_id == area_registry.async_get_area_by_name("default_area").id
     assert device.configuration_url == "http://example.com"
 
 
@@ -1836,7 +2212,6 @@ async def help_test_entity_icon_and_entity_picture(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
-    default_entity_picture: str | None = None,
 ) -> None:
     """Test entity picture and icon."""
     await mqtt_mock_entry()
@@ -1856,7 +2231,7 @@ async def help_test_entity_icon_and_entity_picture(
     state = hass.states.get(entity_id)
     assert entity_id is not None and state
     assert state.attributes.get("icon") is None
-    assert state.attributes.get("entity_picture") == default_entity_picture
+    assert state.attributes.get("entity_picture") is None
 
     # Discover an entity with an entity picture set
     unique_id = "veryunique2"
@@ -1883,7 +2258,7 @@ async def help_test_entity_icon_and_entity_picture(
     state = hass.states.get(entity_id)
     assert entity_id is not None and state
     assert state.attributes.get("icon") == "mdi:emoji-happy-outline"
-    assert state.attributes.get("entity_picture") == default_entity_picture
+    assert state.attributes.get("entity_picture") is None
 
 
 async def help_test_publishing_with_custom_encoding(

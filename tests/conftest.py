@@ -42,14 +42,17 @@ import respx
 from syrupy.assertion import SnapshotAssertion
 from syrupy.session import SnapshotSession
 
+# Setup patching of JSON functions before any other Home Assistant imports
+from . import patch_json  # isort:skip
+
 from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
 
 # Setup patching of recorder functions before any other Home Assistant imports
-from . import patch_recorder
+from . import patch_recorder  # isort:skip
 
 # Setup patching of dt_util time functions before any other Home Assistant imports
-from . import patch_time  # noqa: F401, isort:skip
+from . import patch_time  # isort:skip
 
 from homeassistant import components, core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
@@ -96,6 +99,7 @@ from homeassistant.helpers import (
     translation as translation_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -187,62 +191,24 @@ def pytest_runtest_setup() -> None:
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
-    freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
-    freezegun.api.FakeDatetime = HAFakeDatetime  # type: ignore[attr-defined]
+    freezegun.api.datetime_to_fakedatetime = patch_time.ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
+    freezegun.api.FakeDatetime = patch_time.HAFakeDatetime  # type: ignore[attr-defined]
 
     def adapt_datetime(val):
         return val.isoformat(" ")
 
     # Setup HAFakeDatetime converter for sqlite3
-    sqlite3.register_adapter(HAFakeDatetime, adapt_datetime)
+    sqlite3.register_adapter(patch_time.HAFakeDatetime, adapt_datetime)
 
     # Setup HAFakeDatetime converter for pymysql
     try:
-        # pylint: disable-next=import-outside-toplevel
-        import MySQLdb.converters as MySQLdb_converters
+        import MySQLdb.converters as MySQLdb_converters  # noqa: PLC0415
     except ImportError:
         pass
     else:
-        MySQLdb_converters.conversions[HAFakeDatetime] = (
+        MySQLdb_converters.conversions[patch_time.HAFakeDatetime] = (
             MySQLdb_converters.DateTime2literal
         )
-
-
-def ha_datetime_to_fakedatetime(datetime) -> freezegun.api.FakeDatetime:  # type: ignore[name-defined]
-    """Convert datetime to FakeDatetime.
-
-    Modified to include https://github.com/spulec/freezegun/pull/424.
-    """
-    return freezegun.api.FakeDatetime(  # type: ignore[attr-defined]
-        datetime.year,
-        datetime.month,
-        datetime.day,
-        datetime.hour,
-        datetime.minute,
-        datetime.second,
-        datetime.microsecond,
-        datetime.tzinfo,
-        fold=datetime.fold,
-    )
-
-
-class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
-    """Modified to include https://github.com/spulec/freezegun/pull/424."""
-
-    @classmethod
-    def now(cls, tz=None):
-        """Return frozen now."""
-        now = cls._time_to_freeze() or freezegun.api.real_datetime.now()
-        if tz:
-            result = tz.fromutc(now.replace(tzinfo=tz))
-        else:
-            result = now
-
-        # Add the _tz_offset only if it's non-zero to preserve fold
-        if cls._tz_offset():
-            result += cls._tz_offset()
-
-        return ha_datetime_to_fakedatetime(result)
 
 
 def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
@@ -364,18 +330,18 @@ def long_repr_strings() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-def enable_event_loop_debug(event_loop: asyncio.AbstractEventLoop) -> None:
+def enable_event_loop_debug() -> None:
     """Enable event loop debug mode."""
-    event_loop.set_debug(True)
+    asyncio.get_event_loop().set_debug(True)
 
 
 @pytest.fixture(autouse=True)
 def verify_cleanup(
-    event_loop: asyncio.AbstractEventLoop,
     expected_lingering_tasks: bool,
     expected_lingering_timers: bool,
 ) -> Generator[None]:
     """Verify that the test has cleaned up resources correctly."""
+    event_loop = asyncio.get_event_loop()
     threads_before = frozenset(threading.enumerate())
     tasks_before = asyncio.all_tasks(event_loop)
     yield
@@ -416,8 +382,10 @@ def verify_cleanup(
     # Verify no threads where left behind.
     threads = frozenset(threading.enumerate()) - threads_before
     for thread in threads:
-        assert isinstance(thread, threading._DummyThread) or thread.name.startswith(
-            "waitpid-"
+        assert (
+            isinstance(thread, threading._DummyThread)
+            or thread.name.startswith("waitpid-")
+            or "_run_safe_shutdown_loop" in thread.name
         )
 
     try:
@@ -448,6 +416,12 @@ def reset_globals() -> Generator[None]:
     # Reset the frame helper globals
     frame.async_setup(None)
     frame._REPORTED_INTEGRATIONS.clear()
+
+    # Reset patch_json
+    if patch_json.mock_objects:
+        obj = patch_json.mock_objects.pop()
+        patch_json.mock_objects.clear()
+        pytest.fail(f"Test attempted to serialize mock object {obj}")
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -520,9 +494,7 @@ def aiohttp_client_cls() -> type[CoalescingClient]:
 
 
 @pytest.fixture
-def aiohttp_client(
-    event_loop: asyncio.AbstractEventLoop,
-) -> Generator[ClientSessionGenerator]:
+def aiohttp_client() -> Generator[ClientSessionGenerator]:
     """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
 
     Remove this when upgrading to 4.x as aiohttp_client_cls
@@ -532,7 +504,7 @@ def aiohttp_client(
     aiohttp_client(server, **kwargs)
     aiohttp_client(raw_server, **kwargs)
     """
-    loop = event_loop
+    loop = asyncio.get_event_loop()
     clients = []
 
     async def go(
@@ -1064,7 +1036,7 @@ async def _mqtt_mock_entry(
     """Fixture to mock a delayed setup of the MQTT config entry."""
     # Local import to avoid processing MQTT modules when running a testcase
     # which does not use MQTT.
-    from homeassistant.components import mqtt  # pylint: disable=import-outside-toplevel
+    from homeassistant.components import mqtt  # noqa: PLC0415
 
     if mqtt_config_entry_data is None:
         mqtt_config_entry_data = {mqtt.CONF_BROKER: "mock-broker"}
@@ -1345,7 +1317,7 @@ def disable_mock_zeroconf_resolver(
 @pytest.fixture
 def mock_zeroconf() -> Generator[MagicMock]:
     """Mock zeroconf."""
-    from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
+    from zeroconf import DNSCache  # noqa: PLC0415
 
     with (
         patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc,
@@ -1365,10 +1337,8 @@ def mock_zeroconf() -> Generator[MagicMock]:
 @pytest.fixture
 def mock_async_zeroconf(mock_zeroconf: MagicMock) -> Generator[MagicMock]:
     """Mock AsyncZeroconf."""
-    from zeroconf import DNSCache, Zeroconf  # pylint: disable=import-outside-toplevel
-    from zeroconf.asyncio import (  # pylint: disable=import-outside-toplevel
-        AsyncZeroconf,
-    )
+    from zeroconf import DNSCache, Zeroconf  # noqa: PLC0415
+    from zeroconf.asyncio import AsyncZeroconf  # noqa: PLC0415
 
     with patch(
         "homeassistant.components.zeroconf.HaAsyncZeroconf", spec=AsyncZeroconf
@@ -1524,15 +1494,13 @@ def recorder_db_url(
         tmp_path = tmp_path_factory.mktemp("recorder")
         db_url = "sqlite:///" + str(tmp_path / "pytest.db")
     elif db_url.startswith("mysql://"):
-        # pylint: disable-next=import-outside-toplevel
-        import sqlalchemy_utils
+        import sqlalchemy_utils  # noqa: PLC0415
 
         charset = "utf8mb4' COLLATE = 'utf8mb4_unicode_ci"
         assert not sqlalchemy_utils.database_exists(db_url)
         sqlalchemy_utils.create_database(db_url, encoding=charset)
     elif db_url.startswith("postgresql://"):
-        # pylint: disable-next=import-outside-toplevel
-        import sqlalchemy_utils
+        import sqlalchemy_utils  # noqa: PLC0415
 
         assert not sqlalchemy_utils.database_exists(db_url)
         sqlalchemy_utils.create_database(db_url, encoding="utf8")
@@ -1540,8 +1508,7 @@ def recorder_db_url(
     if db_url == "sqlite://" and persistent_database:
         rmtree(tmp_path, ignore_errors=True)
     elif db_url.startswith("mysql://"):
-        # pylint: disable-next=import-outside-toplevel
-        import sqlalchemy as sa
+        import sqlalchemy as sa  # noqa: PLC0415
 
         made_url = sa.make_url(db_url)
         db = made_url.database
@@ -1572,8 +1539,7 @@ async def _async_init_recorder_component(
     wait_setup: bool,
 ) -> None:
     """Initialize the recorder asynchronously."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import recorder
+    from homeassistant.components import recorder  # noqa: PLC0415
 
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
@@ -1624,21 +1590,16 @@ async def async_test_recorder(
     enable_migrate_event_ids: bool,
 ) -> AsyncGenerator[RecorderInstanceContextManager]:
     """Yield context manager to setup recorder instance."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import recorder
+    from homeassistant.components import recorder  # noqa: PLC0415
+    from homeassistant.components.recorder import migration  # noqa: PLC0415
 
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.recorder import migration
-
-    # pylint: disable-next=import-outside-toplevel
-    from .components.recorder.common import async_recorder_block_till_done
-
-    # pylint: disable-next=import-outside-toplevel
-    from .patch_recorder import real_session_scope
+    from .components.recorder.common import (  # noqa: PLC0415
+        async_recorder_block_till_done,
+    )
+    from .patch_recorder import real_session_scope  # noqa: PLC0415
 
     if TYPE_CHECKING:
-        # pylint: disable-next=import-outside-toplevel
-        from sqlalchemy.orm.session import Session
+        from sqlalchemy.orm.session import Session  # noqa: PLC0415
 
     @contextmanager
     def debug_session_scope(
@@ -1764,7 +1725,7 @@ async def async_test_recorder(
             wait_recorder: bool = True,
             wait_recorder_setup: bool = True,
         ) -> AsyncGenerator[recorder.Recorder]:
-            """Setup and return recorder instance."""  # noqa: D401
+            """Setup and return recorder instance."""
             await _async_init_recorder_component(
                 hass,
                 config,
@@ -1857,6 +1818,7 @@ async def mock_enable_bluetooth(
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
     with (
+        patch("habluetooth.util.recover_adapter"),
         patch("bluetooth_auto_recovery.recover_adapter"),
         patch("bluetooth_adapters.systems.platform.system", return_value="Linux"),
         patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"),
@@ -1885,20 +1847,31 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
     # Late imports to avoid loading bleak unless we need it
 
-    # pylint: disable-next=import-outside-toplevel
-    from habluetooth import scanner as bluetooth_scanner
+    from habluetooth import (  # noqa: PLC0415
+        manager as bluetooth_manager,
+        scanner as bluetooth_scanner,
+    )
 
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
     # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
+
+    # Mock BlueZ management controller to successfully setup
+    # This prevents the manager from operating in degraded mode
+    mock_mgmt_bluetooth_ctl = Mock()
+    mock_mgmt_bluetooth_ctl.setup = AsyncMock(return_value=None)
+
     with (
         patch.object(
             bluetooth_scanner.OriginalBleakScanner,  # pylint: disable=c-extension-no-member
             "start",
         ) as mock_bleak_scanner_start,
         patch.object(bluetooth_scanner, "HaScanner"),
+        patch.object(
+            bluetooth_manager, "MGMTBluetoothCtl", return_value=mock_mgmt_bluetooth_ctl
+        ),
     ):
         yield mock_bleak_scanner_start
 
@@ -1906,13 +1879,9 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 @pytest.fixture
 def hassio_env(supervisor_is_connected: AsyncMock) -> Generator[None]:
     """Fixture to inject hassio env."""
-    from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
-        HassioAPIError,
-    )
+    from homeassistant.components.hassio import HassioAPIError  # noqa: PLC0415
 
-    from .components.hassio import (  # pylint: disable=import-outside-toplevel
-        SUPERVISOR_TOKEN,
-    )
+    from .components.hassio import SUPERVISOR_TOKEN  # noqa: PLC0415
 
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
@@ -1934,9 +1903,7 @@ async def hassio_stubs(
     supervisor_client: AsyncMock,
 ) -> RefreshToken:
     """Create mock hassio http client."""
-    from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
-        HassioAPIError,
-    )
+    from homeassistant.components.hassio import HassioAPIError  # noqa: PLC0415
 
     with (
         patch(
@@ -2125,3 +2092,21 @@ def disable_block_async_io() -> Generator[None]:
             blocking_call.object, blocking_call.function, blocking_call.original_func
         )
     calls.clear()
+
+
+# Ensure that incorrectly formatted mac addresses are rejected during
+# DhcpServiceInfo initialisation
+_real_dhcp_service_info_init = DhcpServiceInfo.__init__
+
+
+def _dhcp_service_info_init(self: DhcpServiceInfo, *args: Any, **kwargs: Any) -> None:
+    """Override __init__ for DhcpServiceInfo.
+
+    Ensure that the macaddress is always in lowercase and without colons to match DHCP service.
+    """
+    _real_dhcp_service_info_init(self, *args, **kwargs)
+    if self.macaddress != self.macaddress.lower().replace(":", ""):
+        raise ValueError("macaddress is not correctly formatted")
+
+
+DhcpServiceInfo.__init__ = _dhcp_service_info_init

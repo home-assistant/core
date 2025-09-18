@@ -40,11 +40,7 @@ rules:
       to increase functionality such as checking for the specific contents
       of a unique id assigned to a config entry.
   docs-actions: done
-  runtime-data:
-    status: todo
-    comment: |
-      The integration stores config entry data in `hass.data` and should be
-      updated to use `runtime_data`.
+  runtime-data: done
 
   # Silver
   log-when-unavailable: done

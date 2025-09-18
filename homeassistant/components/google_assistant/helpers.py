@@ -212,8 +212,7 @@ class AbstractConfig(ABC):
     def async_enable_report_state(self) -> None:
         """Enable proactive mode."""
         # Circular dep
-        # pylint: disable-next=import-outside-toplevel
-        from .report_state import async_enable_report_state
+        from .report_state import async_enable_report_state  # noqa: PLC0415
 
         if self._unsub_report_state is None:
             self._unsub_report_state = async_enable_report_state(self.hass, self)
@@ -395,8 +394,7 @@ class AbstractConfig(ABC):
     async def _handle_local_webhook(self, hass, webhook_id, request):
         """Handle an incoming local SDK message."""
         # Circular dep
-        # pylint: disable-next=import-outside-toplevel
-        from . import smart_home
+        from . import smart_home  # noqa: PLC0415
 
         self._local_last_active = utcnow()
 
@@ -655,8 +653,9 @@ class GoogleEntity:
         if "matter" in self.hass.config.components and any(
             x for x in device_entry.identifiers if x[0] == "matter"
         ):
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components.matter import get_matter_device_info
+            from homeassistant.components.matter import (  # noqa: PLC0415
+                get_matter_device_info,
+            )
 
             # Import matter can block the event loop for multiple seconds
             # so we import it here to avoid blocking the event loop during

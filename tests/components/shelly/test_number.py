@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock
 from aioshelly.const import MODEL_BLU_GATEWAY_G3
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
     ATTR_MAX,
@@ -340,6 +340,7 @@ async def test_rpc_device_virtual_number(
     assert state.state == "56.7"
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_virtual_number_when_mode_label(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,

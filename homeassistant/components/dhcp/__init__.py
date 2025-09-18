@@ -7,6 +7,7 @@ from collections.abc import Callable
 from datetime import timedelta
 from fnmatch import translate
 from functools import lru_cache, partial
+from ipaddress import IPv4Address
 import itertools
 import logging
 import re
@@ -22,6 +23,7 @@ from aiodiscover.discovery import (
 from cached_ipaddress import cached_ip_addresses
 
 from homeassistant import config_entries
+from homeassistant.components import network
 from homeassistant.components.device_tracker import (
     ATTR_HOST_NAME,
     ATTR_IP,
@@ -421,9 +423,33 @@ class DHCPWatcher(WatcherBase):
             response.ip_address, response.hostname, response.mac_address
         )
 
+    async def async_get_adapter_indexes(self) -> list[int] | None:
+        """Get the adapter indexes."""
+        adapters = await network.async_get_adapters(self.hass)
+        if network.async_only_default_interface_enabled(adapters):
+            return None
+        return [
+            adapter["index"]
+            for adapter in adapters
+            if (
+                adapter["enabled"]
+                and adapter["index"] is not None
+                and adapter["ipv4"]
+                and (
+                    addresses := [IPv4Address(ip["address"]) for ip in adapter["ipv4"]]
+                )
+                and any(
+                    ip for ip in addresses if not ip.is_loopback and not ip.is_global
+                )
+            )
+        ]
+
     async def async_start(self) -> None:
         """Start watching for dhcp packets."""
-        self._unsub = await aiodhcpwatcher.async_start(self._async_process_dhcp_request)
+        self._unsub = await aiodhcpwatcher.async_start(
+            self._async_process_dhcp_request,
+            await self.async_get_adapter_indexes(),
+        )
 
 
 class RediscoveryWatcher(WatcherBase):

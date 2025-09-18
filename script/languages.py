@@ -51,8 +51,8 @@ NATIVE_ENTITY_IDS = {
     "lb",  # Lëtzebuergesch
     "lt",  # Lietuvių
     "lv",  # Latviešu
-    "nb",  # Nederlands
-    "nl",  # Norsk Bokmål
+    "nb",  # Norsk Bokmål
+    "nl",  # Nederlands
     "nn",  # Norsk Nynorsk"
     "pl",  # Polski
     "pt",  # Português
@@ -60,6 +60,7 @@ NATIVE_ENTITY_IDS = {
     "ro",  # Română
     "sk",  # Slovenčina
     "sl",  # Slovenščina
+    "sq",  # Shqip
     "sr-Latn",  # Srpski
     "sv",  # Svenska
     "tr",  # Türkçe

@@ -25,13 +25,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from ..bridge import HueBridge
-from ..const import DOMAIN
+from ..bridge import HueBridge, HueConfigEntry
 from .entity import HueBaseEntity
 
 type SensorType = DevicePower | LightLevel | Temperature | ZigbeeConnectivity
@@ -45,11 +43,11 @@ type ControllerType = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HueConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hue Sensors from Config Entry."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
     ctrl_base: SensorsController = api.sensors
 

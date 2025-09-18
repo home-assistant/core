@@ -18,7 +18,7 @@ from homeassistant.components.select import (
 from homeassistant.components.xiaomi_miio import UPDATE_INTERVAL
 from homeassistant.components.xiaomi_miio.const import (
     CONF_FLOW_TYPE,
-    DOMAIN as XIAOMI_DOMAIN,
+    DOMAIN,
     MODEL_AIRFRESH_T2017,
 )
 from homeassistant.const import (
@@ -146,7 +146,7 @@ async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
     entity_id = f"{SELECT_DOMAIN}.{entity_name}"
 
     config_entry = MockConfigEntry(
-        domain=XIAOMI_DOMAIN,
+        domain=DOMAIN,
         unique_id="123456",
         title=entity_name,
         data={

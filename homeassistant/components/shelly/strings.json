@@ -34,7 +34,7 @@
         }
       },
       "confirm_discovery": {
-        "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
+        "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password-protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password-protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
       },
       "reconfigure": {
         "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
@@ -105,7 +105,7 @@
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner.",
-      "zigbee_enabled": "Device with Zigbee enabled cannot be used as a Bluetooth scanner. Please disable it to use the device as a Bluetooth scanner."
+      "zigbee_firmware": "A device with Zigbee firmware cannot be used as a Bluetooth scanner. Please switch to Matter firmware to use the device as a Bluetooth scanner."
     }
   },
   "selector": {
@@ -118,20 +118,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "gas": {
-        "state_attributes": {
-          "detected": {
-            "state": {
-              "none": "None",
-              "mild": "Mild",
-              "heavy": "Heavy",
-              "test": "Test"
-            }
-          }
-        }
-      }
-    },
     "event": {
       "input": {
         "state_attributes": {
@@ -155,6 +141,9 @@
       }
     },
     "sensor": {
+      "detected_objects": {
+        "unit_of_measurement": "objects"
+      },
       "gas_detected": {
         "state": {
           "none": "None",
@@ -178,16 +167,6 @@
           "warmup": "Warm-up",
           "normal": "[%key:common::state::normal%]",
           "fault": "[%key:common::state::fault%]"
-        },
-        "state_attributes": {
-          "self_test": {
-            "state": {
-              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
-              "completed": "[%key:component::shelly::entity::sensor::self_test::state::completed%]",
-              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]",
-              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]"
-            }
-          }
         }
       },
       "self_test": {
@@ -216,6 +195,13 @@
           "failure": "Failure",
           "opened": "Opened",
           "opening": "[%key:common::state::opening%]"
+        }
+      },
+      "illuminance_level": {
+        "state": {
+          "dark": "Dark",
+          "twilight": "Twilight",
+          "bright": "Bright"
         }
       }
     }
@@ -288,6 +274,35 @@
     "unsupported_firmware": {
       "title": "Unsupported firmware for device {device_name}",
       "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Please update the firmware.\n\nIf the device does not offer an update, check internet connectivity (gateway, DNS, time) and restart the device."
+    },
+    "outbound_websocket_incorrectly_enabled": {
+      "title": "Outbound WebSocket is enabled for {device_name}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Outbound WebSocket is enabled for {device_name}",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is a non-sleeping device and Outbound WebSocket should be disabled in its configuration.\n\nSelect **Submit** button to disable Outbound WebSocket."
+          }
+        },
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+        }
+      }
+    },
+    "wall_display_firmware_unsupported": {
+      "title": "{device_name} is running outdated firmware",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "{device_name} is running outdated firmware",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware}. This firmware version will not be supported by Shelly integration starting from Home Assistant 2025.11.0.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version."
+          }
+        },
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "update_not_available": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::fix_flow::abort::update_not_available%]"
+        }
+      }
     }
   }
 }

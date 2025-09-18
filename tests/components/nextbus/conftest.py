@@ -137,6 +137,13 @@ def mock_nextbus_lists(
 def mock_nextbus() -> Generator[MagicMock]:
     """Create a mock py_nextbus module."""
     with patch("homeassistant.components.nextbus.coordinator.NextBusClient") as client:
+        instance = client.return_value
+
+        # Set some mocked rate limit values
+        instance.rate_limit = 450
+        instance.rate_limit_remaining = 225
+        instance.rate_limit_percent = 50.0
+
         yield client
 
 

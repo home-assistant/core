@@ -21,7 +21,7 @@
     "zha",
     "universal_silabs_flasher"
   ],
-  "requirements": ["zha==0.0.57"],
+  "requirements": ["zha==0.0.71"],
   "usb": [
     {
       "vid": "10C4",
@@ -100,6 +100,18 @@
       "pid": "8B34",
       "description": "*bv 2010/10*",
       "known_devices": ["Bitron Video AV2010/10"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*sonoff*max*",
+      "known_devices": ["SONOFF Dongle Max MG24"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*sonoff*lite*mg21*",
+      "known_devices": ["sonoff zigbee dongle lite mg21"]
     }
   ],
   "zeroconf": [

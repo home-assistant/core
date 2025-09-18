@@ -12,6 +12,7 @@ import io
 import logging
 import mimetypes
 import os
+from pathlib import Path
 import re
 import secrets
 from time import monotonic
@@ -25,6 +26,9 @@ import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.media_source import (
+    generate_media_source_id as ms_generate_media_source_id,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, PLATFORM_FORMAT
 from homeassistant.core import (
@@ -58,6 +62,7 @@ from .const import (
     DEFAULT_CACHE_DIR,
     DEFAULT_TIME_MEMORY,
     DOMAIN,
+    MEDIA_SOURCE_STREAM_PATH,
     TtsAudioType,
 )
 from .entity import TextToSpeechEntity, TTSAudioRequest, TTSAudioResponse
@@ -120,6 +125,8 @@ _RE_VOICE_FILE = re.compile(
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
 
 SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
+
+FFMPEG_CHUNK_SIZE: Final[int] = 4096
 
 
 class TTSCache:
@@ -273,9 +280,17 @@ async def async_get_media_source_audio(
     media_source_id: str,
 ) -> tuple[str, bytes]:
     """Get TTS audio as extension, data."""
+    manager = hass.data[DATA_TTS_MANAGER]
     parsed = parse_media_source_id(media_source_id)
-    stream = hass.data[DATA_TTS_MANAGER].async_create_result_stream(**parsed["options"])
-    stream.async_set_message(parsed["message"])
+    if "stream" in parsed:
+        stream = manager.async_get_result_stream(
+            parsed["stream"]  # type: ignore[typeddict-item]
+        )
+        if stream is None:
+            raise ValueError("Stream not found")
+    else:
+        stream = manager.async_create_result_stream(**parsed["options"])
+        stream.async_set_message(parsed["message"])
     data = b"".join([chunk async for chunk in stream.async_stream_result()])
     return stream.extension, data
 
@@ -298,28 +313,31 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
 
 async def _async_convert_audio(
     hass: HomeAssistant,
-    from_extension: str,
-    audio_bytes_gen: AsyncGenerator[bytes],
-    to_extension: str,
+    from_extension: str | None,
+    audio_input: AsyncGenerator[bytes] | str | Path,
+    to_extension: str | None,
     to_sample_rate: int | None = None,
     to_sample_channels: int | None = None,
     to_sample_bytes: int | None = None,
 ) -> AsyncGenerator[bytes]:
     """Convert audio to a preferred format using ffmpeg."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
+    is_input_gen = not isinstance(audio_input, (str, Path))
 
-    command = [
-        ffmpeg_manager.binary,
-        "-hide_banner",
-        "-loglevel",
-        "error",
-        "-f",
-        from_extension,
-        "-i",
-        "pipe:",
-        "-f",
-        to_extension,
-    ]
+    command = [ffmpeg_manager.binary, "-hide_banner", "-loglevel", "error"]
+    if from_extension:
+        command.extend(["-f", from_extension])
+
+    if is_input_gen:
+        # Async generator
+        command.extend(["-i", "pipe:0"])
+    else:
+        # URL or path
+        command.extend(["-i", str(audio_input)])
+
+    if to_extension:
+        command.extend(["-f", to_extension])
+
     if to_sample_rate is not None:
         command.extend(["-ar", str(to_sample_rate)])
     if to_sample_channels is not None:
@@ -334,43 +352,51 @@ async def _async_convert_audio(
 
     process = await asyncio.create_subprocess_exec(
         *command,
-        stdin=asyncio.subprocess.PIPE,
+        stdin=asyncio.subprocess.PIPE if is_input_gen else None,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
 
-    async def write_input() -> None:
-        assert process.stdin
-        try:
-            async for chunk in audio_bytes_gen:
-                process.stdin.write(chunk)
-                await process.stdin.drain()
-        finally:
-            if process.stdin:
-                process.stdin.close()
+    writer_task: asyncio.Task | None = None
 
-    writer_task = hass.async_create_background_task(
-        write_input(), "tts_ffmpeg_conversion"
-    )
+    if is_input_gen:
+        # Input is a generator, so we must manually feed in chunks
+        assert isinstance(audio_input, AsyncGenerator)
+        assert process.stdin
+
+        async def write_input() -> None:
+            assert process.stdin
+            try:
+                async for chunk in audio_input:
+                    process.stdin.write(chunk)
+                    await process.stdin.drain()
+            finally:
+                if process.stdin:
+                    process.stdin.close()
+
+        writer_task = hass.async_create_background_task(
+            write_input(), "tts_ffmpeg_conversion"
+        )
 
     assert process.stdout
-    chunk_size = 4096
     try:
         while True:
-            chunk = await process.stdout.read(chunk_size)
+            chunk = await process.stdout.read(FFMPEG_CHUNK_SIZE)
             if not chunk:
                 break
             yield chunk
     finally:
-        # Ensure we wait for the input writer to complete.
-        await writer_task
+        if writer_task is not None:
+            # Ensure we wait for the input writer to complete.
+            await writer_task
+
         # Wait for process termination and check for errors.
         retcode = await process.wait()
         if retcode != 0:
             assert process.stderr
             stderr_data = await process.stderr.read()
             _LOGGER.error(stderr_data.decode())
-            raise RuntimeError(
+            raise HomeAssistantError(
                 f"Unexpected error while running ffmpeg with arguments: {command}. "
                 "See log for details."
             )
@@ -458,6 +484,7 @@ class ResultStream:
     """Class that will stream the result when available."""
 
     last_used: float = field(default_factory=monotonic, init=False)
+    hass: HomeAssistant
 
     # Streaming/conversion properties
     token: str
@@ -469,13 +496,25 @@ class ResultStream:
     use_file_cache: bool
     language: str
     options: dict
+    supports_streaming_input: bool
 
     _manager: SpeechManager
+
+    # Override
+    _override_media_path: Path | None = None
 
     @cached_property
     def url(self) -> str:
         """Get the URL to stream the result."""
         return f"/api/tts_proxy/{self.token}"
+
+    @cached_property
+    def media_source_id(self) -> str:
+        """Get the media source ID of this stream."""
+        return ms_generate_media_source_id(
+            DOMAIN,
+            f"{MEDIA_SOURCE_STREAM_PATH}/{self.token}",
+        )
 
     @cached_property
     def _result_cache(self) -> asyncio.Future[TTSCache]:
@@ -484,7 +523,10 @@ class ResultStream:
 
     @callback
     def async_set_message(self, message: str) -> None:
-        """Set message to be generated."""
+        """Set message to be generated.
+
+        This method will leverage a disk cache to speed up generation.
+        """
         self._result_cache.set_result(
             self._manager.async_cache_message_in_memory(
                 engine=self.engine,
@@ -497,7 +539,10 @@ class ResultStream:
 
     @callback
     def async_set_message_stream(self, message_stream: AsyncGenerator[str]) -> None:
-        """Set a stream that will generate the message."""
+        """Set a stream that will generate the message.
+
+        This method can result in faster first byte when generating long responses.
+        """
         self._result_cache.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,
@@ -509,11 +554,62 @@ class ResultStream:
 
     async def async_stream_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of this result."""
+        if self._override_media_path is not None:
+            # Overridden
+            async for chunk in self._async_stream_override_result():
+                yield chunk
+
+            self.last_used = monotonic()
+            return
+
         cache = await self._result_cache
         async for chunk in cache.async_stream_data():
             yield chunk
 
         self.last_used = monotonic()
+
+    def async_override_result(self, media_path: str | Path) -> None:
+        """Override the TTS stream with a different media path."""
+        self._override_media_path = Path(media_path)
+
+    async def _async_stream_override_result(self) -> AsyncGenerator[bytes]:
+        """Get the stream of the overridden result."""
+        assert self._override_media_path is not None
+
+        preferred_format = self.options.get(ATTR_PREFERRED_FORMAT)
+        to_sample_rate = self.options.get(ATTR_PREFERRED_SAMPLE_RATE)
+        to_sample_channels = self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
+        to_sample_bytes = self.options.get(ATTR_PREFERRED_SAMPLE_BYTES)
+
+        needs_conversion = (
+            (preferred_format is not None)
+            or (to_sample_rate is not None)
+            or (to_sample_channels is not None)
+            or (to_sample_bytes is not None)
+        )
+
+        if not needs_conversion:
+            # Read file directly (no conversion)
+            yield await self.hass.async_add_executor_job(
+                self._override_media_path.read_bytes
+            )
+            return
+
+        # Use ffmpeg to convert audio to preferred format
+        if not preferred_format:
+            preferred_format = self._override_media_path.suffix[1:]  # strip .
+
+        converted_audio = _async_convert_audio(
+            self.hass,
+            from_extension=None,
+            audio_input=self._override_media_path,
+            to_extension=preferred_format,
+            to_sample_rate=self.options.get(ATTR_PREFERRED_SAMPLE_RATE),
+            to_sample_channels=self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
+            to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),
+        )
+        async for chunk in converted_audio:
+            yield chunk
 
 
 def _hash_options(options: dict) -> str:
@@ -726,6 +822,10 @@ class SpeechManager:
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
             raise HomeAssistantError(f"Provider {engine} not found")
 
+        supports_streaming_input = (
+            isinstance(engine_instance, TextToSpeechEntity)
+            and engine_instance.async_supports_streaming_input()
+        )
         language, options = self.process_options(engine_instance, language, options)
         if use_file_cache is None:
             use_file_cache = self.use_file_cache
@@ -741,6 +841,8 @@ class SpeechManager:
             engine=engine,
             language=language,
             options=options,
+            supports_streaming_input=supports_streaming_input,
+            hass=self.hass,
             _manager=self,
         )
         self.token_to_stream[token] = result_stream
@@ -820,12 +922,9 @@ class SpeechManager:
         else:
             _LOGGER.debug("Generating audio for %s", message[0:32])
 
-            async def message_stream() -> AsyncGenerator[str]:
-                yield message
-
             extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
             data_gen = self._async_generate_tts_audio(
-                engine_instance, message_stream(), language, options
+                engine_instance, message, language, options
             )
 
         cache = TTSCache(
@@ -899,7 +998,7 @@ class SpeechManager:
     async def _async_generate_tts_audio(
         self,
         engine_instance: TextToSpeechEntity | Provider,
-        message_stream: AsyncGenerator[str],
+        message_or_stream: str | AsyncGenerator[str],
         language: str,
         options: dict[str, Any],
     ) -> AsyncGenerator[bytes]:
@@ -947,9 +1046,16 @@ class SpeechManager:
         if engine_instance.name is None or engine_instance.name is UNDEFINED:
             raise HomeAssistantError("TTS engine name is not set.")
 
-        if isinstance(engine_instance, Provider):
-            message = "".join([chunk async for chunk in message_stream])
-            extension, data = await engine_instance.async_get_tts_audio(
+        if isinstance(engine_instance, Provider) or (
+            not engine_instance.async_supports_streaming_input()
+        ):
+            # Non-streaming
+            if isinstance(message_or_stream, str):
+                message = message_or_stream
+            else:
+                message = "".join([chunk async for chunk in message_or_stream])
+
+            extension, data = await engine_instance.async_internal_get_tts_audio(
                 message, language, options
             )
 
@@ -964,8 +1070,19 @@ class SpeechManager:
             data_gen = make_data_generator(data)
 
         else:
+            # Streaming
+            if isinstance(message_or_stream, str):
+
+                async def gen_stream() -> AsyncGenerator[str]:
+                    yield message_or_stream
+
+                stream = gen_stream()
+
+            else:
+                stream = message_or_stream
+
             tts_result = await engine_instance.internal_async_stream_tts_audio(
-                TTSAudioRequest(language, options, message_stream)
+                TTSAudioRequest(language, options, stream)
             )
             extension = tts_result.extension
             data_gen = tts_result.data_gen
@@ -1152,6 +1269,21 @@ class TextToSpeechView(HomeAssistantView):
     def __init__(self, manager: SpeechManager) -> None:
         """Initialize a tts view."""
         self.manager = manager
+
+    async def head(self, request: web.Request, token: str) -> web.StreamResponse:
+        """Start a HEAD request.
+
+        This is sent by some DLNA renderers, like Samsung ones, prior to sending
+        the GET request.
+
+        Check whether the token (file) exists and return its content type.
+        """
+        stream = self.manager.token_to_stream.get(token)
+
+        if stream is None:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        return web.Response(content_type=stream.content_type)
 
     async def get(self, request: web.Request, token: str) -> web.StreamResponse:
         """Start a get request."""

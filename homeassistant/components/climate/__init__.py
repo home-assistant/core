@@ -18,23 +18,19 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_issue_tracker, async_suggest_report_issue
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (  # noqa: F401
-    ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -77,7 +73,6 @@ from .const import (  # noqa: F401
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
-    SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
@@ -109,11 +104,6 @@ DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH]
-
-# Can be removed in 2025.1 after deprecation period of the new feature flags
-CHECK_TURN_ON_OFF_FEATURE_FLAG = (
-    ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-)
 
 SET_TEMPERATURE_SCHEMA = vol.All(
     cv.has_at_least_one_key(
@@ -167,12 +157,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {vol.Required(ATTR_PRESET_MODE): cv.string},
         "async_handle_set_preset_mode_service",
         [ClimateEntityFeature.PRESET_MODE],
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_AUX_HEAT,
-        {vol.Required(ATTR_AUX_HEAT): cv.boolean},
-        async_service_aux_heat,
-        [ClimateEntityFeature.AUX_HEAT],
     )
     component.async_register_entity_service(
         SERVICE_SET_TEMPERATURE,
@@ -239,7 +223,6 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "target_temperature_low",
     "preset_mode",
     "preset_modes",
-    "is_aux_heat",
     "fan_mode",
     "fan_modes",
     "swing_mode",
@@ -272,14 +255,13 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     )
 
     entity_description: ClimateEntityDescription
-    _attr_current_humidity: int | None = None
+    _attr_current_humidity: float | None = None
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
     _attr_hvac_action: HVACAction | None = None
     _attr_hvac_mode: HVACMode | None
     _attr_hvac_modes: list[HVACMode]
-    _attr_is_aux_heat: bool | None
     _attr_max_humidity: float = DEFAULT_MAX_HUMIDITY
     _attr_max_temp: float
     _attr_min_humidity: float = DEFAULT_MIN_HUMIDITY
@@ -298,52 +280,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature_step: float | None = None
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
-
-    __climate_reported_legacy_aux = False
-
-    def _report_legacy_aux(self) -> None:
-        """Log warning and create an issue if the entity implements legacy auxiliary heater."""
-
-        report_issue = async_suggest_report_issue(
-            self.hass,
-            integration_domain=self.platform.platform_name,
-            module=type(self).__module__,
-        )
-        _LOGGER.warning(
-            (
-                "%s::%s implements the `is_aux_heat` property or uses the auxiliary  "
-                "heater methods in a subclass of ClimateEntity which is "
-                "deprecated and will be unsupported from Home Assistant 2025.4."
-                " Please %s"
-            ),
-            self.platform.platform_name,
-            self.__class__.__name__,
-            report_issue,
-        )
-
-        translation_placeholders = {"platform": self.platform.platform_name}
-        translation_key = "deprecated_climate_aux_no_url"
-        issue_tracker = async_get_issue_tracker(
-            self.hass,
-            integration_domain=self.platform.platform_name,
-            module=type(self).__module__,
-        )
-        if issue_tracker:
-            translation_placeholders["issue_tracker"] = issue_tracker
-            translation_key = "deprecated_climate_aux_url_custom"
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_climate_aux_{self.platform.platform_name}",
-            breaks_in_ha_version="2025.4.0",
-            is_fixable=False,
-            is_persistent=False,
-            issue_domain=self.platform.platform_name,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=translation_key,
-            translation_placeholders=translation_placeholders,
-        )
-        self.__climate_reported_legacy_aux = True
 
     @final
     @property
@@ -453,14 +389,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if ClimateEntityFeature.SWING_HORIZONTAL_MODE in supported_features:
             data[ATTR_SWING_HORIZONTAL_MODE] = self.swing_horizontal_mode
 
-        if ClimateEntityFeature.AUX_HEAT in supported_features:
-            data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
-            if (
-                self.__climate_reported_legacy_aux is False
-                and "custom_components" in type(self).__module__
-            ):
-                self._report_legacy_aux()
-
         return data
 
     @cached_property
@@ -541,14 +469,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_preset_modes
 
     @cached_property
-    def is_aux_heat(self) -> bool | None:
-        """Return true if aux heater.
-
-        Requires ClimateEntityFeature.AUX_HEAT.
-        """
-        return self._attr_is_aux_heat
-
-    @cached_property
     def fan_mode(self) -> str | None:
         """Return the fan setting.
 
@@ -609,26 +529,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
         modes_str: str = ", ".join(modes) if modes else ""
         translation_key = f"not_valid_{mode_type}_mode"
-        if mode_type == "hvac":
-            report_issue = async_suggest_report_issue(
-                self.hass,
-                integration_domain=self.platform.platform_name,
-                module=type(self).__module__,
-            )
-            _LOGGER.warning(
-                (
-                    "%s::%s sets the hvac_mode %s which is not "
-                    "valid for this entity with modes: %s. "
-                    "This will stop working in 2025.4 and raise an error instead. "
-                    "Please %s"
-                ),
-                self.platform.platform_name,
-                self.__class__.__name__,
-                mode,
-                modes_str,
-                report_issue,
-            )
-            return
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key=translation_key,
@@ -732,22 +632,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Set new preset mode."""
         await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
 
-    def turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        raise NotImplementedError
-
-    async def async_turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        await self.hass.async_add_executor_job(self.turn_aux_heat_on)
-
-    def turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        raise NotImplementedError
-
-    async def async_turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        await self.hass.async_add_executor_job(self.turn_aux_heat_off)
-
     def turn_on(self) -> None:
         """Turn the entity on."""
         raise NotImplementedError
@@ -843,16 +727,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def max_humidity(self) -> float:
         """Return the maximum humidity."""
         return self._attr_max_humidity
-
-
-async def async_service_aux_heat(
-    entity: ClimateEntity, service_call: ServiceCall
-) -> None:
-    """Handle aux heat service."""
-    if service_call.data[ATTR_AUX_HEAT]:
-        await entity.async_turn_aux_heat_on()
-    else:
-        await entity.async_turn_aux_heat_off()
 
 
 async def async_service_humidity_set(

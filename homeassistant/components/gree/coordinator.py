@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -20,7 +21,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    COORDINATORS,
     DISCOVERY_TIMEOUT,
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
@@ -31,14 +31,24 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type GreeConfigEntry = ConfigEntry[GreeRuntimeData]
+
+
+@dataclass
+class GreeRuntimeData:
+    """RUntime data for Gree Climate integration."""
+
+    discovery_service: DiscoveryService
+    coordinators: list[DeviceDataUpdateCoordinator]
+
 
 class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Manages polling for state changes from the device."""
 
-    config_entry: ConfigEntry
+    config_entry: GreeConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, device: Device
+        self, hass: HomeAssistant, config_entry: GreeConfigEntry, device: Device
     ) -> None:
         """Initialize the data update coordinator."""
         super().__init__(
@@ -128,7 +138,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class DiscoveryService(Listener):
     """Discovery event handler for gree devices."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: GreeConfigEntry) -> None:
         """Initialize discovery service."""
         super().__init__()
         self.hass = hass
@@ -136,8 +146,6 @@ class DiscoveryService(Listener):
 
         self.discovery = Discovery(DISCOVERY_TIMEOUT)
         self.discovery.add_listener(self)
-
-        hass.data[DOMAIN].setdefault(COORDINATORS, [])
 
     async def device_found(self, device_info: DeviceInfo) -> None:
         """Handle new device found on the network."""
@@ -157,14 +165,14 @@ class DiscoveryService(Listener):
             device.device_info.port,
         )
         coordo = DeviceDataUpdateCoordinator(self.hass, self.entry, device)
-        self.hass.data[DOMAIN][COORDINATORS].append(coordo)
+        self.entry.runtime_data.coordinators.append(coordo)
         await coordo.async_refresh()
 
         async_dispatcher_send(self.hass, DISPATCH_DEVICE_DISCOVERED, coordo)
 
     async def device_update(self, device_info: DeviceInfo) -> None:
         """Handle updates in device information, update if ip has changed."""
-        for coordinator in self.hass.data[DOMAIN][COORDINATORS]:
+        for coordinator in self.entry.runtime_data.coordinators:
             if coordinator.device.device_info.mac == device_info.mac:
                 coordinator.device.device_info.ip = device_info.ip
                 await coordinator.async_refresh()

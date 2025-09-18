@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.whirlpool.const import CONF_BRAND, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platform
@@ -24,6 +24,7 @@ async def init_integration(
             CONF_REGION: region,
             CONF_BRAND: brand,
         },
+        unique_id="nobody",
     )
 
     return await init_integration_with_entry(hass, entry)

@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN as LT_DOMAIN, TRACKER_UPDATE
+from . import DOMAIN, TRACKER_UPDATE
 
 
 async def async_setup_entry(
@@ -19,14 +19,14 @@ async def async_setup_entry(
     @callback
     def _receive_data(device, location, location_name):
         """Receive set location."""
-        if device in hass.data[LT_DOMAIN]["devices"]:
+        if device in hass.data[DOMAIN]["devices"]:
             return
 
-        hass.data[LT_DOMAIN]["devices"].add(device)
+        hass.data[DOMAIN]["devices"].add(device)
 
         async_add_entities([LocativeEntity(device, location, location_name)])
 
-    hass.data[LT_DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
+    hass.data[DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
         async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
     )
 

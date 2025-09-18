@@ -1,5 +1,7 @@
 """Tests for the Abode sensor device."""
 
+import pytest
+
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import (
@@ -45,5 +47,5 @@ async def test_attributes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.environment_sensor_temperature")
     # Abodepy device JSON reports 19.5, but Home Assistant shows 19.4
-    assert state.state == "19.4"
+    assert float(state.state) == pytest.approx(19.44444)
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS

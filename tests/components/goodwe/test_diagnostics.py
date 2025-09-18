@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.goodwe import CONF_MODEL_FAMILY, DOMAIN

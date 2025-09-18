@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.number import (

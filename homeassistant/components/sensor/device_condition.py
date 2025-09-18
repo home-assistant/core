@@ -33,6 +33,7 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
 DEVICE_CLASS_NONE = "none"
 
+CONF_IS_ABSOLUTE_HUMIDITY = "is_absolute_humidity"
 CONF_IS_APPARENT_POWER = "is_apparent_power"
 CONF_IS_AQI = "is_aqi"
 CONF_IS_AREA = "is_area"
@@ -70,6 +71,7 @@ CONF_IS_PRECIPITATION = "is_precipitation"
 CONF_IS_PRECIPITATION_INTENSITY = "is_precipitation_intensity"
 CONF_IS_PRESSURE = "is_pressure"
 CONF_IS_SPEED = "is_speed"
+CONF_IS_REACTIVE_ENERGY = "is_reactive_energy"
 CONF_IS_REACTIVE_POWER = "is_reactive_power"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
 CONF_IS_SOUND_PRESSURE = "is_sound_pressure"
@@ -87,6 +89,7 @@ CONF_IS_WIND_DIRECTION = "is_wind_direction"
 CONF_IS_WIND_SPEED = "is_wind_speed"
 
 ENTITY_CONDITIONS = {
+    SensorDeviceClass.ABSOLUTE_HUMIDITY: [{CONF_TYPE: CONF_IS_ABSOLUTE_HUMIDITY}],
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_IS_APPARENT_POWER}],
     SensorDeviceClass.AQI: [{CONF_TYPE: CONF_IS_AQI}],
     SensorDeviceClass.AREA: [{CONF_TYPE: CONF_IS_AREA}],
@@ -128,6 +131,7 @@ ENTITY_CONDITIONS = {
         {CONF_TYPE: CONF_IS_PRECIPITATION_INTENSITY}
     ],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
+    SensorDeviceClass.REACTIVE_ENERGY: [{CONF_TYPE: CONF_IS_REACTIVE_ENERGY}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_IS_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
     SensorDeviceClass.SOUND_PRESSURE: [{CONF_TYPE: CONF_IS_SOUND_PRESSURE}],
@@ -157,6 +161,7 @@ CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): vol.In(
                 [
+                    CONF_IS_ABSOLUTE_HUMIDITY,
                     CONF_IS_APPARENT_POWER,
                     CONF_IS_AQI,
                     CONF_IS_AREA,
@@ -193,6 +198,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_PRECIPITATION,
                     CONF_IS_PRECIPITATION_INTENSITY,
                     CONF_IS_PRESSURE,
+                    CONF_IS_REACTIVE_ENERGY,
                     CONF_IS_REACTIVE_POWER,
                     CONF_IS_SIGNAL_STRENGTH,
                     CONF_IS_SOUND_PRESSURE,

@@ -17,7 +17,7 @@ rules:
   docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
-  has-entity-name: todo
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -42,7 +42,7 @@ rules:
   diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
@@ -57,12 +57,12 @@ rules:
   entity-disabled-by-default: done
   entity-translations: todo
   exception-translations: done
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues: done
   stale-devices:
-    status: todo
-    comment: BLU TRV needs to be removed when un-paired
+    status: done
+    comment: BLU TRV is removed when un-paired
 
   # Platinum
   async-dependency: done

@@ -625,7 +625,9 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
             "type": "form",
             "handler": "test",
             "step_id": "account",
-            "data_schema": [{"name": "user_title", "type": "string"}],
+            "data_schema": [
+                {"name": "user_title", "required": False, "type": "string"}
+            ],
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
@@ -712,7 +714,9 @@ async def test_continue_flow_unauth(
             "type": "form",
             "handler": "test",
             "step_id": "account",
-            "data_schema": [{"name": "user_title", "type": "string"}],
+            "data_schema": [
+                {"name": "user_title", "required": False, "type": "string"}
+            ],
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
@@ -1272,7 +1276,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client: TestClient) ->
             "type": "form",
             "handler": "test1",
             "step_id": "finish",
-            "data_schema": [{"name": "enabled", "type": "boolean"}],
+            "data_schema": [{"name": "enabled", "required": False, "type": "boolean"}],
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
@@ -1526,6 +1530,88 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
     }
 
 
+async def test_subentry_flow_abort_duplicate(hass: HomeAssistant, client) -> None:
+    """Test we can handle a subentry flow raising due to unique_id collision."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_user(self, user_input=None):
+                return await self.async_step_finish()
+
+            async def async_step_finish(self, user_input=None):
+                if user_input:
+                    return self.async_create_entry(
+                        title="Mock title", data=user_input, unique_id="test"
+                    )
+
+                return self.async_show_form(
+                    step_id="finish", data_schema=vol.Schema({"enabled": bool})
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Title",
+                unique_id="test",
+            )
+        ],
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with mock_config_flow("test", TestFlow):
+        url = "/api/config/config_entries/subentries/flow"
+        resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data.pop("flow_id")
+    assert data == {
+        "type": "form",
+        "handler": ["test1", "test"],
+        "step_id": "finish",
+        "data_schema": [{"name": "enabled", "required": False, "type": "boolean"}],
+        "description_placeholders": None,
+        "errors": None,
+        "last_step": None,
+        "preview": None,
+    }
+
+    with mock_config_flow("test", TestFlow):
+        resp = await client.post(
+            f"/api/config/config_entries/subentries/flow/{flow_id}",
+            json={"enabled": True},
+        )
+    assert resp.status == HTTPStatus.OK
+
+    entries = hass.config_entries.async_entries("test")
+    assert len(entries) == 1
+
+    data = await resp.json()
+    data.pop("flow_id")
+    assert data == {
+        "handler": ["test1", "test"],
+        "reason": "already_configured",
+        "type": "abort",
+        "description_placeholders": None,
+    }
+
+
 async def test_subentry_does_not_support_reconfigure(
     hass: HomeAssistant, client: TestClient
 ) -> None:
@@ -1667,7 +1753,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
         data = await resp.json()
         flow_id = data["flow_id"]
         expected_data = {
-            "data_schema": [{"name": "enabled", "type": "boolean"}],
+            "data_schema": [{"name": "enabled", "required": False, "type": "boolean"}],
             "description_placeholders": None,
             "errors": None,
             "flow_id": flow_id,
@@ -3262,6 +3348,82 @@ async def test_list_subentries(
     assert response["error"] == {
         "code": "not_found",
         "message": "Config entry not found",
+    }
+
+
+async def test_update_subentry(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that we can update a subentry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(
+        domain="test",
+        state=core_ce.ConfigEntryState.LOADED,
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={"test": "test"},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="mock_unique_id",
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/update",
+            "entry_id": entry.entry_id,
+            "subentry_id": "mock_id",
+            "title": "Updated Title",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] is None
+
+    assert list(entry.subentries.values())[0].title == "Updated Title"
+    assert list(entry.subentries.values())[0].unique_id == "mock_unique_id"
+    assert list(entry.subentries.values())[0].data["test"] == "test"
+
+    # Try renaming subentry from an unknown entry
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/update",
+            "entry_id": "no_such_entry",
+            "subentry_id": "mock_id",
+            "title": "Updated Title",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config entry not found",
+    }
+
+    # Try renaming subentry from an unknown subentry
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/update",
+            "entry_id": entry.entry_id,
+            "subentry_id": "no_such_entry2",
+            "title": "Updated Title2",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config subentry not found",
     }
 
 

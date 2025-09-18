@@ -9,8 +9,26 @@ from typing import Final
 
 DHCP: Final[list[dict[str, str | bool]]] = [
     {
+        "domain": "airthings",
+        "hostname": "airthings-view",
+    },
+    {
+        "domain": "airthings",
+        "hostname": "airthings-hub",
+        "macaddress": "D0141190*",
+    },
+    {
+        "domain": "airthings",
+        "hostname": "airthings-hub",
+        "macaddress": "70B3D52A0*",
+    },
+    {
         "domain": "airzone",
         "macaddress": "E84F25*",
+    },
+    {
+        "domain": "aladdin_connect",
+        "hostname": "gdocntl-*",
     },
     {
         "domain": "august",
@@ -93,6 +111,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "bond",
         "hostname": "bond-*",
         "macaddress": "F44E38*",
+    },
+    {
+        "domain": "bosch_alarm",
+        "macaddress": "000463*",
     },
     {
         "domain": "broadlink",
@@ -259,6 +281,21 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "30AEA4*",
     },
     {
+        "domain": "home_connect",
+        "hostname": "balay-*",
+        "macaddress": "C8D778*",
+    },
+    {
+        "domain": "home_connect",
+        "hostname": "(balay|bosch|neff|siemens)-*",
+        "macaddress": "68A40E*",
+    },
+    {
+        "domain": "home_connect",
+        "hostname": "(bosch|neff|siemens)-*",
+        "macaddress": "38B4D3*",
+    },
+    {
         "domain": "homewizard",
         "registered_devices": True,
     },
@@ -334,6 +371,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "lametric",
         "registered_devices": True,
+    },
+    {
+        "domain": "lg_thinq",
+        "macaddress": "34E6E6*",
     },
     {
         "domain": "lifx",
@@ -425,6 +466,102 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "palazzetti",
         "registered_devices": True,
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "AC8995*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "1C98C1*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "5C843C*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "605BB4*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "8060B7*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "78C881*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "00D9D1*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "00E421*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "0CFE45*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "2CCC44*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "BC60A7*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "C863F1*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "F8461C*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "70662A*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "09E29*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "B40AD8*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "A8474A*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "280DFC*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "D44B5E*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "F8D0AC*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "E86E3A*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "FC0FE6*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "9C37CB*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "84E657*",
     },
     {
         "domain": "powerwall",

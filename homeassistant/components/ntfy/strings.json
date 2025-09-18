@@ -18,7 +18,7 @@
         "sections": {
           "auth": {
             "name": "Authentication",
-            "description": "Depending on whether the server is configured to support access control, some topics may be read/write protected so that only users with the correct credentials can subscribe or publish to them. To publish/subscribe to protected topics, you can provide a username and password.",
+            "description": "Depending on whether the server is configured to support access control, some topics may be read/write protected so that only users with the correct credentials can subscribe or publish to them. To publish/subscribe to protected topics, you can provide a username and password. Home Assistant will automatically generate an access token to authenticate with ntfy.",
             "data": {
               "username": "[%key:common::config_flow::data::username%]",
               "password": "[%key:common::config_flow::data::password%]"
@@ -39,7 +39,33 @@
         },
         "data_description": {
           "password": "Enter the password corresponding to the aforementioned username to automatically create an access token",
-          "token": "Enter a new access token. To create a new access token navigate to Account → Access tokens and click create access token"
+          "token": "Enter a new access token. To create a new access token navigate to Account → Access tokens and select 'Create access token'"
+        }
+      },
+      "reconfigure": {
+        "title": "Configuration for {name}",
+        "description": "You can either log in with your **ntfy** username and password, and Home Assistant will automatically create an access token to authenticate with **ntfy**, or you can provide an access token directly",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "username": "[%key:component::ntfy::config::step::user::sections::auth::data_description::username%]",
+          "password": "[%key:component::ntfy::config::step::user::sections::auth::data_description::password%]",
+          "token": "Enter a new or existing access token. To create a new access token navigate to Account → Access tokens and select 'Create access token'"
+        }
+      },
+      "reconfigure_user": {
+        "title": "[%key:component::ntfy::config::step::reconfigure::title%]",
+        "description": "Enter the password for **{username}** below. Home Assistant will automatically create a new access token to authenticate with **ntfy**. You can also directly provide a valid access token",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "password": "[%key:component::ntfy::config::step::reauth_confirm::data_description::password%]",
+          "token": "[%key:component::ntfy::config::step::reconfigure::data_description::token%]"
         }
       }
     },
@@ -51,7 +77,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "account_mismatch": "The provided access token corresponds to the account {wrong_username}. Please re-authenticate with with the account **{username}**"
+      "account_mismatch": "The provided access token corresponds to the account {wrong_username}. Please re-authenticate with the account **{username}**",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "config_subentries": {
@@ -75,6 +102,40 @@
           "data_description": {
             "topic": "Enter the name of the topic you want to use for notifications. Topics may not be password-protected, so choose a name that's not easy to guess.",
             "name": "Set an alternative name to display instead of the topic name. This helps identify topics with complex or hard-to-read names more easily."
+          },
+          "sections": {
+            "filter": {
+              "data": {
+                "filter_priority": "Filter by priority",
+                "filter_tags": "Filter by tags",
+                "filter_title": "Filter by title",
+                "filter_message": "Filter by message content"
+              },
+              "data_description": {
+                "filter_priority": "Include messages that match any of the selected priority levels. If no priority is selected, all messages are included by default",
+                "filter_tags": "Only include messages that have all selected tags",
+                "filter_title": "Include messages with a title that exactly matches the specified text",
+                "filter_message": "Include messages with content that exactly matches the specified text"
+              },
+              "name": "Message filters (optional)",
+              "description": "Apply filters to narrow down the messages received when Home Assistant subscribes to the topic. Filters apply only to the event entity."
+            }
+          }
+        },
+        "reconfigure": {
+          "title": "Message filters for {topic}",
+          "description": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::description%]",
+          "data": {
+            "filter_priority": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data::filter_priority%]",
+            "filter_tags": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data::filter_tags%]",
+            "filter_title": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data::filter_title%]",
+            "filter_message": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data::filter_message%]"
+          },
+          "data_description": {
+            "filter_priority": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data_description::filter_priority%]",
+            "filter_tags": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data_description::filter_tags%]",
+            "filter_title": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data_description::filter_title%]",
+            "filter_message": "[%key:component::ntfy::config_subentries::topic::step::add_topic::sections::filter::data_description::filter_message%]"
           }
         }
       },
@@ -89,7 +150,112 @@
         "invalid_topic": "Invalid topic. Only letters, numbers, underscores, or dashes allowed."
       },
       "abort": {
-        "already_configured": "Topic is already configured"
+        "already_configured": "Topic is already configured",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "subscribe": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "triggered": "Triggered"
+            }
+          },
+          "time": { "name": "Time" },
+          "expires": { "name": "Expires" },
+          "topic": { "name": "[%key:component::ntfy::common::topic%]" },
+          "message": { "name": "Message" },
+          "title": { "name": "Title" },
+          "tags": { "name": "Tags" },
+          "priority": { "name": "Priority" },
+          "click": { "name": "Click" },
+          "icon": { "name": "Icon" },
+          "actions": { "name": "Actions" },
+          "attachment": { "name": "Attachment" }
+        }
+      }
+    },
+    "sensor": {
+      "messages": {
+        "name": "Messages published",
+        "unit_of_measurement": "messages"
+      },
+      "messages_remaining": {
+        "name": "Messages remaining",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::messages::unit_of_measurement%]"
+      },
+      "messages_limit": {
+        "name": "Messages usage limit",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::messages::unit_of_measurement%]"
+      },
+      "messages_expiry_duration": {
+        "name": "Messages expiry duration"
+      },
+      "emails": {
+        "name": "Emails sent",
+        "unit_of_measurement": "emails"
+      },
+      "emails_remaining": {
+        "name": "Emails remaining",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::emails::unit_of_measurement%]"
+      },
+      "emails_limit": {
+        "name": "Email usage limit",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::emails::unit_of_measurement%]"
+      },
+      "calls": {
+        "name": "Phone calls made",
+        "unit_of_measurement": "calls"
+      },
+      "calls_remaining": {
+        "name": "Phone calls remaining",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::calls::unit_of_measurement%]"
+      },
+      "calls_limit": {
+        "name": "Phone calls usage limit",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::calls::unit_of_measurement%]"
+      },
+      "reservations": {
+        "name": "Reserved topics",
+        "unit_of_measurement": "topics"
+      },
+      "reservations_remaining": {
+        "name": "Reserved topics remaining",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::reservations::unit_of_measurement%]"
+      },
+      "reservations_limit": {
+        "name": "Reserved topics limit",
+        "unit_of_measurement": "[%key:component::ntfy::entity::sensor::reservations::unit_of_measurement%]"
+      },
+      "attachment_total_size": {
+        "name": "Attachment storage"
+      },
+      "attachment_total_size_remaining": {
+        "name": "Attachment storage remaining"
+      },
+      "attachment_total_size_limit": {
+        "name": "Attachment storage limit"
+      },
+      "attachment_expiry_duration": {
+        "name": "Attachment expiry duration"
+      },
+      "attachment_file_size": {
+        "name": "Attachment file size limit"
+      },
+      "attachment_bandwidth": {
+        "name": "Attachment bandwidth limit"
+      },
+      "tier": {
+        "name": "Subscription tier",
+        "state": {
+          "free": "Free",
+          "supporter": "Supporter",
+          "pro": "Pro",
+          "business": "Business"
+        }
       }
     }
   },
@@ -112,6 +278,94 @@
     },
     "timeout_error": {
       "message": "Failed to connect to ntfy service due to a connection timeout"
+    },
+    "entity_not_found": {
+      "message": "The selected ntfy entity could not be found."
+    },
+    "entry_not_loaded": {
+      "message": "The selected ntfy service is currently not loaded or disabled in Home Assistant."
+    },
+    "delay_no_email": {
+      "message": "Delayed email notifications are not supported"
+    },
+    "delay_no_call": {
+      "message": "Delayed call notifications are not supported"
+    }
+  },
+  "services": {
+    "publish": {
+      "name": "Publish notification",
+      "description": "Publishes a notification message to a ntfy topic",
+      "fields": {
+        "title": {
+          "name": "[%key:component::notify::services::send_message::fields::title::name%]",
+          "description": "[%key:component::notify::services::send_message::fields::title::description%]"
+        },
+        "message": {
+          "name": "[%key:component::notify::services::send_message::fields::message::name%]",
+          "description": "[%key:component::notify::services::send_message::fields::message::description%]"
+        },
+        "markdown": {
+          "name": "Format as Markdown",
+          "description": "Enable Markdown formatting for the message body (Web app only). See the Markdown guide for syntax details: https://www.markdownguide.org/basic-syntax/."
+        },
+        "tags": {
+          "name": "Tags/Emojis",
+          "description": "Add tags or emojis to the notification. Emojis (using shortcodes like smile) will appear in the notification title or message. Other tags will be displayed below the notification content."
+        },
+        "priority": {
+          "name": "Message priority",
+          "description": "All messages have a priority that defines how urgently your phone notifies you, depending on the configured vibration patterns, notification sounds, and visibility in the notification drawer or pop-over."
+        },
+        "click": {
+          "name": "Click URL",
+          "description": "URL that is opened when notification is clicked."
+        },
+        "delay": {
+          "name": "Delay delivery",
+          "description": "Set a delay for message delivery. Minimum delay is 10 seconds, maximum is 3 days."
+        },
+        "attach": {
+          "name": "Attachment URL",
+          "description": "Attach images or other files by URL."
+        },
+        "email": {
+          "name": "Forward to email",
+          "description": "Specify the address to forward the notification to, for example mail@example.com"
+        },
+        "call": {
+          "name": "Phone call",
+          "description": "Phone number to call and read the message out loud using text-to-speech. Requires ntfy Pro and prior phone number verification."
+        },
+        "icon": {
+          "name": "Icon URL",
+          "description": "Include an icon that will appear next to the text of the notification. Only JPEG and PNG images are supported."
+        }
+      }
+    }
+  },
+  "selector": {
+    "priority": {
+      "options": {
+        "1": "Minimum",
+        "2": "[%key:common::state::low%]",
+        "3": "Default",
+        "4": "[%key:common::state::high%]",
+        "5": "Maximum"
+      }
+    }
+  },
+  "issues": {
+    "topic_protected": {
+      "title": "Subscription failed: Topic {topic} is protected",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Topic {topic} is protected",
+            "description": "The topic **{topic}** is protected and requires authentication to subscribe.\n\nTo resolve this issue, you have two options:\n\n1. **Reconfigure the ntfy integration**\nAdd a username and password that has permission to access this topic.\n\n2. **Deactivate the event entity**\nThis will stop Home Assistant from subscribing to the topic.\nClick **Submit** to deactivate the entity."
+          }
+        }
+      }
     }
   }
 }

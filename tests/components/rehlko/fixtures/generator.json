@@ -54,8 +54,8 @@
     "alertCount": 0,
     "model": "Model20KW",
     "modelDisplayName": "20 KW",
-    "lastMaintenanceTimestamp": "2025-04-10T09:12:59",
-    "nextMaintenanceTimestamp": "2026-04-10T09:12:59",
+    "lastMaintenanceTimestamp": "2025-04-10T09:12:59-04:00",
+    "nextMaintenanceTimestamp": "2026-04-10T09:12:59-04:00",
     "maintenancePeriodDays": 365,
     "hasServiceAgreement": null,
     "totalRuntimeHours": 120.2
@@ -74,7 +74,7 @@
   },
   "exercise": {
     "frequency": "Weekly",
-    "nextStartTimestamp": "2025-04-19T10:00:00",
+    "nextStartTimestamp": "2025-04-19T10:00:00-04:00",
     "mode": "Unloaded",
     "runningMode": null,
     "durationMinutes": 20,

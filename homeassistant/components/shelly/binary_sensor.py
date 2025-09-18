@@ -15,7 +15,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -36,10 +35,12 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
+    get_blu_trv_device_info,
     get_device_entry_gen,
     get_virtual_component_ids,
     is_block_momentary_input,
     is_rpc_momentary_input,
+    is_view_for_platform,
 )
 
 PARALLEL_UPDATES = 0
@@ -73,6 +74,17 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
         return bool(self.attribute_value)
 
 
+class RpcPresenceBinarySensor(RpcBinarySensor):
+    """Represent a RPC binary sensor entity for presence component."""
+
+    @property
+    def available(self) -> bool:
+        """Available."""
+        available = super().available
+
+        return available and self.coordinator.device.config[self.key]["enable"]
+
+
 class RpcBluTrvBinarySensor(RpcBinarySensor):
     """Represent a RPC BluTrv binary sensor."""
 
@@ -87,8 +99,9 @@ class RpcBluTrvBinarySensor(RpcBinarySensor):
 
         super().__init__(coordinator, key, attribute, description)
         ble_addr: str = coordinator.device.config[key]["addr"]
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, ble_addr)}
+        fw_ver = coordinator.device.status[key].get("fw_ver")
+        self._attr_device_info = get_blu_trv_device_info(
+            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
         )
 
 
@@ -132,8 +145,6 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
         device_class=BinarySensorDeviceClass.GAS,
         translation_key="gas",
         value=lambda value: value in ["mild", "heavy"],
-        # Deprecated, remove in 2025.10
-        extra_state_attributes=lambda block: {"detected": block.gas},
     ),
     ("sensor", "smoke"): BlockBinarySensorDescription(
         key="sensor|smoke", name="Smoke", device_class=BinarySensorDeviceClass.SMOKE
@@ -190,7 +201,6 @@ RPC_SENSORS: Final = {
     "input": RpcBinarySensorDescription(
         key="input",
         sub_key="state",
-        name="Input",
         device_class=BinarySensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         removal_condition=is_rpc_momentary_input,
@@ -264,7 +274,9 @@ RPC_SENSORS: Final = {
     "boolean": RpcBinarySensorDescription(
         key="boolean",
         sub_key="value",
-        has_entity_name=True,
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, BINARY_SENSOR_PLATFORM
+        ),
     ),
     "calibration": RpcBinarySensorDescription(
         key="blutrv",
@@ -286,6 +298,14 @@ RPC_SENSORS: Final = {
         sub_key="mute",
         name="Mute",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "presence_num_objects": RpcBinarySensorDescription(
+        key="presence",
+        sub_key="num_objects",
+        value=lambda status, _: bool(status),
+        name="Occupancy",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        entity_class=RpcPresenceBinarySensor,
     ),
 }
 

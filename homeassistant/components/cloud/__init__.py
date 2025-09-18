@@ -61,7 +61,6 @@ from .const import (
     CONF_RELAYER_SERVER,
     CONF_REMOTESTATE_SERVER,
     CONF_SERVICEHANDLERS_SERVER,
-    CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
     DATA_CLOUD,
     DATA_CLOUD_LOG_HANDLER,
@@ -134,7 +133,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_CLOUDHOOK_SERVER): str,
                 vol.Optional(CONF_RELAYER_SERVER): str,
                 vol.Optional(CONF_REMOTESTATE_SERVER): str,
-                vol.Optional(CONF_THINGTALK_SERVER): str,
                 vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
             }
         )
