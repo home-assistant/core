@@ -622,3 +622,41 @@ async def test_substituting_blueprint_inputs_incomplete_input_2(
         "code": "unknown_error",
         "message": "No substitution found for input blah",
     }
+
+
+async def test_get_blueprint(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting the details of a blueprint that does exist."""
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "blueprint/get",
+            "domain": "automation",
+            "path": "test_event_service.yaml",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    blueprints = msg["result"]
+    assert blueprints == {
+        "yaml": "blueprint:\n  name: Call service based on event\n  domain: automation\n  input:\n    trigger_event:\n      selector:\n        text: {}\n    service_to_call:\n    a_number:\n      selector:\n        number:\n          mode: box\n          step: 1.0\ntriggers:\n  trigger: event\n  event_type: !input trigger_event\nactions:\n  service: !input service_to_call\n  entity_id: light.kitchen\n"
+    }
+
+
+async def test_get_blueprint_doesnt_exist(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting the details of a blueprint that does not exist."""
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "blueprint/get", "domain": "automation", "path": "foo.yaml"}
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
