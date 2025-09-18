@@ -338,7 +338,7 @@ STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
 }
 
 
-class StateProgramType(MieleEnum):
+class StateProgramType(MieleEnum, missing_to_none=True):
     """Defines program types."""
 
     normal_operation_mode = 0
@@ -346,10 +346,9 @@ class StateProgramType(MieleEnum):
     automatic_program = 2
     cleaning_care_program = 3
     maintenance_program = 4
-    missing2none = -9999
 
 
-class StateDryingStep(MieleEnum):
+class StateDryingStep(MieleEnum, missing_to_none=True):
     """Defines drying steps."""
 
     extra_dry = 0
@@ -360,7 +359,6 @@ class StateDryingStep(MieleEnum):
     hand_iron_2 = 5
     machine_iron = 6
     smoothing = 7
-    missing2none = -9999
 
 
 WASHING_MACHINE_PROGRAM_ID: dict[int, str] = {
@@ -1314,7 +1312,7 @@ STATE_PROGRAM_ID: dict[int, dict[int, str]] = {
 }
 
 
-class PlatePowerStep(MieleEnum):
+class PlatePowerStep(MieleEnum, missing_to_none=True):
     """Plate power settings."""
 
     plate_step_0 = 0
@@ -1339,4 +1337,3 @@ class PlatePowerStep(MieleEnum):
     plate_step_18 = 18
     plate_step_boost = 117, 118, 218
     plate_step_boost_2 = 217
-    missing2none = -9999

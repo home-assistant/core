@@ -16,6 +16,7 @@ from homeassistant.components.media_source import (
     Unresolvable,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.location import vincenty
 
 from . import RadioBrowserConfigEntry
 from .const import DOMAIN
@@ -88,6 +89,7 @@ class RadioMediaSource(MediaSource):
                 *await self._async_build_popular(radios, item),
                 *await self._async_build_by_tag(radios, item),
                 *await self._async_build_by_language(radios, item),
+                *await self._async_build_local(radios, item),
                 *await self._async_build_by_country(radios, item),
             ],
         )
@@ -134,7 +136,7 @@ class RadioMediaSource(MediaSource):
     ) -> list[BrowseMediaSource]:
         """Handle browsing radio stations by country."""
         category, _, country_code = (item.identifier or "").partition("/")
-        if country_code:
+        if category == "country" and country_code:
             stations = await radios.stations(
                 filter_by=FilterBy.COUNTRY_CODE_EXACT,
                 filter_term=country_code,
@@ -185,7 +187,7 @@ class RadioMediaSource(MediaSource):
             return [
                 BrowseMediaSource(
                     domain=DOMAIN,
-                    identifier=f"language/{language.code}",
+                    identifier=f"language/{language.name.lower()}",
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaType.MUSIC,
                     title=language.name,
@@ -286,6 +288,66 @@ class RadioMediaSource(MediaSource):
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaType.MUSIC,
                     title="By Category",
+                    can_play=False,
+                    can_expand=True,
+                )
+            ]
+
+        return []
+
+    def _filter_local_stations(
+        self, stations: list[Station], latitude: float, longitude: float
+    ) -> list[Station]:
+        return [
+            station
+            for station in stations
+            if station.latitude is not None
+            and station.longitude is not None
+            and (
+                (
+                    dist := vincenty(
+                        (latitude, longitude),
+                        (station.latitude, station.longitude),
+                        False,
+                    )
+                )
+                is not None
+            )
+            and dist < 100
+        ]
+
+    async def _async_build_local(
+        self, radios: RadioBrowser, item: MediaSourceItem
+    ) -> list[BrowseMediaSource]:
+        """Handle browsing local radio stations."""
+
+        if item.identifier == "local":
+            country = self.hass.config.country
+            stations = await radios.stations(
+                filter_by=FilterBy.COUNTRY_CODE_EXACT,
+                filter_term=country,
+                hide_broken=True,
+                order=Order.NAME,
+                reverse=False,
+            )
+
+            local_stations = await self.hass.async_add_executor_job(
+                self._filter_local_stations,
+                stations,
+                self.hass.config.latitude,
+                self.hass.config.longitude,
+            )
+
+            return self._async_build_stations(radios, local_stations)
+
+        if not item.identifier:
+            return [
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier="local",
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
+                    title="Local stations",
                     can_play=False,
                     can_expand=True,
                 )
