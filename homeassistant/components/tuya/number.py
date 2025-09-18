@@ -65,6 +65,14 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # White noise machine
+    "bzyd": (
+        NumberEntityDescription(
+            key=DPCode.VOLUME_SET,
+            translation_key="volume",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # CO2 Detector
     # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
     "co2bj": (
