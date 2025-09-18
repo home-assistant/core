@@ -39,28 +39,21 @@ BEHAVIOR_LAST: Final = "last"
 BEHAVIOR_ANY: Final = "any"
 
 STATE_PLATFORM_TYPE: Final = "state"
-STATE_TRIGGER_SCHEMA = vol.All(
-    cv.TRIGGER_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_OPTIONS): {
-                vol.Required(CONF_STATE): vol.In([STATE_ON, STATE_OFF]),
-                vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                    [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
-                ),
-            },
-            vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+STATE_TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_OPTIONS): {
+            vol.Required(CONF_STATE): vol.In([STATE_ON, STATE_OFF]),
+            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+                [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
+            ),
         },
-    )
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+    }
 )
 
 
 class StateTrigger(Trigger):
     """Trigger for state changes."""
-
-    def __init__(self, hass: HomeAssistant, config: dict) -> None:
-        """Initialize the state trigger."""
-        self.hass = hass
-        self.config = config
 
     @override
     @classmethod
@@ -69,6 +62,11 @@ class StateTrigger(Trigger):
     ) -> ConfigType:
         """Validate config."""
         return cast(ConfigType, STATE_TRIGGER_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: dict) -> None:
+        """Initialize the state trigger."""
+        self.hass = hass
+        self.config = config
 
     @override
     async def async_attach(
@@ -151,7 +149,7 @@ class StateTrigger(Trigger):
                 if split_entity_id(entity_id)[0] == DOMAIN
             }
 
-        target_config = self.config.get(CONF_TARGET, {})
+        target_config = self.config[CONF_TARGET]
         return async_track_target_selector_state_change_event(
             self.hass, target_config, state_change_listener, entity_filter
         )
