@@ -13,7 +13,6 @@ This file is responsible for testing:
 It uses binary_sensors/sensors to do black box testing of the read calls.
 """
 
-from contextlib import nullcontext as does_not_raise
 from datetime import timedelta
 import logging
 from unittest import mock
@@ -1014,8 +1013,16 @@ async def test_pb_service_read(
     func_name[do_read[FUNC]].return_value = return_value
 
     error_expected = bool(do_return[DATA])
-    ctx = pytest.raises(HomeAssistantError) if error_expected else does_not_raise()
-    with ctx:
+    if error_expected:
+        with pytest.raises(HomeAssistantError):
+            service_result = await hass.services.async_call(
+                DOMAIN,
+                SERVICE_READ_REGISTERS,
+                data,
+                blocking=True,
+                return_response=True,
+            )
+    else:
         service_result = await hass.services.async_call(
             DOMAIN, SERVICE_READ_REGISTERS, data, blocking=True, return_response=True
         )
