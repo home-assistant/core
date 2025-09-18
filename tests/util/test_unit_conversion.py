@@ -44,6 +44,7 @@ from homeassistant.util.unit_conversion import (
     AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
+    CarbonMonoxideConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -78,6 +79,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         AreaConverter,
         BloodGlucoseConcentrationConverter,
         MassVolumeConcentrationConverter,
+        CarbonMonoxideConcentrationConverter,
         ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
@@ -113,6 +115,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
         18,
+    ),
+    CarbonMonoxideConcentrationConverter: (
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_MILLION,
+        1.145609,
     ),
     ConductivityConverter: (
         UnitOfConductivity.MICROSIEMENS_PER_CM,
@@ -278,6 +285,20 @@ _CONVERTED_VALUE: dict[
             UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
             18,
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        ),
+    ],
+    CarbonMonoxideConcentrationConverter: [
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1.145609,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            104.74778,
+            CONCENTRATION_PARTS_PER_MILLION,
         ),
     ],
     ConductivityConverter: [
@@ -664,6 +685,7 @@ _CONVERTED_VALUE: dict[
         (10, UnitOfPower.TERA_WATT, 10e12, UnitOfPower.WATT),
         (10, UnitOfPower.WATT, 0.01, UnitOfPower.KILO_WATT),
         (10, UnitOfPower.MILLIWATT, 0.01, UnitOfPower.WATT),
+        (10, UnitOfPower.BTU_PER_HOUR, 2.9307107, UnitOfPower.WATT),
     ],
     PressureConverter: [
         (1000, UnitOfPressure.HPA, 14.5037743897, UnitOfPressure.PSI),
@@ -672,12 +694,21 @@ _CONVERTED_VALUE: dict[
         (1000, UnitOfPressure.HPA, 100, UnitOfPressure.KPA),
         (1000, UnitOfPressure.HPA, 1000, UnitOfPressure.MBAR),
         (1000, UnitOfPressure.HPA, 100, UnitOfPressure.CBAR),
+        (1000, UnitOfPressure.HPA, 401.46307866177, UnitOfPressure.INH2O),
         (100, UnitOfPressure.KPA, 14.5037743897, UnitOfPressure.PSI),
         (100, UnitOfPressure.KPA, 29.5299801647, UnitOfPressure.INHG),
         (100, UnitOfPressure.KPA, 100000, UnitOfPressure.PA),
         (100, UnitOfPressure.KPA, 1000, UnitOfPressure.HPA),
         (100, UnitOfPressure.KPA, 1000, UnitOfPressure.MBAR),
         (100, UnitOfPressure.KPA, 100, UnitOfPressure.CBAR),
+        (100, UnitOfPressure.INH2O, 3.6127291827353996, UnitOfPressure.PSI),
+        (100, UnitOfPressure.INH2O, 186.83201548767, UnitOfPressure.MMHG),
+        (100, UnitOfPressure.INH2O, 7.3555912463681, UnitOfPressure.INHG),
+        (100, UnitOfPressure.INH2O, 24908.890833333, UnitOfPressure.PA),
+        (100, UnitOfPressure.INH2O, 249.08890833333, UnitOfPressure.HPA),
+        (100, UnitOfPressure.INH2O, 249.08890833333, UnitOfPressure.MBAR),
+        (100, UnitOfPressure.INH2O, 24.908890833333, UnitOfPressure.KPA),
+        (100, UnitOfPressure.INH2O, 24.908890833333, UnitOfPressure.CBAR),
         (30, UnitOfPressure.INHG, 14.7346266155, UnitOfPressure.PSI),
         (30, UnitOfPressure.INHG, 101.59167, UnitOfPressure.KPA),
         (30, UnitOfPressure.INHG, 1015.9167, UnitOfPressure.HPA),
@@ -685,6 +716,7 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.INHG, 1015.9167, UnitOfPressure.MBAR),
         (30, UnitOfPressure.INHG, 101.59167, UnitOfPressure.CBAR),
         (30, UnitOfPressure.INHG, 762, UnitOfPressure.MMHG),
+        (30, UnitOfPressure.INHG, 407.85300589959, UnitOfPressure.INH2O),
         (30, UnitOfPressure.MMHG, 0.580103, UnitOfPressure.PSI),
         (30, UnitOfPressure.MMHG, 3.99967, UnitOfPressure.KPA),
         (30, UnitOfPressure.MMHG, 39.9967, UnitOfPressure.HPA),
@@ -692,6 +724,7 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 39.9967, UnitOfPressure.MBAR),
         (30, UnitOfPressure.MMHG, 3.99967, UnitOfPressure.CBAR),
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
+        (30, UnitOfPressure.MMHG, 16.0572051431838, UnitOfPressure.INH2O),
         (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
     ],
     ReactiveEnergyConverter: [
@@ -739,6 +772,20 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfSpeed.KILOMETERS_PER_HOUR, 3.106856, UnitOfSpeed.MILES_PER_HOUR),
         # 5 mi/h * 1.609 km/mi = 8.04672 km/h
         (5, UnitOfSpeed.MILES_PER_HOUR, 8.04672, UnitOfSpeed.KILOMETERS_PER_HOUR),
+        # 300 m/min / 60 s/min = 5 m/s
+        (
+            300,
+            UnitOfSpeed.METERS_PER_MINUTE,
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+        ),
+        # 5 m/s * 60 s/min = 300 m/min
+        (
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+            300,
+            UnitOfSpeed.METERS_PER_MINUTE,
+        ),
         # 5 in/day * 25.4 mm/in = 127 mm/day
         (
             5,
