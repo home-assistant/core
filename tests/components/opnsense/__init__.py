@@ -6,22 +6,13 @@ from homeassistant.components.opnsense.const import (
     CONF_API_SECRET,
     CONF_TRACKER_INTERFACES,
 )
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_URL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 
 TITLE = "OPNsense"
 CONFIG_DATA = {
-    CONF_HOST: "router.lan",
-    CONF_PORT: 80,
+    CONF_URL: "http://router.lan/api",
     CONF_API_KEY: "key",
     CONF_API_SECRET: "secret",
-    CONF_SSL: False,
     CONF_VERIFY_SSL: False,
     CONF_TRACKER_INTERFACES: "LAN",
 }

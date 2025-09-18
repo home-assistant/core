@@ -10,14 +10,7 @@ from requests.exceptions import ConnectionError as requestsConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_URL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
@@ -59,19 +52,14 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
                     vol.Required(
-                        CONF_PORT, default=user_input.get(CONF_PORT, 80)
-                    ): vol.Coerce(int),
-                    vol.Required(
-                        CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
+                        CONF_API_KEY,
+                        default=user_input.get(CONF_API_KEY, ""),
                     ): str,
                     vol.Required(
                         CONF_API_SECRET, default=user_input.get(CONF_API_SECRET, "")
                     ): str,
-                    vol.Required(
-                        CONF_SSL, default=user_input.get(CONF_SSL, False)
-                    ): bool,
                     vol.Required(
                         CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, False)
                     ): bool,
@@ -89,11 +77,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return await self._show_setup_form(user_input, None)
-
-        if not user_input.get(CONF_URL):
-            protocol = "https" if user_input[CONF_SSL] else "http"
-            url = f"{protocol}://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/api"
-            user_input[CONF_URL] = url
 
         self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
 
@@ -136,8 +119,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
+        reconfigure_entry = self._get_reconfigure_entry()
         if user_input is not None:
             data = {
+                CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, False),
                 CONF_TRACKER_INTERFACES: user_input.get(CONF_TRACKER_INTERFACES, None),
             }
             return self.async_update_reload_and_abort(
@@ -158,7 +143,16 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_TRACKER_INTERFACES): SelectSelector(
+                    vol.Required(
+                        CONF_VERIFY_SSL,
+                        default=reconfigure_entry.data.get(CONF_VERIFY_SSL, False),
+                    ): bool,
+                    vol.Optional(
+                        CONF_TRACKER_INTERFACES,
+                        default=reconfigure_entry.data.get(
+                            CONF_TRACKER_INTERFACES, None
+                        ),
+                    ): SelectSelector(
                         SelectSelectorConfig(
                             options=list(available_interfaces),
                             multiple=True,
@@ -170,10 +164,11 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(
-        self, import_config: (dict[str, Any] | None)
+        self, import_data: (dict[str, Any])
     ) -> ConfigFlowResult:
-        """Import a config entry."""
-        return await self.async_step_user(import_config)
+        """Import a Yaml config."""
+        self._async_abort_entries_match({CONF_URL: import_data[CONF_URL]})
+        return self.async_create_entry(title="OPNsense", data=import_data)
 
     async def _async_check_connection(self, api_data: APIData) -> None:
         """Check connection to OPNsense."""

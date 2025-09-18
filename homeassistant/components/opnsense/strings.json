@@ -4,11 +4,9 @@
       "user": {
         "description": "Set required parameters to connect to your router. For more information, please refer to the [integration documentation]({doc_url})",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
+          "url": "[%key:common::config_flow::data::url%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "api_secret": "API secret",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "tracker_interfaces": "Interface(s) to use for tracking devices (if blank all will be used)"
         }
@@ -16,6 +14,7 @@
       "reconfigure": {
         "description": "Reconfigure",
         "data": {
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "tracker_interfaces": "Interface(s) to use for tracking devices (if blank all will be used)"
         }
       }
