@@ -11,13 +11,13 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import CONFIG_INPUT
+from .consts import CONFIG_INPUT
 
 from tests.common import MockConfigEntry
 
 
 async def test_async_step_user_success(
-    hass: HomeAssistant, mock_compit_api: AsyncMock
+    hass: HomeAssistant, mock_compit_api: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test user step with successful authentication."""
     mock_compit_api.return_value = True
@@ -35,6 +35,7 @@ async def test_async_step_user_success(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == CONFIG_INPUT[CONF_EMAIL]
     assert result["data"] == CONFIG_INPUT
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -51,6 +52,7 @@ async def test_async_step_user_failed_auth(
     exception: Exception,
     expected_error: str,
     mock_compit_api: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test user step with invalid authentication then success after error is cleared."""
     mock_compit_api.side_effect = [exception, True]
@@ -75,10 +77,14 @@ async def test_async_step_user_failed_auth(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == CONFIG_INPUT[CONF_EMAIL]
     assert result["data"] == CONFIG_INPUT
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_async_step_reauth_success(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_compit_api: AsyncMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_compit_api: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth step with successful authentication."""
     mock_compit_api.return_value = True
@@ -101,6 +107,7 @@ async def test_async_step_reauth_success(
         CONF_EMAIL: CONFIG_INPUT[CONF_EMAIL],
         CONF_PASSWORD: "new-password",
     }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -117,6 +124,7 @@ async def test_async_step_reauth_confirm_failed_auth(
     exception: Exception,
     expected_error: str,
     mock_compit_api: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth confirm step with invalid authentication then success after error is cleared."""
     mock_compit_api.side_effect = [exception, True]
@@ -147,3 +155,4 @@ async def test_async_step_reauth_confirm_failed_auth(
         CONF_EMAIL: CONFIG_INPUT[CONF_EMAIL],
         CONF_PASSWORD: "correct-password",
     }
+    assert len(mock_setup_entry.mock_calls) == 1

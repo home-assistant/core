@@ -6,14 +6,11 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.compit.const import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL
+
+from .consts import CONFIG_INPUT
 
 from tests.common import MockConfigEntry
-
-CONFIG_INPUT = {
-    CONF_EMAIL: "test@example.com",
-    CONF_PASSWORD: "password",
-}
 
 
 @pytest.fixture
