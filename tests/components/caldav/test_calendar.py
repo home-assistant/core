@@ -6,6 +6,7 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, Mock
 import uuid
+import zoneinfo
 
 from caldav.objects import Event
 from freezegun import freeze_time
@@ -1163,6 +1164,7 @@ async def test_config_entry_supported_components(
     assert not state
 
 
+@pytest.mark.parametrize("tz", [UTC])
 @pytest.mark.parametrize(
     ("service_data", "expected_ics_fields"),
     [
@@ -1177,8 +1179,12 @@ async def test_config_entry_supported_components(
             },
             {
                 "description": "Test Description",
-                "dtend": datetime.datetime(2025, 8, 6, 11, 0),
-                "dtstart": datetime.datetime(2025, 8, 6, 10, 0),
+                "dtend": datetime.datetime(
+                    2025, 8, 6, 11, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+                "dtstart": datetime.datetime(
+                    2025, 8, 6, 10, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
                 "location": "Test Location",
                 "summary": "Test Event",
             },
@@ -1187,13 +1193,21 @@ async def test_config_entry_supported_components(
         (
             {
                 "summary": "Required Only",
-                "start_date_time": datetime.datetime(2025, 8, 7, 9, 0, 0),
-                "end_date_time": datetime.datetime(2025, 8, 7, 10, 0, 0),
+                "start_date_time": datetime.datetime(
+                    2025, 8, 7, 9, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+                "end_date_time": datetime.datetime(
+                    2025, 8, 7, 10, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
             },
             {
                 "summary": "Required Only",
-                "dtstart": datetime.datetime(2025, 8, 7, 9, 0),
-                "dtend": datetime.datetime(2025, 8, 7, 10, 0),
+                "dtstart": datetime.datetime(
+                    2025, 8, 7, 9, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+                "dtend": datetime.datetime(
+                    2025, 8, 7, 10, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
             },
         ),
         # All-day event (date only)
@@ -1212,13 +1226,12 @@ async def test_config_entry_supported_components(
         # Rrule is not supported in API (async_call) calls.
     ],
 )
-@pytest.mark.parametrize("tz", [UTC])
 async def test_add_vevent(
     hass: HomeAssistant,
     setup_platform_cb: Callable[[], Awaitable[None]],
     calendars: list[Mock],
     service_data: dict,
-    expected_ics_fields: list[str],
+    expected_ics_fields: dict,
 ) -> None:
     """Test adding a VEVENT to the calendar."""
     await setup_platform_cb()
@@ -1240,13 +1253,13 @@ async def test_add_vevent(
     missing_fields = [
         field for field in expected_ics_fields if field not in resulting_ics
     ]
-    assert not missing_fields
+    assert not missing_fields, f"Missing fields: {missing_fields}"
 
-    for field in expected_ics_fields:
-        assert field in resulting_ics
+    for field, expected_value in expected_ics_fields.items():
+        assert resulting_ics[field] == expected_value, f"Field {field} value mismatch"
 
-        if field.startswith("UID:"):
-            try:
-                uuid.UUID(field.split(":", 1)[1])
-            except ValueError:
-                pytest.fail("Invalid UUID in ICS data")
+    assert "uid" in resulting_ics, "Missing uid field"
+    try:
+        uuid.UUID(resulting_ics["uid"])
+    except (ValueError, TypeError):
+        pytest.fail(f"Invalid uid in ICS data: {resulting_ics['uid']}")
