@@ -1,4 +1,89 @@
 # serializer version: 1
+# name: test_nested_object_selectors
+  dict({
+    'selector': dict({
+      'object': dict({
+        'description_field': 'percentage',
+        'fields': dict({
+          'name': dict({
+            'required': True,
+            'selector': dict({
+              'text': dict({
+                'multiline': False,
+                'multiple': False,
+              }),
+            }),
+          }),
+          'object': dict({
+            'selector': dict({
+              'selector': dict({
+                'object': dict({
+                  'description_field': 'other_name',
+                  'fields': dict({
+                    'new_object': dict({
+                      'required': True,
+                      'selector': dict({
+                        'selector': dict({
+                          'object': dict({
+                            'description_field': 'description',
+                            'fields': dict({
+                              'description': dict({
+                                'required': True,
+                                'selector': dict({
+                                  'text': dict({
+                                    'multiline': False,
+                                    'multiple': False,
+                                  }),
+                                }),
+                              }),
+                              'title': dict({
+                                'required': True,
+                                'selector': dict({
+                                  'text': dict({
+                                    'multiline': False,
+                                    'multiple': False,
+                                  }),
+                                }),
+                              }),
+                            }),
+                            'label_field': 'title',
+                            'multiple': True,
+                          }),
+                        }),
+                      }),
+                    }),
+                    'no_name': dict({
+                      'required': True,
+                      'selector': dict({
+                        'text': dict({
+                          'multiline': False,
+                          'multiple': False,
+                        }),
+                      }),
+                    }),
+                    'other_name': dict({
+                      'required': True,
+                      'selector': dict({
+                        'text': dict({
+                          'multiline': False,
+                          'multiple': False,
+                        }),
+                      }),
+                    }),
+                  }),
+                  'label_field': 'no_name',
+                  'multiple': True,
+                }),
+              }),
+            }),
+          }),
+        }),
+        'label_field': 'name',
+        'multiple': True,
+      }),
+    }),
+  })
+# ---
 # name: test_object_selector_uses_selectors
   dict({
     'selector': dict({

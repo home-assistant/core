@@ -760,6 +760,77 @@ def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
     yaml_util.dump(selector_instance.serialize())
 
 
+def test_nested_object_selectors(snapshot: SnapshotAssertion) -> None:
+    """Test ObjectSelector custom serializer with nested ObjectSelectors."""
+
+    selector_type = "object"
+    schema = {
+        "fields": {
+            "name": {
+                "required": True,
+                "selector": selector.TextSelector(),
+            },
+            "object": {
+                "selector": selector.ObjectSelector(
+                    selector.ObjectSelectorConfig(
+                        fields={
+                            "no_name": {
+                                "required": True,
+                                "selector": selector.TextSelector(),
+                            },
+                            "other_name": {
+                                "required": True,
+                                "selector": selector.TextSelector(),
+                            },
+                            "new_object": {
+                                "required": True,
+                                "selector": selector.ObjectSelector(
+                                    selector.ObjectSelectorConfig(
+                                        fields={
+                                            "title": {
+                                                "required": True,
+                                                "selector": selector.TextSelector(),
+                                            },
+                                            "description": {
+                                                "required": True,
+                                                "selector": selector.TextSelector(),
+                                            },
+                                        },
+                                        multiple=False,
+                                        label_field="title",
+                                        description_field="description",
+                                    )
+                                ),
+                            },
+                        },
+                        multiple=False,
+                        label_field="no_name",
+                        description_field="other_name",
+                    )
+                ),
+            },
+        },
+        "multiple": True,
+        "label_field": "name",
+        "description_field": "percentage",
+    }
+
+    # Validate selector configuration
+    config = {selector_type: schema}
+    selector.validate_selector(config)
+    selector_instance = selector.selector(config)
+
+    # Serialize selector
+    selector_instance = selector.selector({selector_type: schema})
+    assert selector_instance.serialize() != {
+        "selector": {selector_type: selector_instance.config}
+    }
+    assert selector_instance.serialize() == snapshot()
+
+    # Test serialized selector can be dumped to YAML
+    yaml_util.dump(selector_instance.serialize())
+
+
 @pytest.mark.parametrize(
     ("schema", "raises"),
     [
