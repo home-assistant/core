@@ -3,12 +3,12 @@
 get_areas:
   target:
     entity:
-      domain: vacuum
+      domain: matter
 
 select_areas:
   target:
     entity:
-      domain: vacuum
+      domain: matter
   fields:
     areas:
       required: true
@@ -17,7 +17,7 @@ select_areas:
 clean_areas:
   target:
     entity:
-      domain: vacuum
+      domain: matter
   fields:
     areas:
       required: true
