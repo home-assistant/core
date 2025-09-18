@@ -180,7 +180,7 @@ class Trigger(abc.ABC):
 
     @classmethod
     async def async_validate_complete_config(
-        cls, hass: HomeAssistant, config: ConfigType
+        cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
         """Validate complete config.
 
@@ -189,19 +189,19 @@ class Trigger(abc.ABC):
         This method should be overridden by triggers that need to migrate
         from the old-style config.
         """
-        config = _TRIGGER_SCHEMA(config)
+        complete_config = _TRIGGER_SCHEMA(complete_config)
 
         specific_config: ConfigType = {}
         for key in (CONF_OPTIONS, CONF_TARGET):
-            if key in config:
-                specific_config[key] = config.pop(key)
+            if key in complete_config:
+                specific_config[key] = complete_config.pop(key)
         specific_config = await cls.async_validate_config(hass, specific_config)
 
         for key in (CONF_OPTIONS, CONF_TARGET):
             if key in specific_config:
-                config[key] = specific_config[key]
+                complete_config[key] = specific_config[key]
 
-        return config
+        return complete_config
 
     @classmethod
     @abc.abstractmethod
@@ -210,7 +210,7 @@ class Trigger(abc.ABC):
     ) -> ConfigType:
         """Validate config."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, complete_config: ConfigType) -> None:
         """Initialize trigger."""
 
     @abc.abstractmethod

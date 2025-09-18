@@ -535,7 +535,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
             """Validate config."""
             return config
 
-        def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+        def __init__(self, hass: HomeAssistant, complete_config: ConfigType) -> None:
             """Initialize trigger."""
 
     class MockTrigger1(MockTrigger):
@@ -612,13 +612,13 @@ async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
 
         @classmethod
         async def async_validate_complete_config(
-            cls, hass: HomeAssistant, config: ConfigType
+            cls, hass: HomeAssistant, complete_config: ConfigType
         ) -> ConfigType:
             """Validate complete config."""
-            config = move_top_level_schema_fields_to_options(
-                config, OPTIONS_SCHEMA_DICT
+            complete_config = move_top_level_schema_fields_to_options(
+                complete_config, OPTIONS_SCHEMA_DICT
             )
-            return await super().async_validate_complete_config(hass, config)
+            return await super().async_validate_complete_config(hass, complete_config)
 
         @classmethod
         async def async_validate_config(

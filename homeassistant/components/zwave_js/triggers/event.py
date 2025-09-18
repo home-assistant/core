@@ -139,11 +139,13 @@ class EventTrigger(Trigger):
 
     @classmethod
     async def async_validate_complete_config(
-        cls, hass: HomeAssistant, config: ConfigType
+        cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
         """Validate complete config."""
-        config = move_top_level_schema_fields_to_options(config, _OPTIONS_SCHEMA_DICT)
-        return await super().async_validate_complete_config(hass, config)
+        complete_config = move_top_level_schema_fields_to_options(
+            complete_config, _OPTIONS_SCHEMA_DICT
+        )
+        return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
     async def async_validate_config(
@@ -170,10 +172,10 @@ class EventTrigger(Trigger):
 
         return config
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, complete_config: ConfigType) -> None:
         """Initialize trigger."""
         self._hass = hass
-        self._options = config[CONF_OPTIONS]
+        self._options = complete_config[CONF_OPTIONS]
 
     async def async_attach(
         self,
