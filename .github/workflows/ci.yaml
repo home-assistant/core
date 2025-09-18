@@ -267,7 +267,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: venv
-          key: >-
+          key: &key-pre-commit-venv >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
       - name: Create Python virtual environment
@@ -284,7 +284,7 @@ jobs:
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           lookup-only: true
-          key: >-
+          key: &key-pre-commit-env >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
       - name: Install pre-commit dependencies
@@ -309,9 +309,7 @@ jobs:
         with:
           path: venv
           fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
-              needs.info.outputs.pre-commit_cache_key }}
+          key: *key-pre-commit-venv
       - &cache-restore-pre-commit-env
         name: Restore pre-commit environment from cache
         id: cache-precommit
@@ -319,9 +317,7 @@ jobs:
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-              needs.info.outputs.pre-commit_cache_key }}
+          key: *key-pre-commit-env
       - name: Run ruff-format
         run: |
           . venv/bin/activate
@@ -456,7 +452,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: venv
-          key: >-
+          key: &key-python-venv >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore uv wheel cache
@@ -476,10 +472,10 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           lookup-only: ${{ steps.cache-venv.outputs.cache-hit == 'true' }}
-          path: |
+          path: &path-apt-cache |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
-          key: >-
+          key: &key-apt-cache >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Install additional OS dependencies
         if: |
@@ -523,8 +519,7 @@ jobs:
           path: |
             ${{ env.APT_CACHE_DIR }}
             ${{ env.APT_LIST_CACHE_DIR }}
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
+          key: *key-apt-cache
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -573,12 +568,9 @@ jobs:
         name: Restore apt cache
         uses: actions/cache/restore@v4.3.0
         with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
+          path: *path-apt-cache
           fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
+          key: *key-apt-cache
       - name: Install additional OS dependencies
         timeout-minutes: 10
         run: |
@@ -599,9 +591,7 @@ jobs:
         with:
           path: venv
           fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          key: *key-python-venv
       - name: Run hassfest
         run: |
           . venv/bin/activate
@@ -663,9 +653,7 @@ jobs:
         with:
           path: venv
           fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          key: *key-python-venv
       - name: Extract license data
         run: |
           . venv/bin/activate
