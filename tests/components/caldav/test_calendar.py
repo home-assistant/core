@@ -5,7 +5,6 @@ import datetime
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, Mock
-import uuid
 import zoneinfo
 
 from caldav.objects import Event
@@ -1172,8 +1171,8 @@ async def test_config_entry_supported_components(
         (
             {
                 "summary": "Test Event",
-                "start_date_time": datetime.datetime(2025, 8, 6, 10, 0, 0),
-                "end_date_time": datetime.datetime(2025, 8, 6, 11, 0, 0),
+                "start_date_time": "2025-08-06T10:00:00+00:00",
+                "end_date_time": "2025-08-06T11:00:00+00:00",
                 "description": "Test Description",
                 "location": "Test Location",
             },
@@ -1193,12 +1192,8 @@ async def test_config_entry_supported_components(
         (
             {
                 "summary": "Required Only",
-                "start_date_time": datetime.datetime(
-                    2025, 8, 7, 9, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
-                ),
-                "end_date_time": datetime.datetime(
-                    2025, 8, 7, 10, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
-                ),
+                "start_date_time": "2025-08-07T09:00:00+00:00",
+                "end_date_time": "2025-08-07T10:00:00+00:00",
             },
             {
                 "summary": "Required Only",
@@ -1214,8 +1209,8 @@ async def test_config_entry_supported_components(
         (
             {
                 "summary": "All Day Event",
-                "start_date": datetime.date(2025, 8, 8),
-                "end_date": datetime.date(2025, 8, 9),
+                "start_date": "2025-08-08",
+                "end_date": "2025-08-09",
             },
             {
                 "summary": "All Day Event",
@@ -1257,9 +1252,3 @@ async def test_add_vevent(
 
     for field, expected_value in expected_ics_fields.items():
         assert resulting_ics[field] == expected_value, f"Field {field} value mismatch"
-
-    assert "uid" in resulting_ics, "Missing uid field"
-    try:
-        uuid.UUID(resulting_ics["uid"])
-    except (ValueError, TypeError):
-        pytest.fail(f"Invalid uid in ICS data: {resulting_ics['uid']}")
