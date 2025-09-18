@@ -25,6 +25,7 @@ from .const import (
     CONF_TYPE,
     CONF_ZONES,
     DEFAULT_INFER_ARMING_STATE,
+    DEFAULT_MAX_SUPPORTED_ZONES,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SUPPORT_HOME_ARM,
@@ -84,8 +85,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             )
         else:
             _LOGGER.warning(
-                "Unknown panel model %s, will default to 16 zones enabled",
+                "Unknown panel model %s, will default to %s zones enabled",
                 panel_model,
+                DEFAULT_MAX_SUPPORTED_ZONES,
             )
 
         return {

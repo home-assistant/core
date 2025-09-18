@@ -31,7 +31,7 @@ PANEL_MODEL_ZONES = {
     "D8X": 8,
     "D8X_CEL_3G": 8,
     "D8X_CEL_4G": 8,
-    "D8PLUS": 8,
+    "DPLUS8": 8,
     # 16 Zone Variants
     "D16X": 16,
     "D16X_CEL_3G": 16,
