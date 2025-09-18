@@ -1064,7 +1064,7 @@ async def test_get_events_custom_calendars(
             "summary": "This is a normal event",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
-            "uid": "0",
+            "uid": None,
             "recurrence_id": None,
             "rrule": None,
         }
