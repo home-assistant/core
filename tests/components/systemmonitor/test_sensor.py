@@ -21,6 +21,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.freeze_time("2024-02-24 15:00:00", tz_offset=0)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
