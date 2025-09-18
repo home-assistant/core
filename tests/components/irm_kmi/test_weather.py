@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock
 
 from freezegun import freeze_time
 
-from homeassistant.components.irm_kmi.weather import IrmKmiWeather
 from homeassistant.components.weather import Forecast
 from homeassistant.core import HomeAssistant
 
@@ -24,7 +23,7 @@ async def test_weather_nl(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    weather = IrmKmiWeather(mock_config_entry)
+    weather = hass.data["weather"].get_entity("weather.home")
     result = await weather.async_forecast_daily()
 
     assert isinstance(result, list)
@@ -48,7 +47,7 @@ async def test_weather_higher_temp_at_night(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    weather = IrmKmiWeather(mock_config_entry)
+    weather = hass.data["weather"].get_entity("weather.home")
     result: list[Forecast] = await weather.async_forecast_daily()
 
     for f in result:
