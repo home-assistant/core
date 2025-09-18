@@ -16,6 +16,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import camera
+from homeassistant.components.image import DATA_COMPONENT as IMAGE_DATA_COMPONENT
 from homeassistant.components.media_source import async_resolve_media
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
@@ -132,6 +133,16 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                 entity_id = media_content_id.removeprefix("media-source://camera/")
                 img = await camera.async_get_image(self.hass, entity_id)
                 attachment = img.content
+            elif media_content_id.startswith("media-source://image/"):
+                entity_id = media_content_id.removeprefix("media-source://image/")
+                if (
+                    entity := self.hass.data[IMAGE_DATA_COMPONENT].get_entity(entity_id)
+                ) is None:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="image_source_not_found",
+                    )
+                attachment = await entity.async_image()
             else:
                 media = await async_resolve_media(
                     self.hass, file["media_content_id"], None
@@ -140,7 +151,7 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                 if media.path is None:
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
-                        translation_key="only_local_attachments_supported",
+                        translation_key="media_source_not_supported",
                     )
                 async with aiofiles.open(media.path, mode="rb") as f:
                     attachment = await f.read()
