@@ -340,7 +340,7 @@
         },
         "attach_file": {
           "name": "Attach local file",
-          "description": "Attach images or other files by uploading from a local file or camera media source. When selecting a camera, the current snapshot will be uploaded and attached to the notification."
+          "description": "Attach images or other files by uploading from a local file, camera, or image media source. When selecting a camera feed, the current snapshot will be uploaded and attached to the notification."
         },
         "email": {
           "name": "Forward to email",
