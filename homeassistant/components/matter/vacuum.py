@@ -191,48 +191,6 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Pause the cleaning task."""
         await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
 
-    def async_get_areas(self, **kwargs: Any) -> dict[str, Any]:
-        """Get available area and map IDs from vacuum appliance."""
-
-        supported_areas = self.get_matter_attribute_value(
-            clusters.ServiceArea.Attributes.SupportedAreas
-        )
-        if not supported_areas:
-            raise HomeAssistantError("Can't get areas from the device.")
-
-        # Group by area_id: {area_id: {"map_id": ..., "name": ...}}
-        areas = {}
-        for area in supported_areas:
-            area_id = getattr(area, "areaID", None)
-            map_id = getattr(area, "mapID", None)
-            location_name = None
-            area_info = getattr(area, "areaInfo", None)
-            if area_info is not None:
-                location_info = getattr(area_info, "locationInfo", None)
-                if location_info is not None:
-                    location_name = getattr(location_info, "locationName", None)
-            if area_id is not None:
-                areas[area_id] = {"map_id": map_id, "name": location_name}
-
-        # Optionally, also extract supported maps if available
-        supported_maps = self.get_matter_attribute_value(
-            clusters.ServiceArea.Attributes.SupportedMaps
-        )
-        maps = []
-        if supported_maps:
-            maps = [
-                {
-                    "map_id": getattr(m, "mapID", None),
-                    "name": getattr(m, "name", None),
-                }
-                for m in supported_maps
-            ]
-
-        return {
-            "areas": areas,
-            "maps": maps,
-        }
-
     async def async_handle_get_areas(self, **kwargs: Any) -> ServiceResponse:
         """Get available area and map IDs from vacuum appliance."""
         # Group by area_id: {area_id: {"map_id": ..., "name": ...}}
