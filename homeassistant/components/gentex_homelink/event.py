@@ -9,14 +9,10 @@ from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-
-# Import the device class from the component that you want to support
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, EVENT_PRESSED
-
-# Import keeps mypy happy but is a circular reference otherwise
 from .coordinator import HomeLinkCoordinator
 
 
@@ -59,10 +55,7 @@ class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
         self._attr_name: str = param_name
         self._attr_unique_id: str = id
         self._attr_device_info = DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, device_id)
-            },
+            identifiers={(DOMAIN, device_id)},
             name=device_name,
         )
 
@@ -79,7 +72,6 @@ class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
 
         data: Mapping[str, Any] = self.coordinator.data
         latest_update = data[self.id]
-        # Set button to pressed and then schedule the turnoff
         if latest_update["requestId"] != self.last_request_id:
             self._trigger_event(EVENT_PRESSED)
             self.last_request_id = latest_update["requestId"]

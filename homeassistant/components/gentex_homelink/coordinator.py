@@ -1,5 +1,7 @@
 """Makes requests to the state server and stores the resulting data so that the buttons can access it."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 import functools
 import logging
@@ -24,7 +26,7 @@ class HomeLinkData:
     """Class for HomeLink integration runtime data."""
 
     provider: MQTTProvider
-    coordinator: "HomeLinkCoordinator"
+    coordinator: HomeLinkCoordinator
     last_update_id: str | None
 
 
@@ -84,16 +86,6 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict | HomeLinkEventData]):
     async def _async_update_data(self) -> dict | HomeLinkEventData:
         """Fetch data from API endpoint. We only use manual updates so just return an empty dict."""
         return {}
-
-    async def async_update_devices(self, message):
-        """Update the devices from the server."""
-        config_data = self.config_entry.data.copy()
-        config_data["last_update_id"] = message["requestId"]
-        await self.discover_devices()
-
-        self.hass.config_entries.async_update_entry(self.config_entry, data=config_data)
-        self.last_sync_id = message["requestId"]
-        self.last_sync_timestamp = message["timestamp"]
 
 
 def on_message(
