@@ -47,11 +47,11 @@
   "services": {
     "update": {
       "name": "Update",
-      "description": "Asks for a state update of all devices linked to an iCloud account.",
+      "description": "Asks for a state update of all devices linked to an Apple account.",
       "fields": {
         "account": {
           "name": "Account",
-          "description": "Your iCloud account username (email) or account name."
+          "description": "Your Apple account username (email)."
         }
       }
     },
