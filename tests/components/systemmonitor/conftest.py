@@ -27,12 +27,13 @@ def mock_sys_platform() -> Generator[None]:
 class MockProcess(Process):
     """Mock a Process class."""
 
-    def __init__(self, name: str, ex: bool = False) -> None:
+    def __init__(self, name: str, ex: bool = False, num_fds: int | None = None) -> None:
         """Initialize the process."""
         super().__init__(1)
         self._name = name
         self._ex = ex
         self._create_time = 1708700400
+        self._num_fds = num_fds
 
     def name(self):
         """Return a name."""
@@ -44,6 +45,11 @@ class MockProcess(Process):
         """Return the number of file descriptors opened by this process."""
         if self._ex:
             raise NoSuchProcess(1, self._name)
+
+        # Use explicit num_fds if provided, otherwise use defaults
+        if self._num_fds is not None:
+            return self._num_fds
+
         # Return different values for different processes for testing
         if self._name == "python3":
             return 42
