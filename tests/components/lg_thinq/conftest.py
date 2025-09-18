@@ -149,16 +149,3 @@ def devices(mock_thinq_api: AsyncMock, device_fixture: str) -> Generator[AsyncMo
         load_json_object_fixture(f"{device_fixture}/energy_profile.json", DOMAIN)
     )
     return mock_thinq_api
-
-
-@pytest.fixture
-def mock_energy_usage(
-    mock_thinq_api: AsyncMock, device_fixture: str, energy_fixture: str
-) -> Generator[AsyncMock]:
-    """Return a energy api result."""
-    mock_thinq_api.async_get_device_energy_usage.return_value = (
-        load_json_object_fixture(
-            f"{device_fixture}/energy_{energy_fixture}.json", DOMAIN
-        )
-    )
-    return mock_thinq_api
