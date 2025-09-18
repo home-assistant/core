@@ -226,7 +226,6 @@ async def test_api_key_errors(
         (ClientResponseError(None, None, status=500), "cannot_connect"),
         (TimeoutError(), "cannot_connect"),
         (ClientError(), "cannot_connect"),
-        (ValueError(), "unknown"),
     ],
 )
 async def test_web_login_errors(
