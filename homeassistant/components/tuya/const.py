@@ -263,6 +263,7 @@ class DPCode(StrEnum):
     LIQUID_LEVEL_PERCENT = "liquid_level_percent"
     LIQUID_STATE = "liquid_state"
     LOCK = "lock"  # Lock / Child lock
+    LOWER_TEMP = "lower_temp"
     MACH_OPERATE = "mach_operate"
     MANUAL_FEED = "manual_feed"
     MASTER_MODE = "master_mode"  # alarm mode
