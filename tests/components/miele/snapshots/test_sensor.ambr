@@ -1,4 +1,354 @@
 # serializer version: 1
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'autocleaning',
+        'failure',
+        'idle',
+        'in_use',
+        'not_connected',
+        'off',
+        'on',
+        'pause',
+        'program_ended',
+        'program_interrupted',
+        'programmed',
+        'rinse_hold',
+        'service',
+        'supercooling',
+        'supercooling_superfreezing',
+        'superfreezing',
+        'superheating',
+        'waiting_to_start',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffee_system',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:coffee-maker',
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'DummyAppliance_CoffeeSystem-state_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Coffee system',
+      'icon': 'mdi:coffee-maker',
+      'options': list([
+        'autocleaning',
+        'failure',
+        'idle',
+        'in_use',
+        'not_connected',
+        'off',
+        'on',
+        'pause',
+        'program_ended',
+        'program_interrupted',
+        'programmed',
+        'rinse_hold',
+        'service',
+        'supercooling',
+        'supercooling_superfreezing',
+        'superfreezing',
+        'superheating',
+        'waiting_to_start',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'in_use',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'appliance_rinse',
+        'appliance_settings',
+        'barista_assistant',
+        'black_tea',
+        'brewing_unit_degrease',
+        'cafe_au_lait',
+        'caffe_latte',
+        'cappuccino',
+        'cappuccino_italiano',
+        'check_appliance',
+        'coffee',
+        'coffee_pot',
+        'descaling',
+        'espresso',
+        'espresso_macchiato',
+        'flat_white',
+        'fruit_tea',
+        'green_tea',
+        'herbal_tea',
+        'hot_milk',
+        'hot_water',
+        'japanese_tea',
+        'latte_macchiato',
+        'long_coffee',
+        'milk_foam',
+        'milk_pipework_clean',
+        'milk_pipework_rinse',
+        'no_program',
+        'ristretto',
+        'very_hot_water',
+        'white_tea',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffee_system_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_id',
+    'unique_id': 'DummyAppliance_CoffeeSystem-state_program_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Coffee system Program',
+      'options': list([
+        'appliance_rinse',
+        'appliance_settings',
+        'barista_assistant',
+        'black_tea',
+        'brewing_unit_degrease',
+        'cafe_au_lait',
+        'caffe_latte',
+        'cappuccino',
+        'cappuccino_italiano',
+        'check_appliance',
+        'coffee',
+        'coffee_pot',
+        'descaling',
+        'espresso',
+        'espresso_macchiato',
+        'flat_white',
+        'fruit_tea',
+        'green_tea',
+        'herbal_tea',
+        'hot_milk',
+        'hot_water',
+        'japanese_tea',
+        'latte_macchiato',
+        'long_coffee',
+        'milk_foam',
+        'milk_pipework_clean',
+        'milk_pipework_rinse',
+        'no_program',
+        'ristretto',
+        'very_hot_water',
+        'white_tea',
+      ]),
+      'profile': 'profile_1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'espresso',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program_phase-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '2nd_espresso',
+        '2nd_grinding',
+        '2nd_pre_brewing',
+        'dispensing',
+        'espresso',
+        'grinding',
+        'heating_up',
+        'hot_milk',
+        'milk_foam',
+        'not_running',
+        'pre_brewing',
+        'rinse',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffee_system_program_phase',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program phase',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_phase',
+    'unique_id': 'DummyAppliance_CoffeeSystem-state_program_phase',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program_phase-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Coffee system Program phase',
+      'options': list([
+        '2nd_espresso',
+        '2nd_grinding',
+        '2nd_pre_brewing',
+        'dispensing',
+        'espresso',
+        'grinding',
+        'heating_up',
+        'hot_milk',
+        'milk_foam',
+        'not_running',
+        'pre_brewing',
+        'rinse',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system_program_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'espresso',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'automatic_program',
+        'cleaning_care_program',
+        'maintenance_program',
+        'normal_operation_mode',
+        'own_program',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.coffee_system_program_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program type',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_type',
+    'unique_id': 'DummyAppliance_CoffeeSystem-state_program_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Coffee system Program type',
+      'options': list([
+        'automatic_program',
+        'cleaning_care_program',
+        'maintenance_program',
+        'normal_operation_mode',
+        'own_program',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system_program_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'own_program',
+  })
+# ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1245,6 +1595,97 @@
     'state': 'in_use',
   })
 # ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'autocleaning',
+        'failure',
+        'idle',
+        'in_use',
+        'not_connected',
+        'off',
+        'on',
+        'pause',
+        'program_ended',
+        'program_interrupted',
+        'programmed',
+        'rinse_hold',
+        'service',
+        'supercooling',
+        'supercooling_superfreezing',
+        'superfreezing',
+        'superheating',
+        'waiting_to_start',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fridge_freezer_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:fridge-outline',
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'DummyAppliance_Fridge_Freezer_Offline-state_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Fridge freezer',
+      'icon': 'mdi:fridge-outline',
+      'options': list([
+        'autocleaning',
+        'failure',
+        'idle',
+        'in_use',
+        'not_connected',
+        'off',
+        'on',
+        'pause',
+        'program_ended',
+        'program_interrupted',
+        'programmed',
+        'rinse_hold',
+        'service',
+        'supercooling',
+        'supercooling_superfreezing',
+        'superfreezing',
+        'superheating',
+        'waiting_to_start',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fridge_freezer_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_connected',
+  })
+# ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1299,6 +1740,62 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.0',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fridge_freezer_temperature_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'DummyAppliance_Fridge_Freezer_Offline-state_temperature_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Fridge freezer Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fridge_freezer_temperature_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_zone_2-entry]
@@ -2373,7 +2870,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_program-entry]
@@ -2920,7 +3417,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_start_in-entry]
@@ -2976,7 +3473,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_target_temperature-entry]
@@ -3379,7 +3876,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_energy_consumption-entry]
@@ -3407,7 +3904,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -3435,7 +3932,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_energy_forecast-entry]
@@ -3815,7 +4312,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_spin_speed-entry]
@@ -3920,7 +4417,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_target_temperature-entry]
@@ -4004,7 +4501,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
@@ -4032,7 +4529,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_water_forecast-entry]
@@ -5525,7 +6022,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_energy_consumption-entry]
@@ -5553,7 +6050,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -5581,7 +6078,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_energy_forecast-entry]
@@ -5961,7 +6458,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_spin_speed-entry]
@@ -6066,7 +6563,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_target_temperature-entry]
@@ -6150,7 +6647,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
@@ -6178,7 +6675,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_water_forecast-entry]
@@ -6421,7 +6918,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_program-entry]
@@ -6602,6 +7099,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
