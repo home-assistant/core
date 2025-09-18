@@ -1,9 +1,9 @@
 """Config flow for Rejseplanen integration."""
 
-import hashlib
 import json
 from typing import Any
 
+from py_rejseplan.api.base import baseAPIClient as Rejseplanen
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -38,7 +38,6 @@ from .const import (
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_AUTHENTICATION): str,
-        vol.Required(CONF_NAME, default="Rejseplanen"): str,
     }
 )
 
@@ -69,7 +68,7 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle configflow for Rejseplanen integration."""
 
     VERSION = 1
-    MINOR_VERSION = 0
+    MINOR_VERSION = 1
 
     @classmethod
     @callback
@@ -95,15 +94,19 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Validate authentication key
         auth_key = user_input[CONF_AUTHENTICATION]
+        api = Rejseplanen(base_url="https://www.rejseplanen.dk/api/", auth_key=auth_key)
+        result = await self.hass.async_add_executor_job(api.validate_auth_key)
+        if not result:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=CONFIG_SCHEMA,
+                errors={"base": "invalid_auth"},
+            )
 
         # Store the authentication key and name
         return self.async_create_entry(
-            title=user_input[CONF_NAME],
-            data={
-                CONF_AUTHENTICATION: auth_key,
-                CONF_NAME: user_input[CONF_NAME],
-                "is_main_entry": True,
-            },
+            title="Rejseplanen",
+            data={CONF_AUTHENTICATION: auth_key, CONF_NAME: "Rejseplanen"},
         )
 
 
@@ -129,8 +132,8 @@ class RejseplanenSubentryStopFlow(ConfigSubentryFlow):
             "departure_type": user_input.get(CONF_DEPARTURE_TYPE, []),
         }
         unique_str = json.dumps(unique_parts, sort_keys=True, separators=(",", ":"))
-        unique_hash = hashlib.sha256(unique_str.encode()).hexdigest()[:8]
-        unique_id = f"{stop_id}-{unique_hash}"
+        # unique_hash = hashlib.sha256(unique_str.encode()).hexdigest()[:8]
+        unique_id = f"{stop_id}-{unique_str}"
 
         return self.async_create_entry(
             title=name,

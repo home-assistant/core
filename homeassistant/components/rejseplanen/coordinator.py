@@ -10,6 +10,7 @@ from py_rejseplan.dataclasses.departure import Departure
 from py_rejseplan.exceptions import api_error, connection_error, http_error
 from py_rejseplan.version import __version__ as py_rejseplan_version
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -23,13 +24,13 @@ _LOGGER = logging.getLogger(__name__)
 class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
     """Class to manage fetching data from the Rejseplanen API."""
 
-    def __init__(self, hass: HomeAssistant, auth_key: str) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize."""
         _LOGGER.info(
             "Initializing Rejseplanen Data Update Coordinator for Home Assistant with pyRejseplan version %s",
             py_rejseplan_version.version,
         )
-        self.api = departuresAPIClient(auth_key=auth_key)
+        self.api = departuresAPIClient(auth_key=config_entry.data["authentication"])
         self._stop_ids: set[str] = set()
 
         super().__init__(
@@ -37,6 +38,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             _LOGGER,
             name=f"{DOMAIN} Data Update Coordinator",
             update_interval=timedelta(minutes=SCAN_INTERVAL_MINUTES),
+            config_entry=config_entry,
         )
 
     async def _async_update_data(self) -> DepartureBoard:

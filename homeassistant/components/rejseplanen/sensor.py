@@ -63,12 +63,12 @@ async def async_setup_entry(
     entry_data = hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
     coordinator: RejseplanenDataUpdateCoordinator = RejseplanenDataUpdateCoordinator(
         hass,
-        config_entry.data["authentication"],
+        config_entry,
     )
     entry_data["coordinator"] = coordinator
 
     # Only add the updater status sensor for the main entry
-    if config_entry.data.get("is_main_entry"):
+    if config_entry.domain == DOMAIN:
         async_add_entities(
             [RejseplanenUpdaterStatusSensor(coordinator, config_entry.entry_id)]
         )
@@ -245,7 +245,8 @@ class RejseplanenTransportSensor(
                 ATTR_STOP_NAME: departure.name,
                 ATTR_FINAL_STOP: departure.direction,
                 ATTR_DUE_IN: RejseplanenTransportSensor.due_in(
-                    departure.rtTime or departure.time, departure.rtDate or departure.date
+                    departure.rtTime or departure.time,
+                    departure.rtDate or departure.date,
                 ),
                 ATTR_DUE_AT: datetime.combine(
                     departure.date, departure.time
