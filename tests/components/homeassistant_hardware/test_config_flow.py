@@ -976,3 +976,166 @@ async def test_options_flow_thread_to_zigbee(hass: HomeAssistant) -> None:
 
         # The firmware type has been updated
         assert config_entry.data["firmware"] == "ezsp"
+
+
+async def test_config_flow_pick_firmware_shows_migrate_options_with_existing_zha(
+    hass: HomeAssistant,
+) -> None:
+    """Test that migrate options are shown when ZHA entries exist."""
+    # Create a ZHA config entry
+    zha_entry = MockConfigEntry(
+        domain="zha",
+        data={"device": {"path": "/dev/ttyUSB1"}},
+        title="ZHA",
+    )
+    zha_entry.add_to_hass(hass)
+
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    assert init_result["type"] is FlowResultType.MENU
+    assert init_result["step_id"] == "pick_firmware"
+
+    # Should show migrate option for Zigbee since ZHA exists (migrating from ZHA to Zigbee)
+    menu_options = init_result["menu_options"]
+    assert "pick_firmware_zigbee_migrate" in menu_options
+    assert "pick_firmware_thread" in menu_options  # Normal option for Thread
+
+
+async def test_config_flow_pick_firmware_shows_migrate_options_with_existing_otbr(
+    hass: HomeAssistant,
+) -> None:
+    """Test that migrate options are shown when OTBR entries exist."""
+    # Create an OTBR config entry
+    otbr_entry = MockConfigEntry(
+        domain="otbr",
+        data={"url": "http://192.168.1.100:8081"},
+        title="OpenThread Border Router",
+    )
+    otbr_entry.add_to_hass(hass)
+
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    assert init_result["type"] is FlowResultType.MENU
+    assert init_result["step_id"] == "pick_firmware"
+
+    # Should show migrate option for Thread since OTBR exists (migrating from OTBR to Thread)
+    menu_options = init_result["menu_options"]
+    assert "pick_firmware_thread_migrate" in menu_options
+    assert "pick_firmware_zigbee" in menu_options  # Normal option for Zigbee
+
+
+async def test_config_flow_pick_firmware_shows_migrate_options_with_both_existing(
+    hass: HomeAssistant,
+) -> None:
+    """Test that migrate options are shown when both ZHA and OTBR entries exist."""
+    # Create both ZHA and OTBR config entries
+    zha_entry = MockConfigEntry(
+        domain="zha",
+        data={"device": {"path": "/dev/ttyUSB1"}},
+        title="ZHA",
+    )
+    zha_entry.add_to_hass(hass)
+
+    otbr_entry = MockConfigEntry(
+        domain="otbr",
+        data={"url": "http://192.168.1.100:8081"},
+        title="OpenThread Border Router",
+    )
+    otbr_entry.add_to_hass(hass)
+
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    assert init_result["type"] is FlowResultType.MENU
+    assert init_result["step_id"] == "pick_firmware"
+
+    # Should show migrate options for both since both exist
+    menu_options = init_result["menu_options"]
+    assert "pick_firmware_zigbee_migrate" in menu_options
+    assert "pick_firmware_thread_migrate" in menu_options
+
+
+async def test_config_flow_pick_firmware_shows_normal_options_without_existing(
+    hass: HomeAssistant,
+) -> None:
+    """Test that normal options are shown when no ZHA or OTBR entries exist."""
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    assert init_result["type"] is FlowResultType.MENU
+    assert init_result["step_id"] == "pick_firmware"
+
+    # Should show normal options since no existing entries
+    menu_options = init_result["menu_options"]
+    assert "pick_firmware_zigbee" in menu_options
+    assert "pick_firmware_thread" in menu_options
+    assert "pick_firmware_zigbee_migrate" not in menu_options
+    assert "pick_firmware_thread_migrate" not in menu_options
+
+
+async def test_config_flow_zigbee_migrate_handler(hass: HomeAssistant) -> None:
+    """Test that the Zigbee migrate handler works correctly."""
+    # Ensure Zigbee migrate option is available by adding a ZHA entry
+    zha_entry = MockConfigEntry(
+        domain="zha",
+        data={"device": {"path": "/dev/ttyUSB1"}},
+        title="ZHA",
+    )
+    zha_entry.add_to_hass(hass)
+
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    with mock_firmware_info(
+        hass,
+        probe_app_type=ApplicationType.SPINEL,
+        flash_app_type=ApplicationType.EZSP,
+    ):
+        # Test the migrate handler directly
+        result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            user_input={"next_step_id": "pick_firmware_zigbee_migrate"},
+        )
+
+        # Should proceed to zigbee installation type (same as normal zigbee flow)
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "zigbee_installation_type"
+
+
+@pytest.mark.usefixtures("addon_store_info")
+async def test_config_flow_thread_migrate_handler(hass: HomeAssistant) -> None:
+    """Test that the Thread migrate handler works correctly."""
+    # Ensure Thread migrate option is available by adding an OTBR entry
+    otbr_entry = MockConfigEntry(
+        domain="otbr",
+        data={"url": "http://192.168.1.100:8081"},
+        title="OpenThread Border Router",
+    )
+    otbr_entry.add_to_hass(hass)
+
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    with mock_firmware_info(
+        hass,
+        probe_app_type=ApplicationType.EZSP,
+        flash_app_type=ApplicationType.SPINEL,
+    ) as (_, _):
+        # Test the migrate handler directly
+        result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            user_input={"next_step_id": "pick_firmware_thread_migrate"},
+        )
+
+        # Should proceed to OTBR addon installation (same as normal thread flow)
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["progress_action"] == "install_addon"
+        assert result["step_id"] == "install_otbr_addon"

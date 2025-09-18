@@ -50,6 +50,8 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_PICK_FIRMWARE_THREAD = "pick_firmware_thread"
 STEP_PICK_FIRMWARE_ZIGBEE = "pick_firmware_zigbee"
+STEP_PICK_FIRMWARE_THREAD_MIGRATE = "pick_firmware_thread_migrate"
+STEP_PICK_FIRMWARE_ZIGBEE_MIGRATE = "pick_firmware_zigbee_migrate"
 
 
 class PickedFirmwareType(StrEnum):
@@ -124,11 +126,23 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Thread or Zigbee firmware."""
+        # Determine if ZHA or Thread are already configured to present migrate options
+        zha_entries = self.hass.config_entries.async_entries(ZHA_DOMAIN)
+        otbr_entries = self.hass.config_entries.async_entries(OTBR_DOMAIN)
+
         return self.async_show_menu(
             step_id="pick_firmware",
             menu_options=[
-                STEP_PICK_FIRMWARE_ZIGBEE,
-                STEP_PICK_FIRMWARE_THREAD,
+                (
+                    STEP_PICK_FIRMWARE_ZIGBEE_MIGRATE
+                    if zha_entries
+                    else STEP_PICK_FIRMWARE_ZIGBEE
+                ),
+                (
+                    STEP_PICK_FIRMWARE_THREAD_MIGRATE
+                    if otbr_entries
+                    else STEP_PICK_FIRMWARE_THREAD
+                ),
             ],
             description_placeholders=self._get_translation_placeholders(),
         )
@@ -374,6 +388,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self._picked_firmware_type = PickedFirmwareType.ZIGBEE
         return await self.async_step_zigbee_installation_type()
 
+    async def async_step_pick_firmware_zigbee_migrate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick Zigbee firmware. Migration is automatic."""
+        return await self.async_step_pick_firmware_zigbee()
+
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -475,6 +495,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Pick Thread firmware."""
         self._picked_firmware_type = PickedFirmwareType.THREAD
         return await self._async_continue_picked_firmware()
+
+    async def async_step_pick_firmware_thread_migrate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick Thread firmware. Migration is automatic."""
+        return await self.async_step_pick_firmware_thread()
 
     async def async_step_install_thread_firmware(
         self, user_input: dict[str, Any] | None = None
