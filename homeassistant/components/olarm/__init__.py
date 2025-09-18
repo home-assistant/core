@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
     )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     try:
-        await session.async_ensure_token_valid()  # or auth.async_get_access_token()
+        await session.async_ensure_token_valid()
     except ClientResponseError as err:
         if 400 <= err.status < 500:
             raise ConfigEntryAuthFailed("OAuth session not valid") from err
