@@ -441,7 +441,8 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - *checkout
-      - name: Set up Python ${{ matrix.python-version }}
+      - &setup-python-matrix
+        name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
@@ -670,12 +671,7 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     steps:
       - *checkout
-      - name: Set up Python ${{ matrix.python-version }}
-        id: python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
+      - *setup-python-matrix
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -946,12 +942,7 @@ jobs:
             libgammu-dev \
             libxml2-utils
       - *checkout
-      - name: Set up Python ${{ matrix.python-version }}
-        id: python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
+      - *setup-python-matrix
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -1092,12 +1083,7 @@ jobs:
             libmariadb-dev-compat \
             libxml2-utils
       - *checkout
-      - name: Set up Python ${{ matrix.python-version }}
-        id: python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
+      - *setup-python-matrix
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -1247,12 +1233,7 @@ jobs:
           sudo apt-get -y install \
             postgresql-server-dev-14
       - *checkout
-      - name: Set up Python ${{ matrix.python-version }}
-        id: python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
+      - *setup-python-matrix
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -1418,12 +1399,7 @@ jobs:
             libgammu-dev \
             libxml2-utils
       - *checkout
-      - name: Set up Python ${{ matrix.python-version }}
-        id: python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
+      - *setup-python-matrix
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
