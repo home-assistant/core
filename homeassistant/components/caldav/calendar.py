@@ -6,7 +6,6 @@ from datetime import datetime
 from functools import partial
 import logging
 from typing import Any
-import uuid
 
 import caldav
 from caldav.lib.error import DAVError
@@ -38,7 +37,6 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-import homeassistant.util.dt as dt_util
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars
@@ -217,15 +215,17 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """Create a new event in the calendar."""
         _LOGGER.debug("Event: %s", kwargs)
 
-        item_data: dict[str, Any] = {
-            "summary": kwargs.get("summary"),
-            "dtstart": kwargs.get("dtstart"),
-            "dtend": kwargs.get("dtend"),
-            "dtstamp": dt_util.utcnow(),
-            "description": kwargs.get("description"),
-            "location": kwargs.get("location"),
-            "uid": str(uuid.uuid4()),
-        }
+        item_data: dict[str, Any] = {}
+        if summary := kwargs.get("summary"):
+            item_data["summary"] = summary
+        if dtstart := kwargs.get("dtstart"):
+            item_data["dtstart"] = dtstart
+        if dtend := kwargs.get("dtend"):
+            item_data["dtend"] = dtend
+        if description := kwargs.get("description"):
+            item_data["description"] = description
+        if location := kwargs.get("location"):
+            item_data["location"] = location
         if rrule := kwargs.get("rrule"):
             item_data["rrule"] = rrule
 
