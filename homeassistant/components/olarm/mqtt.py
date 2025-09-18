@@ -168,7 +168,7 @@ class OlarmFlowClientMQTT:
                 f"Failed to connect to Olarm MQTT Service: {e}"
             ) from e
 
-    def mqtt_message_callback(self, topic: str, payload: str) -> None:
+    def mqtt_message_callback(self, topic: str, payload: dict[str, Any]) -> None:
         """Handle incoming MQTT messages from the Olarm device."""
 
         _LOGGER.debug("MQTT message received: topic = %s, payload = %s", topic, payload)
