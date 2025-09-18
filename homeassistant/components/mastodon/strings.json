@@ -79,6 +79,10 @@
           "name": "Content warning",
           "description": "A content warning will be shown before the status text is shown (default: no content warning)."
         },
+        "language": {
+          "name": "Language",
+          "description": "The language of the post (default: Mastodon account preference)."
+        },
         "media": {
           "name": "Media",
           "description": "Attach an image or video to the post."
