@@ -68,18 +68,18 @@ async def test_zone_sensors(hass: HomeAssistant, setup_integration) -> None:
 
     # Check zone 0 (active)
     zone_0 = sensors[0]
-    assert zone_0._attr_name == "Zone 001 - Front Door"
+    assert zone_0._attr_translation_key == "zone"
     assert zone_0._attr_is_on is True
     assert zone_0.entity_description.key == "zone"
 
     # Check zone 1 (closed)
     zone_1 = sensors[2]
-    assert zone_1._attr_name == "Zone 002 - Window"
+    assert zone_1._attr_translation_key == "zone"
     assert zone_1._attr_is_on is False
 
     # Check zone 2 (bypassed - still OFF for zone sensor)
     zone_2 = sensors[4]
-    assert zone_2._attr_name == "Zone 003 - Motion"
+    assert zone_2._attr_translation_key == "zone"
     assert zone_2._attr_is_on is False
 
 
@@ -94,6 +94,6 @@ async def test_ac_power_sensor(hass: HomeAssistant, setup_integration) -> None:
     assert len(sensors) == 1
 
     ac_sensor = sensors[0]
-    assert ac_sensor._attr_name == "AC Power"
+    assert ac_sensor._attr_translation_key == "ac_power"
     assert ac_sensor._attr_is_on is True
     assert ac_sensor.entity_description.key == "ac_power"
