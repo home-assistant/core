@@ -109,7 +109,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         )
 
         state = await self.async_get_last_state()
-        if state is not None and state.state in self.options:
+        if (state is not None) and (state.state in self.options):
             self._attr_current_option = state.state
 
         if self.registry_entry and (device_id := self.registry_entry.device_id):
@@ -119,7 +119,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
 
             def cleanup() -> None:
                 """Clean up registered device."""
-                pipeline_data.pipeline_devices.pop(device_id)
+                pipeline_data.pipeline_devices.pop(device_id, None)
 
             self.async_on_remove(cleanup)
 
