@@ -22,5 +22,11 @@
         "user": "Add stop"
       }
     }
+  },
+  "issues": {
+    "yaml_deprecated": {
+      "title": "YAML configuration detected",
+      "description": "You have configured Rejseplanen in configuration.yaml. This method is deprecated and will be ignored. Please use the UI to configure the integration. To solve this issue, remove the platform configuration from the configuration.yaml."
+    }
   }
 }
