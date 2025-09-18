@@ -3041,7 +3041,7 @@ universal-silabs-flasher==0.0.32
 upb-lib==0.6.1
 
 # homeassistant.components.upcloud
-upcloud-api==2.6.0
+upcloud-api==2.8.0
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
