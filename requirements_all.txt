@@ -247,7 +247,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.0.0
+aioesphomeapi==41.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1063,7 +1063,7 @@ google-cloud-speech==2.31.1
 google-cloud-texttospeech==2.25.1
 
 # homeassistant.components.google_generative_ai_conversation
-google-genai==1.29.0
+google-genai==1.38.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
@@ -2827,7 +2827,7 @@ soco==0.30.11
 solaredge-local==0.2.3
 
 # homeassistant.components.solarlog
-solarlog_cli==0.5.0
+solarlog_cli==0.6.0
 
 # homeassistant.components.solax
 solax==3.2.3
@@ -3069,6 +3069,9 @@ velbus-aio==2025.8.0
 # homeassistant.components.venstar
 venstarcolortouch==0.21
 
+# homeassistant.components.victron_remote_monitoring
+victron-vrm==0.1.7
+
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
 
@@ -3180,7 +3183,7 @@ yalexs-ble==3.1.2
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==9.1.0
+yalexs==9.2.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.16
@@ -3216,7 +3219,7 @@ zeroconf==0.147.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.70
+zha==0.0.71
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

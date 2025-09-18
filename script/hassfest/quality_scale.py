@@ -1959,7 +1959,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "somfy_mylink",
     "sonarr",
     "songpal",
-    "sonos",
     "sony_projector",
     "soundtouch",
     "spaceapi",

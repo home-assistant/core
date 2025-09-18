@@ -18,6 +18,7 @@ from homeassistant.components.recorder.models import uuid_hex_to_bytes_or_none
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
@@ -41,8 +42,6 @@ ALLOWED_DOMAINS = {
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
-    Platform.DATE,
-    Platform.DATETIME,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.IMAGE,
@@ -57,14 +56,9 @@ ALLOWED_DOMAINS = {
     Platform.SIREN,
     Platform.SWITCH,
     Platform.TEXT,
-    Platform.TIME,
-    Platform.TODO,
-    Platform.UPDATE,
     Platform.VACUUM,
     Platform.VALVE,
-    Platform.WAKE_WORD,
     Platform.WATER_HEATER,
-    Platform.WEATHER,
     # Helpers with own domain
     "counter",
     "group",
@@ -105,14 +99,17 @@ async def async_predict_common_control(
     """
     # Get the recorder instance to ensure it's ready
     recorder = get_instance(hass)
+    ent_reg = er.async_get(hass)
 
     # Execute the database operation in the recorder's executor
     return await recorder.async_add_executor_job(
-        _fetch_with_session, hass, _fetch_and_process_data, user_id
+        _fetch_with_session, hass, _fetch_and_process_data, ent_reg, user_id
     )
 
 
-def _fetch_and_process_data(session: Session, user_id: str) -> EntityUsagePredictions:
+def _fetch_and_process_data(
+    session: Session, ent_reg: er.EntityRegistry, user_id: str
+) -> EntityUsagePredictions:
     """Fetch and process service call events from the database."""
     # Prepare a dictionary to track results
     results: dict[str, Counter[str]] = {
@@ -198,6 +195,7 @@ def _fetch_and_process_data(session: Session, user_id: str) -> EntityUsagePredic
             entity_id
             for entity_id in entity_ids
             if entity_id.split(".")[0] in ALLOWED_DOMAINS
+            and ((entry := ent_reg.async_get(entity_id)) is None or not entry.hidden)
         ]
 
         if not entity_ids:
