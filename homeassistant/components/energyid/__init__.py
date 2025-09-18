@@ -7,7 +7,6 @@ from dataclasses import dataclass
 import datetime as dt
 import functools
 import logging
-from typing import Any  # noqa: F401
 
 from energyid_webhooks.client_v2 import WebhookClient
 
@@ -226,14 +225,11 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
             """Handle entity registry changes for our tracked entities."""
             _LOGGER.debug("Registry event for tracked entity: %s", event.data)
 
-            action = event.data["action"]
-            changed_entity_id = event.data["entity_id"]
-
-            if action == "update":
-                event_data = event.data  # type: Any
-                if "changes" in event_data and "entity_id" in event_data["changes"]:
-                    old_entity_id = event_data["changes"]["entity_id"]
-                    new_entity_id = changed_entity_id
+            if event.data["action"] == "update":
+                # Type is now narrowed to _EventEntityRegistryUpdatedData_Update
+                if "entity_id" in event.data["changes"]:
+                    old_entity_id = event.data["changes"]["entity_id"]
+                    new_entity_id = event.data["entity_id"]
 
                     _LOGGER.debug(
                         "Tracked entity ID changed: %s -> %s",
@@ -243,9 +239,9 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
                     # Entity ID changed, need to reload listeners to track new ID
                     update_listeners(hass, entry)
 
-            elif action == "remove":
-                _LOGGER.debug("Tracked entity removed: %s", changed_entity_id)
-                # reminder for next PR: Create repair issue to notify user about removed entity
+            elif event.data["action"] == "remove":
+                _LOGGER.debug("Tracked entity removed: %s", event.data["entity_id"])
+                # reminder: Create repair issue to notify user about removed entity
                 update_listeners(hass, entry)
 
         # Track the specific entity IDs we care about
