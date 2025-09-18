@@ -1,5 +1,6 @@
 """Config flow for OPNsense."""
 
+import asyncio
 import logging
 from typing import Any
 
@@ -17,14 +18,16 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
-    CONF_API_BASE_URL,
     CONF_API_SECRET,
-    CONF_API_VERIFY_CERT,
+    CONF_AVAILABLE_INTERFACES,
     CONF_TRACKER_INTERFACES,
     DOMAIN,
+    OPNSENSE_DATA,
 )
+from .types import APIData, Interfaces
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +36,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
     """OPNsense config flow."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize OPNsense config flow."""
+        self.available_interfaces: Interfaces | None = None
 
     async def _show_setup_form(
         self,
@@ -68,7 +75,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, False)
                     ): bool,
-                    vol.Optional(CONF_TRACKER_INTERFACES): str,
                 }
             ),
             errors=errors or {},
@@ -96,34 +102,28 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             tracker_interfaces = tracker_interfaces.replace(" ", "").split(",")
             user_input[CONF_TRACKER_INTERFACES] = tracker_interfaces
 
-        api_data = {
-            CONF_API_KEY: user_input[CONF_API_KEY],
-            CONF_API_SECRET: user_input[CONF_API_SECRET],
-            CONF_API_BASE_URL: user_input[CONF_URL],
-            CONF_API_VERIFY_CERT: user_input[CONF_VERIFY_SSL],
+        api_data: APIData = {
+            "api_key": user_input[CONF_API_KEY],
+            "api_secret": user_input[CONF_API_SECRET],
+            "base_url": user_input[CONF_URL],
+            "verify_cert": user_input[CONF_VERIFY_SSL],
         }
-        interfaces_client = diagnostics.InterfaceClient(**api_data)
 
         try:
-            # Check connection
-            await self.hass.async_add_executor_job(interfaces_client.get_arp)
-
-            if tracker_interfaces:
+            await asyncio.gather(
+                self._async_check_connection(api_data),
+                self._async_get_available_interfaces(api_data),
+            )
+            if tracker_interfaces and self.available_interfaces:
                 # Verify that specified tracker interfaces are valid
-                netinsight_client = diagnostics.NetworkInsightClient(**api_data)
-                interfaces = await self.hass.async_add_executor_job(
-                    netinsight_client.get_interfaces
-                )
-                interfaces_names = list(interfaces.values())
                 for interface in tracker_interfaces:
-                    if interface not in interfaces_names:
+                    if interface not in self.available_interfaces:
                         errors["base"] = "invalid_interface"
                         return await self._show_setup_form(user_input, errors)
 
             return self.async_create_entry(title="OPNsense", data=user_input)
 
         except (APIException, requestsConnectionError):
-            _LOGGER.error("Error connecting to the OPNsense router")
             errors["base"] = "cannot_connect"
 
         except Exception:  # pylint: disable=broad-except
@@ -145,11 +145,26 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_updates=data,
             )
 
+        available_interfaces = []
+        if (
+            OPNSENSE_DATA in self.hass.data
+            and CONF_AVAILABLE_INTERFACES in self.hass.data[OPNSENSE_DATA]
+        ):
+            available_interfaces = self.hass.data[OPNSENSE_DATA][
+                CONF_AVAILABLE_INTERFACES
+            ]
+
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_TRACKER_INTERFACES): str,
+                    vol.Optional(CONF_TRACKER_INTERFACES): SelectSelector(
+                        SelectSelectorConfig(
+                            options=list(available_interfaces),
+                            multiple=True,
+                            sort=True,
+                        )
+                    ),
                 }
             ),
         )
@@ -159,3 +174,17 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Import a config entry."""
         return await self.async_step_user(import_config)
+
+    async def _async_check_connection(self, api_data: APIData) -> None:
+        """Check connection to OPNsense."""
+        interfaces_client = diagnostics.InterfaceClient(**api_data)
+        await self.hass.async_add_executor_job(interfaces_client.get_arp)
+
+    async def _async_get_available_interfaces(self, api_data: APIData) -> Interfaces:
+        """Fetch available interfaces from OPNsense."""
+        netinsight_client = diagnostics.NetworkInsightClient(**api_data)
+        interface_details = await self.hass.async_add_executor_job(
+            netinsight_client.get_interfaces
+        )
+        self.available_interfaces = interface_details.values()
+        return self.available_interfaces

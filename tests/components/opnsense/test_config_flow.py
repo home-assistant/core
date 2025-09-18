@@ -5,11 +5,12 @@ from unittest.mock import patch
 from pyopnsense.exceptions import APIException
 
 from homeassistant import data_entry_flow
+from homeassistant.components.opnsense import CONF_AVAILABLE_INTERFACES, OPNSENSE_DATA
 from homeassistant.components.opnsense.const import CONF_TRACKER_INTERFACES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 
-from . import CONFIG_DATA, CONFIG_DATA_IMPORT, TITLE, setup_mock_diagnostics
+from . import CONFIG_DATA, CONFIG_DATA_IMPORT, INTERFACES, TITLE, setup_mock_diagnostics
 
 from tests.common import MockConfigEntry
 
@@ -156,6 +157,10 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
+    # Mock that setup already saved the interfaces
+    hass.data[OPNSENSE_DATA] = {}
+    hass.data[OPNSENSE_DATA][CONF_AVAILABLE_INTERFACES] = INTERFACES.values()
+
     with patch(
         "homeassistant.components.opnsense.config_flow.diagnostics"
     ) as mock_diagnostics:
@@ -167,10 +172,10 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_TRACKER_INTERFACES: "LAN"},
+            user_input={CONF_TRACKER_INTERFACES: ["LAN"]},
         )
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "reconfigure_successful"
-        assert entry.data[CONF_TRACKER_INTERFACES] == "LAN"
+        assert entry.data[CONF_TRACKER_INTERFACES] == ["LAN"]

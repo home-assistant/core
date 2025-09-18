@@ -10,13 +10,13 @@
           "api_secret": "API secret",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "tracker_interfaces": "Interface(s) to use for tracking devices"
+          "tracker_interfaces": "Interface(s) to use for tracking devices (if blank all will be used)"
         }
       },
       "reconfigure": {
         "description": "Reconfigure",
         "data": {
-          "tracker_interfaces": "Interface(s) to use for tracking devices"
+          "tracker_interfaces": "Interface(s) to use for tracking devices (if blank all will be used)"
         }
       }
     },

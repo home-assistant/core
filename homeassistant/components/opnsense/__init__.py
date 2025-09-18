@@ -14,15 +14,15 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_API_BASE_URL,
     CONF_API_SECRET,
-    CONF_API_VERIFY_CERT,
+    CONF_AVAILABLE_INTERFACES,
     CONF_INTERFACE_CLIENT,
     CONF_TRACKER_INTERFACES,
     DATA_HASS_CONFIG,
     DOMAIN,
     OPNSENSE_DATA,
 )
+from .types import APIData, Interfaces
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,12 +60,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the OPNsense component from a config entry."""
 
-    api_data = {
-        CONF_API_KEY: entry.data[CONF_API_KEY],
-        CONF_API_SECRET: entry.data[CONF_API_SECRET],
-        CONF_API_BASE_URL: entry.data[CONF_URL],
-        CONF_API_VERIFY_CERT: entry.data[CONF_VERIFY_SSL],
+    api_data: APIData = {
+        "api_key": entry.data[CONF_API_KEY],
+        "api_secret": entry.data[CONF_API_SECRET],
+        "base_url": entry.data[CONF_URL],
+        "verify_cert": entry.data[CONF_VERIFY_SSL],
     }
+
     tracker_interfaces = entry.data.get(CONF_TRACKER_INTERFACES)
 
     interfaces_client = diagnostics.InterfaceClient(**api_data)
@@ -82,18 +83,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_TRACKER_INTERFACES: tracker_interfaces,
     }
 
-    if tracker_interfaces:
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
-        hass.async_create_task(
-            async_load_platform(
-                hass,
-                Platform.DEVICE_TRACKER,
-                DOMAIN,
-                tracker_interfaces,
-                hass.data[DATA_HASS_CONFIG],
-            )
-        )
-    else:
-        _LOGGER.warning("No interfaces to track")
+    hass.async_add_executor_job(
+        _load_available_interfaces, hass, api_data, tracker_interfaces
+    )
 
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
+    hass.async_create_task(
+        async_load_platform(
+            hass,
+            Platform.DEVICE_TRACKER,
+            DOMAIN,
+            tracker_interfaces,
+            hass.data[DATA_HASS_CONFIG],
+        )
+    )
     return True
+
+
+def _load_available_interfaces(
+    hass: HomeAssistant, api_data: APIData, tracker_interfaces: Interfaces | None
+) -> None:
+    """Verify that specified tracker interfaces are valid."""
+    netinsight_client = diagnostics.NetworkInsightClient(**api_data)
+    interfaces = list(netinsight_client.get_interfaces().values())
+    hass.data[OPNSENSE_DATA][CONF_AVAILABLE_INTERFACES] = interfaces
+    if tracker_interfaces:
+        # Verify that specified interfaces are valid
+        for interface in tracker_interfaces:
+            if interface not in interfaces:
+                _LOGGER.error(
+                    "Specified OPNsense tracker interface %s is not found", interface
+                )
