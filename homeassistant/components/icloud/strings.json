@@ -47,11 +47,11 @@
   "services": {
     "update": {
       "name": "Update",
-      "description": "Asks for a state update of all devices linked to an Apple account.",
+      "description": "Asks for a state update of all devices linked to an Apple Account.",
       "fields": {
         "account": {
           "name": "Account",
-          "description": "Your Apple account username (email)."
+          "description": "Your Apple Account username (email)."
         }
       }
     },
