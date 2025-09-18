@@ -1,7 +1,7 @@
 """The profiler integration."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 import contextlib
 from contextlib import suppress
 from datetime import timedelta
@@ -12,7 +12,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, cast
+from typing import Any, NamedTuple, cast
 
 from lru import LRU
 import voluptuous as vol
@@ -40,6 +40,8 @@ SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
 SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
 SERVICE_SET_ASYNCIO_DEBUG = "set_asyncio_debug"
 SERVICE_LOG_CURRENT_TASKS = "log_current_tasks"
+SERVICE_START_AUDITING_EVENTS = "start_auditing_events"
+SERVICE_STOP_AUDITING_EVENTS = "stop_auditing_events"
 
 _LRU_CACHE_WRAPPER_OBJECT = _lru_cache_wrapper.__name__
 _SQLALCHEMY_LRU_OBJECT = "LRUCache"
@@ -66,14 +68,34 @@ SERVICES = (
 )
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+DEFAULT_SUMMARY_INTERVAL = timedelta(seconds=30)
 
 DEFAULT_MAX_OBJECTS = 5
 
 CONF_ENABLED = "enabled"
 CONF_SECONDS = "seconds"
 CONF_MAX_OBJECTS = "max_objects"
+CONF_EVENTS = "events"
+CONF_FILTER = "filter"
+CONF_SUMMARY_INTERVAL = "summary_interval"
+CONF_VERBOSE = "verbose"
 
 LOG_INTERVAL_SUB = "log_interval_subscription"
+AUDITING_HOOK_ADDED = "auditing_hook_added"
+AUDITED_EVENTS = "audited_events"
+AUDIT_INTERVAL_SUB = "audit_interval_subscription"
+AUDIT_SUMMARY = "audit_summary"
+
+
+class AuditConfig(NamedTuple):
+    """Auditing configuration of a single audit event type."""
+
+    verbose: bool
+    filter: str | None = None
+
+
+type SummaryByArgs = dict[str, int]
+type SummaryByTraceback = dict[str, SummaryByArgs]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +106,11 @@ async def async_setup_entry(  # noqa: C901
 ) -> bool:
     """Set up Profiler from a config entry."""
     lock = asyncio.Lock()
-    domain_data = hass.data[DOMAIN] = {}
+
+    domain_data = hass.data[DOMAIN] = {
+        AUDITING_HOOK_ADDED: False,
+        AUDITED_EVENTS: {},
+    }
 
     async def _async_run_profile(call: ServiceCall) -> None:
         async with lock:
@@ -273,6 +299,54 @@ async def async_setup_entry(  # noqa: C901
             base_logger.setLevel(logging.INFO)
         hass.loop.set_debug(enabled)
 
+    async def _async_start_auditing_events(call: ServiceCall) -> None:
+        """Configure auditing of Python events."""
+        events = call.data[CONF_EVENTS]
+        verbose = call.data.get(CONF_VERBOSE, False)
+        filter_ = call.data.get(CONF_FILTER)
+        summary_interval = call.data.get(CONF_SUMMARY_INTERVAL, None)
+        audited_events: dict[str, AuditConfig] = domain_data[AUDITED_EVENTS]
+
+        if summary_interval and AUDIT_INTERVAL_SUB in domain_data:
+            raise HomeAssistantError("Already summarizing events")
+
+        for event in events:
+            # Always log this at critical level so we know when
+            # it's been changed when reviewing logs
+            _LOGGER.critical(
+                "Enabling %sauditing for event %s%s",
+                "verbose " if verbose else "",
+                event,
+                f" with filter '{filter_}'" if filter_ else "",
+            )
+            audited_events[event] = AuditConfig(verbose=verbose, filter=filter_)
+
+        if not domain_data[AUDITING_HOOK_ADDED]:
+            _LOGGER.info("Adding Python audit hook function")
+            sys.addaudithook(_make_audit_hook(domain_data))
+            domain_data[AUDITING_HOOK_ADDED] = True
+
+        # Force this module's logger at least to DEBUG to see the events
+        if _LOGGER.getEffectiveLevel() > logging.DEBUG:
+            _LOGGER.setLevel(logging.DEBUG)
+
+        if summary_interval:
+            domain_data[AUDIT_SUMMARY] = {}
+
+            async def _log_events_summary_job(*_: Any) -> None:
+                await hass.async_add_executor_job(_log_events_summary, domain_data)
+
+            domain_data[AUDIT_INTERVAL_SUB] = async_track_time_interval(
+                hass, _log_events_summary_job, summary_interval
+            )
+
+    async def _async_stop_auditing_events(call: ServiceCall) -> None:
+        """Stop auditing all Python events."""
+        domain_data[AUDITED_EVENTS].clear()
+        if AUDIT_INTERVAL_SUB in domain_data:
+            domain_data.pop(AUDIT_INTERVAL_SUB)()
+            domain_data.pop(AUDIT_SUMMARY)
+
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -382,6 +456,28 @@ async def async_setup_entry(  # noqa: C901
         _async_dump_current_tasks,
     )
 
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_START_AUDITING_EVENTS,
+        _async_start_auditing_events,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_EVENTS): vol.All(cv.ensure_list, [cv.string]),
+                vol.Optional(CONF_VERBOSE, default=False): cv.boolean,
+                vol.Optional(CONF_FILTER): cv.string,
+                vol.Optional(CONF_SUMMARY_INTERVAL): cv.time_period,
+            }
+        ),
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_STOP_AUDITING_EVENTS,
+        _async_stop_auditing_events,
+    )
+
     return True
 
 
@@ -391,6 +487,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_remove(domain=DOMAIN, service=service)
     if LOG_INTERVAL_SUB in hass.data[DOMAIN]:
         hass.data[DOMAIN][LOG_INTERVAL_SUB]()
+    if hass.data[DOMAIN].get(AUDITING_HOOK_ADDED, False):
+        _LOGGER.warning(
+            "Python auditing hook cannot be removed, only suppressing logging"
+        )
+        hass.data[DOMAIN][AUDITED_EVENTS].clear()
+    if AUDIT_INTERVAL_SUB in hass.data[DOMAIN]:
+        hass.data[DOMAIN].pop(AUDIT_INTERVAL_SUB)()
     hass.data.pop(DOMAIN)
     return True
 
@@ -598,3 +701,66 @@ def _increase_repr_limit() -> Generator[None]:
     finally:
         arepr.maxstring = original_maxstring
         arepr.maxother = original_maxother
+
+
+def _make_audit_hook(domain_data: dict[str, Any]) -> Callable:
+    """Create an audit hook function that logs events in audited_events."""
+
+    def _audit_hook(event, args):
+        audited_events: dict[str, AuditConfig] = domain_data.get(AUDITED_EVENTS, {})
+        summary: SummaryByTraceback | None = domain_data.get(AUDIT_SUMMARY)
+
+        if event in audited_events:
+            filter_ = audited_events[event].filter
+            args_repr = repr(args)
+            if filter_ and filter_ not in args_repr:
+                return
+
+            summarized = summary is not None
+            if summarized or audited_events[event].verbose:
+                stack = reversed(
+                    traceback.format_stack()[:-1]
+                )  # exclude this function call
+                tb = "".join(stack).strip()
+
+                if summarized:
+                    event_info = f"{event} {args_repr}"
+                    event_traceback_summary: SummaryByArgs = summary.setdefault(tb, {})
+                    event_traceback_summary.setdefault(event_info, 0)
+                    event_traceback_summary[event_info] += 1
+                    return
+
+                if audited_events[event].verbose:
+                    _LOGGER.debug(
+                        "Audited event: %s %s, traceback (most recent call first):\n  %s",
+                        event,
+                        args_repr,
+                        tb,
+                    )
+            else:
+                _LOGGER.debug("Audited event: %s %s", event, args_repr)
+
+    return _audit_hook
+
+
+def _log_events_summary(domain_data: dict[str, Any]) -> None:
+    """Log a summary of audited events."""
+    summary: SummaryByTraceback | None = domain_data.get(AUDIT_SUMMARY)
+
+    if not summary:
+        _LOGGER.debug("No audited events in the last period")
+        return
+
+    old_summary, domain_data[AUDIT_SUMMARY] = summary, {}
+
+    for tb, events in summary.items():
+        _LOGGER.debug(
+            "Audited events summary for traceback (most recent call first):"
+            "\n  %s"
+            "\nEvent arguments:"
+            "\n%s",
+            tb,
+            "\n".join(f"  - {count}×: {event}" for event, count in events.items()),
+        )
+
+    old_summary.clear()
