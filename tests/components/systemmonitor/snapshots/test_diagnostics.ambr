@@ -23,7 +23,7 @@
         'load': '(1, 2, 3)',
         'memory': 'VirtualMemory(total=104857600, available=41943040, percent=40.0, used=62914560, free=31457280)',
         'process_fds': "{'python3': 42, 'pip': 15}",
-        'processes': "[tests.components.systemmonitor.conftest.MockProcess(pid=1, name='python3', status='sleeping', started='2024-02-23 16:00:00'), tests.components.systemmonitor.conftest.MockProcess(pid=1, name='pip', status='sleeping', started='2024-02-23 16:00:00')]",
+        'processes': "[tests.components.systemmonitor.conftest.MockProcess(pid=1, name='python3', status='sleeping', started='2024-02-23 15:00:00'), tests.components.systemmonitor.conftest.MockProcess(pid=1, name='pip', status='sleeping', started='2024-02-23 15:00:00')]",
         'swap': 'sswap(total=104857600, used=62914560, free=41943040, percent=60.0, sin=1, sout=1)',
         'temperatures': dict({
           'cpu0-thermal': "[shwtemp(label='cpu0-thermal', current=50.0, high=60.0, critical=70.0)]",
