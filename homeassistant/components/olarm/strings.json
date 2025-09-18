@@ -33,5 +33,18 @@
     "create_entry": {
       "default": "Successfully authenticated"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "zone": {
+        "name": "Zone {zone_number} {zone_label}"
+      },
+      "zone_bypass": {
+        "name": "Zone {zone_number} Bypass {zone_label}"
+      },
+      "ac_power": {
+        "name": "AC Power"
+      }
+    }
   }
 }
