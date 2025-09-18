@@ -7258,6 +7258,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "victron_remote_monitoring": {
+      "name": "Victron Remote Monitoring",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "vilfo": {
       "name": "Vilfo Router",
       "integration_type": "hub",

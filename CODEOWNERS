@@ -1535,8 +1535,8 @@ build.json @home-assistant/supervisor
 /tests/components/switchbee/ @jafar-atili
 /homeassistant/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski @zerzhang
 /tests/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski @zerzhang
-/homeassistant/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur
-/tests/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur
+/homeassistant/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur @XiaoLing-git
+/tests/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur @XiaoLing-git
 /homeassistant/components/switcher_kis/ @thecode @YogevBokobza
 /tests/components/switcher_kis/ @thecode @YogevBokobza
 /homeassistant/components/switchmate/ @danielhiversen @qiz-li
@@ -1712,6 +1712,8 @@ build.json @home-assistant/supervisor
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak @sapuseven
 /homeassistant/components/vicare/ @CFenner
 /tests/components/vicare/ @CFenner
+/homeassistant/components/victron_remote_monitoring/ @AndyTempel
+/tests/components/victron_remote_monitoring/ @AndyTempel
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
 /homeassistant/components/vivotek/ @HarlemSquirrel
