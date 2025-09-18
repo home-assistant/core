@@ -173,9 +173,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: entity.coordinator.data.battery.percent
-        if entity.coordinator.data.battery
-        else None,
+        value_fn=(
+            lambda entity: entity.coordinator.data.battery.percent
+            if entity.coordinator.data.battery
+            else None
+        ),
         none_is_unavailable=True,
         add_to_update=lambda entity: ("battery", ""),
     ),
