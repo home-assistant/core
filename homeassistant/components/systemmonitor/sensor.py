@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import lru_cache
 import ipaddress
 import logging
@@ -30,7 +30,6 @@ from homeassistant.const import (
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -38,7 +37,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from . import SystemMonitorConfigEntry
 from .binary_sensor import BINARY_SENSOR_DOMAIN
@@ -148,12 +147,15 @@ def get_process_num_fds(entity: SystemMonitorSensor) -> int | None:
     return process_fds.get(entity.argument)
 
 
-def battery_seconds_left(entity: SystemMonitorSensor) -> int | None:
-    """Return remaining battery time in seconds."""
+def battery_time_ends(entity: SystemMonitorSensor) -> datetime | None:
+    """Return when battery runs out, rounded to minute."""
     battery = entity.coordinator.data.battery
     if not battery or battery.secsleft in BATTERY_REMAIN_UNKNOWNS:
         return None
-    return battery.secsleft
+
+    return (dt_util.utcnow() + timedelta(seconds=battery.secsleft)).replace(
+        second=0, microsecond=0
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -184,13 +186,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "battery_left": SysMonitorSensorEntityDescription(
         key="battery_left",
         translation_key="battery_left",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        device_class=SensorDeviceClass.DURATION,
+        device_class=SensorDeviceClass.TIMESTAMP,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=battery_seconds_left,
+        value_fn=battery_time_ends,
         none_is_unavailable=True,
         add_to_update=lambda entity: ("battery", ""),
-        suggested_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     "disk_free": SysMonitorSensorEntityDescription(
         key="disk_free",

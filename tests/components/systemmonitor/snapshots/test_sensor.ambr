@@ -10,16 +10,15 @@
 # name: test_sensor[System Monitor Battery - state]
   '93'
 # ---
-# name: test_sensor[System Monitor Battery remaining - attributes]
+# name: test_sensor[System Monitor Battery empty - attributes]
   ReadOnlyDict({
-    'device_class': 'duration',
-    'friendly_name': 'System Monitor Battery remaining',
+    'device_class': 'timestamp',
+    'friendly_name': 'System Monitor Battery empty',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensor[System Monitor Battery remaining - state]
-  '277.133333333333'
+# name: test_sensor[System Monitor Battery empty - state]
+  '2024-02-24T19:37:00+00:00'
 # ---
 # name: test_sensor[System Monitor Disk free / - attributes]
   ReadOnlyDict({
