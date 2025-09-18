@@ -168,6 +168,20 @@ class BaseUnitConverter:
         return (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
 
 
+class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
+    """Convert carbon monoxide ratio to mass per volume."""
+
+    UNIT_CLASS = "carbon_monoxide"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_PARTS_PER_MILLION: 1,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1.145609,
+    }
+    VALID_UNITS = {
+        CONCENTRATION_PARTS_PER_MILLION,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    }
+
+
 class DataRateConverter(BaseUnitConverter):
     """Utility to convert data rate values."""
 
@@ -497,6 +511,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.INCHES_PER_SECOND: 1 / _IN_TO_M,
         UnitOfSpeed.KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
         UnitOfSpeed.KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
+        UnitOfSpeed.METERS_PER_MINUTE: _MIN_TO_SEC,
         UnitOfSpeed.METERS_PER_SECOND: 1,
         UnitOfSpeed.MILLIMETERS_PER_SECOND: 1 / _MM_TO_M,
         UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
@@ -511,6 +526,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.FEET_PER_SECOND,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.KNOTS,
+        UnitOfSpeed.METERS_PER_MINUTE,
         UnitOfSpeed.METERS_PER_SECOND,
         UnitOfSpeed.MILES_PER_HOUR,
         UnitOfSpeed.MILLIMETERS_PER_SECOND,
