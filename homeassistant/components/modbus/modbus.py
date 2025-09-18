@@ -183,9 +183,9 @@ async def async_modbus_setup(
     def _resolve_slave(data: dict[str, Any]) -> int:
         slave = 1
         if ATTR_UNIT in data:
-            slave = int(float(data[ATTR_UNIT]))
+            slave = data[ATTR_UNIT]
         if ATTR_SLAVE in data:
-            slave = int(float(data[ATTR_SLAVE]))
+            slave = data[ATTR_SLAVE]
         return slave
 
     async def async_write_register(service: ServiceCall) -> None:
