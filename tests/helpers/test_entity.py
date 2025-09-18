@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -924,6 +925,38 @@ async def test_attribution_attribute(hass: HomeAssistant) -> None:
 
     state = hass.states.get(mock_entity.entity_id)
     assert state.attributes.get(ATTR_ATTRIBUTION) == "Home Assistant"
+
+
+async def test_included_entities_attribute(hass: HomeAssistant) -> None:
+    """Test included_entities attribute."""
+    mock_entity = entity.Entity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = "hello.world"
+    mock_entity._attr_included_entities = ["hello.oceans", "hello.continents"]
+
+    mock_entity.async_schedule_update_ha_state(True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(mock_entity.entity_id)
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["hello.oceans", "hello.continents"]
+
+
+async def test_included_entities_attribute_with_extra_state_attributes(
+    hass: HomeAssistant,
+) -> None:
+    """Test included_entities attribute."""
+    mock_entity = entity.Entity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = "hello.world"
+    mock_entity._attr_included_entities = ["hello.oceans", "hello.continents"]
+    mock_entity._attr_extra_state_attributes = {"demo": "Home Assistant"}
+
+    mock_entity.async_schedule_update_ha_state(True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(mock_entity.entity_id)
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["hello.oceans", "hello.continents"]
+    assert state.attributes.get("demo") == "Home Assistant"
 
 
 async def test_entity_category_property(hass: HomeAssistant) -> None:
