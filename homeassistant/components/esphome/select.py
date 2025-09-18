@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import replace
 
 from aioesphomeapi import EntityInfo, SelectInfo, SelectState
@@ -190,10 +191,35 @@ class EsphomeAssistSatelliteWakeWordSelect(
             self.async_write_ha_state()
             return
 
-        self._wake_words = {w.wake_word: w.id for w in config.available_wake_words}
+        self._wake_words = {}
+        wake_word_counts: dict[str, int] = Counter()
+        for available_ww in sorted(config.available_wake_words, key=lambda ww: ww.id):
+            ww_count = wake_word_counts[available_ww.wake_word] + 1
+            ww_option_text = available_ww.wake_word
+            if ww_count > 1:
+                ww_option_text = f"{ww_option_text} ({ww_count})"
+
+            self._wake_words[ww_option_text] = available_ww.id
+            wake_word_counts[available_ww.wake_word] = ww_count
+
         self._attr_options = [NO_WAKE_WORD, *sorted(self._wake_words)]
 
         option = self._attr_current_option
+
+        if (
+            (self._wake_word_index == 0)
+            and (len(config.active_wake_words) == 1)
+            and (option in (None, NO_WAKE_WORD))
+        ):
+            option = next(
+                (
+                    wake_word
+                    for wake_word, wake_word_id in self._wake_words.items()
+                    if wake_word_id == config.active_wake_words[0]
+                ),
+                None,
+            )
+
         if (
             (option is None)
             or ((wake_word_id := self._wake_words.get(option)) is None)
