@@ -22,7 +22,6 @@ async def test_sensor_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     devices: AsyncMock,
-    mock_thinq_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -32,3 +31,28 @@ async def test_sensor_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "energy_fixture", "energy_usage"),
+    [
+        ("air_conditioner", "yesterday", 100),
+        ("air_conditioner", "this_month", 500),
+        ("air_conditioner", "last_month", 700),
+    ],
+)
+async def test_energy_entity(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_energy_usage: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    energy_fixture: str,
+    energy_usage: int,
+) -> None:
+    """Test energy entity."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        state := hass.states.get(f"sensor.test_air_conditioner_energy_{energy_fixture}")
+    )
+    assert float(state.state) == energy_usage

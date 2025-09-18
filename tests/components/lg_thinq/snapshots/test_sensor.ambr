@@ -415,7 +415,7 @@
     'state': '2024-10-10T13:14:00+00:00',
   })
 # ---
-# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy-entry]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_yesterday-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -430,7 +430,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_air_conditioner_energy',
+    'entity_id': 'sensor.test_air_conditioner_energy_yesterday',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -445,7 +445,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy yesterday',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -455,23 +455,23 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy-state]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test air conditioner Energy',
+      'friendly_name': 'Test air conditioner Energy yesterday',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_air_conditioner_energy',
+    'entity_id': 'sensor.test_air_conditioner_energy_yesterday',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_2-entry]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_this_month-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -486,7 +486,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_air_conditioner_energy_2',
+    'entity_id': 'sensor.test_air_conditioner_energy_this_month',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -501,7 +501,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy this month',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -511,23 +511,23 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_2-state]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_this_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test air conditioner Energy',
+      'friendly_name': 'Test air conditioner Energy this month',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_air_conditioner_energy_2',
+    'entity_id': 'sensor.test_air_conditioner_energy_this_month',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_3-entry]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_last_month-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -542,7 +542,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_air_conditioner_energy_3',
+    'entity_id': 'sensor.test_air_conditioner_energy_last_month',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -557,7 +557,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy last month',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -567,16 +567,16 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_3-state]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_last_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test air conditioner Energy',
+      'friendly_name': 'Test air conditioner Energy last month',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_air_conditioner_energy_3',
+    'entity_id': 'sensor.test_air_conditioner_energy_last_month',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
