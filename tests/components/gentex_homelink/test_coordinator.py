@@ -23,38 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "gentex_homelink"
 
 
-def get_state_data():
-    """Get the state of each request."""
-    return [
-        # initial request
-        {
-            "Button 1": {"requestId": "id", "timestamp": time.time()},
-            "Button 2": {"requestId": "id", "timestamp": time.time()},
-            "Button 3": {"requestId": "id", "timestamp": time.time()},
-        },
-        # Same request repeated
-        {
-            "Button 1": {"requestId": "id", "timestamp": time.time()},
-            "Button 2": {"requestId": "id", "timestamp": time.time()},
-            "Button 3": {"requestId": "id", "timestamp": time.time()},
-        },
-        # New ID and time
-        {
-            "Button 1": {"requestId": "id2", "timestamp": time.time() + 100},
-            "Button 2": {"requestId": "id2", "timestamp": time.time() + 100},
-            "Button 3": {"requestId": "id2", "timestamp": time.time() + 100},
-        },
-        # new ID and time repeated
-        {
-            "Button 1": {"requestId": "id2", "timestamp": time.time() + 100},
-            "Button 2": {"requestId": "id2", "timestamp": time.time() + 100},
-            "Button 3": {"requestId": "id2", "timestamp": time.time() + 100},
-        },
-        # No data
-        {},
-    ]
-
-
 @pytest.mark.asyncio
 async def test_get_state_updates(
     hass: HomeAssistant,
@@ -83,7 +51,11 @@ async def test_get_state_updates(
         result = await async_setup_entry(hass, config_entry)
 
         provider = config_entry.runtime_data.provider
-        state_data = get_state_data()
+        state_data = {
+            "Button 1": {"requestId": "id", "timestamp": time.time()},
+            "Button 2": {"requestId": "id", "timestamp": time.time()},
+            "Button 3": {"requestId": "id", "timestamp": time.time()},
+        }
 
         # Assert configuration worked without errors
         assert result
@@ -99,7 +71,7 @@ async def test_get_state_updates(
 
         _LOGGER.info("Fire first event. Buttons should be on")
 
-        provider._call_listeners(state_data[0])
+        provider._call_listeners(state_data)
 
         await hass.async_block_till_done(wait_background_tasks=True)
         await asyncio.gather(*asyncio.all_tasks() - {asyncio.current_task()})

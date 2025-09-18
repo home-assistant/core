@@ -52,7 +52,6 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 errors["base"] = "Error authenticating HomeLink account"
             except Exception:
                 _LOGGER.exception("An unexpected error occurred")
-
                 errors["base"] = "unknown"
             else:
                 _LOGGER.info("Got tokens, passing to creation")
