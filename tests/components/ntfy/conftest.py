@@ -141,3 +141,21 @@ async def mock_camera_fixture(hass: HomeAssistant) -> AsyncGenerator[None]:
         return_value=b"I play the sax\n",
     ):
         yield
+
+
+@pytest.fixture(name="mock_image")
+async def mock_image_fixture(hass: HomeAssistant) -> AsyncGenerator[None]:
+    """Initialize image platform."""
+    assert await async_setup_component(hass, "image", {})
+    await hass.async_block_till_done()
+
+    image_entity = AsyncMock()
+    image_entity.async_image.return_value = b"\x89PNG"
+
+    with (
+        patch(
+            "homeassistant.helpers.entity_component.EntityComponent.get_entity",
+            return_value=image_entity,
+        ),
+    ):
+        yield
