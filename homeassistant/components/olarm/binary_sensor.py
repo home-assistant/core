@@ -99,7 +99,11 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-def load_zone_sensors(coordinator, config_entry, sensors):
+def load_zone_sensors(
+    coordinator: OlarmDataUpdateCoordinator,
+    config_entry: ConfigEntry,
+    sensors: list[OlarmBinarySensor],
+) -> None:
     """Load zone sensors and bypass sensors."""
     device_id = config_entry.data["device_id"]
     zones = coordinator.data.device_state.get("zones", [])
@@ -108,21 +112,25 @@ def load_zone_sensors(coordinator, config_entry, sensors):
     for zone_index, zone_state in enumerate(zones):
         zone_label = labels[zone_index]
         zone_class = types[zone_index]
-        for sensor_type in ("zone", "zone_bypass"):
-            sensors.append(
-                OlarmBinarySensor(
-                    coordinator,
-                    SENSOR_DESCRIPTIONS[sensor_type],
-                    device_id,
-                    zone_index,
-                    zone_state,
-                    zone_label,
-                    zone_class,
-                )
+        sensors.extend(
+            OlarmBinarySensor(
+                coordinator,
+                SENSOR_DESCRIPTIONS[sensor_type],
+                device_id,
+                zone_index,
+                zone_state,
+                zone_label,
+                zone_class,
             )
+            for sensor_type in ("zone", "zone_bypass")
+        )
 
 
-def load_ac_power_sensor(coordinator, config_entry, sensors):
+def load_ac_power_sensor(
+    coordinator: OlarmDataUpdateCoordinator,
+    config_entry: ConfigEntry,
+    sensors: list[OlarmBinarySensor],
+) -> None:
     """Load AC power sensor."""
     ac_power_state = (
         "on"
@@ -150,7 +158,7 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator,
+        coordinator: OlarmDataUpdateCoordinator,
         description: OlarmBinarySensorEntityDescription,
         device_id: str,
         sensor_index: int,
