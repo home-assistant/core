@@ -30,6 +30,7 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
+HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
 HVAC_SYSTEM_MODE_MAP = {
     HVACMode.OFF: 0,
@@ -261,6 +262,14 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
+
+        if raw_measured_humidity := self.get_matter_attribute_value(
+            clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue
+        ):
+            self._attr_current_humidity = (
+                int(raw_measured_humidity) / HUMIDITY_SCALING_FACTOR
+            )
+
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
             # special case: the appliance has a dedicated Power switch on the OnOff cluster
             # if the mains power is off - treat it as if the HVAC mode is off
@@ -428,6 +437,7 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.TemperatureSetpointHold,
             clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+            clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue,
             clusters.OnOff.Attributes.OnOff,
         ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
