@@ -223,13 +223,6 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         ):
             for proc in processes:
                 try:
-                    if not hasattr(proc, "num_fds"):
-                        _LOGGER.debug(
-                            "Process %s does not support num_fds() method",
-                            proc.name(),
-                        )
-                        continue
-
                     process_name = proc.name()
                     # Only collect FD data for processes we're monitoring
                     if process_name in self._monitor_processes:
