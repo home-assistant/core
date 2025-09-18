@@ -1,4 +1,4 @@
-"""Support for Ness D8X/D16X zone binary sensors."""
+"""Support for Ness zone binary sensors."""
 
 from __future__ import annotations
 
@@ -51,10 +51,10 @@ async def async_setup_entry(
             zone_str = panel_model.split("_")[1]
             enabled_zones = int(zone_str)
         except (IndexError, ValueError):
-            enabled_zones = 16
             _LOGGER.warning(
-                "Invalid manual model format '%s', defaulting to 16 zones",
+                "Invalid manual model format '%s', defaulting to %s zones",
                 panel_model,
+                DEFAULT_MAX_SUPPORTED_ZONES,
             )
 
     elif panel_model in PANEL_MODEL_ZONES:

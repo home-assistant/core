@@ -262,7 +262,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         # Get current zone count from panel model
         panel_model = entry.data.get("panel_model", "UNKNOWN")
-        current_zones = PANEL_MODEL_ZONES.get(panel_model, 16)
+        current_zones = PANEL_MODEL_ZONES.get(panel_model, DEFAULT_MAX_SUPPORTED_ZONES)
 
         schema = vol.Schema(
             {

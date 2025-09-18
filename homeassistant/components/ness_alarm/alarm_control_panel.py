@@ -1,4 +1,4 @@
-"""Support for Ness D8X/D16X alarm control panel."""
+"""Support for Ness alarm control panel."""
 
 from __future__ import annotations
 
