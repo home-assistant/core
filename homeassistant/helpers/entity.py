@@ -25,6 +25,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -535,6 +536,7 @@ class Entity(
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
     _attr_has_entity_name: bool
+    _attr_included_entities: list[str] | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_entity_registry_visible_default: bool
@@ -765,6 +767,16 @@ class Entity(
         """
         return self._attr_capability_attributes
 
+    @property
+    def included_entities(self) -> list[str] | None:
+        """Return a list of entity IDs if the entity represents a group.
+
+        Included entities will be shown as members in the UI.
+        """
+        if hasattr(self, "_attr_included_entities"):
+            return self._attr_included_entities
+        return None
+
     def get_initial_entity_options(self) -> er.EntityOptionsType | None:
         """Return initial entity options.
 
@@ -793,9 +805,18 @@ class Entity(
         Implemented by platform classes. Convention for attribute names
         is lowercase snake_case.
         """
+        entity_ids = (
+            None
+            if self.included_entities is None
+            else {ATTR_ENTITY_ID: self.included_entities}
+        )
         if hasattr(self, "_attr_extra_state_attributes"):
-            return self._attr_extra_state_attributes
-        return None
+            return (
+                self._attr_extra_state_attributes
+                if entity_ids is None
+                else self._attr_extra_state_attributes | entity_ids
+            )
+        return None or entity_ids
 
     @cached_property
     def device_info(self) -> DeviceInfo | None:
