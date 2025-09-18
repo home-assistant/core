@@ -168,7 +168,7 @@ PROCESS_ACTIONS = {
 }
 
 
-class ProgramPhaseWashingMachine(MieleEnum):
+class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):
     """Program phase codes for washing machines."""
 
     not_running = 0, 256, 65535
@@ -190,10 +190,9 @@ class ProgramPhaseWashingMachine(MieleEnum):
     hygiene = 279
     drying = 280
     disinfecting = 285
-    missing2none = -9999
 
 
-class ProgramPhaseTumbleDryer(MieleEnum):
+class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):
     """Program phase codes for tumble dryers."""
 
     not_running = 0, 512, 535, 536, 537, 65535
@@ -220,10 +219,9 @@ class ProgramPhaseTumbleDryer(MieleEnum):
     smoothing = 534
     slightly_dry = 538
     safety_cooling = 539
-    missing2none = -9999
 
 
-class ProgramPhaseWasherDryer(MieleEnum):
+class ProgramPhaseWasherDryer(MieleEnum, missing_to_none=True):
     """Program phase codes for washer/dryer machines."""
 
     not_running = 0, 256, 512, 535, 536, 537, 65535
@@ -264,13 +262,12 @@ class ProgramPhaseWasherDryer(MieleEnum):
     smoothing = 534
     slightly_dry = 538
     safety_cooling = 539
-    missing2none = -9999
 
 
-class ProgramPhaseDishwasher(MieleEnum):
+class ProgramPhaseDishwasher(MieleEnum, missing_to_none=True):
     """Program phase codes for dishwashers."""
 
-    not_running = 1792, 65535
+    not_running = 0, 1792, 65535
     reactivating = 1793
     pre_dishwash = 1794, 1801
     main_dishwash = 1795
@@ -279,10 +276,9 @@ class ProgramPhaseDishwasher(MieleEnum):
     final_rinse = 1798
     drying = 1799
     finished = 1800
-    missing2none = -9999
 
 
-class ProgramPhaseOven(MieleEnum):
+class ProgramPhaseOven(MieleEnum, missing_to_none=True):
     """Program phase codes for ovens."""
 
     not_running = 0, 65535
@@ -290,10 +286,9 @@ class ProgramPhaseOven(MieleEnum):
     process_running = 3074
     process_finished = 3078
     energy_save = 3084
-    missing2none = -9999
 
 
-class ProgramPhaseWarmingDrawer(MieleEnum):
+class ProgramPhaseWarmingDrawer(MieleEnum, missing_to_none=True):
     """Program phase codes for warming drawers."""
 
     not_running = 0, 65535
@@ -301,10 +296,9 @@ class ProgramPhaseWarmingDrawer(MieleEnum):
     door_open = 3075
     keeping_warm = 3094
     cooling_down = 3088
-    missing2none = -9999
 
 
-class ProgramPhaseMicrowave(MieleEnum):
+class ProgramPhaseMicrowave(MieleEnum, missing_to_none=True):
     """Program phase for microwave units."""
 
     not_running = 0, 65535
@@ -312,10 +306,9 @@ class ProgramPhaseMicrowave(MieleEnum):
     process_running = 3330
     process_finished = 3334
     energy_save = 3340
-    missing2none = -9999
 
 
-class ProgramPhaseCoffeeSystem(MieleEnum):
+class ProgramPhaseCoffeeSystem(MieleEnum, missing_to_none=True):
     """Program phase codes for coffee systems."""
 
     not_running = 0, 4352, 65535
@@ -330,10 +323,9 @@ class ProgramPhaseCoffeeSystem(MieleEnum):
     second_pre_brewing = 4393
     second_grinding = 4401
     rinse = 4405
-    missing2none = -9999
 
 
-class ProgramPhaseRobotVacuumCleaner(MieleEnum):
+class ProgramPhaseRobotVacuumCleaner(MieleEnum, missing_to_none=True):
     """Program phase codes for robot vacuum cleaner."""
 
     not_running = 0, 65535
@@ -351,10 +343,9 @@ class ProgramPhaseRobotVacuumCleaner(MieleEnum):
     blocked_front_wheel = 5900  # F8
     docked = 5903, 5904
     remote_controlled = 5910
-    missing2none = -9999
 
 
-class ProgramPhaseMicrowaveOvenCombo(MieleEnum):
+class ProgramPhaseMicrowaveOvenCombo(MieleEnum, missing_to_none=True):
     """Program phase codes for microwave oven combo."""
 
     not_running = 0, 65535
@@ -363,10 +354,9 @@ class ProgramPhaseMicrowaveOvenCombo(MieleEnum):
     waiting_for_start = 7939
     heating_up_phase = 7940
     process_finished = 7942
-    missing2none = -9999
 
 
-class ProgramPhaseSteamOven(MieleEnum):
+class ProgramPhaseSteamOven(MieleEnum, missing_to_none=True):
     """Program phase codes for steam ovens."""
 
     not_running = 0, 65535
@@ -375,10 +365,9 @@ class ProgramPhaseSteamOven(MieleEnum):
     waiting_for_start = 7939
     heating_up_phase = 7940
     process_finished = 7942
-    missing2none = -9999
 
 
-class ProgramPhaseSteamOvenCombi(MieleEnum):
+class ProgramPhaseSteamOvenCombi(MieleEnum, missing_to_none=True):
     """Program phase codes for steam oven combi."""
 
     not_running = 0, 65535
@@ -391,10 +380,8 @@ class ProgramPhaseSteamOvenCombi(MieleEnum):
     waiting_for_start = 7939
     heating_up_phase = 7940
 
-    missing2none = -9999
 
-
-class ProgramPhaseSteamOvenMicro(MieleEnum):
+class ProgramPhaseSteamOvenMicro(MieleEnum, missing_to_none=True):
     """Program phase codes for steam oven micro."""
 
     not_running = 0, 65535
@@ -407,8 +394,6 @@ class ProgramPhaseSteamOvenMicro(MieleEnum):
     steam_reduction = 3863
     waiting_for_start = 7939
     heating_up_phase = 7940
-
-    missing2none = -9999
 
 
 PROGRAM_PHASE: dict[int, type[MieleEnum]] = {
