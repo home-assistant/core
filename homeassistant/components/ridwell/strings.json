@@ -53,9 +53,9 @@
   "selector": {
     "conf_calendar_title": {
       "options": {
-        "no_detail": "No Details",
-        "pickup_status": "Pickup Status",
-        "rotating_category": "Rotating Category"
+        "no_detail": "No details",
+        "pickup_status": "Pickup status",
+        "rotating_category": "Rotating category"
       }
     }
   }
