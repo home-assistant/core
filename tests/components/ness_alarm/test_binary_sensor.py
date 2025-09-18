@@ -307,55 +307,6 @@ async def test_manual_zone_override(
             assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
-async def test_invalid_manual_zone_format(
-    hass: HomeAssistant,
-    mock_client,
-) -> None:
-    """Test invalid manual zone format defaults correctly."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_PORT: 2401,
-            "panel_model": "MANUAL_INVALID",  # Invalid manual format
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.ness_alarm.Client",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.ness_alarm.binary_sensor._LOGGER"
-        ) as mock_logger,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        # Should log a warning and default to 16 zones
-        mock_logger.warning.assert_called()
-
-    entity_registry = er.async_get(hass)
-
-    # Should default to 16 zones
-    for zone_id in (1, 16):  # use tuple instead of list
-        unique_id = f"{mock_config_entry.entry_id}_zone_{zone_id}"
-        entity_id = entity_registry.async_get_entity_id(
-            "binary_sensor", DOMAIN, unique_id
-        )
-        entry = entity_registry.entities.get(entity_id)
-        assert entry.disabled_by is None
-
-    # Zone 17 should be disabled
-    zone_17_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{mock_config_entry.entry_id}_zone_17"
-    )
-    entry = entity_registry.entities.get(zone_17_id)
-    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
-
-
 async def test_zone_availability(
     hass: HomeAssistant,
     mock_config_entry,

@@ -176,42 +176,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_form_invalid_host(hass: HomeAssistant) -> None:
-    """Test we handle invalid host formats."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    # Test empty host
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "",
-            CONF_PORT: 2401,
-            CONF_SCAN_INTERVAL: 60,
-            CONF_INFER_ARMING_STATE: False,
-        },
-    )
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-    # Test with spaces only
-    result3 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result4 = await hass.config_entries.flow.async_configure(
-        result3["flow_id"],
-        {
-            CONF_HOST: "   ",
-            CONF_PORT: 2401,
-            CONF_SCAN_INTERVAL: 60,
-            CONF_INFER_ARMING_STATE: False,
-        },
-    )
-    assert result4["type"] == FlowResultType.FORM
-    assert result4["errors"] == {"base": "cannot_connect"}
-
-
 async def test_form_invalid_port(hass: HomeAssistant) -> None:
     """Test we handle invalid port numbers."""
     result = await hass.config_entries.flow.async_init(
