@@ -5,10 +5,10 @@ from ipaddress import ip_address
 from aiohttp import ClientError as ServerTimeoutError
 from devialet.const import UrlSuffix
 
-from homeassistant.components import zeroconf
 from homeassistant.components.devialet.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -25,7 +25,7 @@ CONF_DATA = {
 
 MOCK_CONFIG = {DOMAIN: [{CONF_HOST: HOST}]}
 MOCK_USER_INPUT = {CONF_HOST: HOST}
-MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address(HOST),
     ip_addresses=[ip_address(HOST)],
     hostname="PhantomISilver-L00P00000AB11.local.",

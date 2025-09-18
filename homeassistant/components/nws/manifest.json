@@ -6,6 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/nws",
   "iot_class": "cloud_polling",
   "loggers": ["metar", "pynws"],
-  "quality_scale": "platinum",
-  "requirements": ["pynws==1.6.0"]
+  "requirements": ["pynws[retry]==1.8.2"]
 }

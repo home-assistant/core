@@ -21,20 +21,19 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolDictType
 
 from . import (
     ATTR_BRIGHTNESS_PCT,
     ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_FLASH,
-    DOMAIN,
     FLASH_SHORT,
     VALID_BRIGHTNESS_PCT,
     VALID_FLASH,
-    LightEntityFeature,
     brightness_supported,
     get_supported_color_modes,
 )
+from .const import DOMAIN, LightEntityFeature
 
 # mypy: disallow-any-generics
 
@@ -150,7 +149,7 @@ async def async_get_action_capabilities(
         supported_color_modes = None
         supported_features = 0
 
-    extra_fields = {}
+    extra_fields: VolDictType = {}
 
     if brightness_supported(supported_color_modes):
         extra_fields[vol.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT

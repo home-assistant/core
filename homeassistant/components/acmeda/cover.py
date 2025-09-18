@@ -9,24 +9,23 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base import AcmedaBase
-from .const import ACMEDA_HUB_UPDATE, DOMAIN
+from . import AcmedaConfigEntry
+from .const import ACMEDA_HUB_UPDATE
+from .entity import AcmedaEntity
 from .helpers import async_add_acmeda_entities
-from .hub import PulseHub
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AcmedaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Acmeda Rollers from a config entry."""
-    hub: PulseHub = hass.data[DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     current: set[int] = set()
 
@@ -45,7 +44,7 @@ async def async_setup_entry(
     )
 
 
-class AcmedaCover(AcmedaBase, CoverEntity):
+class AcmedaCover(AcmedaEntity, CoverEntity):
     """Representation of an Acmeda cover device."""
 
     _attr_name = None

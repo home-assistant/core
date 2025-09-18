@@ -1,9 +1,12 @@
 """Test helpers for Husqvarna Automower."""
 
-from collections.abc import Generator
+import asyncio
+from collections.abc import Callable, Generator
 import time
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, create_autospec, patch
 
+from aioautomower.commands import MowerCommands, WorkAreaSettings
+from aioautomower.model import MowerAttributes
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
@@ -13,8 +16,9 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.husqvarna_automower.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .const import CLIENT_ID, CLIENT_SECRET, USER_ID
 
@@ -22,7 +26,7 @@ from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
 
 @pytest.fixture(name="jwt")
-def load_jwt_fixture():
+def load_jwt_fixture() -> str:
     """Load Fixture data."""
     return load_fixture("jwt", DOMAIN)
 
@@ -33,8 +37,38 @@ def mock_expires_at() -> float:
     return time.time() + 3600
 
 
+@pytest.fixture(name="scope")
+def mock_scope() -> str:
+    """Fixture to set correct scope for the token."""
+    return "iam:read amc:api"
+
+
+@pytest.fixture(name="mower_time_zone")
+async def mock_time_zone(hass: HomeAssistant) -> dict[str, MowerAttributes]:
+    """Fixture to set correct scope for the token."""
+    return await dt_util.async_get_time_zone("Europe/Berlin")
+
+
+@pytest.fixture(name="values")
+def mock_values(mower_time_zone) -> dict[str, MowerAttributes]:
+    """Fixture to set correct scope for the token."""
+    return mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN),
+        mower_time_zone,
+    )
+
+
+@pytest.fixture(name="values_one_mower")
+def mock_values_one_mower(mower_time_zone) -> dict[str, MowerAttributes]:
+    """Fixture to set correct scope for the token."""
+    return mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower1.json", DOMAIN),
+        mower_time_zone,
+    )
+
+
 @pytest.fixture
-def mock_config_entry(jwt, expires_at: int) -> MockConfigEntry:
+def mock_config_entry(jwt: str, expires_at: int, scope: str) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         version=1,
@@ -44,7 +78,7 @@ def mock_config_entry(jwt, expires_at: int) -> MockConfigEntry:
             "auth_implementation": DOMAIN,
             "token": {
                 "access_token": jwt,
-                "scope": "iam:read amc:api",
+                "scope": scope,
                 "expires_in": 86399,
                 "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
                 "provider": "husqvarna",
@@ -74,21 +108,50 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_automower_client() -> Generator[AsyncMock, None, None]:
+def mock_automower_client(
+    values: dict[str, MowerAttributes],
+) -> Generator[AsyncMock]:
     """Mock a Husqvarna Automower client."""
+
+    async def listen() -> None:
+        """Mock listen."""
+        listen_block = asyncio.Event()
+        await listen_block.wait()
+        pytest.fail("Listen was not cancelled!")
+
     with patch(
         "homeassistant.components.husqvarna_automower.AutomowerSession",
         autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        client.get_status.return_value = mower_list_to_dictionary_dataclass(
-            load_json_value_fixture("mower.json", DOMAIN)
+        spec_set=True,
+    ) as mock:
+        mock_instance = mock.return_value
+        mock_instance.auth = AsyncMock(side_effect=ClientWebSocketResponse)
+        mock_instance.get_status = AsyncMock(return_value=values)
+        mock_instance.start_listening = AsyncMock(side_effect=listen)
+        mock_instance.commands = create_autospec(
+            MowerCommands, instance=True, spec_set=True
         )
+        mock_instance.commands.workarea_settings.return_value = create_autospec(
+            WorkAreaSettings,
+            instance=True,
+            spec_set=True,
+        )
+        yield mock_instance
 
-        async def websocket_connect() -> ClientWebSocketResponse:
-            """Mock listen."""
-            return ClientWebSocketResponse
 
-        client.auth = AsyncMock(side_effect=websocket_connect)
+@pytest.fixture
+def automower_ws_ready(mock_automower_client: AsyncMock) -> list[Callable[[], None]]:
+    """Fixture to capture ws_ready_callbacks."""
 
-        yield client
+    ws_ready_callbacks: list[Callable[[], None]] = []
+
+    @callback
+    def fake_register_ws_ready_callback(cb: Callable[[], None]) -> None:
+        ws_ready_callbacks.append(cb)
+
+    mock_automower_client.register_ws_ready_callback.side_effect = (
+        fake_register_ws_ready_callback
+    )
+    mock_automower_client.send_empty_message.return_value = True
+
+    return ws_ready_callbacks

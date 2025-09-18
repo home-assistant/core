@@ -22,9 +22,8 @@ from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base import ONVIFBaseEntity
 from .const import (
     ABSOLUTE_MOVE,
     ATTR_CONTINUOUS_DURATION,
@@ -51,13 +50,14 @@ from .const import (
     ZOOM_OUT,
 )
 from .device import ONVIFDevice
+from .entity import ONVIFBaseEntity
 from .models import Profile
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ONVIF camera video stream."""
     platform = entity_platform.async_get_current_platform()
@@ -105,9 +105,9 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self.stream_options[CONF_RTSP_TRANSPORT] = device.config_entry.options.get(
             CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
         )
-        self.stream_options[
-            CONF_USE_WALLCLOCK_AS_TIMESTAMPS
-        ] = device.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False)
+        self.stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = (
+            device.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False)
+        )
         self._basic_auth = (
             device.config_entry.data.get(CONF_SNAPSHOT_AUTH)
             == HTTP_BASIC_AUTHENTICATION
@@ -117,10 +117,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self._attr_entity_registry_enabled_default = (
             device.max_resolution == profile.video.resolution.width
         )
-        if profile.index:
-            self._attr_unique_id = f"{self.mac_or_serial}_{profile.index}"
-        else:
-            self._attr_unique_id = self.mac_or_serial
+        self._attr_unique_id = f"{self.mac_or_serial}#{profile.token}"
         self._attr_name = f"{device.name} {profile.name}"
 
     @property

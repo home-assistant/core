@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import fan, humidifier, remote, water_heater
 from homeassistant.components.alexa import smart_home
 from homeassistant.const import EntityCategory, UnitOfTemperature, __version__
 from homeassistant.core import HomeAssistant
@@ -130,7 +131,7 @@ async def test_serialize_discovery_partly_fails(
     }
     assert all(
         entity in endpoint_ids
-        for entity in ["switch#bla", "fan#bla", "humidifier#bla", "sensor#bla"]
+        for entity in ("switch#bla", "fan#bla", "humidifier#bla", "sensor#bla")
     )
 
     # Simulate fetching the interfaces fails for fan entity
@@ -147,7 +148,7 @@ async def test_serialize_discovery_partly_fails(
         }
         assert all(
             entity in endpoint_ids
-            for entity in ["switch#bla", "humidifier#bla", "sensor#bla"]
+            for entity in ("switch#bla", "humidifier#bla", "sensor#bla")
         )
         assert "Unable to serialize fan.bla for discovery" in caplog.text
         caplog.clear()
@@ -166,7 +167,7 @@ async def test_serialize_discovery_partly_fails(
         }
         assert all(
             entity in endpoint_ids
-            for entity in ["switch#bla", "humidifier#bla", "fan#bla"]
+            for entity in ("switch#bla", "humidifier#bla", "fan#bla")
         )
         assert "Unable to serialize sensor.bla for discovery" in caplog.text
         caplog.clear()
@@ -200,3 +201,167 @@ async def test_serialize_discovery_recovers(
         "Error serializing Alexa.PowerController discovery"
         f" for {hass.states.get('switch.bla')}"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("domain", "state", "state_attributes", "mode_controller_exists"),
+    [
+        ("switch", "on", {}, False),
+        (
+            "fan",
+            "on",
+            {
+                "preset_modes": ["eco", "auto"],
+                "preset_mode": "eco",
+                "supported_features": fan.FanEntityFeature.PRESET_MODE.value,
+            },
+            True,
+        ),
+        (
+            "fan",
+            "on",
+            {
+                "preset_modes": ["eco", "auto"],
+                "preset_mode": None,
+                "supported_features": fan.FanEntityFeature.PRESET_MODE.value,
+            },
+            True,
+        ),
+        (
+            "fan",
+            "on",
+            {
+                "preset_modes": ["eco"],
+                "preset_mode": None,
+                "supported_features": fan.FanEntityFeature.PRESET_MODE.value,
+            },
+            True,
+        ),
+        (
+            "fan",
+            "on",
+            {
+                "preset_modes": [],
+                "preset_mode": None,
+                "supported_features": fan.FanEntityFeature.PRESET_MODE.value,
+            },
+            False,
+        ),
+        (
+            "humidifier",
+            "on",
+            {
+                "available_modes": ["auto", "manual"],
+                "mode": "auto",
+                "supported_features": humidifier.HumidifierEntityFeature.MODES.value,
+            },
+            True,
+        ),
+        (
+            "humidifier",
+            "on",
+            {
+                "available_modes": ["auto"],
+                "mode": None,
+                "supported_features": humidifier.HumidifierEntityFeature.MODES.value,
+            },
+            True,
+        ),
+        (
+            "humidifier",
+            "on",
+            {
+                "available_modes": [],
+                "mode": None,
+                "supported_features": humidifier.HumidifierEntityFeature.MODES.value,
+            },
+            False,
+        ),
+        (
+            "remote",
+            "on",
+            {
+                "activity_list": ["tv", "dvd"],
+                "current_activity": "tv",
+                "supported_features": remote.RemoteEntityFeature.ACTIVITY.value,
+            },
+            True,
+        ),
+        (
+            "remote",
+            "on",
+            {
+                "activity_list": ["tv"],
+                "current_activity": None,
+                "supported_features": remote.RemoteEntityFeature.ACTIVITY.value,
+            },
+            True,
+        ),
+        (
+            "remote",
+            "on",
+            {
+                "activity_list": [],
+                "current_activity": None,
+                "supported_features": remote.RemoteEntityFeature.ACTIVITY.value,
+            },
+            False,
+        ),
+        (
+            "water_heater",
+            "on",
+            {
+                "operation_list": ["on", "auto"],
+                "operation_mode": "auto",
+                "supported_features": water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value,
+            },
+            True,
+        ),
+        (
+            "water_heater",
+            "on",
+            {
+                "operation_list": ["on"],
+                "operation_mode": None,
+                "supported_features": water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value,
+            },
+            True,
+        ),
+        (
+            "water_heater",
+            "on",
+            {
+                "operation_list": [],
+                "operation_mode": None,
+                "supported_features": water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value,
+            },
+            False,
+        ),
+    ],
+)
+async def test_mode_controller_is_omitted_if_no_modes_are_set(
+    hass: HomeAssistant,
+    domain: str,
+    state: str,
+    state_attributes: dict[str, Any],
+    mode_controller_exists: bool,
+) -> None:
+    """Test we do not generate an invalid discovery with AlexaModeController during serialize discovery.
+
+    AlexModeControllers need at least 2 modes. If one mode is set, an extra mode will be added for compatibility.
+    If no modes are offered, the mode controller should be omitted to prevent schema validations.
+    """
+    request = get_new_request("Alexa.Discovery", "Discover")
+
+    hass.states.async_set(
+        f"{domain}.bla", state, {"friendly_name": "Boop Woz"} | state_attributes
+    )
+
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
+    msg = msg["event"]
+
+    interfaces = {
+        ifc["interface"] for ifc in msg["payload"]["endpoints"][0]["capabilities"]
+    }
+
+    assert ("Alexa.ModeController" in interfaces) is mode_controller_exists

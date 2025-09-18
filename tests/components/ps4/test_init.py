@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import ps4
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
@@ -27,10 +27,11 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import location
+from homeassistant.util import location as location_util
 
 from tests.common import MockConfigEntry
 
@@ -47,17 +48,18 @@ MOCK_FLOW_RESULT = {
     "version": VERSION,
     "minor_version": 1,
     "handler": DOMAIN,
-    "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+    "type": FlowResultType.CREATE_ENTRY,
     "title": "test_ps4",
     "data": MOCK_DATA,
     "options": {},
+    "subentries": (),
 }
 
 MOCK_ENTRY_ID = "SomeID"
 
 MOCK_CONFIG = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA, entry_id=MOCK_ENTRY_ID)
 
-MOCK_LOCATION = location.LocationInfo(
+MOCK_LOCATION = location_util.LocationInfo(
     "0.0.0.0",
     "US",
     "USD",
@@ -78,8 +80,6 @@ MOCK_DEVICE_VERSION_1 = {
 }
 
 MOCK_DATA_VERSION_1 = {CONF_TOKEN: MOCK_CREDS, "devices": [MOCK_DEVICE_VERSION_1]}
-
-MOCK_DEVICE_ID = "somedeviceid"
 
 MOCK_ENTRY_VERSION_1 = MockConfigEntry(
     domain=DOMAIN, data=MOCK_DATA_VERSION_1, entry_id=MOCK_ENTRY_ID, version=1
@@ -122,14 +122,17 @@ async def test_ps4_integration_setup(hass: HomeAssistant) -> None:
 async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     """Test setting up PS4 loads the media player."""
     mock_flow = "homeassistant.components.ps4.PlayStation4FlowHandler.async_step_user"
-    with patch(
-        "homeassistant.components.ps4.media_player.async_setup_entry",
-        return_value=True,
-    ) as mock_setup, patch(mock_flow, return_value=MOCK_FLOW_RESULT):
+    with (
+        patch(
+            "homeassistant.components.ps4.media_player.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+        patch(mock_flow, return_value=MOCK_FLOW_RESULT),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 
@@ -137,31 +140,40 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
 
 
 async def test_config_flow_entry_migrate(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that config flow entry is migrated correctly."""
     # Start with the config entry at Version 1.
     manager = hass.config_entries
     mock_entry = MOCK_ENTRY_VERSION_1
     mock_entry.add_to_manager(manager)
+    mock_device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     mock_entity_id = f"media_player.ps4_{MOCK_UNIQUE_ID}"
     mock_e_entry = entity_registry.async_get_or_create(
         "media_player",
         "ps4",
         MOCK_UNIQUE_ID,
         config_entry=mock_entry,
-        device_id=MOCK_DEVICE_ID,
+        device_id=mock_device_entry.id,
     )
     assert len(entity_registry.entities) == 1
     assert mock_e_entry.entity_id == mock_entity_id
     assert mock_e_entry.unique_id == MOCK_UNIQUE_ID
 
-    with patch(
-        "homeassistant.util.location.async_detect_location_info",
-        return_value=MOCK_LOCATION,
-    ), patch(
-        "homeassistant.helpers.entity_registry.async_get",
-        return_value=entity_registry,
+    with (
+        patch(
+            "homeassistant.util.location.async_detect_location_info",
+            return_value=MOCK_LOCATION,
+        ),
+        patch(
+            "homeassistant.helpers.entity_registry.async_get",
+            return_value=entity_registry,
+        ),
     ):
         await ps4.async_migrate_entry(hass, mock_entry)
 
@@ -173,7 +185,7 @@ async def test_config_flow_entry_migrate(
 
     # Test that entity_id remains the same.
     assert mock_entity.entity_id == mock_entity_id
-    assert mock_entity.device_id == MOCK_DEVICE_ID
+    assert mock_entity.device_id == mock_device_entry.id
 
     # Test that last four of credentials is appended to the unique_id.
     assert mock_entity.unique_id == f"{MOCK_UNIQUE_ID}_{MOCK_CREDS[-4:]}"
@@ -192,7 +204,7 @@ async def test_media_player_is_setup(hass: HomeAssistant) -> None:
     assert len(hass.data[PS4_DATA].devices) == 1
 
 
-async def setup_mock_component(hass):
+async def setup_mock_component(hass: HomeAssistant) -> None:
     """Set up Mock Media Player."""
     entry = MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA, version=VERSION)
     entry.add_to_manager(hass.config_entries)
@@ -205,9 +217,10 @@ def test_games_reformat_to_dict(
 ) -> None:
     """Test old data format is converted to new format."""
     patch_load_json_object.return_value = MOCK_GAMES_DATA_OLD_STR_FORMAT
-    with patch(
-        "homeassistant.components.ps4.save_json", side_effect=MagicMock()
-    ), patch("os.path.isfile", return_value=True):
+    with (
+        patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()),
+        patch("os.path.isfile", return_value=True),
+    ):
         mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     # New format is a nested dict.
@@ -226,9 +239,10 @@ def test_games_reformat_to_dict(
 def test_load_games(hass: HomeAssistant, patch_load_json_object: MagicMock) -> None:
     """Test that games are loaded correctly."""
     patch_load_json_object.return_value = MOCK_GAMES
-    with patch(
-        "homeassistant.components.ps4.save_json", side_effect=MagicMock()
-    ), patch("os.path.isfile", return_value=True):
+    with (
+        patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()),
+        patch("os.path.isfile", return_value=True),
+    ):
         mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     assert isinstance(mock_games, dict)
@@ -246,9 +260,10 @@ def test_loading_games_returns_dict(
 ) -> None:
     """Test that loading games always returns a dict."""
     patch_load_json_object.side_effect = HomeAssistantError
-    with patch(
-        "homeassistant.components.ps4.save_json", side_effect=MagicMock()
-    ), patch("os.path.isfile", return_value=True):
+    with (
+        patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()),
+        patch("os.path.isfile", return_value=True),
+    ):
         mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     assert isinstance(mock_games, dict)
@@ -259,9 +274,7 @@ async def test_send_command(hass: HomeAssistant) -> None:
     """Test send_command service."""
     await setup_mock_component(hass)
 
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4", ".media_player.PS4Device.async_send_command"
-    )
+    mock_func = "homeassistant.components.ps4.media_player.PS4Device.async_send_command"
 
     mock_devices = hass.data[PS4_DATA].devices
     assert len(mock_devices) == 1

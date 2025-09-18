@@ -5,10 +5,9 @@ from unittest.mock import patch
 from aioskybell import exceptions
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.skybell.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_SOURCE
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -33,7 +32,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -41,7 +40,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         user_input=CONF_DATA,
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "user"
     assert result["data"] == CONF_DATA
     assert result["result"].unique_id == USER_ID
@@ -59,7 +58,7 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -69,7 +68,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant, skybell_mock) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -83,7 +82,7 @@ async def test_invalid_credentials(hass: HomeAssistant, skybell_mock) -> None:
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -94,7 +93,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant, skybell_mock) -> Non
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
 
@@ -104,24 +103,16 @@ async def test_step_reauth(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, unique_id=USER_ID, data=CONF_DATA)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            CONF_SOURCE: config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_PASSWORD: PASSWORD},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
@@ -130,17 +121,9 @@ async def test_step_reauth_failed(hass: HomeAssistant, skybell_mock) -> None:
     entry = MockConfigEntry(domain=DOMAIN, unique_id=USER_ID, data=CONF_DATA)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            CONF_SOURCE: config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     skybell_mock.async_initialize.side_effect = (
@@ -151,7 +134,7 @@ async def test_step_reauth_failed(hass: HomeAssistant, skybell_mock) -> None:
         user_input={CONF_PASSWORD: PASSWORD},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
     skybell_mock.async_initialize.side_effect = None
@@ -160,5 +143,5 @@ async def test_step_reauth_failed(hass: HomeAssistant, skybell_mock) -> None:
         result["flow_id"],
         user_input={CONF_PASSWORD: PASSWORD},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

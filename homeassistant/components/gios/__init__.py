@@ -2,31 +2,28 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 
-from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from gios import Gios
 from gios.exceptions import GiosError
-from gios.model import GiosSensors
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN, SCAN_INTERVAL
+from .const import CONF_STATION_ID, DOMAIN
+from .coordinator import GiosConfigEntry, GiosData, GiosDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool:
     """Set up GIOS as config entry."""
     station_id: int = entry.data[CONF_STATION_ID]
     _LOGGER.debug("Using station_id: %d", station_id)
@@ -44,12 +41,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_registry.async_update_device(device_entry.id, new_identifiers={new_ids})
 
     websession = async_get_clientsession(hass)
+    try:
+        gios = await Gios.create(websession, station_id)
+    except (GiosError, ConnectionError, ClientConnectorError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={
+                "entry": entry.title,
+                "error": repr(err),
+            },
+        ) from err
 
-    coordinator = GiosDataUpdateCoordinator(hass, websession, station_id)
+    coordinator = GiosDataUpdateCoordinator(hass, entry, gios)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = GiosData(coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -65,31 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
-
-
-class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):  # pylint: disable=hass-enforce-coordinator-module
-    """Define an object to hold GIOS data."""
-
-    def __init__(
-        self, hass: HomeAssistant, session: ClientSession, station_id: int
-    ) -> None:
-        """Class to manage fetching GIOS data API."""
-        self.gios = Gios(station_id, session)
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
-
-    async def _async_update_data(self) -> GiosSensors:
-        """Update data via library."""
-        try:
-            async with asyncio.timeout(API_TIMEOUT):
-                return await self.gios.async_update()
-        except (GiosError, ClientConnectorError) as error:
-            raise UpdateFailed(error) from error
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

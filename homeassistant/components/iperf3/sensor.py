@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_VERSION, DATA_UPDATED, DOMAIN as IPERF3_DOMAIN, SENSOR_TYPES
+from . import ATTR_VERSION, DATA_UPDATED, DOMAIN, SENSOR_TYPES
 
 ATTR_PROTOCOL = "Protocol"
 ATTR_REMOTE_HOST = "Remote Server"
@@ -29,7 +29,7 @@ async def async_setup_platform(
 
     entities = [
         Iperf3Sensor(iperf3_host, description)
-        for iperf3_host in hass.data[IPERF3_DOMAIN].values()
+        for iperf3_host in hass.data[DOMAIN].values()
         for description in SENSOR_TYPES
         if description.key in discovery_info[CONF_MONITORED_CONDITIONS]
     ]

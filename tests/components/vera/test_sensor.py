@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 
 import pyvera as pv
 
+from homeassistant.components.sensor import async_rounded_state
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, LIGHT_LUX, PERCENTAGE
 from homeassistant.core import HomeAssistant
 
@@ -20,8 +21,8 @@ async def run_sensor_test(
     category: int,
     class_property: str,
     assert_states: tuple[tuple[Any, Any]],
-    assert_unit_of_measurement: str = None,
-    setup_callback: Callable[[pv.VeraController], None] = None,
+    assert_unit_of_measurement: str | None = None,
+    setup_callback: Callable[[pv.VeraController], None] | None = None,
 ) -> None:
     """Test generic sensor."""
     vera_device: pv.VeraSensor = MagicMock(spec=pv.VeraSensor)
@@ -46,7 +47,7 @@ async def run_sensor_test(
         update_callback(vera_device)
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
-        assert state.state == state_value
+        assert async_rounded_state(hass, entity_id, state) == state_value
         if assert_unit_of_measurement:
             assert (
                 state.attributes[ATTR_UNIT_OF_MEASUREMENT] == assert_unit_of_measurement
@@ -66,7 +67,7 @@ async def test_temperature_sensor_f(
         vera_component_factory=vera_component_factory,
         category=pv.CATEGORY_TEMPERATURE_SENSOR,
         class_property="temperature",
-        assert_states=(("33", "1"), ("44", "7")),
+        assert_states=(("33", "0.6"), ("44", "6.7")),
         setup_callback=setup_callback,
     )
 
@@ -80,7 +81,7 @@ async def test_temperature_sensor_c(
         vera_component_factory=vera_component_factory,
         category=pv.CATEGORY_TEMPERATURE_SENSOR,
         class_property="temperature",
-        assert_states=(("33", "33"), ("44", "44")),
+        assert_states=(("33", "33.0"), ("44", "44.0")),
     )
 
 

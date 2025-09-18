@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
@@ -32,17 +31,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     aiohttp_client,
-    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_CITY,
@@ -55,6 +48,8 @@ from .const import (
     LOGGER,
 )
 
+type AirVisualConfigEntry = ConfigEntry[DataUpdateCoordinator]
+
 # We use a raw string for the airvisual_pro domain (instead of importing the actual
 # constant) so that we can avoid listing it as a dependency:
 DOMAIN_AIRVISUAL_PRO = "airvisual_pro"
@@ -62,8 +57,6 @@ DOMAIN_AIRVISUAL_PRO = "airvisual_pro"
 PLATFORMS = [Platform.SENSOR]
 
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback
@@ -95,10 +88,9 @@ def async_get_cloud_coordinators_by_api_key(
 ) -> list[DataUpdateCoordinator]:
     """Get all DataUpdateCoordinator objects related to a particular API key."""
     return [
-        coordinator
-        for entry_id, coordinator in hass.data[DOMAIN].items()
-        if (entry := hass.config_entries.async_get_entry(entry_id))
-        and entry.data.get(CONF_API_KEY) == api_key
+        entry.runtime_data
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.data.get(CONF_API_KEY) == api_key and hasattr(entry, "runtime_data")
     ]
 
 
@@ -162,13 +154,13 @@ def _standardize_geography_config_entry(
         # about, infer it from the data we have:
         entry_updates["data"] = {**entry.data}
         if CONF_CITY in entry.data:
-            entry_updates["data"][
-                CONF_INTEGRATION_TYPE
-            ] = INTEGRATION_TYPE_GEOGRAPHY_NAME
+            entry_updates["data"][CONF_INTEGRATION_TYPE] = (
+                INTEGRATION_TYPE_GEOGRAPHY_NAME
+            )
         else:
-            entry_updates["data"][
-                CONF_INTEGRATION_TYPE
-            ] = INTEGRATION_TYPE_GEOGRAPHY_COORDS
+            entry_updates["data"][CONF_INTEGRATION_TYPE] = (
+                INTEGRATION_TYPE_GEOGRAPHY_COORDS
+            )
 
     if not entry_updates:
         return
@@ -176,7 +168,7 @@ def _standardize_geography_config_entry(
     hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) -> bool:
     """Set up AirVisual as config entry."""
     if CONF_API_KEY not in entry.data:
         # If this is a migrated AirVisual Pro entry, there's no actual setup to do;
@@ -212,6 +204,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name=async_get_geography_id(entry.data),
         # We give a placeholder update interval in order to create the coordinator;
         # then, below, we use the coordinator's presence (along with any other
@@ -224,8 +217,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     # Reassess the interval between 2 server requests
     async_sync_geo_coordinator_update_intervals(hass, entry.data[CONF_API_KEY])
@@ -235,7 +227,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) -> bool:
     """Migrate an old config entry."""
     version = entry.version
 
@@ -307,15 +299,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # domain:
             new_entry_data = {**entry.data}
             new_entry_data.pop(CONF_INTEGRATION_TYPE)
-            tasks = [
+
+            # Schedule the removal in a task to avoid a deadlock
+            # since we cannot remove a config entry that is in
+            # the process of being setup.
+            hass.async_create_background_task(
                 hass.config_entries.async_remove(entry.entry_id),
-                hass.config_entries.flow.async_init(
-                    DOMAIN_AIRVISUAL_PRO,
-                    context={"source": SOURCE_IMPORT},
-                    data=new_entry_data,
-                ),
-            ]
-            await asyncio.gather(*tasks)
+                name="remove config legacy airvisual entry {entry.title}",
+            )
+            await hass.config_entries.flow.async_init(
+                DOMAIN_AIRVISUAL_PRO,
+                context={"source": SOURCE_IMPORT},
+                data=new_entry_data,
+            )
 
             # After the migration has occurred, grab the new config and device entries
             # (now under the `airvisual_pro` domain):
@@ -388,56 +384,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) -> bool:
     """Unload an AirVisual config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if CONF_API_KEY in entry.data:
-            # Re-calculate the update interval period for any remaining consumers of
-            # this API key:
-            async_sync_geo_coordinator_update_intervals(hass, entry.data[CONF_API_KEY])
+    if unload_ok and CONF_API_KEY in entry.data:
+        # Re-calculate the update interval period for any remaining consumers of
+        # this API key:
+        async_sync_geo_coordinator_update_intervals(hass, entry.data[CONF_API_KEY])
 
     return unload_ok
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-class AirVisualEntity(CoordinatorEntity):
-    """Define a generic AirVisual entity."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        entry: ConfigEntry,
-        description: EntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-
-        self._attr_extra_state_attributes = {}
-        self._entry = entry
-        self.entity_description = description
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            self.update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.coordinator.async_add_listener(update))
-
-        self.update_from_latest_data()
-
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the entity from the latest data."""
-        raise NotImplementedError

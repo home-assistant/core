@@ -41,6 +41,12 @@
       "disk_free": {
         "name": "{sensor_label} disk free"
       },
+      "diskio_read": {
+        "name": "{sensor_label} disk read"
+      },
+      "diskio_write": {
+        "name": "{sensor_label} disk write"
+      },
       "memory_usage": {
         "name": "Memory usage"
       },
@@ -100,13 +106,22 @@
       },
       "raid_used": {
         "name": "{sensor_label} used"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "gpu_memory_usage": {
+        "name": "{sensor_label} memory usage"
+      },
+      "gpu_processor_usage": {
+        "name": "{sensor_label} processor usage"
+      },
+      "network_rx": {
+        "name": "{sensor_label} RX"
+      },
+      "network_tx": {
+        "name": "{sensor_label} TX"
       }
-    }
-  },
-  "issues": {
-    "deprecated_version": {
-      "title": "Glances servers with version 2 is deprecated",
-      "description": "Glances servers with version 2 is deprecated and will not be supported in future versions of HA. It is recommended to update your server to Glances version 3 then reload the integration."
     }
   }
 }

@@ -15,16 +15,16 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
+    MAX_LENGTH_STATE_STATE,
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import collection
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,10 +50,14 @@ SERVICE_SET_VALUE = "set_value"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-STORAGE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
-    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
+    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.All(
+        vol.Coerce(int), vol.Range(0, MAX_LENGTH_STATE_STATE)
+    ),
+    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.All(
+        vol.Coerce(int), vol.Range(1, MAX_LENGTH_STATE_STATE)
+    ),
     vol.Optional(CONF_INITIAL, ""): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
@@ -85,8 +89,12 @@ CONFIG_SCHEMA = vol.Schema(
                 lambda value: value or {},
                 {
                     vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
-                    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
+                    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.All(
+                        vol.Coerce(int), vol.Range(0, MAX_LENGTH_STATE_STATE)
+                    ),
+                    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.All(
+                        vol.Coerce(int), vol.Range(1, MAX_LENGTH_STATE_STATE)
+                    ),
                     vol.Optional(CONF_INITIAL): cv.string,
                     vol.Optional(CONF_ICON): cv.icon,
                     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
@@ -163,9 +171,9 @@ class InputTextStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_text))
 
-    async def _process_create_data(self, data: dict[str, Any]) -> vol.Schema:
+    async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
-        return self.CREATE_UPDATE_SCHEMA(data)
+        return self.CREATE_UPDATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
     def _get_suggested_id(self, info: dict[str, Any]) -> str:
@@ -264,7 +272,7 @@ class InputText(collection.CollectionEntity, RestoreEntity):
             return
 
         state = await self.async_get_last_state()
-        value: str | None = state and state.state  # type: ignore[assignment]
+        value = state.state if state else None
 
         # Check against None because value can be 0
         if value is not None and self._minimum <= len(value) <= self._maximum:

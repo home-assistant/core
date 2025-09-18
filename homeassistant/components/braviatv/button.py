@@ -10,13 +10,11 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import BraviaTVCoordinator
+from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
 from .entity import BraviaTVEntity
 
 
@@ -45,18 +43,17 @@ BUTTONS: tuple[BraviaTVButtonDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BraviaTVConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bravia TV Button entities."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     unique_id = config_entry.unique_id
     assert unique_id is not None
 
     async_add_entities(
-        BraviaTVButton(coordinator, unique_id, config_entry.title, description)
-        for description in BUTTONS
+        BraviaTVButton(coordinator, unique_id, description) for description in BUTTONS
     )
 
 
@@ -69,11 +66,10 @@ class BraviaTVButton(BraviaTVEntity, ButtonEntity):
         self,
         coordinator: BraviaTVCoordinator,
         unique_id: str,
-        model: str,
         description: BraviaTVButtonDescription,
     ) -> None:
         """Initialize the button."""
-        super().__init__(coordinator, unique_id, model)
+        super().__init__(coordinator, unique_id)
         self._attr_unique_id = f"{unique_id}_{description.key}"
         self.entity_description = description
 

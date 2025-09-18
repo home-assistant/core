@@ -5,42 +5,34 @@ from __future__ import annotations
 from asyncio import timeout
 import logging
 
-from androidtvremote2 import (
-    AndroidTVRemote,
-    CannotConnect,
-    ConnectionClosed,
-    InvalidAuth,
-)
+from androidtvremote2 import CannotConnect, ConnectionClosed, InvalidAuth
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import DOMAIN
-from .helpers import create_api, get_enable_ime
+from .helpers import AndroidTVRemoteConfigEntry, create_api, get_enable_ime
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: AndroidTVRemoteConfigEntry
+) -> bool:
     """Set up Android TV Remote from a config entry."""
+    _LOGGER.debug("async_setup_entry: %s", entry.data)
     api = create_api(hass, entry.data[CONF_HOST], get_enable_ime(entry))
 
     @callback
     def is_available_updated(is_available: bool) -> None:
-        if is_available:
-            _LOGGER.info(
-                "Reconnected to %s at %s", entry.data[CONF_NAME], entry.data[CONF_HOST]
-            )
-        else:
-            _LOGGER.warning(
-                "Disconnected from %s at %s",
-                entry.data[CONF_NAME],
-                entry.data[CONF_HOST],
-            )
+        _LOGGER.info(
+            "%s %s at %s",
+            "Reconnected to" if is_available else "Disconnected from",
+            entry.data[CONF_NAME],
+            entry.data[CONF_HOST],
+        )
 
     api.add_is_available_updated_callback(is_available_updated)
 
@@ -64,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # update the config entry data and reload the config entry.
     api.keep_reconnecting(reauth_needed)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api
+    entry.runtime_data = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -76,20 +68,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
-    entry.async_on_unload(entry.add_update_listener(update_listener))
+    entry.async_on_unload(api.disconnect)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AndroidTVRemoteConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        api: AndroidTVRemote = hass.data[DOMAIN].pop(entry.entry_id)
-        api.disconnect()
-
-    return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    _LOGGER.debug("async_unload_entry: %s", entry.data)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

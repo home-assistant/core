@@ -26,7 +26,22 @@
       "upload_speed": {
         "name": "Upload speed"
       },
-      "transmission_status": {
+      "download_speed_limit": {
+        "name": "Download speed limit"
+      },
+      "upload_speed_limit": {
+        "name": "Upload speed limit"
+      },
+      "alltime_download": {
+        "name": "All-time download"
+      },
+      "alltime_upload": {
+        "name": "All-time upload"
+      },
+      "global_ratio": {
+        "name": "Global ratio"
+      },
+      "current_status": {
         "name": "Status",
         "state": {
           "idle": "[%key:common::state::idle%]",
@@ -35,18 +50,75 @@
           "downloading": "Downloading"
         }
       },
+      "connection_status": {
+        "name": "Connection status",
+        "state": {
+          "connected": "[%key:common::state::connected%]",
+          "firewalled": "Firewalled",
+          "disconnected": "[%key:common::state::disconnected%]"
+        }
+      },
       "active_torrents": {
-        "name": "Active torrents"
+        "name": "Active torrents",
+        "unit_of_measurement": "torrents"
       },
       "inactive_torrents": {
-        "name": "Inactive torrents"
+        "name": "Inactive torrents",
+        "unit_of_measurement": "[%key:component::qbittorrent::entity::sensor::active_torrents::unit_of_measurement%]"
       },
       "paused_torrents": {
-        "name": "Paused torrents"
+        "name": "Paused torrents",
+        "unit_of_measurement": "[%key:component::qbittorrent::entity::sensor::active_torrents::unit_of_measurement%]"
       },
       "all_torrents": {
-        "name": "All torrents"
+        "name": "All torrents",
+        "unit_of_measurement": "[%key:component::qbittorrent::entity::sensor::active_torrents::unit_of_measurement%]"
       }
+    },
+    "switch": {
+      "alternative_speed": {
+        "name": "Alternative speed"
+      }
+    }
+  },
+  "services": {
+    "get_torrents": {
+      "name": "Get torrents",
+      "description": "Gets a list of current torrents",
+      "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "Which service to grab the list from"
+        },
+        "torrent_filter": {
+          "name": "Torrent filter",
+          "description": "What kind of torrents you want to return, such as All or Active."
+        }
+      }
+    },
+    "get_all_torrents": {
+      "name": "Get all torrents",
+      "description": "Gets a list of current torrents from all instances of qBittorrent",
+      "fields": {
+        "torrent_filter": {
+          "name": "Torrent filter",
+          "description": "What kind of torrents you want to return, such as All or Active."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_device": {
+      "message": "No device with ID {device_id} was found"
+    },
+    "invalid_entry_id": {
+      "message": "No entry with ID {device_id} was found"
+    },
+    "login_error": {
+      "message": "A login error occurred. Please check your username and password."
+    },
+    "cannot_connect": {
+      "message": "Can't connect to qBittorrent, please check your configuration."
     }
   }
 }

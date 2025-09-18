@@ -19,6 +19,5 @@
   "documentation": "https://www.home-assistant.io/integrations/nest",
   "iot_class": "cloud_push",
   "loggers": ["google_nest_sdm"],
-  "quality_scale": "platinum",
-  "requirements": ["google-nest-sdm==3.0.3"]
+  "requirements": ["google-nest-sdm==7.1.4"]
 }

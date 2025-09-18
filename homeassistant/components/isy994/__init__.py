@@ -10,7 +10,6 @@ from pyisy import ISY, ISYConnectionError, ISYInvalidAuthError, ISYResponseParse
 from pyisy.constants import CONFIG_NETWORKING, CONFIG_PORTAL
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -21,9 +20,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     _LOGGER,
@@ -43,8 +46,8 @@ from .const import (
     SCHEME_HTTPS,
 )
 from .helpers import _categorize_nodes, _categorize_programs
-from .models import IsyData
-from .services import async_setup_services, async_unload_services
+from .models import IsyConfigEntry, IsyData
+from .services import async_setup_services
 from .util import _async_cleanup_registry_entries
 
 CONFIG_SCHEMA = vol.Schema(
@@ -53,13 +56,16 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ISY 994 integration."""
-    hass.data.setdefault(DOMAIN, {})
-    isy_data = hass.data[DOMAIN][entry.entry_id] = IsyData()
 
+    async_setup_services(hass)
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
+    """Set up the ISY 994 integration."""
     isy_config = entry.data
     isy_options = entry.options
 
@@ -124,6 +130,7 @@ async def async_setup_entry(
             f"Invalid response ISY, device is likely still starting: {err}"
         ) from err
 
+    isy_data = entry.runtime_data = IsyData()
     _categorize_nodes(isy_data, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(isy_data, isy.programs)
     # Gather ISY Variables to be added.
@@ -135,7 +142,7 @@ async def async_setup_entry(
         for vtype, _, vid in isy.variables.children:
             numbers.append(isy.variables[vtype][vid])
     if (
-        isy.conf[CONFIG_NETWORKING] or isy.conf[CONFIG_PORTAL]
+        isy.conf[CONFIG_NETWORKING] or isy.conf.get(CONFIG_PORTAL)
     ) and isy.networking.nobjs:
         isy_data.devices[CONF_NETWORK] = _create_service_device_info(
             isy, name=CONFIG_NETWORKING, unique_id=CONF_NETWORK
@@ -144,7 +151,7 @@ async def async_setup_entry(
             isy_data.net_resources.append(resource)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
-    _LOGGER.info(repr(isy.clock))
+    _LOGGER.debug(repr(isy.clock))
 
     isy_data.root = isy
     _async_get_or_create_isy_device_in_registry(hass, entry, isy)
@@ -153,7 +160,7 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Clean-up any old entities that we no longer provide.
-    _async_cleanup_registry_entries(hass, entry.entry_id)
+    _async_cleanup_registry_entries(hass, entry)
 
     @callback
     def _async_stop_auto_update(event: Event) -> None:
@@ -164,29 +171,16 @@ async def async_setup_entry(
     _LOGGER.debug("ISY Starting Event Stream and automatic updates")
     isy.websocket.start()
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update, run_immediately=True
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update)
     )
-
-    # Register Integration-wide Services:
-    async_setup_services(hass)
 
     return True
 
 
-async def _async_update_listener(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 @callback
 def _async_get_or_create_isy_device_in_registry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry, isy: ISY
+    hass: HomeAssistant, entry: IsyConfigEntry, isy: ISY
 ) -> None:
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -220,34 +214,22 @@ def _create_service_device_info(isy: ISY, name: str, unique_id: str) -> DeviceIn
     )
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    isy_data = hass.data[DOMAIN][entry.entry_id]
-
-    isy: ISY = isy_data.root
-
     _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
-    isy.websocket.stop()
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    async_unload_services(hass)
+    entry.runtime_data.root.websocket.stop()
 
     return unload_ok
 
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: IsyConfigEntry,
     device_entry: dr.DeviceEntry,
 ) -> bool:
     """Remove ISY config entry from a device."""
-    isy_data = hass.data[DOMAIN][config_entry.entry_id]
     return not device_entry.identifiers.intersection(
-        (DOMAIN, unique_id) for unique_id in isy_data.devices
+        (DOMAIN, unique_id) for unique_id in config_entry.runtime_data.devices
     )

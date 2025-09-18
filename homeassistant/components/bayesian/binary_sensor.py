@@ -5,16 +5,18 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Callable
 import logging
-from typing import Any
+import math
+from typing import TYPE_CHECKING, Any, NamedTuple
 from uuid import UUID
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -28,13 +30,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
-from homeassistant.helpers import condition
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     TrackTemplateResultInfo,
@@ -45,12 +48,12 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, PLATFORMS
 from .const import (
     ATTR_OBSERVATIONS,
     ATTR_OCCURRED_OBSERVATION_ENTITIES,
     ATTR_PROBABILITY,
     ATTR_PROBABILITY_THRESHOLD,
+    CONF_NUMERIC_STATE,
     CONF_OBSERVATIONS,
     CONF_P_GIVEN_F,
     CONF_P_GIVEN_T,
@@ -60,6 +63,8 @@ from .const import (
     CONF_TO_STATE,
     DEFAULT_NAME,
     DEFAULT_PROBABILITY_THRESHOLD,
+    DOMAIN,
+    PLATFORMS,
 )
 from .helpers import Observation
 from .issues import raise_mirrored_entries, raise_no_prob_given_false
@@ -67,17 +72,90 @@ from .issues import raise_mirrored_entries, raise_no_prob_given_false
 _LOGGER = logging.getLogger(__name__)
 
 
-NUMERIC_STATE_SCHEMA = vol.Schema(
-    {
-        CONF_PLATFORM: "numeric_state",
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_ABOVE): vol.Coerce(float),
-        vol.Optional(CONF_BELOW): vol.Coerce(float),
-        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
-    },
-    required=True,
+def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
+    """Validate above and below options.
+
+    If the observation is of type/platform NUMERIC_STATE, then ensure that the
+    value given for 'above' is not greater than that for 'below'. Also check
+    that at least one of the two is specified.
+    """
+    if config[CONF_PLATFORM] == CONF_NUMERIC_STATE:
+        above = config.get(CONF_ABOVE)
+        below = config.get(CONF_BELOW)
+        if above is None and below is None:
+            _LOGGER.error(
+                "For bayesian numeric state for entity: %s at least one of 'above' or 'below' must be specified",
+                config[CONF_ENTITY_ID],
+            )
+            raise vol.Invalid("above_or_below")
+        if above is not None and below is not None:
+            if above > below:
+                _LOGGER.error(
+                    "For bayesian numeric state 'above' (%s) must be less than 'below' (%s)",
+                    above,
+                    below,
+                )
+                raise vol.Invalid("above_below")
+    return config
+
+
+NUMERIC_STATE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            CONF_PLATFORM: CONF_NUMERIC_STATE,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_ABOVE): vol.Coerce(float),
+            vol.Optional(CONF_BELOW): vol.Coerce(float),
+            vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
+            vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        },
+        required=True,
+    ),
+    above_greater_than_below,
 )
+
+
+def no_overlapping(configs: list[dict]) -> list[dict]:
+    """Validate that intervals are not overlapping.
+
+    For a list of observations ensure that there are no overlapping intervals
+    for NUMERIC_STATE observations for the same entity.
+    """
+    numeric_configs = [
+        config for config in configs if config[CONF_PLATFORM] == CONF_NUMERIC_STATE
+    ]
+    if len(numeric_configs) < 2:
+        return configs
+
+    class NumericConfig(NamedTuple):
+        above: float
+        below: float
+
+    d: dict[str, list[NumericConfig]] = {}
+    for _, config in enumerate(numeric_configs):
+        above = config.get(CONF_ABOVE, -math.inf)
+        below = config.get(CONF_BELOW, math.inf)
+        entity_id: str = str(config[CONF_ENTITY_ID])
+        d.setdefault(entity_id, []).append(NumericConfig(above, below))
+
+    for ent_id, intervals in d.items():
+        intervals = sorted(intervals, key=lambda tup: tup.above)
+
+        for i, tup in enumerate(intervals):
+            if len(intervals) > i + 1 and tup.below > intervals[i + 1].above:
+                _LOGGER.error(
+                    "Ranges for bayesian numeric state entities must not overlap, but %s has overlapping ranges, above:%s, below:%s overlaps with above:%s, below:%s",
+                    ent_id,
+                    tup.above,
+                    tup.below,
+                    intervals[i + 1].above,
+                    intervals[i + 1].below,
+                )
+                raise vol.Invalid(
+                    "overlapping_ranges",
+                )
+    return configs
+
 
 STATE_SCHEMA = vol.Schema(
     {
@@ -100,7 +178,7 @@ TEMPLATE_SCHEMA = vol.Schema(
     required=True,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -108,7 +186,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_OBSERVATIONS): vol.Schema(
             vol.All(
                 cv.ensure_list,
-                [vol.Any(NUMERIC_STATE_SCHEMA, STATE_SCHEMA, TEMPLATE_SCHEMA)],
+                [vol.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
+                no_overlapping,
             )
         ),
         vol.Required(CONF_PRIOR): vol.Coerce(float),
@@ -134,9 +213,13 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Bayesian Binary sensor."""
+    """Set up the Bayesian Binary sensor from a yaml config."""
+    _LOGGER.debug(
+        "Setting up config entry for Bayesian sensor: '%s' with %s observations",
+        config[CONF_NAME],
+        len(config.get(CONF_OBSERVATIONS, [])),
+    )
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
     observations: list[ConfigType] = config[CONF_OBSERVATIONS]
@@ -148,11 +231,50 @@ async def async_setup_platform(
     broken_observations: list[dict[str, Any]] = []
     for observation in observations:
         if CONF_P_GIVEN_F not in observation:
-            text: str = f"{name}/{observation.get(CONF_ENTITY_ID,'')}{observation.get(CONF_VALUE_TEMPLATE,'')}"
+            text = (
+                f"{name}/{observation.get(CONF_ENTITY_ID, '')}"
+                f"{observation.get(CONF_VALUE_TEMPLATE, '')}"
+            )
             raise_no_prob_given_false(hass, text)
             _LOGGER.error("Missing prob_given_false YAML entry for %s", text)
             broken_observations.append(observation)
     observations = [x for x in observations if x not in broken_observations]
+
+    async_add_entities(
+        [
+            BayesianBinarySensor(
+                name,
+                unique_id,
+                prior,
+                observations,
+                probability_threshold,
+                device_class,
+            )
+        ]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Bayesian Binary sensor from a config entry."""
+    _LOGGER.debug(
+        "Setting up config entry for Bayesian sensor: '%s' with %s observations",
+        config_entry.options[CONF_NAME],
+        len(config_entry.subentries),
+    )
+    config = config_entry.options
+    name: str = config[CONF_NAME]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID, config_entry.entry_id)
+    observations: list[ConfigType] = [
+        dict(subentry.data) for subentry in config_entry.subentries.values()
+    ]
+    prior: float = config[CONF_PRIOR]
+    probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
+    device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     async_add_entities(
         [
@@ -185,6 +307,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         """Initialize the Bayesian sensor."""
         self._attr_name = name
         self._attr_unique_id = unique_id and f"bayesian-{unique_id}"
+
         self._observations = [
             Observation(
                 entity_id=observation.get(CONF_ENTITY_ID),
@@ -212,10 +335,11 @@ class BayesianBinarySensor(BinarySensorEntity):
         self.observations_by_entity = self._build_observations_by_entity()
         self.observations_by_template = self._build_observations_by_template()
 
-        self.observation_handlers: dict[str, Callable[[Observation], bool | None]] = {
+        self.observation_handlers: dict[
+            str, Callable[[Observation, bool], bool | None]
+        ] = {
             "numeric_state": self._process_numeric_state,
             "state": self._process_state,
-            "multi_state": self._process_multi_state,
         }
 
     async def async_added_to_hass(self) -> None:
@@ -343,8 +467,9 @@ class BayesianBinarySensor(BinarySensorEntity):
         for observation in self.observations_by_entity[entity]:
             platform = observation.platform
 
-            observation.observed = self.observation_handlers[platform](observation)
-
+            observation.observed = self.observation_handlers[platform](
+                observation, observation.multi
+            )
             local_observations[observation.id] = observation
 
         return local_observations
@@ -367,21 +492,23 @@ class BayesianBinarySensor(BinarySensorEntity):
                     1 - observation.prob_given_false,
                 )
                 continue
-            # observation.observed is None
+            # Entity exists but observation.observed is None
             if observation.entity_id is not None:
                 _LOGGER.debug(
                     (
                         "Observation for entity '%s' returned None, it will not be used"
-                        " for Bayesian updating"
+                        " for updating Bayesian sensor '%s'"
                     ),
                     observation.entity_id,
+                    self.entity_id,
                 )
                 continue
             _LOGGER.debug(
                 (
                     "Observation for template entity returned None rather than a valid"
-                    " boolean, it will not be used for Bayesian updating"
+                    " boolean, it will not be used for updating Bayesian sensor '%s'"
                 ),
+                self.entity_id,
             )
         # the prior has been updated and is now the posterior
         return prior
@@ -409,9 +536,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             if len(entity_observations) == 1:
                 continue
             for observation in entity_observations:
-                if observation.platform != "state":
-                    continue
-                observation.platform = "multi_state"
+                observation.multi = True
 
         return observations_by_entity
 
@@ -432,20 +557,28 @@ class BayesianBinarySensor(BinarySensorEntity):
         for observation in self._observations:
             if observation.value_template is None:
                 continue
-
             template = observation.value_template
             observations_by_template.setdefault(template, []).append(observation)
 
         return observations_by_template
 
-    def _process_numeric_state(self, entity_observation: Observation) -> bool | None:
+    def _process_numeric_state(
+        self, entity_observation: Observation, multi: bool = False
+    ) -> bool | None:
         """Return True if numeric condition is met, return False if not, return None otherwise."""
-        entity = entity_observation.entity_id
+        entity_id = entity_observation.entity_id
+        # if we are dealing with numeric_state observations entity_id cannot be None
+        if TYPE_CHECKING:
+            assert entity_id is not None
+
+        entity = self.hass.states.get(entity_id)
+        if entity is None:
+            return None
 
         try:
             if condition.state(self.hass, entity, [STATE_UNKNOWN, STATE_UNAVAILABLE]):
                 return None
-            return condition.async_numeric_state(
+            result = condition.async_numeric_state(
                 self.hass,
                 entity,
                 entity_observation.below,
@@ -453,10 +586,24 @@ class BayesianBinarySensor(BinarySensorEntity):
                 None,
                 entity_observation.to_dict(),
             )
+            if result:
+                return True
+            if multi:
+                state = float(entity.state)
+                if (
+                    entity_observation.below is not None
+                    and state == entity_observation.below
+                ):
+                    return True
+                return None
         except ConditionError:
             return None
+        else:
+            return False
 
-    def _process_state(self, entity_observation: Observation) -> bool | None:
+    def _process_state(
+        self, entity_observation: Observation, multi: bool = False
+    ) -> bool | None:
         """Return True if state conditions are met, return False if they are not.
 
         Returns None if the state is unavailable.
@@ -468,24 +615,13 @@ class BayesianBinarySensor(BinarySensorEntity):
             if condition.state(self.hass, entity, [STATE_UNKNOWN, STATE_UNAVAILABLE]):
                 return None
 
-            return condition.state(self.hass, entity, entity_observation.to_state)
+            result = condition.state(self.hass, entity, entity_observation.to_state)
+            if multi and not result:
+                return None
         except ConditionError:
             return None
-
-    def _process_multi_state(self, entity_observation: Observation) -> bool | None:
-        """Return True if state conditions are met, otherwise return None.
-
-        Never return False as all other states should have their own probabilities configured.
-        """
-
-        entity = entity_observation.entity_id
-
-        try:
-            if condition.state(self.hass, entity, entity_observation.to_state):
-                return True
-        except ConditionError:
-            return None
-        return None
+        else:
+            return result
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

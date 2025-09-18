@@ -8,7 +8,6 @@ from homeassistant.components.device_tracker import ATTR_GPS, ATTR_IP, ATTR_MAC
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.components.person import ATTR_USER_ID
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -19,8 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import ProximityDataUpdateCoordinator
+from .coordinator import ProximityConfigEntry
 
 TO_REDACT = {
     ATTR_GPS,
@@ -35,10 +33,10 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: ProximityConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: ProximityDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     diag_data = {
         "entry": entry.as_dict(),

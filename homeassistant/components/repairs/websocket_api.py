@@ -14,14 +14,10 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.decorators import require_admin
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
-)
-from homeassistant.helpers.issue_registry import (
-    async_get as async_get_issue_registry,
-    async_ignore_issue,
 )
 
 from .const import DOMAIN
@@ -50,7 +46,7 @@ def ws_get_issue_data(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Fix an issue."""
-    issue_registry = async_get_issue_registry(hass)
+    issue_registry = ir.async_get(hass)
     if not (issue := issue_registry.async_get_issue(msg["domain"], msg["issue_id"])):
         connection.send_error(
             msg["id"],
@@ -74,7 +70,7 @@ def ws_ignore_issue(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Fix an issue."""
-    async_ignore_issue(hass, msg["domain"], msg["issue_id"], msg["ignore"])
+    ir.async_ignore_issue(hass, msg["domain"], msg["issue_id"], msg["ignore"])
 
     connection.send_result(msg["id"])
 
@@ -89,7 +85,7 @@ def ws_list_issues(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return a list of issues."""
-    issue_registry = async_get_issue_registry(hass)
+    issue_registry = ir.async_get(hass)
     issues = [
         {
             "breaks_in_ha_version": issue.breaks_in_ha_version,
@@ -117,7 +113,7 @@ class RepairsFlowIndexView(FlowManagerIndexView):
     url = "/api/repairs/issues/fix"
     name = "api:repairs:issues:fix"
 
-    @require_admin(error=Unauthorized(permission=POLICY_EDIT))
+    @require_admin(permission=POLICY_EDIT)
     @RequestDataValidator(
         vol.Schema(
             {
@@ -141,9 +137,9 @@ class RepairsFlowIndexView(FlowManagerIndexView):
                 "Handler does not support user", HTTPStatus.BAD_REQUEST
             )
 
-        result = self._prepare_result_json(result)
-
-        return self.json(result)
+        return self.json(
+            self._prepare_result_json(result),
+        )
 
 
 class RepairsFlowResourceView(FlowManagerResourceView):
@@ -152,12 +148,12 @@ class RepairsFlowResourceView(FlowManagerResourceView):
     url = "/api/repairs/issues/fix/{flow_id}"
     name = "api:repairs:issues:fix:resource"
 
-    @require_admin(error=Unauthorized(permission=POLICY_EDIT))
+    @require_admin(permission=POLICY_EDIT)
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
-    @require_admin(error=Unauthorized(permission=POLICY_EDIT))
+    @require_admin(permission=POLICY_EDIT)
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)

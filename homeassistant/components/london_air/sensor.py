@@ -9,9 +9,12 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -26,6 +29,7 @@ AUTHORITIES = [
     "Barking and Dagenham",
     "Bexley",
     "Brent",
+    "Bromley",
     "Camden",
     "City of London",
     "Croydon",
@@ -33,10 +37,12 @@ AUTHORITIES = [
     "Enfield",
     "Greenwich",
     "Hackney",
+    "Hammersmith and Fulham",
     "Haringey",
     "Harrow",
     "Havering",
     "Hillingdon",
+    "Hounslow",
     "Islington",
     "Kensington and Chelsea",
     "Kingston",
@@ -54,7 +60,7 @@ AUTHORITIES = [
 
 URL = "http://api.erg.kcl.ac.uk/AirQuality/Hourly/MonitoringIndex/GroupName=London/Json"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_LOCATIONS, default=AUTHORITIES): vol.All(
             cv.ensure_list, [vol.In(AUTHORITIES)]
@@ -166,9 +172,9 @@ def parse_species(species_data):
             species_dict["code"] = species["@SpeciesCode"]
             species_dict["quality"] = species["@AirQualityBand"]
             species_dict["index"] = species["@AirQualityIndex"]
-            species_dict[
-                "summary"
-            ] = f"{species_dict['code']} is {species_dict['quality']}"
+            species_dict["summary"] = (
+                f"{species_dict['code']} is {species_dict['quality']}"
+            )
             parsed_species_data.append(species_dict)
             quality_list.append(species_dict["quality"])
     return parsed_species_data, quality_list

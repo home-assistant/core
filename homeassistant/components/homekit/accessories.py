@@ -15,6 +15,7 @@ from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
+from homeassistant.components.lawn_mower import LawnMowerEntityFeature
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.remote import RemoteEntityFeature
 from homeassistant.components.sensor import SensorDeviceClass
@@ -45,16 +46,15 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
     Event,
+    EventStateChangedData,
+    HassJobType,
     HomeAssistant,
     State,
     callback as ha_callback,
     split_entity_id,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -72,6 +72,7 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
+    EMPTY_MAC,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
     HK_NOT_CHARGABLE,
@@ -83,6 +84,9 @@ from .const import (
     MAX_VERSION_LENGTH,
     SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
+    SIGNAL_RELOAD_ENTITIES,
+    TYPE_AIR_PURIFIER,
+    TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -103,12 +107,16 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 SWITCH_TYPES = {
-    TYPE_FAUCET: "Valve",
+    TYPE_FAUCET: "ValveSwitch",
     TYPE_OUTLET: "Outlet",
-    TYPE_SHOWER: "Valve",
-    TYPE_SPRINKLER: "Valve",
+    TYPE_SHOWER: "ValveSwitch",
+    TYPE_SPRINKLER: "ValveSwitch",
     TYPE_SWITCH: "Switch",
-    TYPE_VALVE: "Valve",
+    TYPE_VALVE: "ValveSwitch",
+}
+FAN_TYPES = {
+    TYPE_AIR_PURIFIER: "AirPurifier",
+    TYPE_FAN: "Fan",
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
@@ -176,7 +184,10 @@ def get_accessory(  # noqa: C901
             a_type = "WindowCovering"
 
     elif state.domain == "fan":
-        a_type = "Fan"
+        if fan_type := config.get(CONF_TYPE):
+            a_type = FAN_TYPES[fan_type]
+        else:
+            a_type = "Fan"
 
     elif state.domain == "humidifier":
         a_type = "HumidifierDehumidifier"
@@ -234,6 +245,13 @@ def get_accessory(  # noqa: C901
             a_type = "CarbonDioxideSensor"
         elif device_class == SensorDeviceClass.ILLUMINANCE or unit == LIGHT_LUX:
             a_type = "LightSensor"
+        else:
+            _LOGGER.debug(
+                "%s: Unsupported sensor type (device_class=%s) (unit=%s)",
+                state.entity_id,
+                device_class,
+                unit,
+            )
 
     elif state.domain == "switch":
         if switch_type := config.get(CONF_TYPE):
@@ -243,8 +261,18 @@ def get_accessory(  # noqa: C901
         else:
             a_type = "Switch"
 
+    elif state.domain == "valve":
+        a_type = "Valve"
+
     elif state.domain == "vacuum":
         a_type = "Vacuum"
+
+    elif (
+        state.domain == "lawn_mower"
+        and features & LawnMowerEntityFeature.DOCK
+        and features & LawnMowerEntityFeature.START_MOWING
+    ):
+        a_type = "LawnMower"
 
     elif state.domain == "remote" and features & RemoteEntityFeature.ACTIVITY:
         a_type = "ActivityRemote"
@@ -288,7 +316,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         name: str,
         entity_id: str,
         aid: int,
-        config: dict,
+        config: dict[str, Any],
         *args: Any,
         category: int = CATEGORY_OTHER,
         device_id: str | None = None,
@@ -436,7 +464,10 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self._update_available_from_state(state)
         self._subscriptions.append(
             async_track_state_change_event(
-                self.hass, [self.entity_id], self.async_update_event_state_callback
+                self.hass,
+                [self.entity_id],
+                self.async_update_event_state_callback,
+                job_type=HassJobType.Callback,
             )
         )
 
@@ -456,6 +487,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
                     self.hass,
                     [self.linked_battery_sensor],
                     self.async_update_linked_battery_callback,
+                    job_type=HassJobType.Callback,
                 )
             )
         elif state is not None:
@@ -468,6 +500,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
                     self.hass,
                     [self.linked_battery_charging_sensor],
                     self.async_update_linked_battery_charging_callback,
+                    job_type=HassJobType.Callback,
                 )
             )
         elif battery_charging_state is None and state is not None:
@@ -595,12 +628,12 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self,
         domain: str,
         service: str,
-        service_data: dict[str, Any] | None,
+        service_data: dict[str, Any],
         value: Any | None = None,
     ) -> None:
         """Fire event and call service for changes from HomeKit."""
         event_data = {
-            ATTR_ENTITY_ID: self.entity_id,
+            ATTR_ENTITY_ID: service_data.get(ATTR_ENTITY_ID, self.entity_id),
             ATTR_DISPLAY_NAME: self.display_name,
             ATTR_SERVICE: service,
             ATTR_VALUE: value,
@@ -620,7 +653,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         """Reload and recreate an accessory and update the c# value in the mDNS record."""
         async_dispatcher_send(
             self.hass,
-            f"homekit_reload_entities_{self.driver.entry_id}",
+            SIGNAL_RELOAD_ENTITIES.format(self.driver.entry_id),
             (self.entity_id,),
         )
 
@@ -683,7 +716,9 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         **kwargs: Any,
     ) -> None:
         """Initialize a AccessoryDriver object."""
-        super().__init__(**kwargs)
+        # Always set an empty mac of pyhap will incur
+        # the cost of generating a new one for every driver
+        super().__init__(**kwargs, mac=EMPTY_MAC)
         self.hass = hass
         self.entry_id = entry_id
         self._bridge_name = bridge_name

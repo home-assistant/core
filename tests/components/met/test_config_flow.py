@@ -1,14 +1,17 @@
 """Tests for Met.no config flow."""
 
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.met.const import DOMAIN, HOME_LOCATION_NAME
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import init_integration
 
@@ -16,7 +19,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="met_setup", autouse=True)
-def met_setup_fixture(request):
+def met_setup_fixture(request: pytest.FixtureRequest) -> Generator[Any]:
     """Patch met setup entry."""
     if "disable_autouse_fixture" in request.keywords:
         yield
@@ -31,7 +34,7 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -49,7 +52,7 @@ async def test_flow_with_home_location(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     default_data = result["data_schema"]({})
@@ -72,7 +75,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "home"
     assert result["data"] == test_data
 
@@ -100,7 +103,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["name"] == "already_configured"
 
 
@@ -110,7 +113,7 @@ async def test_onboarding_step(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": "onboarding"}, data={}
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOME_LOCATION_NAME
     assert result["data"] == {"track_home": True}
 
@@ -134,7 +137,7 @@ async def test_onboarding_step_abort_no_home(
         DOMAIN, context={"source": "onboarding"}, data={}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_home"
 
 
@@ -153,7 +156,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     # Test show Options form
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     # Test Options flow updated config entry
@@ -164,7 +167,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             entry.entry_id, data=update_data
         )
         await hass.async_block_till_done()
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Mock Title"
     assert result["data"] == update_data
     weatherdatamock.assert_called_with(

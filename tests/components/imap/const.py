@@ -59,6 +59,11 @@ TEST_CONTENT_TEXT_PLAIN = (
     b"Content-Transfer-Encoding: 7bit\r\n\r\nTest body\r\n"
 )
 
+TEST_CONTENT_TEXT_PLAIN_EMPTY = (
+    b'Content-Type: text/plain; charset="utf-8"\r\n'
+    b"Content-Transfer-Encoding: 7bit\r\n\r\n  \r\n"
+)
+
 TEST_CONTENT_TEXT_BASE64 = (
     b'Content-Type: text/plain; charset="utf-8"\r\n'
     b"Content-Transfer-Encoding: base64\r\n\r\nVGVzdCBib2R5\r\n"
@@ -108,6 +113,15 @@ TEST_CONTENT_MULTIPART = (
     + b"\r\n--Mark=_100584970350292485166--\r\n"
 )
 
+TEST_CONTENT_MULTIPART_EMPTY_PLAIN = (
+    b"\r\nThis is a multi-part message in MIME format.\r\n"
+    b"\r\n--Mark=_100584970350292485166\r\n"
+    + TEST_CONTENT_TEXT_PLAIN_EMPTY
+    + b"\r\n--Mark=_100584970350292485166\r\n"
+    + TEST_CONTENT_HTML
+    + b"\r\n--Mark=_100584970350292485166--\r\n"
+)
+
 TEST_CONTENT_MULTIPART_BASE64 = (
     b"\r\nThis is a multi-part message in MIME format.\r\n"
     b"\r\n--Mark=_100584970350292485166\r\n"
@@ -127,6 +141,8 @@ TEST_CONTENT_MULTIPART_BASE64_INVALID = (
 )
 
 EMPTY_SEARCH_RESPONSE = ("OK", [b"", b"Search completed (0.0001 + 0.000 secs)."])
+EMPTY_SEARCH_RESPONSE_ALT = ("OK", [b"Search completed (0.0001 + 0.000 secs)."])
+
 BAD_RESPONSE = ("BAD", [b"", b"Unexpected error"])
 
 TEST_SEARCH_RESPONSE = ("OK", [b"1", b"Search completed (0.0001 + 0.000 secs)."])
@@ -150,6 +166,18 @@ TEST_FETCH_RESPONSE_TEXT_PLAIN = (
         + str(len(TEST_MESSAGE + TEST_CONTENT_TEXT_PLAIN)).encode("utf-8")
         + b"}",
         bytearray(TEST_MESSAGE + TEST_CONTENT_TEXT_PLAIN),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+
+TEST_FETCH_RESPONSE_TEXT_PLAIN_EMPTY = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MESSAGE + TEST_CONTENT_TEXT_PLAIN_EMPTY)).encode("utf-8")
+        + b"}",
+        bytearray(TEST_MESSAGE + TEST_CONTENT_TEXT_PLAIN_EMPTY),
         b")",
         b"Fetch completed (0.0001 + 0.000 secs).",
     ],
@@ -245,6 +273,19 @@ TEST_FETCH_RESPONSE_MULTIPART = (
         + str(len(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART)).encode("utf-8")
         + b"}",
         bytearray(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+TEST_FETCH_RESPONSE_MULTIPART_EMPTY_PLAIN = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART_EMPTY_PLAIN)).encode(
+            "utf-8"
+        )
+        + b"}",
+        bytearray(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART_EMPTY_PLAIN),
         b")",
         b"Fetch completed (0.0001 + 0.000 secs).",
     ],

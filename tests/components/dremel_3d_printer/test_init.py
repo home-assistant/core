@@ -12,7 +12,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -27,7 +27,7 @@ async def test_setup(
     with patch(MOCKED_MODEL, return_value=model) as mock:
         await hass.config_entries.async_setup(config_entry.entry_id)
         assert await async_setup_component(hass, DOMAIN, {})
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert mock.called
 
     with patch(MOCKED_MODEL, return_value=model) as mock:
@@ -50,7 +50,7 @@ async def test_async_setup_entry_not_ready(
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert await async_setup_component(hass, DOMAIN, {})
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert not hass.data.get(DOMAIN)
 
 
@@ -60,7 +60,7 @@ async def test_update_failed(
     """Test coordinator throws UpdateFailed after failed update."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert await async_setup_component(hass, DOMAIN, {})
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with patch(
         "homeassistant.components.dremel_3d_printer.Dremel3DPrinter.refresh",

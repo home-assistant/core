@@ -17,5 +17,7 @@
   "coordinateFormat": null,
   "openIdEnabled": true,
   "openIdForce": true,
-  "attributes": {}
+  "attributes": {
+    "speedUnit": "kn"
+  }
 }

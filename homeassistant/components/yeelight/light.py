@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 import logging
 import math
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import voluptuous as vol
 import yeelight
@@ -16,11 +16,10 @@ from yeelight.main import BulbException
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_HS_COLOR,
-    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     FLASH_LONG,
@@ -33,16 +32,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-import homeassistant.util.color as color_util
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired as kelvin_to_mired,
-    color_temperature_mired_to_kelvin as mired_to_kelvin,
-)
+from homeassistant.helpers.typing import VolDictType
+from homeassistant.util import color as color_util
 
 from . import YEELIGHT_FLOW_TRANSITION_SCHEMA
 from .const import (
@@ -67,13 +62,10 @@ from .const import (
 from .device import YeelightDevice
 from .entity import YeelightEntity
 
-_YeelightBaseLightT = TypeVar("_YeelightBaseLightT", bound="YeelightBaseLight")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MINUTES = "minutes"
+ATTR_KELVIN = "kelvin"
 
 SERVICE_SET_MODE = "set_mode"
 SERVICE_SET_MUSIC_MODE = "set_music_mode"
@@ -174,22 +166,22 @@ EFFECTS_MAP = {
 
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
 
-SERVICE_SCHEMA_SET_MODE = {
+SERVICE_SCHEMA_SET_MODE: VolDictType = {
     vol.Required(ATTR_MODE): vol.In([mode.name.lower() for mode in PowerMode])
 }
 
-SERVICE_SCHEMA_SET_MUSIC_MODE = {vol.Required(ATTR_MODE_MUSIC): cv.boolean}
+SERVICE_SCHEMA_SET_MUSIC_MODE: VolDictType = {vol.Required(ATTR_MODE_MUSIC): cv.boolean}
 
 SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
-SERVICE_SCHEMA_SET_COLOR_SCENE = {
+SERVICE_SCHEMA_SET_COLOR_SCENE: VolDictType = {
     vol.Required(ATTR_RGB_COLOR): vol.All(
         vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
     ),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
-SERVICE_SCHEMA_SET_HSV_SCENE = {
+SERVICE_SCHEMA_SET_HSV_SCENE: VolDictType = {
     vol.Required(ATTR_HS_COLOR): vol.All(
         vol.Coerce(tuple),
         vol.ExactSequence(
@@ -202,14 +194,14 @@ SERVICE_SCHEMA_SET_HSV_SCENE = {
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
-SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE = {
+SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE: VolDictType = {
     vol.Required(ATTR_KELVIN): vol.All(vol.Coerce(int), vol.Range(min=1700, max=6500)),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
-SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE = {
+SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE: VolDictType = {
     vol.Required(ATTR_MINUTES): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
@@ -243,7 +235,7 @@ def _parse_custom_effects(effects_config) -> dict[str, dict[str, Any]]:
     return effects
 
 
-def _async_cmd(
+def _async_cmd[_YeelightBaseLightT: YeelightBaseLight, **_P, _R](
     func: Callable[Concatenate[_YeelightBaseLightT, _P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[_YeelightBaseLightT, _P], Coroutine[Any, Any, _R | None]]:
     """Define a wrapper to catch exceptions from the bulb."""
@@ -286,7 +278,7 @@ def _async_cmd(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Yeelight from a config entry."""
     custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
@@ -443,8 +435,8 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         self._effect = None
 
         model_specs = self._bulb.get_model_specs()
-        self._attr_min_mireds = kelvin_to_mired(model_specs["color_temp"]["max"])
-        self._attr_max_mireds = kelvin_to_mired(model_specs["color_temp"]["min"])
+        self._attr_max_color_temp_kelvin = model_specs["color_temp"]["max"]
+        self._attr_min_color_temp_kelvin = model_specs["color_temp"]["min"]
 
         self._light_type = LightType.Main
 
@@ -479,10 +471,10 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         return self._predefined_effects + self.custom_effects_names
 
     @property
-    def color_temp(self) -> int | None:
-        """Return the color temperature."""
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
         if temp_in_k := self._get_property("ct"):
-            self._color_temp = kelvin_to_mired(int(temp_in_k))
+            self._color_temp = int(temp_in_k)
         return self._color_temp
 
     @property
@@ -681,20 +673,19 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         )
 
     @_async_cmd
-    async def async_set_colortemp(self, colortemp, duration) -> None:
+    async def async_set_colortemp(self, temp_in_k, duration) -> None:
         """Set bulb's color temperature."""
         if (
-            not colortemp
+            not temp_in_k
             or not self.supported_color_modes
             or ColorMode.COLOR_TEMP not in self.supported_color_modes
         ):
             return
-        temp_in_k = mired_to_kelvin(colortemp)
 
         if (
             not self.device.is_color_flow_enabled
             and self.color_mode == ColorMode.COLOR_TEMP
-            and self.color_temp == colortemp
+            and self.color_temp_kelvin == temp_in_k
         ):
             _LOGGER.debug("Color temp already set to: %s", temp_in_k)
             # Already set, and since we get pushed updates
@@ -782,7 +773,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the bulb on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        colortemp = kwargs.get(ATTR_COLOR_TEMP)
+        colortemp = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
         hs_color = kwargs.get(ATTR_HS_COLOR)
         rgb = kwargs.get(ATTR_RGB_COLOR)
         flash = kwargs.get(ATTR_FLASH)
@@ -936,12 +927,12 @@ class YeelightWithoutNightlightSwitchMixIn(YeelightBaseLight):
         return super()._brightness_property
 
     @property
-    def color_temp(self) -> int | None:
-        """Return the color temperature."""
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
         if self.device.is_nightlight_enabled:
             # Enabling the nightlight locks the colortemp to max
-            return self.max_mireds
-        return super().color_temp
+            return self.min_color_temp_kelvin
+        return super().color_temp_kelvin
 
 
 class YeelightColorLightWithoutNightlightSwitch(
@@ -1084,8 +1075,8 @@ class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
     def __init__(self, *args, **kwargs):
         """Initialize the Yeelight Ambient light."""
         super().__init__(*args, **kwargs)
-        self._attr_min_mireds = kelvin_to_mired(6500)
-        self._attr_max_mireds = kelvin_to_mired(1700)
+        self._attr_max_color_temp_kelvin = 6500
+        self._attr_min_color_temp_kelvin = 1700
 
         self._light_type = LightType.Ambient
 

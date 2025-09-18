@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-import homeassistant.components.button as button
+from homeassistant.components import button
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -73,6 +73,17 @@ async def test_buttons(
         blocking=True,
     )
     assert len(mock_fully_kiosk.loadStartUrl.mock_calls) == 1
+
+    entry = entity_registry.async_get("button.amazon_fire_clear_browser_cache")
+    assert entry
+    assert entry.unique_id == "abcdef-123456-clearCache"
+    await hass.services.async_call(
+        button.DOMAIN,
+        button.SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.amazon_fire_clear_browser_cache"},
+        blocking=True,
+    )
+    assert len(mock_fully_kiosk.clearCache.mock_calls) == 1
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)

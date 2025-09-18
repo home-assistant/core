@@ -8,18 +8,19 @@ from typing import TYPE_CHECKING, Any
 
 from bimmer_connected.utils import MyBMWJSONEncoder
 
-from homeassistant.components.diagnostics.util import async_redact_data
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import CONF_REFRESH_TOKEN, DOMAIN
+from . import BMWConfigEntry
+from .const import CONF_REFRESH_TOKEN
+
+PARALLEL_UPDATES = 1
 
 if TYPE_CHECKING:
     from bimmer_connected.vehicle import MyBMWVehicle
 
-    from .coordinator import BMWDataUpdateCoordinator
 
 TO_REDACT_INFO = [CONF_USERNAME, CONF_PASSWORD, CONF_REFRESH_TOKEN]
 TO_REDACT_DATA = [
@@ -47,10 +48,10 @@ def vehicle_to_dict(vehicle: MyBMWVehicle | None) -> dict:
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: BMWConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     coordinator.account.config.log_responses = True
     await coordinator.account.get_vehicles(force_init=True)
@@ -73,10 +74,10 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, config_entry: BMWConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     coordinator.account.config.log_responses = True
     await coordinator.account.get_vehicles(force_init=True)

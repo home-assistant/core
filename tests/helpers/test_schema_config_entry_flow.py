@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -68,7 +68,9 @@ def manager_fixture():
             return result
 
     mgr = FlowManager(None)
+    # pylint: disable-next=attribute-defined-outside-init
     mgr.mock_created_entries = entries
+    # pylint: disable-next=attribute-defined-outside-init
     mgr.mock_reg_handler = handlers.register
     return mgr
 
@@ -315,7 +317,9 @@ async def test_menu_step(hass: HomeAssistant) -> None:
     """Test menu step."""
 
     MENU_1 = ["option1", "option2"]
-    MENU_2 = ["option3", "option4"]
+
+    async def menu_2(handler: SchemaCommonFlowHandler) -> list[str]:
+        return ["option3", "option4"]
 
     async def _option1_next_step(_: dict[str, Any]) -> str:
         return "menu2"
@@ -323,7 +327,7 @@ async def test_menu_step(hass: HomeAssistant) -> None:
     CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         "user": SchemaFlowMenuStep(MENU_1),
         "option1": SchemaFlowFormStep(vol.Schema({}), next_step=_option1_next_step),
-        "menu2": SchemaFlowMenuStep(MENU_2),
+        "menu2": SchemaFlowMenuStep(menu_2),
         "option3": SchemaFlowFormStep(vol.Schema({}), next_step="option4"),
         "option4": SchemaFlowFormStep(vol.Schema({})),
     }
@@ -589,6 +593,45 @@ async def test_suggested_values(
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
+async def test_description_placeholders(
+    hass: HomeAssistant, manager: data_entry_flow.FlowManager
+) -> None:
+    """Test description_placeholders handling in SchemaFlowFormStep."""
+    manager.hass = hass
+
+    OPTIONS_SCHEMA = vol.Schema(
+        {vol.Optional("option1", default="a very reasonable default"): str}
+    )
+
+    async def _get_description_placeholders(
+        _: SchemaCommonFlowHandler,
+    ) -> dict[str, Any]:
+        return {"option1": "a dynamic string"}
+
+    OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+        "init": SchemaFlowFormStep(
+            OPTIONS_SCHEMA,
+            next_step="step_1",
+            description_placeholders=_get_description_placeholders,
+        ),
+    }
+
+    class TestFlow(MockSchemaConfigFlowHandler, domain="test"):
+        config_flow = {}
+        options_flow = OPTIONS_FLOW
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    config_entry = MockConfigEntry(data={}, domain="test")
+    config_entry.add_to_hass(hass)
+
+    # Start flow and check the description_placeholders is populated
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["description_placeholders"] == {"option1": "a dynamic string"}
+
+
 async def test_options_flow_state(hass: HomeAssistant) -> None:
     """Test flow_state handling in SchemaFlowFormStep."""
 
@@ -645,6 +688,10 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
     options_handler: SchemaOptionsFlowHandler
     options_handler = hass.config_entries.options._progress[result["flow_id"]]
     assert options_handler._common_handler.flow_state == {"idx": None}
+
+    # Ensure that self.options and self._common_handler.options refer to the
+    # same mutable copy of the options
+    assert options_handler.options is options_handler._common_handler.options
 
     # In step 1, flow state is updated with user input
     result = await hass.config_entries.options.async_configure(
@@ -742,3 +789,74 @@ async def test_options_flow_omit_optional_keys(
         "advanced_default": "a very reasonable default",
         "optional_default": "a very reasonable default",
     }
+
+
+@pytest.mark.parametrize(
+    (
+        "new_options",
+        "expected_loads",
+        "expected_unloads",
+    ),
+    [
+        ({}, 1, 0),
+        ({"some_string": "some_value"}, 2, 1),
+    ],
+    ids=["should_not_reload", "should_reload"],
+)
+async def test_options_flow_with_automatic_reload(
+    hass: HomeAssistant,
+    manager: data_entry_flow.FlowManager,
+    new_options: dict[str, str],
+    expected_loads: int,
+    expected_unloads: int,
+) -> None:
+    """Test using options flow with automatic reloading."""
+    manager.hass = hass
+
+    OPTIONS_SCHEMA = vol.Schema({vol.Optional("some_string"): str})
+
+    OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+        "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
+    }
+
+    class TestFlow(MockSchemaConfigFlowHandler, domain="test"):
+        config_flow = {}
+        options_flow = OPTIONS_FLOW
+        options_flow_reloads = True
+
+    load_entry_mock = AsyncMock(return_value=True)
+    unload_entry_mock = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=load_entry_mock,
+            async_unload_entry=unload_entry_mock,
+        ),
+    )
+    mock_platform(hass, "test.config_flow", None)
+    config_entry = MockConfigEntry(
+        data={},
+        domain="test",
+        options={
+            "optional_no_default": "abc123",
+            "optional_default": "not default",
+            "advanced_no_default": "abc123",
+            "advanced_default": "not default",
+        },
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert len(load_entry_mock.mock_calls) == 1
+
+    # Start flow in basic mode
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], new_options
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+    assert len(load_entry_mock.mock_calls) == expected_loads
+    assert len(unload_entry_mock.mock_calls) == expected_unloads

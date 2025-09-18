@@ -406,18 +406,20 @@ async def webhook_render_template(
 
 @WEBHOOK_COMMANDS.register("update_location")
 @validate_schema(
-    vol.Schema(
+    vol.All(
         cv.key_dependency(ATTR_GPS, ATTR_GPS_ACCURACY),
-        {
-            vol.Optional(ATTR_LOCATION_NAME): cv.string,
-            vol.Optional(ATTR_GPS): cv.gps,
-            vol.Optional(ATTR_GPS_ACCURACY): cv.positive_int,
-            vol.Optional(ATTR_BATTERY): cv.positive_int,
-            vol.Optional(ATTR_SPEED): cv.positive_int,
-            vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
-            vol.Optional(ATTR_COURSE): cv.positive_int,
-            vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
-        },
+        vol.Schema(
+            {
+                vol.Optional(ATTR_LOCATION_NAME): cv.string,
+                vol.Optional(ATTR_GPS): cv.gps,
+                vol.Optional(ATTR_GPS_ACCURACY): cv.positive_int,
+                vol.Optional(ATTR_BATTERY): cv.positive_int,
+                vol.Optional(ATTR_SPEED): cv.positive_int,
+                vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
+                vol.Optional(ATTR_COURSE): cv.positive_int,
+                vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
+            },
+        ),
     )
 )
 async def webhook_update_location(
@@ -602,9 +604,9 @@ async def webhook_register_sensor(
         async_dispatcher_send(hass, f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}", data)
     else:
         data[CONF_UNIQUE_ID] = unique_store_key
-        data[
-            CONF_NAME
-        ] = f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
+        data[CONF_NAME] = (
+            f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
+        )
 
         register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
         async_dispatcher_send(hass, register_signal, data)
@@ -719,10 +721,15 @@ async def webhook_get_config(
     """Handle a get config webhook."""
     hass_config = hass.config.as_dict()
 
+    device: dr.DeviceEntry = hass.data[DOMAIN][DATA_DEVICES][
+        config_entry.data[CONF_WEBHOOK_ID]
+    ]
+
     resp = {
         "latitude": hass_config["latitude"],
         "longitude": hass_config["longitude"],
         "elevation": hass_config["elevation"],
+        "hass_device_id": device.id,
         "unit_system": hass_config["unit_system"],
         "location_name": hass_config["location_name"],
         "time_zone": hass_config["time_zone"],

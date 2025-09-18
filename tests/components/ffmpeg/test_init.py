@@ -3,12 +3,11 @@
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.ffmpeg import (
-    DOMAIN,
+from homeassistant.components.ffmpeg import DOMAIN, get_ffmpeg_manager
+from homeassistant.components.ffmpeg.services import (
     SERVICE_RESTART,
     SERVICE_START,
     SERVICE_STOP,
-    get_ffmpeg_manager,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -16,13 +15,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import assert_setup_component
 
 
 @callback
-def async_start(hass, entity_id=None):
+def async_start(hass: HomeAssistant, entity_id: str | None = None) -> None:
     """Start a FFmpeg process on entity.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -32,7 +31,7 @@ def async_start(hass, entity_id=None):
 
 
 @callback
-def async_stop(hass, entity_id=None):
+def async_stop(hass: HomeAssistant, entity_id: str | None = None) -> None:
     """Stop a FFmpeg process on entity.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -42,7 +41,7 @@ def async_stop(hass, entity_id=None):
 
 
 @callback
-def async_restart(hass, entity_id=None):
+def async_restart(hass: HomeAssistant, entity_id: str | None = None) -> None:
     """Restart a FFmpeg process on entity.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -54,7 +53,12 @@ def async_restart(hass, entity_id=None):
 class MockFFmpegDev(ffmpeg.FFmpegBase):
     """FFmpeg device mock."""
 
-    def __init__(self, hass, initial_state=True, entity_id="test.ffmpeg_device"):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        initial_state: bool = True,
+        entity_id: str = "test.ffmpeg_device",
+    ) -> None:
         """Initialize mock."""
         super().__init__(None, initial_state)
 
@@ -77,32 +81,28 @@ class MockFFmpegDev(ffmpeg.FFmpegBase):
         self.called_entities = entity_ids
 
 
-def test_setup_component():
+async def test_setup_component(hass: HomeAssistant) -> None:
     """Set up ffmpeg component."""
-    with get_test_home_assistant() as hass:
-        with assert_setup_component(1):
-            setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    with assert_setup_component(1):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-        assert hass.data[ffmpeg.DATA_FFMPEG].binary == "ffmpeg"
-        hass.stop()
+    assert hass.data[ffmpeg.DATA_FFMPEG].binary == "ffmpeg"
 
 
-def test_setup_component_test_service():
+async def test_setup_component_test_service(hass: HomeAssistant) -> None:
     """Set up ffmpeg component test services."""
-    with get_test_home_assistant() as hass:
-        with assert_setup_component(1):
-            setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    with assert_setup_component(1):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-        assert hass.services.has_service(ffmpeg.DOMAIN, "start")
-        assert hass.services.has_service(ffmpeg.DOMAIN, "stop")
-        assert hass.services.has_service(ffmpeg.DOMAIN, "restart")
-        hass.stop()
+    assert hass.services.has_service(DOMAIN, "start")
+    assert hass.services.has_service(DOMAIN, "stop")
+    assert hass.services.has_service(DOMAIN, "restart")
 
 
 async def test_setup_component_test_register(hass: HomeAssistant) -> None:
     """Set up ffmpeg component test register."""
     with assert_setup_component(1):
-        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass)
     ffmpeg_dev._async_stop_ffmpeg = AsyncMock()
@@ -121,7 +121,7 @@ async def test_setup_component_test_register(hass: HomeAssistant) -> None:
 async def test_setup_component_test_register_no_startup(hass: HomeAssistant) -> None:
     """Set up ffmpeg component test register without startup."""
     with assert_setup_component(1):
-        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
     ffmpeg_dev._async_stop_ffmpeg = AsyncMock()
@@ -140,7 +140,7 @@ async def test_setup_component_test_register_no_startup(hass: HomeAssistant) -> 
 async def test_setup_component_test_service_start(hass: HomeAssistant) -> None:
     """Set up ffmpeg component test service start."""
     with assert_setup_component(1):
-        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
     await ffmpeg_dev.async_added_to_hass()
@@ -154,7 +154,7 @@ async def test_setup_component_test_service_start(hass: HomeAssistant) -> None:
 async def test_setup_component_test_service_stop(hass: HomeAssistant) -> None:
     """Set up ffmpeg component test service stop."""
     with assert_setup_component(1):
-        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
     await ffmpeg_dev.async_added_to_hass()
@@ -168,7 +168,7 @@ async def test_setup_component_test_service_stop(hass: HomeAssistant) -> None:
 async def test_setup_component_test_service_restart(hass: HomeAssistant) -> None:
     """Set up ffmpeg component test service restart."""
     with assert_setup_component(1):
-        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
     await ffmpeg_dev.async_added_to_hass()
@@ -185,7 +185,7 @@ async def test_setup_component_test_service_start_with_entity(
 ) -> None:
     """Set up ffmpeg component test service start."""
     with assert_setup_component(1):
-        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
     await ffmpeg_dev.async_added_to_hass()
@@ -200,7 +200,7 @@ async def test_setup_component_test_service_start_with_entity(
 async def test_async_get_image_with_width_height(hass: HomeAssistant) -> None:
     """Test fetching an image with a specific width and height."""
     with assert_setup_component(1):
-        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     get_image_mock = AsyncMock()
     with patch(
@@ -219,7 +219,7 @@ async def test_async_get_image_with_extra_cmd_overlapping_width_height(
 ) -> None:
     """Test fetching an image with and extra_cmd with width and height and a specific width and height."""
     with assert_setup_component(1):
-        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     get_image_mock = AsyncMock()
     with patch(
@@ -238,7 +238,7 @@ async def test_async_get_image_with_extra_cmd_overlapping_width_height(
 async def test_async_get_image_with_extra_cmd_width_height(hass: HomeAssistant) -> None:
     """Test fetching an image with and extra_cmd and a specific width and height."""
     with assert_setup_component(1):
-        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     get_image_mock = AsyncMock()
     with patch(
@@ -259,7 +259,7 @@ async def test_modern_ffmpeg(
 ) -> None:
     """Test modern ffmpeg uses the new ffmpeg content type."""
     with assert_setup_component(1):
-        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     manager = get_ffmpeg_manager(hass)
     assert "ffmpeg" in manager.ffmpeg_stream_content_type
@@ -269,10 +269,14 @@ async def test_legacy_ffmpeg(
     hass: HomeAssistant,
 ) -> None:
     """Test legacy ffmpeg uses the old ffserver content type."""
-    with assert_setup_component(1), patch(
-        "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="3.0"
-    ), patch("homeassistant.components.ffmpeg.is_official_image", return_value=False):
-        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    with (
+        assert_setup_component(1),
+        patch(
+            "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="3.0"
+        ),
+        patch("homeassistant.components.ffmpeg.is_official_image", return_value=False),
+    ):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     manager = get_ffmpeg_manager(hass)
     assert "ffserver" in manager.ffmpeg_stream_content_type
@@ -282,10 +286,11 @@ async def test_ffmpeg_using_official_image(
     hass: HomeAssistant,
 ) -> None:
     """Test ffmpeg using official image is the new ffmpeg content type."""
-    with assert_setup_component(1), patch(
-        "homeassistant.components.ffmpeg.is_official_image", return_value=True
+    with (
+        assert_setup_component(1),
+        patch("homeassistant.components.ffmpeg.is_official_image", return_value=True),
     ):
-        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     manager = get_ffmpeg_manager(hass)
     assert "ffmpeg" in manager.ffmpeg_stream_content_type

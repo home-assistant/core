@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from ssl import SSLError
 from typing import Any
 
@@ -10,14 +11,8 @@ from deluge_client.client import DelugeRPCClient
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SOURCE,
-    CONF_USERNAME,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_WEB_PORT,
@@ -26,6 +21,8 @@ from .const import (
     DEFAULT_WEB_PORT,
     DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -44,12 +41,10 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
                         user_input[CONF_HOST] == entry.data[CONF_HOST]
                         and user_input[CONF_PORT] == entry.data[CONF_PORT]
                     ):
-                        if self.context.get(CONF_SOURCE) == SOURCE_REAUTH:
-                            self.hass.config_entries.async_update_entry(
+                        if self.source == SOURCE_REAUTH:
+                            return self.async_update_reload_and_abort(
                                 entry, data=user_input
                             )
-                            await self.hass.config_entries.async_reload(entry.entry_id)
-                            return self.async_abort(reason="reauth_successful")
                         return self.async_abort(reason="already_configured")
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
@@ -94,7 +89,8 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(api.connect)
         except (ConnectionRefusedError, TimeoutError, SSLError):
             return "cannot_connect"
-        except Exception as ex:  # pylint:disable=broad-except
+        except Exception as ex:
+            _LOGGER.exception("Unexpected error")
             if type(ex).__name__ == "BadLoginError":
                 return "invalid_auth"
             return "unknown"

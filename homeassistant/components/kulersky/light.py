@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Any
 
 import pykulersky
 
+from homeassistant.components import bluetooth
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGBW_COLOR,
@@ -15,51 +15,31 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_ADDRESSES, DATA_DISCOVERY_SUBSCRIPTION, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-DISCOVERY_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Kuler sky light devices."""
-
-    async def discover(*args):
-        """Attempt to discover new lights."""
-        lights = await pykulersky.discover()
-
-        # Filter out already discovered lights
-        new_lights = [
-            light
-            for light in lights
-            if light.address not in hass.data[DOMAIN][DATA_ADDRESSES]
-        ]
-
-        new_entities = []
-        for light in new_lights:
-            hass.data[DOMAIN][DATA_ADDRESSES].add(light.address)
-            new_entities.append(KulerskyLight(light))
-
-        async_add_entities(new_entities, update_before_add=True)
-
-    # Start initial discovery
-    hass.async_create_task(discover())
-
-    # Perform recurring discovery of new devices
-    hass.data[DOMAIN][DATA_DISCOVERY_SUBSCRIPTION] = async_track_time_interval(
-        hass, discover, DISCOVERY_INTERVAL
+    ble_device = bluetooth.async_ble_device_from_address(
+        hass, config_entry.data[CONF_ADDRESS], connectable=True
     )
+    entity = KulerskyLight(
+        config_entry.title,
+        config_entry.data[CONF_ADDRESS],
+        pykulersky.Light(ble_device),
+    )
+    async_add_entities([entity], update_before_add=True)
 
 
 class KulerskyLight(LightEntity):
@@ -71,37 +51,30 @@ class KulerskyLight(LightEntity):
     _attr_supported_color_modes = {ColorMode.RGBW}
     _attr_color_mode = ColorMode.RGBW
 
-    def __init__(self, light: pykulersky.Light) -> None:
+    def __init__(self, name: str, address: str, light: pykulersky.Light) -> None:
         """Initialize a Kuler Sky light."""
         self._light = light
-        self._attr_unique_id = light.address
+        self._attr_unique_id = address
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, light.address)},
+            identifiers={(DOMAIN, address)},
+            connections={(CONNECTION_BLUETOOTH, address)},
             manufacturer="Brightech",
-            name=light.name,
+            name=name,
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        self.async_on_remove(
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, self.async_will_remove_from_hass
-            )
-        )
-
-    async def async_will_remove_from_hass(self, *args) -> None:
+    async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         try:
             await self._light.disconnect()
         except pykulersky.PykulerskyException:
             _LOGGER.debug(
-                "Exception disconnected from %s", self._light.address, exc_info=True
+                "Exception disconnected from %s", self._attr_unique_id, exc_info=True
             )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if light is on."""
-        return self.brightness > 0
+        return self.brightness is not None and self.brightness > 0
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -133,11 +106,13 @@ class KulerskyLight(LightEntity):
             rgbw = await self._light.get_color()
         except pykulersky.PykulerskyException as exc:
             if self._attr_available:
-                _LOGGER.warning("Unable to connect to %s: %s", self._light.address, exc)
+                _LOGGER.warning(
+                    "Unable to connect to %s: %s", self._attr_unique_id, exc
+                )
             self._attr_available = False
             return
         if self._attr_available is False:
-            _LOGGER.info("Reconnected to %s", self._light.address)
+            _LOGGER.info("Reconnected to %s", self._attr_unique_id)
 
         self._attr_available = True
         brightness = max(rgbw)

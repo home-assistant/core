@@ -8,22 +8,22 @@ from dataclasses import dataclass
 from hole import Hole
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleEntity
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
+from . import PiHoleConfigEntry
+from .entity import PiHoleEntity
 
 
 @dataclass(frozen=True)
 class PiHoleUpdateEntityDescription(UpdateEntityDescription):
     """Describes PiHole update entity."""
 
-    installed_version: Callable[[dict], str | None] = lambda api: None
-    latest_version: Callable[[dict], str | None] = lambda api: None
+    installed_version: Callable[[Hole], str | None] = lambda api: None
+    latest_version: Callable[[Hole], str | None] = lambda api: None
+    has_update: Callable[[Hole], bool | None] = lambda api: None
     release_base_url: str | None = None
     title: str | None = None
 
@@ -34,8 +34,9 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         translation_key="core_update_available",
         title="Pi-hole Core",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("core_current"),
-        latest_version=lambda versions: versions.get("core_latest"),
+        installed_version=lambda api: api.core_current,
+        latest_version=lambda api: api.core_latest,
+        has_update=lambda api: api.core_update,
         release_base_url="https://github.com/pi-hole/pi-hole/releases/tag",
     ),
     PiHoleUpdateEntityDescription(
@@ -43,8 +44,9 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         translation_key="web_update_available",
         title="Pi-hole Web interface",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("web_current"),
-        latest_version=lambda versions: versions.get("web_latest"),
+        installed_version=lambda api: api.web_current,
+        latest_version=lambda api: api.web_latest,
+        has_update=lambda api: api.web_update,
         release_base_url="https://github.com/pi-hole/AdminLTE/releases/tag",
     ),
     PiHoleUpdateEntityDescription(
@@ -52,24 +54,27 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         translation_key="ftl_update_available",
         title="Pi-hole FTL DNS",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("FTL_current"),
-        latest_version=lambda versions: versions.get("FTL_latest"),
+        installed_version=lambda api: api.ftl_current,
+        latest_version=lambda api: api.ftl_latest,
+        has_update=lambda api: api.ftl_update,
         release_base_url="https://github.com/pi-hole/FTL/releases/tag",
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PiHoleConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole update entities."""
     name = entry.data[CONF_NAME]
-    hole_data = hass.data[DOMAIN][entry.entry_id]
+    hole_data = entry.runtime_data
 
     async_add_entities(
         PiHoleUpdateEntity(
-            hole_data[DATA_KEY_API],
-            hole_data[DATA_KEY_COORDINATOR],
+            hole_data.api,
+            hole_data.coordinator,
             name,
             entry.entry_id,
             description,
@@ -87,7 +92,7 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
     def __init__(
         self,
         api: Hole,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[None],
         name: str,
         server_unique_id: str,
         description: PiHoleUpdateEntityDescription,
@@ -103,14 +108,16 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         if isinstance(self.api.versions, dict):
-            return self.entity_description.installed_version(self.api.versions)
+            return self.entity_description.installed_version(self.api)
         return None
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         if isinstance(self.api.versions, dict):
-            return self.entity_description.latest_version(self.api.versions)
+            if self.entity_description.has_update(self.api):
+                return self.entity_description.latest_version(self.api)
+            return self.installed_version
         return None
 
     @property

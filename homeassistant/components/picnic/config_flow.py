@@ -6,8 +6,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from python_picnic_api import PicnicAPI
-from python_picnic_api.session import PicnicAuthError
+from python_picnic_api2 import PicnicAPI
+from python_picnic_api2.session import PicnicAuthError
 import requests
 import voluptuous as vol
 
@@ -67,8 +67,8 @@ async def validate_input(hass: HomeAssistant, data):
 
     # Return the validation result
     address = (
-        f'{user_data["address"]["street"]} {user_data["address"]["house_number"]}'
-        f'{user_data["address"]["house_number_ext"]}'
+        f"{user_data['address']['street']} {user_data['address']['house_number']}"
+        f"{user_data['address']['house_number_ext']}"
     )
     return auth_token, {
         "title": address,
@@ -87,7 +87,9 @@ class PicnicConfigFlow(ConfigFlow, domain=DOMAIN):
         """Perform the re-auth step upon an API authentication error."""
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the authentication step, this is the generic step for both `step_user` and `step_reauth`."""
         if user_input is None:
             return self.async_show_form(
@@ -102,7 +104,7 @@ class PicnicConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

@@ -1,9 +1,8 @@
 """Tests for Ecovacs binary sensors."""
 
-from deebot_client.capabilities import Capabilities
-from deebot_client.events import WaterAmount, WaterInfoEvent
+from deebot_client.events.water_info import MopAttachedEvent
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
@@ -38,22 +37,18 @@ async def test_mop_attached(
     assert entity_entry == snapshot(name=f"{entity_id}-entity_entry")
     assert entity_entry.device_id
 
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
 
     assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
 
     event_bus = device.events
-    await notify_and_wait(
-        hass, event_bus, WaterInfoEvent(WaterAmount.HIGH, mop_attached=True)
-    )
+    await notify_and_wait(hass, event_bus, MopAttachedEvent(True))
 
     assert (state := hass.states.get(state.entity_id))
-    assert entity_entry == snapshot(name=f"{entity_id}-state")
+    assert state == snapshot(name=f"{entity_id}-state")
 
-    await notify_and_wait(
-        hass, event_bus, WaterInfoEvent(WaterAmount.HIGH, mop_attached=False)
-    )
+    await notify_and_wait(hass, event_bus, MopAttachedEvent(False))
 
     assert (state := hass.states.get(state.entity_id))
     assert state.state == STATE_OFF

@@ -8,7 +8,11 @@ import tempfile
 
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +20,7 @@ SUPPORT_LANGUAGES = ["en-US", "en-GB", "de-DE", "es-ES", "fr-FR", "it-IT"]
 
 DEFAULT_LANG = "en-US"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
 )
 
@@ -52,10 +56,15 @@ class PicoProvider(Provider):
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpf:
             fname = tmpf.name
 
-        cmd = ["pico2wave", "--wave", fname, "-l", language, "--", message]
-        subprocess.call(cmd)
+        cmd = ["pico2wave", "--wave", fname, "-l", language]
+        result = subprocess.run(cmd, text=True, input=message, check=False)
         data = None
         try:
+            if result.returncode != 0:
+                _LOGGER.error(
+                    "Error running pico2wave, return code: %s", result.returncode
+                )
+                return (None, None)
             with open(fname, "rb") as voice:
                 data = voice.read()
         except OSError:

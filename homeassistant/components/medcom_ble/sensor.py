@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from medcom_ble import MedcomBleDevice
-
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -14,13 +12,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, UNIT_CPM
+from .coordinator import MedcomBleUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,13 +33,11 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Medcom BLE radiation monitor sensors."""
 
-    coordinator: DataUpdateCoordinator[MedcomBleDevice] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator: MedcomBleUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
     _LOGGER.debug("got sensors: %s", coordinator.data.sensors)
@@ -62,16 +56,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MedcomSensor(
-    CoordinatorEntity[DataUpdateCoordinator[MedcomBleDevice]], SensorEntity
-):
+class MedcomSensor(CoordinatorEntity[MedcomBleUpdateCoordinator], SensorEntity):
     """Medcom BLE radiation monitor sensors for the device."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[MedcomBleDevice],
+        coordinator: MedcomBleUpdateCoordinator,
         entity_description: SensorEntityDescription,
     ) -> None:
         """Populate the medcom entity with relevant data."""

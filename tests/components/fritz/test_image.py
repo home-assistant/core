@@ -13,7 +13,7 @@ from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from .const import MOCK_FB_SERVICES, MOCK_USER_DATA
@@ -24,6 +24,7 @@ from tests.typing import ClientSessionGenerator
 GUEST_WIFI_ENABLED: dict[str, dict] = {
     "WLANConfiguration0": {},
     "WLANConfiguration1": {
+        "GetBeaconAdvertisement": {"NewBeaconAdvertisementEnabled": 1},
         "GetInfo": {
             "NewEnable": True,
             "NewStatus": "Up",
@@ -43,6 +44,7 @@ GUEST_WIFI_ENABLED: dict[str, dict] = {
 GUEST_WIFI_CHANGED: dict[str, dict] = {
     "WLANConfiguration0": {},
     "WLANConfiguration1": {
+        "GetBeaconAdvertisement": {"NewBeaconAdvertisementEnabled": 1},
         "GetInfo": {
             "NewEnable": True,
             "NewStatus": "Up",
@@ -62,6 +64,7 @@ GUEST_WIFI_CHANGED: dict[str, dict] = {
 GUEST_WIFI_DISABLED: dict[str, dict] = {
     "WLANConfiguration0": {},
     "WLANConfiguration1": {
+        "GetBeaconAdvertisement": {"NewBeaconAdvertisementEnabled": 1},
         "GetInfo": {
             "NewEnable": False,
             "NewStatus": "Up",
@@ -89,6 +92,7 @@ GUEST_WIFI_DISABLED: dict[str, dict] = {
 async def test_image_entity(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     fc_class_mock,
     fh_class_mock,
@@ -105,7 +109,7 @@ async def test_image_entity(
         await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     # test image entity is generated as expected
     states = hass.states.async_all(IMAGE_DOMAIN)
@@ -122,7 +126,6 @@ async def test_image_entity(
         "friendly_name": "Mock Title GuestWifi",
     }
 
-    entity_registry = async_get_entity_registry(hass)
     entity_entry = entity_registry.async_get("image.mock_title_guestwifi")
     assert entity_entry.unique_id == "1c_ed_6f_12_34_11_guestwifi_qr_code"
 
@@ -155,7 +158,7 @@ async def test_image_update(
         await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     client = await hass_client()
     resp = await client.get("/api/image_proxy/image.mock_title_guestwifi")
@@ -164,7 +167,7 @@ async def test_image_update(
 
     fc_class_mock().override_services({**MOCK_FB_SERVICES, **GUEST_WIFI_CHANGED})
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     resp = await client.get("/api/image_proxy/image.mock_title_guestwifi")
     resp_body_new = await resp.read()
@@ -191,7 +194,7 @@ async def test_image_update_unavailable(
         await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get("image.mock_title_guestwifi")
     assert state
@@ -199,7 +202,7 @@ async def test_image_update_unavailable(
     # fritzbox becomes unavailable
     fc_class_mock().call_action_side_effect(ReadTimeout)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("image.mock_title_guestwifi")
     assert state.state == STATE_UNKNOWN
@@ -207,7 +210,7 @@ async def test_image_update_unavailable(
     # fritzbox is available again
     fc_class_mock().call_action_side_effect(None)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("image.mock_title_guestwifi")
     assert state.state != STATE_UNKNOWN

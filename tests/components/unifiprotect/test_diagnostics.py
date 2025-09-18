@@ -1,8 +1,7 @@
 """Test UniFi Protect diagnostics."""
 
-from pyunifiprotect.data import NVR, Light
+from uiprotect.data import NVR, Light
 
-from homeassistant.components.unifiprotect.const import CONF_ALLOW_EA
 from homeassistant.core import HomeAssistant
 
 from .utils import MockUFPFixture, init_entry
@@ -22,7 +21,6 @@ async def test_diagnostics(
     await init_entry(hass, ufp, [light])
 
     options = dict(ufp.entry.options)
-    options[CONF_ALLOW_EA] = True
     hass.config_entries.async_update_entry(ufp.entry, options=options)
     await hass.async_block_till_done()
 
@@ -30,7 +28,6 @@ async def test_diagnostics(
 
     assert "options" in diag and isinstance(diag["options"], dict)
     options = diag["options"]
-    assert options[CONF_ALLOW_EA] is True
 
     assert "bootstrap" in diag and isinstance(diag["bootstrap"], dict)
     bootstrap = diag["bootstrap"]

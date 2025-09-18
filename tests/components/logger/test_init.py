@@ -1,6 +1,7 @@
 """The tests for the Logger component."""
 
 from collections import defaultdict
+import datetime
 import logging
 from typing import Any
 from unittest.mock import Mock, patch
@@ -9,8 +10,12 @@ import pytest
 
 from homeassistant.components import logger
 from homeassistant.components.logger import LOGSEVERITY
+from homeassistant.components.logger.helpers import SAVE_DELAY_LONG
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from tests.common import async_call_logger_set_level, async_fire_time_changed
 
 HASS_NS = "unused.homeassistant"
 COMPONENTS_NS = f"{HASS_NS}.components"
@@ -68,28 +73,27 @@ async def test_log_filtering(
     msg_test(filter_logger, True, "format string shouldfilter%s", "not")
 
     # Filtering should work even if log level is modified
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"test.filter": "warning"},
-        blocking=True,
-    )
-    assert filter_logger.getEffectiveLevel() == logging.WARNING
-    msg_test(
-        filter_logger,
-        False,
-        "this line containing shouldfilterall should still be filtered",
-    )
+    async with async_call_logger_set_level(
+        "test.filter", "WARNING", hass=hass, caplog=caplog
+    ):
+        assert filter_logger.getEffectiveLevel() == logging.WARNING
+        msg_test(
+            filter_logger,
+            False,
+            "this line containing shouldfilterall should still be filtered",
+        )
 
-    # Filtering should be scoped to a service
-    msg_test(
-        filter_logger, True, "this line containing otherfilterer should not be filtered"
-    )
-    msg_test(
-        logging.getLogger("test.other_filter"),
-        False,
-        "this line containing otherfilterer SHOULD be filtered",
-    )
+        # Filtering should be scoped to a service
+        msg_test(
+            filter_logger,
+            True,
+            "this line containing otherfilterer should not be filtered",
+        )
+        msg_test(
+            logging.getLogger("test.other_filter"),
+            False,
+            "this line containing otherfilterer SHOULD be filtered",
+        )
 
 
 async def test_setting_level(hass: HomeAssistant) -> None:
@@ -221,7 +225,7 @@ async def test_can_set_level_from_store(
     _reset_logging()
 
 
-async def _assert_log_levels(hass):
+async def _assert_log_levels(hass: HomeAssistant) -> None:
     assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
     assert logging.getLogger(UNCONFIG_NS).isEnabledFor(logging.CRITICAL) is True
     assert (
@@ -403,7 +407,7 @@ async def test_log_once_removed_from_store(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test logs with persistence "once" are removed from the store at startup."""
-    hass_storage["core.logger"] = {
+    store_contents = {
         "data": {
             "logs": {
                 ZONE_NS: {"type": "module", "level": "DEBUG", "persistence": "once"}
@@ -412,7 +416,15 @@ async def test_log_once_removed_from_store(
         "key": "core.logger",
         "version": 1,
     }
+    hass_storage["core.logger"] = store_contents
 
     assert await async_setup_component(hass, "logger", {})
+
+    assert hass_storage["core.logger"]["data"] == store_contents["data"]
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + datetime.timedelta(seconds=SAVE_DELAY_LONG)
+    )
+    await hass.async_block_till_done()
 
     assert hass_storage["core.logger"]["data"] == {"logs": {}}

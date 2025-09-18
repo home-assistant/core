@@ -17,8 +17,14 @@
     }
   },
   "services": {
-    "set_timer_level": "mdi:timer",
-    "set_breeze": "mdi:weather-windy",
-    "set_pollution_settings": "mdi:air-filter"
+    "set_timer_level": {
+      "service": "mdi:timer"
+    },
+    "set_breeze": {
+      "service": "mdi:weather-windy"
+    },
+    "set_pollution_settings": {
+      "service": "mdi:air-filter"
+    }
   }
 }

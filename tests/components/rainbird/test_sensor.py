@@ -32,7 +32,7 @@ async def setup_config_entry(
 ) -> list[Platform]:
     """Fixture to setup the config entry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -85,7 +85,7 @@ async def test_sensor_no_unique_id(
     responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     raindelay = hass.states.get("sensor.rain_bird_controller_raindelay")
     assert raindelay is not None

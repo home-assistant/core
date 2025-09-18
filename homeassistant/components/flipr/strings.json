@@ -8,23 +8,13 @@
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
-      },
-      "flipr_id": {
-        "title": "Choose your Flipr",
-        "description": "Choose your Flipr ID in the list",
-        "data": {
-          "flipr_id": "Flipr ID"
-        }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_flipr_id_found": "No flipr id associated to your account for now. You should verify it is working with the Flipr's mobile app first."
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "no_flipr_id_found": "No Flipr or hub associated to your account for now. You should verify it is working with the Flipr mobile app first."
     }
   },
   "entity": {
@@ -48,6 +38,16 @@
       },
       "red_ox": {
         "name": "Red OX"
+      }
+    },
+    "select": {
+      "hub_mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
+          "planning": "Planning"
+        }
       }
     }
   }

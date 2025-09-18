@@ -14,7 +14,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import DOMAIN as AXIS_DOMAIN
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from .hub import AxisHub
@@ -61,7 +61,7 @@ class AxisEntity(Entity):
         self.hub = hub
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(AXIS_DOMAIN, hub.unique_id)},
+            identifiers={(DOMAIN, hub.unique_id)},
             serial_number=hub.unique_id,
         )
 
@@ -99,8 +99,8 @@ class AxisEventEntity(AxisEntity):
 
         self._event_id = event.id
         self._event_topic = event.topic_base
-        event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
 
+        event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
         self._attr_name = description.name_fn(hub, event) or f"{event_type} {event.id}"
 
         self._attr_unique_id = f"{hub.unique_id}-{event.topic}-{event.id}"

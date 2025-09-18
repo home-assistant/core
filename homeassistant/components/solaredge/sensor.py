@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from solaredge import Solaredge
+from aiosolaredge import SolarEdge
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,11 +13,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -32,6 +31,7 @@ from .coordinator import (
     SolarEdgeOverviewDataService,
     SolarEdgePowerFlowDataService,
 )
+from .types import SolarEdgeConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -200,14 +200,13 @@ SENSOR_TYPES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: SolarEdgeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add an solarEdge entry."""
     # Add the needed sensors to hass
-    api: Solaredge = hass.data[DOMAIN][entry.entry_id][DATA_API_CLIENT]
-
-    sensor_factory = SolarEdgeSensorFactory(hass, entry.data[CONF_SITE_ID], api)
+    api = entry.runtime_data[DATA_API_CLIENT]
+    sensor_factory = SolarEdgeSensorFactory(hass, entry, entry.data[CONF_SITE_ID], api)
     for service in sensor_factory.all_services:
         service.async_setup()
         await service.coordinator.async_refresh()
@@ -223,14 +222,20 @@ async def async_setup_entry(
 class SolarEdgeSensorFactory:
     """Factory which creates sensors based on the sensor_key."""
 
-    def __init__(self, hass: HomeAssistant, site_id: str, api: Solaredge) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SolarEdgeConfigEntry,
+        site_id: str,
+        api: SolarEdge,
+    ) -> None:
         """Initialize the factory."""
 
-        details = SolarEdgeDetailsDataService(hass, api, site_id)
-        overview = SolarEdgeOverviewDataService(hass, api, site_id)
-        inventory = SolarEdgeInventoryDataService(hass, api, site_id)
-        flow = SolarEdgePowerFlowDataService(hass, api, site_id)
-        energy = SolarEdgeEnergyDetailsService(hass, api, site_id)
+        details = SolarEdgeDetailsDataService(hass, config_entry, api, site_id)
+        overview = SolarEdgeOverviewDataService(hass, config_entry, api, site_id)
+        inventory = SolarEdgeInventoryDataService(hass, config_entry, api, site_id)
+        flow = SolarEdgePowerFlowDataService(hass, config_entry, api, site_id)
+        energy = SolarEdgeEnergyDetailsService(hass, config_entry, api, site_id)
 
         self.all_services = (details, overview, inventory, flow, energy)
 

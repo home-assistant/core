@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+from functools import partial
 from typing import Any
 
 from jellyfin_apiclient_python import JellyfinClient
 
-from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
-from homeassistant.components.media_player.browse_media import BrowseMedia
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
+    SearchMediaQuery,
+)
 from homeassistant.core import HomeAssistant
 
 from .client_wrapper import get_artwork_url
@@ -69,7 +75,7 @@ async def build_root_response(
     children = [
         await item_payload(hass, client, user_id, folder)
         for folder in folders["Items"]
-        if folder["CollectionType"] in SUPPORTED_COLLECTION_TYPES
+        if folder.get("CollectionType") in SUPPORTED_COLLECTION_TYPES
     ]
 
     return BrowseMedia(
@@ -150,6 +156,51 @@ def fetch_items(
         if not item.get("IsFolder")
         or (item.get("IsFolder") and item.get("ChildCount", 1) > 0)
     ]
+
+
+async def search_items(
+    hass: HomeAssistant, client: JellyfinClient, user_id: str, query: SearchMediaQuery
+) -> list[BrowseMedia]:
+    """Search items in Jellyfin server."""
+    search_result: list[BrowseMedia] = []
+
+    items: list[dict[str, Any]] = []
+    # Search for items based on media filter classes (or all if none specified)
+    media_types: list[MediaClass] | list[None] = []
+    if query.media_filter_classes:
+        media_types = query.media_filter_classes
+    else:
+        media_types = [None]
+
+    for media_type in media_types:
+        items_dict: dict[str, Any] = await hass.async_add_executor_job(
+            partial(
+                client.jellyfin.search_media_items,
+                term=query.search_query,
+                media=media_type,
+                parent_id=query.media_content_id,
+            )
+        )
+        items.extend(items_dict.get("Items", []))
+
+    for item in items:
+        content_type: str = item["MediaType"]
+
+        response = BrowseMedia(
+            media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
+                content_type, MediaClass.DIRECTORY
+            ),
+            media_content_id=item["Id"],
+            media_content_type=content_type,
+            title=item["Name"],
+            thumbnail=get_artwork_url(client, item),
+            can_play=bool(content_type in PLAYABLE_MEDIA_TYPES),
+            can_expand=item.get("IsFolder", False),
+            children=None,
+        )
+        search_result.append(response)
+
+    return search_result
 
 
 async def get_media_info(

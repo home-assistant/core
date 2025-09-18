@@ -4,8 +4,8 @@ import logging
 from unittest.mock import patch
 
 from homeassistant import loader
-from homeassistant.components.logger.helpers import async_get_domain_config
-from homeassistant.components.websocket_api import const
+from homeassistant.components.logger.helpers import DATA_LOGGER
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -28,10 +28,9 @@ async def test_integration_log_info(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert {"domain": "http", "level": logging.DEBUG} in msg["result"]
-    assert {"domain": "websocket_api", "level": logging.DEBUG} in msg["result"]
 
 
 async def test_integration_log_level_logger_not_loaded(
@@ -51,7 +50,7 @@ async def test_integration_log_level_logger_not_loaded(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
 
 
@@ -74,10 +73,10 @@ async def test_integration_log_level(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
-    assert async_get_domain_config(hass).overrides == {
+    assert hass.data[DATA_LOGGER].overrides == {
         "homeassistant.components.websocket_api": logging.DEBUG
     }
 
@@ -102,12 +101,15 @@ async def test_custom_integration_log_level(
         },
     )
 
-    with patch(
-        "homeassistant.components.logger.helpers.async_get_integration",
-        return_value=integration,
-    ), patch(
-        "homeassistant.components.logger.websocket_api.async_get_integration",
-        return_value=integration,
+    with (
+        patch(
+            "homeassistant.components.logger.helpers.async_get_integration",
+            return_value=integration,
+        ),
+        patch(
+            "homeassistant.components.logger.websocket_api.async_get_integration",
+            return_value=integration,
+        ),
     ):
         await websocket_client.send_json(
             {
@@ -121,10 +123,10 @@ async def test_custom_integration_log_level(
 
         msg = await websocket_client.receive_json()
         assert msg["id"] == 7
-        assert msg["type"] == const.TYPE_RESULT
+        assert msg["type"] == TYPE_RESULT
         assert msg["success"]
 
-        assert async_get_domain_config(hass).overrides == {
+        assert hass.data[DATA_LOGGER].overrides == {
             "homeassistant.components.hue": logging.DEBUG,
             "custom_components.hue": logging.DEBUG,
             "some_other_logger": logging.DEBUG,
@@ -150,7 +152,7 @@ async def test_integration_log_level_unknown_integration(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
 
 
@@ -177,10 +179,10 @@ async def test_module_log_level(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
-    assert async_get_domain_config(hass).overrides == {
+    assert hass.data[DATA_LOGGER].overrides == {
         "homeassistant.components.websocket_api": logging.DEBUG,
         "homeassistant.components.other_component": logging.WARNING,
     }
@@ -197,7 +199,7 @@ async def test_module_log_level_override(
         {"logger": {"logs": {"homeassistant.components.websocket_api": "warning"}}},
     )
 
-    assert async_get_domain_config(hass).overrides == {
+    assert hass.data[DATA_LOGGER].overrides == {
         "homeassistant.components.websocket_api": logging.WARNING
     }
 
@@ -213,10 +215,10 @@ async def test_module_log_level_override(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
-    assert async_get_domain_config(hass).overrides == {
+    assert hass.data[DATA_LOGGER].overrides == {
         "homeassistant.components.websocket_api": logging.ERROR
     }
 
@@ -232,10 +234,10 @@ async def test_module_log_level_override(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
-    assert async_get_domain_config(hass).overrides == {
+    assert hass.data[DATA_LOGGER].overrides == {
         "homeassistant.components.websocket_api": logging.DEBUG
     }
 
@@ -251,9 +253,9 @@ async def test_module_log_level_override(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 8
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
-    assert async_get_domain_config(hass).overrides == {
+    assert hass.data[DATA_LOGGER].overrides == {
         "homeassistant.components.websocket_api": logging.NOTSET
     }

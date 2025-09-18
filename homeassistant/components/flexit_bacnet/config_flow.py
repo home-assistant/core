@@ -46,7 +46,7 @@ class FlexitBacnetConfigFlow(ConfigFlow, domain=DOMAIN):
                 await device.update()
             except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

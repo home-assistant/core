@@ -1,10 +1,12 @@
 {
   "domain": "telegram_bot",
   "name": "Telegram bot",
-  "codeowners": [],
+  "codeowners": ["@hanwg"],
+  "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/telegram_bot",
   "iot_class": "cloud_push",
   "loggers": ["telegram"],
-  "requirements": ["python-telegram-bot[socks]==21.0.1"]
+  "quality_scale": "bronze",
+  "requirements": ["python-telegram-bot[socks]==21.5"]
 }

@@ -11,8 +11,8 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -101,13 +101,12 @@ async def discover_devices(hass, hass_config):
 
         async def _fetch_channels():
             async with asyncio.timeout(SCAN_INTERVAL.total_seconds()):
-                channels = {
+                return {
                     channel["id"]: channel
                     for channel in await server.get_channels(  # noqa: B023
                         include=["iodevice", "state", "connected"]
                     )
                 }
-                return channels
 
         coordinator = DataUpdateCoordinator(
             hass,

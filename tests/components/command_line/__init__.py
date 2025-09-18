@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 @contextmanager
 def mock_asyncio_subprocess_run(
-    response: bytes = b"", returncode: int = 0, exception: Exception = None
+    response: bytes = b"", returncode: int = 0, exception: Exception | None = None
 ):
     """Mock create_subprocess_shell."""
 

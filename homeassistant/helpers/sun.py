@@ -10,16 +10,19 @@ from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     import astral
     import astral.location
 
-DATA_LOCATION_CACHE = "astral_location_cache"
+DATA_LOCATION_CACHE: HassKey[
+    dict[tuple[str, str, str, float, float], astral.location.Location]
+] = HassKey("astral_location_cache")
 
 ELEVATION_AGNOSTIC_EVENTS = ("noon", "midnight")
 
-_AstralSunEventCallable = Callable[..., datetime.datetime]
+type _AstralSunEventCallable = Callable[..., datetime.datetime]
 
 
 @callback
@@ -28,8 +31,8 @@ def get_astral_location(
     hass: HomeAssistant,
 ) -> tuple[astral.location.Location, astral.Elevation]:
     """Get an astral location for the current Home Assistant configuration."""
-    from astral import LocationInfo  # pylint: disable=import-outside-toplevel
-    from astral.location import Location  # pylint: disable=import-outside-toplevel
+    from astral import LocationInfo  # noqa: PLC0415
+    from astral.location import Location  # noqa: PLC0415
 
     latitude = hass.config.latitude
     longitude = hass.config.longitude

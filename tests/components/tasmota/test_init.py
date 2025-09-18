@@ -4,9 +4,8 @@ import copy
 import json
 from unittest.mock import call
 
-import pytest
-
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -26,9 +25,7 @@ async def test_device_remove(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mqtt_mock: MqttMockHAClient,
-    caplog: pytest.LogCaptureFixture,
-    device_reg,
-    entity_reg,
+    device_registry: dr.DeviceRegistry,
     setup_tasmota,
 ) -> None:
     """Test removing a discovered device through device registry."""
@@ -44,16 +41,16 @@ async def test_device_remove(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
 
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    await remove_device(hass, hass_ws_client, device_entry.id)
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is None
@@ -70,7 +67,7 @@ async def test_device_remove(
 
 async def test_device_remove_non_tasmota_device(
     hass: HomeAssistant,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     hass_ws_client: WebSocketGenerator,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
@@ -78,7 +75,9 @@ async def test_device_remove_non_tasmota_device(
     """Test removing a non Tasmota device through device registry."""
     assert await async_setup_component(hass, "config", {})
 
-    async def async_remove_config_entry_device(hass, config_entry, device_entry):
+    async def async_remove_config_entry_device(
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    ) -> bool:
         return True
 
     mock_integration(
@@ -92,19 +91,17 @@ async def test_device_remove_non_tasmota_device(
     config_entry.add_to_hass(hass)
 
     mac = "12:34:56:AB:CD:EF"
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
     assert device_entry is not None
 
-    await remove_device(
-        hass, await hass_ws_client(hass), device_entry.id, config_entry.entry_id
-    )
+    await remove_device(hass, hass_ws_client, device_entry.id, config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is None
@@ -115,7 +112,7 @@ async def test_device_remove_non_tasmota_device(
 
 async def test_device_remove_stale_tasmota_device(
     hass: HomeAssistant,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     hass_ws_client: WebSocketGenerator,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
@@ -125,17 +122,17 @@ async def test_device_remove_stale_tasmota_device(
     config_entry = hass.config_entries.async_entries("tasmota")[0]
 
     mac = "12:34:56:AB:CD:EF"
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
     assert device_entry is not None
 
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    await remove_device(hass, hass_ws_client, device_entry.id)
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is None
@@ -146,8 +143,7 @@ async def test_device_remove_stale_tasmota_device(
 
 async def test_tasmota_ws_remove_discovered_device(
     hass: HomeAssistant,
-    device_reg,
-    entity_reg,
+    device_registry: dr.DeviceRegistry,
     hass_ws_client: WebSocketGenerator,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
@@ -161,26 +157,18 @@ async def test_tasmota_ws_remove_discovered_device(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
 
-    client = await hass_ws_client(hass)
     tasmota_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    await client.send_json(
-        {
-            "id": 5,
-            "config_entry_id": tasmota_config_entry.entry_id,
-            "type": "config/device_registry/remove_config_entry",
-            "device_id": device_entry.id,
-        }
+    await remove_device(
+        hass, hass_ws_client, device_entry.id, tasmota_config_entry.entry_id
     )
-    response = await client.receive_json()
-    assert response["success"]
 
     # Verify device entry is cleared
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is None

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
+from enum import Enum
 import logging
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.energy_production import (
@@ -89,11 +90,9 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     MultilevelSensorType,
 )
 from zwave_js_server.exceptions import UnknownValueData
-from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue as ZwaveConfigurationValue,
     Value as ZwaveValue,
-    get_value_id_str,
 )
 from zwave_js_server.util.command_class.energy_production import (
     get_energy_production_parameter,
@@ -132,7 +131,10 @@ from homeassistant.const import (
 )
 
 from .const import (
-    ENTITY_DESC_KEY_BATTERY,
+    ENTITY_DESC_KEY_BATTERY_LEVEL,
+    ENTITY_DESC_KEY_BATTERY_LIST_STATE,
+    ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
+    ENTITY_DESC_KEY_BATTERY_TEMPERATURE,
     ENTITY_DESC_KEY_CO,
     ENTITY_DESC_KEY_CO2,
     ENTITY_DESC_KEY_CURRENT,
@@ -155,7 +157,7 @@ from .const import (
     ENTITY_DESC_KEY_UV_INDEX,
     ENTITY_DESC_KEY_VOLTAGE,
 )
-from .helpers import ZwaveValueID
+from .models import BaseDiscoverySchemaDataTemplate, ZwaveValueID
 
 ENERGY_PRODUCTION_DEVICE_CLASS_MAP: dict[str, list[EnergyProductionParameter]] = {
     ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME: [EnergyProductionParameter.TOTAL_TIME],
@@ -261,49 +263,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class BaseDiscoverySchemaDataTemplate:
-    """Base class for discovery schema data templates."""
-
-    static_data: Any | None = None
-
-    def resolve_data(self, value: ZwaveValue) -> Any:
-        """Resolve helper class data for a discovered value.
-
-        Can optionally be implemented by subclasses if input data needs to be
-        transformed once discovered Value is available.
-        """
-        return {}
-
-    def values_to_watch(self, resolved_data: Any) -> Iterable[ZwaveValue | None]:
-        """Return list of all ZwaveValues resolved by helper that should be watched.
-
-        Should be implemented by subclasses only if there are values to watch.
-        """
-        return []
-
-    def value_ids_to_watch(self, resolved_data: Any) -> set[str]:
-        """Return list of all Value IDs resolved by helper that should be watched.
-
-        Not to be overwritten by subclasses.
-        """
-        return {val.value_id for val in self.values_to_watch(resolved_data) if val}
-
-    @staticmethod
-    def _get_value_from_id(
-        node: ZwaveNode, value_id_obj: ZwaveValueID
-    ) -> ZwaveValue | ZwaveConfigurationValue | None:
-        """Get a ZwaveValue from a node using a ZwaveValueDict."""
-        value_id = get_value_id_str(
-            node,
-            value_id_obj.command_class,
-            value_id_obj.property_,
-            endpoint=value_id_obj.endpoint,
-            property_key=value_id_obj.property_key,
-        )
-        return node.values.get(value_id)
-
-
-@dataclass
 class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
     """Data template class for Z-Wave JS Climate entities with dynamic current temps."""
 
@@ -357,22 +316,12 @@ class NumericSensorDataTemplateData:
     unit_of_measurement: str | None = None
 
 
-T = TypeVar(
-    "T",
-    MultilevelSensorType,
-    MultilevelSensorScaleType,
-    MeterScaleType,
-    EnergyProductionParameter,
-    EnergyProductionScaleType,
-)
-
-
 class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     """Data template class for Z-Wave Sensor entities."""
 
     @staticmethod
-    def find_key_from_matching_set(
-        enum_value: T, set_map: Mapping[str, list[T]]
+    def find_key_from_matching_set[_T: Enum](
+        enum_value: _T, set_map: Mapping[str, list[_T]]
     ) -> str | None:
         """Find a key in a set map that matches a given enum value."""
         for key, value_set in set_map.items():
@@ -389,8 +338,31 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     def resolve_data(self, value: ZwaveValue) -> NumericSensorDataTemplateData:
         """Resolve helper class data for a discovered value."""
 
-        if value.command_class == CommandClass.BATTERY:
-            return NumericSensorDataTemplateData(ENTITY_DESC_KEY_BATTERY, PERCENTAGE)
+        if value.command_class == CommandClass.BATTERY and value.property_ == "level":
+            return NumericSensorDataTemplateData(
+                ENTITY_DESC_KEY_BATTERY_LEVEL, PERCENTAGE
+            )
+        if value.command_class == CommandClass.BATTERY and value.property_ in (
+            "chargingStatus",
+            "rechargeOrReplace",
+        ):
+            return NumericSensorDataTemplateData(
+                ENTITY_DESC_KEY_BATTERY_LIST_STATE, None
+            )
+        if (
+            value.command_class == CommandClass.BATTERY
+            and value.property_ == "maximumCapacity"
+        ):
+            return NumericSensorDataTemplateData(
+                ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY, PERCENTAGE
+            )
+        if (
+            value.command_class == CommandClass.BATTERY
+            and value.property_ == "temperature"
+        ):
+            return NumericSensorDataTemplateData(
+                ENTITY_DESC_KEY_BATTERY_TEMPERATURE, UnitOfTemperature.CELSIUS
+            )
 
         if value.command_class == CommandClass.METER:
             try:

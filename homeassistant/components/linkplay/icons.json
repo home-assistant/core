@@ -1,0 +1,19 @@
+{
+  "entity": {
+    "button": {
+      "timesync": {
+        "default": "mdi:clock"
+      }
+    },
+    "select": {
+      "audio_output_hardware_mode": {
+        "default": "mdi:transit-connection-horizontal"
+      }
+    }
+  },
+  "services": {
+    "play_preset": {
+      "service": "mdi:play-box-outline"
+    }
+  }
+}

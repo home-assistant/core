@@ -1,11 +1,11 @@
-"""Provides device automations for control of LG webOS Smart TV."""
+"""Provides device automations for control of LG webOS TV."""
 
 from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_PLATFORM, CONF_TYPE
@@ -14,8 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import trigger
-from .const import DOMAIN
+from . import DOMAIN, trigger
 from .helpers import (
     async_get_client_by_device_entry,
     async_get_device_entry_by_device_id,
@@ -43,8 +42,7 @@ async def async_validate_trigger_config(
         device_id = config[CONF_DEVICE_ID]
         try:
             device = async_get_device_entry_by_device_id(hass, device_id)
-            if DOMAIN in hass.data:
-                async_get_client_by_device_entry(hass, device)
+            async_get_client_by_device_entry(hass, device)
         except ValueError as err:
             raise InvalidDeviceAutomationConfig(err) from err
 
@@ -55,8 +53,7 @@ async def async_get_triggers(
     _hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for device."""
-    triggers = [async_get_turn_on_trigger(device_id)]
-    return triggers
+    return [async_get_turn_on_trigger(device_id)]
 
 
 async def async_attach_trigger(
@@ -78,4 +75,8 @@ async def async_attach_trigger(
             hass, trigger_config, action, trigger_info
         )
 
-    raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="unhandled_trigger_type",
+        translation_placeholders={"trigger_type": trigger_type},
+    )

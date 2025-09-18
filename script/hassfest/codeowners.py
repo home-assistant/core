@@ -12,13 +12,30 @@ BASE = """
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
 # Home Assistant Core
-setup.cfg @home-assistant/core
+.core_files.yaml @home-assistant/core
+.git-blame-ignore-revs @home-assistant/core
+.gitattributes @home-assistant/core
+.gitignore @home-assistant/core
+.hadolint.yaml @home-assistant/core
+.pre-commit-config.yaml @home-assistant/core
+.prettierignore @home-assistant/core
+.yamllint @home-assistant/core
 pyproject.toml @home-assistant/core
+requirements_test.txt @home-assistant/core
+/.devcontainer/ @home-assistant/core
+/.github/ @home-assistant/core
+/.vscode/ @home-assistant/core
 /homeassistant/*.py @home-assistant/core
+/homeassistant/auth/ @home-assistant/core
+/homeassistant/backports/ @home-assistant/core
 /homeassistant/helpers/ @home-assistant/core
+/homeassistant/scripts/ @home-assistant/core
 /homeassistant/util/ @home-assistant/core
+/pylint/ @home-assistant/core
+/script/ @home-assistant/core
 
 # Home Assistant Supervisor
+.dockerignore @home-assistant/supervisor
 build.json @home-assistant/supervisor
 /machine/ @home-assistant/supervisor
 /rootfs/ @home-assistant/supervisor
@@ -81,18 +98,15 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    with open(str(codeowners_path)) as fp:
-        if fp.read().strip() != content:
-            config.add_error(
-                "codeowners",
-                "File CODEOWNERS is not up to date. Run python3 -m script.hassfest",
-                fixable=True,
-            )
-        return
+    if codeowners_path.read_text() != content + "\n":
+        config.add_error(
+            "codeowners",
+            "File CODEOWNERS is not up to date. Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate CODEOWNERS."""
     codeowners_path = config.root / "CODEOWNERS"
-    with open(str(codeowners_path), "w") as fp:
-        fp.write(f"{config.cache['codeowners']}\n")
+    codeowners_path.write_text(f"{config.cache['codeowners']}\n")

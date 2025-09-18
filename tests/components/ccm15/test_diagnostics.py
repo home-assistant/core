@@ -1,8 +1,7 @@
 """Test CCM15 diagnostics."""
 
-from unittest.mock import AsyncMock
-
-from syrupy import SnapshotAssertion
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ccm15.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -13,10 +12,10 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("ccm15_device")
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    ccm15_device: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""

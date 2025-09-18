@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import (
     TEST_CAMERA,
@@ -116,7 +116,6 @@ async def test_setup_camera_with_wrong_webhook(
     )
     assert not client.async_set_camera.called
 
-    # Update the options, which will trigger a reload with the new behavior.
     with patch(
         "homeassistant.components.motioneye.MotionEyeClient",
         return_value=client,
@@ -124,6 +123,7 @@ async def test_setup_camera_with_wrong_webhook(
         hass.config_entries.async_update_entry(
             config_entry, options={CONF_WEBHOOK_SET_OVERWRITE: True}
         )
+        await hass.config_entries.async_reload(config_entry.entry_id)
         await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -222,18 +222,18 @@ async def test_setup_camera_with_correct_webhook(
 
     cameras = copy.deepcopy(TEST_CAMERAS)
     cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_NOTIFICATIONS_ENABLED] = True
-    cameras[KEY_CAMERAS][0][
-        KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD
-    ] = KEY_HTTP_METHOD_POST_JSON
+    cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD] = (
+        KEY_HTTP_METHOD_POST_JSON
+    )
     cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_NOTIFICATIONS_URL] = (
         "https://internal.url"
         + URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID])
         + f"?{WEB_HOOK_MOTION_DETECTED_QUERY_STRING}&device_id={device.id}"
     )
     cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_STORAGE_ENABLED] = True
-    cameras[KEY_CAMERAS][0][
-        KEY_WEB_HOOK_STORAGE_HTTP_METHOD
-    ] = KEY_HTTP_METHOD_POST_JSON
+    cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_STORAGE_HTTP_METHOD] = (
+        KEY_HTTP_METHOD_POST_JSON
+    )
     cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_STORAGE_URL] = (
         "https://internal.url"
         + URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID])

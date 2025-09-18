@@ -52,9 +52,6 @@
       "pop": {
         "name": "Chance of precipitation"
       },
-      "precip_yesterday": {
-        "name": "Precipitation yesterday"
-      },
       "pressure": {
         "name": "Barometric pressure"
       },
@@ -89,7 +86,7 @@
         "name": "AQHI"
       },
       "advisories": {
-        "name": "Advisory"
+        "name": "Advisories"
       },
       "endings": {
         "name": "Endings"
@@ -116,6 +113,10 @@
     }
   },
   "services": {
+    "get_forecasts": {
+      "name": "Get forecasts",
+      "description": "Retrieves the forecast from selected weather services."
+    },
     "set_radar_type": {
       "name": "Set radar type",
       "description": "Sets the type of radar image to retrieve.",

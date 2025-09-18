@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from azure.eventhub.exceptions import EventHubError
 import pytest
@@ -60,7 +60,9 @@ async def test_filter_only_config(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_unload_entry(hass: HomeAssistant, entry, mock_create_batch) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant, entry: MockConfigEntry, mock_create_batch: MagicMock
+) -> None:
     """Test being able to unload an entry.
 
     Queue should be empty, so adding events to the batch should not be called,
@@ -69,11 +71,11 @@ async def test_unload_entry(hass: HomeAssistant, entry, mock_create_batch) -> No
     """
     assert await hass.config_entries.async_unload(entry.entry_id)
     mock_create_batch.add.assert_not_called()
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_failed_test_connection(
-    hass: HomeAssistant, mock_get_eventhub_properties
+    hass: HomeAssistant, mock_get_eventhub_properties: AsyncMock
 ) -> None:
     """Test being able to unload an entry."""
     entry = MockConfigEntry(
@@ -85,11 +87,13 @@ async def test_failed_test_connection(
     entry.add_to_hass(hass)
     mock_get_eventhub_properties.side_effect = EventHubError("Test")
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_send_batch_error(
-    hass: HomeAssistant, entry_with_one_event, mock_send_batch
+    hass: HomeAssistant,
+    entry_with_one_event: MockConfigEntry,
+    mock_send_batch: AsyncMock,
 ) -> None:
     """Test a error in send_batch, including recovering at the next interval."""
     mock_send_batch.reset_mock()
@@ -108,10 +112,13 @@ async def test_send_batch_error(
     )
     await hass.async_block_till_done()
     mock_send_batch.assert_called_once()
+    mock_send_batch.side_effect = None  # Reset to avoid error in teardown
 
 
 async def test_late_event(
-    hass: HomeAssistant, entry_with_one_event, mock_create_batch
+    hass: HomeAssistant,
+    entry_with_one_event: MockConfigEntry,
+    mock_create_batch: MagicMock,
 ) -> None:
     """Test the check on late events."""
     with patch(
@@ -128,7 +135,9 @@ async def test_late_event(
 
 
 async def test_full_batch(
-    hass: HomeAssistant, entry_with_one_event, mock_create_batch
+    hass: HomeAssistant,
+    entry_with_one_event: MockConfigEntry,
+    mock_create_batch: MagicMock,
 ) -> None:
     """Test the full batch behaviour."""
     mock_create_batch.add.side_effect = [ValueError, None]
@@ -208,7 +217,12 @@ async def test_full_batch(
     ],
     ids=["allowlist", "denylist", "filtered_allowlist", "filtered_denylist"],
 )
-async def test_filter(hass: HomeAssistant, entry, tests, mock_create_batch) -> None:
+async def test_filter(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    tests: list[FilterTest],
+    mock_create_batch: MagicMock,
+) -> None:
     """Test different filters.
 
     Filter_schema is also a fixture which is replaced by the filter_schema

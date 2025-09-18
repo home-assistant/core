@@ -17,7 +17,7 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonValueType, load_json_array
@@ -92,13 +92,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Mark the first item with matching `name` as completed."""
         data = hass.data[DOMAIN]
         name = call.data[ATTR_NAME]
-
         try:
-            item = [item for item in data.items if item["name"] == name][0]
-        except IndexError:
-            _LOGGER.error("Updating of item failed: %s cannot be found", name)
-        else:
-            await data.async_update(item["id"], {"name": name, "complete": True})
+            await data.async_complete(name)
+        except NoMatchingShoppingListItem:
+            _LOGGER.error("Completing of item failed: %s cannot be found", name)
 
     async def incomplete_item_service(call: ServiceCall) -> None:
         """Mark the first item with matching `name` as incomplete."""
@@ -258,6 +255,30 @@ class ShoppingData:
             )
         return removed
 
+    async def async_complete(
+        self, name: str, context: Context | None = None
+    ) -> list[dict[str, JsonValueType]]:
+        """Mark all shopping list items with the given name as complete."""
+        complete_items = [
+            item for item in self.items if item["name"] == name and not item["complete"]
+        ]
+
+        if len(complete_items) == 0:
+            raise NoMatchingShoppingListItem
+
+        for item in complete_items:
+            _LOGGER.debug("Completing %s", item)
+            item["complete"] = True
+        await self.hass.async_add_executor_job(self.save)
+        self._async_notify()
+        for item in complete_items:
+            self.hass.bus.async_fire(
+                EVENT_SHOPPING_LIST_UPDATED,
+                {"action": "complete", "item": item},
+                context=context,
+            )
+        return complete_items
+
     async def async_update(
         self, item_id: str | None, info: dict[str, Any], context: Context | None = None
     ) -> dict[str, JsonValueType]:
@@ -320,15 +341,15 @@ class ShoppingData:
             # Remove the item from mapping after it's appended in the result array.
             del all_items_mapping[item_id]
         # Append the rest of the items
-        for key in all_items_mapping:
+        for value in all_items_mapping.values():
             # All the unchecked items must be passed in the item_ids array,
             # so all items left in the mapping should be checked items.
-            if all_items_mapping[key]["complete"] is False:
+            if value["complete"] is False:
                 raise vol.Invalid(
                     "The item ids array doesn't contain all the unchecked shopping list"
                     " items."
                 )
-            new_items.append(all_items_mapping[key])
+            new_items.append(value)
         self.items = new_items
         self.hass.async_add_executor_job(self.save)
         self._async_notify()
@@ -582,12 +603,12 @@ def websocket_handle_reorder(
     except NoMatchingShoppingListItem:
         connection.send_error(
             msg_id,
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             "One or more item id(s) not found.",
         )
         return
     except vol.Invalid as err:
-        connection.send_error(msg_id, websocket_api.const.ERR_INVALID_FORMAT, f"{err}")
+        connection.send_error(msg_id, websocket_api.ERR_INVALID_FORMAT, f"{err}")
         return
 
     connection.send_result(msg_id)

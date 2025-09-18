@@ -13,9 +13,11 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, PrusaLinkEntity, PrusaLinkUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import PrusaLinkUpdateCoordinator
+from .entity import PrusaLinkEntity
 
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 
@@ -70,7 +72,7 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PrusaLink buttons based on a config entry."""
     coordinators: dict[str, PrusaLinkUpdateCoordinator] = hass.data[DOMAIN][

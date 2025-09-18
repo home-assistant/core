@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
-from pysensibo.model import SensiboData
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -17,33 +17,24 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 
-async def test_entity(
-    hass: HomeAssistant, load_int: ConfigEntry, get_data: SensiboData
+async def test_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    load_int: ConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the Sensibo climate."""
+    """Test the Sensibo device."""
 
     state1 = hass.states.get("climate.hallway")
     assert state1
 
-    dr_reg = dr.async_get(hass)
-    dr_entries = dr.async_entries_for_config_entry(dr_reg, load_int.entry_id)
-    dr_entry: dr.DeviceEntry
-    for dr_entry in dr_entries:
-        if dr_entry.name == "Hallway":
-            assert dr_entry.identifiers == {("sensibo", "ABC999111")}
-            device_id = dr_entry.id
-
-    er_reg = er.async_get(hass)
-    er_entries = er.async_entries_for_device(
-        er_reg, device_id, include_disabled_entities=True
+    assert (
+        dr.async_entries_for_config_entry(device_registry, load_int.entry_id)
+        == snapshot
     )
-    er_entry: er.RegistryEntry
-    for er_entry in er_entries:
-        if er_entry.name == "Hallway":
-            assert er_entry.unique_id == "Hallway"
 
 
 @pytest.mark.parametrize("p_error", SENSIBO_ERRORS)
@@ -51,32 +42,30 @@ async def test_entity_failed_service_calls(
     hass: HomeAssistant,
     p_error: Exception,
     load_int: ConfigEntry,
-    get_data: SensiboData,
+    mock_client: MagicMock,
 ) -> None:
     """Test the Sensibo send command with error."""
 
     state = hass.states.get("climate.hallway")
     assert state
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-        return_value={"result": {"status": "Success"}},
-    ):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "low"},
-            blocking=True,
-        )
-    await hass.async_block_till_done()
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "low"},
+        blocking=True,
+    )
 
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "low"
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-        side_effect=p_error,
-    ), pytest.raises(HomeAssistantError):
+    mock_client.async_set_ac_state_property.side_effect = p_error
+
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,

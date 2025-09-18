@@ -16,42 +16,104 @@ from homeassistant.components.media_player import (
     MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+
+from .const import (
+    ATTR_FORMAT_QUERY,
+    ATTR_URL,
+    DEFAULT_STREAM_QUERY,
+    DOMAIN,
+    SERVICE_EXTRACT_MEDIA_URL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CUSTOMIZE_ENTITIES = "customize"
 CONF_DEFAULT_STREAM_QUERY = "default_query"
 
-DEFAULT_STREAM_QUERY = "best"
-DOMAIN = "media_extractor"
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_DEFAULT_STREAM_QUERY): cv.string,
-                vol.Optional(CONF_CUSTOMIZE_ENTITIES): vol.Schema(
-                    {cv.entity_id: vol.Schema({cv.string: cv.string})}
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Media Extractor from a config entry."""
+
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the media extractor service."""
+
+    async def extract_media_url(call: ServiceCall) -> ServiceResponse:
+        """Extract media url."""
+
+        def extract_info() -> dict[str, Any]:
+            youtube_dl = YoutubeDL(
+                {
+                    "quiet": True,
+                    "logger": _LOGGER,
+                    "format": call.data[ATTR_FORMAT_QUERY],
+                }
+            )
+            return cast(
+                dict[str, Any],
+                youtube_dl.extract_info(
+                    call.data[ATTR_URL], download=False, process=False
+                ),
+            )
+
+        result = await hass.async_add_executor_job(extract_info)
+        if "entries" in result:
+            _LOGGER.warning("Playlists are not supported, looking for the first video")
+            entries = list(result["entries"])
+            if entries:
+                selected_media = entries[0]
+            else:
+                raise HomeAssistantError("Playlist is empty")
+        else:
+            selected_media = result
+        if "formats" in selected_media:
+            if selected_media["extractor"] == "youtube":
+                url = get_best_stream_youtube(selected_media["formats"])
+            else:
+                url = get_best_stream(selected_media["formats"])
+        else:
+            url = cast(str, selected_media["url"])
+        return {"url": url}
 
     def play_media(call: ServiceCall) -> None:
         """Get stream URL and send it to the play_media service."""
-        MediaExtractor(hass, config[DOMAIN], call.data).extract_and_send()
+        MediaExtractor(hass, config.get(DOMAIN, {}), call.data).extract_and_send()
 
-    hass.services.register(
+    default_format_query = config.get(DOMAIN, {}).get(
+        CONF_DEFAULT_STREAM_QUERY, DEFAULT_STREAM_QUERY
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_EXTRACT_MEDIA_URL,
+        extract_media_url,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_URL): cv.string,
+                vol.Optional(
+                    ATTR_FORMAT_QUERY, default=default_format_query
+                ): cv.string,
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
         DOMAIN,
         SERVICE_PLAY_MEDIA,
         play_media,
@@ -215,9 +277,9 @@ def get_best_stream_youtube(formats: list[dict[str, Any]]) -> str:
 
     return get_best_stream(
         [
-            format
-            for format in formats
-            if format.get("acodec", "none") != "none"
-            and format.get("vcodec", "none") != "none"
+            stream_format
+            for stream_format in formats
+            if stream_format.get("acodec", "none") != "none"
+            and stream_format.get("vcodec", "none") != "none"
         ]
     )

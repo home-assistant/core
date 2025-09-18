@@ -11,16 +11,21 @@
         'name': 'AEMET',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'aemet',
       'entry_id': '7442b231f139e813fc1939281123f220',
       'minor_version': 1,
       'options': dict({
+        'radar_updates': True,
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
-      'unique_id': None,
+      'unique_id': '**REDACTED**',
       'version': 1,
     }),
     'coord_data': dict({
@@ -31,6 +36,12 @@
         ]),
       }),
       'lib': dict({
+        'radar': dict({
+          'datetime': '2021-01-09T11:34:06.448809+00:00',
+          'id': 'national',
+          'image-bytes': '**REDACTED**',
+          'image-type': 'image/gif',
+        }),
         'station': dict({
           'altitude': 667.0,
           'coordinates': '**REDACTED**',

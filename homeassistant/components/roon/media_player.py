@@ -25,7 +25,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
@@ -52,7 +52,7 @@ REPEAT_MODE_MAPPING_TO_ROON = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roon MediaPlayer from Config Entry."""
     roon_server = hass.data[DOMAIN][config_entry.entry_id]
@@ -72,7 +72,7 @@ async def async_setup_entry(
         dev_id = player_data["dev_id"]
         if dev_id not in media_players:
             # new player!
-            media_player = RoonDevice(roon_server, player_data)
+            media_player = RoonDevice(roon_server, player_data, config_entry.entry_id)
             media_players.add(dev_id)
             async_add_entities([media_player])
         else:
@@ -106,7 +106,7 @@ class RoonDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY_MEDIA
     )
 
-    def __init__(self, server, player_data):
+    def __init__(self, server, player_data, entry_id):
         """Initialize Roon device object."""
         self._remove_signal_status = None
         self._server = server
@@ -125,6 +125,7 @@ class RoonDevice(MediaPlayerEntity):
         self._attr_volume_level = 0
         self._volume_fixed = True
         self._volume_incremental = False
+        self._entry_id = entry_id
         self.update_data(player_data)
 
     async def async_added_to_hass(self) -> None:
@@ -166,7 +167,7 @@ class RoonDevice(MediaPlayerEntity):
             name=cast(str | None, self.name),
             manufacturer="RoonLabs",
             model=dev_model,
-            via_device=(DOMAIN, self._server.roon_id),
+            via_device=(DOMAIN, self._entry_id),
         )
 
     def update_data(self, player_data=None):
@@ -233,12 +234,13 @@ class RoonDevice(MediaPlayerEntity):
         }
         now_playing_data = None
 
+        media_position = convert(player_data.get("seek_position"), int, 0)
+
         try:
             now_playing_data = player_data["now_playing"]
             media_title = now_playing_data["three_line"]["line1"]
             media_artist = now_playing_data["three_line"]["line2"]
             media_album_name = now_playing_data["three_line"]["line3"]
-            media_position = convert(now_playing_data["seek_position"], int, 0)
             media_duration = convert(now_playing_data.get("length"), int, 0)
             image_id = now_playing_data.get("image_key")
         except KeyError:
@@ -327,6 +329,11 @@ class RoonDevice(MediaPlayerEntity):
     def media_album_artist(self) -> str | None:
         """Album artist of current playing media (Music track only)."""
         return self.media_artist
+
+    @property
+    def media_content_type(self) -> str:
+        """Return the media type."""
+        return MediaType.MUSIC
 
     @property
     def supports_standby(self):

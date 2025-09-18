@@ -5,16 +5,14 @@ from __future__ import annotations
 import logging
 
 from aiohttp.client_exceptions import ClientError
-from slack import WebClient
-from slack.errors import SlackApiError
+from slack_sdk.errors import SlackApiError
+from slack_sdk.web.async_client import AsyncWebClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv, discovery
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -22,7 +20,6 @@ from .const import (
     ATTR_USER_ID,
     DATA_CLIENT,
     DATA_HASS_CONFIG,
-    DEFAULT_NAME,
     DOMAIN,
     SLACK_DATA,
 )
@@ -43,7 +40,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Slack from a config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
-    slack = WebClient(token=entry.data[CONF_API_KEY], run_async=True, session=session)
+    slack = AsyncWebClient(
+        token=entry.data[CONF_API_KEY], session=session
+    )  # No run_async
 
     try:
         res = await slack.auth_test()
@@ -52,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Invalid API key")
             return False
         raise ConfigEntryNotReady("Error while setting up integration") from ex
+
     data = {
         DATA_CLIENT: slack,
         ATTR_URL: res[ATTR_URL],
@@ -74,28 +74,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
-
-
-class SlackEntity(Entity):
-    """Representation of a Slack entity."""
-
-    _attr_attribution = "Data provided by Slack"
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        data: dict[str, str | WebClient],
-        description: EntityDescription,
-        entry: ConfigEntry,
-    ) -> None:
-        """Initialize a Slack entity."""
-        self._client = data[DATA_CLIENT]
-        self.entity_description = description
-        self._attr_unique_id = f"{data[ATTR_USER_ID]}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            configuration_url=data[ATTR_URL],
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer=DEFAULT_NAME,
-            name=entry.title,
-        )

@@ -1,12 +1,12 @@
 """Recorder entity registry helper."""
 
-from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.event import async_has_entity_registry_updated_listeners
 
 from .core import Recorder
 from .util import filter_unique_constraint_integrity_error, get_instance, session_scope
@@ -19,10 +19,14 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the entity hooks."""
 
     @callback
-    def _async_entity_id_changed(event: Event) -> None:
+    def _async_entity_id_changed(
+        event: Event[er.EventEntityRegistryUpdatedData],
+    ) -> None:
         instance = get_instance(hass)
-        old_entity_id: str = event.data["old_entity_id"]
-        new_entity_id: str = event.data["entity_id"]
+        if TYPE_CHECKING:
+            assert event.data["action"] == "update" and "old_entity_id" in event.data
+        old_entity_id = event.data["old_entity_id"]
+        new_entity_id = event.data["entity_id"]
         instance.async_update_statistics_metadata(
             old_entity_id, new_statistic_id=new_entity_id
         )
@@ -31,21 +35,23 @@ def async_setup(hass: HomeAssistant) -> None:
         )
 
     @callback
-    def entity_registry_changed_filter(event_data: Mapping[str, Any]) -> bool:
+    def entity_registry_changed_filter(
+        event_data: er.EventEntityRegistryUpdatedData,
+    ) -> bool:
         """Handle entity_id changed filter."""
         return event_data["action"] == "update" and "old_entity_id" in event_data
 
-    @callback
-    def _setup_entity_registry_event_handler(hass: HomeAssistant) -> None:
-        """Subscribe to event registry events."""
-        hass.bus.async_listen(
-            er.EVENT_ENTITY_REGISTRY_UPDATED,
-            _async_entity_id_changed,
-            event_filter=entity_registry_changed_filter,
-            run_immediately=True,
+    if async_has_entity_registry_updated_listeners(hass):
+        raise HomeAssistantError(
+            "The recorder entity registry listener must be installed"
+            " before async_track_entity_registry_updated_event is called"
         )
 
-    async_at_start(hass, _setup_entity_registry_event_handler)
+    hass.bus.async_listen(
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        _async_entity_id_changed,
+        event_filter=entity_registry_changed_filter,
+    )
 
 
 def update_states_metadata(

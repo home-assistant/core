@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 import io
+from pathlib import Path
 from unittest.mock import patch
 import wave
 
@@ -33,9 +34,8 @@ def get_empty_wav() -> bytes:
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
     """Mock the TTS cache dir with empty dir."""
-    return mock_tts_cache_dir
 
 
 async def test_setup_component(hass: HomeAssistant) -> None:
@@ -155,7 +155,7 @@ async def test_service_say_http_error(
             await retrieve_media(
                 hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
             )
-            == HTTPStatus.NOT_FOUND
+            == HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
     mock_speak.assert_called_once()

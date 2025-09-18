@@ -1,39 +1,40 @@
 """Ecovacs image entities."""
 
-from deebot_client.capabilities import CapabilityMap, VacuumCapabilities
+from typing import cast
+
+from deebot_client.capabilities import CapabilityMap
 from deebot_client.device import Device
 from deebot_client.events.map import CachedMapInfoEvent, MapChangedEvent
+from deebot_client.map import Map
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .controller import EcovacsController
+from . import EcovacsConfigEntry
 from .entity import EcovacsEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcovacsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
-    for device in controller.devices(VacuumCapabilities):
-        capabilities: VacuumCapabilities = device.capabilities
-        if caps := capabilities.map:
-            entities.append(EcovacsMap(device, caps, hass))
+    controller = config_entry.runtime_data
+    entities = [
+        EcovacsMap(device, caps, hass)
+        for device in controller.devices
+        if (caps := device.capabilities.map)
+    ]
 
     if entities:
         async_add_entities(entities)
 
 
 class EcovacsMap(
-    EcovacsEntity[VacuumCapabilities, CapabilityMap],
+    EcovacsEntity[CapabilityMap],
     ImageEntity,
 ):
     """Ecovacs map."""
@@ -49,6 +50,7 @@ class EcovacsMap(
         """Initialize entity."""
         super().__init__(device, capability, hass=hass)
         self._attr_extra_state_attributes = {}
+        self._map = cast(Map, self._device.map)
 
     entity_description = EntityDescription(
         key="map",
@@ -57,7 +59,7 @@ class EcovacsMap(
 
     def image(self) -> bytes | None:
         """Return bytes of image or None."""
-        if svg := self._device.map.get_svg_map():
+        if svg := self._map.get_svg_map():
             return svg.encode()
 
         return None
@@ -82,4 +84,4 @@ class EcovacsMap(
         Only used by the generic entity update service.
         """
         await super().async_update()
-        self._device.map.refresh()
+        self._map.refresh()

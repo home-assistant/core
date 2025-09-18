@@ -27,7 +27,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.8.0"]
+REQUIREMENTS = ["pyotp==2.9.0"]
 
 CONF_MESSAGE = "message"
 
@@ -52,28 +52,28 @@ _LOGGER = logging.getLogger(__name__)
 
 def _generate_secret() -> str:
     """Generate a secret."""
-    import pyotp  # pylint: disable=import-outside-toplevel
+    import pyotp  # noqa: PLC0415
 
     return str(pyotp.random_base32())
 
 
 def _generate_random() -> int:
     """Generate a 32 digit number."""
-    import pyotp  # pylint: disable=import-outside-toplevel
+    import pyotp  # noqa: PLC0415
 
     return int(pyotp.random_base32(length=32, chars=list("1234567890")))
 
 
 def _generate_otp(secret: str, count: int) -> str:
     """Generate one time password."""
-    import pyotp  # pylint: disable=import-outside-toplevel
+    import pyotp  # noqa: PLC0415
 
     return str(pyotp.HOTP(secret).at(count))
 
 
 def _verify_otp(secret: str, otp: str, count: int) -> bool:
     """Verify one time password."""
-    import pyotp  # pylint: disable=import-outside-toplevel
+    import pyotp  # noqa: PLC0415
 
     return bool(pyotp.HOTP(secret).verify(otp, count))
 
@@ -88,7 +88,7 @@ class NotifySetting:
     target: str | None = attr.ib(default=None)
 
 
-_UsersDict = dict[str, NotifySetting]
+type _UsersDict = dict[str, NotifySetting]
 
 
 @MULTI_FACTOR_AUTH_MODULES.register("notify")
@@ -162,7 +162,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         return sorted(unordered_services)
 
-    async def async_setup_flow(self, user_id: str) -> SetupFlow:
+    async def async_setup_flow(self, user_id: str) -> NotifySetupFlow:
         """Return a data entry flow handler for setup module.
 
         Mfa module should extend SetupFlow
@@ -268,7 +268,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         await self.hass.services.async_call("notify", notify_service, data)
 
 
-class NotifySetupFlow(SetupFlow):
+class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
     """Handler for the setup flow."""
 
     def __init__(
@@ -280,8 +280,6 @@ class NotifySetupFlow(SetupFlow):
     ) -> None:
         """Initialize the setup flow."""
         super().__init__(auth_module, setup_schema, user_id)
-        # to fix typing complaint
-        self._auth_module: NotifyAuthModule = auth_module
         self._available_notify_services = available_notify_services
         self._secret: str | None = None
         self._count: int | None = None

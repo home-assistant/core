@@ -4,24 +4,19 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import logging
 from typing import Any, Final
 
 from aiopvapi.helpers.constants import ATTR_NAME, FUNCTION_SET_POWER
 from aiopvapi.resources.shade import BaseShade
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewDeviceInfo, PowerviewEntryData
-
-_LOGGER = logging.getLogger(__name__)
+from .model import PowerviewConfigEntry, PowerviewDeviceInfo
 
 
 @dataclass(frozen=True)
@@ -57,12 +52,12 @@ DROPDOWNS: Final = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PowerviewConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the hunter douglas select entities."""
-
-    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
-
+    pv_entry = entry.runtime_data
     entities: list[PowerViewSelect] = []
     for shade in pv_entry.shade_data.values():
         if not shade.has_battery_info():
@@ -114,5 +109,6 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
         """Change the selected option."""
         await self.entity_description.select_fn(self._shade, option)
         # force update data to ensure new info is in coordinator
-        await self._shade.refresh()
+        async with self.coordinator.radio_operation_lock:
+            await self._shade.refresh(suppress_timeout=True)
         self.async_write_ha_state()

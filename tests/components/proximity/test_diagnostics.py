@@ -67,10 +67,17 @@ async def test_entry_diagnostics(
     mock_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_entry.state == ConfigEntryState.LOADED
+    assert mock_entry.state is ConfigEntryState.LOADED
 
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, mock_entry
     ) == snapshot(
-        exclude=props("entry_id", "last_changed", "last_reported", "last_updated")
+        exclude=props(
+            "entry_id",
+            "last_changed",
+            "last_reported",
+            "last_updated",
+            "created_at",
+            "modified_at",
+        )
     )

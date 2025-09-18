@@ -8,13 +8,14 @@ from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import area_registry as ar, device_registry as dr
 
 
 async def test_device_registry_info(
     hass: HomeAssistant,
     satellite_device: SatelliteDevice,
     satellite_config_entry: ConfigEntry,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test info in device registry."""
@@ -26,14 +27,14 @@ async def test_device_registry_info(
     )
     assert device is not None
     assert device.name == "Test Satellite"
-    assert device.suggested_area == "Office"
+    assert device.area_id == area_registry.async_get_area_by_name("Office").id
 
     # Check associated entities
     assist_in_progress_id = satellite_device.get_assist_in_progress_entity_id(hass)
     assert assist_in_progress_id
     assist_in_progress_state = hass.states.get(assist_in_progress_id)
-    assert assist_in_progress_state is not None
-    assert assist_in_progress_state.state == STATE_OFF
+    # assist_in_progress binary sensor is disabled
+    assert assist_in_progress_state is None
 
     muted_id = satellite_device.get_muted_entity_id(hass)
     assert muted_id
@@ -58,7 +59,8 @@ async def test_remove_device_registry_entry(
     # Check associated entities
     assist_in_progress_id = satellite_device.get_assist_in_progress_entity_id(hass)
     assert assist_in_progress_id
-    assert hass.states.get(assist_in_progress_id) is not None
+    # assist_in_progress binary sensor is disabled
+    assert hass.states.get(assist_in_progress_id) is None
 
     muted_id = satellite_device.get_muted_entity_id(hass)
     assert muted_id

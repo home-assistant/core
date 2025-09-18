@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 from aiolookin import Climate, Device, Remote
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 DEVICE_ID = "98F33163"
 MODULE = "homeassistant.components.lookin"
@@ -31,13 +31,11 @@ ZEROCONF_DATA = ZeroconfServiceInfo(
 
 
 def _mocked_climate() -> Climate:
-    climate = MagicMock(auto_spec=Climate)
-    return climate
+    return MagicMock(auto_spec=Climate)
 
 
 def _mocked_remote() -> Remote:
-    remote = MagicMock(auto_spec=Remote)
-    return remote
+    return MagicMock(auto_spec=Remote)
 
 
 def _mocked_device() -> Device:

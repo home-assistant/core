@@ -8,8 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_TOKEN, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import state as state_helper
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,8 +48,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             payload = {"host": le_wh, "event": json_body}
             requests.post(le_wh, data=json.dumps(payload), timeout=10)
-        except requests.exceptions.RequestException as error:
-            _LOGGER.exception("Error sending to Logentries: %s", error)
+        except requests.exceptions.RequestException:
+            _LOGGER.exception("Error sending to Logentries")
 
     hass.bus.listen(EVENT_STATE_CHANGED, logentries_event_listener)
 

@@ -5,23 +5,21 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_IDENTIFIERS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .helper import Plenticore
+from .coordinator import PlenticoreConfigEntry
 
 TO_REDACT = {CONF_PASSWORD}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: PlenticoreConfigEntry
 ) -> dict[str, dict[str, Any]]:
     """Return diagnostics for a config entry."""
     data = {"config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT)}
 
-    plenticore: Plenticore = hass.data[DOMAIN][config_entry.entry_id]
+    plenticore = config_entry.runtime_data
 
     # Get information from Kostal Plenticore library
     available_process_data = await plenticore.client.get_process_data()

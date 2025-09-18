@@ -84,6 +84,22 @@
       }
     }
   },
+  "services": {
+    "get_prices": {
+      "name": "Get energy prices",
+      "description": "Fetches hourly energy prices including price level.",
+      "fields": {
+        "start": {
+          "name": "Start",
+          "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted."
+        },
+        "end": {
+          "name": "End",
+          "description": "Specifies the date and time until which to retrieve prices. Defaults to the last hour of today if omitted."
+        }
+      }
+    }
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
@@ -100,6 +116,14 @@
         },
         "description": "Enter your access token from {url}"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_date": {
+      "message": "Invalid datetime provided {date}"
+    },
+    "send_message_timeout": {
+      "message": "Timeout sending message with Tibber"
     }
   }
 }

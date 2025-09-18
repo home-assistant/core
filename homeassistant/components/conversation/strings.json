@@ -37,5 +37,10 @@
         }
       }
     }
+  },
+  "conversation": {
+    "agent": {
+      "done": "Done"
+    }
   }
 }

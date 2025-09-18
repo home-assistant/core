@@ -24,6 +24,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -35,7 +36,16 @@
   "entity": {
     "binary_sensor": {
       "jvc_power": {
-        "name": "[%key:component::sensor::entity_component::power::name%]"
+        "name": "[%key:component::binary_sensor::entity_component::power::name%]"
+      }
+    },
+    "select": {
+      "input": {
+        "name": "Input",
+        "state": {
+          "hdmi1": "HDMI 1",
+          "hdmi2": "HDMI 2"
+        }
       }
     },
     "sensor": {
@@ -46,7 +56,7 @@
           "on": "[%key:common::state::on%]",
           "warming": "Warming",
           "cooling": "Cooling",
-          "error": "Error"
+          "error": "[%key:common::state::error%]"
         }
       }
     }

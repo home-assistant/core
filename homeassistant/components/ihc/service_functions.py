@@ -3,7 +3,7 @@
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_CONTROLLER_ID,
@@ -90,24 +90,24 @@ def setup_service_functions(hass: HomeAssistant) -> None:
         ihc_controller = _get_controller(call)
         await async_pulse(hass, ihc_controller, ihc_id)
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN,
         SERVICE_SET_RUNTIME_VALUE_BOOL,
         async_set_runtime_value_bool,
         schema=SET_RUNTIME_VALUE_BOOL_SCHEMA,
     )
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN,
         SERVICE_SET_RUNTIME_VALUE_INT,
         async_set_runtime_value_int,
         schema=SET_RUNTIME_VALUE_INT_SCHEMA,
     )
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN,
         SERVICE_SET_RUNTIME_VALUE_FLOAT,
         async_set_runtime_value_float,
         schema=SET_RUNTIME_VALUE_FLOAT_SCHEMA,
     )
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_PULSE, async_pulse_runtime_input, schema=PULSE_SCHEMA
     )

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aurorapy.client import AuroraError, AuroraSerialClient
 import serial.tools.list_ports
@@ -45,10 +45,10 @@ def validate_and_connect(
         ret[ATTR_SERIAL_NUMBER] = client.serial_number()
         ret[ATTR_MODEL] = f"{client.version()} ({client.pn()})"
         ret[ATTR_FIRMWARE] = client.firmware(1)
-        _LOGGER.info("Returning device info=%s", ret)
-    except AuroraError as err:
+        _LOGGER.debug("Returning device info=%s", ret)
+    except AuroraError:
         _LOGGER.warning("Could not connect to device=%s", comport)
-        raise err
+        raise
     finally:
         if client.serline.isOpen():
             client.close()
@@ -75,11 +75,10 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise the config flow."""
-        self.config = None
-        self._com_ports_list = None
-        self._default_com_port = None
+        self._com_ports_list: list[str] | None = None
+        self._default_com_port: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -92,6 +91,8 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
             self._com_ports_list, self._default_com_port = result
             if self._default_com_port is None:
                 return self.async_abort(reason="no_serial_ports")
+            if TYPE_CHECKING:
+                assert isinstance(self._com_ports_list, list)
 
         # Handle the initial step.
         if user_input is not None:

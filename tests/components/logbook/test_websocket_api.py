@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 from unittest.mock import ANY, patch
 
 from freezegun import freeze_time
@@ -15,8 +16,10 @@ from homeassistant.components.logbook import websocket_api
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.util import get_instance
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorDeviceClass
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -31,11 +34,12 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import (
@@ -44,12 +48,6 @@ from tests.components.recorder.common import (
     async_wait_recording_done,
 )
 from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
-
-
-@pytest.fixture
-def set_utc(hass):
-    """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
@@ -314,13 +312,15 @@ async def test_get_events_entities_filtered_away(
     hass.states.async_set("light.kitchen", STATE_ON)
     await hass.async_block_till_done()
     hass.states.async_set(
-        "light.filtered", STATE_ON, {"brightness": 100, ATTR_UNIT_OF_MEASUREMENT: "any"}
+        "sensor.filtered",
+        STATE_ON,
+        {"brightness": 100, ATTR_UNIT_OF_MEASUREMENT: "any"},
     )
     await hass.async_block_till_done()
     hass.states.async_set("light.kitchen", STATE_OFF, {"brightness": 200})
     await hass.async_block_till_done()
     hass.states.async_set(
-        "light.filtered",
+        "sensor.filtered",
         STATE_OFF,
         {"brightness": 300, ATTR_UNIT_OF_MEASUREMENT: "any"},
     )
@@ -349,7 +349,7 @@ async def test_get_events_entities_filtered_away(
             "id": 2,
             "type": "logbook/get_events",
             "start_time": now.isoformat(),
-            "entity_ids": ["light.filtered"],
+            "entity_ids": ["sensor.filtered"],
         }
     )
     response = await client.receive_json()
@@ -630,7 +630,7 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
     assert msg["event"]["start_time"] == now.timestamp()
@@ -679,17 +679,17 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
         {
             "entity_id": "light.alpha",
             "state": "off",
-            "when": alpha_off_state.last_updated.timestamp(),
+            "when": alpha_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "off",
-            "when": zulu_off_state.last_updated.timestamp(),
+            "when": zulu_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "on",
-            "when": zulu_on_state.last_updated.timestamp(),
+            "when": zulu_on_state.last_updated_timestamp,
         },
     ]
 
@@ -1033,7 +1033,7 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
     assert msg["event"]["start_time"] == now.timestamp()
@@ -1082,17 +1082,17 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
         {
             "entity_id": "light.alpha",
             "state": "off",
-            "when": alpha_off_state.last_updated.timestamp(),
+            "when": alpha_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "off",
-            "when": zulu_off_state.last_updated.timestamp(),
+            "when": zulu_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "on",
-            "when": zulu_on_state.last_updated.timestamp(),
+            "when": zulu_on_state.last_updated_timestamp,
         },
     ]
 
@@ -1185,6 +1185,10 @@ async def test_subscribe_unsubscribe_logbook_stream(
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
     init_listeners = hass.bus.async_listeners()
+    init_listeners = {
+        **init_listeners,
+        EVENT_HOMEASSISTANT_START: init_listeners[EVENT_HOMEASSISTANT_START] - 1,
+    }
     await websocket_client.send_json(
         {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
     )
@@ -1201,7 +1205,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
     assert msg["event"]["start_time"] == now.timestamp()
@@ -1241,17 +1245,17 @@ async def test_subscribe_unsubscribe_logbook_stream(
         {
             "entity_id": "light.alpha",
             "state": "off",
-            "when": alpha_off_state.last_updated.timestamp(),
+            "when": alpha_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "off",
-            "when": zulu_off_state.last_updated.timestamp(),
+            "when": zulu_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "on",
-            "when": zulu_on_state.last_updated.timestamp(),
+            "when": zulu_on_state.last_updated_timestamp,
         },
     ]
 
@@ -1514,7 +1518,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
 
@@ -1613,7 +1617,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
 
@@ -1716,7 +1720,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_past_only(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
 
@@ -1804,7 +1808,7 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "on",
-            "when": current_state.last_updated.timestamp(),
+            "when": current_state.last_updated_timestamp,
         }
     ]
 
@@ -1817,7 +1821,7 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
         {
             "entity_id": "binary_sensor.four_days_ago",
             "state": "off",
-            "when": four_day_old_state.last_updated.timestamp(),
+            "when": four_day_old_state.last_updated_timestamp,
         }
     ]
 
@@ -2363,7 +2367,7 @@ async def test_subscribe_disconnected(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
 
@@ -2400,8 +2404,9 @@ async def test_stream_consumer_stop_processing(
 
     after_ws_created_listeners = hass.bus.async_listeners()
 
-    with patch.object(websocket_api, "MAX_PENDING_LOGBOOK_EVENTS", 5), patch.object(
-        websocket_api, "_async_events_consumer"
+    with (
+        patch.object(websocket_api, "MAX_PENDING_LOGBOOK_EVENTS", 5),
+        patch.object(websocket_api, "_async_events_consumer"),
     ):
         await websocket_client.send_json(
             {
@@ -2789,7 +2794,7 @@ async def test_logbook_stream_ignores_forced_updates(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
     assert msg["event"]["start_time"] == now.timestamp()
@@ -2964,3 +2969,236 @@ async def test_subscribe_all_entities_are_continuous_with_device(
     assert listeners_without_writes(
         hass.bus.async_listeners()
     ) == listeners_without_writes(init_listeners)
+
+
+@pytest.mark.parametrize("params", [{"entity_ids": ["binary_sensor.is_light"]}, {}])
+async def test_live_stream_with_changed_state_change(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    params: dict[str, Any],
+) -> None:
+    """Test the live logbook stream with chained events."""
+    config = {recorder.CONF_COMMIT_INTERVAL: 0.5}
+    await async_setup_recorder_instance(hass, config)
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
+
+    hass.states.async_set("binary_sensor.is_light", "unavailable")
+    hass.states.async_set("binary_sensor.is_light", "unknown")
+    await async_wait_recording_done(hass)
+
+    @callback
+    def auto_off_listener(event):
+        hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+
+    async_track_state_change_event(hass, ["binary_sensor.is_light"], auto_off_listener)
+
+    websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            **params,
+        }
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    await hass.async_block_till_done()
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+
+    recieved_rows = []
+    while len(recieved_rows) < 3:
+        msg = await asyncio.wait_for(websocket_client.receive_json(), 2.5)
+        assert msg["id"] == 7
+        assert msg["type"] == "event"
+        recieved_rows.extend(msg["event"]["events"])
+
+    # Make sure we get rows back in order
+    assert recieved_rows == [
+        {"entity_id": "binary_sensor.is_light", "state": "unknown", "when": ANY},
+        {"entity_id": "binary_sensor.is_light", "state": "on", "when": ANY},
+        {"entity_id": "binary_sensor.is_light", "state": "off", "when": ANY},
+    ]
+
+    await websocket_client.send_json(
+        {"id": 8, "type": "unsubscribe_events", "subscription": 7}
+    )
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+
+    assert msg["id"] == 8
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    # Check our listener got unsubscribed
+    assert listeners_without_writes(
+        hass.bus.async_listeners()
+    ) == listeners_without_writes(init_listeners)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "attributes", "result_count"),
+    [
+        (
+            "light.kitchen",
+            {ATTR_UNIT_OF_MEASUREMENT: "any", "brightness": 100},
+            1,  # Light is not a filterable domain
+        ),
+        (
+            "sensor.sensor0",
+            {ATTR_UNIT_OF_MEASUREMENT: "any"},
+            0,  # Sensor with UoM is always filtered
+        ),
+        (
+            "sensor.sensor1",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.AQI},
+            0,  # Sensor with a numeric device class is always filtered
+        ),
+        (
+            "sensor.sensor2",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM},
+            1,  # Sensor with a non-numeric device class is not filtered
+        ),
+        (
+            "sensor.sensor3",
+            {ATTR_STATE_CLASS: "any"},
+            0,  # Sensor with state class is always filtered
+        ),
+        (
+            "sensor.sensor4",
+            {},
+            1,  # Sensor with no UoM, device_class, or state_class is not filtered
+        ),
+        (
+            "number.number0",
+            {ATTR_UNIT_OF_MEASUREMENT: "any"},
+            1,  # Non-sensor domains are not filtered by presence of UoM
+        ),
+        (
+            "number.number1",
+            {},
+            1,  # Not a filtered domain
+        ),
+        (
+            "input_number.number0",
+            {ATTR_UNIT_OF_MEASUREMENT: "any"},
+            1,  # Non-sensor domains are not filtered by presence of UoM
+        ),
+        (
+            "input_number.number1",
+            {},
+            1,  # Not a filtered domain
+        ),
+        (
+            "counter.counter0",
+            {},
+            0,  # Counter is an always continuous domain
+        ),
+        (
+            "zone.home",
+            {},
+            1,  # Zone is not an always continuous domain
+        ),
+    ],
+)
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_consistent_stream_and_recorder_filtering(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_id: str,
+    attributes: dict,
+    result_count: int,
+) -> None:
+    """Test that the logbook live stream and get_events apis use consistent filtering rules."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    hass.states.async_set(entity_id, "1.0", attributes)
+    hass.states.async_set("binary_sensor.other_entity", "off")
+
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            "entity_ids": [entity_id, "binary_sensor.other_entity"],
+        }
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 1
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
+    assert "partial" in msg["event"]
+    await async_wait_recording_done(hass)
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 1
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
+    assert "partial" not in msg["event"]
+    await async_wait_recording_done(hass)
+
+    hass.states.async_set(
+        entity_id,
+        "2.0",
+        attributes,
+    )
+    hass.states.async_set("binary_sensor.other_entity", "on")
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 1
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]
+    assert len(msg["event"]["events"]) == 1 + result_count
+
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    await websocket_client.send_json(
+        {
+            "id": 2,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "entity_ids": [entity_id],
+        }
+    )
+    response = await websocket_client.receive_json()
+    assert response["success"]
+    assert response["id"] == 2
+
+    results = response["result"]
+    assert len(results) == result_count

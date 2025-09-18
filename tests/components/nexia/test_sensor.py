@@ -12,7 +12,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     await async_init_integration(hass)
 
     state = hass.states.get("sensor.nick_office_temperature")
-    assert state.state == "23"
+    assert round(float(state.state)) == 23
 
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
@@ -23,7 +23,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.nick_office_zone_setpoint_status")
@@ -35,7 +35,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.nick_office_zone_status")
@@ -48,7 +48,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.master_suite_air_cleaner_mode")
@@ -61,11 +61,11 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.master_suite_current_compressor_speed")
-    assert state.state == "69.0"
+    assert round(float(state.state)) == 69
 
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
@@ -75,11 +75,11 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.master_suite_outdoor_temperature")
-    assert state.state == "30.6"
+    assert round(float(state.state), 1) == 30.6
 
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
@@ -90,7 +90,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.master_suite_humidity")
@@ -105,7 +105,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.master_suite_requested_compressor_speed")
@@ -119,7 +119,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.master_suite_system_status")
@@ -132,5 +132,5 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )

@@ -6,17 +6,18 @@ https://home-assistant.io/components/vacuum.romy/.
 
 from typing import Any
 
-from romy import RomyRobot
-
-from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeature
+from homeassistant.components.vacuum import (
+    StateVacuumEntity,
+    VacuumActivity,
+    VacuumEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, LOGGER
 from .coordinator import RomyVacuumCoordinator
+from .entity import RomyEntity
 
 FAN_SPEED_NONE = "default"
 FAN_SPEED_NORMAL = "normal"
@@ -50,44 +51,42 @@ SUPPORT_ROMY_ROBOT = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ROMY vacuum cleaner."""
 
     coordinator: RomyVacuumCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([RomyVacuumEntity(coordinator, coordinator.romy)], True)
+    async_add_entities([RomyVacuumEntity(coordinator)])
 
 
-class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEntity):
+class RomyVacuumEntity(RomyEntity, StateVacuumEntity):
     """Representation of a ROMY vacuum cleaner robot."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
     _attr_supported_features = SUPPORT_ROMY_ROBOT
     _attr_fan_speed_list = FAN_SPEEDS
+    _attr_name = None
 
     def __init__(
         self,
         coordinator: RomyVacuumCoordinator,
-        romy: RomyRobot,
     ) -> None:
         """Initialize the ROMY Robot."""
         super().__init__(coordinator)
-        self.romy = romy
         self._attr_unique_id = self.romy.unique_id
-        self._device_info = DeviceInfo(
-            identifiers={(DOMAIN, romy.unique_id)},
-            manufacturer="ROMY",
-            name=romy.name,
-            model=romy.model,
-        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_fan_speed = FAN_SPEEDS[self.romy.fan_speed]
         self._attr_battery_level = self.romy.battery_level
-        self._attr_state = self.romy.status
+        if (status := self.romy.status) is None:
+            self._attr_activity = None
+            self.async_write_ha_state()
+            return
+        try:
+            self._attr_activity = VacuumActivity(status)
+        except ValueError:
+            self._attr_activity = None
 
         self.async_write_ha_state()
 

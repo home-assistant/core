@@ -10,23 +10,28 @@ import logging
 from math import ceil, floor
 from typing import TYPE_CHECKING, Any, Self, final
 
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
-from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    async_get_hass_or_none,
+    callback,
 )
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_suggest_report_issue
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
+    AMBIGUOUS_UNITS,
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
@@ -34,6 +39,7 @@ from .const import (  # noqa: F401
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     SERVICE_SET_VALUE,
@@ -43,18 +49,16 @@ from .const import (  # noqa: F401
 )
 from .websocket_api import async_setup as async_setup_ws_api
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[NumberEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SCAN_INTERVAL = timedelta(seconds=30)
 
 __all__ = [
     "ATTR_MAX",
@@ -65,8 +69,8 @@ __all__ = [
     "DEFAULT_MIN_VALUE",
     "DEFAULT_STEP",
     "DOMAIN",
-    "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
     "NumberDeviceClass",
     "NumberEntity",
     "NumberEntityDescription",
@@ -80,7 +84,7 @@ __all__ = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Number entities."""
-    component = hass.data[DOMAIN] = EntityComponent[NumberEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[NumberEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     async_setup_ws_api(hass)
@@ -99,10 +103,17 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
     """Service call wrapper to set a new value."""
     value = service_call.data["value"]
     if value < entity.min_value or value > entity.max_value:
-        raise ValueError(
-            f"Value {value} for {entity.entity_id} is outside valid range"
-            f" {entity.min_value} - {entity.max_value}"
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="out_of_range",
+            translation_placeholders={
+                "value": value,
+                "entity_id": entity.entity_id,
+                "min_value": str(entity.min_value),
+                "max_value": str(entity.max_value),
+            },
         )
+
     try:
         native_value = entity.convert_to_native_value(value)
         # Clamp to the native range
@@ -116,14 +127,12 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[NumberEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[NumberEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class NumberEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -209,10 +218,9 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 "value",
             )
         ):
-            hass: HomeAssistant | None = None
-            with suppress(HomeAssistantError):
-                hass = async_get_hass()
-            report_issue = async_suggest_report_issue(hass, module=cls.__module__)
+            report_issue = async_suggest_report_issue(
+                async_get_hass_or_none(), module=cls.__module__
+            )
             _LOGGER.warning(
                 (
                     "%s::%s is overriding deprecated methods on an instance of "
@@ -360,6 +368,19 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return self.entity_description.native_unit_of_measurement
         return None
 
+    @final
+    @property
+    def __native_unit_of_measurement_compat(self) -> str | None:
+        """Handle wrong character coding in unit provided by integrations.
+
+        NumberEntity should read the number's native unit through this property instead
+        of through native_unit_of_measurement.
+        """
+        native_unit_of_measurement = self.native_unit_of_measurement
+        return AMBIGUOUS_UNITS.get(
+            native_unit_of_measurement, native_unit_of_measurement
+        )
+
     @property
     @final
     def unit_of_measurement(self) -> str | None:
@@ -367,7 +388,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self._number_option_unit_of_measurement:
             return self._number_option_unit_of_measurement
 
-        native_unit_of_measurement = self.native_unit_of_measurement
+        native_unit_of_measurement = self.__native_unit_of_measurement_compat
         # device_class is checked after native_unit_of_measurement since most
         # of the time we can avoid the device_class check
         if (
@@ -376,6 +397,20 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             and self.device_class == NumberDeviceClass.TEMPERATURE
         ):
             return self.hass.config.units.temperature_unit
+
+        if (translation_key := self._unit_of_measurement_translation_key) and (
+            unit_of_measurement
+            := self.platform_data.default_language_platform_translations.get(
+                translation_key
+            )
+        ):
+            if native_unit_of_measurement is not None:
+                raise ValueError(
+                    f"Number entity {type(self)} from integration '{self.platform.platform_name}' "
+                    f"has a translation key for unit_of_measurement '{unit_of_measurement}', "
+                    f"but also has a native_unit_of_measurement '{native_unit_of_measurement}'"
+                )
+            return unit_of_measurement
 
         return native_unit_of_measurement
 
@@ -422,7 +457,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if device_class not in UNIT_CONVERTERS:
             return value
 
-        native_unit_of_measurement = self.native_unit_of_measurement
+        native_unit_of_measurement = self.__native_unit_of_measurement_compat
         unit_of_measurement = self.unit_of_measurement
         if native_unit_of_measurement != unit_of_measurement:
             if TYPE_CHECKING:
@@ -451,7 +486,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if value is None or (device_class := self.device_class) not in UNIT_CONVERTERS:
             return value
 
-        native_unit_of_measurement = self.native_unit_of_measurement
+        native_unit_of_measurement = self.__native_unit_of_measurement_compat
         unit_of_measurement = self.unit_of_measurement
         if native_unit_of_measurement != unit_of_measurement:
             if TYPE_CHECKING:
@@ -474,7 +509,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             (number_options := self.registry_entry.options.get(DOMAIN))
             and (custom_unit := number_options.get(CONF_UNIT_OF_MEASUREMENT))
             and (device_class := self.device_class) in UNIT_CONVERTERS
-            and self.native_unit_of_measurement
+            and self.__native_unit_of_measurement_compat
             in UNIT_CONVERTERS[device_class].VALID_UNITS
             and custom_unit in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):

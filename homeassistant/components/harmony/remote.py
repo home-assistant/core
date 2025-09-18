@@ -19,13 +19,12 @@ from homeassistant.components.remote import (
     RemoteEntity,
     RemoteEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HassJob, HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ACTIVITY_POWER_OFF,
@@ -33,13 +32,12 @@ from .const import (
     ATTR_DEVICES_LIST,
     ATTR_LAST_ACTIVITY,
     DOMAIN,
-    HARMONY_DATA,
     HARMONY_OPTIONS_UPDATE,
     PREVIOUS_ACTIVE_ACTIVITY,
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
 )
-from .data import HarmonyData
+from .data import HarmonyConfigEntry, HarmonyData
 from .entity import HarmonyEntity
 from .subscriber import HarmonyCallback
 
@@ -50,17 +48,18 @@ PARALLEL_UPDATES = 0
 
 ATTR_CHANNEL = "channel"
 
-HARMONY_CHANGE_CHANNEL_SCHEMA = {
+HARMONY_CHANGE_CHANNEL_SCHEMA: VolDictType = {
     vol.Required(ATTR_CHANNEL): cv.positive_int,
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: HarmonyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Harmony config entry."""
-
-    data: HarmonyData = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
+    data = entry.runtime_data
 
     _LOGGER.debug("HarmonyData : %s", data)
 
@@ -75,7 +74,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SYNC,
-        {},
+        None,
         "sync",
     )
     platform.async_register_entity_service(
@@ -138,7 +137,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
 
         _LOGGER.debug("%s: Harmony Hub added", self._data.name)
 
-        self.async_on_remove(self._clear_disconnection_delay)
+        self.async_on_remove(self._async_clear_disconnection_delay)
         self._setup_callbacks()
 
         self.async_on_remove(

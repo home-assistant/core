@@ -19,7 +19,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
 from .entity import MatterEntity
@@ -31,8 +31,14 @@ OPERATIONAL_STATUS_MASK = 0b11
 
 # map Matter window cover types to HA device class
 TYPE_MAP = {
+    clusters.WindowCovering.Enums.Type.kRollerShade: CoverDeviceClass.SHADE,
+    clusters.WindowCovering.Enums.Type.kRollerShade2Motor: CoverDeviceClass.SHADE,
+    clusters.WindowCovering.Enums.Type.kRollerShadeExterior: CoverDeviceClass.SHADE,
+    clusters.WindowCovering.Enums.Type.kRollerShadeExterior2Motor: CoverDeviceClass.SHADE,
     clusters.WindowCovering.Enums.Type.kAwning: CoverDeviceClass.AWNING,
     clusters.WindowCovering.Enums.Type.kDrapery: CoverDeviceClass.CURTAIN,
+    clusters.WindowCovering.Enums.Type.kTiltBlindTiltOnly: CoverDeviceClass.BLIND,
+    clusters.WindowCovering.Enums.Type.kTiltBlindLiftAndTilt: CoverDeviceClass.BLIND,
 }
 
 
@@ -48,7 +54,7 @@ class OperationalStatus(IntEnum):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Cover from Config Entry."""
     matter = get_matter(hass)
@@ -100,14 +106,6 @@ class MatterCover(MatterEntity, CoverEntity):
         await self.send_device_command(
             # value needs to be inverted and is sent in 100ths
             clusters.WindowCovering.Commands.GoToTiltPercentage((100 - position) * 100)
-        )
-
-    async def send_device_command(self, command: Any) -> None:
-        """Send device command."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
         )
 
     @callback
@@ -200,7 +198,10 @@ class MatterCover(MatterEntity, CoverEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.COVER,
-        entity_description=CoverEntityDescription(key="MatterCover", name=None),
+        entity_description=CoverEntityDescription(
+            key="MatterCover",
+            name=None,
+        ),
         entity_class=MatterCover,
         required_attributes=(
             clusters.WindowCovering.Attributes.OperationalStatus,

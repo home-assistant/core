@@ -1,22 +1,52 @@
 """The Flipr integration."""
 
+import logging
+
+from flipr_api import FliprAPIRestClient
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import FliprDataUpdateCoordinator
+from .coordinator import (
+    FliprConfigEntry,
+    FliprData,
+    FliprDataUpdateCoordinator,
+    FliprHubDataUpdateCoordinator,
+)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
+
+_LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Flipr from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
+async def async_setup_entry(hass: HomeAssistant, entry: FliprConfigEntry) -> bool:
+    """Set up flipr from a config entry."""
 
-    coordinator = FliprDataUpdateCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    config = entry.data
+
+    username = config[CONF_EMAIL]
+    password = config[CONF_PASSWORD]
+
+    _LOGGER.debug("Initializing Flipr client %s", username)
+    client = FliprAPIRestClient(username, password)
+    ids = await hass.async_add_executor_job(client.search_all_ids)
+
+    _LOGGER.debug("List of devices ids : %s", ids)
+
+    flipr_coordinators = []
+    for flipr_id in ids["flipr"]:
+        flipr_coordinator = FliprDataUpdateCoordinator(hass, entry, client, flipr_id)
+        await flipr_coordinator.async_config_entry_first_refresh()
+        flipr_coordinators.append(flipr_coordinator)
+
+    hub_coordinators = []
+    for hub_id in ids["hub"]:
+        hub_coordinator = FliprHubDataUpdateCoordinator(hass, entry, client, hub_id)
+        await hub_coordinator.async_config_entry_first_refresh()
+        hub_coordinators.append(hub_coordinator)
+
+    entry.runtime_data = FliprData(flipr_coordinators, hub_coordinators)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -25,9 +55,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

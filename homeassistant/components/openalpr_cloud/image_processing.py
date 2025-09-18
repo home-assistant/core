@@ -6,6 +6,7 @@ import asyncio
 from base64 import b64encode
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import aiohttp
 import voluptuous as vol
@@ -13,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
     CONF_CONFIDENCE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingDeviceClass,
     ImageProcessingEntity,
 )
@@ -26,8 +27,8 @@ from homeassistant.const import (
     CONF_SOURCE,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -57,7 +58,7 @@ OPENALPR_REGIONS = [
     "vn2",
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_REGION): vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
@@ -72,7 +73,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the OpenALPR cloud API platform."""
-    confidence = config[CONF_CONFIDENCE]
+    confidence: float = config[CONF_CONFIDENCE]
+    source: list[dict[str, str]] = config[CONF_SOURCE]
     params = {
         "secret_key": config[CONF_API_KEY],
         "tasks": "plate",
@@ -84,7 +86,7 @@ async def async_setup_platform(
         OpenAlprCloudEntity(
             camera[CONF_ENTITY_ID], params, confidence, camera.get(CONF_NAME)
         )
-        for camera in config[CONF_SOURCE]
+        for camera in source
     )
 
 
@@ -99,10 +101,10 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         self.vehicles = 0
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the entity."""
-        confidence = 0
-        plate = None
+        confidence = 0.0
+        plate: str | None = None
 
         # search high plate
         for i_pl, i_co in self.plates.items():
@@ -112,7 +114,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         return plate
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
 
@@ -156,35 +158,26 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
 class OpenAlprCloudEntity(ImageProcessingAlprEntity):
     """Representation of an OpenALPR cloud entity."""
 
-    def __init__(self, camera_entity, params, confidence, name=None):
+    def __init__(
+        self,
+        camera_entity: str,
+        params: dict[str, Any],
+        confidence: float,
+        name: str | None,
+    ) -> None:
         """Initialize OpenALPR cloud API."""
         super().__init__()
 
         self._params = params
-        self._camera = camera_entity
-        self._confidence = confidence
+        self._attr_camera_entity = camera_entity
+        self._attr_confidence = confidence
 
         if name:
-            self._name = name
+            self._attr_name = name
         else:
-            self._name = f"OpenAlpr {split_entity_id(camera_entity)[1]}"
+            self._attr_name = f"OpenAlpr {split_entity_id(camera_entity)[1]}"
 
-    @property
-    def confidence(self):
-        """Return minimum confidence for send events."""
-        return self._confidence
-
-    @property
-    def camera_entity(self):
-        """Return camera entity id from process pictures."""
-        return self._camera
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    async def async_process_image(self, image):
+    async def async_process_image(self, image: bytes) -> None:
         """Process image.
 
         This method is a coroutine.

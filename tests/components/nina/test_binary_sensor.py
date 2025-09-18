@@ -17,6 +17,7 @@ from homeassistant.components.nina.const import (
     ATTR_SENT,
     ATTR_SEVERITY,
     ATTR_START,
+    ATTR_WEB,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -48,7 +49,7 @@ ENTRY_DATA_NO_AREA: dict[str, Any] = {
 }
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the creation and values of the NINA sensors."""
 
     with patch(
@@ -58,17 +59,15 @@ async def test_sensors(hass: HomeAssistant) -> None:
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA
         )
-
-        entity_registry: er = er.async_get(hass)
         conf_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(conf_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert conf_entry.state == ConfigEntryState.LOADED
+        assert conf_entry.state is ConfigEntryState.LOADED
 
-        state_w1 = hass.states.get("binary_sensor.warning_aach_stadt_1")
-        entry_w1 = entity_registry.async_get("binary_sensor.warning_aach_stadt_1")
+        state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
+        entry_w1 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_1")
 
         assert state_w1.state == STATE_ON
         assert state_w1.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
@@ -79,6 +78,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w1.attributes.get(ATTR_SENDER) == "Deutscher Wetterdienst"
         assert state_w1.attributes.get(ATTR_SEVERITY) == "Minor"
         assert state_w1.attributes.get(ATTR_RECOMMENDED_ACTIONS) == ""
+        assert state_w1.attributes.get(ATTR_WEB) == "https://www.wettergefahren.de"
         assert (
             state_w1.attributes.get(ATTR_AFFECTED_AREAS)
             == "Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Liebenzell, Stadt Solingen, Stadt Haiterbach, Stadt Bad Herrenalb, Gemeinde Höfen an der Enz, Gemeinde Gechingen, Gemeinde Enzklösterle, Gemeinde Gutach (Schwarzwaldbahn) und 3392 weitere."
@@ -91,8 +91,8 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert entry_w1.unique_id == "083350000000-1"
         assert state_w1.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
-        state_w2 = hass.states.get("binary_sensor.warning_aach_stadt_2")
-        entry_w2 = entity_registry.async_get("binary_sensor.warning_aach_stadt_2")
+        state_w2 = hass.states.get("binary_sensor.nina_warning_aach_stadt_2")
+        entry_w2 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_2")
 
         assert state_w2.state == STATE_OFF
         assert state_w2.attributes.get(ATTR_HEADLINE) is None
@@ -100,6 +100,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w2.attributes.get(ATTR_SENDER) is None
         assert state_w2.attributes.get(ATTR_SEVERITY) is None
         assert state_w2.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w2.attributes.get(ATTR_WEB) is None
         assert state_w2.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w2.attributes.get(ATTR_ID) is None
         assert state_w2.attributes.get(ATTR_SENT) is None
@@ -109,8 +110,8 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert entry_w2.unique_id == "083350000000-2"
         assert state_w2.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
-        state_w3 = hass.states.get("binary_sensor.warning_aach_stadt_3")
-        entry_w3 = entity_registry.async_get("binary_sensor.warning_aach_stadt_3")
+        state_w3 = hass.states.get("binary_sensor.nina_warning_aach_stadt_3")
+        entry_w3 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_3")
 
         assert state_w3.state == STATE_OFF
         assert state_w3.attributes.get(ATTR_HEADLINE) is None
@@ -118,6 +119,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w3.attributes.get(ATTR_SENDER) is None
         assert state_w3.attributes.get(ATTR_SEVERITY) is None
         assert state_w3.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w3.attributes.get(ATTR_WEB) is None
         assert state_w3.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w3.attributes.get(ATTR_ID) is None
         assert state_w3.attributes.get(ATTR_SENT) is None
@@ -127,8 +129,8 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert entry_w3.unique_id == "083350000000-3"
         assert state_w3.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
-        state_w4 = hass.states.get("binary_sensor.warning_aach_stadt_4")
-        entry_w4 = entity_registry.async_get("binary_sensor.warning_aach_stadt_4")
+        state_w4 = hass.states.get("binary_sensor.nina_warning_aach_stadt_4")
+        entry_w4 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_4")
 
         assert state_w4.state == STATE_OFF
         assert state_w4.attributes.get(ATTR_HEADLINE) is None
@@ -136,6 +138,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w4.attributes.get(ATTR_SENDER) is None
         assert state_w4.attributes.get(ATTR_SEVERITY) is None
         assert state_w4.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w4.attributes.get(ATTR_WEB) is None
         assert state_w4.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w4.attributes.get(ATTR_ID) is None
         assert state_w4.attributes.get(ATTR_SENT) is None
@@ -145,8 +148,8 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert entry_w4.unique_id == "083350000000-4"
         assert state_w4.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
-        state_w5 = hass.states.get("binary_sensor.warning_aach_stadt_5")
-        entry_w5 = entity_registry.async_get("binary_sensor.warning_aach_stadt_5")
+        state_w5 = hass.states.get("binary_sensor.nina_warning_aach_stadt_5")
+        entry_w5 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_5")
 
         assert state_w5.state == STATE_OFF
         assert state_w5.attributes.get(ATTR_HEADLINE) is None
@@ -154,6 +157,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get(ATTR_SENDER) is None
         assert state_w5.attributes.get(ATTR_SEVERITY) is None
         assert state_w5.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w5.attributes.get(ATTR_WEB) is None
         assert state_w5.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w5.attributes.get(ATTR_ID) is None
         assert state_w5.attributes.get(ATTR_SENT) is None
@@ -164,7 +168,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
 
-async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
+async def test_sensors_without_corona_filter(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the creation and values of the NINA sensors without the corona filter."""
 
     with patch(
@@ -174,17 +180,15 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA_NO_CORONA
         )
-
-        entity_registry: er = er.async_get(hass)
         conf_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(conf_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert conf_entry.state == ConfigEntryState.LOADED
+        assert conf_entry.state is ConfigEntryState.LOADED
 
-        state_w1 = hass.states.get("binary_sensor.warning_aach_stadt_1")
-        entry_w1 = entity_registry.async_get("binary_sensor.warning_aach_stadt_1")
+        state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
+        entry_w1 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_1")
 
         assert state_w1.state == STATE_ON
         assert (
@@ -201,6 +205,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
             state_w1.attributes.get(ATTR_RECOMMENDED_ACTIONS)
             == "Waschen sich regelmäßig und gründlich die Hände."
         )
+        assert state_w1.attributes.get(ATTR_WEB) == ""
         assert (
             state_w1.attributes.get(ATTR_AFFECTED_AREAS)
             == "Bundesland: Freie Hansestadt Bremen, Land Berlin, Land Hessen, Land Nordrhein-Westfalen, Land Brandenburg, Freistaat Bayern, Land Mecklenburg-Vorpommern, Land Rheinland-Pfalz, Freistaat Sachsen, Land Schleswig-Holstein, Freie und Hansestadt Hamburg, Freistaat Thüringen, Land Niedersachsen, Land Saarland, Land Sachsen-Anhalt, Land Baden-Württemberg"
@@ -213,8 +218,8 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert entry_w1.unique_id == "083350000000-1"
         assert state_w1.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
-        state_w2 = hass.states.get("binary_sensor.warning_aach_stadt_2")
-        entry_w2 = entity_registry.async_get("binary_sensor.warning_aach_stadt_2")
+        state_w2 = hass.states.get("binary_sensor.nina_warning_aach_stadt_2")
+        entry_w2 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_2")
 
         assert state_w2.state == STATE_ON
         assert state_w2.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
@@ -229,6 +234,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w2.attributes.get(ATTR_SENDER) == "Deutscher Wetterdienst"
         assert state_w2.attributes.get(ATTR_SEVERITY) == "Minor"
         assert state_w2.attributes.get(ATTR_RECOMMENDED_ACTIONS) == ""
+        assert state_w2.attributes.get(ATTR_WEB) == "https://www.wettergefahren.de"
         assert state_w2.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
         assert state_w2.attributes.get(ATTR_SENT) == "2021-10-11T05:20:00+01:00"
         assert state_w2.attributes.get(ATTR_START) == "2021-11-01T05:20:00+01:00"
@@ -237,8 +243,8 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert entry_w2.unique_id == "083350000000-2"
         assert state_w2.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
-        state_w3 = hass.states.get("binary_sensor.warning_aach_stadt_3")
-        entry_w3 = entity_registry.async_get("binary_sensor.warning_aach_stadt_3")
+        state_w3 = hass.states.get("binary_sensor.nina_warning_aach_stadt_3")
+        entry_w3 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_3")
 
         assert state_w3.state == STATE_OFF
         assert state_w3.attributes.get(ATTR_HEADLINE) is None
@@ -246,6 +252,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w3.attributes.get(ATTR_SENDER) is None
         assert state_w3.attributes.get(ATTR_SEVERITY) is None
         assert state_w3.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w3.attributes.get(ATTR_WEB) is None
         assert state_w3.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w3.attributes.get(ATTR_ID) is None
         assert state_w3.attributes.get(ATTR_SENT) is None
@@ -255,8 +262,8 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert entry_w3.unique_id == "083350000000-3"
         assert state_w3.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
-        state_w4 = hass.states.get("binary_sensor.warning_aach_stadt_4")
-        entry_w4 = entity_registry.async_get("binary_sensor.warning_aach_stadt_4")
+        state_w4 = hass.states.get("binary_sensor.nina_warning_aach_stadt_4")
+        entry_w4 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_4")
 
         assert state_w4.state == STATE_OFF
         assert state_w4.attributes.get(ATTR_HEADLINE) is None
@@ -264,6 +271,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w4.attributes.get(ATTR_SENDER) is None
         assert state_w4.attributes.get(ATTR_SEVERITY) is None
         assert state_w4.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w4.attributes.get(ATTR_WEB) is None
         assert state_w4.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w4.attributes.get(ATTR_ID) is None
         assert state_w4.attributes.get(ATTR_SENT) is None
@@ -273,8 +281,8 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert entry_w4.unique_id == "083350000000-4"
         assert state_w4.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
-        state_w5 = hass.states.get("binary_sensor.warning_aach_stadt_5")
-        entry_w5 = entity_registry.async_get("binary_sensor.warning_aach_stadt_5")
+        state_w5 = hass.states.get("binary_sensor.nina_warning_aach_stadt_5")
+        entry_w5 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_5")
 
         assert state_w5.state == STATE_OFF
         assert state_w5.attributes.get(ATTR_HEADLINE) is None
@@ -282,6 +290,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get(ATTR_SENDER) is None
         assert state_w5.attributes.get(ATTR_SEVERITY) is None
         assert state_w5.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w5.attributes.get(ATTR_WEB) is None
         assert state_w5.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w5.attributes.get(ATTR_ID) is None
         assert state_w5.attributes.get(ATTR_SENT) is None
@@ -292,7 +301,9 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
 
-async def test_sensors_with_area_filter(hass: HomeAssistant) -> None:
+async def test_sensors_with_area_filter(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the creation and values of the NINA sensors with an area filter."""
 
     with patch(
@@ -302,49 +313,47 @@ async def test_sensors_with_area_filter(hass: HomeAssistant) -> None:
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA_NO_AREA
         )
-
-        entity_registry: er = er.async_get(hass)
         conf_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(conf_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert conf_entry.state == ConfigEntryState.LOADED
+        assert conf_entry.state is ConfigEntryState.LOADED
 
-        state_w1 = hass.states.get("binary_sensor.warning_aach_stadt_1")
-        entry_w1 = entity_registry.async_get("binary_sensor.warning_aach_stadt_1")
+        state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
+        entry_w1 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_1")
 
         assert state_w1.state == STATE_ON
 
         assert entry_w1.unique_id == "083350000000-1"
         assert state_w1.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
-        state_w2 = hass.states.get("binary_sensor.warning_aach_stadt_2")
-        entry_w2 = entity_registry.async_get("binary_sensor.warning_aach_stadt_2")
+        state_w2 = hass.states.get("binary_sensor.nina_warning_aach_stadt_2")
+        entry_w2 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_2")
 
         assert state_w2.state == STATE_OFF
 
         assert entry_w2.unique_id == "083350000000-2"
         assert state_w2.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
-        state_w3 = hass.states.get("binary_sensor.warning_aach_stadt_3")
-        entry_w3 = entity_registry.async_get("binary_sensor.warning_aach_stadt_3")
+        state_w3 = hass.states.get("binary_sensor.nina_warning_aach_stadt_3")
+        entry_w3 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_3")
 
         assert state_w3.state == STATE_OFF
 
         assert entry_w3.unique_id == "083350000000-3"
         assert state_w3.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
-        state_w4 = hass.states.get("binary_sensor.warning_aach_stadt_4")
-        entry_w4 = entity_registry.async_get("binary_sensor.warning_aach_stadt_4")
+        state_w4 = hass.states.get("binary_sensor.nina_warning_aach_stadt_4")
+        entry_w4 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_4")
 
         assert state_w4.state == STATE_OFF
 
         assert entry_w4.unique_id == "083350000000-4"
         assert state_w4.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
-        state_w5 = hass.states.get("binary_sensor.warning_aach_stadt_5")
-        entry_w5 = entity_registry.async_get("binary_sensor.warning_aach_stadt_5")
+        state_w5 = hass.states.get("binary_sensor.nina_warning_aach_stadt_5")
+        entry_w5 = entity_registry.async_get("binary_sensor.nina_warning_aach_stadt_5")
 
         assert state_w5.state == STATE_OFF
 

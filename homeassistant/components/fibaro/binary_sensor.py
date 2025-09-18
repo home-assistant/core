@@ -12,13 +12,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FibaroController, FibaroDevice
-from .const import DOMAIN
+from . import FibaroConfigEntry
+from .entity import FibaroEntity
 
 SENSOR_TYPES = {
     "com.fibaro.floodSensor": ["Flood", "mdi:water", BinarySensorDeviceClass.MOISTURE],
@@ -42,11 +41,11 @@ SENSOR_TYPES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FibaroConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
-    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
+    controller = entry.runtime_data
     async_add_entities(
         [
             FibaroBinarySensor(device)
@@ -56,7 +55,7 @@ async def async_setup_entry(
     )
 
 
-class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
+class FibaroBinarySensor(FibaroEntity, BinarySensorEntity):
     """Representation of a Fibaro Binary Sensor."""
 
     def __init__(self, fibaro_device: DeviceModel) -> None:
@@ -76,9 +75,9 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
             self._attr_icon = SENSOR_TYPES[self._fibaro_sensor_type][1]
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the extra state attributes of the device."""
-        return super().extra_state_attributes | self._own_extra_state_attributes
+        return {**super().extra_state_attributes, **self._own_extra_state_attributes}
 
     def update(self) -> None:
         """Get the latest data and update the state."""

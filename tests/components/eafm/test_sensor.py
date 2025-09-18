@@ -1,15 +1,18 @@
 """Tests for polling measures."""
 
+from collections.abc import Callable, Coroutine
 import datetime
+from typing import Any
+from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -23,7 +26,9 @@ CONNECTION_EXCEPTIONS = [
 ]
 
 
-async def async_setup_test_fixture(hass, mock_get_station, initial_value):
+async def async_setup_test_fixture(
+    hass: HomeAssistant, mock_get_station: AsyncMock, initial_value: dict[str, Any]
+) -> tuple[MockConfigEntry, Callable[[Any], Coroutine[Any, Any, None]]]:
     """Create a dummy config entry for testing polling."""
     mock_get_station.return_value = initial_value
 
@@ -37,7 +42,7 @@ async def async_setup_test_fixture(hass, mock_get_station, initial_value):
     entry.add_to_hass(hass)
 
     assert await async_setup_component(hass, "eafm", {})
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     await hass.async_block_till_done()
 
     async def poll(value):
@@ -447,7 +452,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_get_station) -> None:
     state = hass.states.get("sensor.my_station_water_level_stage")
     assert state.state == "5"
 
-    assert await entry.async_unload(hass)
+    await hass.config_entries.async_unload(entry.entry_id)
 
     # And the entity should be unavailable
     assert (

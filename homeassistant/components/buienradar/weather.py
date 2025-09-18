@@ -9,6 +9,7 @@ from buienradar.constants import (
     MAX_TEMP,
     MIN_TEMP,
     RAIN,
+    RAIN_CHANCE,
     WINDAZIMUTH,
     WINDSPEED,
 )
@@ -33,13 +34,13 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -52,10 +53,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-# Reuse data and API logic from the sensor implementation
-from .const import DEFAULT_TIMEFRAME, DOMAIN
+from . import BuienRadarConfigEntry
+from .const import DEFAULT_TIMEFRAME
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +94,9 @@ CONDITION_MAP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: BuienRadarConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the buienradar platform."""
     config = entry.data
@@ -113,7 +116,7 @@ async def async_setup_entry(
 
     # create weather data:
     data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, entities)
-    hass.data[DOMAIN][entry.entry_id][Platform.WEATHER] = data
+    entry.runtime_data[Platform.WEATHER] = data
     await data.async_update()
 
     async_add_entities(entities)
@@ -130,7 +133,7 @@ class BrWeather(WeatherEntity):
     _attr_should_poll = False
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
-    def __init__(self, config, coordinates):
+    def __init__(self, config, coordinates) -> None:
         """Initialize the platform with a data instance and station name."""
         self._stationname = config.get(CONF_NAME, "Buienradar")
         self._attr_name = self._stationname or f"BR {'(unknown station)'}"
@@ -138,20 +141,23 @@ class BrWeather(WeatherEntity):
         self._attr_unique_id = (
             f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
         )
+        self._forecast: list | None = None
 
     @callback
     def data_updated(self, data: BrData) -> None:
         """Update data."""
         self._attr_attribution = data.attribution
         self._attr_condition = self._calc_condition(data)
-        self._attr_forecast = self._calc_forecast(data)
+        self._forecast = self._calc_forecast(data)
         self._attr_humidity = data.humidity
         self._attr_name = (
             self._stationname or f"BR {data.stationname or '(unknown station)'}"
         )
         self._attr_native_pressure = data.pressure
         self._attr_native_temperature = data.temperature
+        self._attr_native_apparent_temperature = data.feeltemperature
         self._attr_native_visibility = data.visibility
+        self._attr_native_wind_gust_speed = data.wind_gust
         self._attr_native_wind_speed = data.wind_speed
         self._attr_wind_bearing = data.wind_bearing
 
@@ -186,6 +192,7 @@ class BrWeather(WeatherEntity):
                 ATTR_FORECAST_NATIVE_TEMP_LOW: data_in.get(MIN_TEMP),
                 ATTR_FORECAST_NATIVE_TEMP: data_in.get(MAX_TEMP),
                 ATTR_FORECAST_NATIVE_PRECIPITATION: data_in.get(RAIN),
+                ATTR_FORECAST_PRECIPITATION_PROBABILITY: data_in.get(RAIN_CHANCE),
                 ATTR_FORECAST_WIND_BEARING: data_in.get(WINDAZIMUTH),
                 ATTR_FORECAST_NATIVE_WIND_SPEED: data_in.get(WINDSPEED),
             }
@@ -196,4 +203,4 @@ class BrWeather(WeatherEntity):
 
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self._attr_forecast
+        return self._forecast

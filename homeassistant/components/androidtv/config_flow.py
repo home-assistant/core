@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
@@ -34,7 +34,7 @@ from .const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
-    CONF_SCREENCAP,
+    CONF_SCREENCAP_INTERVAL,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
     CONF_TURN_ON_COMMAND,
@@ -43,7 +43,7 @@ from .const import (
     DEFAULT_EXCLUDE_UNNAMED_APPS,
     DEFAULT_GET_SOURCES,
     DEFAULT_PORT,
-    DEFAULT_SCREENCAP,
+    DEFAULT_SCREENCAP_INTERVAL,
     DEVICE_CLASSES,
     DOMAIN,
     PROP_ETHMAC,
@@ -76,6 +76,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @callback
     def _show_setup_form(
@@ -119,7 +120,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             aftv, error_message = await async_connect_androidtv(self.hass, user_input)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Unknown error connecting with Android device at %s",
                 user_input[CONF_HOST],
@@ -131,7 +132,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
             return RESULT_CONN_ERROR, None
 
         dev_prop = aftv.device_properties
-        _LOGGER.info(
+        _LOGGER.debug(
             "Android device at %s: %s = %r, %s = %r",
             user_input[CONF_HOST],
             PROP_ETHMAC,
@@ -185,16 +186,14 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(OptionsFlowWithConfigEntry):
+class OptionsFlowHandler(OptionsFlow):
     """Handle an option flow for Android Debug Bridge."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        super().__init__(config_entry)
-
-        self._apps: dict[str, Any] = self.options.setdefault(CONF_APPS, {})
-        self._state_det_rules: dict[str, Any] = self.options.setdefault(
-            CONF_STATE_DETECTION_RULES, {}
+        self._apps: dict[str, Any] = dict(config_entry.options.get(CONF_APPS, {}))
+        self._state_det_rules: dict[str, Any] = dict(
+            config_entry.options.get(CONF_STATE_DETECTION_RULES, {})
         )
         self._conf_app_id: str | None = None
         self._conf_rule_id: str | None = None
@@ -236,7 +235,7 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
             SelectOptionDict(value=k, label=v) for k, v in apps_list.items()
         ]
         rules = [RULES_NEW_ID, *self._state_det_rules]
-        options = self.options
+        options = self.config_entry.options
 
         data_schema = vol.Schema(
             {
@@ -253,10 +252,12 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
                         CONF_EXCLUDE_UNNAMED_APPS, DEFAULT_EXCLUDE_UNNAMED_APPS
                     ),
                 ): bool,
-                vol.Optional(
-                    CONF_SCREENCAP,
-                    default=options.get(CONF_SCREENCAP, DEFAULT_SCREENCAP),
-                ): bool,
+                vol.Required(
+                    CONF_SCREENCAP_INTERVAL,
+                    default=options.get(
+                        CONF_SCREENCAP_INTERVAL, DEFAULT_SCREENCAP_INTERVAL
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=15)),
                 vol.Optional(
                     CONF_TURN_OFF_COMMAND,
                     description={
@@ -386,4 +387,4 @@ def _validate_state_det_rules(state_det_rules: Any) -> list[Any] | None:
     except ValueError as exc:
         _LOGGER.warning("Invalid state detection rules: %s", exc)
         return None
-    return json_rules  # type: ignore[no-any-return]
+    return json_rules

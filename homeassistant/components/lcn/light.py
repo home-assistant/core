@@ -1,7 +1,7 @@
 """Support for LCN lights."""
 
-from __future__ import annotations
-
+from collections.abc import Iterable
+from functools import partial
 from typing import Any
 
 import pypck
@@ -14,13 +14,12 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES
+from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.color import brightness_to_value, value_to_brightness
 
-from . import LcnEntity
 from .const import (
     CONF_DIMMABLE,
     CONF_DOMAIN_DATA,
@@ -28,36 +27,52 @@ from .const import (
     CONF_TRANSITION,
     OUTPUT_PORTS,
 )
-from .helpers import DeviceConnectionType, InputType, get_device_connection
+from .entity import LcnEntity
+from .helpers import InputType, LcnConfigEntry
+
+BRIGHTNESS_SCALE = (1, 100)
 
 PARALLEL_UPDATES = 0
 
 
-def create_lcn_light_entity(
-    hass: HomeAssistant, entity_config: ConfigType, config_entry: ConfigEntry
-) -> LcnEntity:
-    """Set up an entity for this domain."""
-    device_connection = get_device_connection(
-        hass, entity_config[CONF_ADDRESS], config_entry
-    )
+def add_lcn_entities(
+    config_entry: LcnConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    entity_configs: Iterable[ConfigType],
+) -> None:
+    """Add entities for this domain."""
+    entities: list[LcnOutputLight | LcnRelayLight] = []
+    for entity_config in entity_configs:
+        if entity_config[CONF_DOMAIN_DATA][CONF_OUTPUT] in OUTPUT_PORTS:
+            entities.append(LcnOutputLight(entity_config, config_entry))
+        else:  # in RELAY_PORTS
+            entities.append(LcnRelayLight(entity_config, config_entry))
 
-    if entity_config[CONF_DOMAIN_DATA][CONF_OUTPUT] in OUTPUT_PORTS:
-        return LcnOutputLight(entity_config, config_entry.entry_id, device_connection)
-    # in RELAY_PORTS
-    return LcnRelayLight(entity_config, config_entry.entry_id, device_connection)
+    async_add_entities(entities)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LcnConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN light entities from a config entry."""
+    add_entities = partial(
+        add_lcn_entities,
+        config_entry,
+        async_add_entities,
+    )
 
-    async_add_entities(
-        create_lcn_light_entity(hass, entity_config, config_entry)
-        for entity_config in config_entry.data[CONF_ENTITIES]
-        if entity_config[CONF_DOMAIN] == DOMAIN_LIGHT
+    config_entry.runtime_data.add_entities_callbacks.update(
+        {DOMAIN_LIGHT: add_entities}
+    )
+
+    add_entities(
+        (
+            entity_config
+            for entity_config in config_entry.data[CONF_ENTITIES]
+            if entity_config[CONF_DOMAIN] == DOMAIN_LIGHT
+        ),
     )
 
 
@@ -68,20 +83,16 @@ class LcnOutputLight(LcnEntity, LightEntity):
     _attr_is_on = False
     _attr_brightness = 255
 
-    def __init__(
-        self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
-    ) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN light."""
-        super().__init__(config, entry_id, device_connection)
+        super().__init__(config, config_entry)
 
         self.output = pypck.lcn_defs.OutputPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
         self._transition = pypck.lcn_defs.time_to_ramp_value(
-            config[CONF_DOMAIN_DATA][CONF_TRANSITION]
+            config[CONF_DOMAIN_DATA][CONF_TRANSITION] * 1000.0
         )
         self.dimmable = config[CONF_DOMAIN_DATA][CONF_DIMMABLE]
-
-        self._is_dimming_to_zero = False
 
         if self.dimmable:
             self._attr_color_mode = ColorMode.BRIGHTNESS
@@ -103,10 +114,6 @@ class LcnOutputLight(LcnEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            percent = int(kwargs[ATTR_BRIGHTNESS] / 255.0 * 100)
-        else:
-            percent = 100
         if ATTR_TRANSITION in kwargs:
             transition = pypck.lcn_defs.time_to_ramp_value(
                 kwargs[ATTR_TRANSITION] * 1000
@@ -114,12 +121,23 @@ class LcnOutputLight(LcnEntity, LightEntity):
         else:
             transition = self._transition
 
-        if not await self.device_connection.dim_output(
-            self.output.value, percent, transition
-        ):
+        if ATTR_BRIGHTNESS in kwargs:
+            percent = int(
+                brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
+            )
+            if not await self.device_connection.dim_output(
+                self.output.value, percent, transition
+            ):
+                return
+        elif not self.is_on:
+            if not await self.device_connection.toggle_output(
+                self.output.value, transition, to_memory=True
+            ):
+                return
+        else:
             return
+
         self._attr_is_on = True
-        self._is_dimming_to_zero = False
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -131,13 +149,13 @@ class LcnOutputLight(LcnEntity, LightEntity):
         else:
             transition = self._transition
 
-        if not await self.device_connection.dim_output(
-            self.output.value, 0, transition
-        ):
-            return
-        self._is_dimming_to_zero = bool(transition)
-        self._attr_is_on = False
-        self.async_write_ha_state()
+        if self.is_on:
+            if not await self.device_connection.toggle_output(
+                self.output.value, transition, to_memory=True
+            ):
+                return
+            self._attr_is_on = False
+            self.async_write_ha_state()
 
     def input_received(self, input_obj: InputType) -> None:
         """Set light state when LCN input object (command) is received."""
@@ -147,11 +165,9 @@ class LcnOutputLight(LcnEntity, LightEntity):
         ):
             return
 
-        self._attr_brightness = int(input_obj.get_percent() / 100.0 * 255)
-        if self._attr_brightness == 0:
-            self._is_dimming_to_zero = False
-        if not self._is_dimming_to_zero and self._attr_brightness is not None:
-            self._attr_is_on = self._attr_brightness > 0
+        percent = input_obj.get_percent()
+        self._attr_brightness = value_to_brightness(BRIGHTNESS_SCALE, percent)
+        self._attr_is_on = bool(percent)
         self.async_write_ha_state()
 
 
@@ -162,11 +178,9 @@ class LcnRelayLight(LcnEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_is_on = False
 
-    def __init__(
-        self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
-    ) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN light."""
-        super().__init__(config, entry_id, device_connection)
+        super().__init__(config, config_entry)
 
         self.output = pypck.lcn_defs.RelayPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 

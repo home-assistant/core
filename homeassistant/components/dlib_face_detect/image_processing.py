@@ -6,15 +6,23 @@ import io
 
 import face_recognition
 
-from homeassistant.components.image_processing import ImageProcessingFaceEntity
+from homeassistant.components.image_processing import (
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
+    ImageProcessingFaceEntity,
+)
 from homeassistant.const import ATTR_LOCATION, CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    split_entity_id,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from homeassistant.components.image_processing import (  # noqa: F401, isort:skip
-    PLATFORM_SCHEMA,
-)
+from . import DOMAIN
+
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA
 
 
 def setup_platform(
@@ -24,37 +32,42 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Dlib Face detection platform."""
+    create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_system_packages_yaml_integration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Dlib Face Detect",
+        },
+    )
+    source: list[dict[str, str]] = config[CONF_SOURCE]
     add_entities(
         DlibFaceDetectEntity(camera[CONF_ENTITY_ID], camera.get(CONF_NAME))
-        for camera in config[CONF_SOURCE]
+        for camera in source
     )
 
 
 class DlibFaceDetectEntity(ImageProcessingFaceEntity):
     """Dlib Face API entity for identify."""
 
-    def __init__(self, camera_entity, name=None):
+    def __init__(self, camera_entity: str, name: str | None) -> None:
         """Initialize Dlib face entity."""
         super().__init__()
 
-        self._camera = camera_entity
+        self._attr_camera_entity = camera_entity
 
         if name:
-            self._name = name
+            self._attr_name = name
         else:
-            self._name = f"Dlib Face {split_entity_id(camera_entity)[1]}"
+            self._attr_name = f"Dlib Face {split_entity_id(camera_entity)[1]}"
 
-    @property
-    def camera_entity(self):
-        """Return camera entity id from process pictures."""
-        return self._camera
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    def process_image(self, image):
+    def process_image(self, image: bytes) -> None:
         """Process image."""
 
         fak_file = io.BytesIO(image)

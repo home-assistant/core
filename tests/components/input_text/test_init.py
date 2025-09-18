@@ -1,5 +1,6 @@
 """The tests for the Input text component."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -36,7 +37,7 @@ TEST_VAL_MAX = 22
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):
@@ -70,7 +71,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def async_set_value(hass, entity_id, value):
+async def async_set_value(hass: HomeAssistant, entity_id: str, value: str) -> None:
     """Set input_text to value."""
     await hass.services.async_call(
         DOMAIN,
@@ -80,16 +81,21 @@ async def async_set_value(hass, entity_id, value):
     )
 
 
-async def test_config(hass: HomeAssistant) -> None:
-    """Test config."""
-    invalid_configs = [
+@pytest.mark.parametrize(
+    "invalid_config",
+    [
         None,
-        {},
         {"name with space": None},
-        {"test_1": {"min": 50, "max": 50}},
-    ]
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+        {"test_1": {"min": 51, "max": 50}},
+        {"test_1": {"min": -1, "max": 100}},
+        {"test_1": {"min": 0, "max": 256}},
+        {"test_1": {"min": 0, "max": 3, "initial": "aaaaa"}},
+    ],
+)
+async def test_config(hass: HomeAssistant, invalid_config) -> None:
+    """Test config."""
+
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
 
 
 async def test_set_value(hass: HomeAssistant) -> None:

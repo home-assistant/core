@@ -6,7 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import sensor
-import homeassistant.components.geo_rss_events.sensor as geo_rss_events
+from homeassistant.components.geo_rss_events import sensor as geo_rss_events
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -15,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
 
@@ -99,7 +99,7 @@ async def test_setup(
         # so no changes to entities.
         mock_feed.return_value.update.return_value = "OK_NO_DATA", None
         async_fire_time_changed(hass, utcnow + geo_rss_events.SCAN_INTERVAL)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         all_states = hass.states.async_all()
         assert len(all_states) == 1
@@ -109,7 +109,7 @@ async def test_setup(
         # Simulate an update - empty data, removes all entities
         mock_feed.return_value.update.return_value = "ERROR", None
         async_fire_time_changed(hass, utcnow + 2 * geo_rss_events.SCAN_INTERVAL)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         all_states = hass.states.async_all()
         assert len(all_states) == 1

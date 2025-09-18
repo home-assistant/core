@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from pathlib import Path
 import re
 import tempfile
 from unittest.mock import patch
@@ -36,7 +38,7 @@ from homeassistant.components.matrix import (
     RoomAnyID,
     RoomID,
 )
-from homeassistant.components.matrix.const import DOMAIN as MATRIX_DOMAIN
+from homeassistant.components.matrix.const import DOMAIN
 from homeassistant.components.matrix.notify import CONF_DEFAULT_ROOM
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
@@ -46,7 +48,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
@@ -84,14 +86,12 @@ class _MockAsyncClient(AsyncClient):
             return RoomResolveAliasResponse(
                 room_alias=room_alias, room_id=room_id, servers=[TEST_HOMESERVER]
             )
-        else:
-            return RoomResolveAliasError(message=f"Could not resolve {room_alias}")
+        return RoomResolveAliasError(message=f"Could not resolve {room_alias}")
 
     async def join(self, room_id: RoomID):
         if room_id in TEST_JOINABLE_ROOMS.values():
             return JoinResponse(room_id=room_id)
-        else:
-            return JoinError(message="Not allowed to join this room.")
+        return JoinError(message="Not allowed to join this room.")
 
     async def login(self, *args, **kwargs):
         if kwargs.get("password") == TEST_PASSWORD or kwargs.get("token") == TEST_TOKEN:
@@ -101,9 +101,8 @@ class _MockAsyncClient(AsyncClient):
                 device_id="test_device",
                 user_id=TEST_MXID,
             )
-        else:
-            self.access_token = ""
-            return LoginError(message="LoginError", status_code="status_code")
+        self.access_token = ""
+        return LoginError(message="LoginError", status_code="status_code")
 
     async def logout(self, *args, **kwargs):
         self.access_token = ""
@@ -115,19 +114,17 @@ class _MockAsyncClient(AsyncClient):
             return WhoamiResponse(
                 user_id=TEST_MXID, device_id=TEST_DEVICE_ID, is_guest=False
             )
-        else:
-            self.access_token = ""
-            return WhoamiError(
-                message="Invalid access token passed.", status_code="M_UNKNOWN_TOKEN"
-            )
+        self.access_token = ""
+        return WhoamiError(
+            message="Invalid access token passed.", status_code="M_UNKNOWN_TOKEN"
+        )
 
     async def room_send(self, *args, **kwargs):
         if not self.logged_in:
             raise LocalProtocolError
         if kwargs["room_id"] not in TEST_JOINABLE_ROOMS.values():
             return ErrorResponse(message="Cannot send a message in this room.")
-        else:
-            return Response()
+        return Response()
 
     async def sync(self, *args, **kwargs):
         return None
@@ -140,7 +137,7 @@ class _MockAsyncClient(AsyncClient):
 
 
 MOCK_CONFIG_DATA = {
-    MATRIX_DOMAIN: {
+    DOMAIN: {
         CONF_HOMESERVER: "https://matrix.example.com",
         CONF_USERNAME: TEST_MXID,
         CONF_PASSWORD: TEST_PASSWORD,
@@ -169,7 +166,7 @@ MOCK_CONFIG_DATA = {
     },
     NOTIFY_DOMAIN: {
         CONF_NAME: TEST_NOTIFIER_NAME,
-        CONF_PLATFORM: MATRIX_DOMAIN,
+        CONF_PLATFORM: DOMAIN,
         CONF_DEFAULT_ROOM: TEST_DEFAULT_ROOM,
     },
 }
@@ -270,7 +267,9 @@ def mock_load_json():
 @pytest.fixture
 def mock_allowed_path():
     """Allow using NamedTemporaryFile for mock image."""
-    with patch("homeassistant.core.Config.is_allowed_path", return_value=True) as mock:
+    with patch(
+        "homeassistant.core_config.Config.is_allowed_path", return_value=True
+    ) as mock:
         yield mock
 
 
@@ -283,10 +282,13 @@ async def matrix_bot(
     The resulting MatrixBot will have a mocked _client.
     """
 
-    assert await async_setup_component(hass, MATRIX_DOMAIN, MOCK_CONFIG_DATA)
+    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG_DATA)
     assert await async_setup_component(hass, NOTIFY_DOMAIN, MOCK_CONFIG_DATA)
     await hass.async_block_till_done()
-    assert isinstance(matrix_bot := hass.data[MATRIX_DOMAIN], MatrixBot)
+
+    # Accessing hass.data in tests is not desirable, but all the tests here
+    # currently do this.
+    assert isinstance(matrix_bot := hass.data[DOMAIN], MatrixBot)
 
     await hass.async_start()
 
@@ -294,21 +296,21 @@ async def matrix_bot(
 
 
 @pytest.fixture
-def matrix_events(hass: HomeAssistant):
+def matrix_events(hass: HomeAssistant) -> list[Event]:
     """Track event calls."""
-    return async_capture_events(hass, MATRIX_DOMAIN)
+    return async_capture_events(hass, DOMAIN)
 
 
 @pytest.fixture
-def command_events(hass: HomeAssistant):
+def command_events(hass: HomeAssistant) -> list[Event]:
     """Track event calls."""
     return async_capture_events(hass, EVENT_MATRIX_COMMAND)
 
 
 @pytest.fixture
-def image_path(tmp_path):
+def image_path(tmp_path: Path) -> Generator[tempfile._TemporaryFileWrapper]:
     """Provide the Path to a mock image."""
     image = Image.new("RGBA", size=(50, 50), color=(256, 0, 0))
-    image_file = tempfile.NamedTemporaryFile(dir=tmp_path)
-    image.save(image_file, "PNG")
-    return image_file
+    with tempfile.NamedTemporaryFile(dir=tmp_path) as image_file:
+        image.save(image_file, "PNG")
+        yield image_file

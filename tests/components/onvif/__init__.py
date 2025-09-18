@@ -18,6 +18,7 @@ from homeassistant.components.onvif.models import (
     WebHookManagerState,
 )
 from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -122,7 +123,7 @@ def setup_mock_onvif_camera(
     mock_onvif_camera.side_effect = mock_constructor
 
 
-def setup_mock_device(mock_device, capabilities=None):
+def setup_mock_device(mock_device, capabilities=None, profiles=None):
     """Prepare mock ONVIFDevice."""
     mock_device.async_setup = AsyncMock(return_value=True)
     mock_device.port = 80
@@ -144,13 +145,15 @@ def setup_mock_device(mock_device, capabilities=None):
         ptz=None,
         video_source_token=None,
     )
-    mock_device.profiles = [profile1]
+    mock_device.profiles = profiles or [profile1]
     mock_device.events = MagicMock(
         webhook_manager=MagicMock(state=WebHookManagerState.STARTED),
         pullpoint_manager=MagicMock(state=PullPointManagerState.PAUSED),
     )
 
-    def mock_constructor(hass, config):
+    def mock_constructor(
+        hass: HomeAssistant, config: config_entries.ConfigEntry
+    ) -> MagicMock:
         """Fake the controller constructor."""
         return mock_device
 
@@ -158,7 +161,7 @@ def setup_mock_device(mock_device, capabilities=None):
 
 
 async def setup_onvif_integration(
-    hass,
+    hass: HomeAssistant,
     config=None,
     options=None,
     unique_id=MAC,
@@ -187,13 +190,15 @@ async def setup_onvif_integration(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_onvif_camera, patch(
-        "homeassistant.components.onvif.config_flow.wsdiscovery"
-    ) as mock_discovery, patch(
-        "homeassistant.components.onvif.ONVIFDevice"
-    ) as mock_device:
+    with (
+        patch(
+            "homeassistant.components.onvif.config_flow.get_device"
+        ) as mock_onvif_camera,
+        patch(
+            "homeassistant.components.onvif.config_flow.wsdiscovery"
+        ) as mock_discovery,
+        patch("homeassistant.components.onvif.ONVIFDevice") as mock_device,
+    ):
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
         # no discovery
         mock_discovery.return_value = []

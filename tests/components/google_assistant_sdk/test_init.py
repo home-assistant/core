@@ -6,6 +6,7 @@ import time
 from unittest.mock import call, patch
 
 import aiohttp
+from grpc import RpcError
 import pytest
 
 from homeassistant.components import conversation
@@ -13,6 +14,7 @@ from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.components.google_assistant_sdk.const import SUPPORTED_LANGUAGE_CODES
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -114,6 +116,25 @@ async def test_expired_token_refresh_failure(
     assert entries[0].state is expected_state
 
 
+@pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
+async def test_setup_client_error(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test setup handling aiohttp.ClientError."""
+    aioclient_mock.post(
+        "https://oauth2.googleapis.com/token",
+        exc=aiohttp.ClientError,
+    )
+
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY
+
+
 @pytest.mark.parametrize(
     ("configured_language_code", "expected_language_code"),
     [("", "en-US"), ("en-US", "en-US"), ("es-ES", "es-ES")],
@@ -149,6 +170,7 @@ async def test_send_text_command(
     mock_text_assistant.assert_called_once_with(
         ExpectedCredentials(), expected_language_code, audio_out=False
     )
+    # pylint:disable-next=unnecessary-dunder-call
     mock_text_assistant.assert_has_calls([call().__enter__().assist(command)])
 
 
@@ -230,9 +252,32 @@ async def test_send_text_command_expired_token_refresh_failure(
             {"command": "turn on tv"},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     assert any(entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth
+
+
+async def test_send_text_command_grpc_error(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test service call send_text_command when RpcError is raised."""
+    await setup_integration()
+
+    command = "turn on home assistant unsupported device"
+    with (
+        patch(
+            "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+            side_effect=RpcError(),
+        ) as mock_assist_call,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_text_command",
+            {"command": command},
+            blocking=True,
+        )
+    mock_assist_call.assert_called_once_with(command)
 
 
 async def test_send_text_command_media_player(
@@ -327,6 +372,7 @@ async def test_conversation_agent(
     """Test GoogleAssistantConversationAgent."""
     await setup_integration()
 
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -334,7 +380,7 @@ async def test_conversation_agent(
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
+    agent = conversation.get_agent_manager(hass).async_get_agent(entry.entry_id)
     assert agent.supported_languages == SUPPORTED_LANGUAGE_CODES
 
     text1 = "tell me a joke"
@@ -365,6 +411,7 @@ async def test_conversation_agent_refresh_token(
     """Test GoogleAssistantConversationAgent when token is expired."""
     await setup_integration()
 
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -416,6 +463,7 @@ async def test_conversation_agent_language_changed(
     """Test GoogleAssistantConversationAgent when language is changed."""
     await setup_integration()
 
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
     entries = hass.config_entries.async_entries(DOMAIN)

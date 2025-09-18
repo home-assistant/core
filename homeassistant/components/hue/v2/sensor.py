@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, TypeAlias
+from typing import Any
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -25,17 +25,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from ..bridge import HueBridge
-from ..const import DOMAIN
+from ..bridge import HueBridge, HueConfigEntry
 from .entity import HueBaseEntity
 
-SensorType: TypeAlias = DevicePower | LightLevel | Temperature | ZigbeeConnectivity
-ControllerType: TypeAlias = (
+type SensorType = DevicePower | LightLevel | Temperature | ZigbeeConnectivity
+type ControllerType = (
     DevicePowerController
     | LightLevelController
     | TemperatureController
@@ -45,11 +43,11 @@ ControllerType: TypeAlias = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: HueConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hue Sensors from Config Entry."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
     ctrl_base: SensorsController = api.sensors
 
@@ -79,6 +77,7 @@ async def async_setup_entry(
     register_items(ctrl_base.zigbee_connectivity, HueZigbeeConnectivitySensor)
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueSensorBase(HueBaseEntity, SensorEntity):
     """Representation of a Hue sensor."""
 
@@ -94,6 +93,7 @@ class HueSensorBase(HueBaseEntity, SensorEntity):
         self.controller = controller
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueTemperatureSensor(HueSensorBase):
     """Representation of a Hue Temperature sensor."""
 
@@ -111,6 +111,7 @@ class HueTemperatureSensor(HueSensorBase):
         return round(self.resource.temperature.value, 1)
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueLightLevelSensor(HueSensorBase):
     """Representation of a Hue LightLevel (illuminance) sensor."""
 
@@ -139,6 +140,7 @@ class HueLightLevelSensor(HueSensorBase):
         }
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueBatterySensor(HueSensorBase):
     """Representation of a Hue Battery sensor."""
 
@@ -164,6 +166,7 @@ class HueBatterySensor(HueSensorBase):
         return {"battery_state": self.resource.power_state.battery_state.value}
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueZigbeeConnectivitySensor(HueSensorBase):
     """Representation of a Hue ZigbeeConnectivity sensor."""
 

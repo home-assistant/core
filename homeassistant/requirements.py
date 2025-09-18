@@ -4,15 +4,16 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
+import contextlib
 import logging
 import os
-from typing import Any, cast
+from typing import Any
 
 from packaging.requirements import Requirement
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
-from .helpers.typing import UNDEFINED, UndefinedType
+from .helpers import singleton
 from .loader import Integration, IntegrationNotFound, async_get_integration
 from .util import package as pkg_util
 
@@ -72,14 +73,10 @@ async def async_load_installed_versions(
 
 
 @callback
+@singleton.singleton(DATA_REQUIREMENTS_MANAGER)
 def _async_get_manager(hass: HomeAssistant) -> RequirementsManager:
     """Get the requirements manager."""
-    if DATA_REQUIREMENTS_MANAGER in hass.data:
-        manager: RequirementsManager = hass.data[DATA_REQUIREMENTS_MANAGER]
-        return manager
-
-    manager = hass.data[DATA_REQUIREMENTS_MANAGER] = RequirementsManager(hass)
-    return manager
+    return RequirementsManager(hass)
 
 
 @callback
@@ -130,7 +127,7 @@ class RequirementsManager:
         self.hass = hass
         self.pip_lock = asyncio.Lock()
         self.integrations_with_reqs: dict[
-            str, Integration | asyncio.Future[None] | None | UndefinedType
+            str, Integration | asyncio.Future[Integration]
         ] = {}
         self.install_failure_history: set[str] = set()
         self.is_installed_cache: set[str] = set()
@@ -144,45 +141,37 @@ class RequirementsManager:
         is invalid, RequirementNotFound if there was some type of
         failure to install requirements.
         """
-
         if done is None:
             done = {domain}
         else:
             done.add(domain)
 
-        integration = await async_get_integration(self.hass, domain)
-
-        if self.hass.config.skip_pip:
-            return integration
-
         cache = self.integrations_with_reqs
-        int_or_fut = cache.get(domain, UNDEFINED)
+        if int_or_fut := cache.get(domain):
+            if isinstance(int_or_fut, Integration):
+                return int_or_fut
+            return await int_or_fut
 
-        if isinstance(int_or_fut, asyncio.Future):
-            await int_or_fut
-
-            # When we have waited and it's UNDEFINED, it doesn't exist
-            # We don't cache that it doesn't exist, or else people can't fix it
-            # and then restart, because their config will never be valid.
-            if (int_or_fut := cache.get(domain, UNDEFINED)) is UNDEFINED:
-                raise IntegrationNotFound(domain)
-
-        if int_or_fut is not UNDEFINED:
-            return cast(Integration, int_or_fut)
-
-        event = cache[domain] = self.hass.loop.create_future()
-
+        future = cache[domain] = self.hass.loop.create_future()
         try:
-            await self._async_process_integration(integration, done)
-        except Exception:
+            integration = await async_get_integration(self.hass, domain)
+            if not self.hass.config.skip_pip:
+                await self._async_process_integration(integration, done)
+        except BaseException as ex:
+            # We do not cache failures as we want to retry, or
+            # else people can't fix it and then restart, because
+            # their config will never be valid.
             del cache[domain]
-            if not event.done():
-                event.set_result(None)
+            future.set_exception(ex)
+            with contextlib.suppress(BaseException):
+                # Clear the flag as its normal that nothing
+                # will wait for this future to be resolved
+                # if there are no concurrent requirements fetches.
+                await future
             raise
 
         cache[domain] = integration
-        if not event.done():
-            event.set_result(None)
+        future.set_result(integration)
         return integration
 
     async def _async_process_integration(
@@ -244,7 +233,7 @@ class RequirementsManager:
                     or ex.domain not in integration.after_dependencies
                 ):
                     exceptions.append(ex)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:  # noqa: BLE001
                 exceptions.insert(0, ex)
 
         if exceptions:

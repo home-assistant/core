@@ -10,23 +10,66 @@ from homeassistant.components.schlage.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import MockSchlageConfigEntry
+
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
+@pytest.mark.parametrize(
+    "username",
+    [
+        "test-username",
+        "TEST-USERNAME",
+    ],
+)
 async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_pyschlage_auth: Mock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_pyschlage_auth: Mock,
+    username: str,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
+        {
+            "username": username,
+            "password": "test-password",
+        },
+    )
+    await hass.async_block_till_done()
+
+    mock_pyschlage_auth.authenticate.assert_called_once_with()
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "test-username"
+    assert result2["data"] == {
+        "username": "test-username",
+        "password": "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_requires_unique_id(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_pyschlage_auth: Mock,
+) -> None:
+    """Test entries have unique ids."""
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert init_result["type"] is FlowResultType.FORM
+    assert init_result["errors"] == {}
+
+    create_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"],
         {
             "username": "test-username",
             "password": "test-password",
@@ -35,13 +78,8 @@ async def test_form(
     await hass.async_block_till_done()
 
     mock_pyschlage_auth.authenticate.assert_called_once_with()
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "test-username"
-    assert result2["data"] == {
-        "username": "test-username",
-        "password": "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert create_result["type"] is FlowResultType.ABORT
+    assert create_result["reason"] == "already_configured"
 
 
 async def test_form_invalid_auth(
@@ -60,7 +98,7 @@ async def test_form_invalid_auth(
             "password": "test-password",
         },
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -79,14 +117,13 @@ async def test_form_unknown(hass: HomeAssistant, mock_pyschlage_auth: Mock) -> N
         },
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_reauth(
     hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    mock_added_config_entry: MockSchlageConfigEntry,
     mock_pyschlage_auth: Mock,
 ) -> None:
     """Test reauth flow."""
@@ -94,8 +131,7 @@ async def test_reauth(
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    [result] = flows
+    result = flows[-1]
     assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -105,18 +141,17 @@ async def test_reauth(
     await hass.async_block_till_done()
 
     mock_pyschlage_auth.authenticate.assert_called_once_with()
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert mock_added_config_entry.data == {
         "username": "asdf@asdf.com",
         "password": "new-password",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reauth_invalid_auth(
     hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
+    mock_added_config_entry: MockSchlageConfigEntry,
     mock_setup_entry: AsyncMock,
     mock_pyschlage_auth: Mock,
 ) -> None:
@@ -138,13 +173,13 @@ async def test_reauth_invalid_auth(
     await hass.async_block_till_done()
 
     mock_pyschlage_auth.authenticate.assert_called_once_with()
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_reauth_wrong_account(
     hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
+    mock_added_config_entry: MockSchlageConfigEntry,
     mock_setup_entry: AsyncMock,
     mock_pyschlage_auth: Mock,
 ) -> None:
@@ -165,7 +200,7 @@ async def test_reauth_wrong_account(
     await hass.async_block_till_done()
 
     mock_pyschlage_auth.authenticate.assert_called_once_with()
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "wrong_account"
     assert mock_added_config_entry.data == {
         "username": "asdf@asdf.com",

@@ -23,7 +23,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_pm2_5")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "11.0"
+    assert state.state == "11.03"
 
 
 async def test_config_not_ready(hass: HomeAssistant) -> None:
@@ -44,24 +44,6 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_config_not_ready_while_checking_credentials(hass: HomeAssistant) -> None:
-    """Test for setup failure if the connection fails while checking credentials."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="10.10.2.3",
-        unique_id="aa:bb:cc:dd:ee:ff",
-        data={"host": "10.10.2.3"},
-    )
-    entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        side_effect=ApiError("API Error"),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
 async def test_config_auth_failed(hass: HomeAssistant) -> None:
     """Test for setup failure if the auth fails."""
     entry = MockConfigEntry(
@@ -73,7 +55,7 @@ async def test_config_auth_failed(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         side_effect=AuthFailedError("Authorization has failed"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)

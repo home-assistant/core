@@ -25,14 +25,14 @@ PRICE_EUR_KWH: Final = f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}"
 PRICE_EUR_M3: Final = f"EUR/{UnitOfVolume.CUBIC_METERS}"
 
 
-def dsmr_transform(value):
+def dsmr_transform(value: str) -> float | str:
     """Transform DSMR version value to right format."""
     if value.isdigit():
         return float(value) / 10
     return value
 
 
-def tariff_transform(value):
+def tariff_transform(value: str) -> str:
     """Transform tariff from number to description."""
     if value == "1":
         return "low"
@@ -40,6 +40,7 @@ def tariff_transform(value):
 
 
 @dataclass(frozen=True)
+# pylint: disable-next=hass-enforce-class-module
 class DSMRReaderSensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for DSMR Reader."""
 
@@ -141,7 +142,6 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         key="dsmr/reading/extra_device_delivered",
         translation_key="gas_meter_usage",
         entity_registry_enabled_default=False,
-        icon="mdi:fire",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -266,81 +266,68 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity1_cost",
         translation_key="daily_low_tariff_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity2_cost",
         translation_key="daily_high_tariff_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity_cost_merged",
         translation_key="daily_power_total_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/gas",
         translation_key="daily_gas_usage",
-        icon="mdi:counter",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/gas_cost",
         translation_key="gas_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/total_cost",
         translation_key="total_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_electricity_delivered_1",
         translation_key="low_tariff_delivered_price",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=PRICE_EUR_KWH,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_electricity_delivered_2",
         translation_key="high_tariff_delivered_price",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=PRICE_EUR_KWH,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_electricity_returned_1",
         translation_key="low_tariff_returned_price",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=PRICE_EUR_KWH,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_electricity_returned_2",
         translation_key="high_tariff_returned_price",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=PRICE_EUR_KWH,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_gas",
         translation_key="gas_price",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=PRICE_EUR_M3,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/fixed_cost",
         translation_key="current_day_fixed_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/meter-stats/dsmr_version",
         translation_key="dsmr_version",
         entity_registry_enabled_default=False,
-        icon="mdi:alert-circle",
         state=dsmr_transform,
     ),
     DSMRReaderSensorEntityDescription(
@@ -348,62 +335,52 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         translation_key="electricity_tariff",
         device_class=SensorDeviceClass.ENUM,
         options=["low", "high"],
-        icon="mdi:flash",
         state=tariff_transform,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/meter-stats/power_failure_count",
         translation_key="power_failure_count",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/meter-stats/long_power_failure_count",
         translation_key="long_power_failure_count",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/meter-stats/voltage_sag_count_l1",
         translation_key="voltage_sag_l1",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/meter-stats/voltage_sag_count_l2",
         translation_key="voltage_sag_l2",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/meter-stats/voltage_sag_count_l3",
         translation_key="voltage_sag_l3",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/meter-stats/voltage_swell_count_l1",
         translation_key="voltage_swell_l1",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/meter-stats/voltage_swell_count_l2",
         translation_key="voltage_swell_l2",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/meter-stats/voltage_swell_count_l3",
         translation_key="voltage_swell_l3",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/meter-stats/rejected_telegrams",
         translation_key="rejected_telegrams",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-month/electricity1",
@@ -444,44 +421,37 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-month/electricity1_cost",
         translation_key="current_month_low_tariff_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-month/electricity2_cost",
         translation_key="current_month_high_tariff_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-month/electricity_cost_merged",
         translation_key="current_month_power_total_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-month/gas",
         translation_key="current_month_gas_usage",
-        icon="mdi:counter",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-month/gas_cost",
         translation_key="current_month_gas_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-month/fixed_cost",
         translation_key="current_month_fixed_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-month/total_cost",
         translation_key="current_month_total_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
@@ -523,44 +493,37 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-year/electricity1_cost",
         translation_key="current_year_low_tariff_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-year/electricity2_cost",
         translation_key="current_year_high_tariff_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-year/electricity_cost_merged",
         translation_key="current_year_power_total_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-year/gas",
         translation_key="current_year_gas_usage",
-        icon="mdi:counter",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-year/gas_cost",
         translation_key="current_year_gas_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-year/fixed_cost",
         translation_key="current_year_fixed_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/current-year/total_cost",
         translation_key="current_year_total_cost",
-        icon="mdi:currency-eur",
         native_unit_of_measurement=CURRENCY_EURO,
     ),
     DSMRReaderSensorEntityDescription(

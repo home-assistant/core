@@ -11,6 +11,7 @@ from urllib.parse import quote
 
 import aiohttp
 from aiohttp import ClientTimeout, ClientWebSocketResponse, hdrs, web
+from aiohttp.helpers import must_be_empty_body
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPBadRequest
 from multidict import CIMultiDict
 from yarl import URL
@@ -46,6 +47,8 @@ RESPONSE_HEADERS_FILTER = {
 MIN_COMPRESSED_SIZE = 128
 MAX_SIMPLE_RESPONSE_SIZE = 4194000
 
+DISABLED_TIMEOUT = ClientTimeout(total=None)
+
 
 @callback
 def async_setup_ingress_view(hass: HomeAssistant, host: str) -> None:
@@ -67,15 +70,15 @@ class HassIOIngress(HomeAssistantView):
         """Initialize a Hass.io ingress view."""
         self._host = host
         self._websession = websession
+        self._url = URL(f"http://{host}")
 
     @lru_cache
     def _create_url(self, token: str, path: str) -> URL:
         """Create URL to service."""
         base_path = f"/ingress/{token}/"
-        url = f"http://{self._host}{base_path}{quote(path)}"
 
         try:
-            target_url = URL(url)
+            target_url = self._url.join(URL(f"{base_path}{quote(path)}"))
         except ValueError as err:
             raise HTTPBadRequest from err
 
@@ -107,6 +110,7 @@ class HassIOIngress(HomeAssistantView):
     delete = _handle
     patch = _handle
     options = _handle
+    head = _handle
 
     async def _handle_websocket(
         self, request: web.Request, token: str, path: str
@@ -135,21 +139,27 @@ class HassIOIngress(HomeAssistantView):
             url = url.with_query(request.query_string)
 
         # Start proxy
-        async with self._websession.ws_connect(
-            url,
-            headers=source_header,
-            protocols=req_protocols,
-            autoclose=False,
-            autoping=False,
-        ) as ws_client:
-            # Proxy requests
-            await asyncio.wait(
-                [
-                    create_eager_task(_websocket_forward(ws_server, ws_client)),
-                    create_eager_task(_websocket_forward(ws_client, ws_server)),
-                ],
-                return_when=asyncio.FIRST_COMPLETED,
+        try:
+            _LOGGER.debug(
+                "Proxying WebSocket to %s / %s, upstream url: %s", token, path, url
             )
+            async with self._websession.ws_connect(
+                url,
+                headers=source_header,
+                protocols=req_protocols,
+                autoclose=False,
+                autoping=False,
+            ) as ws_client:
+                # Proxy requests
+                await asyncio.wait(
+                    [
+                        create_eager_task(_websocket_forward(ws_server, ws_client)),
+                        create_eager_task(_websocket_forward(ws_client, ws_server)),
+                    ],
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+        except TimeoutError:
+            _LOGGER.warning("WebSocket proxy to %s / %s timed out", token, path)
 
         return ws_server
 
@@ -167,7 +177,7 @@ class HassIOIngress(HomeAssistantView):
             params=request.query,
             allow_redirects=False,
             data=request.content if request.method != "GET" else None,
-            timeout=ClientTimeout(total=None),
+            timeout=DISABLED_TIMEOUT,
             skip_auto_headers={hdrs.CONTENT_TYPE},
         ) as result:
             headers = _response_header(result)
@@ -177,15 +187,20 @@ class HassIOIngress(HomeAssistantView):
             if maybe_content_type := result.headers.get(hdrs.CONTENT_TYPE):
                 content_type: str = (maybe_content_type.partition(";"))[0].strip()
             else:
-                content_type = result.content_type
+                # default value according to RFC 2616
+                content_type = "application/octet-stream"
+
             # Simple request
-            if result.status in (204, 304) or (
+            if (empty_body := must_be_empty_body(result.method, result.status)) or (
                 content_length is not UNDEFINED
-                and (content_length_int := int(content_length or 0))
+                and (content_length_int := int(content_length))
                 <= MAX_SIMPLE_RESPONSE_SIZE
             ):
                 # Return Response
-                body = await result.read()
+                if empty_body:
+                    body = None
+                else:
+                    body = await result.read()
                 simple_response = web.Response(
                     headers=headers,
                     status=result.status,
@@ -194,18 +209,17 @@ class HassIOIngress(HomeAssistantView):
                     zlib_executor_size=32768,
                 )
                 if content_length_int > MIN_COMPRESSED_SIZE and should_compress(
-                    content_type or simple_response.content_type
+                    content_type
                 ):
                     simple_response.enable_compression()
-                await simple_response.prepare(request)
                 return simple_response
 
             # Stream response
             response = web.StreamResponse(status=result.status, headers=headers)
-            response.content_type = result.content_type
+            response.content_type = content_type
 
             try:
-                if should_compress(response.content_type):
+                if should_compress(content_type):
                     response.enable_compression()
                 await response.prepare(request)
                 # In testing iter_chunked, iter_any, and iter_chunks:
@@ -218,6 +232,7 @@ class HassIOIngress(HomeAssistantView):
                 aiohttp.ClientError,
                 aiohttp.ClientPayloadError,
                 ConnectionResetError,
+                ConnectionError,
             ) as err:
                 _LOGGER.debug("Stream error %s / %s: %s", token, path, err)
 
@@ -231,13 +246,13 @@ def _forwarded_for_header(forward_for: str | None, peer_name: str) -> str:
     return f"{forward_for}, {connected_ip!s}" if forward_for else f"{connected_ip!s}"
 
 
-def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, str]:
+def _init_header(request: web.Request, token: str) -> CIMultiDict:
     """Create initial header."""
-    headers = {
-        name: value
+    headers = CIMultiDict(
+        (name, value)
         for name, value in request.headers.items()
         if name not in INIT_HEADERS_FILTER
-    }
+    )
     # Ingress information
     headers[X_HASS_SOURCE] = "core.ingress"
     headers[X_INGRESS_PATH] = f"/api/hassio_ingress/{token}"
@@ -265,13 +280,13 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
     return headers
 
 
-def _response_header(response: aiohttp.ClientResponse) -> dict[str, str]:
+def _response_header(response: aiohttp.ClientResponse) -> CIMultiDict:
     """Create response header."""
-    return {
-        name: value
+    return CIMultiDict(
+        (name, value)
         for name, value in response.headers.items()
         if name not in RESPONSE_HEADERS_FILTER
-    }
+    )
 
 
 def _is_websocket(request: web.Request) -> bool:
@@ -295,9 +310,9 @@ async def _websocket_forward(
             elif msg.type is aiohttp.WSMsgType.BINARY:
                 await ws_to.send_bytes(msg.data)
             elif msg.type is aiohttp.WSMsgType.PING:
-                await ws_to.ping()
+                await ws_to.ping(msg.data)
             elif msg.type is aiohttp.WSMsgType.PONG:
-                await ws_to.pong()
+                await ws_to.pong(msg.data)
             elif ws_to.closed:
                 await ws_to.close(code=ws_to.close_code, message=msg.extra)  # type: ignore[arg-type]
     except RuntimeError:

@@ -190,7 +190,7 @@ async def test_ecobee3_setup_connection_failure(
 
         # If there is no cached entity map and the accessory connection is
         # failing then we have to fail the config entry setup.
-        config_entry, pairing = await setup_test_accessories(hass, accessories)
+        config_entry, _pairing = await setup_test_accessories(hass, accessories)
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     climate = entity_registry.async_get("climate.homew")
@@ -203,6 +203,7 @@ async def test_ecobee3_setup_connection_failure(
     # We just advance time by 5 minutes so that the retry happens, rather
     # than manually invoking async_setup_entry.
     await time_changed(hass, 5 * 60)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     climate = entity_registry.async_get("climate.homew")
     assert climate.unique_id == "00:00:00:00:00:00_1_16"

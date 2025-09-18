@@ -5,10 +5,14 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import zeroconf
+from homeassistant import config_entries
 from homeassistant.components.tradfri import config_flow
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from . import TRADFRI_PATH
 
@@ -38,7 +42,7 @@ async def test_already_paired(hass: HomeAssistant, mock_entry_setup) -> None:
             result["flow_id"], {"host": "123.123.123.123", "security_code": "abcd"}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_authenticate"}
 
 
@@ -58,7 +62,7 @@ async def test_user_connection_successful(
 
     assert len(mock_entry_setup.mock_calls) == 1
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "host": "123.123.123.123",
         "gateway_id": "bla",
@@ -81,7 +85,7 @@ async def test_user_connection_timeout(
 
     assert len(mock_entry_setup.mock_calls) == 0
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "timeout"}
 
 
@@ -101,8 +105,8 @@ async def test_user_connection_bad_key(
 
     assert len(mock_entry_setup.mock_calls) == 0
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == {"security_code": "invalid_security_code"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_security_code"}
 
 
 async def test_discovery_connection(
@@ -114,13 +118,13 @@ async def test_discovery_connection(
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
             ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
@@ -131,7 +135,7 @@ async def test_discovery_connection(
 
     assert len(mock_entry_setup.mock_calls) == 1
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "homekit-id"
     assert result["result"].data == {
         "host": "123.123.123.123",
@@ -149,18 +153,18 @@ async def test_discovery_duplicate_aborted(hass: HomeAssistant) -> None:
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.124"),
             ip_addresses=[ip_address("123.123.123.124")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
 
-    assert flow["type"] == data_entry_flow.FlowResultType.ABORT
+    assert flow["type"] is FlowResultType.ABORT
     assert flow["reason"] == "already_configured"
 
     assert entry.data["host"] == "123.123.123.124"
@@ -173,34 +177,34 @@ async def test_duplicate_discovery(
     result = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
             ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
             ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
 
 
 async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
@@ -214,18 +218,18 @@ async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
             ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
 
-    assert flow["type"] == data_entry_flow.FlowResultType.ABORT
+    assert flow["type"] is FlowResultType.ABORT
     assert flow["reason"] == "already_configured"
 
     assert entry.unique_id == "homekit-id"

@@ -1,15 +1,19 @@
 """Test cloud repairs."""
 
-from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
-from homeassistant.components.cloud import DOMAIN
-import homeassistant.components.cloud.repairs as cloud_repairs
+from hass_nabucasa.payments_api import PaymentsApiError
+import pytest
+
+from homeassistant.components.cloud.const import DOMAIN
+from homeassistant.components.cloud.repairs import (
+    async_manage_legacy_subscription_issue,
+)
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -36,12 +40,12 @@ async def test_do_not_create_repair_issues_at_startup_if_not_logged_in(
     )
 
 
+@pytest.mark.usefixtures("mock_auth")
 async def test_create_repair_issues_at_startup_if_logged_in(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_auth: Generator[None, AsyncMock, None],
     issue_registry: ir.IssueRegistry,
-):
+) -> None:
     """Test that we create repair issue at startup if we are logged in."""
     aioclient_mock.get(
         "https://accounts.nabucasa.com/payments/subscription_info",
@@ -64,24 +68,24 @@ async def test_legacy_subscription_delete_issue_if_no_longer_legacy(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that we delete the legacy subscription issue if no longer legacy."""
-    cloud_repairs.async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
+    async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
     assert issue_registry.async_get_issue(
         domain="cloud", issue_id="legacy_subscription"
     )
 
-    cloud_repairs.async_manage_legacy_subscription_issue(hass, {})
+    async_manage_legacy_subscription_issue(hass, {})
     assert not issue_registry.async_get_issue(
         domain="cloud", issue_id="legacy_subscription"
     )
 
 
+@pytest.mark.usefixtures("mock_auth")
 async def test_legacy_subscription_repair_flow(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_auth: Generator[None, AsyncMock, None],
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
-):
+) -> None:
     """Test desired flow of the fix flow for legacy subscription."""
     aioclient_mock.get(
         "https://accounts.nabucasa.com/payments/subscription_info",
@@ -92,7 +96,7 @@ async def test_legacy_subscription_repair_flow(
         json={"url": "https://paypal.com"},
     )
 
-    cloud_repairs.async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
+    async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
     repair_issue = issue_registry.async_get_issue(
         domain="cloud", issue_id="legacy_subscription"
     )
@@ -160,20 +164,20 @@ async def test_legacy_subscription_repair_flow(
     )
 
 
+@pytest.mark.usefixtures("mock_auth")
 async def test_legacy_subscription_repair_flow_timeout(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_auth: Generator[None, AsyncMock, None],
     aioclient_mock: AiohttpClientMocker,
     issue_registry: ir.IssueRegistry,
-):
+) -> None:
     """Test timeout flow of the fix flow for legacy subscription."""
     aioclient_mock.post(
         "https://accounts.nabucasa.com/payments/migrate_paypal_agreement",
         status=403,
     )
 
-    cloud_repairs.async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
+    async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
     repair_issue = issue_registry.async_get_issue(
         domain="cloud", issue_id="legacy_subscription"
     )
@@ -207,7 +211,13 @@ async def test_legacy_subscription_repair_flow_timeout(
         "preview": None,
     }
 
-    with patch("homeassistant.components.cloud.repairs.MAX_RETRIES", new=0):
+    with (
+        patch("homeassistant.components.cloud.repairs.MAX_RETRIES", new=0),
+        patch(
+            "hass_nabucasa.payments_api.PaymentsApi.migrate_paypal_agreement",
+            side_effect=PaymentsApiError("some error", status=403),
+        ),
+    ):
         resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
         assert resp.status == HTTPStatus.OK
         data = await resp.json()
@@ -233,7 +243,6 @@ async def test_legacy_subscription_repair_flow_timeout(
         "handler": "cloud",
         "reason": "operation_took_too_long",
         "description_placeholders": None,
-        "result": None,
     }
 
     assert issue_registry.async_get_issue(

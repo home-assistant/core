@@ -55,7 +55,7 @@ def trace_automation(
     blueprint_inputs: ConfigType | None,
     context: Context,
     trace_config: ConfigType,
-) -> Generator[AutomationTrace, None, None]:
+) -> Generator[AutomationTrace]:
     """Trace action execution of automation with automation_id."""
     trace = AutomationTrace(automation_id, config, blueprint_inputs, context)
     async_store_trace(hass, trace, trace_config[CONF_STORED_TRACES])
@@ -65,7 +65,7 @@ def trace_automation(
     except Exception as ex:
         if automation_id:
             trace.set_error(ex)
-        raise ex
+        raise
     finally:
         if automation_id:
             trace.finished()

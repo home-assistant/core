@@ -1,48 +1,97 @@
-"""The aladdin_connect component."""
+"""The Aladdin Connect Genie integration."""
 
-import logging
-from typing import Final
+from __future__ import annotations
 
-from AIOAladdinConnect import AladdinConnectClient
-import AIOAladdinConnect.session_manager as Aladdin
-from aiohttp import ClientError
+from genie_partner_sdk.client import AladdinConnectClient
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    device_registry as dr,
+)
 
-from .const import CLIENT_ID, DOMAIN
-
-_LOGGER: Final = logging.getLogger(__name__)
+from . import api
+from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
+from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
 
 PLATFORMS: list[Platform] = [Platform.COVER, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up platform from a ConfigEntry."""
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    acc = AladdinConnectClient(
-        username, password, async_get_clientsession(hass), CLIENT_ID
+async def async_setup_entry(
+    hass: HomeAssistant, entry: AladdinConnectConfigEntry
+) -> bool:
+    """Set up Aladdin Connect Genie from a config entry."""
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
     )
-    try:
-        await acc.login()
-    except (ClientError, TimeoutError, Aladdin.ConnectionError) as ex:
-        raise ConfigEntryNotReady("Can not connect to host") from ex
-    except Aladdin.InvalidPasswordError as ex:
-        raise ConfigEntryAuthFailed("Incorrect Password") from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = acc
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+
+    client = AladdinConnectClient(
+        api.AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
+    )
+
+    doors = await client.get_doors()
+
+    entry.runtime_data = {
+        door.unique_id: AladdinConnectCoordinator(hass, entry, client, door)
+        for door in doors
+    }
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    remove_stale_devices(hass, entry)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AladdinConnectConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    return unload_ok
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: AladdinConnectConfigEntry
+) -> bool:
+    """Migrate old config."""
+    if config_entry.version < CONFIG_FLOW_VERSION:
+        config_entry.async_start_reauth(hass)
+        new_data = {**config_entry.data}
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=new_data,
+            version=CONFIG_FLOW_VERSION,
+            minor_version=CONFIG_FLOW_MINOR_VERSION,
+        )
+
+    return True
+
+
+def remove_stale_devices(
+    hass: HomeAssistant,
+    config_entry: AladdinConnectConfigEntry,
+) -> None:
+    """Remove stale devices from device registry."""
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    all_device_ids = set(config_entry.runtime_data)
+
+    for device_entry in device_entries:
+        device_id: str | None = None
+        for identifier in device_entry.identifiers:
+            if identifier[0] == DOMAIN:
+                device_id = identifier[1]
+                break
+
+        if device_id and device_id not in all_device_ids:
+            device_registry.async_update_device(
+                device_entry.id, remove_config_entry_id=config_entry.entry_id
+            )

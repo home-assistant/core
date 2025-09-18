@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Iterable
 from copy import deepcopy
 import ipaddress
@@ -12,6 +13,7 @@ import socket
 from typing import Any, cast
 
 from aiohttp import web
+from pyhap import util as pyhap_util
 from pyhap.characteristic import Characteristic
 from pyhap.const import STANDALONE_AID
 from pyhap.loader import get_loader
@@ -28,8 +30,11 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.device_automation.trigger import (
     async_validate_trigger_config,
 )
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, EventDeviceClass
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -45,6 +50,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
+    CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
@@ -69,15 +75,18 @@ from homeassistant.helpers.entityfilter import (
     EntityFilter,
 )
 from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.service import (
-    async_extract_referenced_entity_ids,
-    async_register_admin_service,
-)
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.target import (
+    TargetSelectorData,
+    async_extract_referenced_entity_ids,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util.async_ import create_eager_task
 
 from . import (  # noqa: F401
+    type_air_purifiers,
     type_cameras,
     type_covers,
     type_fans,
@@ -108,6 +117,8 @@ from .const import (
     CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_HUMIDITY_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
+    CONF_LINKED_PM25_SENSOR,
+    CONF_LINKED_TEMPERATURE_SENSOR,
     CONFIG_OPTIONS,
     DEFAULT_EXCLUDE_ACCESSORY_MODE,
     DEFAULT_HOMEKIT_MODE,
@@ -120,9 +131,11 @@ from .const import (
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
+    SIGNAL_RELOAD_ENTITIES,
+    TYPE_AIR_PURIFIER,
 )
 from .iidmanager import AccessoryIIDStorage
-from .models import HomeKitEntryData
+from .models import HomeKitConfigEntry, HomeKitEntryData
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
@@ -152,6 +165,19 @@ _HOMEKIT_CONFIG_UPDATE_TIME = (
 )
 _HAS_IPV6 = hasattr(socket, "AF_INET6")
 _DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
+
+
+BATTERY_CHARGING_SENSOR = (
+    BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass.BATTERY_CHARGING,
+)
+BATTERY_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.BATTERY)
+MOTION_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.MOTION)
+MOTION_SENSOR = (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION)
+DOORBELL_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.DOORBELL)
+HUMIDITY_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.HUMIDITY)
+TEMPERATURE_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.TEMPERATURE)
+PM25_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.PM25)
 
 
 def _has_all_unique_names_and_ports(
@@ -198,16 +224,47 @@ RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-UNPAIR_SERVICE_SCHEMA = vol.All(
-    vol.Schema(cv.ENTITY_SERVICE_FIELDS),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+UNPAIR_SERVICE_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [str])}
 )
+
+
+@callback
+def _async_update_entries_from_yaml(
+    hass: HomeAssistant, config: ConfigType, start_import_flow: bool
+) -> None:
+    current_entries = hass.config_entries.async_entries(DOMAIN)
+    entries_by_name, entries_by_port = _async_get_imported_entries_indices(
+        current_entries
+    )
+    hk_config: list[dict[str, Any]] = config[DOMAIN]
+
+    for index, conf in enumerate(hk_config):
+        if _async_update_config_entry_from_yaml(
+            hass, entries_by_name, entries_by_port, conf
+        ):
+            continue
+
+        if start_import_flow:
+            conf[CONF_ENTRY_INDEX] = index
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data=conf,
+                ),
+                eager_start=True,
+            )
 
 
 def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
     """All active HomeKit instances."""
-    domain_data: dict[str, HomeKitEntryData] = hass.data[DOMAIN]
-    return [data.homekit for data in domain_data.values()]
+    hk_data: HomeKitEntryData | None
+    return [
+        hk_data.homekit
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if (hk_data := getattr(entry, "runtime_data", None))
+    ]
 
 
 def _async_get_imported_entries_indices(
@@ -229,7 +286,6 @@ def _async_get_imported_entries_indices(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomeKit from yaml."""
-    hass.data[DOMAIN] = {}
     hass.data[PERSIST_LOCK_DATA] = asyncio.Lock()
 
     # Initialize the loader before loading entries to ensure
@@ -238,31 +294,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await hass.async_add_executor_job(get_loader)
 
     _async_register_events_and_services(hass)
-
     if DOMAIN not in config:
         return True
 
-    current_entries = hass.config_entries.async_entries(DOMAIN)
-    entries_by_name, entries_by_port = _async_get_imported_entries_indices(
-        current_entries
-    )
-
-    for index, conf in enumerate(config[DOMAIN]):
-        if _async_update_config_entry_from_yaml(
-            hass, entries_by_name, entries_by_port, conf
-        ):
-            continue
-
-        conf[CONF_ENTRY_INDEX] = index
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=conf,
-            ),
-            eager_start=True,
-        )
-
+    _async_update_entries_from_yaml(hass, config, start_import_flow=True)
     return True
 
 
@@ -299,20 +334,19 @@ def _async_update_config_entry_from_yaml(
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> bool:
     """Set up HomeKit from a config entry."""
     _async_import_options_from_data_if_missing(hass, entry)
 
     conf = entry.data
     options = entry.options
 
-    name = conf[CONF_NAME]
-    port = conf[CONF_PORT]
-    _LOGGER.debug("Begin setup HomeKit for %s", name)
-
+    name: str = conf[CONF_NAME]
+    port: int = conf[CONF_PORT]
     # ip_address and advertise_ip are yaml only
-    ip_address = conf.get(CONF_IP_ADDRESS, _DEFAULT_BIND)
-    advertise_ips: list[str] = conf.get(
+    ip_address: str | list[str] | None = conf.get(CONF_IP_ADDRESS, _DEFAULT_BIND)
+    advertise_ips: list[str]
+    advertise_ips = conf.get(
         CONF_ADVERTISE_IP
     ) or await network.async_get_announce_addresses(hass)
 
@@ -324,13 +358,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # with users who have not migrated yet we do not do exclude
     # these entities by default as we cannot migrate automatically
     # since it requires a re-pairing.
-    exclude_accessory_mode = conf.get(
+    exclude_accessory_mode: bool = conf.get(
         CONF_EXCLUDE_ACCESSORY_MODE, DEFAULT_EXCLUDE_ACCESSORY_MODE
     )
-    homekit_mode = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
-    entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
-    entity_filter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
-    devices = options.get(CONF_DEVICES, [])
+    homekit_mode: str = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
+    entity_config: dict[str, Any] = options.get(CONF_ENTITY_CONFIG, {}).copy()
+    entity_filter: EntityFilter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
+    devices: list[str] = options.get(CONF_DEVICES, [])
 
     homekit = HomeKit(
         hass,
@@ -349,15 +383,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, homekit.async_stop, run_immediately=True
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
     )
 
     entry_data = HomeKitEntryData(
         homekit=homekit, pairing_qr=None, pairing_qr_secret=None
     )
-    hass.data[DOMAIN][entry.entry_id] = entry_data
+    entry.runtime_data = entry_data
 
     async def _async_start_homekit(hass: HomeAssistant) -> None:
         await homekit.async_start()
@@ -367,17 +399,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: HomeKitConfigEntry
+) -> None:
     """Handle options update."""
     if entry.source == SOURCE_IMPORT:
         return
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> bool:
     """Unload a config entry."""
     async_dismiss_setup_message(hass, entry.entry_id)
-    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+    entry_data = entry.runtime_data
     homekit = entry_data.homekit
 
     if homekit.status == STATUS_RUNNING:
@@ -389,17 +423,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             break
 
         if not logged_shutdown_wait:
-            _LOGGER.info("Waiting for the HomeKit server to shutdown")
+            _LOGGER.debug("Waiting for the HomeKit server to shutdown")
             logged_shutdown_wait = True
 
         await asyncio.sleep(PORT_CLEANUP_CHECK_INTERVAL_SECS)
 
-    hass.data[DOMAIN].pop(entry.entry_id)
-
     return True
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> None:
     """Remove a config entry."""
     await hass.async_add_executor_job(
         remove_state_files_for_entry_id, hass, entry.entry_id
@@ -408,7 +440,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 @callback
 def _async_import_options_from_data_if_missing(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: HomeKitConfigEntry
 ) -> None:
     options = deepcopy(dict(entry.options))
     data = deepcopy(dict(entry.data))
@@ -450,7 +482,9 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
 
     async def async_handle_homekit_unpair(service: ServiceCall) -> None:
         """Handle unpair HomeKit service call."""
-        referenced = async_extract_referenced_entity_ids(hass, service)
+        referenced = async_extract_referenced_entity_ids(
+            hass, TargetSelectorData(service.data)
+        )
         dev_reg = dr.async_get(hass)
         for device_id in referenced.referenced_devices:
             if not (dev_reg_ent := dev_reg.async_get(device_id)):
@@ -482,26 +516,15 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
     async def _handle_homekit_reload(service: ServiceCall) -> None:
         """Handle start HomeKit service call."""
         config = await async_integration_yaml_config(hass, DOMAIN)
-
         if not config or DOMAIN not in config:
             return
-
-        current_entries = hass.config_entries.async_entries(DOMAIN)
-        entries_by_name, entries_by_port = _async_get_imported_entries_indices(
-            current_entries
-        )
-
-        for conf in config[DOMAIN]:
-            _async_update_config_entry_from_yaml(
-                hass, entries_by_name, entries_by_port, conf
+        _async_update_entries_from_yaml(hass, config, start_import_flow=False)
+        await asyncio.gather(
+            *(
+                create_eager_task(hass.config_entries.async_reload(entry.entry_id))
+                for entry in hass.config_entries.async_entries(DOMAIN)
             )
-
-        reload_tasks = [
-            hass.config_entries.async_reload(entry.entry_id)
-            for entry in current_entries
-        ]
-
-        await asyncio.gather(*reload_tasks)
+        )
 
     async_register_admin_service(
         hass,
@@ -519,10 +542,10 @@ class HomeKit:
         hass: HomeAssistant,
         name: str,
         port: int,
-        ip_address: str | None,
+        ip_address: list[str] | str | None,
         entity_filter: EntityFilter,
         exclude_accessory_mode: bool,
-        entity_config: dict,
+        entity_config: dict[str, Any],
         homekit_mode: str,
         advertise_ips: list[str],
         entry_id: str,
@@ -535,7 +558,9 @@ class HomeKit:
         self._port = port
         self._ip_address = ip_address
         self._filter = entity_filter
-        self._config = entity_config
+        self._config: defaultdict[str, dict[str, Any]] = defaultdict(
+            dict, entity_config
+        )
         self._exclude_accessory_mode = exclude_accessory_mode
         self._advertise_ips = advertise_ips
         self._entry_id = entry_id
@@ -580,6 +605,8 @@ class HomeKit:
             self.driver.load()
             return True
 
+        # If there is no persist file, we need to generate a mac
+        self.driver.state.mac = pyhap_util.generate_mac()
         return False
 
     async def async_reset_accessories(self, entity_ids: Iterable[str]) -> None:
@@ -738,7 +765,7 @@ class HomeKit:
             if acc is not None:
                 self.bridge.add_accessory(acc)
                 return acc
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Failed to create a HomeKit accessory for %s", state.entity_id
             )
@@ -800,18 +827,10 @@ class HomeKit:
         """Configure accessories for the included states."""
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)
-        device_lookup = ent_reg.async_get_device_class_lookup(
-            {
-                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.BATTERY_CHARGING),
-                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION),
-                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY),
-                (SENSOR_DOMAIN, SensorDeviceClass.BATTERY),
-                (SENSOR_DOMAIN, SensorDeviceClass.HUMIDITY),
-            }
-        )
-
+        device_lookup: dict[str, dict[tuple[str, str | None], str]] = {}
         entity_states: list[State] = []
         entity_filter = self._filter.get_filter()
+        entries = ent_reg.entities
         for state in self.hass.states.async_all():
             entity_id = state.entity_id
             if not entity_filter(entity_id):
@@ -827,7 +846,18 @@ class HomeKit:
                 await self._async_set_device_info_attributes(
                     ent_reg_ent, dev_reg, entity_id
                 )
-                self._async_configure_linked_sensors(ent_reg_ent, device_lookup, state)
+                if device_id := ent_reg_ent.device_id:
+                    if device_id not in device_lookup:
+                        device_lookup[device_id] = {
+                            (
+                                entry.domain,
+                                entry.device_class or entry.original_device_class,
+                            ): entry.entity_id
+                            for entry in entries.get_entries_for_device_id(device_id)
+                        }
+                    self._async_configure_linked_sensors(
+                        ent_reg_ent, device_lookup[device_id], state
+                    )
 
             entity_states.append(state)
 
@@ -840,7 +870,7 @@ class HomeKit:
         self.status = STATUS_WAIT
         self._cancel_reload_dispatcher = async_dispatcher_connect(
             self.hass,
-            f"homekit_reload_entities_{self._entry_id}",
+            SIGNAL_RELOAD_ENTITIES.format(self._entry_id),
             self.async_reload_accessories,
         )
         async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
@@ -946,9 +976,8 @@ class HomeKit:
         """Purge bridges that exist from failed pairing or manual resets."""
         devices_to_purge = [
             entry.id
-            for entry in dev_reg.devices.values()
-            if self._entry_id in entry.config_entries
-            and (
+            for entry in dev_reg.devices.get_devices_for_config_entry_id(self._entry_id)
+            if (
                 identifier not in entry.identifiers  # type: ignore[comparison-overlap]
                 or connection not in entry.connections
             )
@@ -1070,64 +1099,74 @@ class HomeKit:
     def _async_configure_linked_sensors(
         self,
         ent_reg_ent: er.RegistryEntry,
-        device_lookup: dict[str, dict[tuple[str, str | None], str]],
+        lookup: dict[tuple[str, str | None], str],
         state: State,
     ) -> None:
-        if (
-            ent_reg_ent is None
-            or ent_reg_ent.device_id is None
-            or ent_reg_ent.device_id not in device_lookup
-            or (ent_reg_ent.device_class or ent_reg_ent.original_device_class)
-            in (BinarySensorDeviceClass.BATTERY_CHARGING, SensorDeviceClass.BATTERY)
+        if (ent_reg_ent.device_class or ent_reg_ent.original_device_class) in (
+            BinarySensorDeviceClass.BATTERY_CHARGING,
+            SensorDeviceClass.BATTERY,
         ):
             return
 
-        if ATTR_BATTERY_CHARGING not in state.attributes:
-            battery_charging_binary_sensor_entity_id = device_lookup[
-                ent_reg_ent.device_id
-            ].get((BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.BATTERY_CHARGING))
-            if battery_charging_binary_sensor_entity_id:
-                self._config.setdefault(state.entity_id, {}).setdefault(
-                    CONF_LINKED_BATTERY_CHARGING_SENSOR,
-                    battery_charging_binary_sensor_entity_id,
+        domain = state.domain
+        attributes = state.attributes
+        config = self._config
+        entity_id = state.entity_id
+
+        if ATTR_BATTERY_CHARGING not in attributes and (
+            battery_charging_binary_sensor_entity_id := lookup.get(
+                BATTERY_CHARGING_SENSOR
+            )
+        ):
+            config[entity_id].setdefault(
+                CONF_LINKED_BATTERY_CHARGING_SENSOR,
+                battery_charging_binary_sensor_entity_id,
+            )
+
+        if ATTR_BATTERY_LEVEL not in attributes and (
+            battery_sensor_entity_id := lookup.get(BATTERY_SENSOR)
+        ):
+            config[entity_id].setdefault(
+                CONF_LINKED_BATTERY_SENSOR, battery_sensor_entity_id
+            )
+
+        if domain == CAMERA_DOMAIN:
+            if motion_event_entity_id := lookup.get(MOTION_EVENT_SENSOR):
+                config[entity_id].setdefault(
+                    CONF_LINKED_MOTION_SENSOR, motion_event_entity_id
+                )
+            elif motion_binary_sensor_entity_id := lookup.get(MOTION_SENSOR):
+                config[entity_id].setdefault(
+                    CONF_LINKED_MOTION_SENSOR, motion_binary_sensor_entity_id
                 )
 
-        if ATTR_BATTERY_LEVEL not in state.attributes:
-            battery_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                (SENSOR_DOMAIN, SensorDeviceClass.BATTERY)
-            )
-            if battery_sensor_entity_id:
-                self._config.setdefault(state.entity_id, {}).setdefault(
-                    CONF_LINKED_BATTERY_SENSOR, battery_sensor_entity_id
+        if domain in (CAMERA_DOMAIN, LOCK_DOMAIN):
+            if doorbell_event_entity_id := lookup.get(DOORBELL_EVENT_SENSOR):
+                config[entity_id].setdefault(
+                    CONF_LINKED_DOORBELL_SENSOR, doorbell_event_entity_id
                 )
 
-        if state.entity_id.startswith(f"{CAMERA_DOMAIN}."):
-            motion_binary_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION)
-            )
-            if motion_binary_sensor_entity_id:
-                self._config.setdefault(state.entity_id, {}).setdefault(
-                    CONF_LINKED_MOTION_SENSOR,
-                    motion_binary_sensor_entity_id,
+        if domain == FAN_DOMAIN:
+            if current_humidity_sensor_entity_id := lookup.get(HUMIDITY_SENSOR):
+                config[entity_id].setdefault(
+                    CONF_LINKED_HUMIDITY_SENSOR, current_humidity_sensor_entity_id
                 )
-            doorbell_binary_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY)
-            )
-            if doorbell_binary_sensor_entity_id:
-                self._config.setdefault(state.entity_id, {}).setdefault(
-                    CONF_LINKED_DOORBELL_SENSOR,
-                    doorbell_binary_sensor_entity_id,
+            if current_pm25_sensor_entity_id := lookup.get(PM25_SENSOR):
+                config[entity_id].setdefault(CONF_TYPE, TYPE_AIR_PURIFIER)
+                config[entity_id].setdefault(
+                    CONF_LINKED_PM25_SENSOR, current_pm25_sensor_entity_id
+                )
+            if current_temperature_sensor_entity_id := lookup.get(TEMPERATURE_SENSOR):
+                config[entity_id].setdefault(
+                    CONF_LINKED_TEMPERATURE_SENSOR, current_temperature_sensor_entity_id
                 )
 
-        if state.entity_id.startswith(f"{HUMIDIFIER_DOMAIN}."):
-            current_humidity_sensor_entity_id = device_lookup[
-                ent_reg_ent.device_id
-            ].get((SENSOR_DOMAIN, SensorDeviceClass.HUMIDITY))
-            if current_humidity_sensor_entity_id:
-                self._config.setdefault(state.entity_id, {}).setdefault(
-                    CONF_LINKED_HUMIDITY_SENSOR,
-                    current_humidity_sensor_entity_id,
-                )
+        if domain == HUMIDIFIER_DOMAIN and (
+            current_humidity_sensor_entity_id := lookup.get(HUMIDITY_SENSOR)
+        ):
+            config[entity_id].setdefault(
+                CONF_LINKED_HUMIDITY_SENSOR, current_humidity_sensor_entity_id
+            )
 
     async def _async_set_device_info_attributes(
         self,
@@ -1136,7 +1175,7 @@ class HomeKit:
         entity_id: str,
     ) -> None:
         """Set attributes that will be used for homekit device info."""
-        ent_cfg = self._config.setdefault(entity_id, {})
+        ent_cfg = self._config[entity_id]
         if ent_reg_ent.device_id:
             if dev_reg_ent := dev_reg.async_get(ent_reg_ent.device_id):
                 self._fill_config_from_device_registry_entry(dev_reg_ent, ent_cfg)
@@ -1180,9 +1219,10 @@ class HomeKitPairingQRView(HomeAssistantView):
             raise Unauthorized
         entry_id, secret = request.query_string.split("-")
         hass = request.app[KEY_HASS]
-        domain_data: dict[str, HomeKitEntryData] = hass.data[DOMAIN]
+        entry_data: HomeKitEntryData | None
         if (
-            not (entry_data := domain_data.get(entry_id))
+            not (entry := hass.config_entries.async_get_entry(entry_id))
+            or not (entry_data := getattr(entry, "runtime_data", None))
             or not secret
             or not entry_data.pairing_qr_secret
             or secret != entry_data.pairing_qr_secret

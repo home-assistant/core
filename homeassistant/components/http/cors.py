@@ -13,12 +13,13 @@ from aiohttp.web_urldispatcher import (
     ResourceRoute,
     StaticResource,
 )
+import aiohttp_cors
 
 from homeassistant.const import HTTP_HEADER_X_REQUESTED_WITH
 from homeassistant.core import callback
 from homeassistant.helpers.http import (
     KEY_ALLOW_ALL_CORS,
-    KEY_ALLOW_CONFIGRED_CORS,
+    KEY_ALLOW_CONFIGURED_CORS,
     AllowCorsType,
 )
 
@@ -35,22 +36,17 @@ VALID_CORS_TYPES: Final = (Resource, ResourceRoute, StaticResource)
 @callback
 def setup_cors(app: Application, origins: list[str]) -> None:
     """Set up CORS."""
-    # This import should remain here. That way the HTTP integration can always
-    # be imported by other integrations without it's requirements being installed.
-    # pylint: disable-next=import-outside-toplevel
-    import aiohttp_cors
-
     cors = aiohttp_cors.setup(
         app,
         defaults={
-            host: aiohttp_cors.ResourceOptions(
+            host: aiohttp_cors.ResourceOptions(  # type: ignore[no-untyped-call]
                 allow_headers=ALLOWED_CORS_HEADERS, allow_methods="*"
             )
             for host in origins
         },
     )
 
-    cors_added = set()
+    cors_added: set[str] = set()
 
     def _allow_cors(
         route: AbstractRoute | AbstractResource,
@@ -73,19 +69,19 @@ def setup_cors(app: Application, origins: list[str]) -> None:
         if path_str in cors_added:
             return
 
-        cors.add(route, config)
+        cors.add(route, config)  # type: ignore[arg-type]
         cors_added.add(path_str)
 
     app[KEY_ALLOW_ALL_CORS] = lambda route: _allow_cors(
         route,
         {
-            "*": aiohttp_cors.ResourceOptions(
+            "*": aiohttp_cors.ResourceOptions(  # type: ignore[no-untyped-call]
                 allow_headers=ALLOWED_CORS_HEADERS, allow_methods="*"
             )
         },
     )
 
     if origins:
-        app[KEY_ALLOW_CONFIGRED_CORS] = cast(AllowCorsType, _allow_cors)
+        app[KEY_ALLOW_CONFIGURED_CORS] = cast(AllowCorsType, _allow_cors)
     else:
-        app[KEY_ALLOW_CONFIGRED_CORS] = lambda _: None
+        app[KEY_ALLOW_CONFIGURED_CORS] = lambda _: None

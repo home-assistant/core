@@ -26,7 +26,7 @@ async def test_async_setup_entry_success(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     with patch(
         "homeassistant.components.pushbullet.api.PushBulletNotificationProvider.start"
@@ -49,7 +49,7 @@ async def test_setup_entry_failed_invalid_key(hass: HomeAssistant) -> None:
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_entry_failed_conn_error(hass: HomeAssistant) -> None:
@@ -65,7 +65,7 @@ async def test_setup_entry_failed_conn_error(hass: HomeAssistant) -> None:
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_async_unload_entry(hass: HomeAssistant, requests_mock_fixture) -> None:
@@ -78,8 +78,8 @@ async def test_async_unload_entry(hass: HomeAssistant, requests_mock_fixture) ->
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED

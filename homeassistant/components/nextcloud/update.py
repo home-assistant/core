@@ -3,20 +3,20 @@
 from __future__ import annotations
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import NextcloudDataUpdateCoordinator
+from .coordinator import NextcloudConfigEntry
 from .entity import NextcloudEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NextcloudConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Nextcloud update entity."""
-    coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     if coordinator.data.get("update_available") is None:
         return
     async_add_entities(
@@ -32,12 +32,12 @@ class NextcloudUpdateSensor(NextcloudEntity, UpdateEntity):
     """Represents a Nextcloud update entity."""
 
     @property
-    def installed_version(self) -> str | None:
+    def installed_version(self) -> str:
         """Version installed and in use."""
-        return self.coordinator.data.get("system_version")
+        return self.coordinator.data["system_version"]
 
     @property
-    def latest_version(self) -> str | None:
+    def latest_version(self) -> str:
         """Latest version available for install."""
         return self.coordinator.data.get(
             "update_available_version", self.installed_version
@@ -46,7 +46,5 @@ class NextcloudUpdateSensor(NextcloudEntity, UpdateEntity):
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
-        if self.latest_version:
-            ver = "-".join(self.latest_version.split(".")[:3])
-            return f"https://nextcloud.com/changelog/#{ver}"
-        return None
+        ver = "-".join(self.latest_version.split(".")[:3])
+        return f"https://nextcloud.com/changelog/#{ver}"

@@ -8,7 +8,7 @@ from typing import Any
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, async_rounded_state
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
     _get_unique_id,
@@ -24,7 +24,7 @@ from homeassistant.components.tomorrowio.sensor import TomorrowioSensorEntityDes
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, SOURCE_USER
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -103,7 +103,7 @@ V4_FIELDS = [
 @callback
 def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     """Enable disabled entity."""
-    ent_reg = async_get(hass)
+    ent_reg = er.async_get(hass)
     entry = ent_reg.async_get(entity_name)
     updated_entry = ent_reg.async_update_entity(entry.entity_id, disabled_by=None)
     assert updated_entry != entry
@@ -142,9 +142,10 @@ async def _setup(
 
 def check_sensor_state(hass: HomeAssistant, entity_name: str, value: str):
     """Check the state of a Tomorrow.io sensor."""
-    state = hass.states.get(CC_SENSOR_ENTITY_ID.format(entity_name))
+    entity_id = CC_SENSOR_ENTITY_ID.format(entity_name)
+    state = hass.states.get(entity_id)
     assert state
-    assert state.state == value
+    assert async_rounded_state(hass, entity_id, state) == value
     assert state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
 
 
@@ -168,7 +169,7 @@ async def test_v4_sensor(hass: HomeAssistant) -> None:
     check_sensor_state(hass, WEED_POLLEN, "none")
     check_sensor_state(hass, TREE_POLLEN, "none")
     check_sensor_state(hass, FEELS_LIKE, "101.3")
-    check_sensor_state(hass, DEW_POINT, "72.82")
+    check_sensor_state(hass, DEW_POINT, "72.8")
     check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "29.47")
     check_sensor_state(hass, GHI, "0")
     check_sensor_state(hass, CLOUD_BASE, "0.74")
@@ -201,8 +202,8 @@ async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
     check_sensor_state(hass, WEED_POLLEN, "none")
     check_sensor_state(hass, TREE_POLLEN, "none")
     check_sensor_state(hass, FEELS_LIKE, "214.3")
-    check_sensor_state(hass, DEW_POINT, "163.08")
-    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "0.427")
+    check_sensor_state(hass, DEW_POINT, "163.1")
+    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "0.43")
     check_sensor_state(hass, GHI, "0.0")
     check_sensor_state(hass, CLOUD_BASE, "0.46")
     check_sensor_state(hass, CLOUD_COVER, "100")

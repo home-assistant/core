@@ -1,6 +1,7 @@
 """Support to turn on lights based on the states."""
 
 from datetime import timedelta
+from functools import partial
 import logging
 
 import voluptuous as vol
@@ -27,15 +28,15 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
-    async_track_state_change,
+    async_track_state_change_event,
 )
 from homeassistant.helpers.sun import get_astral_event_next, is_up
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 DOMAIN = "device_sun_light_trigger"
 CONF_DEVICE_GROUP = "device_group"
@@ -195,8 +196,20 @@ async def activate_automation(  # noqa: C901
         schedule_light_turn_on(None)
 
     @callback
-    def check_light_on_dev_state_change(entity, old_state, new_state):
+    def check_light_on_dev_state_change(
+        from_state: str, to_state: str, event: Event[EventStateChangedData]
+    ) -> None:
         """Handle tracked device state changes."""
+        event_data = event.data
+        if (
+            (old_state := event_data["old_state"]) is None
+            or (new_state := event_data["new_state"]) is None
+            or old_state.state != from_state
+            or new_state.state != to_state
+        ):
+            return
+
+        entity = event_data["entity_id"]
         lights_are_on = any_light_on()
         light_needed = not (lights_are_on or is_up(hass))
 
@@ -237,12 +250,10 @@ async def activate_automation(  # noqa: C901
                     # will all the following then, break.
                     break
 
-    async_track_state_change(
+    async_track_state_change_event(
         hass,
         device_entity_ids,
-        check_light_on_dev_state_change,
-        STATE_NOT_HOME,
-        STATE_HOME,
+        partial(check_light_on_dev_state_change, STATE_NOT_HOME, STATE_HOME),
     )
 
     if disable_turn_off:
@@ -266,12 +277,10 @@ async def activate_automation(  # noqa: C901
             )
         )
 
-    async_track_state_change(
+    async_track_state_change_event(
         hass,
         device_entity_ids,
-        turn_off_lights_when_all_leave,
-        STATE_HOME,
-        STATE_NOT_HOME,
+        partial(turn_off_lights_when_all_leave, STATE_HOME, STATE_NOT_HOME),
     )
 
     return

@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import logging
 
 from govee_local_api import GoveeController
 
-from homeassistant.components import network
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 
+from . import async_get_source_ips
 from .const import (
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
@@ -22,15 +23,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _async_has_devices(hass: HomeAssistant) -> bool:
-    """Return if there are devices that can be discovered."""
-
-    adapter = await network.async_get_source_ip(hass, network.PUBLIC_TARGET_IP)
-
+async def _async_discover(hass: HomeAssistant, adapter_ip: str) -> bool:
     controller: GoveeController = GoveeController(
         loop=hass.loop,
         logger=_LOGGER,
-        listening_address=adapter,
+        listening_address=adapter_ip,
         broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
         broadcast_port=CONF_TARGET_PORT_DEFAULT,
         listening_port=CONF_LISTENING_PORT_DEFAULT,
@@ -39,19 +36,35 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
         update_enabled=False,
     )
 
-    await controller.start()
+    try:
+        _LOGGER.debug("Starting discovery with IP %s", adapter_ip)
+        await controller.start()
+    except OSError as ex:
+        _LOGGER.error("Start failed on IP %s, errno: %d", adapter_ip, ex.errno)
+        return False
 
     try:
         async with asyncio.timeout(delay=DISCOVERY_TIMEOUT):
             while not controller.devices:
                 await asyncio.sleep(delay=1)
     except TimeoutError:
-        _LOGGER.debug("No devices found")
+        _LOGGER.debug("No devices found with IP %s", adapter_ip)
 
     devices_count = len(controller.devices)
-    controller.cleanup()
+    cleanup_complete: asyncio.Event = controller.cleanup()
+    with suppress(TimeoutError):
+        await asyncio.wait_for(cleanup_complete.wait(), 1)
 
     return devices_count > 0
+
+
+async def _async_has_devices(hass: HomeAssistant) -> bool:
+    """Return if there are devices that can be discovered."""
+
+    source_ips = await async_get_source_ips(hass)
+    results = await asyncio.gather(*[_async_discover(hass, ip) for ip in source_ips])
+
+    return any(results)
 
 
 config_entry_flow.register_discovery_flow(

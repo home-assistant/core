@@ -9,25 +9,25 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     SourceType,
 )
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_VALIDATOR = "validator"
 CONF_SECRET = "secret"
 URL = "/api/meraki"
-VERSION = "2.0"
+ACCEPTED_VERSIONS = ["2.0", "2.1"]
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_VALIDATOR): cv.string, vol.Required(CONF_SECRET): cv.string}
 )
 
@@ -74,7 +74,7 @@ class MerakiView(HomeAssistantView):
         if data["secret"] != self.secret:
             _LOGGER.error("Invalid Secret received from Meraki")
             return self.json_message("Invalid secret", HTTPStatus.UNPROCESSABLE_ENTITY)
-        if data["version"] != VERSION:
+        if data["version"] not in ACCEPTED_VERSIONS:
             _LOGGER.error("Invalid API version: %s", data["version"])
             return self.json_message("Invalid version", HTTPStatus.UNPROCESSABLE_ENTITY)
         _LOGGER.debug("Valid Secret")
@@ -86,8 +86,9 @@ class MerakiView(HomeAssistantView):
         _LOGGER.debug("Processing %s", data["type"])
         if not data["data"]["observations"]:
             _LOGGER.debug("No observations found")
-            return
+            return None
         self._handle(request.app[KEY_HASS], data)
+        return None
 
     @callback
     def _handle(self, hass, data):

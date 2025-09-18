@@ -21,7 +21,7 @@ from homeassistant.components.stream.fmp4utils import find_box
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     DefaultSegment as Segment,
@@ -35,7 +35,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
-async def stream_component(hass):
+async def stream_component(hass: HomeAssistant) -> None:
     """Set up the component before each test."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
@@ -101,9 +101,10 @@ async def test_record_path_not_allowed(hass: HomeAssistant, h264_video) -> None:
     """Test where the output path is not allowed by home assistant configuration."""
 
     stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
-    with patch.object(
-        hass.config, "is_allowed_path", return_value=False
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=False),
+        pytest.raises(HomeAssistantError),
+    ):
         await stream.async_record("/example/path")
 
 
@@ -149,9 +150,11 @@ async def test_recorder_discontinuity(
             provider_ready.set()
             return provider
 
-    with patch.object(hass.config, "is_allowed_path", return_value=True), patch(
-        "homeassistant.components.stream.Stream", wraps=MockStream
-    ), patch("homeassistant.components.stream.recorder.RecorderOutput.recv"):
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch("homeassistant.components.stream.Stream", wraps=MockStream),
+        patch("homeassistant.components.stream.recorder.RecorderOutput.recv"),
+    ):
         stream = create_stream(hass, "blank", {}, dynamic_stream_settings())
         make_recording = hass.async_create_task(stream.async_record(filename))
         await provider_ready.wait()
@@ -302,7 +305,5 @@ async def test_record_stream_rotate(hass: HomeAssistant, filename, h264_video) -
 
     # Assert
     assert os.path.exists(filename)
-    with open(filename, "rb") as rotated_mp4:
-        assert_mp4_has_transform_matrix(
-            rotated_mp4.read(), stream.dynamic_stream_settings.orientation
-        )
+    data = await hass.async_add_executor_job(Path(filename).read_bytes)
+    assert_mp4_has_transform_matrix(data, stream.dynamic_stream_settings.orientation)

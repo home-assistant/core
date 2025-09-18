@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncIterable
 import logging
 
@@ -23,11 +22,12 @@ from homeassistant.components.stt import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.setup import async_when_setup
 
 from .assist_pipeline import async_migrate_cloud_pipeline_engine
 from .client import CloudClient
-from .const import DATA_PLATFORMS_SETUP, DOMAIN, STT_ENTITY_UNIQUE_ID
+from .const import DATA_CLOUD, DATA_PLATFORMS_SETUP, STT_ENTITY_UNIQUE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,12 +35,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud speech platform via config entry."""
-    stt_platform_loaded: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][Platform.STT]
+    stt_platform_loaded = hass.data[DATA_PLATFORMS_SETUP][Platform.STT]
     stt_platform_loaded.set()
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     async_add_entities([CloudProviderEntity(cloud)])
 
 
@@ -86,9 +86,18 @@ class CloudProviderEntity(SpeechToTextEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added to hass."""
-        await async_migrate_cloud_pipeline_engine(
-            self.hass, platform=Platform.STT, engine_id=self.entity_id
-        )
+
+        async def pipeline_setup(hass: HomeAssistant, _comp: str) -> None:
+            """When assist_pipeline is set up."""
+            assert self.platform.config_entry
+            self.platform.config_entry.async_create_task(
+                hass,
+                async_migrate_cloud_pipeline_engine(
+                    self.hass, platform=Platform.STT, engine_id=self.entity_id
+                ),
+            )
+
+        async_when_setup(self.hass, "assist_pipeline", pipeline_setup)
 
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]

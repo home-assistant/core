@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components import imap
-from homeassistant.components.sensor.const import SensorStateClass
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -41,7 +41,7 @@ async def test_entry_diagnostics(
     # Make sure we have had one update (when polling)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # we should have received one message
     assert state is not None
     assert state.state == "1"
@@ -66,6 +66,10 @@ async def test_entry_diagnostics(
         "port": 993,
         "charset": "utf-8",
         "folder": "INBOX",
+        "event_message_data": [
+            "text",
+            "headers",
+        ],
         "search": "UnSeen UnDeleted",
         "custom_event_data_template": "{{ 4 * 4 }}",
     }

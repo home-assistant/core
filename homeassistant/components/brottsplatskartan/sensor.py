@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_APP_ID, CONF_AREA, DOMAIN, LOGGER
 
@@ -21,7 +21,9 @@ SCAN_INTERVAL = timedelta(minutes=30)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Brottsplatskartan sensor entry."""
 
@@ -63,9 +65,9 @@ class BrottsplatskartanSensor(SensorEntity):
         """Update device state."""
 
         incident_counts: defaultdict[str, int] = defaultdict(int)
-        get_incidents: dict[str, list] | Literal[
-            False
-        ] = self._brottsplatskartan.get_incidents()
+        get_incidents: dict[str, list] | Literal[False] = (
+            self._brottsplatskartan.get_incidents()
+        )
 
         if get_incidents is False:
             LOGGER.debug("Problems fetching incidents")

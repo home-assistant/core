@@ -6,7 +6,7 @@ from io import BufferedReader
 import logging
 from typing import Any
 
-from notifications_android_tv import Notifications
+from notifications_android_tv.notifications import ConnectError, Notifications
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
@@ -19,7 +19,8 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -44,6 +45,7 @@ from .const import (
     ATTR_POSITION,
     ATTR_TRANSPARENCY,
     DEFAULT_TIMEOUT,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,9 +59,9 @@ async def async_get_service(
     """Get the NFAndroidTV notification service."""
     if discovery_info is None:
         return None
-    notify = await hass.async_add_executor_job(Notifications, discovery_info[CONF_HOST])
+
     return NFAndroidTVNotificationService(
-        notify,
+        discovery_info[CONF_HOST],
         hass.config.is_allowed_path,
     )
 
@@ -69,15 +71,24 @@ class NFAndroidTVNotificationService(BaseNotificationService):
 
     def __init__(
         self,
-        notify: Notifications,
+        host: str,
         is_allowed_path: Any,
     ) -> None:
         """Initialize the service."""
-        self.notify = notify
+        self.host = host
         self.is_allowed_path = is_allowed_path
+        self.notify: Notifications | None = None
 
     def send_message(self, message: str, **kwargs: Any) -> None:
-        """Send a message to a Android TV device."""
+        """Send a message to an Android TV device."""
+        if self.notify is None:
+            try:
+                self.notify = Notifications(self.host)
+            except ConnectError as err:
+                raise HomeAssistantError(
+                    f"Failed to connect to host: {self.host}"
+                ) from err
+
         data: dict | None = kwargs.get(ATTR_DATA)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         duration = None
@@ -133,33 +144,65 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         "Invalid interrupt-value: %s", data.get(ATTR_INTERRUPT)
                     )
             if imagedata := data.get(ATTR_IMAGE):
-                image_file = self.load_file(
-                    url=imagedata.get(ATTR_IMAGE_URL),
-                    local_path=imagedata.get(ATTR_IMAGE_PATH),
-                    username=imagedata.get(ATTR_IMAGE_USERNAME),
-                    password=imagedata.get(ATTR_IMAGE_PASSWORD),
-                    auth=imagedata.get(ATTR_IMAGE_AUTH),
-                )
+                if isinstance(imagedata, str):
+                    image_file = (
+                        self.load_file(url=imagedata)
+                        if imagedata.startswith("http")
+                        else self.load_file(local_path=imagedata)
+                    )
+                elif isinstance(imagedata, dict):
+                    image_file = self.load_file(
+                        url=imagedata.get(ATTR_IMAGE_URL),
+                        local_path=imagedata.get(ATTR_IMAGE_PATH),
+                        username=imagedata.get(ATTR_IMAGE_USERNAME),
+                        password=imagedata.get(ATTR_IMAGE_PASSWORD),
+                        auth=imagedata.get(ATTR_IMAGE_AUTH),
+                    )
+                else:
+                    raise ServiceValidationError(
+                        "Invalid image provided",
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_notification_image",
+                        translation_placeholders={"type": type(imagedata).__name__},
+                    )
             if icondata := data.get(ATTR_ICON):
-                icon = self.load_file(
-                    url=icondata.get(ATTR_ICON_URL),
-                    local_path=icondata.get(ATTR_ICON_PATH),
-                    username=icondata.get(ATTR_ICON_USERNAME),
-                    password=icondata.get(ATTR_ICON_PASSWORD),
-                    auth=icondata.get(ATTR_ICON_AUTH),
-                )
-        self.notify.send(
-            message,
-            title=title,
-            duration=duration,
-            fontsize=fontsize,
-            position=position,
-            bkgcolor=bkgcolor,
-            transparency=transparency,
-            interrupt=interrupt,
-            icon=icon,
-            image_file=image_file,
-        )
+                if isinstance(icondata, str):
+                    icondata = (
+                        self.load_file(url=icondata)
+                        if icondata.startswith("http")
+                        else self.load_file(local_path=icondata)
+                    )
+                elif isinstance(icondata, dict):
+                    icon = self.load_file(
+                        url=icondata.get(ATTR_ICON_URL),
+                        local_path=icondata.get(ATTR_ICON_PATH),
+                        username=icondata.get(ATTR_ICON_USERNAME),
+                        password=icondata.get(ATTR_ICON_PASSWORD),
+                        auth=icondata.get(ATTR_ICON_AUTH),
+                    )
+                else:
+                    raise ServiceValidationError(
+                        "Invalid Icon provided",
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_notification_icon",
+                        translation_placeholders={"type": type(icondata).__name__},
+                    )
+
+        try:
+            self.notify.send(
+                message,
+                title=title,
+                duration=duration,
+                fontsize=fontsize,
+                position=position,
+                bkgcolor=bkgcolor,
+                transparency=transparency,
+                interrupt=interrupt,
+                icon=icon,
+                image_file=image_file,
+            )
+        except ConnectError as err:
+            raise HomeAssistantError(f"Failed to connect to host: {self.host}") from err
 
     def load_file(
         self,

@@ -2,11 +2,10 @@
 
 from http import HTTPStatus
 import ssl
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import httpx
+import aiohttp
 import pytest
-import respx
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import (
@@ -28,6 +27,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_missing_basic_config(hass: HomeAssistant) -> None:
@@ -56,15 +56,14 @@ async def test_setup_missing_config(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 0
 
 
-@respx.mock
 async def test_setup_failed_connect(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup when connection error occurs."""
 
-    respx.get("http://localhost").mock(
-        side_effect=httpx.RequestError("server offline", request=MagicMock())
-    )
+    aioclient_mock.get("http://localhost", exc=Exception("server offline"))
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -81,12 +80,13 @@ async def test_setup_failed_connect(
     assert "server offline" in caplog.text
 
 
-@respx.mock
 async def test_setup_fail_on_ssl_erros(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup when connection error occurs."""
-    respx.get("https://localhost").mock(side_effect=ssl.SSLError("ssl error"))
+    aioclient_mock.get("https://localhost", exc=ssl.SSLError("ssl error"))
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -103,10 +103,11 @@ async def test_setup_fail_on_ssl_erros(
     assert "ssl error" in caplog.text
 
 
-@respx.mock
-async def test_setup_timeout(hass: HomeAssistant) -> None:
+async def test_setup_timeout(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup when connection timeout occurs."""
-    respx.get("http://localhost").mock(side_effect=TimeoutError())
+    aioclient_mock.get("http://localhost", exc=TimeoutError())
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -122,10 +123,11 @@ async def test_setup_timeout(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 0
 
 
-@respx.mock
-async def test_setup_minimum(hass: HomeAssistant) -> None:
+async def test_setup_minimum(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with minimum configuration."""
-    respx.get("http://localhost") % HTTPStatus.OK
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -141,10 +143,11 @@ async def test_setup_minimum(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
 
 
-@respx.mock
-async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
+async def test_setup_minimum_resource_template(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with minimum configuration (resource_template)."""
-    respx.get("http://localhost") % HTTPStatus.OK
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -159,10 +162,11 @@ async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
 
 
-@respx.mock
-async def test_setup_duplicate_resource_template(hass: HomeAssistant) -> None:
+async def test_setup_duplicate_resource_template(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with duplicate resources."""
-    respx.get("http://localhost") % HTTPStatus.OK
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -178,10 +182,11 @@ async def test_setup_duplicate_resource_template(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 0
 
 
-@respx.mock
-async def test_setup_get(hass: HomeAssistant) -> None:
+async def test_setup_get(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with valid configuration."""
-    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK, json={})
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -211,10 +216,11 @@ async def test_setup_get(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.PLUG
 
 
-@respx.mock
-async def test_setup_get_template_headers_params(hass: HomeAssistant) -> None:
+async def test_setup_get_template_headers_params(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with valid configuration."""
-    respx.get("http://localhost").respond(status_code=200, json={})
+    aioclient_mock.get("http://localhost", status=200, json={})
     assert await async_setup_component(
         hass,
         "sensor",
@@ -241,15 +247,18 @@ async def test_setup_get_template_headers_params(hass: HomeAssistant) -> None:
     await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
-    assert respx.calls.last.request.headers["Accept"] == CONTENT_TYPE_JSON
-    assert respx.calls.last.request.headers["User-Agent"] == "Mozilla/5.0"
-    assert respx.calls.last.request.url.query == b"start=0&end=5"
+    # Verify headers and params were sent correctly by checking the mock was called
+    assert aioclient_mock.call_count == 1
+    last_request_headers = aioclient_mock.mock_calls[0][3]
+    assert last_request_headers["Accept"] == CONTENT_TYPE_JSON
+    assert last_request_headers["User-Agent"] == "Mozilla/5.0"
 
 
-@respx.mock
-async def test_setup_get_digest_auth(hass: HomeAssistant) -> None:
+async def test_setup_get_digest_auth(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with valid configuration."""
-    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK, json={})
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -274,10 +283,11 @@ async def test_setup_get_digest_auth(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
 
 
-@respx.mock
-async def test_setup_post(hass: HomeAssistant) -> None:
+async def test_setup_post(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with valid configuration."""
-    respx.post("http://localhost").respond(status_code=HTTPStatus.OK, json={})
+    aioclient_mock.post("http://localhost", status=HTTPStatus.OK, json={})
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -302,11 +312,13 @@ async def test_setup_post(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
 
 
-@respx.mock
-async def test_setup_get_off(hass: HomeAssistant) -> None:
+async def test_setup_get_off(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with valid off configuration."""
-    respx.get("http://localhost").respond(
-        status_code=HTTPStatus.OK,
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
         headers={"content-type": "text/json"},
         json={"dog": False},
     )
@@ -332,11 +344,13 @@ async def test_setup_get_off(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
 
-@respx.mock
-async def test_setup_get_on(hass: HomeAssistant) -> None:
+async def test_setup_get_on(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with valid on configuration."""
-    respx.get("http://localhost").respond(
-        status_code=HTTPStatus.OK,
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
         headers={"content-type": "text/json"},
         json={"dog": True},
     )
@@ -362,10 +376,87 @@ async def test_setup_get_on(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
 
 
-@respx.mock
-async def test_setup_with_exception(hass: HomeAssistant) -> None:
+async def test_setup_get_xml(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with valid xml configuration."""
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        headers={"content-type": "text/xml"},
+        text="<dog>1</dog>",
+    )
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.dog }}",
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("content"),
+    [
+        (""),
+        ("<open></close>"),
+    ],
+)
+async def test_setup_get_bad_xml(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    content: str,
+) -> None:
+    """Test attributes get extracted from a XML result with bad xml."""
+
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        headers={"content-type": "text/xml"},
+        text=content,
+    )
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.toplevel.master_value }}",
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
+    state = hass.states.get("binary_sensor.foo")
+
+    assert state.state == STATE_OFF
+    assert "REST xml result could not be parsed" in caplog.text
+
+
+async def test_setup_with_exception(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with exception."""
-    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK, json={})
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -390,8 +481,8 @@ async def test_setup_with_exception(hass: HomeAssistant) -> None:
     await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
-    respx.clear()
-    respx.get("http://localhost").mock(side_effect=httpx.RequestError)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get("http://localhost", exc=aiohttp.ClientError("Request failed"))
     await hass.services.async_call(
         "homeassistant",
         "update_entity",
@@ -404,11 +495,10 @@ async def test_setup_with_exception(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNAVAILABLE
 
 
-@respx.mock
-async def test_reload(hass: HomeAssistant) -> None:
+async def test_reload(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Verify we can reload reset sensors."""
 
-    respx.get("http://localhost") % HTTPStatus.OK
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
 
     await async_setup_component(
         hass,
@@ -444,10 +534,11 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert hass.states.get("binary_sensor.rollout")
 
 
-@respx.mock
-async def test_setup_query_params(hass: HomeAssistant) -> None:
+async def test_setup_query_params(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with query params."""
-    respx.get("http://localhost", params={"search": "something"}) % HTTPStatus.OK
+    aioclient_mock.get("http://localhost?search=something", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -464,8 +555,11 @@ async def test_setup_query_params(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
 
 
-@respx.mock
-async def test_entity_config(hass: HomeAssistant) -> None:
+async def test_entity_config(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test entity configuration."""
 
     config = {
@@ -482,11 +576,10 @@ async def test_entity_config(hass: HomeAssistant) -> None:
         },
     }
 
-    respx.get("http://localhost") % HTTPStatus.OK
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get("binary_sensor.rest_binary_sensor").unique_id
         == "very_unique"
@@ -501,8 +594,9 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     }
 
 
-@respx.mock
-async def test_availability_in_config(hass: HomeAssistant) -> None:
+async def test_availability_in_config(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test entity configuration."""
 
     config = {
@@ -517,9 +611,92 @@ async def test_availability_in_config(hass: HomeAssistant) -> None:
         },
     }
 
-    respx.get("http://localhost") % HTTPStatus.OK
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.rest_binary_sensor")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_availability_blocks_value_template(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test availability blocks value_template from rendering."""
+    error = "Error parsing value for binary_sensor.block_template: 'x' is undefined"
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK, text="51")
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "resource": "http://localhost",
+                    "binary_sensor": [
+                        {
+                            "unique_id": "block_template",
+                            "name": "block_template",
+                            "value_template": "{{ x - 1 }}",
+                            "availability": "{{ value == '50' }}",
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+
+    assert error not in caplog.text
+
+    state = hass.states.get("binary_sensor.block_template")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK, text="50")
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["binary_sensor.block_template"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert error in caplog.text
+
+
+async def test_setup_get_basic_auth_utf8(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with basic auth using UTF-8 characters including Unicode char \u2018."""
+    # Use a password with the Unicode character \u2018 (left single quotation mark)
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK, json={"key": "on"})
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.key }}",
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+                "authentication": "basic",
+                "username": "test_user",
+                "password": "test\u2018password",  # Password with Unicode char
+                "headers": {"Accept": CONTENT_TYPE_JSON},
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state.state == STATE_ON

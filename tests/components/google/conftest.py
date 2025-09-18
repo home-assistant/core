@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 import datetime
 import http
 import time
-from typing import Any, TypeVar
+from typing import Any
 from unittest.mock import Mock, mock_open, patch
 
 from aiohttp.client_exceptions import ClientError
@@ -27,10 +27,9 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-ApiResult = Callable[[dict[str, Any]], None]
-ComponentSetup = Callable[[], Awaitable[bool]]
-_T = TypeVar("_T")
-YieldFixture = Generator[_T, None, None]
+type ApiResult = Callable[[dict[str, Any]], None]
+type ComponentSetup = Callable[[], Awaitable[bool]]
+type AsyncYieldFixture[_T] = AsyncGenerator[_T]
 
 
 CALENDAR_ID = "qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com"
@@ -93,18 +92,27 @@ CLIENT_ID = "client-id"
 CLIENT_SECRET = "client-secret"
 
 
-@pytest.fixture(name="calendar_access_role")
-def test_calendar_access_role() -> str:
-    """Default access role to use for test_api_calendar in tests."""
+@pytest.fixture
+def calendar_access_role() -> str:
+    """Set default access role to use for test_api_calendar in tests."""
     return "owner"
 
 
 @pytest.fixture
-def test_api_calendar(calendar_access_role: str) -> None:
+def calendar_is_primary() -> bool:
+    """Set if the calendar is the primary or not."""
+    return False
+
+
+@pytest.fixture(name="test_api_calendar")
+def api_calendar(
+    calendar_access_role: str, calendar_is_primary: bool
+) -> dict[str, Any]:
     """Return a test calendar object used in API responses."""
     return {
         **TEST_API_CALENDAR,
         "accessRole": calendar_access_role,
+        "primary": calendar_is_primary,
     }
 
 
@@ -151,7 +159,7 @@ def calendars_config(calendars_config_entity: dict[str, Any]) -> list[dict[str, 
 def mock_calendars_yaml(
     hass: HomeAssistant,
     calendars_config: list[dict[str, Any]],
-) -> Generator[Mock, None, None]:
+) -> Generator[Mock]:
     """Fixture that prepares the google_calendars.yaml mocks."""
     mocked_open_function = mock_open(
         read_data=yaml.dump(calendars_config) if calendars_config else None
@@ -241,7 +249,7 @@ def mock_events_list(
 
     def _put_result(
         response: dict[str, Any],
-        calendar_id: str = None,
+        calendar_id: str | None = None,
         exc: ClientError | None = None,
     ) -> None:
         if calendar_id is None:
@@ -255,7 +263,6 @@ def mock_events_list(
             json=resp,
             exc=exc,
         )
-        return
 
     return _put_result
 
@@ -268,7 +275,6 @@ def mock_events_list_items(
 
     def _put_items(items: list[dict[str, Any]]) -> None:
         mock_events_list({"items": items})
-        return
 
     return _put_items
 
@@ -289,7 +295,6 @@ def mock_calendars_list(
             json=resp,
             exc=exc,
         )
-        return
 
     return _result
 
@@ -297,7 +302,7 @@ def mock_calendars_list(
 @pytest.fixture
 def mock_calendar_get(
     aioclient_mock: AiohttpClientMocker,
-) -> Callable[[...], None]:
+) -> Callable[..., None]:
     """Fixture for returning a calendar get response."""
 
     def _result(
@@ -312,7 +317,6 @@ def mock_calendar_get(
             exc=exc,
             status=status,
         )
-        return
 
     return _result
 
@@ -320,7 +324,7 @@ def mock_calendar_get(
 @pytest.fixture
 def mock_insert_event(
     aioclient_mock: AiohttpClientMocker,
-) -> Callable[[...], None]:
+) -> Callable[..., None]:
     """Fixture for capturing event creation."""
 
     def _expect_result(
@@ -330,17 +334,16 @@ def mock_insert_event(
             f"{API_BASE_URL}/calendars/{calendar_id}/events",
             exc=exc,
         )
-        return
 
     return _expect_result
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass):
+async def set_time_zone(hass: HomeAssistant) -> None:
     """Set the time zone for the tests."""
     # Set our timezone to CST/Regina so we can check calculations
     # This keeps UTC-6 all year round
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 @pytest.fixture

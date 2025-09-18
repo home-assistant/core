@@ -8,10 +8,16 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_call_later,
@@ -42,19 +48,16 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     trigger_data = trigger_info["trigger_data"]
+    variables = trigger_info["variables"] or {}
     value_template: Template = config[CONF_VALUE_TEMPLATE]
-    value_template.hass = hass
     time_delta = config.get(CONF_FOR)
-    template.attach(hass, time_delta)
     delay_cancel = None
     job = HassJob(action)
     armed = False
 
     # Arm at setup if the template is already false.
     try:
-        if not result_as_boolean(
-            value_template.async_render(trigger_info["variables"])
-        ):
+        if not result_as_boolean(value_template.async_render(variables)):
             armed = True
     except exceptions.TemplateError as ex:
         _LOGGER.warning(
@@ -130,9 +133,12 @@ async def async_attach_trigger(
             call_action()
             return
 
+        data = {"trigger": template_variables}
+        period_variables = {**variables, **data}
+
         try:
             period: timedelta = cv.positive_time_period(
-                template.render_complex(time_delta, {"trigger": template_variables})
+                template.render_complex(time_delta, period_variables)
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             _LOGGER.error(
@@ -146,7 +152,7 @@ async def async_attach_trigger(
 
     info = async_track_template_result(
         hass,
-        [TrackTemplate(value_template, trigger_info["variables"])],
+        [TrackTemplate(value_template, variables)],
         template_listener,
     )
     unsub = info.async_remove

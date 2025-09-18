@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from typing import TYPE_CHECKING
 
 from pydeconz import DeconzSession, errors
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
@@ -14,9 +14,12 @@ from ..const import LOGGER
 from ..errors import AuthenticationRequired, CannotConnect
 from .config import DeconzConfig
 
+if TYPE_CHECKING:
+    from .. import DeconzConfigEntry
+
 
 async def get_deconz_api(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: DeconzConfigEntry
 ) -> DeconzSession:
     """Create a gateway object and verify configuration."""
     session = aiohttp_client.async_get_clientsession(hass)
@@ -26,7 +29,6 @@ async def get_deconz_api(
     try:
         async with asyncio.timeout(10):
             await api.refresh_state()
-        return api
 
     except errors.Unauthorized as err:
         LOGGER.warning("Invalid key for deCONZ at %s", config.host)
@@ -35,3 +37,4 @@ async def get_deconz_api(
     except (TimeoutError, errors.RequestError, errors.ResponseError) as err:
         LOGGER.error("Error connecting to deCONZ gateway at %s", config.host)
         raise CannotConnect from err
+    return api

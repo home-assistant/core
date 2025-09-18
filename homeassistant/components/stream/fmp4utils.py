@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 def find_box(
     mp4_bytes: bytes, target_type: bytes, box_start: int = 0
-) -> Generator[int, None, None]:
+) -> Generator[int]:
     """Find location of first box (or sub box if box_start provided) of given type."""
     if box_start == 0:
         index = 0
@@ -146,9 +146,10 @@ def get_codec_string(mp4_bytes: bytes) -> str:
     return ",".join(codecs)
 
 
-def find_moov(mp4_io: BufferedIOBase) -> int:
+def find_moov(mp4_io: BufferedIOBase) -> int:  # noqa: RET503
     """Find location of moov atom in a BufferedIOBase mp4."""
     index = 0
+    # Ruff doesn't understand this loop - the exception is always raised at the end
     while 1:
         mp4_io.seek(index)
         box_header = mp4_io.read(8)

@@ -3,7 +3,11 @@
 from logging import getLogger
 from typing import Any
 
-from switchbot_api import CannotConnect, InvalidAuth, SwitchBotAPI
+from switchbot_api import (
+    SwitchBotAPI,
+    SwitchBotAuthenticationError,
+    SwitchBotConnectionError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -36,11 +40,11 @@ class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 await SwitchBotAPI(
                     token=user_input[CONF_API_TOKEN], secret=user_input[CONF_API_KEY]
                 ).list_devices()
-            except CannotConnect:
+            except SwitchBotConnectionError:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except SwitchBotAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

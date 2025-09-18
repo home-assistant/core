@@ -2,34 +2,35 @@
 
 from __future__ import annotations
 
+from env_canada import ECRadar
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import device_info
-from .const import ATTR_OBSERVATION_TIME, DOMAIN
+from .const import ATTR_OBSERVATION_TIME
+from .coordinator import ECConfigEntry, ECDataUpdateCoordinator
 
 SERVICE_SET_RADAR_TYPE = "set_radar_type"
-SET_RADAR_TYPE_SCHEMA = {
+SET_RADAR_TYPE_SCHEMA: VolDictType = {
     vol.Required("radar_type"): vol.In(["Auto", "Rain", "Snow"]),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ECConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["radar_coordinator"]
-    async_add_entities([ECCamera(coordinator)])
+    coordinator = config_entry.runtime_data.radar_coordinator
+    async_add_entities([ECCameraEntity(coordinator)])
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
@@ -39,13 +40,13 @@ async def async_setup_entry(
     )
 
 
-class ECCamera(CoordinatorEntity, Camera):
+class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECRadar]], Camera):
     """Implementation of an Environment Canada radar camera."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "radar"
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator: ECDataUpdateCoordinator[ECRadar]) -> None:
         """Initialize the camera."""
         super().__init__(coordinator)
         Camera.__init__(self)
@@ -54,7 +55,7 @@ class ECCamera(CoordinatorEntity, Camera):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}-radar"
         self._attr_attribution = self.radar_object.metadata["attribution"]
         self._attr_entity_registry_enabled_default = False
-        self._attr_device_info = device_info(coordinator.config_entry)
+        self._attr_device_info = coordinator.device_info
 
         self.content_type = "image/gif"
 

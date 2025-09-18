@@ -90,17 +90,17 @@
   "services": {
     "get_forecasts": {
       "name": "Get forecasts",
-      "description": "Get weather forecasts.",
+      "description": "Retrieves the forecast from selected weather services.",
       "fields": {
         "type": {
           "name": "Forecast type",
-          "description": "Forecast type: daily, hourly or twice daily."
+          "description": "The scope of the weather forecast."
         }
       }
     },
     "get_forecast": {
       "name": "Get forecast",
-      "description": "Get weather forecast.",
+      "description": "Retrieves the forecast from a selected weather service.",
       "fields": {
         "type": {
           "name": "[%key:component::weather::services::get_forecasts::fields::type::name%]",
@@ -110,21 +110,13 @@
     }
   },
   "issues": {
-    "deprecated_weather_forecast_url": {
-      "title": "The {platform} custom integration is using deprecated weather forecast",
-      "description": "The custom integration `{platform}` implements the `forecast` property or sets `self._attr_forecast` in a subclass of WeatherEntity.\n\nPlease create a bug report at {issue_tracker}.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue."
-    },
-    "deprecated_weather_forecast_no_url": {
-      "title": "[%key:component::weather::issues::deprecated_weather_forecast_url::title%]",
-      "description": "The custom integration `{platform}` implements the `forecast` property or sets `self._attr_forecast` in a subclass of WeatherEntity.\n\nPlease report it to the author of the {platform} integration.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue."
-    },
     "deprecated_service_weather_get_forecast": {
-      "title": "Detected use of deprecated service `weather.get_forecast`",
+      "title": "Detected use of deprecated action weather.get_forecast",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "[%key:component::weather::issues::deprecated_service_weather_get_forecast::title%]",
-            "description": "Use `weather.get_forecasts` instead which supports multiple entities.\n\nPlease replace this service and adjust your automations and scripts and select **submit** to close this issue."
+            "description": "Use `weather.get_forecasts` instead which supports multiple entities.\n\nPlease replace this action and adjust your automations and scripts and select **Submit** to close this issue."
           }
         }
       }

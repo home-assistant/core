@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -24,11 +23,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import convert
 
-from . import FibaroController, FibaroDevice
-from .const import DOMAIN
+from . import FibaroConfigEntry
+from .entity import FibaroEntity
 
 # List of known sensors which represents a fibaro device
 MAIN_SENSOR_TYPES: dict[str, SensorEntityDescription] = {
@@ -102,15 +101,20 @@ FIBARO_TO_HASS_UNIT: dict[str, str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FibaroConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fibaro controller devices."""
 
-    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
+    controller = entry.runtime_data
     entities: list[SensorEntity] = [
         FibaroSensor(device, MAIN_SENSOR_TYPES.get(device.type))
         for device in controller.fibaro_devices[Platform.SENSOR]
+        # Some sensor devices do not have a value but report power or energy.
+        # These sensors are added to the sensor list but need to be excluded
+        # here as the FibaroSensor expects a value. One example is the
+        # Qubino 3 phase power meter.
+        if device.value.has_value
     ]
 
     entities.extend(
@@ -121,6 +125,7 @@ async def async_setup_entry(
             Platform.COVER,
             Platform.LIGHT,
             Platform.LOCK,
+            Platform.SENSOR,
             Platform.SWITCH,
         )
         for device in controller.fibaro_devices[platform]
@@ -131,7 +136,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class FibaroSensor(FibaroDevice, SensorEntity):
+class FibaroSensor(FibaroEntity, SensorEntity):
     """Representation of a Fibaro Sensor."""
 
     def __init__(
@@ -160,7 +165,7 @@ class FibaroSensor(FibaroDevice, SensorEntity):
             self._attr_native_value = self.fibaro_device.value.float_value()
 
 
-class FibaroAdditionalSensor(FibaroDevice, SensorEntity):
+class FibaroAdditionalSensor(FibaroEntity, SensorEntity):
     """Representation of a Fibaro Additional Sensor."""
 
     def __init__(

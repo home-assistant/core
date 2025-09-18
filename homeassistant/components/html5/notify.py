@@ -26,9 +26,10 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_NAME, URL_ROOT
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
@@ -38,32 +39,23 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import ensure_unique_string
 from homeassistant.util.json import JsonObjectType, load_json_object
 
-from .const import DOMAIN, SERVICE_DISMISS
+from .const import (
+    ATTR_VAPID_EMAIL,
+    ATTR_VAPID_PRV_KEY,
+    ATTR_VAPID_PUB_KEY,
+    DOMAIN,
+    SERVICE_DISMISS,
+)
+from .issues import async_create_html5_issue
 
 _LOGGER = logging.getLogger(__name__)
 
 REGISTRATIONS_FILE = "html5_push_registrations.conf"
 
-ATTR_VAPID_PUB_KEY = "vapid_pub_key"
-ATTR_VAPID_PRV_KEY = "vapid_prv_key"
-ATTR_VAPID_EMAIL = "vapid_email"
 
-
-def gcm_api_deprecated(value):
-    """Warn user that GCM API config is deprecated."""
-    if value:
-        _LOGGER.warning(
-            "Configuring html5_push_notifications via the GCM api"
-            " has been deprecated and stopped working since May 29,"
-            " 2019. Use the VAPID configuration instead. For instructions,"
-            " see https://www.home-assistant.io/integrations/html5/"
-        )
-    return value
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional("gcm_sender_id"): vol.All(cv.string, gcm_api_deprecated),
+        vol.Optional("gcm_sender_id"): cv.string,
         vol.Optional("gcm_api_key"): cv.string,
         vol.Required(ATTR_VAPID_PUB_KEY): cv.string,
         vol.Required(ATTR_VAPID_PRV_KEY): cv.string,
@@ -162,24 +154,40 @@ HTML5_SHOWNOTIFICATION_PARAMETERS = (
     "tag",
     "timestamp",
     "vibrate",
+    "silent",
 )
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> HTML5NotificationService | None:
     """Get the HTML5 push notification service."""
+    if config:
+        existing_config_entry = hass.config_entries.async_entries(DOMAIN)
+        if existing_config_entry:
+            async_create_html5_issue(hass, True)
+            return None
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            )
+        )
+        return None
+
+    if discovery_info is None:
+        return None
+
     json_path = hass.config.path(REGISTRATIONS_FILE)
 
-    registrations = _load_config(json_path)
+    registrations = await hass.async_add_executor_job(_load_config, json_path)
 
-    vapid_pub_key = config[ATTR_VAPID_PUB_KEY]
-    vapid_prv_key = config[ATTR_VAPID_PRV_KEY]
-    vapid_email = config[ATTR_VAPID_EMAIL]
+    vapid_pub_key = discovery_info[ATTR_VAPID_PUB_KEY]
+    vapid_prv_key = discovery_info[ATTR_VAPID_PRV_KEY]
+    vapid_email = discovery_info[ATTR_VAPID_EMAIL]
 
-    def websocket_appkey(hass, connection, msg):
+    def websocket_appkey(_hass, connection, msg):
         connection.send_message(websocket_api.result_message(msg["id"], vapid_pub_key))
 
     websocket_api.async_register_command(
@@ -426,10 +434,7 @@ class HTML5NotificationService(BaseNotificationService):
     @property
     def targets(self):
         """Return a dictionary of registered targets."""
-        targets = {}
-        for registration in self.registrations:
-            targets[registration] = registration
-        return targets
+        return {registration: registration for registration in self.registrations}
 
     def dismiss(self, **kwargs):
         """Dismisses a notification."""
@@ -536,7 +541,7 @@ class HTML5NotificationService(BaseNotificationService):
             elif response.status_code > 399:
                 _LOGGER.error(
                     "There was an issue sending the notification %s: %s",
-                    response.status,
+                    response.status_code,
                     response.text,
                 )
 

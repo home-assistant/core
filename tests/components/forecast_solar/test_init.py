@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from forecast_solar import ForecastSolarConnectionError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
@@ -29,7 +29,7 @@ async def test_load_unload_config_entry(
     mock_config_entry.add_to_hass(hass)
     await async_setup_component(hass, "forecast_solar", {})
 
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

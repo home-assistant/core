@@ -24,6 +24,8 @@ MOCK_ENTRY_DATA = {
     "connection_type": "nibegw",
 }
 
+MOCK_UNIQUE_ID = "mock_entry_unique_id"
+
 
 class MockConnection(Connection):
     """A mock connection class."""
@@ -50,7 +52,7 @@ class MockConnection(Connection):
     async def verify_connectivity(self):
         """Verify that we have functioning communication."""
 
-    def mock_coil_update(self, coil_id: int, value: int | float | str | None):
+    def mock_coil_update(self, coil_id: int, value: float | str | None):
         """Trigger an out of band coil update."""
         coil = self.heatpump.get_coil_by_address(coil_id)
         self.coils[coil_id] = value
@@ -59,12 +61,14 @@ class MockConnection(Connection):
 
 async def async_add_entry(hass: HomeAssistant, data: dict[str, Any]) -> MockConfigEntry:
     """Add entry and get the coordinator."""
-    entry = MockConfigEntry(domain=DOMAIN, title="Dummy", data=data)
+    entry = MockConfigEntry(
+        domain=DOMAIN, title="Dummy", data=data, unique_id=MOCK_UNIQUE_ID
+    )
 
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     return entry
 
 

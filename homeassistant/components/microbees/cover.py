@@ -12,16 +12,20 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesEntity
 
+COVER_IDS = {47: "roller_shutter"}
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the microBees cover platform."""
     coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
@@ -32,11 +36,17 @@ async def async_setup_entry(
         MBCover(
             coordinator,
             bee_id,
-            next(filter(lambda x: x.deviceID == 551, bee.actuators)).id,
-            next(filter(lambda x: x.deviceID == 552, bee.actuators)).id,
+            next(
+                (actuator.id for actuator in bee.actuators if actuator.deviceID == 551),
+                None,
+            ),
+            next(
+                (actuator.id for actuator in bee.actuators if actuator.deviceID == 552),
+                None,
+            ),
         )
         for bee_id, bee in coordinator.data.bees.items()
-        if bee.productID == 47
+        if bee.productID in COVER_IDS
     )
 
 

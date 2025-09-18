@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import aiohttp
 from async_upnp_client.client import UpnpError
@@ -24,13 +24,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_PIN_INDEX, DOMAIN, SERVICE_INVOKE_PIN
-
-_OpenhomeDeviceT = TypeVar("_OpenhomeDeviceT", bound="OpenhomeDevice")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
 SUPPORT_OPENHOME = (
     MediaPlayerEntityFeature.SELECT_SOURCE
@@ -44,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Openhome config entry."""
 
@@ -52,7 +48,7 @@ async def async_setup_entry(
 
     device = hass.data[DOMAIN][config_entry.entry_id]
 
-    entity = OpenhomeDevice(hass, device)
+    entity = OpenhomeDevice(device)
 
     async_add_entities([entity])
 
@@ -65,17 +61,15 @@ async def async_setup_entry(
     )
 
 
-_FuncType = Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]
-_ReturnFuncType = Callable[
-    Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
+type _ReturnFuncType[_T, **_P, _R] = Callable[
+    Concatenate[_T, _P], Coroutine[Any, Any, _R | None]
 ]
 
 
-def catch_request_errors() -> (
-    Callable[
-        [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
-    ]
-):
+def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> Callable[
+    [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
+]:
     """Catch TimeoutError, aiohttp.ClientError, UpnpError errors."""
 
     def call_wrapper(
@@ -106,9 +100,8 @@ class OpenhomeDevice(MediaPlayerEntity):
     _attr_state = MediaPlayerState.PLAYING
     _attr_available = True
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialise the Openhome device."""
-        self.hass = hass
         self._device = device
         self._attr_unique_id = device.uuid()
         self._source_index = {}

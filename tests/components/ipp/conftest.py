@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 @pytest.fixture
@@ -39,7 +39,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.ipp.async_setup_entry", return_value=True
@@ -49,6 +49,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 @pytest.fixture
 async def mock_printer(
+    hass: HomeAssistant,
     request: pytest.FixtureRequest,
 ) -> Printer:
     """Return the mocked printer."""
@@ -56,13 +57,11 @@ async def mock_printer(
     if hasattr(request, "param") and request.param:
         fixture = request.param
 
-    return Printer.from_dict(json.loads(load_fixture(fixture)))
+    return Printer.from_dict(json.loads(await async_load_fixture(hass, fixture)))
 
 
 @pytest.fixture
-def mock_ipp_config_flow(
-    mock_printer: Printer,
-) -> Generator[None, MagicMock, None]:
+def mock_ipp_config_flow(mock_printer: Printer) -> Generator[MagicMock]:
     """Return a mocked IPP client."""
 
     with patch(
@@ -74,9 +73,7 @@ def mock_ipp_config_flow(
 
 
 @pytest.fixture
-def mock_ipp(
-    request: pytest.FixtureRequest, mock_printer: Printer
-) -> Generator[None, MagicMock, None]:
+def mock_ipp(mock_printer: Printer) -> Generator[MagicMock]:
     """Return a mocked IPP client."""
 
     with patch(

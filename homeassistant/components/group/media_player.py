@@ -15,8 +15,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
-    DOMAIN,
-    PLATFORM_SCHEMA,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     MediaPlayerEntity,
@@ -45,13 +45,20 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
     EventStateChangedData,
-    async_track_state_change_event,
+    HomeAssistant,
+    State,
+    callback,
 )
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 KEY_ANNOUNCE = "announce"
@@ -67,9 +74,9 @@ KEY_VOLUME = "volume"
 
 DEFAULT_NAME = "Media Group"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(MEDIA_PLAYER_DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -95,7 +102,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize MediaPlayer Group config entry."""
     registry = er.async_get(hass)
@@ -270,7 +277,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Clear players playlist."""
         data = {ATTR_ENTITY_ID: self._features[KEY_CLEAR_PLAYLIST]}
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_CLEAR_PLAYLIST,
             data,
             context=self._context,
@@ -280,7 +287,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Send next track command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_MEDIA_NEXT_TRACK,
             data,
             context=self._context,
@@ -290,7 +297,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Send pause command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_MEDIA_PAUSE,
             data,
             context=self._context,
@@ -300,7 +307,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Send play command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_MEDIA_PLAY,
             data,
             context=self._context,
@@ -310,7 +317,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Send previous track command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_MEDIA_PREVIOUS_TRACK,
             data,
             context=self._context,
@@ -323,7 +330,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             ATTR_MEDIA_SEEK_POSITION: position,
         }
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_MEDIA_SEEK,
             data,
             context=self._context,
@@ -333,7 +340,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Send stop command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_MEDIA_STOP,
             data,
             context=self._context,
@@ -346,7 +353,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             ATTR_MEDIA_VOLUME_MUTED: mute,
         }
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_VOLUME_MUTE,
             data,
             context=self._context,
@@ -361,8 +368,10 @@ class MediaPlayerGroup(MediaPlayerEntity):
             ATTR_MEDIA_CONTENT_ID: media_id,
             ATTR_MEDIA_CONTENT_TYPE: media_type,
         }
+        if kwargs:
+            data.update(kwargs)
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             data,
             context=self._context,
@@ -375,7 +384,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             ATTR_MEDIA_SHUFFLE: shuffle,
         }
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_SHUFFLE_SET,
             data,
             context=self._context,
@@ -385,7 +394,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Forward the turn_on command to all media in the media group."""
         data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_TURN_ON,
             data,
             context=self._context,
@@ -398,7 +407,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             ATTR_MEDIA_VOLUME_LEVEL: volume,
         }
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_VOLUME_SET,
             data,
             context=self._context,
@@ -408,7 +417,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Forward the turn_off command to all media in the media group."""
         data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
         await self.hass.services.async_call(
-            DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_TURN_OFF,
             data,
             context=self._context,

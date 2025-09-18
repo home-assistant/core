@@ -1,6 +1,5 @@
 """Tests for the srp_energy sensor platform."""
 
-import time
 from unittest.mock import patch
 
 from requests.models import HTTPError
@@ -21,7 +20,7 @@ from tests.common import MockConfigEntry
 async def test_loading_sensors(hass: HomeAssistant, init_integration) -> None:
     """Test the srp energy sensors."""
     # Validate the Config Entry was initialized
-    assert init_integration.state == ConfigEntryState.LOADED
+    assert init_integration.state is ConfigEntryState.LOADED
 
     # Check sensors were loaded
     assert len(hass.states.async_all()) == 1
@@ -72,14 +71,15 @@ async def test_srp_entity_timeout(
 ) -> None:
     """Test the SrpEntity timing out."""
 
-    with patch(
-        "homeassistant.components.srp_energy.SrpEnergyClient", autospec=True
-    ) as srp_energy_mock, patch(
-        "homeassistant.components.srp_energy.coordinator.TIMEOUT", 0
+    with (
+        patch(
+            "homeassistant.components.srp_energy.SrpEnergyClient", autospec=True
+        ) as srp_energy_mock,
+        patch("homeassistant.components.srp_energy.coordinator.TIMEOUT", 0),
     ):
         client = srp_energy_mock.return_value
         client.validate.return_value = True
-        client.usage = lambda _, __, ___: time.sleep(1)
+        client.usage = lambda _, __, ___: None
         mock_config_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

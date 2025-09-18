@@ -19,3 +19,14 @@ play_media:
             - "MUSIC"
             - "TVSHOW"
             - "VIDEO"
+extract_media_url:
+  fields:
+    url:
+      required: true
+      example: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      selector:
+        text:
+    format_query:
+      example: "best"
+      selector:
+        text:

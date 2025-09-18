@@ -4,8 +4,9 @@ from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import patch
 
-from homeassistant import data_entry_flow, setup
-from homeassistant.components import zeroconf
+import pytest
+
+from homeassistant import setup
 from homeassistant.components.smappee.const import (
     CONF_SERIALNUMBER,
     DOMAIN,
@@ -16,7 +17,9 @@ from homeassistant.components.smappee.const import (
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -34,7 +37,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "environment"
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_show_user_host_form(hass: HomeAssistant) -> None:
@@ -44,14 +47,14 @@ async def test_show_user_host_form(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
     )
     assert result["step_id"] == "environment"
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"environment": ENV_LOCAL}
     )
 
     assert result["step_id"] == ENV_LOCAL
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_show_zeroconf_connection_error_form(hass: HomeAssistant) -> None:
@@ -60,7 +63,7 @@ async def test_show_zeroconf_connection_error_form(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("1.2.3.4"),
                 ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
@@ -72,14 +75,14 @@ async def test_show_zeroconf_connection_error_form(hass: HomeAssistant) -> None:
         )
 
         assert result["description_placeholders"] == {CONF_SERIALNUMBER: "1006000212"}
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "zeroconf_confirm"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
         assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
@@ -92,7 +95,7 @@ async def test_show_zeroconf_connection_error_form_next_generation(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("1.2.3.4"),
                 ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
@@ -104,68 +107,71 @@ async def test_show_zeroconf_connection_error_form_next_generation(
         )
 
         assert result["description_placeholders"] == {CONF_SERIALNUMBER: "5001000212"}
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "zeroconf_confirm"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
         assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 async def test_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on Smappee connection error."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None), patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=None
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None),
+        patch("pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=None),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
         )
         assert result["step_id"] == "environment"
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"environment": ENV_LOCAL}
         )
         assert result["step_id"] == ENV_LOCAL
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"}
         )
         assert result["reason"] == "cannot_connect"
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
 
 
 async def test_user_local_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on Smappee connection error in local next generation option."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None), patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True
-    ), patch("pysmappee.mqtt.SmappeeLocalMqtt.start", return_value=True), patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.stop", return_value=True
-    ), patch("pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready", return_value=None):
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None),
+        patch("pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True),
+        patch("pysmappee.mqtt.SmappeeLocalMqtt.start", return_value=True),
+        patch("pysmappee.mqtt.SmappeeLocalMqtt.stop", return_value=True),
+        patch("pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready", return_value=None),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
         )
         assert result["step_id"] == "environment"
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"environment": ENV_LOCAL}
         )
         assert result["step_id"] == ENV_LOCAL
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"}
         )
         assert result["reason"] == "cannot_connect"
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
 
 
 async def test_zeroconf_wrong_mdns(hass: HomeAssistant) -> None:
@@ -173,7 +179,7 @@ async def test_zeroconf_wrong_mdns(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.2.3.4"),
             ip_addresses=[ip_address("1.2.3.4")],
             port=22,
@@ -185,50 +191,60 @@ async def test_zeroconf_wrong_mdns(hass: HomeAssistant) -> None:
     )
 
     assert result["reason"] == "invalid_mdns"
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_full_user_wrong_mdns(hass: HomeAssistant) -> None:
     """Test we abort user flow if unsupported mDNS name got resolved."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
-        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee5100000001"}],
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
-        return_value=[{"key": "phase0ActivePower", "value": 0}],
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+            return_value=[{"key": "mdnsHostName", "value": "Smappee5100000001"}],
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+            return_value=[{"key": "phase0ActivePower", "value": 0}],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
         )
         assert result["step_id"] == "environment"
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"environment": ENV_LOCAL}
         )
         assert result["step_id"] == ENV_LOCAL
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "invalid_mdns"
 
 
 async def test_user_device_exists_abort(hass: HomeAssistant) -> None:
     """Test we abort user flow if Smappee device already configured."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
-        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
-        return_value=[{"key": "phase0ActivePower", "value": 0}],
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+            return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+            return_value=[{"key": "phase0ActivePower", "value": 0}],
+        ),
     ):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
@@ -244,32 +260,37 @@ async def test_user_device_exists_abort(hass: HomeAssistant) -> None:
             context={"source": SOURCE_USER},
         )
         assert result["step_id"] == "environment"
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"environment": ENV_LOCAL}
         )
         assert result["step_id"] == ENV_LOCAL
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 async def test_zeroconf_device_exists_abort(hass: HomeAssistant) -> None:
     """Test we abort zeroconf flow if Smappee device already configured."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
-        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
-        return_value=[{"key": "phase0ActivePower", "value": 0}],
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+            return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+            return_value=[{"key": "phase0ActivePower", "value": 0}],
+        ),
     ):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
@@ -284,7 +305,7 @@ async def test_zeroconf_device_exists_abort(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("1.2.3.4"),
                 ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
@@ -294,7 +315,7 @@ async def test_zeroconf_device_exists_abort(hass: HomeAssistant) -> None:
                 properties={"_raw": {}},
             ),
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -315,7 +336,7 @@ async def test_cloud_device_exists_abort(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured_device"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -334,7 +355,7 @@ async def test_zeroconf_abort_if_cloud_device_exists(hass: HomeAssistant) -> Non
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.2.3.4"),
             ip_addresses=[ip_address("1.2.3.4")],
             port=22,
@@ -344,7 +365,7 @@ async def test_zeroconf_abort_if_cloud_device_exists(hass: HomeAssistant) -> Non
             properties={"_raw": {}},
         ),
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured_device"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -356,7 +377,7 @@ async def test_zeroconf_confirm_abort_if_cloud_device_exists(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.2.3.4"),
             ip_addresses=[ip_address("1.2.3.4")],
             port=22,
@@ -378,7 +399,7 @@ async def test_zeroconf_confirm_abort_if_cloud_device_exists(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured_device"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -403,16 +424,16 @@ async def test_abort_cloud_flow_if_local_device_exists(hass: HomeAssistant) -> N
         result["flow_id"], {"environment": ENV_CLOUD}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured_local_device"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_user_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(
@@ -465,19 +486,25 @@ async def test_full_user_flow(
 
 async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
     """Test the full zeroconf flow."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
-        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
-        return_value=[{"key": "phase0ActivePower", "value": 0}],
-    ), patch("homeassistant.components.smappee.async_setup_entry", return_value=True):
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+            return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+            return_value=[{"key": "phase0ActivePower", "value": 0}],
+        ),
+        patch("homeassistant.components.smappee.async_setup_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("1.2.3.4"),
                 ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
@@ -487,7 +514,7 @@ async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
                 properties={"_raw": {}},
             ),
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "zeroconf_confirm"
         assert result["description_placeholders"] == {CONF_SERIALNUMBER: "1006000212"}
 
@@ -495,7 +522,7 @@ async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
             result["flow_id"], {"host": "1.2.3.4"}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "smappee1006000212"
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -505,21 +532,27 @@ async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
 
 async def test_full_user_local_flow(hass: HomeAssistant) -> None:
     """Test the full zeroconf flow."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
-        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
-        return_value=[{"key": "phase0ActivePower", "value": 0}],
-    ), patch("homeassistant.components.smappee.async_setup_entry", return_value=True):
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+            return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+            return_value=[{"key": "phase0ActivePower", "value": 0}],
+        ),
+        patch("homeassistant.components.smappee.async_setup_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
         )
         assert result["step_id"] == "environment"
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["description_placeholders"] is None
 
         result = await hass.config_entries.flow.async_configure(
@@ -527,12 +560,12 @@ async def test_full_user_local_flow(hass: HomeAssistant) -> None:
             {"environment": ENV_LOCAL},
         )
         assert result["step_id"] == ENV_LOCAL
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "smappee1006000212"
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -542,19 +575,21 @@ async def test_full_user_local_flow(hass: HomeAssistant) -> None:
 
 async def test_full_zeroconf_flow_next_generation(hass: HomeAssistant) -> None:
     """Test the full zeroconf flow."""
-    with patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True
-    ), patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.start",
-        return_value=None,
-    ), patch(
-        "pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready",
-        return_value=None,
+    with (
+        patch("pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True),
+        patch(
+            "pysmappee.mqtt.SmappeeLocalMqtt.start",
+            return_value=None,
+        ),
+        patch(
+            "pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready",
+            return_value=None,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("1.2.3.4"),
                 ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
@@ -564,7 +599,7 @@ async def test_full_zeroconf_flow_next_generation(hass: HomeAssistant) -> None:
                 properties={"_raw": {}},
             ),
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "zeroconf_confirm"
         assert result["description_placeholders"] == {CONF_SERIALNUMBER: "5001000212"}
 
@@ -572,7 +607,7 @@ async def test_full_zeroconf_flow_next_generation(hass: HomeAssistant) -> None:
             result["flow_id"], {"host": "1.2.3.4"}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "smappee5001000212"
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 

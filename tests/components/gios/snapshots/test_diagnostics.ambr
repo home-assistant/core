@@ -7,6 +7,8 @@
         'station_id': 123,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'gios',
       'entry_id': '86129426118ae32020417a53712d6eef',
       'minor_version': 1,
@@ -15,6 +17,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Home',
       'unique_id': '123',
       'version': 1,
@@ -38,11 +42,23 @@
         'name': 'carbon monoxide',
         'value': 251.874,
       }),
+      'no': dict({
+        'id': 664,
+        'index': None,
+        'name': 'nitrogen monoxide',
+        'value': 5.1,
+      }),
       'no2': dict({
         'id': 665,
         'index': 'good',
         'name': 'nitrogen dioxide',
         'value': 7.13411,
+      }),
+      'nox': dict({
+        'id': 666,
+        'index': None,
+        'name': 'nitrogen oxides',
+        'value': 5.5,
       }),
       'o3': dict({
         'id': 667,

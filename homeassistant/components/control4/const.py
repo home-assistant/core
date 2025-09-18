@@ -5,14 +5,8 @@ DOMAIN = "control4"
 DEFAULT_SCAN_INTERVAL = 5
 MIN_SCAN_INTERVAL = 1
 
-CONF_ACCOUNT = "account"
-CONF_DIRECTOR = "director"
-CONF_DIRECTOR_SW_VERSION = "director_sw_version"
-CONF_DIRECTOR_MODEL = "director_model"
-CONF_DIRECTOR_ALL_ITEMS = "director_all_items"
-CONF_UI_CONFIGURATION = "ui_configuration"
-CONF_CONTROLLER_UNIQUE_ID = "controller_unique_id"
+API_RETRY_TIMES = 5
 
-CONF_CONFIG_LISTENER = "config_listener"
+CONF_CONTROLLER_UNIQUE_ID = "controller_unique_id"
 
 CONTROL4_ENTITY_TYPE = 7

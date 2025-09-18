@@ -14,10 +14,10 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_apiclient() -> Generator[ApiClient, None, None]:
+def mock_apiclient() -> Generator[ApiClient]:
     """Return a mocked ApiClient class."""
     with patch(
-        "homeassistant.components.kostal_plenticore.helper.ExtendedApiClient",
+        "homeassistant.components.kostal_plenticore.coordinator.ExtendedApiClient",
         autospec=True,
     ) as mock_api_class:
         apiclient = MagicMock(spec=ExtendedApiClient)
@@ -67,7 +67,7 @@ async def test_plenticore_async_setup_g1(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    plenticore = hass.data[DOMAIN][mock_config_entry.entry_id]
+    plenticore = mock_config_entry.runtime_data
 
     assert plenticore.device_info == DeviceInfo(
         configuration_url="http://192.168.1.2",
@@ -119,7 +119,7 @@ async def test_plenticore_async_setup_g2(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    plenticore = hass.data[DOMAIN][mock_config_entry.entry_id]
+    plenticore = mock_config_entry.runtime_data
 
     assert plenticore.device_info == DeviceInfo(
         configuration_url="http://192.168.1.2",

@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from freezegun import freeze_time
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     mock_config_entry,
@@ -26,7 +28,11 @@ async def test_battery_sensor(hass: HomeAssistant) -> None:
 
     entry = mock_config_entry(hass)
 
-    with patch_async_ble_device_from_address(), patch_melnor_device(), patch_async_register_callback():
+    with (
+        patch_async_ble_device_from_address(),
+        patch_melnor_device(),
+        patch_async_register_callback(),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -47,15 +53,18 @@ async def test_minutes_remaining_sensor(hass: HomeAssistant) -> None:
     entry = mock_config_entry(hass)
     device = mock_melnor_device()
 
-    end_time = now + dt_util.dt.timedelta(minutes=10)
+    end_time = now + timedelta(minutes=10)
 
     # we control this mock
 
     device.zone1._end_time = (end_time).timestamp()
 
-    with freeze_time(now), patch_async_ble_device_from_address(), patch_melnor_device(
-        device
-    ), patch_async_register_callback():
+    with (
+        freeze_time(now),
+        patch_async_ble_device_from_address(),
+        patch_melnor_device(device),
+        patch_async_register_callback(),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -69,7 +78,7 @@ async def test_minutes_remaining_sensor(hass: HomeAssistant) -> None:
         # Turn valve on
         device.zone1._is_watering = True
 
-        async_fire_time_changed(hass, now + dt_util.dt.timedelta(seconds=10))
+        async_fire_time_changed(hass, now + timedelta(seconds=10))
         await hass.async_block_till_done()
 
         # Valve is on, report 10
@@ -87,14 +96,17 @@ async def test_schedule_next_cycle_sensor(hass: HomeAssistant) -> None:
     entry = mock_config_entry(hass)
     device = mock_melnor_device()
 
-    next_cycle = now + dt_util.dt.timedelta(minutes=10)
+    next_cycle = now + timedelta(minutes=10)
 
     # we control this mock
     device.zone1.frequency._next_run_time = next_cycle
 
-    with freeze_time(now), patch_async_ble_device_from_address(), patch_melnor_device(
-        device
-    ), patch_async_register_callback():
+    with (
+        freeze_time(now),
+        patch_async_ble_device_from_address(),
+        patch_melnor_device(device),
+        patch_async_register_callback(),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -108,7 +120,7 @@ async def test_schedule_next_cycle_sensor(hass: HomeAssistant) -> None:
         # Turn valve on
         device.zone1._schedule_enabled = True
 
-        async_fire_time_changed(hass, now + dt_util.dt.timedelta(seconds=10))
+        async_fire_time_changed(hass, now + timedelta(seconds=10))
         await hass.async_block_till_done()
 
         # Valve is on, report 10
@@ -127,9 +139,11 @@ async def test_rssi_sensor(
 
     device = mock_melnor_device()
 
-    with patch_async_ble_device_from_address(), patch_melnor_device(
-        device
-    ), patch_async_register_callback():
+    with (
+        patch_async_ble_device_from_address(),
+        patch_melnor_device(device),
+        patch_async_register_callback(),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

@@ -21,12 +21,11 @@ from homeassistant.components.device_tracker import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_HOME_INTERVAL,
@@ -89,14 +88,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     devices = domain_data.setdefault(NMAP_TRACKED_DEVICES, NmapTrackedDevices())
     scanner = domain_data[entry.entry_id] = NmapDeviceScanner(hass, entry, devices)
     await scanner.async_setup()
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -380,7 +373,7 @@ class NmapDeviceScanner:
             )
             if mac is None:
                 self._async_device_offline(ipv4, "No MAC address found", now)
-                _LOGGER.info("No MAC address found for %s", ipv4)
+                _LOGGER.warning("No MAC address found for %s", ipv4)
                 continue
 
             formatted_mac = format_mac(mac)

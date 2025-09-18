@@ -12,7 +12,11 @@
     }
   },
   "services": {
-    "reset": "mdi:numeric-0-box-outline",
-    "calibrate": "mdi:auto-fix"
+    "reset": {
+      "service": "mdi:numeric-0-box-outline"
+    },
+    "calibrate": {
+      "service": "mdi:auto-fix"
+    }
   }
 }

@@ -7,7 +7,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["deepmerge", "pyipp"],
-  "quality_scale": "platinum",
-  "requirements": ["pyipp==0.15.0"],
+  "requirements": ["pyipp==0.17.0"],
   "zeroconf": ["_ipps._tcp.local.", "_ipp._tcp.local."]
 }

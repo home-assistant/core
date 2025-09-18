@@ -21,7 +21,7 @@ MOCKUP_ENTITY_IDS = {
 
 
 async def test_failing_setups_no_entities(
-    hass: HomeAssistant, numato_fixture, monkeypatch
+    hass: HomeAssistant, numato_fixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """When port setup fails, no entity shall be created."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
@@ -92,9 +92,7 @@ async def test_binary_sensor_setup_no_notify(
     caplog.set_level(logging.INFO)
 
     def raise_notification_error(self, port, callback, direction):
-        raise NumatoGpioError(
-            f"{repr(self)} Mockup device doesn't support notifications."
-        )
+        raise NumatoGpioError(f"{self!r} Mockup device doesn't support notifications.")
 
     with patch.object(
         NumatoModuleMock.NumatoDeviceMock,

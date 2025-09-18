@@ -1,7 +1,13 @@
 {
   "services": {
-    "get_command": "mdi:console",
-    "set_dynamic_eq": "mdi:tune",
-    "update_audyssey": "mdi:waveform"
+    "get_command": {
+      "service": "mdi:console"
+    },
+    "set_dynamic_eq": {
+      "service": "mdi:tune"
+    },
+    "update_audyssey": {
+      "service": "mdi:waveform"
+    }
   }
 }

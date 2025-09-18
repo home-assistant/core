@@ -19,6 +19,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -39,6 +40,7 @@
     'original_name': None,
     'platform': 'kitchen_sink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'outlet_1',
@@ -49,6 +51,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -62,15 +65,15 @@
         'outlet_1',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'Outlet 1',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -79,6 +82,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -92,15 +96,15 @@
         '2_ch_power_strip',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'Power strip with 2 sockets',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -125,6 +129,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -145,6 +150,7 @@
     'original_name': None,
     'platform': 'kitchen_sink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'outlet_2',
@@ -155,6 +161,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -168,15 +175,15 @@
         'outlet_2',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'Outlet 2',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -185,6 +192,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -198,15 +206,15 @@
         '2_ch_power_strip',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'Power strip with 2 sockets',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })

@@ -9,7 +9,7 @@ from homeassistant.util.yaml import dump
 from tests.common import patch_yaml_files
 
 
-def test_remove_device_from_config(hass: HomeAssistant):
+def test_remove_device_from_config(hass: HomeAssistant) -> None:
     """Test the removal of a device from a config."""
     yaml_devices = {
         "test": {
@@ -30,8 +30,9 @@ def test_remove_device_from_config(hass: HomeAssistant):
     mopen = mock_open()
 
     files = {legacy.YAML_DEVICES: dump(yaml_devices)}
-    with patch_yaml_files(files, True), patch(
-        "homeassistant.components.device_tracker.legacy.open", mopen
+    with (
+        patch_yaml_files(files, True),
+        patch("homeassistant.components.device_tracker.legacy.open", mopen),
     ):
         legacy.remove_device_from_config(hass, "test")
 

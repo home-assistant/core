@@ -2,8 +2,8 @@
 
 from ipaddress import ip_address
 
-from homeassistant.components import zeroconf
 from homeassistant.components.kodi.const import DEFAULT_SSL
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 TEST_HOST = {
     "host": "1.1.1.1",
@@ -17,7 +17,7 @@ TEST_CREDENTIALS = {"username": "username", "password": "password"}
 TEST_WS_PORT = {"ws_port": 9090}
 
 UUID = "11111111-1111-1111-1111-111111111111"
-TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
+TEST_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("1.1.1.1"),
     ip_addresses=[ip_address("1.1.1.1")],
     port=8080,
@@ -28,7 +28,7 @@ TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
 )
 
 
-TEST_DISCOVERY_WO_UUID = zeroconf.ZeroconfServiceInfo(
+TEST_DISCOVERY_WO_UUID = ZeroconfServiceInfo(
     ip_address=ip_address("1.1.1.1"),
     ip_addresses=[ip_address("1.1.1.1")],
     port=8080,
@@ -57,14 +57,13 @@ def get_kodi_connection(
     """Get Kodi connection."""
     if ws_port is None:
         return MockConnection()
-    else:
-        return MockWSConnection()
+    return MockWSConnection()
 
 
 class MockConnection:
     """A mock kodi connection."""
 
-    def __init__(self, connected=True):
+    def __init__(self, connected=True) -> None:
         """Mock the Kodi connection."""
         self._connected = connected
 
@@ -93,7 +92,7 @@ class MockConnection:
 class MockWSConnection:
     """A mock kodi websocket connection."""
 
-    def __init__(self, connected=True):
+    def __init__(self, connected=True) -> None:
         """Mock the websocket connection."""
         self._connected = connected
 

@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_sys_platform() -> Generator[None, None, None]:
+def mock_sys_platform() -> Generator[None]:
     """Mock sys platform to Linux."""
     with patch("sys.platform", "linux"):
         yield
@@ -42,7 +42,7 @@ class MockProcess(Process):
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setup entry."""
     with patch(
         "homeassistant.components.systemmonitor.async_setup_entry",
@@ -129,7 +129,21 @@ def mock_psutil(mock_process: list[MockProcess]) -> Generator:
                     "255.255.255.0",
                     "255.255.255.255",
                     None,
-                )
+                ),
+                snicaddr(
+                    socket.AF_INET6,
+                    "fe80::baf2:8a90:4f78:b1cb%end0",
+                    "ffff:ffff:ffff:ffff::",
+                    None,
+                    None,
+                ),
+                snicaddr(
+                    socket.AF_INET6,
+                    "2a00:1f:2103:3a01:3333:2222:1111:0000",
+                    "ffff:ffff:ffff:ffff::",
+                    None,
+                    None,
+                ),
             ],
             "eth1": [
                 snicaddr(
@@ -160,11 +174,11 @@ def mock_psutil(mock_process: list[MockProcess]) -> Generator:
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
         mock_psutil.disk_partitions.return_value = [
-            sdiskpart("test", "/", "ext4", "", 1, 1),
-            sdiskpart("test2", "/media/share", "ext4", "", 1, 1),
-            sdiskpart("test3", "/incorrect", "", "", 1, 1),
-            sdiskpart("hosts", "/etc/hosts", "bind", "", 1, 1),
-            sdiskpart("proc", "/proc/run", "proc", "", 1, 1),
+            sdiskpart("test", "/", "ext4", ""),
+            sdiskpart("test2", "/media/share", "ext4", ""),
+            sdiskpart("test3", "/incorrect", "", ""),
+            sdiskpart("hosts", "/etc/hosts", "bind", ""),
+            sdiskpart("proc", "/proc/run", "proc", ""),
         ]
         mock_psutil.boot_time.return_value = 1708786800.0
         mock_psutil.NoSuchProcess = NoSuchProcess
@@ -179,11 +193,10 @@ def mock_os() -> Generator:
         """Mock os.path.isdir."""
         return path != "/etc/hosts"
 
-    with patch(
-        "homeassistant.components.systemmonitor.coordinator.os"
-    ) as mock_os, patch(
-        "homeassistant.components.systemmonitor.util.os"
-    ) as mock_os_util:
+    with (
+        patch("homeassistant.components.systemmonitor.coordinator.os") as mock_os,
+        patch("homeassistant.components.systemmonitor.util.os") as mock_os_util,
+    ):
         mock_os_util.name = "nt"
         mock_os.getloadavg.return_value = (1, 2, 3)
         mock_os_util.path.isdir = isdir

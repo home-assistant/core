@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from types import MappingProxyType
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.weather import (
@@ -13,6 +13,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_UV_INDEX,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
@@ -21,7 +22,6 @@ from homeassistant.components.weather import (
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -34,7 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
@@ -46,18 +46,18 @@ from .const import (
     DOMAIN,
     FORECAST_MAP,
 )
-from .coordinator import MetDataUpdateCoordinator
+from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
 
 DEFAULT_NAME = "Met.no"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: MetWeatherConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator: MetDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     entity_registry = er.async_get(hass)
 
     name: str | None
@@ -82,7 +82,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> str:
+def _calculate_unique_id(config: Mapping[str, Any], hourly: bool) -> str:
     """Calculate unique ID."""
     name_appendix = ""
     if hourly:
@@ -120,7 +120,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: MetDataUpdateCoordinator,
-        config_entry: ConfigEntry,
+        config_entry: MetWeatherConfigEntry,
         name: str,
         is_metric: bool,
     ) -> None:
@@ -208,6 +208,13 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
             ATTR_MAP[ATTR_WEATHER_DEW_POINT]
         )
 
+    @property
+    def uv_index(self) -> float | None:
+        """Return the uv index."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_UV_INDEX]
+        )
+
     def _forecast(self, hourly: bool) -> list[Forecast] | None:
         """Return the forecast array."""
         if hourly:
@@ -230,11 +237,6 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
                 )
             ha_forecast.append(ha_item)  # type: ignore[arg-type]
         return ha_forecast
-
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return self._forecast(False)
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:

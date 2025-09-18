@@ -3,12 +3,20 @@
 from __future__ import annotations
 
 import asyncio
-from asyncio import events
+from collections.abc import Generator
+from contextlib import contextmanager
 import dataclasses
+from datetime import datetime
+import fcntl
+from io import TextIOWrapper
+import json
 import logging
 import os
+from pathlib import Path
 import subprocess
+import sys
 import threading
+import time
 from time import monotonic
 import traceback
 from typing import Any
@@ -16,9 +24,11 @@ from typing import Any
 import packaging.tags
 
 from . import bootstrap
+from .const import __version__
 from .core import callback
 from .helpers.frame import warn_use
 from .util.executor import InterruptibleThreadPoolExecutor
+from .util.resource import set_open_file_descriptor_limit
 from .util.thread import deadlock_safe_shutdown
 
 #
@@ -34,7 +44,111 @@ from .util.thread import deadlock_safe_shutdown
 MAX_EXECUTOR_WORKERS = 64
 TASK_CANCELATION_TIMEOUT = 5
 
+# Lock file configuration
+LOCK_FILE_NAME = ".ha_run.lock"
+LOCK_FILE_VERSION = 1  # Increment if format changes
+
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class SingleExecutionLock:
+    """Context object for single execution lock."""
+
+    exit_code: int | None = None
+
+
+def _write_lock_info(lock_file: TextIOWrapper) -> None:
+    """Write current instance information to the lock file.
+
+    Args:
+        lock_file: The open lock file handle.
+    """
+    lock_file.seek(0)
+    lock_file.truncate()
+
+    instance_info = {
+        "pid": os.getpid(),
+        "version": LOCK_FILE_VERSION,
+        "ha_version": __version__,
+        "start_ts": time.time(),
+    }
+    json.dump(instance_info, lock_file)
+    lock_file.flush()
+
+
+def _report_existing_instance(lock_file_path: Path, config_dir: str) -> None:
+    """Report that another instance is already running.
+
+    Attempts to read the lock file to provide details about the running instance.
+    """
+    error_msg: list[str] = []
+    error_msg.append("Error: Another Home Assistant instance is already running!")
+
+    # Try to read information about the existing instance
+    try:
+        with open(lock_file_path, encoding="utf-8") as f:
+            if content := f.read().strip():
+                existing_info = json.loads(content)
+                start_dt = datetime.fromtimestamp(existing_info["start_ts"])
+                # Format with timezone abbreviation if available, otherwise add local time indicator
+                if tz_abbr := start_dt.strftime("%Z"):
+                    start_time = start_dt.strftime(f"%Y-%m-%d %H:%M:%S {tz_abbr}")
+                else:
+                    start_time = (
+                        start_dt.strftime("%Y-%m-%d %H:%M:%S") + " (local time)"
+                    )
+
+                error_msg.append(f"  PID: {existing_info['pid']}")
+                error_msg.append(f"  Version: {existing_info['ha_version']}")
+                error_msg.append(f"  Started: {start_time}")
+            else:
+                error_msg.append("  Unable to read lock file details.")
+    except (json.JSONDecodeError, OSError) as ex:
+        error_msg.append(f"  Unable to read lock file details: {ex}")
+
+    error_msg.append(f"  Config directory: {config_dir}")
+    error_msg.append("")
+    error_msg.append("Please stop the existing instance before starting a new one.")
+
+    for line in error_msg:
+        print(line, file=sys.stderr)  # noqa: T201
+
+
+@contextmanager
+def ensure_single_execution(config_dir: str) -> Generator[SingleExecutionLock]:
+    """Ensure only one Home Assistant instance runs per config directory.
+
+    Uses file locking to prevent multiple instances from running with the
+    same configuration directory, which can cause data corruption.
+
+    Returns a context object with exit_code attribute that will be set
+    if another instance is already running.
+    """
+    lock_file_path = Path(config_dir) / LOCK_FILE_NAME
+    lock_context = SingleExecutionLock()
+
+    # Open with 'a+' mode to avoid truncating existing content
+    # This allows us to read existing content if lock fails
+    with open(lock_file_path, "a+", encoding="utf-8") as lock_file:
+        # Try to acquire an exclusive, non-blocking lock
+        # This will raise BlockingIOError if lock is already held
+        try:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            # Another instance is already running
+            _report_existing_instance(lock_file_path, config_dir)
+            lock_context.exit_code = 1
+            yield lock_context
+            return  # Exit early since we couldn't get the lock
+
+        # If we got the lock (no exception), write our instance info
+        _write_lock_info(lock_file)
+
+        # Yield the context - lock will be released when the with statement closes the file
+        # IMPORTANT: We don't unlink the file to avoid races where multiple processes
+        # could create different lock files
+        yield lock_context
 
 
 @dataclasses.dataclass(slots=True)
@@ -58,22 +172,6 @@ class RuntimeConfig:
     safe_mode: bool = False
 
 
-def can_use_pidfd() -> bool:
-    """Check if pidfd_open is available.
-
-    Back ported from cpython 3.12
-    """
-    if not hasattr(os, "pidfd_open"):
-        return False
-    try:
-        pid = os.getpid()
-        os.close(os.pidfd_open(pid, 0))
-    except OSError:
-        # blocked by security policy like SECCOMP
-        return False
-    return True
-
-
 class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     """Event loop policy for Home Assistant."""
 
@@ -81,23 +179,6 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
         """Init the event loop policy."""
         super().__init__()
         self.debug = debug
-        self._watcher: asyncio.AbstractChildWatcher | None = None
-
-    def _init_watcher(self) -> None:
-        """Initialize the watcher for child processes.
-
-        Back ported from cpython 3.12
-        """
-        with events._lock:  # type: ignore[attr-defined] # pylint: disable=protected-access
-            if self._watcher is None:  # pragma: no branch
-                if can_use_pidfd():
-                    self._watcher = asyncio.PidfdChildWatcher()
-                else:
-                    self._watcher = asyncio.ThreadedChildWatcher()
-                if threading.current_thread() is threading.main_thread():
-                    self._watcher.attach_loop(
-                        self._local._loop  # type: ignore[attr-defined] # pylint: disable=protected-access
-                    )
 
     @property
     def loop_name(self) -> str:
@@ -136,16 +217,18 @@ def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
     if source_traceback := context.get("source_traceback"):
         stack_summary = "".join(traceback.format_list(source_traceback))
         logger.error(
-            "Error doing job: %s: %s",
+            "Error doing job: %s (%s): %s",
             context["message"],
+            context.get("task"),
             stack_summary,
             **kwargs,  # type: ignore[arg-type]
         )
         return
 
     logger.error(
-        "Error doing job: %s",
+        "Error doing job: %s (%s)",
         context["message"],
+        context.get("task"),
         **kwargs,  # type: ignore[arg-type]
     )
 
@@ -158,15 +241,14 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
         return 1
 
     # threading._shutdown can deadlock forever
-    # pylint: disable-next=protected-access
-    threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined]
+    threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined]  # noqa: SLF001
 
     return await hass.async_run()
 
 
 def _enable_posix_spawn() -> None:
     """Enable posix_spawn on Alpine Linux."""
-    if subprocess._USE_POSIX_SPAWN:  # pylint: disable=protected-access
+    if subprocess._USE_POSIX_SPAWN:  # noqa: SLF001
         return
 
     # The subprocess module does not know about Alpine Linux/musl
@@ -174,13 +256,13 @@ def _enable_posix_spawn() -> None:
     # less efficient. This is a workaround to force posix_spawn()
     # when using musl since cpython is not aware its supported.
     tag = next(packaging.tags.sys_tags())
-    # pylint: disable-next=protected-access
-    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform
+    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform  # type: ignore[misc]  # noqa: SLF001
 
 
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
     _enable_posix_spawn()
+    set_open_file_descriptor_limit()
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
     # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
     loop = asyncio.new_event_loop()

@@ -22,6 +22,12 @@
       "cpu_15min_load": {
         "default": "mdi:chip"
       },
+      "device_size_total": {
+        "default": "mdi:chart-pie"
+      },
+      "device_status": {
+        "default": "mdi:checkbox-marked-circle-outline"
+      },
       "memory_real_usage": {
         "default": "mdi:memory"
       },
@@ -49,8 +55,20 @@
       "network_down": {
         "default": "mdi:download"
       },
+      "partition_percentage_used": {
+        "default": "mdi:chart-pie"
+      },
+      "partition_size_total": {
+        "default": "mdi:chart-pie"
+      },
+      "partition_size_used": {
+        "default": "mdi:chart-pie"
+      },
       "volume_status": {
-        "default": "mdi:checkbox-marked-circle-outline"
+        "default": "mdi:checkbox-marked-circle-outline",
+        "state": {
+          "degrade": "mdi:alert-circle-outline"
+        }
       },
       "volume_size_total": {
         "default": "mdi:chart-pie"
@@ -75,7 +93,11 @@
     }
   },
   "services": {
-    "reboot": "mdi:reboot",
-    "shutdown": "mdi:power"
+    "reboot": {
+      "service": "mdi:restart"
+    },
+    "shutdown": {
+      "service": "mdi:power"
+    }
   }
 }

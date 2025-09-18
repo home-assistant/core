@@ -5,8 +5,7 @@ from unittest.mock import MagicMock
 from luftdaten.exceptions import LuftdatenConnectionError
 import pytest
 
-from homeassistant.components.luftdaten import DOMAIN
-from homeassistant.components.luftdaten.const import CONF_SENSOR_ID
+from homeassistant.components.luftdaten.const import CONF_SENSOR_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
@@ -25,7 +24,7 @@ async def test_duplicate_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -33,7 +32,7 @@ async def test_duplicate_error(
         user_input={CONF_SENSOR_ID: 12345},
     )
 
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "already_configured"
 
 
@@ -45,7 +44,7 @@ async def test_communication_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     mock_luftdaten.get_data.side_effect = LuftdatenConnectionError
@@ -54,7 +53,7 @@ async def test_communication_error(
         user_input={CONF_SENSOR_ID: 12345},
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "user"
     assert result2.get("errors") == {CONF_SENSOR_ID: "cannot_connect"}
 
@@ -64,7 +63,7 @@ async def test_communication_error(
         user_input={CONF_SENSOR_ID: 12345},
     )
 
-    assert result3.get("type") == FlowResultType.CREATE_ENTRY
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "12345"
     assert result3.get("data") == {
         CONF_SENSOR_ID: 12345,
@@ -78,7 +77,7 @@ async def test_invalid_sensor(hass: HomeAssistant, mock_luftdaten: MagicMock) ->
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     mock_luftdaten.validate_sensor.return_value = False
@@ -87,7 +86,7 @@ async def test_invalid_sensor(hass: HomeAssistant, mock_luftdaten: MagicMock) ->
         user_input={CONF_SENSOR_ID: 11111},
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "user"
     assert result2.get("errors") == {CONF_SENSOR_ID: "invalid_sensor"}
 
@@ -97,7 +96,7 @@ async def test_invalid_sensor(hass: HomeAssistant, mock_luftdaten: MagicMock) ->
         user_input={CONF_SENSOR_ID: 12345},
     )
 
-    assert result3.get("type") == FlowResultType.CREATE_ENTRY
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "12345"
     assert result3.get("data") == {
         CONF_SENSOR_ID: 12345,
@@ -114,7 +113,7 @@ async def test_step_user(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -125,7 +124,7 @@ async def test_step_user(
         },
     )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "12345"
     assert result2.get("data") == {
         CONF_SENSOR_ID: 12345,

@@ -6,11 +6,18 @@ from operator import itemgetter
 import numpy as np
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
+    DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
+)
 from homeassistant.const import (
     CONF_ATTRIBUTE,
+    CONF_DEVICE_CLASS,
     CONF_MAXIMUM,
     CONF_MINIMUM,
+    CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -42,7 +49,7 @@ def datapoints_greater_than_degree(value: dict) -> dict:
     if len(value[CONF_DATAPOINTS]) <= value[CONF_DEGREE]:
         raise vol.Invalid(
             f"{CONF_DATAPOINTS} must have at least"
-            f" {value[CONF_DEGREE]+1} {CONF_DATAPOINTS}"
+            f" {value[CONF_DEGREE] + 1} {CONF_DATAPOINTS}"
         )
 
     return value
@@ -50,20 +57,23 @@ def datapoints_greater_than_degree(value: dict) -> dict:
 
 COMPENSATION_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SOURCE): cv.entity_id,
+        vol.Optional(CONF_ATTRIBUTE): cv.string,
         vol.Required(CONF_DATAPOINTS): [
             vol.ExactSequence([vol.Coerce(float), vol.Coerce(float)])
         ],
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_UPPER_LIMIT, default=False): cv.boolean,
-        vol.Optional(CONF_LOWER_LIMIT, default=False): cv.boolean,
-        vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): cv.positive_int,
         vol.Optional(CONF_DEGREE, default=DEFAULT_DEGREE): vol.All(
             vol.Coerce(int),
             vol.Range(min=1, max=7),
         ),
+        vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_LOWER_LIMIT, default=False): cv.boolean,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): cv.positive_int,
+        vol.Required(CONF_SOURCE): cv.entity_id,
+        vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_UPPER_LIMIT, default=False): cv.boolean,
     }
 )
 
@@ -90,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         sorted_coefficients = sorted(initial_coefficients, key=itemgetter(0))
 
         # get x values and y values from the x,y point pairs
-        x_values, y_values = zip(*initial_coefficients)
+        x_values, y_values = zip(*initial_coefficients, strict=False)
 
         # try to get valid coefficients for a polynomial
         coefficients = None

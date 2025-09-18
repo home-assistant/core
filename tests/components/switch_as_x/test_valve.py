@@ -7,7 +7,7 @@ from homeassistant.components.switch_as_x.const import (
     CONF_TARGET_DOMAIN,
     DOMAIN,
 )
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN, ValveState
 from homeassistant.const import (
     CONF_ENTITY_ID,
     SERVICE_CLOSE_VALVE,
@@ -15,10 +15,8 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_CLOSED,
     STATE_OFF,
     STATE_ON,
-    STATE_OPEN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -71,7 +69,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("valve.decorative_lights").state == STATE_OPEN
+    assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
 
     await hass.services.async_call(
         VALVE_DOMAIN,
@@ -81,7 +79,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("valve.decorative_lights").state == STATE_CLOSED
+    assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED
 
     await hass.services.async_call(
         VALVE_DOMAIN,
@@ -91,7 +89,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("valve.decorative_lights").state == STATE_OPEN
+    assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
 
     await hass.services.async_call(
         VALVE_DOMAIN,
@@ -101,7 +99,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("valve.decorative_lights").state == STATE_CLOSED
+    assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -111,7 +109,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("valve.decorative_lights").state == STATE_OPEN
+    assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -121,7 +119,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("valve.decorative_lights").state == STATE_CLOSED
+    assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -131,7 +129,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("valve.decorative_lights").state == STATE_OPEN
+    assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
 
 
 async def test_service_calls_inverted(hass: HomeAssistant) -> None:
@@ -154,7 +152,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("valve.decorative_lights").state == STATE_CLOSED
+    assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED
 
     await hass.services.async_call(
         VALVE_DOMAIN,
@@ -164,7 +162,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("valve.decorative_lights").state == STATE_OPEN
+    assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
 
     await hass.services.async_call(
         VALVE_DOMAIN,
@@ -174,7 +172,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("valve.decorative_lights").state == STATE_OPEN
+    assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
 
     await hass.services.async_call(
         VALVE_DOMAIN,
@@ -184,7 +182,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("valve.decorative_lights").state == STATE_CLOSED
+    assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -194,7 +192,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("valve.decorative_lights").state == STATE_CLOSED
+    assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -204,7 +202,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("valve.decorative_lights").state == STATE_OPEN
+    assert hass.states.get("valve.decorative_lights").state == ValveState.OPEN
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -214,4 +212,4 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("valve.decorative_lights").state == STATE_CLOSED
+    assert hass.states.get("valve.decorative_lights").state == ValveState.CLOSED

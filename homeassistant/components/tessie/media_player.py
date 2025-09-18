@@ -7,13 +7,12 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import TessieStateUpdateCoordinator
+from . import TessieConfigEntry
 from .entity import TessieEntity
+from .models import TessieVehicleData
 
 STATES = {
     "Playing": MediaPlayerState.PLAYING,
@@ -21,27 +20,36 @@ STATES = {
     "Stopped": MediaPlayerState.IDLE,
 }
 
+# Tesla uses 31 steps, in 0.333 increments up to 10.333
+VOLUME_STEP = 1 / 31
+VOLUME_FACTOR = 31 / 3  # 10.333
+
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tessie Media platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
-    async_add_entities(TessieMediaEntity(vehicle.state_coordinator) for vehicle in data)
+    async_add_entities(TessieMediaEntity(vehicle) for vehicle in data.vehicles)
 
 
 class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
     """Vehicle Location Media Class."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    _attr_volume_step = VOLUME_STEP
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the media player entity."""
-        super().__init__(coordinator, "media")
+        super().__init__(vehicle, "media")
 
     @property
     def state(self) -> MediaPlayerState:
@@ -54,9 +62,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
     @property
     def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
-        return self.get("vehicle_state_media_info_audio_volume", 0) / self.get(
-            "vehicle_state_media_info_audio_volume_max", 10.333333
-        )
+        return self.get("vehicle_state_media_info_audio_volume", 0) / VOLUME_FACTOR
 
     @property
     def media_duration(self) -> int | None:

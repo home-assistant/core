@@ -12,7 +12,11 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from . import UPNP_SERIAL
 
@@ -21,12 +25,11 @@ from tests.common import MockConfigEntry
 
 async def test_roku_sensors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Roku sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get("sensor.my_roku_3_active_app")
     entry = entity_registry.async_get("sensor.my_roku_3_active_app")
     assert entry
@@ -61,19 +64,19 @@ async def test_roku_sensors(
     assert device_entry.entry_type is None
     assert device_entry.sw_version == "7.5.0"
     assert device_entry.hw_version == "4200X"
-    assert device_entry.suggested_area is None
+    assert device_entry.area_id is None
 
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_rokutv_sensors(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
     """Test the Roku TV sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get("sensor.58_onn_roku_tv_active_app")
     entry = entity_registry.async_get("sensor.58_onn_roku_tv_active_app")
     assert entry
@@ -108,4 +111,6 @@ async def test_rokutv_sensors(
     assert device_entry.entry_type is None
     assert device_entry.sw_version == "9.2.0"
     assert device_entry.hw_version == "7820X"
-    assert device_entry.suggested_area == "Living room"
+    assert (
+        device_entry.area_id == area_registry.async_get_area_by_name("Living room").id
+    )

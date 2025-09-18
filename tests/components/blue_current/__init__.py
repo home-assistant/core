@@ -4,18 +4,28 @@ from __future__ import annotations
 
 from asyncio import Event, Future
 from dataclasses import dataclass
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from bluecurrent_api import Client
 
+from homeassistant.components.blue_current import EVSE_ID, PLUG_AND_CHARGE
+from homeassistant.components.blue_current.const import PUBLIC_CHARGING
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+DEFAULT_CHARGE_POINT_OPTIONS = {
+    PLUG_AND_CHARGE: {"value": False, "permission": "write"},
+    PUBLIC_CHARGING: {"value": True, "permission": "write"},
+}
 
 DEFAULT_CHARGE_POINT = {
     "evse_id": "101",
     "model_type": "",
     "name": "",
+    "activity": "available",
+    **DEFAULT_CHARGE_POINT_OPTIONS,
 }
 
 
@@ -42,10 +52,10 @@ def create_client_mock(
         """Wait until chargepoints are received."""
         await received_charge_points.wait()
 
-    async def connect(receiver):
+    async def connect(receiver, on_open):
         """Set the receiver and await future."""
         client_mock.receiver = receiver
-        await client_mock.get_charge_points()
+        await on_open()
 
         started_loop.set()
         started_loop.clear()
@@ -77,11 +87,20 @@ def create_client_mock(
         """Send the grid status to the callback."""
         await client_mock.receiver({"object": "GRID_STATUS", "data": grid})
 
+    async def update_charge_point(
+        evse_id: str, event_object: str, settings: dict[str, Any]
+    ) -> None:
+        """Update the charge point data by sending an event."""
+        await client_mock.receiver(
+            {"object": event_object, "data": {EVSE_ID: evse_id, **settings}}
+        )
+
     client_mock.connect.side_effect = connect
     client_mock.wait_for_charge_points.side_effect = wait_for_charge_points
     client_mock.get_charge_points.side_effect = get_charge_points
     client_mock.get_status.side_effect = get_status
     client_mock.get_grid_status.side_effect = get_grid_status
+    client_mock.update_charge_point = update_charge_point
 
     return client_mock
 
@@ -112,8 +131,9 @@ async def init_integration(
         hass, future_container, started_loop, charge_point, status, grid
     )
 
-    with patch("homeassistant.components.blue_current.PLATFORMS", [platform]), patch(
-        "homeassistant.components.blue_current.Client", return_value=client_mock
+    with (
+        patch("homeassistant.components.blue_current.PLATFORMS", [platform]),
+        patch("homeassistant.components.blue_current.Client", return_value=client_mock),
     ):
         config_entry.add_to_hass(hass)
 

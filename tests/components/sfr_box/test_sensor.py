@@ -15,7 +15,7 @@ pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.sfr_box.PLATFORMS", [Platform.SENSOR]):
         yield

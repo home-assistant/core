@@ -52,7 +52,7 @@ async def test_fan_available(
     assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(2.040816)
     assert state.attributes[ATTR_PRESET_MODES] == ["Auto"]
     assert state.attributes[ATTR_PRESET_MODE] is None
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 9
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 57
 
     await command_store.trigger_observe_callback(
         hass, device, {ATTR_REACHABLE_STATE: 0}
@@ -172,7 +172,7 @@ async def test_services(
     assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(2.040816)
     assert state.attributes[ATTR_PRESET_MODES] == ["Auto"]
     assert state.attributes[ATTR_PRESET_MODE] is None
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 9
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 57
 
     await hass.services.async_call(
         FAN_DOMAIN,

@@ -1,0 +1,836 @@
+"""Test the ntfy config flow."""
+
+from datetime import datetime
+from typing import Any
+from unittest.mock import AsyncMock
+
+from aiontfy import AccountTokenResponse
+from aiontfy.exceptions import (
+    NtfyException,
+    NtfyHTTPError,
+    NtfyUnauthorizedAuthenticationError,
+)
+import pytest
+
+from homeassistant import config_entries
+from homeassistant.components.ntfy.const import (
+    CONF_MESSAGE,
+    CONF_PRIORITY,
+    CONF_TAGS,
+    CONF_TITLE,
+    CONF_TOPIC,
+    DOMAIN,
+    SECTION_AUTH,
+    SECTION_FILTER,
+)
+from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
+
+
+@pytest.mark.parametrize(
+    ("user_input", "entry_data"),
+    [
+        (
+            {
+                CONF_URL: "https://ntfy.sh",
+                CONF_VERIFY_SSL: True,
+                SECTION_AUTH: {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+            },
+            {
+                CONF_URL: "https://ntfy.sh/",
+                CONF_VERIFY_SSL: True,
+                CONF_USERNAME: "username",
+                CONF_TOKEN: "token",
+            },
+        ),
+        (
+            {CONF_URL: "https://ntfy.sh", CONF_VERIFY_SSL: True, SECTION_AUTH: {}},
+            {
+                CONF_URL: "https://ntfy.sh/",
+                CONF_VERIFY_SSL: True,
+                CONF_USERNAME: None,
+                CONF_TOKEN: "token",
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_form(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    user_input: dict[str, Any],
+    entry_data: dict[str, Any],
+) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "ntfy.sh"
+    assert result["data"] == entry_data
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            NtfyHTTPError(418001, 418, "I'm a teapot", ""),
+            "cannot_connect",
+        ),
+        (
+            NtfyUnauthorizedAuthenticationError(
+                40101,
+                401,
+                "unauthorized",
+                "https://ntfy.sh/docs/publish/#authentication",
+            ),
+            "invalid_auth",
+        ),
+        (NtfyException, "cannot_connect"),
+        (TypeError, "unknown"),
+    ],
+)
+async def test_form_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_aiontfy: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test we handle invalid auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    mock_aiontfy.account.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "https://ntfy.sh",
+            CONF_VERIFY_SSL: True,
+            SECTION_AUTH: {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_aiontfy.account.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "https://ntfy.sh",
+            CONF_VERIFY_SSL: True,
+            SECTION_AUTH: {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "ntfy.sh"
+    assert result["data"] == {
+        CONF_URL: "https://ntfy.sh/",
+        CONF_VERIFY_SSL: True,
+        CONF_USERNAME: "username",
+        CONF_TOKEN: "token",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_form_already_configured(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort when entry is already configured."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_URL: "https://ntfy.sh",
+            CONF_VERIFY_SSL: True,
+            SECTION_AUTH: {},
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_add_topic_flow(hass: HomeAssistant) -> None:
+    """Test add topic subentry flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "https://ntfy.sh/", CONF_VERIFY_SSL: True, CONF_USERNAME: None},
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "topic"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert "add_topic" in result["menu_options"]
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_topic"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_topic"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TOPIC: "mytopic",
+            SECTION_FILTER: {
+                CONF_PRIORITY: ["5"],
+                CONF_TAGS: ["octopus", "+1"],
+                CONF_TITLE: "title",
+                CONF_MESSAGE: "triggered",
+            },
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry_id = list(config_entry.subentries)[0]
+    assert config_entry.subentries == {
+        subentry_id: ConfigSubentry(
+            data={
+                CONF_TOPIC: "mytopic",
+                CONF_PRIORITY: ["5"],
+                CONF_TAGS: ["octopus", "+1"],
+                CONF_TITLE: "title",
+                CONF_MESSAGE: "triggered",
+            },
+            subentry_id=subentry_id,
+            subentry_type="topic",
+            title="mytopic",
+            unique_id="mytopic",
+        )
+    }
+
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> None:
+    """Test add topic subentry flow with generated topic name."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "https://ntfy.sh/", CONF_VERIFY_SSL: True},
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "topic"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert "generate_topic" in result["menu_options"]
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "generate_topic"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_topic"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TOPIC: "",
+            SECTION_FILTER: {},
+        },
+    )
+
+    mock_random.assert_called_once()
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TOPIC: "randomtopic",
+            CONF_NAME: "mytopic",
+            SECTION_FILTER: {},
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry_id = list(config_entry.subentries)[0]
+    assert config_entry.subentries == {
+        subentry_id: ConfigSubentry(
+            data={CONF_TOPIC: "randomtopic"},
+            subentry_id=subentry_id,
+            subentry_type="topic",
+            title="mytopic",
+            unique_id="randomtopic",
+        )
+    }
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_invalid_topic(hass: HomeAssistant, mock_random: AsyncMock) -> None:
+    """Test add topic subentry flow with invalid topic name."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "https://ntfy.sh/", CONF_VERIFY_SSL: True},
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "topic"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert "add_topic" in result["menu_options"]
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_topic"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_topic"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TOPIC: "invalid,topic",
+            SECTION_FILTER: {},
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_topic"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TOPIC: "mytopic",
+            SECTION_FILTER: {},
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry_id = list(config_entry.subentries)[0]
+    assert config_entry.subentries == {
+        subentry_id: ConfigSubentry(
+            data={CONF_TOPIC: "mytopic"},
+            subentry_id=subentry_id,
+            subentry_type="topic",
+            title="mytopic",
+            unique_id="mytopic",
+        )
+    }
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_topic_already_configured(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort when entry is already configured."""
+
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "topic"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert "add_topic" in result["menu_options"]
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_topic"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_topic"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TOPIC: "mytopic",
+            SECTION_FILTER: {},
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    "user_input", [{CONF_PASSWORD: "password"}, {CONF_TOKEN: "newtoken"}]
+)
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_flow_reauth(
+    hass: HomeAssistant,
+    mock_aiontfy: AsyncMock,
+    user_input: dict[str, Any],
+) -> None:
+    """Test reauth flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ntfy.sh",
+        data={
+            CONF_URL: "https://ntfy.sh/",
+            CONF_USERNAME: "username",
+            CONF_TOKEN: "token",
+        },
+    )
+    mock_aiontfy.generate_token.return_value = AccountTokenResponse(
+        token="newtoken", last_access=datetime.now()
+    )
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_TOKEN] == "newtoken"
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            NtfyHTTPError(418001, 418, "I'm a teapot", ""),
+            "cannot_connect",
+        ),
+        (
+            NtfyUnauthorizedAuthenticationError(
+                40101,
+                401,
+                "unauthorized",
+                "https://ntfy.sh/docs/publish/#authentication",
+            ),
+            "invalid_auth",
+        ),
+        (NtfyException, "cannot_connect"),
+        (TypeError, "unknown"),
+    ],
+)
+async def test_form_reauth_errors(
+    hass: HomeAssistant,
+    mock_aiontfy: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reauth flow errors."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ntfy.sh",
+        data={
+            CONF_URL: "https://ntfy.sh/",
+            CONF_USERNAME: "username",
+            CONF_TOKEN: "token",
+        },
+    )
+    mock_aiontfy.account.side_effect = exception
+    mock_aiontfy.generate_token.return_value = AccountTokenResponse(
+        token="newtoken", last_access=datetime.now()
+    )
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "password"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_aiontfy.account.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "password"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data == {
+        CONF_URL: "https://ntfy.sh/",
+        CONF_USERNAME: "username",
+        CONF_TOKEN: "newtoken",
+    }
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_flow_reauth_account_mismatch(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow."""
+
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TOKEN: "newtoken"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "account_mismatch"
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "user_input", "step_id"),
+    [
+        (
+            {CONF_USERNAME: None, CONF_TOKEN: None},
+            {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+            "reconfigure",
+        ),
+        (
+            {CONF_USERNAME: "username", CONF_TOKEN: "oldtoken"},
+            {CONF_TOKEN: "newtoken"},
+            "reconfigure_user",
+        ),
+    ],
+)
+async def test_flow_reconfigure(
+    hass: HomeAssistant,
+    mock_aiontfy: AsyncMock,
+    entry_data: dict[str, str | None],
+    user_input: dict[str, str],
+    step_id: str,
+) -> None:
+    """Test reconfigure flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ntfy.sh",
+        data={
+            CONF_URL: "https://ntfy.sh/",
+            **entry_data,
+        },
+    )
+    mock_aiontfy.generate_token.return_value = AccountTokenResponse(
+        token="newtoken", last_access=datetime.now()
+    )
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_USERNAME] == "username"
+    assert config_entry.data[CONF_TOKEN] == "newtoken"
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "step_id"),
+    [
+        ({CONF_USERNAME: None, CONF_TOKEN: None}, "reconfigure"),
+        ({CONF_USERNAME: "username", CONF_TOKEN: "oldtoken"}, "reconfigure_user"),
+    ],
+)
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_flow_reconfigure_token(
+    hass: HomeAssistant,
+    entry_data: dict[str, Any],
+    step_id: str,
+) -> None:
+    """Test reconfigure flow with access token."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ntfy.sh",
+        data={
+            CONF_URL: "https://ntfy.sh/",
+            **entry_data,
+        },
+    )
+
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TOKEN: "access_token"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_USERNAME] == "username"
+    assert config_entry.data[CONF_TOKEN] == "access_token"
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            NtfyHTTPError(418001, 418, "I'm a teapot", ""),
+            "cannot_connect",
+        ),
+        (
+            NtfyUnauthorizedAuthenticationError(
+                40101,
+                401,
+                "unauthorized",
+                "https://ntfy.sh/docs/publish/#authentication",
+            ),
+            "invalid_auth",
+        ),
+        (NtfyException, "cannot_connect"),
+        (TypeError, "unknown"),
+    ],
+)
+async def test_flow_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_aiontfy: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reconfigure flow errors."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ntfy.sh",
+        data={
+            CONF_URL: "https://ntfy.sh/",
+            CONF_USERNAME: None,
+            CONF_TOKEN: None,
+        },
+    )
+    mock_aiontfy.generate_token.return_value = AccountTokenResponse(
+        token="newtoken", last_access=datetime.now()
+    )
+    mock_aiontfy.account.side_effect = exception
+
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_aiontfy.account.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_USERNAME] == "username"
+    assert config_entry.data[CONF_TOKEN] == "newtoken"
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_flow_reconfigure_already_configured(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow already configured."""
+    other_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ntfy.sh",
+        data={
+            CONF_URL: "https://ntfy.sh/",
+            CONF_USERNAME: "username",
+        },
+    )
+    other_config_entry.add_to_hass(hass)
+
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert len(hass.config_entries.async_entries()) == 2
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_flow_reconfigure_account_mismatch(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfigure flow account mismatch."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ntfy.sh",
+        data={
+            CONF_URL: "https://ntfy.sh/",
+            CONF_USERNAME: "wrong_username",
+            CONF_TOKEN: "oldtoken",
+        },
+    )
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TOKEN: "newtoken"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "account_mismatch"
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_topic_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test topic subentry reconfigure flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "https://ntfy.sh/", CONF_USERNAME: None},
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={
+                    CONF_TOPIC: "mytopic",
+                    CONF_PRIORITY: ["1"],
+                    CONF_TAGS: ["owl", "-1"],
+                    CONF_TITLE: "",
+                    CONF_MESSAGE: "",
+                },
+                subentry_id="subentry_id",
+                subentry_type="topic",
+                title="mytopic",
+                unique_id="mytopic",
+            )
+        ],
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await config_entry.start_subentry_reconfigure_flow(hass, "subentry_id")
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PRIORITY: ["5"],
+            CONF_TAGS: ["octopus", "+1"],
+            CONF_TITLE: "title",
+            CONF_MESSAGE: "triggered",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert config_entry.subentries == {
+        "subentry_id": ConfigSubentry(
+            data={
+                CONF_TOPIC: "mytopic",
+                CONF_PRIORITY: ["5"],
+                CONF_TAGS: ["octopus", "+1"],
+                CONF_TITLE: "title",
+                CONF_MESSAGE: "triggered",
+            },
+            subentry_id="subentry_id",
+            subentry_type="topic",
+            title="mytopic",
+            unique_id="mytopic",
+        )
+    }
+
+    await hass.async_block_till_done()

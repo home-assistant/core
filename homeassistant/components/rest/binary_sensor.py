@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import logging
 import ssl
+from xml.parsers.expat import ExpatError
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
 from homeassistant.const import (
@@ -24,13 +25,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     ManualTriggerEntity,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -43,10 +45,9 @@ from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **BINARY_SENSOR_SCHEMA})
-
 PLATFORM_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE), PLATFORM_SCHEMA
+    BINARY_SENSOR_PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **BINARY_SENSOR_SCHEMA}),
+    cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE),
 )
 
 TRIGGER_ENTITY_OPTIONS = (
@@ -132,9 +133,7 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
             config[CONF_FORCE_UPDATE],
         )
         self._previous_data = None
-        self._value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-        if (value_template := self._value_template) is not None:
-            value_template.hass = hass
+        self._value_template: ValueTemplate | None = config.get(CONF_VALUE_TEMPLATE)
 
     @property
     def available(self) -> bool:
@@ -149,24 +148,34 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
             self._attr_is_on = False
             return
 
-        response = self.rest.data
+        try:
+            response = self.rest.data_without_xml()
+        except ExpatError as err:
+            self._attr_is_on = False
+            _LOGGER.warning(
+                "REST xml result could not be parsed and converted to JSON: %s", err
+            )
+            return
 
-        raw_value = response
+        variables = self._template_variables_with_value(response)
+        if not self._render_availability_template(variables):
+            self.async_write_ha_state()
+            return
 
-        if self._value_template is not None:
-            response = self._value_template.async_render_with_possible_json_value(
-                self.rest.data, False
+        if response is not None and self._value_template is not None:
+            response = self._value_template.async_render_as_value_template(
+                self.entity_id, variables, False
             )
 
         try:
-            self._attr_is_on = bool(int(response))
+            self._attr_is_on = bool(int(str(response)))
         except ValueError:
             self._attr_is_on = {
                 "true": True,
                 "on": True,
                 "open": True,
                 "yes": True,
-            }.get(response.lower(), False)
+            }.get(str(response).lower(), False)
 
-        self._process_manual_data(raw_value)
+        self._process_manual_data(variables)
         self.async_write_ha_state()

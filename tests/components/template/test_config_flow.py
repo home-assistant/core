@@ -8,11 +8,43 @@ from pytest_unordered import unordered
 
 from homeassistant import config_entries
 from homeassistant.components.template import DOMAIN, async_setup_entry
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 from tests.typing import WebSocketGenerator
+
+SWITCH_BEFORE_OPTIONS = {
+    "name": "test_template_switch",
+    "template_type": "switch",
+    "turn_off": [{"event": "test_template_switch", "event_data": {"event": "off"}}],
+    "turn_on": [{"event": "test_template_switch", "event_data": {"event": "on"}}],
+    "value_template": "{{ now().minute % 2 == 0 }}",
+}
+
+
+SWITCH_AFTER_OPTIONS = {
+    "name": "test_template_switch",
+    "template_type": "switch",
+    "turn_off": [{"event": "test_template_switch", "event_data": {"event": "off"}}],
+    "turn_on": [{"event": "test_template_switch", "event_data": {"event": "on"}}],
+    "state": "{{ now().minute % 2 == 0 }}",
+    "value_template": "{{ now().minute % 2 == 0 }}",
+}
+
+SENSOR_OPTIONS = {
+    "name": "test_template_sensor",
+    "template_type": "sensor",
+    "state": "{{ 'a' if now().minute % 2 == 0 else 'b' }}",
+}
+
+BINARY_SENSOR_OPTIONS = {
+    "name": "test_template_sensor",
+    "template_type": "binary_sensor",
+    "state": "{{ now().minute % 2 == 0 else }}",
+}
 
 
 @pytest.mark.parametrize(
@@ -28,8 +60,20 @@ from tests.typing import WebSocketGenerator
     ),
     [
         (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            "armed_away",
+            {"one": "armed_away", "two": "disarmed"},
+            {},
+            {},
+            {"code_arm_required": True, "code_format": "number"},
+            {},
+        ),
+        (
             "binary_sensor",
-            "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}",
+            {
+                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+            },
             "on",
             {"one": "on", "two": "off"},
             {},
@@ -39,7 +83,9 @@ from tests.typing import WebSocketGenerator
         ),
         (
             "sensor",
-            "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
+            {
+                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+            },
             "50.0",
             {"one": "30.0", "two": "20.0"},
             {},
@@ -47,18 +93,195 @@ from tests.typing import WebSocketGenerator
             {},
             {},
         ),
+        (
+            "button",
+            {},
+            "unknown",
+            {"one": "30.0", "two": "20.0"},
+            {},
+            {
+                "device_class": "restart",
+                "press": [
+                    {
+                        "action": "input_boolean.toggle",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+            },
+            {
+                "device_class": "restart",
+                "press": [
+                    {
+                        "action": "input_boolean.toggle",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+            },
+            {},
+        ),
+        (
+            "cover",
+            {"state": "{{ states('cover.one') }}"},
+            "open",
+            {"one": "open", "two": "closed"},
+            {},
+            {
+                "device_class": "garage",
+                "set_cover_position": [
+                    {
+                        "action": "input_number.set_value",
+                        "target": {"entity_id": "input_number.test"},
+                        "data": {"position": "{{ position }}"},
+                    }
+                ],
+            },
+            {
+                "device_class": "garage",
+                "set_cover_position": [
+                    {
+                        "action": "input_number.set_value",
+                        "target": {"entity_id": "input_number.test"},
+                        "data": {"position": "{{ position }}"},
+                    }
+                ],
+            },
+            {},
+        ),
+        (
+            "event",
+            {"event_type": "{{ states('event.one') }}"},
+            "2024-07-09T00:00:00.000+00:00",
+            {"one": "single", "two": "double"},
+            {},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {},
+        ),
+        (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            "on",
+            {"one": "on", "two": "off"},
+            {},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            {},
+        ),
+        (
+            "image",
+            {"url": "{{ states('sensor.one') }}"},
+            "2024-07-09T00:00:00+00:00",
+            {"one": "http://www.test.com", "two": ""},
+            {},
+            {"verify_ssl": True},
+            {"verify_ssl": True},
+            {},
+        ),
+        (
+            "light",
+            {"state": "{{ states('light.one') }}"},
+            "on",
+            {"one": "on", "two": "off"},
+            {},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            {},
+        ),
+        (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            "locked",
+            {"one": "locked", "two": "unlocked"},
+            {},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+            {},
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            "30.0",
+            {"one": "30.0", "two": "20.0"},
+            {},
+            {
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {},
+        ),
+        (
+            "select",
+            {"state": "{{ states('select.one') }}"},
+            "on",
+            {"one": "on", "two": "off"},
+            {},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {},
+        ),
+        (
+            "switch",
+            {"value_template": "{{ states('switch.one') }}"},
+            "on",
+            {"one": "on", "two": "off"},
+            {},
+            {},
+            {},
+            {},
+        ),
+        (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            "off",
+            {"one": "2.0", "two": "1.0"},
+            {},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            {},
+        ),
+        (
+            "vacuum",
+            {"state": "{{ states('vacuum.one') }}"},
+            "docked",
+            {"one": "docked", "two": "cleaning"},
+            {},
+            {"start": []},
+            {"start": []},
+            {},
+        ),
     ],
 )
+@pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
 async def test_config_flow(
     hass: HomeAssistant,
-    template_type,
-    state_template,
-    template_state,
-    input_states,
-    input_attributes,
-    extra_input,
-    extra_options,
-    extra_attrs,
+    template_type: str,
+    state_template: dict[str, Any],
+    template_state: str,
+    input_states: dict[str, Any],
+    input_attributes: dict[str, Any],
+    extra_input: dict[str, Any],
+    extra_options: dict[str, Any],
+    extra_attrs: dict[str, Any],
 ) -> None:
     """Test the config flow."""
     input_entities = ["one", "two"]
@@ -72,14 +295,209 @@ async def test_config_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": template_type},
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == template_type
+
+    availability = {"advanced_options": {"availability": "{{ True }}"}}
+
+    with patch(
+        "homeassistant.components.template.async_setup_entry", wraps=async_setup_entry
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"name": "My template", **state_template, **extra_input, **availability},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "My template"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "name": "My template",
+        "template_type": template_type,
+        **state_template,
+        **extra_options,
+        **availability,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": template_type,
+        **state_template,
+        **extra_options,
+        **availability,
+    }
+
+    state = hass.states.get(f"{template_type}.my_template")
+    assert state.state == template_state
+    for key, value in extra_attrs.items():
+        assert state.attributes[key] == value
+
+
+@pytest.mark.parametrize(
+    (
+        "template_type",
+        "state_template",
+        "extra_input",
+        "extra_options",
+    ),
+    [
+        (
+            "sensor",
+            {"state": "{{ 15 }}"},
+            {},
+            {},
+        ),
+        (
+            "binary_sensor",
+            {"state": "{{ false }}"},
+            {},
+            {},
+        ),
+        (
+            "switch",
+            {"value_template": "{{ false }}"},
+            {},
+            {},
+        ),
+        (
+            "button",
+            {},
+            {},
+            {},
+        ),
+        (
+            "cover",
+            {"state": "{{ 'open' }}"},
+            {"set_cover_position": []},
+            {"set_cover_position": []},
+        ),
+        (
+            "event",
+            {"event_type": "{{ 'single' }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+        ),
+        (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+        ),
+        (
+            "image",
+            {
+                "url": "{{ states('sensor.one') }}",
+            },
+            {"verify_ssl": True},
+            {"verify_ssl": True},
+        ),
+        (
+            "light",
+            {"state": "{{ states('light.one') }}"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+        ),
+        (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            {
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+        ),
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
+        ),
+        (
+            "select",
+            {"state": "{{ states('select.one') }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+        ),
+        (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
+        ),
+        (
+            "vacuum",
+            {"state": "{{ states('vacuum.one') }}"},
+            {"start": []},
+            {"start": []},
+        ),
+    ],
+)
+async def test_config_flow_device(
+    hass: HomeAssistant,
+    template_type: str,
+    state_template: dict[str, Any],
+    extra_input: dict[str, Any],
+    extra_options: dict[str, Any],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test remove the device registry configuration entry when the device changes."""
+
+    # Configure a device registry
+    entry_device = MockConfigEntry()
+    entry_device.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_device.entry_id,
+        identifiers={("test", "identifier_test1")},
+        connections={("mac", "20:31:32:33:34:01")},
+    )
+    await hass.async_block_till_done()
+
+    device_id = device.id
+    assert device_id is not None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": template_type},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
 
     with patch(
@@ -89,19 +507,21 @@ async def test_config_flow(
             result["flow_id"],
             {
                 "name": "My template",
-                "state": state_template,
+                "device_id": device_id,
+                **state_template,
                 **extra_input,
             },
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My template"
     assert result["data"] == {}
     assert result["options"] == {
         "name": "My template",
-        "state": state_template,
         "template_type": template_type,
+        "device_id": device_id,
+        **state_template,
         **extra_options,
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -110,26 +530,11 @@ async def test_config_flow(
     assert config_entry.data == {}
     assert config_entry.options == {
         "name": "My template",
-        "state": state_template,
         "template_type": template_type,
+        "device_id": device_id,
+        **state_template,
         **extra_options,
     }
-
-    state = hass.states.get(f"{template_type}.my_template")
-    assert state.state == template_state
-    for key in extra_attrs:
-        assert state.attributes[key] == extra_attrs[key]
-
-
-def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    for k in schema:
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
-                return None
-            return k.description["suggested_value"]
-    # Wanted key absent from schema
-    raise Exception
 
 
 @pytest.mark.parametrize(
@@ -141,37 +546,224 @@ def get_suggested(schema, key):
         "input_states",
         "extra_options",
         "options_options",
+        "key_template",
     ),
     [
         (
             "binary_sensor",
-            "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}",
-            "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}",
+            {
+                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+            },
+            {
+                "state": "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}"
+            },
             ["on", "off"],
             {"one": "on", "two": "off"},
             {},
             {},
+            "state",
         ),
         (
             "sensor",
-            "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
-            "{{ float(states('sensor.one')) - float(states('sensor.two')) }}",
+            {
+                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+            },
+            {
+                "state": "{{ float(states('sensor.one')) - float(states('sensor.two')) }}"
+            },
             ["50.0", "10.0"],
             {"one": "30.0", "two": "20.0"},
             {},
             {},
+            "state",
+        ),
+        (
+            "button",
+            {},
+            {},
+            ["unknown", "unknown"],
+            {"one": "30.0", "two": "20.0"},
+            {
+                "device_class": "restart",
+                "press": [
+                    {
+                        "action": "input_boolean.toggle",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+            },
+            {
+                "press": [
+                    {
+                        "action": "input_boolean.toggle",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+            },
+            "state",
+        ),
+        (
+            "cover",
+            {"state": "{{ states('cover.one') }}"},
+            {"state": "{{ states('cover.two') }}"},
+            ["open", "closed"],
+            {"one": "open", "two": "closed"},
+            {"set_cover_position": []},
+            {"set_cover_position": []},
+            "state",
+        ),
+        (
+            "event",
+            {"event_type": "{{ states('event.one') }}"},
+            {"event_type": "{{ states('event.two') }}"},
+            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.000+00:00"],
+            {"one": "single", "two": "double"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            "event_type",
+        ),
+        (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            {"state": "{{ states('fan.two') }}"},
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            "state",
+        ),
+        (
+            "image",
+            {
+                "url": "{{ states('sensor.one') }}",
+            },
+            {
+                "url": "{{ states('sensor.two') }}",
+            },
+            ["2024-07-09T00:00:00+00:00", "2024-07-09T00:00:00+00:00"],
+            {"one": "http://www.test.com", "two": "http://www.test2.com"},
+            {"verify_ssl": True},
+            {
+                "url": "{{ states('sensor.two') }}",
+                "verify_ssl": True,
+            },
+            "url",
+        ),
+        (
+            "light",
+            {"state": "{{ states('light.one') }}"},
+            {"state": "{{ states('light.two') }}"},
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            "state",
+        ),
+        (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            {"state": "{{ states('lock.two') }}"},
+            ["locked", "unlocked"],
+            {"one": "locked", "two": "unlocked"},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+            "state",
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            {"state": "{{ states('number.two') }}"},
+            ["30.0", "20.0"],
+            {"one": "30.0", "two": "20.0"},
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            "state",
+        ),
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"value_template": "{{ states('alarm_control_panel.two') }}"},
+            ["armed_away", "disarmed"],
+            {"one": "armed_away", "two": "disarmed"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
+            "value_template",
+        ),
+        (
+            "select",
+            {"state": "{{ states('select.one') }}"},
+            {"state": "{{ states('select.two') }}"},
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            "state",
+        ),
+        (
+            "switch",
+            {"value_template": "{{ states('switch.one') }}"},
+            {"value_template": "{{ states('switch.two') }}"},
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {},
+            {},
+            "value_template",
+        ),
+        (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            {"installed_version": "{{ states('update.two') }}"},
+            ["off", "on"],
+            {"one": "2.0", "two": "1.0"},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            "installed_version",
+        ),
+        (
+            "vacuum",
+            {"state": "{{ states('vacuum.one') }}"},
+            {"state": "{{ states('vacuum.two') }}"},
+            ["docked", "cleaning"],
+            {"one": "docked", "two": "cleaning"},
+            {"start": []},
+            {"start": []},
+            "state",
         ),
     ],
 )
+@pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
 async def test_options(
     hass: HomeAssistant,
-    template_type,
-    old_state_template,
-    new_state_template,
-    template_state,
-    input_states,
-    extra_options,
-    options_options,
+    template_type: str,
+    old_state_template: dict[str, Any],
+    new_state_template: dict[str, Any],
+    template_state: list[str],
+    input_states: dict[str, Any],
+    extra_options: dict[str, Any],
+    options_options: dict[str, Any],
+    key_template: str,
 ) -> None:
     """Test reconfiguring."""
     input_entities = ["one", "two"]
@@ -186,8 +778,8 @@ async def test_options(
         domain=DOMAIN,
         options={
             "name": "My template",
-            "state": old_state_template,
             "template_type": template_type,
+            **old_state_template,
             **extra_options,
         },
         title="My template",
@@ -203,27 +795,32 @@ async def test_options(
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
-    assert get_suggested(result["data_schema"].schema, "state") == old_state_template
+    assert get_schema_suggested_value(
+        result["data_schema"].schema, key_template
+    ) == old_state_template.get(key_template)
     assert "name" not in result["data_schema"].schema
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"state": new_state_template, **options_options},
+        user_input={
+            **new_state_template,
+            **options_options,
+        },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "My template",
-        "state": new_state_template,
         "template_type": template_type,
+        **new_state_template,
         **extra_options,
     }
     assert config_entry.data == {}
     assert config_entry.options == {
         "name": "My template",
-        "state": new_state_template,
         "template_type": template_type,
+        **new_state_template,
         **extra_options,
     }
     assert config_entry.title == "My template"
@@ -237,18 +834,20 @@ async def test_options(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": template_type},
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
 
-    assert get_suggested(result["data_schema"].schema, "name") is None
-    assert get_suggested(result["data_schema"].schema, "state") is None
+    assert get_schema_suggested_value(result["data_schema"].schema, "name") is None
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, key_template) is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -276,7 +875,7 @@ async def test_options(
             "{{ float(states('sensor.one'), default='') + float(states('sensor.two'), default='') }}",
             {},
             {"one": "30.0", "two": "20.0"},
-            ["", "50.0"],
+            ["", STATE_UNKNOWN, "50.0"],
             [{}, {}],
             [["one", "two"], ["one", "two"]],
         ),
@@ -288,7 +887,7 @@ async def test_config_flow_preview(
     template_type: str,
     state_template: str,
     extra_user_input: dict[str, Any],
-    input_states: list[str],
+    input_states: dict[str, Any],
     template_states: str,
     extra_attributes: list[dict[str, Any]],
     listeners: list[list[str]],
@@ -296,29 +895,42 @@ async def test_config_flow_preview(
     """Test the config flow preview."""
     client = await hass_ws_client(hass)
 
+    hass.states.async_set("binary_sensor.available", "on")
+    await hass.async_block_till_done()
+
     input_entities = ["one", "two"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": template_type},
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
     assert result["errors"] is None
     assert result["preview"] == "template"
+
+    availability = {
+        "advanced_options": {
+            "availability": "{{ is_state('binary_sensor.available', 'on') }}"
+        }
+    }
 
     await client.send_json_auto_id(
         {
             "type": "template/start_preview",
             "flow_id": result["flow_id"],
             "flow_type": "config_flow",
-            "user_input": {"name": "My template", "state": state_template}
+            "user_input": {
+                "name": "My template",
+                "state": state_template,
+                **availability,
+            }
             | extra_user_input,
         }
     )
@@ -326,13 +938,16 @@ async def test_config_flow_preview(
     assert msg["success"]
     assert msg["result"] is None
 
+    entities = [f"{template_type}.{_id}" for _id in listeners[0]]
+    entities.append("binary_sensor.available")
+
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes[0],
         "listeners": {
             "all": False,
             "domains": [],
-            "entities": unordered([f"{template_type}.{_id}" for _id in listeners[0]]),
+            "entities": unordered(entities),
             "time": False,
         },
         "state": template_states[0],
@@ -342,6 +957,30 @@ async def test_config_flow_preview(
         hass.states.async_set(
             f"{template_type}.{input_entity}", input_states[input_entity], {}
         )
+        await hass.async_block_till_done()
+
+    entities = [f"{template_type}.{_id}" for _id in listeners[1]]
+    entities.append("binary_sensor.available")
+
+    for template_state in template_states[1:]:
+        msg = await client.receive_json()
+        assert msg["event"] == {
+            "attributes": {"friendly_name": "My template"}
+            | extra_attributes[0]
+            | extra_attributes[1],
+            "listeners": {
+                "all": False,
+                "domains": [],
+                "entities": unordered(entities),
+                "time": False,
+            },
+            "state": template_state,
+        }
+    assert len(hass.states.async_all()) == 3
+
+    # Test preview availability.
+    hass.states.async_set("binary_sensor.available", "off")
+    await hass.async_block_till_done()
 
     msg = await client.receive_json()
     assert msg["event"] == {
@@ -351,12 +990,13 @@ async def test_config_flow_preview(
         "listeners": {
             "all": False,
             "domains": [],
-            "entities": unordered([f"{template_type}.{_id}" for _id in listeners[1]]),
+            "entities": unordered(entities),
             "time": False,
         },
-        "state": template_states[1],
+        "state": STATE_UNAVAILABLE,
     }
-    assert len(hass.states.async_all()) == 2
+
+    assert len(hass.states.async_all()) == 3
 
 
 EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of template')"
@@ -422,7 +1062,7 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
                 ),
                 "unit_of_measurement": (
                     "'None' is not a valid unit for device class 'energy'; "
-                    "expected one of 'GJ', 'kWh', 'MJ', 'MWh', 'Wh'"
+                    "expected one of 'cal', 'Gcal', 'GJ', 'GWh', 'J', 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh', 'mWh', 'TWh', 'Wh'"
                 ),
             },
         ),
@@ -434,7 +1074,7 @@ async def test_config_flow_preview_bad_input(
     template_type: str,
     state_template: str,
     extra_user_input: dict[str, str],
-    error: str,
+    error: dict[str, str],
 ) -> None:
     """Test the config flow preview."""
     client = await hass_ws_client(hass)
@@ -442,14 +1082,14 @@ async def test_config_flow_preview_bad_input(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": template_type},
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
     assert result["errors"] is None
     assert result["preview"] == "template"
@@ -512,14 +1152,14 @@ async def test_config_flow_preview_template_startup_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": template_type},
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
     assert result["errors"] is None
     assert result["preview"] == "template"
@@ -595,14 +1235,14 @@ async def test_config_flow_preview_template_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": template_type},
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
     assert result["errors"] is None
     assert result["preview"] == "template"
@@ -665,14 +1305,14 @@ async def test_config_flow_preview_bad_state(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": template_type},
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
     assert result["errors"] is None
     assert result["preview"] == "template"
@@ -746,7 +1386,7 @@ async def test_option_flow_preview(
     new_state_template: str,
     extra_config_flow_data: dict[str, Any],
     extra_user_input: dict[str, Any],
-    input_states: list[str],
+    input_states: dict[str, Any],
     template_state: str,
     extra_attributes: dict[str, Any],
     listeners: list[str],
@@ -754,7 +1394,7 @@ async def test_option_flow_preview(
     """Test the option flow preview."""
     client = await hass_ws_client(hass)
 
-    input_entities = input_entities = ["one", "two"]
+    input_entities = ["one", "two"]
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -773,7 +1413,7 @@ async def test_option_flow_preview(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["preview"] == "template"
 
@@ -830,7 +1470,7 @@ async def test_option_flow_sensor_preview_config_entry_removed(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["preview"] == "template"
 
@@ -847,3 +1487,265 @@ async def test_option_flow_sensor_preview_config_entry_removed(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {"code": "home_assistant_error", "message": "Unknown error"}
+
+
+@pytest.mark.parametrize(
+    (
+        "template_type",
+        "state_template",
+        "extra_input",
+        "extra_options",
+    ),
+    [
+        (
+            "sensor",
+            {"state": "{{ 15 }}"},
+            {},
+            {},
+        ),
+        (
+            "binary_sensor",
+            {"state": "{{ false }}"},
+            {},
+            {},
+        ),
+        (
+            "button",
+            {},
+            {},
+            {},
+        ),
+        (
+            "cover",
+            {"state": "{{ states('cover.one') }}"},
+            {"set_cover_position": []},
+            {"set_cover_position": []},
+        ),
+        (
+            "event",
+            {"event_type": "{{ 'single' }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+        ),
+        (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+        ),
+        (
+            "image",
+            {
+                "url": "{{ states('sensor.one') }}",
+                "verify_ssl": True,
+            },
+            {},
+            {},
+        ),
+        (
+            "light",
+            {"state": "{{ states('light.one') }}"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+        ),
+        (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+        ),
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
+        ),
+        (
+            "select",
+            {"state": "{{ states('select.one') }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}"},
+        ),
+        (
+            "switch",
+            {"value_template": "{{ false }}"},
+            {},
+            {},
+        ),
+        (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
+        ),
+        (
+            "vacuum",
+            {"state": "{{ states('vacuum.one') }}"},
+            {"start": []},
+            {"start": []},
+        ),
+    ],
+)
+async def test_options_flow_change_device(
+    hass: HomeAssistant,
+    template_type: str,
+    state_template: dict[str, Any],
+    extra_input: dict[str, Any],
+    extra_options: dict[str, Any],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test remove the device registry configuration entry when the device changes."""
+
+    # Configure a device registry
+    entry_device1 = MockConfigEntry()
+    entry_device1.add_to_hass(hass)
+    device1 = device_registry.async_get_or_create(
+        config_entry_id=entry_device1.entry_id,
+        identifiers={("test", "identifier_test1")},
+        connections={("mac", "20:31:32:33:34:01")},
+    )
+    entry_device2 = MockConfigEntry()
+    entry_device2.add_to_hass(hass)
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=entry_device1.entry_id,
+        identifiers={("test", "identifier_test2")},
+        connections={("mac", "20:31:32:33:34:02")},
+    )
+    await hass.async_block_till_done()
+
+    device_id1 = device1.id
+    assert device_id1 is not None
+
+    device_id2 = device2.id
+    assert device_id2 is not None
+
+    # Setup the config entry with device 1
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "template_type": template_type,
+            "name": "My template",
+            "device_id": device_id1,
+            **state_template,
+            **extra_options,
+        },
+        title="Template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Change to link to device 2
+    result = await hass.config_entries.options.async_init(
+        template_config_entry.entry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "device_id": device_id2,
+            **state_template,
+            **extra_input,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "template_type": template_type,
+        "name": "My template",
+        "device_id": device_id2,
+        **state_template,
+        **extra_input,
+    }
+    assert template_config_entry.data == {}
+    assert template_config_entry.options == {
+        "template_type": template_type,
+        "name": "My template",
+        "device_id": device_id2,
+        **state_template,
+        **extra_options,
+    }
+
+    # Remove link with device
+    result = await hass.config_entries.options.async_init(
+        template_config_entry.entry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            **state_template,
+            **extra_input,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "template_type": template_type,
+        "name": "My template",
+        **state_template,
+        **extra_input,
+    }
+    assert template_config_entry.data == {}
+    assert template_config_entry.options == {
+        "template_type": template_type,
+        "name": "My template",
+        **state_template,
+        **extra_options,
+    }
+
+    # Change to link to device 1
+    result = await hass.config_entries.options.async_init(
+        template_config_entry.entry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "device_id": device_id1,
+            **state_template,
+            **extra_input,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "template_type": template_type,
+        "name": "My template",
+        "device_id": device_id1,
+        **state_template,
+        **extra_input,
+    }
+    assert template_config_entry.data == {}
+    assert template_config_entry.options == {
+        "template_type": template_type,
+        "name": "My template",
+        "device_id": device_id1,
+        **state_template,
+        **extra_options,
+    }

@@ -17,7 +17,7 @@ from .const import (
     WATCH_TV_ACTIVITY_ID,
 )
 
-from tests.common import MockConfigEntry, mock_registry
+from tests.common import MockConfigEntry, RegistryEntryWithDefaults, mock_registry
 
 
 async def test_unique_id_migration(
@@ -33,35 +33,35 @@ async def test_unique_id_migration(
         hass,
         {
             # old format
-            ENTITY_WATCH_TV: er.RegistryEntry(
+            ENTITY_WATCH_TV: RegistryEntryWithDefaults(
                 entity_id=ENTITY_WATCH_TV,
                 unique_id="123443-Watch TV",
                 platform="harmony",
                 config_entry_id=entry.entry_id,
             ),
             # old format, activity name with -
-            ENTITY_NILE_TV: er.RegistryEntry(
+            ENTITY_NILE_TV: RegistryEntryWithDefaults(
                 entity_id=ENTITY_NILE_TV,
                 unique_id="123443-Nile-TV",
                 platform="harmony",
                 config_entry_id=entry.entry_id,
             ),
             # new format
-            ENTITY_PLAY_MUSIC: er.RegistryEntry(
+            ENTITY_PLAY_MUSIC: RegistryEntryWithDefaults(
                 entity_id=ENTITY_PLAY_MUSIC,
                 unique_id=f"activity_{PLAY_MUSIC_ACTIVITY_ID}",
                 platform="harmony",
                 config_entry_id=entry.entry_id,
             ),
             # old entity which no longer has a matching activity on the hub. skipped.
-            "switch.some_other_activity": er.RegistryEntry(
+            "switch.some_other_activity": RegistryEntryWithDefaults(
                 entity_id="switch.some_other_activity",
                 unique_id="123443-Some Other Activity",
                 platform="harmony",
                 config_entry_id=entry.entry_id,
             ),
             # select entity
-            ENTITY_SELECT: er.RegistryEntry(
+            ENTITY_SELECT: RegistryEntryWithDefaults(
                 entity_id=ENTITY_SELECT,
                 unique_id=f"{HUB_NAME}_activities",
                 platform="harmony",

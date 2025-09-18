@@ -25,7 +25,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util import slugify
 
 from .const import ATTR_DURATION, ATTR_ROTATION, CONF_ANGLE, CONF_GESTURE, LOGGER
-from .deconz_device import DeconzBase
+from .entity import DeconzBase
 from .hub import DeconzHub
 
 CONF_DECONZ_EVENT = "deconz_event"
@@ -61,7 +61,12 @@ async def async_setup_events(hub: DeconzHub) -> None:
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Create DeconzEvent."""
-        new_event: DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent | DeconzRelativeRotaryEvent
+        new_event: (
+            DeconzAlarmEvent
+            | DeconzEvent
+            | DeconzPresenceEvent
+            | DeconzRelativeRotaryEvent
+        )
         sensor = hub.api.sensors[sensor_id]
 
         if isinstance(sensor, Switch):

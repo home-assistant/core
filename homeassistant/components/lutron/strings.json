@@ -17,31 +17,30 @@
         "description": "Please enter the main repeater login information",
         "title": "Main repeater setup"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The Lutron YAML configuration import cannot connect to server",
-      "description": "Configuring Lutron using YAML is being removed but there was an connection error importing your YAML configuration.\n\nThings you can try:\nMake sure your home assistant can reach the main repeater.\nRestart the main repeater by unplugging it for 60 seconds.\nTry logging into the main repeater at the IP address you specified in a web browser and the same login information.\n\nThen restart Home Assistant to try importing this integration again.\n\nAlternatively, you may remove the Lutron configuration from your YAML configuration entirely, restart Home Assistant, and add the Lutron integration manually."
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "title": "The Lutron YAML configuration import request failed due to an unknown error",
-      "description": "Configuring Lutron using YAML is being removed but there was an unknown error while importing your existing configuration.\nSetup will not proceed.\n\nThe specific error can be found in the logs. The most likely cause is a networking error or the Main Repeater is down or has an invalid configuration.\n\nVerify that your Lutron system is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the Lutron configuration from your YAML configuration entirely, restart Home Assistant, and add the Lutron integration manually."
-    },
-    "deprecated_light_fan_entity": {
-      "title": "Detected Lutron fan entity created as a light",
-      "description": "Fan entities have been added to the Lutron integration.\nWe detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new fan entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated light entity removed, disable the entity and restart Home Assistant."
-    },
-    "deprecated_light_fan_on": {
-      "title": "The Lutron integration deprecated fan turned on",
-      "description": "Fan entities have been added to the Lutron integration.\nPreviously fans were created as lights; this behavior is now deprecated.\n\nYour configuration just turned on a fan created as a light. You should migrate your scenes and automations to use the new fan entity.\n\nWhen you are done migrating your automations and are ready to have the deprecated light entity removed, disable the entity and restart Home Assistant.\n\nAn issue will be created each time the incorrect entity is used to remind you to migrate."
-    },
-    "deprecated_light_fan_off": {
-      "title": "The Lutron integration deprecated fan turned off",
-      "description": "Fan entities have been added to the Lutron integration.\nPreviously fans were created as lights; this behavior is now deprecated.\n\nYour configuration just turned off a fan created as a light. You should migrate your scenes and automations to use the new fan entity.\n\nWhen you are done migrating your automations and are ready to have the deprecated light entity removed, disable the entity and restart Home Assistant.\n\nAn issue will be created each time the incorrect entity is used to remind you to migrate."
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "default_dimmer_level": "Default light level when first turning on a light from Home Assistant"
+        }
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "single_press": "Single press",
+              "press": "Press",
+              "release": "Release"
+            }
+          }
+        }
+      }
     }
   }
 }

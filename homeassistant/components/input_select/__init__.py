@@ -27,13 +27,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import collection
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +54,7 @@ def _unique(options: Any) -> Any:
         raise HomeAssistantError("Duplicate options are not allowed") from exc
 
 
-STORAGE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Required(CONF_OPTIONS): vol.All(
         cv.ensure_list, vol.Length(min=1), _unique, [cv.string]
@@ -183,13 +182,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SELECT_FIRST,
-        {},
+        None,
         InputSelect.async_first.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_LAST,
-        {},
+        None,
         InputSelect.async_last.__name__,
     )
 
@@ -246,11 +245,12 @@ class InputSelectStorageCollection(collection.DictStorageCollection):
         return {CONF_ID: item[CONF_ID]} | update_data
 
 
+# pylint: disable-next=hass-enforce-class-module
 class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
     _entity_component_unrecorded_attributes = (
-        SelectEntity._entity_component_unrecorded_attributes - {ATTR_OPTIONS}
+        SelectEntity._entity_component_unrecorded_attributes - {ATTR_OPTIONS}  # noqa: SLF001
     )
     _unrecorded_attributes = frozenset({ATTR_EDITABLE})
 

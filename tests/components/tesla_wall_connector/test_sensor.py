@@ -21,13 +21,19 @@ async def test_sensors(hass: HomeAssistant) -> None:
             "sensor.tesla_wall_connector_handle_temperature", "25.5", "-1.4"
         ),
         EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_pcb_temperature", "30.5", "-1.2"
+        ),
+        EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_mcu_temperature", "42.0", "-1"
+        ),
+        EntityAndExpectedValues(
             "sensor.tesla_wall_connector_grid_voltage", "230.2", "229.2"
         ),
         EntityAndExpectedValues(
             "sensor.tesla_wall_connector_grid_frequency", "50.021", "49.981"
         ),
         EntityAndExpectedValues(
-            "sensor.tesla_wall_connector_energy", "988.022", "989.000"
+            "sensor.tesla_wall_connector_energy", "988.022", "989.0"
         ),
         EntityAndExpectedValues(
             "sensor.tesla_wall_connector_phase_a_current", "10", "7"
@@ -53,21 +59,12 @@ async def test_sensors(hass: HomeAssistant) -> None:
     ]
 
     mock_vitals_first_update = get_vitals_mock()
-    mock_vitals_first_update.evse_state = 1
-    mock_vitals_first_update.handle_temp_c = 25.51
-    mock_vitals_first_update.grid_v = 230.15
-    mock_vitals_first_update.grid_hz = 50.021
-    mock_vitals_first_update.voltageA_v = 230.1
-    mock_vitals_first_update.voltageB_v = 231
-    mock_vitals_first_update.voltageC_v = 232.1
-    mock_vitals_first_update.currentA_a = 10
-    mock_vitals_first_update.currentB_a = 11.1
-    mock_vitals_first_update.currentC_a = 12
-    mock_vitals_first_update.session_energy_wh = 1234.56
 
     mock_vitals_second_update = get_vitals_mock()
     mock_vitals_second_update.evse_state = 3
     mock_vitals_second_update.handle_temp_c = -1.42
+    mock_vitals_second_update.pcba_temp_c = -1.2
+    mock_vitals_second_update.mcu_temp_c = -1
     mock_vitals_second_update.grid_v = 229.21
     mock_vitals_second_update.grid_hz = 49.981
     mock_vitals_second_update.voltageA_v = 228.1

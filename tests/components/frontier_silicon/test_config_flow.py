@@ -6,7 +6,6 @@ from afsapi import ConnectionError, InvalidPinException, NotImplementedException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.frontier_silicon.const import (
     CONF_WEBFSAPI_URL,
     DEFAULT_PIN,
@@ -15,25 +14,28 @@ from homeassistant.components.frontier_silicon.const import (
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
+MOCK_DISCOVERY = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_udn="uuid:3dcc7100-f76c-11dd-87af-00226124ca30",
     ssdp_st="mock_st",
     ssdp_location="http://1.1.1.1/device",
+    ssdp_headers={"SPEAKER-NAME": "Speaker Name"},
     upnp={"SPEAKER-NAME": "Speaker Name"},
 )
 
-INVALID_MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
+INVALID_MOCK_DISCOVERY = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_udn="uuid:3dcc7100-f76c-11dd-87af-00226124ca30",
     ssdp_st="mock_st",
     ssdp_location=None,
+    ssdp_headers={"SPEAKER-NAME": "Speaker Name"},
     upnp={"SPEAKER-NAME": "Speaker Name"},
 )
 
@@ -52,7 +54,7 @@ async def test_form_default_pin(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -67,7 +69,7 @@ async def test_form_default_pin(
         )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
         CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
@@ -90,7 +92,7 @@ async def test_form_nondefault_pin(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -104,7 +106,7 @@ async def test_form_nondefault_pin(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "device_config"
     assert result2["errors"] is None
 
@@ -119,7 +121,7 @@ async def test_form_nondefault_pin(
         )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Name of the device"
     assert result3["data"] == {
         CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
@@ -146,7 +148,7 @@ async def test_form_nondefault_pin_invalid(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -160,7 +162,7 @@ async def test_form_nondefault_pin_invalid(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "device_config"
     assert result2["errors"] is None
 
@@ -174,7 +176,7 @@ async def test_form_nondefault_pin_invalid(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result2["step_id"] == "device_config"
     assert result3["errors"] == {"base": result_error}
 
@@ -184,7 +186,7 @@ async def test_form_nondefault_pin_invalid(
     )
     await hass.async_block_till_done()
 
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "Name of the device"
     assert result4["data"] == {
         CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
@@ -210,7 +212,7 @@ async def test_invalid_device_url(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -224,7 +226,7 @@ async def test_invalid_device_url(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": result_error}
 
@@ -234,7 +236,7 @@ async def test_invalid_device_url(
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Name of the device"
     assert result3["data"] == {
         CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
@@ -265,15 +267,20 @@ async def test_ssdp(
             data=MOCK_DISCOVERY,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow["context"]["title_placeholders"] == {"name": "Speaker Name"}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {},
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
         CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
@@ -291,7 +298,7 @@ async def test_ssdp_invalid_location(hass: HomeAssistant) -> None:
         data=INVALID_MOCK_DISCOVERY,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -308,7 +315,7 @@ async def test_ssdp_already_configured(
         data=MOCK_DISCOVERY,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -330,7 +337,7 @@ async def test_ssdp_fail(
             data=MOCK_DISCOVERY,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == result_error
 
 
@@ -347,7 +354,7 @@ async def test_ssdp_nondefault_pin(hass: HomeAssistant) -> None:
             data=MOCK_DISCOVERY,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_auth"
 
 
@@ -356,23 +363,15 @@ async def test_reauth_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -
     config_entry.add_to_hass(hass)
     assert config_entry.data[CONF_PIN] == "1234"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": config_entry.unique_id,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
-    assert result["type"] == FlowResultType.FORM
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device_config"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_PIN: "4242"},
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert config_entry.data[CONF_PIN] == "4242"
 
@@ -395,16 +394,8 @@ async def test_reauth_flow_friendly_name_error(
     config_entry.add_to_hass(hass)
     assert config_entry.data[CONF_PIN] == "1234"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": config_entry.unique_id,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
-    assert result["type"] == FlowResultType.FORM
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device_config"
 
     with patch(
@@ -417,7 +408,7 @@ async def test_reauth_flow_friendly_name_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "device_config"
     assert result2["errors"] == {"base": reason}
 
@@ -425,6 +416,6 @@ async def test_reauth_flow_friendly_name_error(
         result["flow_id"],
         user_input={CONF_PIN: "4242"},
     )
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert config_entry.data[CONF_PIN] == "4242"

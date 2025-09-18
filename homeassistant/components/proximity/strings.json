@@ -1,13 +1,13 @@
 {
   "title": "Proximity",
   "config": {
-    "flow_title": "Proximity",
+    "flow_title": "[%key:component::proximity::title%]",
     "step": {
       "user": {
         "data": {
           "zone": "Zone to track distance to",
           "ignored_zones": "Zones to ignore",
-          "tracked_entities": "Devices or Persons to track",
+          "tracked_entities": "Devices or persons to track",
           "tolerance": "Tolerance distance"
         }
       }
@@ -21,10 +21,10 @@
     "step": {
       "init": {
         "data": {
-          "zone": "Zone to track distance to",
-          "ignored_zones": "Zones to ignore",
-          "tracked_entities": "Devices or Persons to track",
-          "tolerance": "Tolerance distance"
+          "zone": "[%key:component::proximity::config::step::user::data::zone%]",
+          "ignored_zones": "[%key:component::proximity::config::step::user::data::ignored_zones%]",
+          "tracked_entities": "[%key:component::proximity::config::step::user::data::tracked_entities%]",
+          "tolerance": "[%key:component::proximity::config::step::user::data::tolerance%]"
         }
       }
     }
@@ -32,7 +32,7 @@
   "entity": {
     "sensor": {
       "dir_of_travel": {
-        "name": "{tracked_entity} Direction of travel",
+        "name": "{tracked_entity} direction of travel",
         "state": {
           "arrived": "Arrived",
           "away_from": "Away from",
@@ -40,39 +40,28 @@
           "towards": "Towards"
         }
       },
-      "dist_to_zone": { "name": "{tracked_entity} Distance" },
+      "dist_to_zone": { "name": "{tracked_entity} distance" },
       "nearest": { "name": "Nearest device" },
       "nearest_dir_of_travel": {
         "name": "Nearest direction of travel",
         "state": {
-          "arrived": "Arrived",
-          "away_from": "Away from",
-          "stationary": "Stationary",
-          "towards": "Towards"
+          "arrived": "[%key:component::proximity::entity::sensor::dir_of_travel::state::arrived%]",
+          "away_from": "[%key:component::proximity::entity::sensor::dir_of_travel::state::away_from%]",
+          "stationary": "[%key:component::proximity::entity::sensor::dir_of_travel::state::stationary%]",
+          "towards": "[%key:component::proximity::entity::sensor::dir_of_travel::state::towards%]"
         }
       },
       "nearest_dist_to_zone": { "name": "Nearest distance" }
     }
   },
   "issues": {
-    "deprecated_proximity_entity": {
-      "title": "The proximity entity is deprecated",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::proximity::issues::deprecated_proximity_entity::title%]",
-            "description": "The proximity entity `{entity}` is deprecated and will be removed in `2024.8`. However it is used within the following configurations:\n- {used_in}\n\nPlease adjust any automations or scripts that use this deprecated Proximity entity.\nFor each tracked person or device one sensor for the distance and the direction of travel to/from the monitored zone is created. Additionally for each Proximity configuration one sensor which shows the nearest device or person to the monitored zone is created. With this you can use the Min/Max integration to determine the nearest and furthest distance."
-          }
-        }
-      }
-    },
     "tracked_entity_removed": {
       "title": "Tracked entity has been removed",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "[%key:component::proximity::issues::tracked_entity_removed::title%]",
-            "description": "The entity `{entity_id}` has been removed from HA, but is used in proximity {name}. Please remove `{entity_id}` from the list of tracked entities. Related proximity sensor entites were set to unavailable and can be removed."
+            "description": "The entity `{entity_id}` has been removed from HA, but is used in proximity {name}. Please remove `{entity_id}` from the list of tracked entities. Related proximity sensor entities were set to unavailable and can be removed."
           }
         }
       }

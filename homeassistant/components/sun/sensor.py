@@ -13,16 +13,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN, SIGNAL_EVENTS_CHANGED, SIGNAL_POSITION_CHANGED
-from .entity import Sun
+from .entity import Sun, SunConfigEntry
 
 ENTITY_ID_SENSOR_FORMAT = SENSOR_DOMAIN + ".sun_{}"
 
@@ -107,11 +111,13 @@ SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SunConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sun sensor platform."""
 
-    sun: Sun = hass.data[DOMAIN]
+    sun = entry.runtime_data
 
     async_add_entities(
         [SunSensor(sun, description, entry.entry_id) for description in SENSOR_TYPES]
@@ -148,6 +154,21 @@ class SunSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register signal listener when added to hass."""
         await super().async_added_to_hass()
+
+        if self.entity_description.key == "solar_rising":
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_sun_solar_rising",
+                breaks_in_ha_version="2026.1.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_sun_solar_rising",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                },
+            )
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -155,3 +176,9 @@ class SunSensor(SensorEntity):
                 self.async_write_ha_state,
             )
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        if self.entity_description.key == "solar_rising":
+            async_delete_issue(self.hass, DOMAIN, "deprecated_sun_solar_rising")

@@ -27,10 +27,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HuaweiLteBaseEntityWithDevice, Router
+from . import Router
 from .const import (
     DOMAIN,
     KEY_DEVICE_INFORMATION,
@@ -44,6 +44,7 @@ from .const import (
     KEY_SMS_SMS_COUNT,
     SENSOR_KEYS,
 )
+from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
     if value is not None:
         # Clean up value and infer unit, e.g. -71dBm, 15 dB
         if match := re.match(
-            r"([>=<]*)(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value)
+            r"((&[gl]t;|[><])=?)?(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value)
         ):
             try:
                 value = float(match.group("value"))
@@ -79,9 +80,9 @@ def format_last_reset_elapsed_seconds(value: str | None) -> datetime | None:
     try:
         last_reset = datetime.now() - timedelta(seconds=int(value))
         last_reset.replace(microsecond=0)
-        return last_reset
     except ValueError:
         return None
+    return last_reset
 
 
 def signal_icon(limits: Sequence[int], value: StateType) -> str:
@@ -137,7 +138,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "uptime": HuaweiSensorEntityDescription(
                 key="uptime",
                 translation_key="uptime",
-                icon="mdi:timer-outline",
                 native_unit_of_measurement=UnitOfTime.SECONDS,
                 device_class=SensorDeviceClass.DURATION,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -145,14 +145,12 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "WanIPAddress": HuaweiSensorEntityDescription(
                 key="WanIPAddress",
                 translation_key="wan_ip_address",
-                icon="mdi:ip",
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
             ),
             "WanIPv6Address": HuaweiSensorEntityDescription(
                 key="WanIPv6Address",
                 translation_key="wan_ipv6_address",
-                icon="mdi:ip",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
         },
@@ -180,19 +178,17 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "cell_id": HuaweiSensorEntityDescription(
                 key="cell_id",
                 translation_key="cell_id",
-                icon="mdi:transmission-tower",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "cqi0": HuaweiSensorEntityDescription(
                 key="cqi0",
                 translation_key="cqi0",
-                icon="mdi:speedometer",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "cqi1": HuaweiSensorEntityDescription(
                 key="cqi1",
                 translation_key="cqi1",
-                icon="mdi:speedometer",
+                entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "dl_mcs": HuaweiSensorEntityDescription(
                 key="dl_mcs",
@@ -230,10 +226,14 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="enodeb_id",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
+            "ims": HuaweiSensorEntityDescription(
+                key="ims",
+                translation_key="ims",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
             "lac": HuaweiSensorEntityDescription(
                 key="lac",
                 translation_key="lac",
-                icon="mdi:map-marker",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "ltedlfreq": HuaweiSensorEntityDescription(
@@ -268,10 +268,103 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 ),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
+            "nei_cellid": HuaweiSensorEntityDescription(
+                key="nei_cellid",
+                translation_key="nei_cellid",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrbler": HuaweiSensorEntityDescription(
+                key="nrbler",
+                translation_key="nrbler",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrcqi0": HuaweiSensorEntityDescription(
+                key="nrcqi0",
+                translation_key="nrcqi0",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrcqi1": HuaweiSensorEntityDescription(
+                key="nrcqi1",
+                translation_key="nrcqi1",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrdlbandwidth": HuaweiSensorEntityDescription(
+                key="nrdlbandwidth",
+                translation_key="nrdlbandwidth",
+                # Could add icon_fn like we have for dlbandwidth,
+                # if we find a good source what to use as 5G thresholds.
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrdlmcs": HuaweiSensorEntityDescription(
+                key="nrdlmcs",
+                translation_key="nrdlmcs",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrearfcn": HuaweiSensorEntityDescription(
+                key="nrearfcn",
+                translation_key="nrearfcn",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrrank": HuaweiSensorEntityDescription(
+                key="nrrank",
+                translation_key="nrrank",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrrsrp": HuaweiSensorEntityDescription(
+                key="nrrsrp",
+                translation_key="nrrsrp",
+                device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                # Could add icon_fn as in rsrp, source for 5G thresholds?
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=True,
+            ),
+            "nrrsrq": HuaweiSensorEntityDescription(
+                key="nrrsrq",
+                translation_key="nrrsrq",
+                device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                # Could add icon_fn as in rsrq, source for 5G thresholds?
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=True,
+            ),
+            "nrsinr": HuaweiSensorEntityDescription(
+                key="nrsinr",
+                translation_key="nrsinr",
+                device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                # Could add icon_fn as in sinr, source for thresholds?
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=True,
+            ),
+            "nrtxpower": HuaweiSensorEntityDescription(
+                key="nrtxpower",
+                translation_key="nrtxpower",
+                # The value we get from the API tends to consist of several, e.g.
+                #     PPusch:21dBm PPucch:2dBm PSrs:0dBm PPrach:10dBm
+                # Present as SIGNAL_STRENGTH only if it was parsed to a number.
+                # We could try to parse this to separate component sensors sometime.
+                device_class_fn=lambda x: (
+                    SensorDeviceClass.SIGNAL_STRENGTH
+                    if isinstance(x, (float, int))
+                    else None
+                ),
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrulbandwidth": HuaweiSensorEntityDescription(
+                key="nrulbandwidth",
+                translation_key="nrulbandwidth",
+                # Could add icon_fn as in ulbandwidth, source for 5G thresholds?
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrulmcs": HuaweiSensorEntityDescription(
+                key="nrulmcs",
+                translation_key="nrulmcs",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
             "pci": HuaweiSensorEntityDescription(
                 key="pci",
                 translation_key="pci",
-                icon="mdi:transmission-tower",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "plmn": HuaweiSensorEntityDescription(
@@ -282,7 +375,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "rac": HuaweiSensorEntityDescription(
                 key="rac",
                 translation_key="rac",
-                icon="mdi:map-marker",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "rrc_status": HuaweiSensorEntityDescription(
@@ -303,7 +395,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="rsrp",
                 translation_key="rsrp",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # http://www.lte-anbieter.info/technik/rsrp.php
+                # http://www.lte-anbieter.info/technik/rsrp.php  # codespell:ignore technik
                 icon_fn=lambda x: signal_icon((-110, -95, -80), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -313,7 +405,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="rsrq",
                 translation_key="rsrq",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # http://www.lte-anbieter.info/technik/rsrq.php
+                # http://www.lte-anbieter.info/technik/rsrq.php  # codespell:ignore technik
                 icon_fn=lambda x: signal_icon((-11, -8, -5), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -329,11 +421,22 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
             ),
+            "rxlev": HuaweiSensorEntityDescription(
+                key="rxlev",
+                translation_key="rxlev",
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "sc": HuaweiSensorEntityDescription(
+                key="sc",
+                translation_key="sc",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
             "sinr": HuaweiSensorEntityDescription(
                 key="sinr",
                 translation_key="sinr",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # http://www.lte-anbieter.info/technik/sinr.php
+                # http://www.lte-anbieter.info/technik/sinr.php  # codespell:ignore technik
                 icon_fn=lambda x: signal_icon((0, 5, 10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -342,7 +445,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "tac": HuaweiSensorEntityDescription(
                 key="tac",
                 translation_key="tac",
-                icon="mdi:map-marker",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "tdd": HuaweiSensorEntityDescription(
@@ -386,6 +488,12 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 device_class=SensorDeviceClass.FREQUENCY,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
+            "wdlfreq": HuaweiSensorEntityDescription(
+                key="wdlfreq",
+                translation_key="wdlfreq",
+                device_class=SensorDeviceClass.FREQUENCY,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
         }
     ),
     #
@@ -400,7 +508,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "UnreadMessage": HuaweiSensorEntityDescription(
                 key="UnreadMessage",
                 translation_key="sms_unread",
-                icon="mdi:email-arrow-left",
             ),
         },
     ),
@@ -414,7 +521,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="current_day_transfer",
                 native_unit_of_measurement=UnitOfInformation.BYTES,
                 device_class=SensorDeviceClass.DATA_SIZE,
-                icon="mdi:arrow-up-down-bold",
                 state_class=SensorStateClass.TOTAL,
                 last_reset_item="CurrentDayDuration",
                 last_reset_format_fn=format_last_reset_elapsed_seconds,
@@ -424,7 +530,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="current_month_download",
                 native_unit_of_measurement=UnitOfInformation.BYTES,
                 device_class=SensorDeviceClass.DATA_SIZE,
-                icon="mdi:download",
                 state_class=SensorStateClass.TOTAL,
                 last_reset_item="MonthDuration",
                 last_reset_format_fn=format_last_reset_elapsed_seconds,
@@ -434,7 +539,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="current_month_upload",
                 native_unit_of_measurement=UnitOfInformation.BYTES,
                 device_class=SensorDeviceClass.DATA_SIZE,
-                icon="mdi:upload",
                 state_class=SensorStateClass.TOTAL,
                 last_reset_item="MonthDuration",
                 last_reset_format_fn=format_last_reset_elapsed_seconds,
@@ -449,6 +553,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
         descriptions={
             "BatteryPercent": HuaweiSensorEntityDescription(
                 key="BatteryPercent",
+                translation_key="battery",
                 device_class=SensorDeviceClass.BATTERY,
                 native_unit_of_measurement=PERCENTAGE,
                 state_class=SensorStateClass.MEASUREMENT,
@@ -457,32 +562,27 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "CurrentWifiUser": HuaweiSensorEntityDescription(
                 key="CurrentWifiUser",
                 translation_key="wifi_clients_connected",
-                icon="mdi:wifi",
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "PrimaryDns": HuaweiSensorEntityDescription(
                 key="PrimaryDns",
                 translation_key="primary_dns_server",
-                icon="mdi:ip",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "PrimaryIPv6Dns": HuaweiSensorEntityDescription(
                 key="PrimaryIPv6Dns",
                 translation_key="primary_ipv6_dns_server",
-                icon="mdi:ip",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "SecondaryDns": HuaweiSensorEntityDescription(
                 key="SecondaryDns",
                 translation_key="secondary_dns_server",
-                icon="mdi:ip",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "SecondaryIPv6Dns": HuaweiSensorEntityDescription(
                 key="SecondaryIPv6Dns",
                 translation_key="secondary_ipv6_dns_server",
-                icon="mdi:ip",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
         },
@@ -495,14 +595,12 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="current_connection_duration",
                 native_unit_of_measurement=UnitOfTime.SECONDS,
                 device_class=SensorDeviceClass.DURATION,
-                icon="mdi:timer-outline",
             ),
             "CurrentDownload": HuaweiSensorEntityDescription(
                 key="CurrentDownload",
                 translation_key="current_connection_download",
                 native_unit_of_measurement=UnitOfInformation.BYTES,
                 device_class=SensorDeviceClass.DATA_SIZE,
-                icon="mdi:download",
                 state_class=SensorStateClass.TOTAL_INCREASING,
             ),
             "CurrentDownloadRate": HuaweiSensorEntityDescription(
@@ -510,7 +608,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="current_download_rate",
                 native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
                 device_class=SensorDeviceClass.DATA_RATE,
-                icon="mdi:download",
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             "CurrentUpload": HuaweiSensorEntityDescription(
@@ -518,7 +615,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="current_connection_upload",
                 native_unit_of_measurement=UnitOfInformation.BYTES,
                 device_class=SensorDeviceClass.DATA_SIZE,
-                icon="mdi:upload",
                 state_class=SensorStateClass.TOTAL_INCREASING,
             ),
             "CurrentUploadRate": HuaweiSensorEntityDescription(
@@ -526,7 +622,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="current_upload_rate",
                 native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
                 device_class=SensorDeviceClass.DATA_RATE,
-                icon="mdi:upload",
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             "TotalConnectTime": HuaweiSensorEntityDescription(
@@ -534,7 +629,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="total_connected_duration",
                 native_unit_of_measurement=UnitOfTime.SECONDS,
                 device_class=SensorDeviceClass.DURATION,
-                icon="mdi:timer-outline",
                 state_class=SensorStateClass.TOTAL_INCREASING,
             ),
             "TotalDownload": HuaweiSensorEntityDescription(
@@ -542,7 +636,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="total_download",
                 native_unit_of_measurement=UnitOfInformation.BYTES,
                 device_class=SensorDeviceClass.DATA_SIZE,
-                icon="mdi:download",
                 state_class=SensorStateClass.TOTAL_INCREASING,
             ),
             "TotalUpload": HuaweiSensorEntityDescription(
@@ -550,7 +643,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="total_upload",
                 native_unit_of_measurement=UnitOfInformation.BYTES,
                 device_class=SensorDeviceClass.DATA_SIZE,
-                icon="mdi:upload",
                 state_class=SensorStateClass.TOTAL_INCREASING,
             ),
         },
@@ -596,62 +688,50 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "LocalDeleted": HuaweiSensorEntityDescription(
                 key="LocalDeleted",
                 translation_key="sms_deleted_device",
-                icon="mdi:email-minus",
             ),
             "LocalDraft": HuaweiSensorEntityDescription(
                 key="LocalDraft",
                 translation_key="sms_drafts_device",
-                icon="mdi:email-arrow-right-outline",
             ),
             "LocalInbox": HuaweiSensorEntityDescription(
                 key="LocalInbox",
                 translation_key="sms_inbox_device",
-                icon="mdi:email",
             ),
             "LocalMax": HuaweiSensorEntityDescription(
                 key="LocalMax",
                 translation_key="sms_capacity_device",
-                icon="mdi:email",
             ),
             "LocalOutbox": HuaweiSensorEntityDescription(
                 key="LocalOutbox",
                 translation_key="sms_outbox_device",
-                icon="mdi:email-arrow-right",
             ),
             "LocalUnread": HuaweiSensorEntityDescription(
                 key="LocalUnread",
                 translation_key="sms_unread_device",
-                icon="mdi:email-arrow-left",
             ),
             "SimDraft": HuaweiSensorEntityDescription(
                 key="SimDraft",
                 translation_key="sms_drafts_sim",
-                icon="mdi:email-arrow-right-outline",
             ),
             "SimInbox": HuaweiSensorEntityDescription(
                 key="SimInbox",
                 translation_key="sms_inbox_sim",
-                icon="mdi:email",
             ),
             "SimMax": HuaweiSensorEntityDescription(
                 key="SimMax",
                 translation_key="sms_capacity_sim",
-                icon="mdi:email",
             ),
             "SimOutbox": HuaweiSensorEntityDescription(
                 key="SimOutbox",
                 translation_key="sms_outbox_sim",
-                icon="mdi:email-arrow-right",
             ),
             "SimUnread": HuaweiSensorEntityDescription(
                 key="SimUnread",
                 translation_key="sms_unread_sim",
-                icon="mdi:email-arrow-left",
             ),
             "SimUsed": HuaweiSensorEntityDescription(
                 key="SimUsed",
                 translation_key="sms_messages_sim",
-                icon="mdi:email-arrow-left",
             ),
         },
     ),
@@ -661,7 +741,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.entry_id]
@@ -747,7 +827,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         """Return icon for sensor."""
         if self.entity_description.icon_fn:
             return self.entity_description.icon_fn(self.state)
-        return self.entity_description.icon
+        return super().icon
 
     @property
     def device_class(self) -> SensorDeviceClass | None:

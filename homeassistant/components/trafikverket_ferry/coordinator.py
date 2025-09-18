@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pytrafikverket import TrafikverketFerry
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
-from pytrafikverket.trafikverket_ferry import FerryStop
+from pytrafikverket.models import FerryStopModel
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -19,6 +18,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
+
+if TYPE_CHECKING:
+    from . import TVFerryConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 TIME_BETWEEN_UPDATES = timedelta(minutes=5)
@@ -48,21 +50,24 @@ def next_departuredate(departure: list[str]) -> date:
 class TVDataUpdateCoordinator(DataUpdateCoordinator):
     """A Trafikverket Data Update Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    config_entry: TVFerryConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: TVFerryConfigEntry) -> None:
         """Initialize the Trafikverket coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=TIME_BETWEEN_UPDATES,
         )
         self._ferry_api = TrafikverketFerry(
-            async_get_clientsession(hass), entry.data[CONF_API_KEY]
+            async_get_clientsession(hass), config_entry.data[CONF_API_KEY]
         )
-        self._from: str = entry.data[CONF_FROM]
-        self._to: str = entry.data[CONF_TO]
-        self._time: time | None = dt_util.parse_time(entry.data[CONF_TIME])
-        self._weekdays: list[str] = entry.data[CONF_WEEKDAY]
+        self._from: str = config_entry.data[CONF_FROM]
+        self._to: str = config_entry.data[CONF_TO]
+        self._time: time | None = dt_util.parse_time(config_entry.data[CONF_TIME])
+        self._weekdays: list[str] = config_entry.data[CONF_WEEKDAY]
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Trafikverket."""
@@ -73,7 +78,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
             datetime.combine(
                 departure_day,
                 self._time,
-                dt_util.get_time_zone(self.hass.config.time_zone),
+                dt_util.get_default_time_zone(),
             )
             if self._time
             else dt_util.now()
@@ -82,7 +87,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             routedata: list[
-                FerryStop
+                FerryStopModel
             ] = await self._ferry_api.async_get_next_ferry_stops(
                 self._from, self._to, when, 3
             )

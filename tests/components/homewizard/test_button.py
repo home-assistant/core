@@ -18,9 +18,7 @@ pytestmark = [
 ]
 
 
-@pytest.mark.parametrize(
-    "device_fixture", ["HWE-WTR", "SDM230", "SDM630", "HWE-KWH1", "HWE-KWH3"]
-)
+@pytest.mark.parametrize("device_fixture", ["SDM230", "SDM630", "HWE-KWH1", "HWE-KWH3"])
 async def test_identify_button_entity_not_loaded_when_not_available(
     hass: HomeAssistant,
 ) -> None:
@@ -63,7 +61,7 @@ async def test_identify_button(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"^An error occurred while communicating with HomeWizard device$",
+        match=r"^An error occurred while communicating with your HomeWizard Energy device$",
     ):
         await hass.services.async_call(
             button.DOMAIN,
@@ -81,7 +79,7 @@ async def test_identify_button(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"^The local API of the HomeWizard device is disabled$",
+        match=r"^The local API is disabled$",
     ):
         await hass.services.async_call(
             button.DOMAIN,

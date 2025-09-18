@@ -7,20 +7,21 @@ from typing import Any
 from tuya_sharing import Manager, SharingScene
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantTuyaData
+from . import TuyaConfigEntry
 from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya scenes."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
     scenes = await hass.async_add_executor_job(hass_data.manager.query_scenes)
     async_add_entities(TuyaSceneEntity(hass_data.manager, scene) for scene in scenes)
 
@@ -47,6 +48,7 @@ class TuyaSceneEntity(Scene):
             manufacturer="tuya",
             name=self.scene.name,
             model="Tuya Scene",
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     @property

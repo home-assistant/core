@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pykoplenti import MeData, VersionData
 import pytest
 
-from homeassistant.components.kostal_plenticore.helper import Plenticore
+from homeassistant.components.kostal_plenticore.coordinator import Plenticore
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -27,7 +27,22 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_plenticore() -> Generator[Plenticore, None, None]:
+def mock_installer_config_entry() -> MockConfigEntry:
+    """Return a mocked ConfigEntry for testing with installer login."""
+    return MockConfigEntry(
+        entry_id="2ab8dd92a62787ddfe213a67e09406bd",
+        title="scb",
+        domain="kostal_plenticore",
+        data={
+            "host": "192.168.1.2",
+            "password": "secret_password",
+            "service_code": "12345",
+        },
+    )
+
+
+@pytest.fixture
+def mock_plenticore() -> Generator[Plenticore]:
     """Set up a Plenticore mock with some default values."""
     with patch(
         "homeassistant.components.kostal_plenticore.Plenticore", autospec=True

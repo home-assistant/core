@@ -1,109 +1,64 @@
 """Common utilities for VeSync Component."""
 
 import logging
-from typing import Any
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity, ToggleEntity
-
-from .const import DOMAIN, VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
+from pyvesync.base_devices import VeSyncHumidifier
+from pyvesync.base_devices.fan_base import VeSyncFanBase
+from pyvesync.base_devices.outlet_base import VeSyncOutlet
+from pyvesync.base_devices.purifier_base import VeSyncPurifier
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.devices.vesyncswitch import VeSyncWallSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_process_devices(hass, manager):
-    """Assign devices to proper component."""
-    devices = {}
-    devices[VS_SWITCHES] = []
-    devices[VS_FANS] = []
-    devices[VS_LIGHTS] = []
-    devices[VS_SENSORS] = []
+def rgetattr(obj: object, attr: str):
+    """Return a string in the form word.1.2.3 and return the item as 3. Note that this last value could be in a dict as well."""
+    _this_func = rgetattr
+    sp = attr.split(".", 1)
+    if len(sp) == 1:
+        left, right = sp[0], ""
+    else:
+        left, right = sp
 
-    await hass.async_add_executor_job(manager.update)
+    if isinstance(obj, dict):
+        obj = obj.get(left)
+    elif hasattr(obj, left):
+        obj = getattr(obj, left)
+    else:
+        return None
 
-    if manager.fans:
-        devices[VS_FANS].extend(manager.fans)
-        # Expose fan sensors separately
-        devices[VS_SENSORS].extend(manager.fans)
-        _LOGGER.info("%d VeSync fans found", len(manager.fans))
+    if right:
+        obj = _this_func(obj, right)
 
-    if manager.bulbs:
-        devices[VS_LIGHTS].extend(manager.bulbs)
-        _LOGGER.info("%d VeSync lights found", len(manager.bulbs))
-
-    if manager.outlets:
-        devices[VS_SWITCHES].extend(manager.outlets)
-        # Expose outlets' voltage, power & energy usage as separate sensors
-        devices[VS_SENSORS].extend(manager.outlets)
-        _LOGGER.info("%d VeSync outlets found", len(manager.outlets))
-
-    if manager.switches:
-        for switch in manager.switches:
-            if not switch.is_dimmable():
-                devices[VS_SWITCHES].append(switch)
-            else:
-                devices[VS_LIGHTS].append(switch)
-        _LOGGER.info("%d VeSync switches found", len(manager.switches))
-
-    return devices
+    return obj
 
 
-class VeSyncBaseEntity(Entity):
-    """Base class for VeSync Entity Representations."""
+def is_humidifier(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents a humidifier."""
 
-    _attr_has_entity_name = True
-
-    def __init__(self, device: VeSyncBaseDevice) -> None:
-        """Initialize the VeSync device."""
-        self.device = device
-        self._attr_unique_id = self.base_unique_id
-
-    @property
-    def base_unique_id(self):
-        """Return the ID of this device."""
-        # The unique_id property may be overridden in subclasses, such as in
-        # sensors. Maintaining base_unique_id allows us to group related
-        # entities under a single device.
-        if isinstance(self.device.sub_device_no, int):
-            return f"{self.device.cid}{str(self.device.sub_device_no)}"
-        return self.device.cid
-
-    @property
-    def available(self) -> bool:
-        """Return True if device is available."""
-        return self.device.connection_status == "online"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.base_unique_id)},
-            name=self.device.device_name,
-            model=self.device.device_type,
-            manufacturer="VeSync",
-            sw_version=self.device.current_firm_version,
-        )
-
-    def update(self) -> None:
-        """Update vesync device."""
-        self.device.update()
+    return isinstance(device, VeSyncHumidifier)
 
 
-class VeSyncDevice(VeSyncBaseEntity, ToggleEntity):
-    """Base class for VeSync Device Representations."""
+def is_fan(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents a fan."""
 
-    @property
-    def details(self):
-        """Provide access to the device details dictionary."""
-        return self.device.details
+    return isinstance(device, VeSyncFanBase)
 
-    @property
-    def is_on(self) -> bool:
-        """Return True if device is on."""
-        return self.device.device_status == "on"
 
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        self.device.turn_off()
+def is_outlet(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents an outlet."""
+
+    return isinstance(device, VeSyncOutlet)
+
+
+def is_wall_switch(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents a wall switch, note this doessn't include dimming switches."""
+
+    return isinstance(device, VeSyncWallSwitch)
+
+
+def is_purifier(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents an air purifier."""
+
+    return isinstance(device, VeSyncPurifier)

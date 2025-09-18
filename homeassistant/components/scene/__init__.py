@@ -12,20 +12,23 @@ import voluptuous as vol
 from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON, STATE_UNAVAILABLE
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "scene"
+DATA_COMPONENT: HassKey[EntityComponent[BaseScene]] = HassKey(DOMAIN)
 STATES: Final = "states"
 
 
 def _hass_domain_validator(config: dict[str, Any]) -> dict[str, Any]:
     """Validate platform in config for homeassistant domain."""
     if CONF_PLATFORM not in config:
-        config = {CONF_PLATFORM: HA_DOMAIN, STATES: config}
+        config = {CONF_PLATFORM: HOMEASSISTANT_DOMAIN, STATES: config}
 
     return config
 
@@ -60,14 +63,16 @@ PLATFORM_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the scenes."""
-    component = hass.data[DOMAIN] = EntityComponent[Scene](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[BaseScene](
         logging.getLogger(__name__), DOMAIN, hass
     )
 
     await component.async_setup(config)
     # Ensure Home Assistant platform always loaded.
     hass.async_create_task(
-        component.async_setup_platform(HA_DOMAIN, {"platform": HA_DOMAIN, STATES: []}),
+        component.async_setup_platform(
+            HOMEASSISTANT_DOMAIN, {"platform": HOMEASSISTANT_DOMAIN, STATES: []}
+        ),
         eager_start=True,
     )
     component.async_register_entity_service(
@@ -81,18 +86,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[Scene] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[Scene] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-class Scene(RestoreEntity):
-    """A scene is a group of entities and the states we want them to be."""
+class BaseScene(RestoreEntity):
+    """Base type for scenes."""
 
     _attr_should_poll = False
     __last_activated: str | None = None
@@ -106,14 +109,14 @@ class Scene(RestoreEntity):
         return self.__last_activated
 
     @final
-    async def _async_activate(self, **kwargs: Any) -> None:
-        """Activate scene.
+    def _record_activation(self) -> None:
+        run_callback_threadsafe(self.hass.loop, self._async_record_activation).result()
 
-        Should not be overridden, handle setting last press timestamp.
-        """
+    @final
+    @callback
+    def _async_record_activation(self) -> None:
+        """Update the activation timestamp."""
         self.__last_activated = dt_util.utcnow().isoformat()
-        self.async_write_ha_state()
-        await self.async_activate(**kwargs)
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the scene is added to hass."""
@@ -126,6 +129,10 @@ class Scene(RestoreEntity):
         ):
             self.__last_activated = state.state
 
+    async def _async_activate(self, **kwargs: Any) -> None:
+        """Activate scene."""
+        raise NotImplementedError
+
     def activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         raise NotImplementedError
@@ -135,3 +142,17 @@ class Scene(RestoreEntity):
         task = self.hass.async_add_executor_job(ft.partial(self.activate, **kwargs))
         if task:
             await task
+
+
+class Scene(BaseScene):
+    """A scene is a group of entities and the states we want them to be."""
+
+    @final
+    async def _async_activate(self, **kwargs: Any) -> None:
+        """Activate scene.
+
+        Should not be overridden, handle setting last press timestamp.
+        """
+        self._async_record_activation()
+        self.async_write_ha_state()
+        await self.async_activate(**kwargs)

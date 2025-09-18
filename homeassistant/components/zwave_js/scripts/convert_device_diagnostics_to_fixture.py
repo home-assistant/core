@@ -25,9 +25,7 @@ def get_arguments() -> argparse.Namespace:
         ),
     )
 
-    arguments = parser.parse_args()
-
-    return arguments
+    return parser.parse_args()
 
 
 def get_fixtures_dir_path(data: dict) -> Path:

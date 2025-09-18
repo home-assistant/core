@@ -19,7 +19,7 @@ pytestmark = pytest.mark.usefixtures(
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.sfr_box.PLATFORMS", []):
         yield

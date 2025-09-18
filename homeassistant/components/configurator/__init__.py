@@ -49,7 +49,7 @@ SERVICE_CONFIGURE = "configure"
 STATE_CONFIGURE = "configure"
 STATE_CONFIGURED = "configured"
 
-ConfiguratorCallback = Callable[[list[dict[str, str]]], None]
+type ConfiguratorCallback = Callable[[list[dict[str, str]]], None]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -250,7 +250,7 @@ class Configurator:
 
         # field validation goes here?
         if callback and (
-            job := self.hass.async_add_hass_job(
+            job := self.hass.async_run_hass_job(
                 HassJob(callback), call.data.get(ATTR_FIELDS, {})
             )
         ):

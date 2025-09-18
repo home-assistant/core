@@ -22,7 +22,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import DEFAULT_NAME, DOMAIN, PLAYER_EVENT
@@ -39,7 +39,7 @@ STATE_MAPPING = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SlimProto MediaPlayer(s) from Config Entry."""
     slimserver: SlimServer = hass.data[DOMAIN]
@@ -107,9 +107,9 @@ class SlimProtoPlayer(MediaPlayerEntity):
         )
         # PiCore + SqueezeESP32 player has web interface
         if "-pCP" in self.player.firmware or self.player.device_model == "SqueezeESP32":
-            self._attr_device_info[
-                "configuration_url"
-            ] = f"http://{self.player.device_address}"
+            self._attr_device_info["configuration_url"] = (
+                f"http://{self.player.device_address}"
+            )
         self.update_attributes()
 
     async def async_added_to_hass(self) -> None:

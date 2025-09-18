@@ -493,14 +493,12 @@ class IBeaconCoordinator:
     @callback
     def _async_restore_from_registry(self) -> None:
         """Restore the state of the Coordinator from the device registry."""
-        for device in self._dev_reg.devices.values():
-            unique_id = None
-            for identifier in device.identifiers:
-                if identifier[0] == DOMAIN:
-                    unique_id = identifier[1]
-                    break
-            if not unique_id:
+        for device in self._dev_reg.devices.get_devices_for_config_entry_id(
+            self._entry.entry_id
+        ):
+            if not (identifier := next(iter(device.identifiers), None)):
                 continue
+            unique_id = identifier[1]
             # iBeacons with a fixed MAC address
             if unique_id.count("_") == 3:
                 uuid, major, minor, address = unique_id.split("_")

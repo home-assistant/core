@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import device_trigger
 from .config import MQTT_BASE_SCHEMA
-from .mixins import async_setup_non_entity_entry_helper
+from .entity import async_setup_non_entity_entry_helper
 
 AUTOMATION_TYPE_TRIGGER = "trigger"
 AUTOMATION_TYPES = [AUTOMATION_TYPE_TRIGGER]
@@ -25,11 +25,13 @@ DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_setup_mqtt_device_automation_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Set up MQTT device automation dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_automation, hass, config_entry=config_entry)
-    await async_setup_non_entity_entry_helper(
+    async_setup_non_entity_entry_helper(
         hass, "device_automation", setup, DISCOVERY_SCHEMA
     )
 

@@ -5,14 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from functools import partial
 import socket
-from typing import Any
+from typing import Any, Self
 from urllib.parse import urlparse
 
 import getmac
 from samsungtvws.encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthenticator
 import voluptuous as vol
 
-from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -24,7 +23,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_METHOD,
     CONF_MODEL,
-    CONF_NAME,
+    CONF_PIN,
     CONF_PORT,
     CONF_TOKEN,
 )
@@ -32,6 +31,14 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
@@ -49,17 +56,16 @@ from .const import (
     RESULT_INVALID_PIN,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
-    RESULT_UNKNOWN_HOST,
     SUCCESSFUL_RESULTS,
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
 )
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 def _strip_uuid(udn: str) -> str:
-    return udn[5:] if udn.startswith("uuid:") else udn
+    return udn.removeprefix("uuid:")
 
 
 def _entry_is_complete(
@@ -90,6 +96,7 @@ def _mac_is_same_with_incorrect_formatting(
     current_unformatted_mac: str, formatted_mac: str
 ) -> bool:
     """Check if two macs are the same but formatted incorrectly."""
+    # Incorrect MAC cleanup introduced in #110599, can be removed in 2026.3
     current_formatted_mac = format_mac(current_unformatted_mac)
     return (
         current_formatted_mac == formatted_mac
@@ -101,11 +108,13 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
     VERSION = 2
+    MINOR_VERSION = 2
+
+    _host: str
+    _bridge: SamsungTVBridge
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._reauth_entry: ConfigEntry | None = None
-        self._host: str = ""
         self._mac: str | None = None
         self._udn: str | None = None
         self._upnp_udn: str | None = None
@@ -115,23 +124,21 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self._model: str | None = None
         self._connect_result: str | None = None
         self._method: str | None = None
+        self._port: int | None = None
         self._name: str | None = None
         self._title: str = ""
         self._id: int | None = None
-        self._bridge: SamsungTVBridge | None = None
         self._device_info: dict[str, Any] | None = None
         self._authenticator: SamsungTVEncryptedWSAsyncAuthenticator | None = None
 
     def _base_config_entry(self) -> dict[str, Any]:
         """Generate the base config entry without the method."""
-        assert self._bridge is not None
         return {
             CONF_HOST: self._host,
             CONF_MAC: self._mac,
             CONF_MANUFACTURER: self._manufacturer or DEFAULT_MANUFACTURER,
             CONF_METHOD: self._bridge.method,
             CONF_MODEL: self._model,
-            CONF_NAME: self._name,
             CONF_PORT: self._bridge.port,
             CONF_SSDP_RENDERING_CONTROL_LOCATION: self._ssdp_rendering_control_location,
             CONF_SSDP_MAIN_TV_AGENT_LOCATION: self._ssdp_main_tv_agent_location,
@@ -139,7 +146,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _get_entry_from_bridge(self) -> ConfigFlowResult:
         """Get device entry."""
-        assert self._bridge
         data = self._base_config_entry()
         if self._bridge.token:
             data[CONF_TOKEN] = self._bridge.token
@@ -159,7 +165,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, raise_on_progress: bool = True
     ) -> None:
         """Set the unique id from the udn."""
-        assert self._host is not None
         # Set the unique id without raising on progress in case
         # there are two SSDP flows with for each ST
         await self.async_set_unique_id(self._udn, raise_on_progress=False)
@@ -184,44 +189,48 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._model:
             updates[CONF_MODEL] = self._model
         if self._ssdp_rendering_control_location:
-            updates[
-                CONF_SSDP_RENDERING_CONTROL_LOCATION
-            ] = self._ssdp_rendering_control_location
+            updates[CONF_SSDP_RENDERING_CONTROL_LOCATION] = (
+                self._ssdp_rendering_control_location
+            )
         if self._ssdp_main_tv_agent_location:
-            updates[
-                CONF_SSDP_MAIN_TV_AGENT_LOCATION
-            ] = self._ssdp_main_tv_agent_location
+            updates[CONF_SSDP_MAIN_TV_AGENT_LOCATION] = (
+                self._ssdp_main_tv_agent_location
+            )
         self._abort_if_unique_id_configured(updates=updates, reload_on_update=False)
 
     async def _async_create_bridge(self) -> None:
         """Create the bridge."""
-        result, method, _info = await self._async_get_device_info_and_method()
+        result = await self._async_load_device_info()
         if result not in SUCCESSFUL_RESULTS:
             LOGGER.debug("No working config found for %s", self._host)
             raise AbortFlow(result)
-        assert method is not None
-        self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
+        assert self._method is not None
+        self._bridge = SamsungTVBridge.get_bridge(
+            self.hass, self._method, self._host, self._port
+        )
 
-    async def _async_get_device_info_and_method(
+    async def _async_load_device_info(
         self,
-    ) -> tuple[str, str | None, dict[str, Any] | None]:
+    ) -> str:
         """Get device info and method only once."""
         if self._connect_result is None:
-            result, _, method, info = await async_get_device_info(self.hass, self._host)
+            result, port, method, info = await async_get_device_info(
+                self.hass, self._host
+            )
             self._connect_result = result
             self._method = method
+            self._port = port
             self._device_info = info
             if not method:
                 LOGGER.debug("Host:%s did not return device info", self._host)
-                return result, None, None
-        return self._connect_result, self._method, self._device_info
+        return self._connect_result
 
     async def _async_get_and_check_device_info(self) -> bool:
         """Try to get the device info."""
-        result, _method, info = await self._async_get_device_info_and_method()
+        result = await self._async_load_device_info()
         if result not in SUCCESSFUL_RESULTS:
             raise AbortFlow(result)
-        if not info:
+        if not (info := self._device_info):
             return False
         dev_info = info.get("device", {})
         assert dev_info is not None
@@ -246,39 +255,44 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self._mac = mac
         return True
 
-    async def _async_set_name_host_from_input(self, user_input: dict[str, Any]) -> None:
+    async def _async_set_name_host_from_input(self, user_input: dict[str, Any]) -> bool:
         try:
             self._host = await self.hass.async_add_executor_job(
                 socket.gethostbyname, user_input[CONF_HOST]
             )
         except socket.gaierror as err:
-            raise AbortFlow(RESULT_UNKNOWN_HOST) from err
-        self._name = user_input.get(CONF_NAME, self._host) or ""
-        self._title = self._name
+            LOGGER.debug("Failed to get IP for %s: %s", user_input[CONF_HOST], err)
+            return False
+        self._title = self._host
+        return True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+        errors: dict[str, str] | None = None
         if user_input is not None:
-            await self._async_set_name_host_from_input(user_input)
-            await self._async_create_bridge()
-            assert self._bridge
-            self._async_abort_entries_match({CONF_HOST: self._host})
-            if self._bridge.method != METHOD_LEGACY:
-                # Legacy bridge does not provide device info
-                await self._async_set_device_unique_id(raise_on_progress=False)
-            if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
-                return await self.async_step_encrypted_pairing()
-            return await self.async_step_pairing({})
+            if await self._async_set_name_host_from_input(user_input):
+                await self._async_create_bridge()
+                self._async_abort_entries_match({CONF_HOST: self._host})
+                if self._bridge.method != METHOD_LEGACY:
+                    # Legacy bridge does not provide device info
+                    await self._async_set_device_unique_id(raise_on_progress=False)
+                if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
+                    return await self.async_step_encrypted_pairing()
+                return await self.async_step_pairing({})
+            errors = {"base": "invalid_host"}
 
-        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, user_input),
+            errors=errors,
+        )
 
     async def async_step_pairing(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a pairing by accepting the message on the TV."""
-        assert self._bridge is not None
         errors: dict[str, str] = {}
         if user_input is not None:
             result = await self._bridge.async_try_connect()
@@ -300,14 +314,13 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a encrypted pairing."""
-        assert self._host is not None
         await self._async_start_encrypted_pairing(self._host)
         assert self._authenticator is not None
         errors: dict[str, str] = {}
 
         if user_input is not None:
             if (
-                (pin := user_input.get("pin"))
+                (pin := user_input.get(CONF_PIN))
                 and (token := await self._authenticator.try_pin(pin))
                 and (session_id := await self._authenticator.get_session_id_and_close())
             ):
@@ -326,7 +339,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="encrypted_pairing",
             errors=errors,
             description_placeholders={"device": self._title},
-            data_schema=vol.Schema({vol.Required("pin"): str}),
+            data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
         )
 
     @callback
@@ -388,13 +401,13 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             or update_model
         ):
             if update_ssdp_rendering_control_location:
-                data[
-                    CONF_SSDP_RENDERING_CONTROL_LOCATION
-                ] = self._ssdp_rendering_control_location
+                data[CONF_SSDP_RENDERING_CONTROL_LOCATION] = (
+                    self._ssdp_rendering_control_location
+                )
             if update_ssdp_main_tv_agent_location:
-                data[
-                    CONF_SSDP_MAIN_TV_AGENT_LOCATION
-                ] = self._ssdp_main_tv_agent_location
+                data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] = (
+                    self._ssdp_main_tv_agent_location
+                )
             if update_mac:
                 data[CONF_MAC] = self._mac
             if update_model:
@@ -415,7 +428,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_start_discovery_with_mac_address(self) -> None:
         """Start discovery."""
-        assert self._host is not None
         if (entry := self._async_update_existing_matching_entry()) and entry.unique_id:
             # If we have the unique id and the mac we abort
             # as we do not need anything else
@@ -424,10 +436,12 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_abort_if_host_already_in_progress(self) -> None:
-        self.context[CONF_HOST] = self._host
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == self._host:
-                raise AbortFlow("already_in_progress")
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            raise AbortFlow("already_in_progress")
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow._host == self._host  # noqa: SLF001
 
     @callback
     def _abort_if_manufacturer_is_not_samsung(self) -> None:
@@ -437,11 +451,11 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             raise AbortFlow(RESULT_NOT_SUPPORTED)
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
-        model_name: str = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
+        model_name: str = discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME) or ""
         if discovery_info.ssdp_st == UPNP_SVC_RENDERING_CONTROL:
             self._ssdp_rendering_control_location = discovery_info.ssdp_location
             LOGGER.debug(
@@ -454,12 +468,10 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Set SSDP MainTvAgent location to: %s",
                 self._ssdp_main_tv_agent_location,
             )
-        self._udn = self._upnp_udn = _strip_uuid(
-            discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
-        )
+        self._udn = self._upnp_udn = _strip_uuid(discovery_info.upnp[ATTR_UPNP_UDN])
         if hostname := urlparse(discovery_info.ssdp_location or "").hostname:
             self._host = hostname
-        self._manufacturer = discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER)
+        self._manufacturer = discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER)
         self._abort_if_manufacturer_is_not_samsung()
 
         # Set defaults, in case they cannot be extracted from device_info
@@ -484,7 +496,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by dhcp discovery."""
         LOGGER.debug("Samsung device found via DHCP: %s", discovery_info)
@@ -496,7 +508,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)
@@ -513,7 +525,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
             await self._async_create_bridge()
-            assert self._bridge
             if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
                 return await self.async_step_encrypted_pairing()
             return await self.async_step_pairing({})
@@ -526,13 +537,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        if entry_data.get(CONF_MODEL) and entry_data.get(CONF_NAME):
-            self._title = f"{entry_data[CONF_NAME]} ({entry_data[CONF_MODEL]})"
-        else:
-            self._title = entry_data.get(CONF_NAME) or entry_data[CONF_HOST]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -540,22 +544,23 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm reauth."""
         errors = {}
-        assert self._reauth_entry
-        method = self._reauth_entry.data[CONF_METHOD]
+
+        reauth_entry = self._get_reauth_entry()
+        method = reauth_entry.data[CONF_METHOD]
         if user_input is not None:
             if method == METHOD_ENCRYPTED_WEBSOCKET:
                 return await self.async_step_reauth_confirm_encrypted()
             bridge = SamsungTVBridge.get_bridge(
                 self.hass,
                 method,
-                self._reauth_entry.data[CONF_HOST],
+                reauth_entry.data[CONF_HOST],
             )
             result = await bridge.async_try_connect()
             if result == RESULT_SUCCESS:
-                new_data = dict(self._reauth_entry.data)
+                new_data = dict(reauth_entry.data)
                 new_data[CONF_TOKEN] = bridge.token
                 return self.async_update_reload_and_abort(
-                    self._reauth_entry,
+                    reauth_entry,
                     data=new_data,
                 )
             if result not in (RESULT_AUTH_MISSING, RESULT_CANNOT_CONNECT):
@@ -564,11 +569,11 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             # On websocket we will get RESULT_CANNOT_CONNECT when auth is missing
             errors = {"base": RESULT_AUTH_MISSING}
 
-        self.context["title_placeholders"] = {"device": self._title}
+        self.context["title_placeholders"] = {"device": reauth_entry.title}
         return self.async_show_form(
             step_id="reauth_confirm",
             errors=errors,
-            description_placeholders={"device": self._title},
+            description_placeholders={"device": reauth_entry.title},
         )
 
     async def _async_start_encrypted_pairing(self, host: str) -> None:
@@ -584,20 +589,20 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm reauth (encrypted method)."""
         errors = {}
-        assert self._reauth_entry
-        await self._async_start_encrypted_pairing(self._reauth_entry.data[CONF_HOST])
+
+        reauth_entry = self._get_reauth_entry()
+        await self._async_start_encrypted_pairing(reauth_entry.data[CONF_HOST])
         assert self._authenticator is not None
 
         if user_input is not None:
             if (
-                (pin := user_input.get("pin"))
+                (pin := user_input.get(CONF_PIN))
                 and (token := await self._authenticator.try_pin(pin))
                 and (session_id := await self._authenticator.get_session_id_and_close())
             ):
                 return self.async_update_reload_and_abort(
-                    self._reauth_entry,
-                    data={
-                        **self._reauth_entry.data,
+                    reauth_entry,
+                    data_updates={
                         CONF_TOKEN: token,
                         CONF_SESSION_ID: session_id,
                     },
@@ -605,10 +610,10 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors = {"base": RESULT_INVALID_PIN}
 
-        self.context["title_placeholders"] = {"device": self._title}
+        self.context["title_placeholders"] = {"device": reauth_entry.title}
         return self.async_show_form(
             step_id="reauth_confirm_encrypted",
             errors=errors,
-            description_placeholders={"device": self._title},
-            data_schema=vol.Schema({vol.Required("pin"): str}),
+            description_placeholders={"device": reauth_entry.title},
+            data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
         )

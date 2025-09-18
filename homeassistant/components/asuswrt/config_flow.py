@@ -7,7 +7,7 @@ import os
 import socket
 from typing import Any, cast
 
-from pyasuswrt import AsusWrtError
+from asusrouter import AsusRouterError
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -32,6 +32,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.typing import VolDictType
 
 from .bridge import AsusWrtBridge
 from .const import (
@@ -143,6 +144,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
         user_input = self._config_data
 
+        add_schema: VolDictType
         if self.show_advanced_options:
             add_schema = {
                 vol.Exclusive(CONF_PASSWORD, PASS_KEY, PASS_KEY_MSG): str,
@@ -187,7 +189,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await api.async_connect()
 
-        except (AsusWrtError, OSError):
+        except (AsusRouterError, OSError):
             _LOGGER.error(
                 "Error connecting to the AsusWrt router at %s using protocol %s",
                 host,
@@ -195,7 +197,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             error = RESULT_CONN_ERROR
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Unknown error connecting with AsusWrt router at %s using protocol %s",
                 host,

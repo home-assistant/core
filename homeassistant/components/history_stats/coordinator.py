@@ -6,12 +6,16 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.event import (
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
     EventStateChangedData,
-    async_track_state_change_event,
+    HomeAssistant,
+    callback,
 )
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -24,22 +28,26 @@ UPDATE_INTERVAL = timedelta(minutes=1)
 
 
 class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
-    """DataUpdateCoordinator to gather data for a specific TPLink device."""
+    """DataUpdateCoordinator for history stats."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         history_stats: HistoryStats,
+        config_entry: ConfigEntry | None,
         name: str,
+        preview: bool = False,
     ) -> None:
         """Initialize DataUpdateCoordinator."""
         self._history_stats = history_stats
         self._subscriber_count = 0
         self._at_start_listener: CALLBACK_TYPE | None = None
         self._track_events_listener: CALLBACK_TYPE | None = None
+        self._preview = preview
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=name,
             update_interval=UPDATE_INTERVAL,
         )
@@ -98,3 +106,8 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
             return await self._history_stats.async_update(None)
         except (TemplateError, TypeError, ValueError) as ex:
             raise UpdateFailed(ex) from ex
+
+    async def async_refresh(self) -> None:
+        """Refresh data and log errors."""
+        log_failures = not self._preview
+        await self._async_refresh(log_failures)

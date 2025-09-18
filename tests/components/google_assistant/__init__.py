@@ -2,7 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.google_assistant import helpers, http
+from homeassistant.components.google_assistant import http
+from homeassistant.core import HomeAssistant
 
 
 def mock_google_config_store(agent_user_ids=None):
@@ -24,14 +25,14 @@ class MockConfig(http.GoogleConfig):
         agent_user_ids=None,
         enabled=True,
         entity_config=None,
-        hass=None,
+        hass: HomeAssistant | None = None,
         secure_devices_pin=None,
         should_2fa=None,
         should_expose=None,
         should_report_state=False,
-    ):
+    ) -> None:
         """Initialize config."""
-        helpers.AbstractConfig.__init__(self, hass)
+        super().__init__(hass, None)
         self._enabled = enabled
         self._entity_config = entity_config or {}
         self._secure_devices_pin = secure_devices_pin
@@ -255,6 +256,13 @@ DEMO_DEVICES = [
             "action.devices.traits.TransportControl",
             "action.devices.traits.MediaState",
         ],
+        "type": "action.devices.types.SETTOP",
+        "willReportState": False,
+    },
+    {
+        "id": "media_player.search",
+        "name": {"name": "Search"},
+        "traits": ["action.devices.traits.MediaState", "action.devices.traits.OnOff"],
         "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },

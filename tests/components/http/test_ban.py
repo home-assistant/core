@@ -3,15 +3,14 @@
 from http import HTTPStatus
 from ipaddress import ip_address
 import os
-from unittest.mock import Mock, mock_open, patch
+from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 import pytest
 
-import homeassistant.components.http as http
-from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS
+from homeassistant.components import http
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
@@ -22,6 +21,7 @@ from homeassistant.components.http.ban import (
 from homeassistant.components.http.view import request_handler_factory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_get_persistent_notifications
@@ -34,12 +34,12 @@ BANNED_IPS_WITH_SUPERVISOR = [*BANNED_IPS, SUPERVISOR_IP]
 
 
 @pytest.fixture(name="hassio_env")
-def hassio_env_fixture():
+def hassio_env_fixture(supervisor_is_connected: AsyncMock):
     """Fixture to inject hassio env."""
-    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
-        return_value={"result": "ok", "data": {}},
-    ), patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}):
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}),
+    ):
         yield
 
 
@@ -186,6 +186,7 @@ async def test_ip_ban_manager_never_started(
             BANNED_IPS_WITH_SUPERVISOR,
             [1, 1, 0],
             [HTTPStatus.FORBIDDEN, HTTPStatus.FORBIDDEN, HTTPStatus.UNAUTHORIZED],
+            strict=False,
         )
     ),
 )
@@ -196,6 +197,7 @@ async def test_access_from_supervisor_ip(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
     hassio_env,
+    resolution_info: AsyncMock,
 ) -> None:
     """Test accessing to server from supervisor IP."""
     app = web.Application()
@@ -217,22 +219,13 @@ async def test_access_from_supervisor_ip(
 
     manager = app[KEY_BAN_MANAGER]
 
-    with patch(
-        "homeassistant.components.hassio.HassIO.get_resolution_info",
-        return_value={
-            "unsupported": [],
-            "unhealthy": [],
-            "suggestions": [],
-            "issues": [],
-            "checks": [],
-        },
-    ):
-        assert await async_setup_component(hass, "hassio", {"hassio": {}})
+    assert await async_setup_component(hass, "hassio", {"hassio": {}})
 
     m_open = mock_open()
 
-    with patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}), patch(
-        "homeassistant.components.http.ban.open", m_open, create=True
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}),
+        patch("homeassistant.components.http.ban.open", m_open, create=True),
     ):
         resp = await client.get("/")
         assert resp.status == HTTPStatus.UNAUTHORIZED

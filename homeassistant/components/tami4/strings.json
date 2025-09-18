@@ -1,23 +1,17 @@
 {
   "entity": {
     "sensor": {
-      "uv_last_replacement": {
-        "name": "UV last replacement"
-      },
       "uv_upcoming_replacement": {
         "name": "UV upcoming replacement"
       },
-      "uv_status": {
-        "name": "UV status"
-      },
-      "filter_last_replacement": {
-        "name": "Filter last replacement"
+      "uv_installed": {
+        "name": "UV installed"
       },
       "filter_upcoming_replacement": {
         "name": "Filter upcoming replacement"
       },
-      "filter_status": {
-        "name": "Filter status"
+      "filter_installed": {
+        "name": "Filter installed"
       },
       "filter_litters_passed": {
         "name": "Filter water passed"
@@ -26,23 +20,26 @@
     "button": {
       "boil_water": {
         "name": "Boil water"
+      },
+      "prepare_drink": {
+        "name": "Prepare {drink_name}"
       }
     }
   },
   "config": {
     "step": {
       "user": {
-        "title": "SMS Verification",
+        "title": "SMS verification",
         "description": "Enter your phone number (same as what you used to register to the tami4 app)",
         "data": {
-          "phone": "Phone Number"
+          "phone": "Phone number"
         }
       },
       "otp": {
         "title": "[%key:component::tami4::config::step::user::title%]",
         "description": "Enter the code you received via SMS",
         "data": {
-          "otp": "SMS Code"
+          "otp": "SMS code"
         }
       }
     },

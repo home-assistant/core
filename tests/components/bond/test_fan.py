@@ -11,7 +11,7 @@ import pytest
 from homeassistant import core
 from homeassistant.components import fan
 from homeassistant.components.bond.const import (
-    DOMAIN as BOND_DOMAIN,
+    DOMAIN,
     SERVICE_SET_FAN_SPEED_TRACKED_STATE,
 )
 from homeassistant.components.bond.fan import PRESET_MODE_BREEZE
@@ -253,13 +253,17 @@ async def test_turn_on_fan_preset_mode_not_supported(hass: HomeAssistant) -> Non
         props={"max_speed": 6},
     )
 
-    with patch_bond_action(), patch_bond_device_state(), pytest.raises(
-        NotValidPresetModeError
+    with (
+        patch_bond_action(),
+        patch_bond_device_state(),
+        pytest.raises(NotValidPresetModeError),
     ):
         await turn_fan_on(hass, "fan.name_1", preset_mode=PRESET_MODE_BREEZE)
 
-    with patch_bond_action(), patch_bond_device_state(), pytest.raises(
-        NotValidPresetModeError
+    with (
+        patch_bond_action(),
+        patch_bond_device_state(),
+        pytest.raises(NotValidPresetModeError),
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -363,7 +367,7 @@ async def test_set_speed_belief_speed_zero(hass: HomeAssistant) -> None:
 
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
-            BOND_DOMAIN,
+            DOMAIN,
             SERVICE_SET_FAN_SPEED_TRACKED_STATE,
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 0},
             blocking=True,
@@ -381,16 +385,17 @@ async def test_set_speed_belief_speed_api_error(hass: HomeAssistant) -> None:
         hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
-            BOND_DOMAIN,
+            DOMAIN,
             SERVICE_SET_FAN_SPEED_TRACKED_STATE,
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 100},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_set_speed_belief_speed_100(hass: HomeAssistant) -> None:
@@ -401,7 +406,7 @@ async def test_set_speed_belief_speed_100(hass: HomeAssistant) -> None:
 
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
-            BOND_DOMAIN,
+            DOMAIN,
             SERVICE_SET_FAN_SPEED_TRACKED_STATE,
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 100},
             blocking=True,

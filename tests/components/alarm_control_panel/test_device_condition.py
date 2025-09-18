@@ -3,42 +3,24 @@
 import pytest
 from pytest_unordered import unordered
 
+from homeassistant.components import automation
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
-import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-    EntityCategory,
-)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.mark.parametrize(
@@ -177,7 +159,7 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in ["is_disarmed", "is_triggered"]
+        for condition in ("is_disarmed", "is_triggered")
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -189,7 +171,7 @@ async def test_if_state(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for all conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -364,7 +346,7 @@ async def test_if_state(
             ]
         },
     )
-    hass.states.async_set(entry.entity_id, STATE_ALARM_TRIGGERED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.TRIGGERED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -373,10 +355,10 @@ async def test_if_state(
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "is_triggered - event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "is_triggered - event - test_event1"
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_DISARMED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.DISARMED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -385,10 +367,10 @@ async def test_if_state(
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "is_disarmed - event - test_event2"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "is_disarmed - event - test_event2"
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_HOME)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_HOME)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -397,10 +379,10 @@ async def test_if_state(
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 3
-    assert calls[2].data["some"] == "is_armed_home - event - test_event3"
+    assert len(service_calls) == 3
+    assert service_calls[2].data["some"] == "is_armed_home - event - test_event3"
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_AWAY)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_AWAY)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -409,10 +391,10 @@ async def test_if_state(
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 4
-    assert calls[3].data["some"] == "is_armed_away - event - test_event4"
+    assert len(service_calls) == 4
+    assert service_calls[3].data["some"] == "is_armed_away - event - test_event4"
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_NIGHT)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_NIGHT)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -421,10 +403,10 @@ async def test_if_state(
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 5
-    assert calls[4].data["some"] == "is_armed_night - event - test_event5"
+    assert len(service_calls) == 5
+    assert service_calls[4].data["some"] == "is_armed_night - event - test_event5"
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_VACATION)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_VACATION)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -433,10 +415,10 @@ async def test_if_state(
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 6
-    assert calls[5].data["some"] == "is_armed_vacation - event - test_event6"
+    assert len(service_calls) == 6
+    assert service_calls[5].data["some"] == "is_armed_vacation - event - test_event6"
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_CUSTOM_BYPASS)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -445,15 +427,17 @@ async def test_if_state(
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 7
-    assert calls[6].data["some"] == "is_armed_custom_bypass - event - test_event7"
+    assert len(service_calls) == 7
+    assert (
+        service_calls[6].data["some"] == "is_armed_custom_bypass - event - test_event7"
+    )
 
 
 async def test_if_state_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for all conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -496,8 +480,8 @@ async def test_if_state_legacy(
             ]
         },
     )
-    hass.states.async_set(entry.entity_id, STATE_ALARM_TRIGGERED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.TRIGGERED)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "is_triggered - event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "is_triggered - event - test_event1"

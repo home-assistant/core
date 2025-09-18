@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import _generate_mock_feed_entry
@@ -54,9 +54,12 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=AsyncMock
-    ) as mock_feed_update:
+    with (
+        freeze_time(utcnow),
+        patch(
+            "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=AsyncMock
+        ) as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         assert await async_setup_component(hass, geonetnz_volcano.DOMAIN, CONFIG)
         # Artificially trigger update and collect events.
@@ -161,11 +164,12 @@ async def test_setup_imperial(
 
     # Patching 'utcnow' to gain more control over the timed update.
     freezer.move_to(dt_util.utcnow())
-    with patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=AsyncMock
-    ) as mock_feed_update, patch(
-        "aio_geojson_client.feed.GeoJsonFeed.__init__"
-    ) as mock_feed_init:
+    with (
+        patch(
+            "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=AsyncMock
+        ) as mock_feed_update,
+        patch("aio_geojson_client.feed.GeoJsonFeed.__init__") as mock_feed_init,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
         assert await async_setup_component(hass, geonetnz_volcano.DOMAIN, CONFIG)
         # Artificially trigger update and collect events.

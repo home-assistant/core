@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -26,8 +26,6 @@ async def test_cover_async_setup_entry(
     """Test switch platform."""
 
     await add_mock_config(hass)
-
-    registry = er.async_get(hass)
 
     # Test Fresh Air Switch Entity
     entity_id = "switch.myzone_fresh_air"
@@ -61,7 +59,7 @@ async def test_cover_async_setup_entry(
     entity_id = "switch.myzone_myfan"
     assert hass.states.get(entity_id) == snapshot(name=entity_id)
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-myfan"
 

@@ -35,6 +35,8 @@ from .const import (
 # Suppress logs from the library, it logs unneeded on error
 logging.getLogger("tuya_sharing").setLevel(logging.CRITICAL)
 
+type TuyaConfigEntry = ConfigEntry[HomeAssistantTuyaData]
+
 
 class HomeAssistantTuyaData(NamedTuple):
     """Tuya data stored in the Home Assistant data object."""
@@ -43,7 +45,7 @@ class HomeAssistantTuyaData(NamedTuple):
     listener: SharingDeviceListener
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
     """Async setup hass config entry."""
     if CONF_APP_TYPE in entry.data:
         raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
@@ -73,9 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise
 
     # Connection is successful, store the manager & listener
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantTuyaData(
-        manager=manager, listener=listener
-    )
+    entry.runtime_data = HomeAssistantTuyaData(manager=manager, listener=listener)
 
     # Cleanup device registry
     await cleanup_device_registry(hass, manager)
@@ -83,12 +83,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register known device IDs
     device_registry = dr.async_get(hass)
     for device in manager.device_map.values():
+        LOGGER.debug(
+            "Register device %s (online: %s): %s (function: %s, status range: %s)",
+            device.id,
+            device.online,
+            device.status,
+            device.function,
+            device.status_range,
+        )
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.id)},
             manufacturer="Tuya",
             name=device.name,
+            # Note: the model is overridden via entity.device_info property
+            # when the entity is created. If no entities are generated, it will
+            # stay as unsupported
             model=f"{device.product_name} (unsupported)",
+            model_id=device.product_id,
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -108,18 +120,17 @@ async def cleanup_device_registry(hass: HomeAssistant, device_manager: Manager) 
                 break
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
     """Unloading the Tuya platforms."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        tuya: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+        tuya = entry.runtime_data
         if tuya.manager.mq is not None:
             tuya.manager.mq.stop()
         tuya.manager.remove_device_listener(tuya.listener)
-        del hass.data[DOMAIN][entry.entry_id]
     return unload_ok
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> None:
     """Remove a config entry.
 
     This will revoke the credentials from Tuya.
@@ -146,19 +157,42 @@ class DeviceListener(SharingDeviceListener):
         self.hass = hass
         self.manager = manager
 
-    def update_device(self, device: CustomerDevice) -> None:
-        """Update device status."""
+    def update_device(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None = None,
+        dp_timestamps: dict | None = None,
+    ) -> None:
+        """Update device status with optional DP timestamps."""
         LOGGER.debug(
-            "Received update for device %s: %s",
+            "Received update for device %s (online: %s): %s"
+            " (updated properties: %s, dp_timestamps: %s)",
             device.id,
-            self.manager.device_map[device.id].status,
+            device.online,
+            device.status,
+            updated_status_properties,
+            dp_timestamps,
         )
-        dispatcher_send(self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}")
+        dispatcher_send(
+            self.hass,
+            f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
+            updated_status_properties,
+            dp_timestamps,
+        )
 
     def add_device(self, device: CustomerDevice) -> None:
         """Add device added listener."""
         # Ensure the device isn't present stale
         self.hass.add_job(self.async_remove_device, device.id)
+
+        LOGGER.debug(
+            "Add device %s (online: %s): %s (function: %s, status range: %s)",
+            device.id,
+            device.online,
+            device.status,
+            device.function,
+            device.status_range,
+        )
 
         dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
 
@@ -184,7 +218,7 @@ class TokenListener(SharingTokenListener):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: TuyaConfigEntry,
     ) -> None:
         """Init TokenListener."""
         self.hass = hass

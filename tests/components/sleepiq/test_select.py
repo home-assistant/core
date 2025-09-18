@@ -2,9 +2,12 @@
 
 from unittest.mock import MagicMock
 
-from asyncsleepiq import FootWarmingTemps
+from asyncsleepiq import CoreTemps, FootWarmingTemps
 
-from homeassistant.components.select import DOMAIN, SERVICE_SELECT_OPTION
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -18,6 +21,7 @@ from .conftest import (
     BED_ID,
     BED_NAME,
     BED_NAME_LOWER,
+    CORE_CLIMATE_TIME,
     FOOT_WARM_TIME,
     PRESET_L_STATE,
     PRESET_R_STATE,
@@ -32,11 +36,12 @@ from .conftest import (
 
 
 async def test_split_foundation_preset(
-    hass: HomeAssistant, mock_asyncsleepiq: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_asyncsleepiq: MagicMock,
 ) -> None:
     """Test the SleepIQ select entity for split foundation presets."""
-    entry = await setup_platform(hass, DOMAIN)
-    entity_registry = er.async_get(hass)
+    entry = await setup_platform(hass, SELECT_DOMAIN)
 
     state = hass.states.get(
         f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_right"
@@ -71,7 +76,7 @@ async def test_split_foundation_preset(
     assert entry.unique_id == f"{BED_ID}_preset_L"
 
     await hass.services.async_call(
-        DOMAIN,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_left",
@@ -88,11 +93,12 @@ async def test_split_foundation_preset(
 
 
 async def test_single_foundation_preset(
-    hass: HomeAssistant, mock_asyncsleepiq_single_foundation: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_asyncsleepiq_single_foundation: MagicMock,
 ) -> None:
     """Test the SleepIQ select entity for single foundation presets."""
-    entry = await setup_platform(hass, DOMAIN)
-    entity_registry = er.async_get(hass)
+    entry = await setup_platform(hass, SELECT_DOMAIN)
 
     state = hass.states.get(f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset")
     assert state.state == PRESET_R_STATE
@@ -109,7 +115,7 @@ async def test_single_foundation_preset(
     assert entry.unique_id == f"{BED_ID}_preset"
 
     await hass.services.async_call(
-        DOMAIN,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset",
@@ -127,10 +133,13 @@ async def test_single_foundation_preset(
     ].set_preset.assert_called_with("Zero G")
 
 
-async def test_foot_warmer(hass: HomeAssistant, mock_asyncsleepiq: MagicMock) -> None:
+async def test_foot_warmer(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_asyncsleepiq: MagicMock,
+) -> None:
     """Test the SleepIQ select entity for foot warmers."""
-    entry = await setup_platform(hass, DOMAIN)
-    entity_registry = er.async_get(hass)
+    entry = await setup_platform(hass, SELECT_DOMAIN)
 
     state = hass.states.get(
         f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warmer"
@@ -149,7 +158,7 @@ async def test_foot_warmer(hass: HomeAssistant, mock_asyncsleepiq: MagicMock) ->
     assert entry.unique_id == f"{SLEEPER_L_ID}_foot_warmer"
 
     await hass.services.async_call(
-        DOMAIN,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warmer",
@@ -180,7 +189,7 @@ async def test_foot_warmer(hass: HomeAssistant, mock_asyncsleepiq: MagicMock) ->
     assert entry.unique_id == f"{SLEEPER_R_ID}_foot_warmer"
 
     await hass.services.async_call(
-        DOMAIN,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_foot_warmer",
@@ -196,3 +205,77 @@ async def test_foot_warmer(hass: HomeAssistant, mock_asyncsleepiq: MagicMock) ->
     mock_asyncsleepiq.beds[BED_ID].foundation.foot_warmers[
         1
     ].turn_on.assert_called_with(FootWarmingTemps.HIGH, FOOT_WARM_TIME)
+
+
+async def test_core_climate(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_asyncsleepiq: MagicMock,
+) -> None:
+    """Test the SleepIQ select entity for core climate."""
+    entry = await setup_platform(hass, SELECT_DOMAIN)
+
+    state = hass.states.get(
+        f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_core_climate"
+    )
+    assert state.state == "cooling_medium"
+    assert state.attributes.get(ATTR_ICON) == "mdi:heat-wave"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_L_NAME} Core Climate"
+    )
+
+    entry = entity_registry.async_get(
+        f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_core_climate"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_L_ID}_core_climate"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_core_climate",
+            ATTR_OPTION: "off",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_asyncsleepiq.beds[BED_ID].foundation.core_climates[
+        0
+    ].turn_off.assert_called_once()
+
+    state = hass.states.get(
+        f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_core_climate"
+    )
+    assert state.state == CoreTemps.OFF.name.lower()
+    assert state.attributes.get(ATTR_ICON) == "mdi:heat-wave"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_R_NAME} Core Climate"
+    )
+
+    entry = entity_registry.async_get(
+        f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_core_climate"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_R_ID}_core_climate"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_core_climate",
+            ATTR_OPTION: "heating_high",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_asyncsleepiq.beds[BED_ID].foundation.core_climates[
+        1
+    ].turn_on.assert_called_once()
+    mock_asyncsleepiq.beds[BED_ID].foundation.core_climates[
+        1
+    ].turn_on.assert_called_with(CoreTemps.HEATING_PUSH_HIGH, CORE_CLIMATE_TIME)

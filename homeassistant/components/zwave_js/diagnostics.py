@@ -12,15 +12,13 @@ from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import ValueDataType
 from zwave_js_server.util.node import dump_node_state
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.diagnostics.util import async_redact_data
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_CLIENT, DOMAIN, USER_AGENT
+from .const import USER_AGENT
 from .helpers import (
     ZwaveValueMatcher,
     get_home_and_node_id_from_device_entry,
@@ -28,6 +26,7 @@ from .helpers import (
     get_value_id_from_unique_id,
     value_matches_matcher,
 )
+from .models import ZwaveJSConfigEntry
 
 KEYS_TO_REDACT = {"homeId", "location"}
 
@@ -74,14 +73,17 @@ def redact_node_state(node_state: dict) -> dict:
 
 
 def get_device_entities(
-    hass: HomeAssistant, node: Node, config_entry: ConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant,
+    node: Node,
+    config_entry: ZwaveJSConfigEntry,
+    device: dr.DeviceEntry,
 ) -> list[dict[str, Any]]:
     """Get entities for a device."""
     entity_entries = er.async_entries_for_device(
         er.async_get(hass), device.id, include_disabled_entities=True
     )
     entities = []
-    for entry in entity_entries:
+    for entry in sorted(entity_entries):
         # Skip entities that are not part of this integration
         if entry.config_entry_id != config_entry.entry_id:
             continue
@@ -126,7 +128,7 @@ def get_device_entities(
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ZwaveJSConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     msgs: list[dict] = async_redact_data(
@@ -145,13 +147,14 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ZwaveJSConfigEntry, device: dr.DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    client: Client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: Client = config_entry.runtime_data.client
     identifiers = get_home_and_node_id_from_device_entry(device)
     node_id = identifiers[1] if identifiers else None
-    assert (driver := client.driver)
+    driver = client.driver
+    assert driver
     if node_id is None or node_id not in driver.controller.nodes:
         raise ValueError(f"Node for device {device.id} can't be found")
     node = driver.controller.nodes[node_id]

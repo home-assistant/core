@@ -3,12 +3,18 @@
 from datetime import datetime, timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+from holidays import CATHOLIC
+import pytest
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     SERVICE_GET_EVENTS,
 )
-from homeassistant.components.holiday.const import CONF_PROVINCE, DOMAIN
+from homeassistant.components.holiday.const import (
+    CONF_CATEGORIES,
+    CONF_PROVINCE,
+    DOMAIN,
+)
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -17,12 +23,18 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.parametrize(
+    "time_zone", ["Asia/Tokyo", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
+)
 async def test_holiday_calendar_entity(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    time_zone: str,
 ) -> None:
     """Test HolidayCalendarEntity functionality."""
-    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=dt_util.UTC))
+    await hass.config.async_set_time_zone(time_zone)
+    zone = await dt_util.async_get_time_zone(time_zone)
+    freezer.move_to(datetime(2023, 1, 1, 0, 1, 1, tzinfo=zone))  # New Years Day
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -42,7 +54,7 @@ async def test_holiday_calendar_entity(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.united_states_ak",
-            "end_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(hours=1),
         },
         blocking=True,
         return_response=True,
@@ -64,8 +76,16 @@ async def test_holiday_calendar_entity(
     assert state is not None
     assert state.state == "on"
 
+    freezer.move_to(
+        datetime(2023, 1, 2, 0, 1, 1, tzinfo=zone)
+    )  # Day after New Years Day
+
+    state = hass.states.get("calendar.united_states_ak")
+    assert state is not None
+    assert state.state == "on"
+
     # Test holidays for the next year
-    freezer.move_to(datetime(2023, 12, 31, 12, tzinfo=dt_util.UTC))
+    freezer.move_to(datetime(2023, 12, 31, 12, tzinfo=zone))
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
@@ -91,12 +111,18 @@ async def test_holiday_calendar_entity(
     }
 
 
+@pytest.mark.parametrize(
+    "time_zone", ["Asia/Tokyo", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
+)
 async def test_default_language(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    time_zone: str,
 ) -> None:
     """Test default language."""
-    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=dt_util.UTC))
+    await hass.config.async_set_time_zone(time_zone)
+    zone = await dt_util.async_get_time_zone(time_zone)
+    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=zone))
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -114,7 +140,7 @@ async def test_default_language(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.france_bl",
-            "end_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(hours=1),
         },
         blocking=True,
         return_response=True,
@@ -143,7 +169,7 @@ async def test_default_language(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.france_bl",
-            "end_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(hours=1),
         },
         blocking=True,
         return_response=True,
@@ -162,12 +188,18 @@ async def test_default_language(
     }
 
 
+@pytest.mark.parametrize(
+    "time_zone", ["Asia/Tokyo", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
+)
 async def test_no_language(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    time_zone: str,
 ) -> None:
     """Test language defaults to English if language not exist."""
-    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=dt_util.UTC))
+    await hass.config.async_set_time_zone(time_zone)
+    zone = await dt_util.async_get_time_zone(time_zone)
+    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=zone))
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -184,7 +216,7 @@ async def test_no_language(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.albania",
-            "end_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(hours=1),
         },
         blocking=True,
         return_response=True,
@@ -203,12 +235,18 @@ async def test_no_language(
     }
 
 
+@pytest.mark.parametrize(
+    "time_zone", ["Asia/Tokyo", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
+)
 async def test_no_next_event(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    time_zone: str,
 ) -> None:
     """Test if there is no next event."""
-    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=dt_util.UTC))
+    await hass.config.async_set_time_zone(time_zone)
+    zone = await dt_util.async_get_time_zone(time_zone)
+    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=zone))
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -221,7 +259,7 @@ async def test_no_next_event(
     await hass.async_block_till_done()
 
     # Move time to out of reach
-    freezer.move_to(datetime(dt_util.now().year + 5, 1, 1, 12, tzinfo=dt_util.UTC))
+    freezer.move_to(datetime(dt_util.now().year + 5, 1, 1, 12, tzinfo=zone))
     async_fire_time_changed(hass)
 
     state = hass.states.get("calendar.germany")
@@ -230,15 +268,22 @@ async def test_no_next_event(
     assert state.attributes == {"friendly_name": "Germany"}
 
 
+@pytest.mark.parametrize(
+    "time_zone", ["Asia/Tokyo", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
+)
 async def test_language_not_exist(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    time_zone: str,
 ) -> None:
     """Test when language doesn't exist it will fallback to country default language."""
+    await hass.config.async_set_time_zone(time_zone)
+    zone = await dt_util.async_get_time_zone(time_zone)
 
     hass.config.language = "nb"  # Norweigan language "Norks bokmål"
     hass.config.country = "NO"
 
-    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=dt_util.UTC))
+    freezer.move_to(datetime(2023, 1, 1, 12, tzinfo=zone))
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -268,7 +313,7 @@ async def test_language_not_exist(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.norge",
-            "end_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(hours=1),
         },
         blocking=True,
         return_response=True,
@@ -296,7 +341,7 @@ async def test_language_not_exist(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.norge",
-            "end_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(hours=1),
         },
         blocking=True,
         return_response=True,
@@ -309,6 +354,79 @@ async def test_language_not_exist(
                     "end": "2023-01-02",
                     "summary": "New Year's Day",
                     "location": "Norge",
+                }
+            ]
+        }
+    }
+
+
+async def test_categories(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test if there is no next event."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    zone = await dt_util.async_get_time_zone("Europe/Berlin")
+    freezer.move_to(datetime(2025, 8, 14, 12, tzinfo=zone))
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_COUNTRY: "DE",
+            CONF_PROVINCE: "BY",
+        },
+        options={
+            CONF_CATEGORIES: [CATHOLIC],
+        },
+        title="Germany",
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.germany",
+            "end_date_time": dt_util.now() + timedelta(days=2),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "calendar.germany": {
+            "events": [
+                {
+                    "start": "2025-08-15",
+                    "end": "2025-08-16",
+                    "summary": "Assumption Day",
+                    "location": "Germany",
+                }
+            ]
+        }
+    }
+
+    freezer.move_to(datetime(2025, 12, 23, 12, tzinfo=zone))
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.germany",
+            "end_date_time": dt_util.now() + timedelta(days=2),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "calendar.germany": {
+            "events": [
+                {
+                    "start": "2025-12-25",
+                    "end": "2025-12-26",
+                    "summary": "Christmas Day",
+                    "location": "Germany",
                 }
             ]
         }

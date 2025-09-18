@@ -3,9 +3,9 @@
 from typing import Any
 from unittest.mock import patch
 
-from aemet_opendata.const import ATTR_DATA
+from aemet_opendata.const import ATTR_BYTES, ATTR_DATA, ATTR_TIMESTAMP, ATTR_TYPE
 
-from homeassistant.components.aemet import DOMAIN
+from homeassistant.components.aemet.const import CONF_RADAR_UPDATES, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
@@ -17,6 +17,14 @@ FORECAST_DAILY_DATA_MOCK = {
 
 FORECAST_HOURLY_DATA_MOCK = {
     ATTR_DATA: load_json_value_fixture("aemet/town-28065-forecast-hourly-data.json"),
+}
+
+RADAR_DATA_MOCK = {
+    ATTR_DATA: {
+        ATTR_TYPE: "image/gif",
+        ATTR_BYTES: bytes([0]),
+    },
+    ATTR_TIMESTAMP: "2021-01-09T11:34:06.448809+00:00",
 }
 
 STATION_DATA_MOCK = {
@@ -42,14 +50,20 @@ def mock_api_call(cmd: str, fetch_data: bool = False) -> dict[str, Any]:
         return TOWN_DATA_MOCK
     if cmd == "maestro/municipios":
         return TOWNS_DATA_MOCK
-    if cmd == "observacion/convencional/datos/estacion/3195":
+    if (
+        cmd
+        == "observacion/convencional/datos/estacion/3195"  # codespell:ignore convencional
+    ):
         return STATION_DATA_MOCK
-    if cmd == "observacion/convencional/todas":
+    if cmd == "observacion/convencional/todas":  # codespell:ignore convencional
         return STATIONS_DATA_MOCK
     if cmd == "prediccion/especifica/municipio/diaria/28065":
         return FORECAST_DAILY_DATA_MOCK
     if cmd == "prediccion/especifica/municipio/horaria/28065":
         return FORECAST_HOURLY_DATA_MOCK
+    if cmd == "red/radar/nacional":
+        return RADAR_DATA_MOCK
+
     return {}
 
 
@@ -65,6 +79,10 @@ async def async_init_integration(hass: HomeAssistant):
             CONF_NAME: "AEMET",
         },
         entry_id="7442b231f139e813fc1939281123f220",
+        unique_id="40.30403754--3.72935236",
+        options={
+            CONF_RADAR_UPDATES: True,
+        },
     )
     config_entry.add_to_hass(hass)
 

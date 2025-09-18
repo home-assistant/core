@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pyprosegur.installation import Camera
 import pytest
 
-from homeassistant.components.prosegur import DOMAIN as PROSEGUR_DOMAIN
+from homeassistant.components.prosegur import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -18,7 +18,7 @@ CONTRACT = "1234abcd"
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        domain=PROSEGUR_DOMAIN,
+        domain=DOMAIN,
         data={
             "contract": CONTRACT,
             CONF_USERNAME: "user@email.com",
@@ -62,9 +62,12 @@ async def init_integration(
     """Set up the Prosegur integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "pyprosegur.installation.Installation.retrieve", return_value=mock_install
-    ), patch("pyprosegur.auth.Auth.login"):
+    with (
+        patch(
+            "pyprosegur.installation.Installation.retrieve", return_value=mock_install
+        ),
+        patch("pyprosegur.auth.Auth.login"),
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

@@ -2,28 +2,40 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from renault_api.kamereon.models import KamereonVehicleLocationData
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.device_tracker import (
+    TrackerEntity,
+    TrackerEntityDescription,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import RenaultConfigEntry
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
-from .renault_hub import RenaultHub
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class RenaultTrackerEntityDescription(
+    TrackerEntityDescription, RenaultDataEntityDescription
+):
+    """Class describing Renault tracker entities."""
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RenaultConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[RenaultDeviceTracker] = [
         RenaultDeviceTracker(vehicle, description)
-        for vehicle in proxy.vehicles.values()
+        for vehicle in config_entry.runtime_data.vehicles.values()
         for description in DEVICE_TRACKER_TYPES
         if description.coordinator in vehicle.coordinators
     ]
@@ -35,6 +47,8 @@ class RenaultDeviceTracker(
 ):
     """Mixin for device tracker specific attributes."""
 
+    entity_description: RenaultTrackerEntityDescription
+
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
@@ -45,14 +59,9 @@ class RenaultDeviceTracker(
         """Return longitude value of the device."""
         return self.coordinator.data.gpsLongitude if self.coordinator.data else None
 
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the device."""
-        return SourceType.GPS
 
-
-DEVICE_TRACKER_TYPES: tuple[RenaultDataEntityDescription, ...] = (
-    RenaultDataEntityDescription(
+DEVICE_TRACKER_TYPES: tuple[RenaultTrackerEntityDescription, ...] = (
+    RenaultTrackerEntityDescription(
         key="location",
         coordinator="location",
         translation_key="location",

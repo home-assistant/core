@@ -5,14 +5,16 @@ from unittest.mock import ANY, patch
 
 import pytest
 
-from homeassistant.components.cover import ATTR_POSITION, DOMAIN as COVER_DOMAIN
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    CoverState,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
-    STATE_CLOSED,
-    STATE_OPEN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -56,7 +58,7 @@ async def test_cover_get_state(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes.get("friendly_name") == name
 
     entry = entity_registry.async_get(entity_id)
@@ -80,7 +82,7 @@ async def test_cover_get_state(
         assert entry
         assert entry.unique_id == uid
 
-        assert state.state == STATE_OPEN
+        assert state.state == CoverState.OPEN
 
 
 @pytest.mark.parametrize(
@@ -107,7 +109,7 @@ async def test_cover_set_position(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes.get("friendly_name") == name
 
     entry = entity_registry.async_get(entity_id)
@@ -133,7 +135,7 @@ async def test_cover_set_position(
         await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes["current_position"] == 33
 
 
@@ -171,7 +173,7 @@ async def test_cover_close(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes.get("friendly_name") == name
 
     entry = entity_registry.async_get(entity_id)
@@ -196,7 +198,7 @@ async def test_cover_close(
         await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
 
 @pytest.mark.parametrize(
@@ -223,7 +225,7 @@ async def test_cover_open(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes.get("friendly_name") == name
 
     entry = entity_registry.async_get(entity_id)
@@ -249,4 +251,4 @@ async def test_cover_open(
         await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN

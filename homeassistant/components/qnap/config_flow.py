@@ -70,8 +70,8 @@ class QnapConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except TypeError:
                 errors["base"] = "invalid_auth"
-            except Exception as error:  # pylint: disable=broad-except
-                _LOGGER.error(error)
+            except Exception:
+                _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
                 unique_id = stats["system"]["serial_number"]

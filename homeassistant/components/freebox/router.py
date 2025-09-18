@@ -38,12 +38,13 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type FreeboxConfigEntry = ConfigEntry[FreeboxRouter]
+
 
 def is_json(json_str: str) -> bool:
     """Validate if a String is a JSON value or not."""
     try:
         json.loads(json_str)
-        return True
     except (ValueError, TypeError) as err:
         _LOGGER.error(
             "Failed to parse JSON '%s', error '%s'",
@@ -51,6 +52,7 @@ def is_json(json_str: str) -> bool:
             err,
         )
         return False
+    return True
 
 
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
@@ -72,7 +74,11 @@ async def get_hosts_list_if_supported(
     supports_hosts: bool = True
     fbx_devices: list[dict[str, Any]] = []
     try:
-        fbx_devices = await fbx_api.lan.get_hosts_list() or []
+        fbx_interfaces = await fbx_api.lan.get_interfaces() or []
+        for interface in fbx_interfaces:
+            fbx_devices.extend(
+                await fbx_api.lan.get_hosts_list(interface["name"]) or []
+            )
     except HttpRequestError as err:
         if (
             (matcher := re.search(r"Request failed \(APIResponse: (.+)\)", str(err)))
@@ -87,7 +93,7 @@ async def get_hosts_list_if_supported(
             )
 
         else:
-            raise err
+            raise
 
     return supports_hosts, fbx_devices
 
@@ -98,7 +104,7 @@ class FreeboxRouter:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: FreeboxConfigEntry,
         api: Freepybox,
         freebox_config: Mapping[str, Any],
     ) -> None:
@@ -109,8 +115,10 @@ class FreeboxRouter:
 
         self._api: Freepybox = api
         self.name: str = freebox_config["model_info"]["pretty_name"]
+        self.model_id: str = freebox_config["model_info"]["name"]
         self.mac: str = freebox_config["mac"]
         self._sw_v: str = freebox_config["firmware_version"]
+        self._hw_v: str | None = freebox_config.get("board_name")
         self._attrs: dict[str, Any] = {}
 
         self.supports_hosts = True
@@ -225,7 +233,7 @@ class FreeboxRouter:
             fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
         except HttpRequestError:
             self.supports_raid = False
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Router %s API does not support RAID",
                 self.name,
             )
@@ -276,7 +284,10 @@ class FreeboxRouter:
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Freebox SAS",
             name=self.name,
+            model=self.name,
+            model_id=self.model_id,
             sw_version=self._sw_v,
+            hw_version=self._hw_v,
         )
 
     @property

@@ -13,7 +13,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,8 +45,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         mochad_controller = MochadCtrl(host, port)
-    except exceptions.ConfigurationError as err:
-        _LOGGER.exception(str(err))
+    except exceptions.ConfigurationError:
+        _LOGGER.exception("Unexpected exception")
         return False
 
     def stop_mochad(event):

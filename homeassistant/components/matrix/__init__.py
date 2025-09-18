@@ -39,12 +39,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonObjectType, load_json_object
 
-from .const import DOMAIN, FORMAT_HTML, FORMAT_TEXT, SERVICE_SEND_MESSAGE
+from .const import ATTR_FORMAT, ATTR_IMAGES, CONF_ROOMS_REGEX, DOMAIN, FORMAT_HTML
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,17 +58,11 @@ CONF_WORD: Final = "word"
 CONF_EXPRESSION: Final = "expression"
 
 CONF_USERNAME_REGEX = "^@[^:]*:.*"
-CONF_ROOMS_REGEX = "^[!|#][^:]*:.*"
 
 EVENT_MATRIX_COMMAND = "matrix_command"
 
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
 
-MESSAGE_FORMATS = [FORMAT_HTML, FORMAT_TEXT]
-DEFAULT_MESSAGE_FORMAT = FORMAT_TEXT
-
-ATTR_FORMAT = "format"  # optional message format
-ATTR_IMAGES = "images"  # optional images
 
 WordCommand = NewType("WordCommand", str)
 ExpressionCommand = NewType("ExpressionCommand", re.Pattern)
@@ -117,27 +112,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
-    {
-        vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_DATA, default={}): {
-            vol.Optional(ATTR_FORMAT, default=DEFAULT_MESSAGE_FORMAT): vol.In(
-                MESSAGE_FORMATS
-            ),
-            vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
-        },
-        vol.Required(ATTR_TARGET): vol.All(
-            cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
-        ),
-    }
-)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
     config = config[DOMAIN]
 
-    matrix_bot = MatrixBot(
+    hass.data[DOMAIN] = MatrixBot(
         hass,
         os.path.join(hass.config.path(), SESSION_FILE),
         config[CONF_HOMESERVER],
@@ -147,14 +127,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         config[CONF_ROOMS],
         config[CONF_COMMANDS],
     )
-    hass.data[DOMAIN] = matrix_bot
 
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SEND_MESSAGE,
-        matrix_bot.handle_send_message,
-        schema=SERVICE_SCHEMA_SEND_MESSAGE,
-    )
+    async_setup_services(hass)
 
     return True
 
@@ -209,15 +183,22 @@ class MatrixBot:
             await self._resolve_room_aliases(listening_rooms)
             self._load_commands(commands)
             await self._join_rooms()
+
             # Sync once so that we don't respond to past events.
+            _LOGGER.debug("Starting initial sync for %s", self._mx_id)
             await self._client.sync(timeout=30_000)
+            _LOGGER.debug("Finished initial sync for %s", self._mx_id)
 
             self._client.add_event_callback(self._handle_room_message, RoomMessageText)
 
-            await self._client.sync_forever(
-                timeout=30_000,
-                loop_sleep_time=1_000,
-            )  # milliseconds.
+            _LOGGER.debug("Starting sync_forever for %s", self._mx_id)
+            self.hass.async_create_background_task(
+                self._client.sync_forever(
+                    timeout=30_000,
+                    loop_sleep_time=1_000,
+                ),  # milliseconds.
+                name=f"{self.__class__.__name__}: sync_forever for '{self._mx_id}'",
+            )
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
@@ -308,7 +289,9 @@ class MatrixBot:
     async def _resolve_room_aliases(self, listening_rooms: list[RoomAnyID]) -> None:
         """Resolve any RoomAliases into RoomIDs for the purpose of client interactions."""
         resolved_rooms = [
-            self.hass.async_create_task(self._resolve_room_alias(room_alias_or_id))
+            self.hass.async_create_task(
+                self._resolve_room_alias(room_alias_or_id), eager_start=False
+            )
             for room_alias_or_id in listening_rooms
         ]
         for resolved_room in asyncio.as_completed(resolved_rooms):
@@ -330,7 +313,9 @@ class MatrixBot:
     async def _join_rooms(self) -> None:
         """Join the Matrix rooms that we listen for commands in."""
         rooms = [
-            self.hass.async_create_task(self._join_room(room_id, room_alias_or_id))
+            self.hass.async_create_task(
+                self._join_room(room_id, room_alias_or_id), eager_start=False
+            )
             for room_alias_or_id, room_id in self._listening_rooms.items()
         ]
         await asyncio.wait(rooms)
@@ -338,7 +323,9 @@ class MatrixBot:
     async def _get_auth_tokens(self) -> JsonObjectType:
         """Read sorted authentication tokens from disk."""
         try:
-            return load_json_object(self._session_filepath)
+            return await self.hass.async_add_executor_job(
+                load_json_object, self._session_filepath
+            )
         except HomeAssistantError as ex:
             _LOGGER.warning(
                 "Loading authentication tokens from file '%s' failed: %s",
@@ -438,7 +425,8 @@ class MatrixBot:
                     target_room=target_room,
                     message_type=message_type,
                     content=content,
-                )
+                ),
+                eager_start=False,
             )
             for target_room in target_rooms
         )
@@ -461,7 +449,7 @@ class MatrixBot:
         file_stat = await aiofiles.os.stat(image_path)
 
         _LOGGER.debug("Uploading file from path, %s", image_path)
-        async with aiofiles.open(image_path, "r+b") as image_file:
+        async with aiofiles.open(image_path, "rb") as image_file:
             response, _ = await self._client.upload(
                 image_file,
                 content_type=mime_type,
@@ -514,7 +502,9 @@ class MatrixBot:
             and len(target_rooms) > 0
         ):
             image_tasks = [
-                self.hass.async_create_task(self._send_image(image_path, target_rooms))
+                self.hass.async_create_task(
+                    self._send_image(image_path, target_rooms), eager_start=False
+                )
                 for image_path in image_paths
             ]
             await asyncio.wait(image_tasks)

@@ -9,13 +9,22 @@
       "ads_blocked_today": {
         "default": "mdi:close-octagon-outline"
       },
+      "ads_blocked": {
+        "default": "mdi:close-octagon-outline"
+      },
       "ads_percentage_today": {
+        "default": "mdi:close-octagon-outline"
+      },
+      "percent_ads_blocked": {
         "default": "mdi:close-octagon-outline"
       },
       "clients_ever_seen": {
         "default": "mdi:account-outline"
       },
       "dns_queries_today": {
+        "default": "mdi:comment-question-outline"
+      },
+      "dns_queries": {
         "default": "mdi:comment-question-outline"
       },
       "domains_being_blocked": {
@@ -36,6 +45,8 @@
     }
   },
   "services": {
-    "disable": "mdi:server-off"
+    "disable": {
+      "service": "mdi:server-off"
+    }
   }
 }

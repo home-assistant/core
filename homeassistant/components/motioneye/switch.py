@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from types import MappingProxyType
+from collections.abc import Mapping
 from typing import Any
 
 from motioneye_client.client import MotionEyeClient
@@ -19,11 +19,12 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import MotionEyeEntity, get_camera_from_cameras, listen_for_new_cameras
+from . import get_camera_from_cameras, listen_for_new_cameras
 from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_SWITCH_BASE
+from .entity import MotionEyeEntity
 
 MOTIONEYE_SWITCHES = [
     SwitchEntityDescription(
@@ -66,7 +67,9 @@ MOTIONEYE_SWITCHES = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up motionEye from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
@@ -100,7 +103,7 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         camera: dict[str, Any],
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
-        options: MappingProxyType[str, str],
+        options: Mapping[str, str],
         entity_description: SwitchEntityDescription,
     ) -> None:
         """Initialize the switch."""

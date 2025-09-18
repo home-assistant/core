@@ -34,12 +34,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import Airtouch5ConfigEntry
 from .const import DOMAIN, FAN_INTELLIGENT_AUTO, FAN_TURBO
 from .entity import Airtouch5Entity
 
@@ -92,11 +92,11 @@ FAN_MODE_TO_SET_AC_FAN_SPEED = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: Airtouch5ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Airtouch 5 Climate entities."""
-    client: Airtouch5SimpleClient = hass.data[DOMAIN][config_entry.entry_id]
+    client = config_entry.runtime_data
 
     entities: list[ClimateEntity] = []
 
@@ -121,9 +121,9 @@ class Airtouch5ClimateEntity(ClimateEntity, Airtouch5Entity):
     """Base class for Airtouch5 Climate Entities."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
     _attr_target_temperature_step = 1
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
 
 class Airtouch5AC(Airtouch5ClimateEntity):
@@ -261,7 +261,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
             _LOGGER.debug("Argument `temperature` is missing in set_temperature")
             return
 
-        await self._control(temp=temp)
+        await self._control(setpoint=SetpointControl.CHANGE_SETPOINT, temp=temp)
 
 
 class Airtouch5Zone(Airtouch5ClimateEntity):

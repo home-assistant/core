@@ -25,10 +25,11 @@ from .const import (
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
+    ENCRYPTED_MODELS,
     HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL,
     SupportedModels,
 )
-from .coordinator import SwitchbotDataUpdateCoordinator
+from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
     SupportedModels.BULB.value: [Platform.SENSOR, Platform.LIGHT],
@@ -42,10 +43,16 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.HYGROMETER.value: [Platform.SENSOR],
+    SupportedModels.HYGROMETER_CO2.value: [Platform.SENSOR],
     SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.HUMIDIFIER.value: [Platform.HUMIDIFIER, Platform.SENSOR],
     SupportedModels.LOCK.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.LOCK_PRO.value: [
         Platform.BINARY_SENSOR,
         Platform.LOCK,
         Platform.SENSOR,
@@ -55,6 +62,43 @@ PLATFORMS_BY_TYPE = {
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
+    SupportedModels.HUB2.value: [Platform.SENSOR],
+    SupportedModels.RELAY_SWITCH_1PM.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.RELAY_SWITCH_1.value: [Platform.SWITCH],
+    SupportedModels.LEAK.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.REMOTE.value: [Platform.SENSOR],
+    SupportedModels.ROLLER_SHADE.value: [
+        Platform.COVER,
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    SupportedModels.HUBMINI_MATTER.value: [Platform.SENSOR],
+    SupportedModels.CIRCULATOR_FAN.value: [Platform.FAN, Platform.SENSOR],
+    SupportedModels.K20_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.S10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.K10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.K10_PRO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.K10_PRO_COMBO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.HUB3.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
+    SupportedModels.LOCK_LITE.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.LOCK_ULTRA.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.AIR_PURIFIER.value: [Platform.FAN, Platform.SENSOR],
+    SupportedModels.AIR_PURIFIER_TABLE.value: [Platform.FAN, Platform.SENSOR],
+    SupportedModels.EVAPORATIVE_HUMIDIFIER: [Platform.HUMIDIFIER, Platform.SENSOR],
+    SupportedModels.FLOOR_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.STRIP_LIGHT_3.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.RGBICWW_FLOOR_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.RGBICWW_STRIP_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.PLUG_MINI_EU.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.RELAY_SWITCH_2PM.value: [Platform.SWITCH, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -65,17 +109,37 @@ CLASS_BY_DEVICE = {
     SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
     SupportedModels.HUMIDIFIER.value: switchbot.SwitchbotHumidifier,
     SupportedModels.LOCK.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.BLIND_TILT.value: switchbot.SwitchbotBlindTilt,
+    SupportedModels.RELAY_SWITCH_1PM.value: switchbot.SwitchbotRelaySwitch,
+    SupportedModels.RELAY_SWITCH_1.value: switchbot.SwitchbotRelaySwitch,
+    SupportedModels.ROLLER_SHADE.value: switchbot.SwitchbotRollerShade,
+    SupportedModels.CIRCULATOR_FAN.value: switchbot.SwitchbotFan,
+    SupportedModels.K20_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.S10_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.K10_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.K10_PRO_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.K10_PRO_COMBO_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.LOCK_LITE.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_ULTRA.value: switchbot.SwitchbotLock,
+    SupportedModels.AIR_PURIFIER.value: switchbot.SwitchbotAirPurifier,
+    SupportedModels.AIR_PURIFIER_TABLE.value: switchbot.SwitchbotAirPurifier,
+    SupportedModels.EVAPORATIVE_HUMIDIFIER: switchbot.SwitchbotEvaporativeHumidifier,
+    SupportedModels.FLOOR_LAMP.value: switchbot.SwitchbotStripLight3,
+    SupportedModels.STRIP_LIGHT_3.value: switchbot.SwitchbotStripLight3,
+    SupportedModels.RGBICWW_FLOOR_LAMP.value: switchbot.SwitchbotRgbicLight,
+    SupportedModels.RGBICWW_STRIP_LIGHT.value: switchbot.SwitchbotRgbicLight,
+    SupportedModels.PLUG_MINI_EU.value: switchbot.SwitchbotRelaySwitch,
+    SupportedModels.RELAY_SWITCH_2PM.value: switchbot.SwitchbotRelaySwitch2PM,
 }
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:
     """Set up Switchbot from a config entry."""
     assert entry.unique_id is not None
-    hass.data.setdefault(DOMAIN, {})
     if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
         # Bleak uses addresses not mac addresses which are actually
         # UUIDs on some platforms (MacOS).
@@ -106,21 +170,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if not ble_device:
         raise ConfigEntryNotReady(
-            f"Could not find Switchbot {sensor_type} with address {address}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found_error",
+            translation_placeholders={"sensor_type": sensor_type, "address": address},
         )
 
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
-    if cls is switchbot.SwitchbotLock:
+    if switchbot_model in ENCRYPTED_MODELS:
         try:
-            device = switchbot.SwitchbotLock(
+            device = cls(
                 device=ble_device,
                 key_id=entry.data.get(CONF_KEY_ID),
                 encryption_key=entry.data.get(CONF_ENCRYPTION_KEY),
                 retry_count=entry.options[CONF_RETRY_COUNT],
+                model=switchbot_model,
             )
         except ValueError as error:
             raise ConfigEntryNotReady(
-                "Invalid encryption configuration provided"
+                translation_domain=DOMAIN,
+                translation_key="value_error",
+                translation_placeholders={"error": str(error)},
             ) from error
     else:
         device = cls(
@@ -129,7 +198,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             retry_count=entry.options[CONF_RETRY_COUNT],
         )
 
-    coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotDataUpdateCoordinator(
+    coordinator = entry.runtime_data = SwitchbotDataUpdateCoordinator(
         hass,
         _LOGGER,
         ble_device,
@@ -141,7 +210,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
-        raise ConfigEntryNotReady(f"{address} is not advertising state")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="advertising_state_error",
+            translation_placeholders={"address": address},
+        )
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(
@@ -159,13 +232,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     sensor_type = entry.data[CONF_SENSOR_TYPE]
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    return await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.config_entries.async_entries(DOMAIN):
-            hass.data.pop(DOMAIN)
-
-    return unload_ok

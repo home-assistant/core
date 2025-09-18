@@ -2,7 +2,6 @@
 
 from ipaddress import ip_address
 
-from homeassistant.components import zeroconf
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     MediaPlayerDeviceClass,
@@ -27,6 +26,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PIN,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import slugify
 
 NAME = "Vizio"
@@ -112,14 +112,6 @@ MOCK_OPTIONS = {
     CONF_VOLUME_STEP: VOLUME_STEP,
 }
 
-MOCK_IMPORT_VALID_TV_CONFIG = {
-    CONF_NAME: NAME,
-    CONF_HOST: HOST,
-    CONF_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
-    CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-    CONF_VOLUME_STEP: VOLUME_STEP,
-}
-
 MOCK_TV_WITH_INCLUDE_CONFIG = {
     CONF_NAME: NAME,
     CONF_HOST: HOST,
@@ -147,23 +139,6 @@ MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG = {
     CONF_APPS: {CONF_ADDITIONAL_CONFIGS: [ADDITIONAL_APP_CONFIG]},
 }
 
-MOCK_SPEAKER_APPS_FAILURE = {
-    CONF_NAME: NAME,
-    CONF_HOST: HOST,
-    CONF_DEVICE_CLASS: MediaPlayerDeviceClass.SPEAKER,
-    CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-    CONF_VOLUME_STEP: VOLUME_STEP,
-    CONF_APPS: {CONF_ADDITIONAL_CONFIGS: [ADDITIONAL_APP_CONFIG]},
-}
-
-MOCK_TV_APPS_FAILURE = {
-    CONF_NAME: NAME,
-    CONF_HOST: HOST,
-    CONF_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
-    CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-    CONF_VOLUME_STEP: VOLUME_STEP,
-    CONF_APPS: None,
-}
 
 MOCK_TV_APPS_WITH_VALID_APPS_CONFIG = {
     CONF_HOST: HOST,
@@ -196,10 +171,9 @@ MOCK_INCLUDE_NO_APPS = {
 
 VIZIO_ZEROCONF_SERVICE_TYPE = "_viziocast._tcp.local."
 ZEROCONF_NAME = f"{NAME}.{VIZIO_ZEROCONF_SERVICE_TYPE}"
-ZEROCONF_HOST = HOST.split(":")[0]
-ZEROCONF_PORT = HOST.split(":")[1]
+ZEROCONF_HOST, ZEROCONF_PORT = HOST.split(":", maxsplit=2)
 
-MOCK_ZEROCONF_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
+MOCK_ZEROCONF_SERVICE_INFO = ZeroconfServiceInfo(
     ip_address=ip_address(ZEROCONF_HOST),
     ip_addresses=[ip_address(ZEROCONF_HOST)],
     hostname="mock_hostname",

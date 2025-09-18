@@ -12,18 +12,18 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     PERCENTAGE,
     EntityCategory,
+    UnitOfEnergy,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import Trackables, TractiveClient
+from . import Trackables, TractiveClient, TractiveConfigEntry
 from .const import (
     ATTR_ACTIVITY_LABEL,
     ATTR_CALORIES,
@@ -34,10 +34,6 @@ from .const import (
     ATTR_MINUTES_REST,
     ATTR_SLEEP_LABEL,
     ATTR_TRACKER_STATE,
-    CLIENT,
-    DOMAIN,
-    TRACKABLES,
-    TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_WELLNESS_STATUS_UPDATED,
 )
@@ -108,6 +104,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=[
+            "inaccurate_position",
             "not_reporting",
             "operational",
             "system_shutdown_user",
@@ -118,7 +115,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         key=ATTR_MINUTES_ACTIVE,
         translation_key="activity_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_ACTIVITY_STATUS_UPDATED,
+        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
@@ -131,7 +128,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_CALORIES,
         translation_key="calories",
-        native_unit_of_measurement="kcal",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
@@ -139,7 +136,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         key=ATTR_DAILY_GOAL,
         translation_key="daily_goal",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_ACTIVITY_STATUS_UPDATED,
+        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_DAY_SLEEP,
@@ -183,11 +180,13 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TractiveConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tractive device trackers."""
-    client = hass.data[DOMAIN][entry.entry_id][CLIENT]
-    trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
+    client = entry.runtime_data.client
+    trackables = entry.runtime_data.trackables
 
     entities = [
         TractiveSensor(client, item, description)

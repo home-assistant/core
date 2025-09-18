@@ -4,16 +4,17 @@ from unittest.mock import MagicMock, patch
 
 import phone_modem
 
-from homeassistant import data_entry_flow
 from homeassistant.components import usb
 from homeassistant.components.modem_callerid.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_SOURCE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import com_port, patch_config_flow_modem
 
-DISCOVERY_INFO = usb.UsbServiceInfo(
+DISCOVERY_INFO = UsbServiceInfo(
     device=phone_modem.DEFAULT_PORT,
     pid="1340",
     vid="0572",
@@ -38,14 +39,14 @@ async def test_flow_usb(hass: HomeAssistant) -> None:
             context={CONF_SOURCE: SOURCE_USB},
             data=DISCOVERY_INFO,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "usb_confirm"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_DEVICE: phone_modem.DEFAULT_PORT},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {CONF_DEVICE: com_port().device}
 
 
@@ -57,7 +58,7 @@ async def test_flow_usb_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USB}, data=DISCOVERY_INFO
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -79,7 +80,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
             context={CONF_SOURCE: SOURCE_USER},
             data={CONF_DEVICE: port_select},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {CONF_DEVICE: port.device}
 
         result = await hass.config_entries.flow.async_init(
@@ -87,7 +88,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
             context={CONF_SOURCE: SOURCE_USER},
             data={CONF_DEVICE: port_select},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_devices_found"
 
 
@@ -108,7 +109,7 @@ async def test_flow_user_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_DEVICE: port_select}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -117,7 +118,7 @@ async def test_flow_user_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_DEVICE: port_select},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {CONF_DEVICE: port.device}
 
 
@@ -130,7 +131,7 @@ async def test_flow_user_no_port_list(hass: HomeAssistant) -> None:
             context={CONF_SOURCE: SOURCE_USER},
             data={CONF_DEVICE: phone_modem.DEFAULT_PORT},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_devices_found"
 
 
@@ -142,7 +143,7 @@ async def test_abort_user_with_existing_flow(hass: HomeAssistant) -> None:
             context={CONF_SOURCE: SOURCE_USB},
             data=DISCOVERY_INFO,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "usb_confirm"
 
         result2 = await hass.config_entries.flow.async_init(
@@ -151,5 +152,5 @@ async def test_abort_user_with_existing_flow(hass: HomeAssistant) -> None:
             data={},
         )
 
-        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "already_in_progress"

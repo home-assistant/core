@@ -5,10 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .coordinator import TotalConnectConfigEntry
 
 TO_REDACT = [
     "username",
@@ -21,29 +20,28 @@ TO_REDACT = [
 ]
 
 # Private variable access needed for diagnostics
-# pylint: disable=protected-access
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: TotalConnectConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    client = hass.data[DOMAIN][config_entry.entry_id].client
+    client = config_entry.runtime_data.client
 
     data: dict[str, Any] = {}
     data["client"] = {
         "auto_bypass_low_battery": client.auto_bypass_low_battery,
-        "module_flags": client._module_flags,
+        "module_flags": client._module_flags,  # noqa: SLF001
         "retry_delay": client.retry_delay,
-        "invalid_credentials": client._invalid_credentials,
+        "invalid_credentials": client._invalid_credentials,  # noqa: SLF001
     }
 
     data["user"] = {
-        "master": client._user._master_user,
-        "user_admin": client._user._user_admin,
-        "config_admin": client._user._config_admin,
-        "security_problem": client._user.security_problem(),
-        "features": client._user._features,
+        "master": client._user._master_user,  # noqa: SLF001
+        "user_admin": client._user._user_admin,  # noqa: SLF001
+        "config_admin": client._user._config_admin,  # noqa: SLF001
+        "security_problem": client._user.security_problem(),  # noqa: SLF001
+        "features": client._user._features,  # noqa: SLF001
     }
 
     data["locations"] = []
@@ -51,7 +49,7 @@ async def async_get_config_entry_diagnostics(
         new_location = {
             "location_id": location.location_id,
             "name": location.location_name,
-            "module_flags": location._module_flags,
+            "module_flags": location._module_flags,  # noqa: SLF001
             "security_device_id": location.security_device_id,
             "ac_loss": location.ac_loss,
             "low_battery": location.low_battery,
@@ -85,6 +83,7 @@ async def async_get_config_entry_diagnostics(
                 "is_new_partition": partition.is_new_partition,
                 "is_night_stay_enabled": partition.is_night_stay_enabled,
                 "exit_delay_timer": partition.exit_delay_timer,
+                "arming_state": partition.arming_state,
             }
             new_location["partitions"].append(new_partition)
 

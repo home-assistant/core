@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, ParamSpec, TypeVar, overload
+from typing import Any, Concatenate, overload
 
 from aiohttp.web import Request, Response, StreamResponse
 
@@ -13,37 +13,47 @@ from homeassistant.exceptions import Unauthorized
 
 from .view import HomeAssistantView
 
-_HomeAssistantViewT = TypeVar("_HomeAssistantViewT", bound=HomeAssistantView)
-_ResponseT = TypeVar("_ResponseT", bound=Response | StreamResponse)
-_P = ParamSpec("_P")
-_FuncType = Callable[
-    Concatenate[_HomeAssistantViewT, Request, _P], Coroutine[Any, Any, _ResponseT]
+type _ResponseType = Response | StreamResponse
+type _FuncType[_T, **_P, _R] = Callable[
+    Concatenate[_T, Request, _P], Coroutine[Any, Any, _R]
 ]
 
 
 @overload
-def require_admin(
+def require_admin[
+    _HomeAssistantViewT: HomeAssistantView,
+    **_P,
+    _ResponseT: _ResponseType,
+](
     _func: None = None,
     *,
-    error: Unauthorized | None = None,
+    perm_category: str | None = None,
+    permission: str | None = None,
 ) -> Callable[
     [_FuncType[_HomeAssistantViewT, _P, _ResponseT]],
     _FuncType[_HomeAssistantViewT, _P, _ResponseT],
-]:
-    ...
+]: ...
 
 
 @overload
-def require_admin(
+def require_admin[
+    _HomeAssistantViewT: HomeAssistantView,
+    **_P,
+    _ResponseT: _ResponseType,
+](
     _func: _FuncType[_HomeAssistantViewT, _P, _ResponseT],
-) -> _FuncType[_HomeAssistantViewT, _P, _ResponseT]:
-    ...
+) -> _FuncType[_HomeAssistantViewT, _P, _ResponseT]: ...
 
 
-def require_admin(
+def require_admin[
+    _HomeAssistantViewT: HomeAssistantView,
+    **_P,
+    _ResponseT: _ResponseType,
+](
     _func: _FuncType[_HomeAssistantViewT, _P, _ResponseT] | None = None,
     *,
-    error: Unauthorized | None = None,
+    perm_category: str | None = None,
+    permission: str | None = None,
 ) -> (
     Callable[
         [_FuncType[_HomeAssistantViewT, _P, _ResponseT]],
@@ -68,7 +78,7 @@ def require_admin(
             """Check admin and call function."""
             user: User = request["hass_user"]
             if not user.is_admin:
-                raise error or Unauthorized()
+                raise Unauthorized(perm_category=perm_category, permission=permission)
 
             return await func(self, request, *args, **kwargs)
 

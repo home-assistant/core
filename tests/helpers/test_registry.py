@@ -21,10 +21,10 @@ class SampleRegistry(BaseRegistry):
         self._store = storage.Store(hass, 1, "test")
         self.save_calls = 0
 
-    def _data_to_save(self) -> None:
+    def _data_to_save(self) -> dict[str, Any]:
         """Return data of registry to save."""
         self.save_calls += 1
-        return None
+        return {}
 
 
 @pytest.mark.parametrize(

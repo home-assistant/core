@@ -10,7 +10,6 @@ from py_aosmith.models import (
     DeviceType,
     EnergyUseData,
     EnergyUseHistoryEntry,
-    HotWaterStatus,
     OperationMode,
     SupportedOperationModeInfo,
 )
@@ -21,7 +20,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 FIXTURE_USER_INPUT = {
     CONF_EMAIL: "testemail@example.com",
@@ -30,7 +29,11 @@ FIXTURE_USER_INPUT = {
 
 
 def build_device_fixture(
-    heat_pump: bool, mode_pending: bool, setpoint_pending: bool, has_vacation_mode: bool
+    heat_pump: bool,
+    mode_pending: bool,
+    setpoint_pending: bool,
+    has_vacation_mode: bool,
+    supports_hot_water_plus: bool,
 ):
     """Build a fixture for a device."""
     supported_modes: list[SupportedOperationModeInfo] = [
@@ -38,6 +41,7 @@ def build_device_fixture(
             mode=OperationMode.ELECTRIC,
             original_name="ELECTRIC",
             has_day_selection=True,
+            supports_hot_water_plus=supports_hot_water_plus,
         ),
     ]
 
@@ -47,6 +51,7 @@ def build_device_fixture(
                 mode=OperationMode.HYBRID,
                 original_name="HYBRID",
                 has_day_selection=False,
+                supports_hot_water_plus=supports_hot_water_plus,
             )
         )
         supported_modes.append(
@@ -54,6 +59,7 @@ def build_device_fixture(
                 mode=OperationMode.HEAT_PUMP,
                 original_name="HEAT_PUMP",
                 has_day_selection=False,
+                supports_hot_water_plus=supports_hot_water_plus,
             )
         )
 
@@ -63,20 +69,22 @@ def build_device_fixture(
                 mode=OperationMode.VACATION,
                 original_name="VACATION",
                 has_day_selection=True,
+                supports_hot_water_plus=False,
             )
         )
 
-    device_type = (
-        DeviceType.NEXT_GEN_HEAT_PUMP if heat_pump else DeviceType.RE3_CONNECTED
-    )
-
     current_mode = OperationMode.HEAT_PUMP if heat_pump else OperationMode.ELECTRIC
 
-    model = "HPTS-50 200 202172000" if heat_pump else "EE12-50H55DVF 100,3806368"
+    if heat_pump and supports_hot_water_plus:
+        device_type = DeviceType.RE3_PREMIUM
+    elif heat_pump:
+        device_type = DeviceType.NEXT_GEN_HEAT_PUMP
+    else:
+        device_type = DeviceType.RE3_CONNECTED
 
     return Device(
         brand="aosmith",
-        model=model,
+        model="Example model",
         device_type=device_type,
         dsn="dsn",
         junction_id="junctionId",
@@ -84,6 +92,7 @@ def build_device_fixture(
         serial="serial",
         install_location="Basement",
         supported_modes=supported_modes,
+        supports_hot_water_plus=supports_hot_water_plus,
         status=DeviceStatus(
             firmware_version="2.14",
             is_online=True,
@@ -93,7 +102,8 @@ def build_device_fixture(
             temperature_setpoint_pending=setpoint_pending,
             temperature_setpoint_previous=130,
             temperature_setpoint_maximum=130,
-            hot_water_status=HotWaterStatus.LOW,
+            hot_water_status=90,
+            hot_water_plus_level=1 if supports_hot_water_plus else None,
         ),
     )
 
@@ -128,7 +138,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.aosmith.async_setup_entry", return_value=True
@@ -161,12 +171,20 @@ def get_devices_fixture_has_vacation_mode() -> bool:
 
 
 @pytest.fixture
+def get_devices_fixture_supports_hot_water_plus() -> bool:
+    """Return whether to include hot water plus support in the get_devices fixture."""
+    return False
+
+
+@pytest.fixture
 async def mock_client(
+    hass: HomeAssistant,
     get_devices_fixture_heat_pump: bool,
     get_devices_fixture_mode_pending: bool,
     get_devices_fixture_setpoint_pending: bool,
     get_devices_fixture_has_vacation_mode: bool,
-) -> Generator[MagicMock, None, None]:
+    get_devices_fixture_supports_hot_water_plus: bool,
+) -> Generator[MagicMock]:
     """Return a mocked client."""
     get_devices_fixture = [
         build_device_fixture(
@@ -174,10 +192,11 @@ async def mock_client(
             mode_pending=get_devices_fixture_mode_pending,
             setpoint_pending=get_devices_fixture_setpoint_pending,
             has_vacation_mode=get_devices_fixture_has_vacation_mode,
+            supports_hot_water_plus=get_devices_fixture_supports_hot_water_plus,
         )
     ]
-    get_all_device_info_fixture = load_json_object_fixture(
-        "get_all_device_info.json", DOMAIN
+    get_all_device_info_fixture = await async_load_json_object_fixture(
+        hass, "get_all_device_info.json", DOMAIN
     )
 
     client_mock = MagicMock(AOSmithAPIClient)

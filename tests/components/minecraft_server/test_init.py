@@ -6,7 +6,7 @@ from mcstatus import JavaServer
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.minecraft_server.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.minecraft_server.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PORT
@@ -22,6 +22,8 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry
+
+DEFAULT_NAME = "Minecraft Server"
 
 TEST_UNIQUE_ID = f"{TEST_HOST}-{TEST_PORT}"
 
@@ -108,12 +110,10 @@ def create_v1_mock_binary_sensor_entity_entry(
         device_id=device_entry_id,
     )
     assert entity_entry.unique_id == entity_unique_id
-    binary_sensor_entity_id_key_mapping = {
+    return {
         "entity_id": entity_entry.entity_id,
         "key": BINARY_SENSOR_KEYS["v2"],
     }
-
-    return binary_sensor_entity_id_key_mapping
 
 
 async def test_setup_and_unload_entry(
@@ -122,21 +122,24 @@ async def test_setup_and_unload_entry(
     """Test successful entry setup and unload."""
     java_mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
-        return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
-    ), patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.async_status",
-        return_value=TEST_JAVA_STATUS_RESPONSE,
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
+            return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_status",
+            return_value=TEST_JAVA_STATUS_RESPONSE,
+        ),
     ):
         assert await hass.config_entries.async_setup(java_mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert java_mock_config_entry.state == ConfigEntryState.LOADED
+        assert java_mock_config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(java_mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert not hass.data.get(DOMAIN)
-    assert java_mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    assert java_mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_entry_lookup_failure(
@@ -154,7 +157,7 @@ async def test_setup_entry_lookup_failure(
         )
 
     await hass.async_block_till_done()
-    assert java_mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert java_mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_init_failure(
@@ -172,7 +175,7 @@ async def test_setup_entry_init_failure(
         )
 
     await hass.async_block_till_done()
-    assert java_mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert java_mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_not_ready(
@@ -181,19 +184,22 @@ async def test_setup_entry_not_ready(
     """Test entry setup not ready."""
     java_mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
-        return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
-    ), patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.async_status",
-        return_value=OSError,
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
+            return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_status",
+            return_value=OSError,
+        ),
     ):
         assert not await hass.config_entries.async_setup(
             java_mock_config_entry.entry_id
         )
 
     await hass.async_block_till_done()
-    assert java_mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert java_mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_entry_migration(
@@ -214,16 +220,19 @@ async def test_entry_migration(
     )
 
     # Trigger migration.
-    with patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
-        side_effect=[
-            ValueError,  # async_migrate_entry
-            JavaServer(host=TEST_HOST, port=TEST_PORT),  # async_migrate_entry
-            JavaServer(host=TEST_HOST, port=TEST_PORT),  # async_setup_entry
-        ],
-    ), patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.async_status",
-        return_value=TEST_JAVA_STATUS_RESPONSE,
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
+            side_effect=[
+                ValueError,  # async_migrate_entry
+                JavaServer(host=TEST_HOST, port=TEST_PORT),  # async_migrate_entry
+                JavaServer(host=TEST_HOST, port=TEST_PORT),  # async_setup_entry
+            ],
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_status",
+            return_value=TEST_JAVA_STATUS_RESPONSE,
+        ),
     ):
         assert await hass.config_entries.async_setup(v1_mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -237,7 +246,7 @@ async def test_entry_migration(
         CONF_ADDRESS: TEST_ADDRESS,
     }
     assert migrated_config_entry.version == 3
-    assert migrated_config_entry.state == ConfigEntryState.LOADED
+    assert migrated_config_entry.state is ConfigEntryState.LOADED
 
     # Test migrated device entry.
     device_entry = device_registry.async_get(device_entry_id)
@@ -276,12 +285,15 @@ async def test_entry_migration_host_only(
     )
 
     # Trigger migration.
-    with patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
-        return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
-    ), patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.async_status",
-        return_value=TEST_JAVA_STATUS_RESPONSE,
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
+            return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_status",
+            return_value=TEST_JAVA_STATUS_RESPONSE,
+        ),
     ):
         assert await hass.config_entries.async_setup(v1_mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -293,7 +305,7 @@ async def test_entry_migration_host_only(
         CONF_ADDRESS: TEST_HOST,
     }
     assert v1_mock_config_entry.version == 3
-    assert v1_mock_config_entry.state == ConfigEntryState.LOADED
+    assert v1_mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_entry_migration_v3_failure(
@@ -323,4 +335,4 @@ async def test_entry_migration_v3_failure(
 
     # Test config entry.
     assert v1_mock_config_entry.version == 2
-    assert v1_mock_config_entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert v1_mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR

@@ -2,22 +2,34 @@
 
 from __future__ import annotations
 
+import datetime as dt
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
-import ns_api
-from ns_api import RequestParametersError
+from ns_api import NSAPI, Trip
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt as dt_util
+from homeassistant.util.dt import parse_time
+
+from . import NSConfigEntry
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,62 +54,89 @@ ROUTE_SCHEMA = vol.Schema(
 
 ROUTES_SCHEMA = vol.All(cv.ensure_list, [ROUTE_SCHEMA])
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_API_KEY): cv.string, vol.Optional(CONF_ROUTES): ROUTES_SCHEMA}
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the departure sensor."""
 
-    nsapi = ns_api.NSAPI(config[CONF_API_KEY])
-
-    try:
-        stations = nsapi.get_stations()
-    except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.HTTPError,
-    ) as error:
-        _LOGGER.error("Could not connect to the internet: %s", error)
-        raise PlatformNotReady from error
-    except RequestParametersError as error:
-        _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Nederlandse Spoorwegen",
+            },
+        )
         return
 
-    sensors = []
-    for departure in config.get(CONF_ROUTES, {}):
-        if not valid_stations(
-            stations,
-            [departure.get(CONF_FROM), departure.get(CONF_VIA), departure.get(CONF_TO)],
-        ):
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Nederlandse Spoorwegen",
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: NSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the departure sensor from a config entry."""
+
+    client = config_entry.runtime_data
+
+    for subentry in config_entry.subentries.values():
+        if subentry.subentry_type != "route":
             continue
-        sensors.append(
-            NSDepartureSensor(
-                nsapi,
-                departure.get(CONF_NAME),
-                departure.get(CONF_FROM),
-                departure.get(CONF_TO),
-                departure.get(CONF_VIA),
-                departure.get(CONF_TIME),
-            )
+
+        async_add_entities(
+            [
+                NSDepartureSensor(
+                    client,
+                    subentry.data[CONF_NAME],
+                    subentry.data[CONF_FROM],
+                    subentry.data[CONF_TO],
+                    subentry.data.get(CONF_VIA),
+                    parse_time(subentry.data[CONF_TIME])
+                    if CONF_TIME in subentry.data
+                    else None,
+                )
+            ],
+            config_subentry_id=subentry.subentry_id,
+            update_before_add=True,
         )
-    add_entities(sensors, True)
-
-
-def valid_stations(stations, given_stations):
-    """Verify the existence of the given station codes."""
-    for station in given_stations:
-        if station is None:
-            continue
-        if not any(s.code == station.upper() for s in stations):
-            _LOGGER.warning("Station '%s' is not a valid station", station)
-            return False
-    return True
 
 
 class NSDepartureSensor(SensorEntity):
@@ -106,7 +145,15 @@ class NSDepartureSensor(SensorEntity):
     _attr_attribution = "Data provided by NS"
     _attr_icon = "mdi:train"
 
-    def __init__(self, nsapi, name, departure, heading, via, time):
+    def __init__(
+        self,
+        nsapi: NSAPI,
+        name: str,
+        departure: str,
+        heading: str,
+        via: str | None,
+        time: dt.time | None,
+    ) -> None:
         """Initialize the sensor."""
         self._nsapi = nsapi
         self._name = name
@@ -114,60 +161,62 @@ class NSDepartureSensor(SensorEntity):
         self._via = via
         self._heading = heading
         self._time = time
-        self._state = None
-        self._trips = None
+        self._state: str | None = None
+        self._trips: list[Trip] | None = None
+        self._first_trip: Trip | None = None
+        self._next_trip: Trip | None = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the next departure time."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        if not self._trips:
-            return
+        if not self._trips or self._first_trip is None:
+            return None
 
-        if self._trips[0].trip_parts:
-            route = [self._trips[0].departure]
-            route.extend(k.destination for k in self._trips[0].trip_parts)
+        if self._first_trip.trip_parts:
+            route = [self._first_trip.departure]
+            route.extend(k.destination for k in self._first_trip.trip_parts)
 
         # Static attributes
         attributes = {
-            "going": self._trips[0].going,
+            "going": self._first_trip.going,
             "departure_time_planned": None,
             "departure_time_actual": None,
             "departure_delay": False,
-            "departure_platform_planned": self._trips[0].departure_platform_planned,
-            "departure_platform_actual": self._trips[0].departure_platform_actual,
+            "departure_platform_planned": self._first_trip.departure_platform_planned,
+            "departure_platform_actual": self._first_trip.departure_platform_actual,
             "arrival_time_planned": None,
             "arrival_time_actual": None,
             "arrival_delay": False,
-            "arrival_platform_planned": self._trips[0].arrival_platform_planned,
-            "arrival_platform_actual": self._trips[0].arrival_platform_actual,
+            "arrival_platform_planned": self._first_trip.arrival_platform_planned,
+            "arrival_platform_actual": self._first_trip.arrival_platform_actual,
             "next": None,
-            "status": self._trips[0].status.lower(),
-            "transfers": self._trips[0].nr_transfers,
+            "status": self._first_trip.status.lower(),
+            "transfers": self._first_trip.nr_transfers,
             "route": route,
             "remarks": None,
         }
 
         # Planned departure attributes
-        if self._trips[0].departure_time_planned is not None:
-            attributes["departure_time_planned"] = self._trips[
-                0
-            ].departure_time_planned.strftime("%H:%M")
+        if self._first_trip.departure_time_planned is not None:
+            attributes["departure_time_planned"] = (
+                self._first_trip.departure_time_planned.strftime("%H:%M")
+            )
 
         # Actual departure attributes
-        if self._trips[0].departure_time_actual is not None:
-            attributes["departure_time_actual"] = self._trips[
-                0
-            ].departure_time_actual.strftime("%H:%M")
+        if self._first_trip.departure_time_actual is not None:
+            attributes["departure_time_actual"] = (
+                self._first_trip.departure_time_actual.strftime("%H:%M")
+            )
 
         # Delay departure attributes
         if (
@@ -179,16 +228,16 @@ class NSDepartureSensor(SensorEntity):
             attributes["departure_delay"] = True
 
         # Planned arrival attributes
-        if self._trips[0].arrival_time_planned is not None:
-            attributes["arrival_time_planned"] = self._trips[
-                0
-            ].arrival_time_planned.strftime("%H:%M")
+        if self._first_trip.arrival_time_planned is not None:
+            attributes["arrival_time_planned"] = (
+                self._first_trip.arrival_time_planned.strftime("%H:%M")
+            )
 
         # Actual arrival attributes
-        if self._trips[0].arrival_time_actual is not None:
-            attributes["arrival_time_actual"] = self._trips[
-                0
-            ].arrival_time_actual.strftime("%H:%M")
+        if self._first_trip.arrival_time_actual is not None:
+            attributes["arrival_time_actual"] = (
+                self._first_trip.arrival_time_actual.strftime("%H:%M")
+            )
 
         # Delay arrival attributes
         if (
@@ -198,16 +247,16 @@ class NSDepartureSensor(SensorEntity):
         ):
             attributes["arrival_delay"] = True
 
+        assert self._next_trip is not None
         # Next attributes
-        if len(self._trips) > 1:
-            if self._trips[1].departure_time_actual is not None:
-                attributes["next"] = self._trips[1].departure_time_actual.strftime(
-                    "%H:%M"
-                )
-            elif self._trips[1].departure_time_planned is not None:
-                attributes["next"] = self._trips[1].departure_time_planned.strftime(
-                    "%H:%M"
-                )
+        if self._next_trip.departure_time_actual is not None:
+            attributes["next"] = self._next_trip.departure_time_actual.strftime("%H:%M")
+        elif self._next_trip.departure_time_planned is not None:
+            attributes["next"] = self._next_trip.departure_time_planned.strftime(
+                "%H:%M"
+            )
+        else:
+            attributes["next"] = None
 
         return attributes
 
@@ -222,6 +271,7 @@ class NSDepartureSensor(SensorEntity):
         ):
             self._state = None
             self._trips = None
+            self._first_trip = None
             return
 
         # Set the search parameter to search from a specific trip time
@@ -233,19 +283,51 @@ class NSDepartureSensor(SensorEntity):
                 .strftime("%d-%m-%Y %H:%M")
             )
         else:
-            trip_time = datetime.now().strftime("%d-%m-%Y %H:%M")
+            trip_time = dt_util.now().strftime("%d-%m-%Y %H:%M")
 
         try:
             self._trips = self._nsapi.get_trips(
                 trip_time, self._departure, self._via, self._heading, True, 0, 2
             )
             if self._trips:
-                if self._trips[0].departure_time_actual is None:
-                    planned_time = self._trips[0].departure_time_planned
-                    self._state = planned_time.strftime("%H:%M")
+                all_times = []
+
+                # If a train is delayed we can observe this through departure_time_actual.
+                for trip in self._trips:
+                    if trip.departure_time_actual is None:
+                        all_times.append(trip.departure_time_planned)
+                    else:
+                        all_times.append(trip.departure_time_actual)
+
+                # Remove all trains that already left.
+                filtered_times = [
+                    (i, time)
+                    for i, time in enumerate(all_times)
+                    if time > dt_util.now()
+                ]
+
+                if len(filtered_times) > 0:
+                    sorted_times = sorted(filtered_times, key=lambda x: x[1])
+                    self._first_trip = self._trips[sorted_times[0][0]]
+                    self._state = sorted_times[0][1].strftime("%H:%M")
+
+                    # Filter again to remove trains that leave at the exact same time.
+                    filtered_times = [
+                        (i, time)
+                        for i, time in enumerate(all_times)
+                        if time > sorted_times[0][1]
+                    ]
+
+                    if len(filtered_times) > 0:
+                        sorted_times = sorted(filtered_times, key=lambda x: x[1])
+                        self._next_trip = self._trips[sorted_times[0][0]]
+                    else:
+                        self._next_trip = None
+
                 else:
-                    actual_time = self._trips[0].departure_time_actual
-                    self._state = actual_time.strftime("%H:%M")
+                    self._first_trip = None
+                    self._state = None
+
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.HTTPError,

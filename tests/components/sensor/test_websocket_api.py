@@ -36,11 +36,14 @@ async def test_device_class_units(
             "ft/s",
             "in/d",
             "in/h",
+            "in/s",
             "km/h",
             "kn",
+            "m/min",
             "m/s",
             "mm/d",
             "mm/h",
+            "mm/s",
             "mph",
         ]
     }

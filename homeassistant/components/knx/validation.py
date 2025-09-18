@@ -1,6 +1,7 @@
 """Validation helpers for KNX config schemas."""
 
 from collections.abc import Callable
+from enum import Enum
 import ipaddress
 from typing import Any
 
@@ -9,7 +10,7 @@ from xknx.dpt import DPTBase, DPTNumeric, DPTString
 from xknx.exceptions import CouldNotParseAddress
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 
 def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str | int]:
@@ -30,30 +31,46 @@ def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str
     return dpt_value_validator
 
 
+dpt_base_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
 numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[type-abstract]
-sensor_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
 string_type_validator = dpt_subclass_validator(DPTString)
+sensor_type_validator = vol.Any(numeric_type_validator, string_type_validator)
 
 
 def ga_validator(value: Any) -> str | int:
     """Validate that value is parsable as GroupAddress or InternalGroupAddress."""
-    if isinstance(value, (str, int)):
-        try:
-            parse_device_group_address(value)
-            return value
-        except CouldNotParseAddress as exc:
-            raise vol.Invalid(
-                f"'{value}' is not a valid KNX group address: {exc.message}"
-            ) from exc
-    raise vol.Invalid(
-        f"'{value}' is not a valid KNX group address: Invalid type '{type(value).__name__}'"
-    )
+    if not isinstance(value, (str, int)):
+        raise vol.Invalid(
+            f"'{value}' is not a valid KNX group address: Invalid type '{type(value).__name__}'"
+        )
+    try:
+        parse_device_group_address(value)
+    except CouldNotParseAddress as exc:
+        raise vol.Invalid(
+            f"'{value}' is not a valid KNX group address: {exc.message}"
+        ) from exc
+    return value
+
+
+def maybe_ga_validator(value: Any) -> str | int | None:
+    """Validate a group address or None."""
+    # this is a version of vol.Maybe(ga_validator) that delivers the
+    # error message of ga_validator if validation fails.
+    return ga_validator(value) if value is not None else None
 
 
 ga_list_validator = vol.All(
     cv.ensure_list,
     [ga_validator],
     vol.IsTrue("value must be a group address or a list containing group addresses"),
+)
+
+ga_list_validator_optional = vol.Maybe(
+    vol.All(
+        cv.ensure_list,
+        [ga_validator],
+        vol.Any(vol.IsTrue(), vol.SetTo(None)),  # avoid empty lists -> None
+    )
 )
 
 ia_validator = vol.Any(
@@ -88,3 +105,36 @@ sync_state_validator = vol.Any(
     cv.boolean,
     cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
 )
+
+
+def backwards_compatible_xknx_climate_enum_member(enumClass: type[Enum]) -> vol.All:
+    """Transform a string to an enum member.
+
+    Backwards compatible with member names of xknx 2.x climate DPT Enums
+    due to unintentional breaking change in HA 2024.8.
+    """
+
+    def _string_transform(value: Any) -> str:
+        """Upper and slugify string and substitute old member names.
+
+        Previously this was checked against Enum values instead of names. These
+        looked like `FAN_ONLY = "Fan only"`, therefore the upper & replace part.
+        """
+        if not isinstance(value, str):
+            raise vol.Invalid("value should be a string")
+        name = value.upper().replace(" ", "_")
+        match name:
+            case "NIGHT":
+                return "ECONOMY"
+            case "FROST_PROTECTION":
+                return "BUILDING_PROTECTION"
+            case "DRY":
+                return "DEHUMIDIFICATION"
+            case _:
+                return name
+
+    return vol.All(
+        _string_transform,
+        vol.In(enumClass.__members__),
+        enumClass.__getitem__,
+    )

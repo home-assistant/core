@@ -7,8 +7,9 @@ import dataclasses
 from functools import wraps
 import logging
 import random
-from typing import Any, Concatenate, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, cast
 
+import aiohttp
 import python_otbr_api
 from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
 from python_otbr_api.pskc import compute_pskc
@@ -18,24 +19,19 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     MultiprotocolAddonManager,
     get_multiprotocol_addon_manager,
     is_multiprotocol_url,
-    multi_pan_addon_using_device,
 )
-from homeassistant.components.homeassistant_yellow import RADIO_DEVICE as YELLOW_RADIO
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
+if TYPE_CHECKING:
+    from . import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-INFO_URL_SKY_CONNECT = (
-    "https://skyconnect.home-assistant.io/multiprotocol-channel-missmatch"
-)
-INFO_URL_YELLOW = "https://yellow.home-assistant.io/multiprotocol-channel-missmatch"
 
 INSECURE_NETWORK_KEYS = (
     # Thread web UI default
@@ -50,6 +46,10 @@ INSECURE_PASSPHRASES = (
 )
 
 
+class GetBorderAgentIdNotSupported(HomeAssistantError):
+    """Raised from python_otbr_api.GetBorderAgentIdNotSupportedError."""
+
+
 def compose_default_network_name(pan_id: int) -> str:
     """Generate a default network name."""
     return f"ha-thread-{pan_id:04x}"
@@ -61,7 +61,7 @@ def generate_random_pan_id() -> int:
     return random.randint(0, 0xFFFE)
 
 
-def _handle_otbr_error(
+def _handle_otbr_error[**_P, _R](
     func: Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]]:
     """Handle OTBR errors."""
@@ -70,7 +70,7 @@ def _handle_otbr_error(
     async def _func(self: OTBRData, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await func(self, *args, **kwargs)
-        except python_otbr_api.OTBRError as exc:
+        except (python_otbr_api.OTBRError, aiohttp.ClientError, TimeoutError) as exc:
             raise HomeAssistantError("Failed to call OTBR API") from exc
 
     return _func
@@ -85,7 +85,7 @@ class OTBRData:
     entry_id: str
 
     @_handle_otbr_error
-    async def factory_reset(self) -> None:
+    async def factory_reset(self, hass: HomeAssistant) -> None:
         """Reset the router."""
         try:
             await self.api.factory_reset()
@@ -94,14 +94,19 @@ class OTBRData:
                 "OTBR does not support factory reset, attempting to delete dataset"
             )
             await self.delete_active_dataset()
+        await update_unique_id(
+            hass,
+            hass.config_entries.async_get_entry(self.entry_id),
+            await self.get_border_agent_id(),
+        )
 
     @_handle_otbr_error
-    async def get_border_agent_id(self) -> bytes | None:
+    async def get_border_agent_id(self) -> bytes:
         """Get the border agent ID or None if not supported by the router."""
         try:
             return await self.api.get_border_agent_id()
-        except python_otbr_api.GetBorderAgentIdNotSupportedError:
-            return None
+        except python_otbr_api.GetBorderAgentIdNotSupportedError as exc:
+            raise GetBorderAgentIdNotSupported from exc
 
     @_handle_otbr_error
     async def set_enabled(self, enabled: bool) -> None:
@@ -152,6 +157,11 @@ class OTBRData:
         """Get extended address (EUI-64)."""
         return await self.api.get_extended_address()
 
+    @_handle_otbr_error
+    async def get_coprocessor_version(self) -> str:
+        """Get coprocessor firmware version."""
+        return await self.api.get_coprocessor_version()
+
 
 async def get_allowed_channel(hass: HomeAssistant, otbr_url: str) -> int | None:
     """Return the allowed channel, or None if there's no restriction."""
@@ -192,16 +202,12 @@ async def _warn_on_channel_collision(
         delete_issue()
         return
 
-    yellow = await multi_pan_addon_using_device(hass, YELLOW_RADIO)
-    learn_more_url = INFO_URL_YELLOW if yellow else INFO_URL_SKY_CONNECT
-
     ir.async_create_issue(
         hass,
         DOMAIN,
         f"otbr_zha_channel_collision_{otbrdata.entry_id}",
         is_fixable=False,
         is_persistent=False,
-        learn_more_url=learn_more_url,
         severity=ir.IssueSeverity.WARNING,
         translation_key="otbr_zha_channel_collision",
         translation_placeholders={
@@ -260,3 +266,18 @@ async def update_issues(
     """Raise or clear repair issues related to network settings."""
     await _warn_on_channel_collision(hass, otbrdata, dataset_tlvs)
     _warn_on_default_network_settings(hass, otbrdata, dataset_tlvs)
+
+
+async def update_unique_id(
+    hass: HomeAssistant, entry: OTBRConfigEntry | None, border_agent_id: bytes
+) -> None:
+    """Update the config entry's unique_id if not matching."""
+    border_agent_id_hex = border_agent_id.hex()
+    if entry and entry.source == SOURCE_USER and entry.unique_id != border_agent_id_hex:
+        _LOGGER.debug(
+            "Updating unique_id of entry %s from %s to %s",
+            entry.entry_id,
+            entry.unique_id,
+            border_agent_id_hex,
+        )
+        hass.config_entries.async_update_entry(entry, unique_id=border_agent_id_hex)

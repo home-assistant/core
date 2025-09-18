@@ -4,20 +4,20 @@ from __future__ import annotations
 
 from itertools import chain
 import logging
+from typing import TypedDict
 
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import Bootstrap
-from typing_extensions import TypedDict
+from uiprotect import ProtectApiClient
+from uiprotect.data import Bootstrap
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.issue_registry import IssueSeverity
 
 from .const import DOMAIN
+from .data import UFPConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class EntityUsage(TypedDict):
 
 @callback
 def check_if_used(
-    hass: HomeAssistant, entry: ConfigEntry, entities: dict[str, EntityRef]
+    hass: HomeAssistant, entry: UFPConfigEntry, entities: dict[str, EntityRef]
 ) -> dict[str, EntityUsage]:
     """Check for usages of entities and return them."""
 
@@ -67,7 +67,7 @@ def check_if_used(
 @callback
 def create_repair_if_used(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     breaks_in: str,
     entities: dict[str, EntityRef],
 ) -> None:
@@ -101,25 +101,23 @@ def create_repair_if_used(
 
 async def async_migrate_data(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     protect: ProtectApiClient,
     bootstrap: Bootstrap,
 ) -> None:
     """Run all valid UniFi Protect data migrations."""
 
-    _LOGGER.debug("Start Migrate: async_deprecate_hdr_package")
-    async_deprecate_hdr_package(hass, entry)
-    _LOGGER.debug("Completed Migrate: async_deprecate_hdr_package")
+    _LOGGER.debug("Start Migrate: async_deprecate_hdr")
+    async_deprecate_hdr(hass, entry)
+    _LOGGER.debug("Completed Migrate: async_deprecate_hdr")
 
 
 @callback
-def async_deprecate_hdr_package(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Check for usages of hdr_mode switch and package sensor and raise repair if it is used.
+def async_deprecate_hdr(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
+    """Check for usages of hdr_mode switch and raise repair if it is used.
 
     UniFi Protect v3.0.22 changed how HDR works so it is no longer a simple on/off toggle. There is
     Always On, Always Off and Auto. So it has been migrated to a select. The old switch is now deprecated.
-
-    Additionally, the Package sensor is no longer functional due to how events work so a repair to notify users.
 
     Added in 2024.4.0
     """
@@ -128,11 +126,5 @@ def async_deprecate_hdr_package(hass: HomeAssistant, entry: ConfigEntry) -> None
         hass,
         entry,
         "2024.10.0",
-        {
-            "hdr_switch": {"id": "hdr_mode", "platform": Platform.SWITCH},
-            "package_sensor": {
-                "id": "smart_obj_package",
-                "platform": Platform.BINARY_SENSOR,
-            },
-        },
+        {"hdr_switch": {"id": "hdr_mode", "platform": Platform.SWITCH}},
     )

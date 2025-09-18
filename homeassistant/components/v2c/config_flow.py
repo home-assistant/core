@@ -41,13 +41,18 @@ class V2CConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                await evse.get_data()
+                data = await evse.get_data()
+
             except TrydanError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if data.ID:
+                    await self.async_set_unique_id(data.ID)
+                    self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
                     title=f"EVSE {user_input[CONF_HOST]}", data=user_input
                 )

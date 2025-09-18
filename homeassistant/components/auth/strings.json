@@ -5,7 +5,7 @@
       "step": {
         "init": {
           "title": "Set up two-factor authentication using TOTP",
-          "description": "To activate two factor authentication using time-based one-time passwords, scan the QR code with your authentication app. If you don't have one, we recommend either [Google Authenticator](https://support.google.com/accounts/answer/1066447) or [Authy](https://authy.com/).\n\n{qr_code}\n\nAfter scanning the code, enter the six digit code from your app to verify the setup. If you have problems scanning the QR code, do a manual setup with code **`{code}`**."
+          "description": "To activate two-factor authentication using time-based one-time passwords, scan the QR code with your authentication app. If you don't have one, we recommend either [Google Authenticator](https://support.google.com/accounts/answer/1066447) or [Authy](https://authy.com/).\n\n{qr_code}\n\nAfter scanning the code, enter the six-digit code from your app to verify the setup. If you have problems scanning the QR code, do a manual setup with code **`{code}`**."
         }
       },
       "error": {
@@ -13,7 +13,7 @@
       }
     },
     "notify": {
-      "title": "Notify One-Time Password",
+      "title": "Notify one-time password",
       "step": {
         "init": {
           "title": "Set up one-time password delivered by notify component",
@@ -32,10 +32,21 @@
       }
     }
   },
+  "exceptions": {
+    "username_already_exists": {
+      "message": "Username \"{username}\" already exists"
+    },
+    "username_not_normalized": {
+      "message": "Username \"{new_username}\" is not normalized. Please make sure the username is lowercase and does not contain any whitespace."
+    },
+    "user_not_found": {
+      "message": "User not found"
+    }
+  },
   "issues": {
-    "deprecated_legacy_api_password": {
-      "title": "The legacy API password is deprecated",
-      "description": "The legacy API password authentication provider is deprecated and will be removed. Please remove it from your YAML configuration and use the default Home Assistant authentication provider instead."
+    "homeassistant_provider_not_normalized_usernames": {
+      "title": "Not normalized usernames detected",
+      "description": "The Home Assistant auth provider is running in legacy mode because we detected not normalized usernames. The legacy mode is deprecated and will be removed. Please change the following usernames:\n\n{usernames}\n\nNormalized usernames are case folded (lower case) and stripped of whitespaces."
     }
   }
 }

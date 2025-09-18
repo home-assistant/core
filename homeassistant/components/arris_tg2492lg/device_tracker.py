@@ -2,22 +2,24 @@
 
 from __future__ import annotations
 
+from aiohttp.client_exceptions import ClientResponseError
 from arris_tg2492lg import ConnectBox, Device
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 DEFAULT_HOST = "192.168.178.1"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -25,12 +27,21 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> ArrisDeviceScanner:
-    """Return the Arris device scanner."""
-    conf = config[DOMAIN]
+async def async_get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> ArrisDeviceScanner | None:
+    """Return the Arris device scanner if successful."""
+    conf = config[DEVICE_TRACKER_DOMAIN]
     url = f"http://{conf[CONF_HOST]}"
-    connect_box = ConnectBox(url, conf[CONF_PASSWORD])
-    return ArrisDeviceScanner(connect_box)
+    websession = async_get_clientsession(hass)
+    connect_box = ConnectBox(websession, url, conf[CONF_PASSWORD])
+
+    try:
+        await connect_box.async_login()
+
+        return ArrisDeviceScanner(connect_box)
+    except ClientResponseError:
+        return None
 
 
 class ArrisDeviceScanner(DeviceScanner):
@@ -41,23 +52,22 @@ class ArrisDeviceScanner(DeviceScanner):
         self.connect_box = connect_box
         self.last_results: list[Device] = []
 
-    def scan_devices(self) -> list[str]:
+    async def async_scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
+        await self._async_update_info()
 
         return [device.mac for device in self.last_results if device.mac]
 
-    def get_device_name(self, device: str) -> str | None:
+    async def async_get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
-        name = next(
+        return next(
             (result.hostname for result in self.last_results if result.mac == device),
             None,
         )
-        return name
 
-    def _update_info(self) -> None:
+    async def _async_update_info(self) -> None:
         """Ensure the information from the Arris TG2492LG router is up to date."""
-        result = self.connect_box.get_connected_devices()
+        result = await self.connect_box.async_get_connected_devices()
 
         last_results: list[Device] = []
         mac_addresses: set[str | None] = set()

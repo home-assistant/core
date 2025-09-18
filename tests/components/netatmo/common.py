@@ -1,19 +1,21 @@
 """Common methods used across tests for Netatmo."""
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 import json
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.netatmo.const import DOMAIN
 from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockRequest
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 COMMON_RESPONSE = {
@@ -52,7 +54,7 @@ async def snapshot_platform_entities(
         )
 
 
-async def fake_post_request(*args: Any, **kwargs: Any):
+async def fake_post_request(hass: HomeAssistant, *args: Any, **kwargs: Any):
     """Return fake data."""
     if "endpoint" not in kwargs:
         return "{}"
@@ -74,10 +76,12 @@ async def fake_post_request(*args: Any, **kwargs: Any):
 
     elif endpoint == "homestatus":
         home_id = kwargs.get("params", {}).get("home_id")
-        payload = json.loads(load_fixture(f"netatmo/{endpoint}_{home_id}.json"))
+        payload = json.loads(
+            await async_load_fixture(hass, f"{endpoint}_{home_id}.json", DOMAIN)
+        )
 
     else:
-        payload = json.loads(load_fixture(f"netatmo/{endpoint}.json"))
+        payload = json.loads(await async_load_fixture(hass, f"{endpoint}.json", DOMAIN))
 
     return AiohttpClientMockResponse(
         method="POST",
@@ -86,7 +90,7 @@ async def fake_post_request(*args: Any, **kwargs: Any):
     )
 
 
-async def fake_get_image(*args: Any, **kwargs: Any) -> bytes | str:
+async def fake_get_image(*args: Any, **kwargs: Any) -> bytes | str | None:
     """Return fake data."""
     if "endpoint" not in kwargs:
         return "{}"
@@ -95,6 +99,7 @@ async def fake_get_image(*args: Any, **kwargs: Any) -> bytes | str:
 
     if endpoint in "snapshot_720.jpg":
         return b"test stream image bytes"
+    return None
 
 
 async def simulate_webhook(hass: HomeAssistant, webhook_id: str, response) -> None:
@@ -109,13 +114,15 @@ async def simulate_webhook(hass: HomeAssistant, webhook_id: str, response) -> No
 
 
 @contextmanager
-def selected_platforms(platforms: list[Platform]) -> AsyncMock:
+def selected_platforms(platforms: list[Platform]) -> Iterator[None]:
     """Restrict loaded platforms to list given."""
-    with patch(
-        "homeassistant.components.netatmo.data_handler.PLATFORMS", platforms
-    ), patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url",
+    with (
+        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", platforms),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook_generate_url",
+        ),
     ):
         yield

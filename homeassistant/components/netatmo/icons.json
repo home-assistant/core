@@ -1,14 +1,86 @@
 {
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "frost_guard": "mdi:snowflake-thermometer",
+              "schedule": "mdi:clock-outline",
+              "manual": "mdi:gesture-tap"
+            }
+          }
+        }
+      }
+    },
+    "button": {
+      "preferred_position": {
+        "default": "mdi:window-shutter-auto"
+      }
+    },
+    "sensor": {
+      "temp_trend": {
+        "default": "mdi:trending-up"
+      },
+      "pressure_trend": {
+        "default": "mdi:trending-up"
+      },
+      "wind_direction": {
+        "default": "mdi:compass-outline"
+      },
+      "wind_angle": {
+        "default": "mdi:compass-outline"
+      },
+      "gust_direction": {
+        "default": "mdi:compass-outline"
+      },
+      "gust_angle": {
+        "default": "mdi:compass-outline"
+      },
+      "reachable": {
+        "default": "mdi:signal"
+      },
+      "rf_strength": {
+        "default": "mdi:signal"
+      },
+      "wifi_strength": {
+        "default": "mdi:wifi"
+      },
+      "health_idx": {
+        "default": "mdi:cloud"
+      }
+    }
+  },
   "services": {
-    "set_camera_light": "mdi:led-on",
-    "set_schedule": "mdi:calendar-clock",
-    "set_preset_mode_with_end_datetime": "mdi:calendar-clock",
-    "set_temperature_with_end_datetime": "mdi:thermometer",
-    "set_temperature_with_time_period": "mdi:thermometer",
-    "clear_temperature_setting": "mdi:thermometer",
-    "set_persons_home": "mdi:home",
-    "set_person_away": "mdi:walk",
-    "register_webhook": "mdi:link-variant",
-    "unregister_webhook": "mdi:link-variant-off"
+    "set_camera_light": {
+      "service": "mdi:led-on"
+    },
+    "set_schedule": {
+      "service": "mdi:calendar-clock"
+    },
+    "set_preset_mode_with_end_datetime": {
+      "service": "mdi:calendar-clock"
+    },
+    "set_temperature_with_end_datetime": {
+      "service": "mdi:thermometer"
+    },
+    "set_temperature_with_time_period": {
+      "service": "mdi:thermometer"
+    },
+    "clear_temperature_setting": {
+      "service": "mdi:thermometer"
+    },
+    "set_persons_home": {
+      "service": "mdi:home"
+    },
+    "set_person_away": {
+      "service": "mdi:walk"
+    },
+    "register_webhook": {
+      "service": "mdi:link-variant"
+    },
+    "unregister_webhook": {
+      "service": "mdi:link-variant-off"
+    }
   }
 }

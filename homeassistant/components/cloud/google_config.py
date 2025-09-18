@@ -7,7 +7,7 @@ from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any
 
-from hass_nabucasa import Cloud, cloud_api
+from hass_nabucasa import Cloud
 from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -41,7 +41,7 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     DEFAULT_DISABLE_2FA,
-    DOMAIN as CLOUD_DOMAIN,
+    DOMAIN,
     PREF_DISABLE_2FA,
     PREF_SHOULD_EXPOSE,
 )
@@ -52,7 +52,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-CLOUD_GOOGLE = f"{CLOUD_DOMAIN}.{GOOGLE_DOMAIN}"
+CLOUD_GOOGLE = f"{DOMAIN}.{GOOGLE_DOMAIN}"
 
 
 SUPPORTED_DOMAINS = {
@@ -177,7 +177,7 @@ class CloudGoogleConfig(AbstractConfig):
     def get_local_user_id(self, webhook_id: Any) -> str:
         """Map webhook ID to a Home Assistant user ID.
 
-        Any action inititated by Google Assistant via the local SDK will be attributed
+        Any action initiated by Google Assistant via the local SDK will be attributed
         to the returned user ID.
         """
         return self._user
@@ -377,7 +377,7 @@ class CloudGoogleConfig(AbstractConfig):
             return HTTPStatus.OK
 
         async with self._sync_entities_lock:
-            resp = await cloud_api.async_google_actions_request_sync(self._cloud)
+            resp = await self._cloud.google_report_state.request_sync()
             return resp.status
 
     async def async_connect_agent_user(self, agent_user_id: str) -> None:
@@ -400,7 +400,11 @@ class CloudGoogleConfig(AbstractConfig):
     @callback
     def async_get_agent_users(self) -> tuple:
         """Return known agent users."""
-        if not self._prefs.google_connected or not self._cloud.username:
+        if (
+            not self._cloud.is_logged_in  # Can't call Cloud.username if not logged in
+            or not self._prefs.google_connected
+            or not self._cloud.username
+        ):
             return ()
         return (self._cloud.username,)
 
@@ -449,7 +453,9 @@ class CloudGoogleConfig(AbstractConfig):
         self.async_schedule_google_sync_all()
 
     @callback
-    def _handle_entity_registry_updated(self, event: Event) -> None:
+    def _handle_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle when entity registry updated."""
         if (
             not self.enabled
@@ -472,7 +478,9 @@ class CloudGoogleConfig(AbstractConfig):
         self.async_schedule_google_sync_all()
 
     @callback
-    async def _handle_device_registry_updated(self, event: Event) -> None:
+    def _handle_device_registry_updated(
+        self, event: Event[dr.EventDeviceRegistryUpdatedData]
+    ) -> None:
         """Handle when device registry updated."""
         if (
             not self.enabled

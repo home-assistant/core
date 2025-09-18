@@ -14,7 +14,7 @@ from tests.common import get_system_health_info
 
 
 @pytest.fixture(autouse=True)
-def mock_onboarding_done() -> Generator[MagicMock, None, None]:
+def mock_onboarding_done() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding.
 
     Enabled to prevent creating default dashboards during test execution.
@@ -72,6 +72,6 @@ async def test_system_health_info_yaml_not_found(hass: HomeAssistant) -> None:
     assert info == {
         "dashboards": 1,
         "mode": "yaml",
-        "error": "{} not found".format(hass.config.path("ui-lovelace.yaml")),
+        "error": f"{hass.config.path('ui-lovelace.yaml')} not found",
         "resources": 0,
     }

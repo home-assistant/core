@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
+import logging
 import os
 from typing import Any
 
@@ -31,16 +33,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ANDROID_DEV,
-    ANDROID_DEV_OPT,
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
     CONF_ADBKEY,
+    CONF_SCREENCAP_INTERVAL,
     CONF_STATE_DETECTION_RULES,
     DEFAULT_ADB_SERVER_PORT,
     DEVICE_ANDROIDTV,
@@ -50,6 +53,7 @@ from .const import (
     PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
 )
+from .services import async_setup_services
 
 ADB_PYTHON_EXCEPTIONS: tuple = (
     AdbTimeoutError,
@@ -63,10 +67,25 @@ ADB_PYTHON_EXCEPTIONS: tuple = (
 )
 ADB_TCP_EXCEPTIONS: tuple = (ConnectionResetError, RuntimeError)
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
 _INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class AndroidTVRuntimeData:
+    """Runtime data definition."""
+
+    aftv: AndroidTVAsync | FireTVAsync
+    dev_opt: dict[str, Any]
+
+
+AndroidTVConfigEntry = ConfigEntry[AndroidTVRuntimeData]
 
 
 def get_androidtv_mac(dev_props: dict[str, Any]) -> str | None:
@@ -97,7 +116,7 @@ def _setup_androidtv(
         adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
 
     else:
-        # Use "pure-python-adb" (communicate with ADB server)
+        # Communicate via ADB server
         signer = None
         adb_log = (
             "using ADB server at"
@@ -122,15 +141,16 @@ async def async_connect_androidtv(
     )
 
     aftv = await async_androidtv_setup(
-        config[CONF_HOST],
-        config[CONF_PORT],
-        adbkey,
-        config.get(CONF_ADB_SERVER_IP),
-        config.get(CONF_ADB_SERVER_PORT, DEFAULT_ADB_SERVER_PORT),
-        state_detection_rules,
-        config[CONF_DEVICE_CLASS],
-        timeout,
-        signer,
+        host=config[CONF_HOST],
+        port=config[CONF_PORT],
+        adbkey=adbkey,
+        adb_server_ip=config.get(CONF_ADB_SERVER_IP),
+        adb_server_port=config.get(CONF_ADB_SERVER_PORT, DEFAULT_ADB_SERVER_PORT),
+        state_detection_rules=state_detection_rules,
+        device_class=config[CONF_DEVICE_CLASS],
+        auth_timeout_s=timeout,
+        signer=signer,
+        log_errors=False,
     )
 
     if not aftv.available:
@@ -148,7 +168,39 @@ async def async_connect_androidtv(
     return aftv, None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s", entry.version, entry.minor_version
+    )
+
+    if entry.version == 1:
+        new_options = {**entry.options}
+
+        # Migrate MinorVersion 1 -> MinorVersion 2: New option
+        if entry.minor_version < 2:
+            new_options = {**new_options, CONF_SCREENCAP_INTERVAL: 0}
+
+            hass.config_entries.async_update_entry(
+                entry, options=new_options, minor_version=2, version=1
+            )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Android TV / Fire TV integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> bool:
     """Set up Android Debug Bridge platform."""
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
@@ -176,30 +228,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        ANDROID_DEV: aftv,
-        ANDROID_DEV_OPT: entry.options.copy(),
-    }
+    entry.runtime_data = AndroidTVRuntimeData(aftv, entry.options.copy())
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
+        aftv = entry.runtime_data.aftv
         await aftv.adb_close()
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> None:
     """Update when config_entry options update."""
     reload_opt = False
-    old_options = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV_OPT]
+    old_options = entry.runtime_data.dev_opt
     for opt_key, opt_val in entry.options.items():
         if opt_key in RELOAD_OPTIONS:
             old_val = old_options.get(opt_key)
@@ -211,5 +259,5 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await hass.config_entries.async_reload(entry.entry_id)
         return
 
-    hass.data[DOMAIN][entry.entry_id][ANDROID_DEV_OPT] = entry.options.copy()
+    entry.runtime_data.dev_opt = entry.options.copy()
     async_dispatcher_send(hass, f"{SIGNAL_CONFIG_ENTITY}_{entry.entry_id}")

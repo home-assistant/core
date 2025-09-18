@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
-from homeassistant import data_entry_flow
 from homeassistant.components.launch_library.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -17,7 +17,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     with patch(
@@ -28,7 +28,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
             {},
         )
 
-        assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result.get("type") is FlowResultType.CREATE_ENTRY
         assert result.get("result").data == {}
 
 
@@ -44,5 +44,5 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}, data={}
     )
 
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"

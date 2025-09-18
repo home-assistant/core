@@ -10,8 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers import selector
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 
 from .const import CONNECTION_TIMEOUT, DOMAIN
 from .coordinator import APCUPSdData
@@ -47,11 +46,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="user", data_schema=_SCHEMA)
 
         host, port = user_input[CONF_HOST], user_input[CONF_PORT]
-
-        # Abort if an entry with same host and port is present.
         self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
-
-        # Test the connection to the host and get the current status for serial number.
         try:
             async with asyncio.timeout(CONNECTION_TIMEOUT):
                 data = APCUPSdData(await aioapcaccess.request_status(host, port))
@@ -68,3 +63,30 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         title = data.name or data.model or data.serial_no or "APC UPS"
         return self.async_create_entry(title=title, data=user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry."""
+
+        if user_input is None:
+            return self.async_show_form(step_id="reconfigure", data_schema=_SCHEMA)
+
+        host, port = user_input[CONF_HOST], user_input[CONF_PORT]
+        self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
+        try:
+            async with asyncio.timeout(CONNECTION_TIMEOUT):
+                data = APCUPSdData(await aioapcaccess.request_status(host, port))
+        except (OSError, asyncio.IncompleteReadError, TimeoutError):
+            errors = {"base": "cannot_connect"}
+            return self.async_show_form(
+                step_id="reconfigure", data_schema=_SCHEMA, errors=errors
+            )
+
+        await self.async_set_unique_id(data.serial_no)
+        self._abort_if_unique_id_mismatch(reason="wrong_apcupsd_daemon")
+
+        return self.async_update_reload_and_abort(
+            self._get_reconfigure_entry(),
+            data_updates=user_input,
+        )

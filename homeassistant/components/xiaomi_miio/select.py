@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import logging
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
+from miio import Device as MiioDevice
 from miio.fan_common import LedBrightness as FanLedBrightness
 from miio.integrations.airpurifier.dmaker.airfresh_t2017 import (
     DisplayOrientation as AirfreshT2017DisplayOrientation,
@@ -29,16 +30,13 @@ from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_FLOW_TYPE,
-    DOMAIN,
-    KEY_COORDINATOR,
-    KEY_DEVICE,
     MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
     MODEL_AIRFRESH_VA4,
@@ -54,6 +52,7 @@ from .const import (
     MODEL_AIRPURIFIER_M2,
     MODEL_AIRPURIFIER_MA2,
     MODEL_AIRPURIFIER_PROH,
+    MODEL_AIRPURIFIER_PROH_EU,
     MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_SA1,
     MODEL_FAN_V2,
@@ -62,7 +61,8 @@ from .const import (
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
 )
-from .device import XiaomiCoordinatedMiioEntity
+from .entity import XiaomiCoordinatedMiioEntity
+from .typing import XiaomiMiioConfigEntry
 
 ATTR_DISPLAY_ORIENTATION = "display_orientation"
 ATTR_LED_BRIGHTNESS = "led_brightness"
@@ -89,7 +89,7 @@ class AttributeEnumMapping(NamedTuple):
     enum_class: type
 
 
-MODEL_TO_ATTR_MAP: dict[str, list] = {
+MODEL_TO_ATTR_MAP: dict[str, list[AttributeEnumMapping]] = {
     MODEL_AIRFRESH_T2017: [
         AttributeEnumMapping(ATTR_DISPLAY_ORIENTATION, AirfreshT2017DisplayOrientation),
         AttributeEnumMapping(ATTR_PTC_LEVEL, AirfreshT2017PtcLevel),
@@ -135,6 +135,9 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierLedBrightness)
     ],
     MODEL_AIRPURIFIER_PROH: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_PROH_EU: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
     MODEL_FAN_SA1: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
@@ -200,8 +203,8 @@ SELECTOR_TYPES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: XiaomiMiioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Selectors from a config entry."""
     if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
@@ -212,8 +215,8 @@ async def async_setup_entry(
         return
 
     unique_id = config_entry.unique_id
-    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.device_coordinator
     attributes = MODEL_TO_ATTR_MAP[model]
 
     async_add_entities(
@@ -231,10 +234,21 @@ async def async_setup_entry(
     )
 
 
-class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
+class XiaomiSelector(
+    XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[Any]], SelectEntity
+):
     """Representation of a generic Xiaomi attribute selector."""
 
-    def __init__(self, device, entry, unique_id, coordinator, description):
+    entity_description: XiaomiMiioSelectDescription
+
+    def __init__(
+        self,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str,
+        coordinator: DataUpdateCoordinator[Any],
+        description: XiaomiMiioSelectDescription,
+    ) -> None:
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(device, entry, unique_id, coordinator)
         self.entity_description = description
@@ -243,9 +257,15 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
 class XiaomiGenericSelector(XiaomiSelector):
     """Representation of a Xiaomi generic selector."""
 
-    entity_description: XiaomiMiioSelectDescription
-
-    def __init__(self, device, entry, unique_id, coordinator, description, enum_class):
+    def __init__(
+        self,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str,
+        coordinator: DataUpdateCoordinator[Any],
+        description: XiaomiMiioSelectDescription,
+        enum_class: type,
+    ) -> None:
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(device, entry, unique_id, coordinator, description)
         self._current_attr = enum_class(
@@ -256,10 +276,10 @@ class XiaomiGenericSelector(XiaomiSelector):
 
         if description.options_map:
             self._options_map = {}
-            for key, val in enum_class._member_map_.items():
+            for key, val in enum_class._member_map_.items():  # type: ignore[attr-defined]
                 self._options_map[description.options_map[key]] = val
         else:
-            self._options_map = enum_class._member_map_
+            self._options_map = enum_class._member_map_  # type: ignore[attr-defined]
         self._reverse_map = {val: key for key, val in self._options_map.items()}
         self._enum_class = enum_class
 

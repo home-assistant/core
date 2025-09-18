@@ -141,10 +141,13 @@ async def test_setup_reload_service_when_async_process_component_config_fails(
     await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
 
     yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
-    with patch.object(config, "YAML_CONFIG_FILE", yaml_path), patch.object(
-        config,
-        "async_process_component_config",
-        return_value=config.IntegrationConfigInfo(None, []),
+    with (
+        patch.object(config, "YAML_CONFIG_FILE", yaml_path),
+        patch.object(
+            config,
+            "async_process_component_config",
+            return_value=config.IntegrationConfigInfo(None, []),
+        ),
     ):
         await hass.services.async_call(
             PLATFORM,
@@ -250,10 +253,14 @@ async def test_async_integration_failing_on_reload(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule(DOMAIN))
 
     yaml_path = get_fixture_path(f"helpers/{DOMAIN}_configuration.yaml")
-    with patch.object(config, "YAML_CONFIG_FILE", yaml_path), patch(
-        "homeassistant.config.async_process_component_config",
-        side_effect=HomeAssistantError(),
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch.object(config, "YAML_CONFIG_FILE", yaml_path),
+        patch(
+            "homeassistant.config.async_process_component_config",
+            side_effect=HomeAssistantError(),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         # Test fetching yaml config does raise when the raise_on_failure option is set
         await async_integration_yaml_config(hass, DOMAIN, raise_on_failure=True)
 
@@ -263,7 +270,8 @@ async def test_async_integration_missing_yaml_config(hass: HomeAssistant) -> Non
     mock_integration(hass, MockModule(DOMAIN))
 
     yaml_path = get_fixture_path("helpers/does_not_exist_configuration.yaml")
-    with pytest.raises(FileNotFoundError), patch.object(
-        config, "YAML_CONFIG_FILE", yaml_path
+    with (
+        pytest.raises(FileNotFoundError),
+        patch.object(config, "YAML_CONFIG_FILE", yaml_path),
     ):
         await async_integration_yaml_config(hass, DOMAIN)

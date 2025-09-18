@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.aprilaire.config_flow import (
     STEP_USER_DATA_SCHEMA,
-    ConfigFlow,
+    AprilaireConfigFlow,
 )
 from homeassistant.core import HomeAssistant
 
@@ -24,7 +24,7 @@ async def test_user_input_step() -> None:
 
     show_form_mock = Mock()
 
-    config_flow = ConfigFlow()
+    config_flow = AprilaireConfigFlow()
     config_flow.async_show_form = show_form_mock
 
     await config_flow.async_step_user(None)
@@ -41,7 +41,7 @@ async def test_config_flow_invalid_data(client: AprilaireClient) -> None:
     set_unique_id_mock = AsyncMock()
     async_abort_entries_match_mock = Mock()
 
-    config_flow = ConfigFlow()
+    config_flow = AprilaireConfigFlow()
     config_flow.async_show_form = show_form_mock
     config_flow.async_set_unique_id = set_unique_id_mock
     config_flow._async_abort_entries_match = async_abort_entries_match_mock
@@ -77,7 +77,7 @@ async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) ->
     abort_if_unique_id_configured_mock = Mock()
     create_entry_mock = Mock()
 
-    config_flow = ConfigFlow()
+    config_flow = AprilaireConfigFlow()
     config_flow.hass = hass
     config_flow.async_show_form = show_form_mock
     config_flow.async_set_unique_id = set_unique_id_mock
@@ -95,7 +95,6 @@ async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) ->
         )
 
     client.start_listen.assert_called_once()
-    client.wait_for_response.assert_any_call(FunctionalDomain.IDENTIFICATION, 4, 30)
     client.wait_for_response.assert_any_call(FunctionalDomain.CONTROL, 7, 30)
     client.wait_for_response.assert_any_call(FunctionalDomain.SENSORS, 2, 30)
     client.stop_listen.assert_called_once()
@@ -104,7 +103,7 @@ async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) ->
     abort_if_unique_id_configured_mock.assert_called_once()
 
     create_entry_mock.assert_called_once_with(
-        title="Aprilaire",
+        title="AprilAire",
         data={
             "host": "localhost",
             "port": 7000,

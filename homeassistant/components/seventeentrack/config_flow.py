@@ -5,12 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from py17track import Client as SeventeenTrackClient
-from py17track.errors import SeventeenTrackError
+from pyseventeentrack import Client as SeventeenTrackClient
+from pyseventeentrack.errors import SeventeenTrackError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -47,7 +46,7 @@ USER_SCHEMA = vol.Schema(
 )
 
 
-class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SeventeenTrackConfigFlow(ConfigFlow, domain=DOMAIN):
     """17track config flow."""
 
     VERSION = 1
@@ -55,7 +54,7 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
@@ -67,7 +66,7 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input:
-            client = await self._get_client()
+            client = self._get_client()
 
             try:
                 if not await client.profile.login(
@@ -98,40 +97,7 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import 17Track config from configuration.yaml."""
-
-        client = await self._get_client()
-
-        try:
-            login_result = await client.profile.login(
-                import_data[CONF_USERNAME], import_data[CONF_PASSWORD]
-            )
-        except SeventeenTrackError as err:
-            _LOGGER.error("There was an error while logging in: %s", err)
-            return self.async_abort(reason="cannot_connect")
-
-        if not login_result:
-            _LOGGER.error("Invalid username and password provided")
-            return self.async_abort(reason="invalid_credentials")
-
-        account_id = client.profile.account_id
-
-        await self.async_set_unique_id(account_id)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=import_data[CONF_USERNAME],
-            data=import_data,
-            options={
-                CONF_SHOW_ARCHIVED: import_data.get(
-                    CONF_SHOW_ARCHIVED, DEFAULT_SHOW_ARCHIVED
-                ),
-                CONF_SHOW_DELIVERED: import_data.get(
-                    CONF_SHOW_DELIVERED, DEFAULT_SHOW_DELIVERED
-                ),
-            },
-        )
-
-    async def _get_client(self):
+    @callback
+    def _get_client(self):
         session = aiohttp_client.async_get_clientsession(self.hass)
         return SeventeenTrackClient(session=session)

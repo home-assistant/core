@@ -3,12 +3,13 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import async_entries_for_config_entry
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -19,9 +20,8 @@ from .const import (
     HMIPC_HAPID,
     HMIPC_NAME,
 )
-from .generic_entity import HomematicipGenericEntity  # noqa: F401
-from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
-from .services import async_setup_services, async_unload_services
+from .hap import HomematicIPConfigEntry, HomematicipHAP
+from .services import async_setup_services
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -44,8 +44,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomematicIP Cloud component."""
-    hass.data[DOMAIN] = {}
-
     accesspoints = config.get(DOMAIN, [])
 
     for conf in accesspoints:
@@ -65,10 +63,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             )
 
+    async_setup_services(hass)
+
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) -> bool:
     """Set up an access point from a config entry."""
 
     # 0.104 introduced config entry unique id, this makes upgrading possible
@@ -80,12 +80,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     hap = HomematicipHAP(hass, entry)
-    hass.data[DOMAIN][entry.unique_id] = hap
 
+    entry.runtime_data = hap
     if not await hap.async_setup():
         return False
 
-    await async_setup_services(hass)
     _async_remove_obsolete_entities(hass, entry, hap)
 
     # Register on HA stop event to gracefully shutdown HomematicIP Cloud connection
@@ -109,19 +108,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: HomematicIPConfigEntry
+) -> bool:
     """Unload a config entry."""
-    hap = hass.data[DOMAIN].pop(entry.unique_id)
+    hap = entry.runtime_data
+    assert hap.reset_connection_listener is not None
     hap.reset_connection_listener()
-
-    await async_unload_services(hass)
 
     return await hap.async_reset()
 
 
 @callback
 def _async_remove_obsolete_entities(
-    hass: HomeAssistant, entry: ConfigEntry, hap: HomematicipHAP
+    hass: HomeAssistant, entry: HomematicIPConfigEntry, hap: HomematicipHAP
 ):
     """Remove obsolete entities from entity registry."""
 
@@ -129,7 +129,7 @@ def _async_remove_obsolete_entities(
         return
 
     entity_registry = er.async_get(hass)
-    er_entries = async_entries_for_config_entry(entity_registry, entry.entry_id)
+    er_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     for er_entry in er_entries:
         if er_entry.unique_id.startswith("HomematicipAccesspointStatus"):
             entity_registry.async_remove(er_entry.entity_id)

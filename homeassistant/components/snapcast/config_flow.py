@@ -45,7 +45,7 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
             except OSError:
                 errors["base"] = "cannot_connect"
             else:
-                await client.stop()
+                client.stop()
                 return self.async_create_entry(title=DEFAULT_TITLE, data=user_input)
         return self.async_show_form(
             step_id="user", data_schema=SNAPCAST_SCHEMA, errors=errors

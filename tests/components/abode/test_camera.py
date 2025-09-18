@@ -2,9 +2,9 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.abode.const import DOMAIN as ABODE_DOMAIN
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_IDLE
+from homeassistant.components.abode.const import DOMAIN
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN, CameraState
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -26,7 +26,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
     await setup_platform(hass, CAMERA_DOMAIN)
 
     state = hass.states.get("camera.test_cam")
-    assert state.state == STATE_IDLE
+    assert state.state == CameraState.IDLE
 
 
 async def test_capture_image(hass: HomeAssistant) -> None:
@@ -35,7 +35,7 @@ async def test_capture_image(hass: HomeAssistant) -> None:
 
     with patch("jaraco.abode.devices.camera.Camera.capture") as mock_capture:
         await hass.services.async_call(
-            ABODE_DOMAIN,
+            DOMAIN,
             "capture_image",
             {ATTR_ENTITY_ID: "camera.test_cam"},
             blocking=True,

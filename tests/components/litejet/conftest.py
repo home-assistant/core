@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 
 @pytest.fixture

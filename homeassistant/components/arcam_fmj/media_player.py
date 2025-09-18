@@ -5,12 +5,13 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import Any, ParamSpec, TypeVar
+from typing import Any
 
 from arcam.fmj import ConnectionFailed, SourceCodes
 from arcam.fmj.state import State
 
 from homeassistant.components.media_player import (
+    BrowseError,
     BrowseMedia,
     MediaClass,
     MediaPlayerEntity,
@@ -18,16 +19,14 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .config_flow import get_entry_client
+from . import ArcamFmjConfigEntry
 from .const import (
     DOMAIN,
     EVENT_TURN_ON,
@@ -36,20 +35,17 @@ from .const import (
     SIGNAL_CLIENT_STOPPED,
 )
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ArcamFmjConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the configuration entry."""
 
-    client = get_entry_client(hass, config_entry)
+    client = config_entry.runtime_data
 
     async_add_entities(
         [
@@ -64,7 +60,7 @@ async def async_setup_entry(
     )
 
 
-def convert_exception(
+def convert_exception[**_P, _R](
     func: Callable[_P, Coroutine[Any, Any, _R]],
 ) -> Callable[_P, Coroutine[Any, Any, _R]]:
     """Return decorator to convert a connection error into a home assistant error."""
@@ -257,7 +253,7 @@ class ArcamFmj(MediaPlayerEntity):
             for preset in presets.values()
         ]
 
-        root = BrowseMedia(
+        return BrowseMedia(
             title="Arcam FMJ Receiver",
             media_class=MediaClass.DIRECTORY,
             media_content_id="root",
@@ -266,8 +262,6 @@ class ArcamFmj(MediaPlayerEntity):
             can_expand=True,
             children=radio,
         )
-
-        return root
 
     @convert_exception
     async def async_play_media(

@@ -5,23 +5,21 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .common import AvmWrapper
-from .const import DOMAIN
+from .coordinator import FritzConfigEntry
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: FritzConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = entry.runtime_data
 
-    diag_data = {
+    return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "device_info": {
             "model": avm_wrapper.model,
@@ -51,5 +49,3 @@ async def async_get_config_entry_diagnostics(
             "wan_link_properties": await avm_wrapper.async_get_wan_link_properties(),
         },
     }
-
-    return diag_data

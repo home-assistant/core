@@ -18,7 +18,7 @@ from homeassistant.util.json import json_loads
 JWT_TOKEN_CACHE_SIZE = 16
 MAX_TOKEN_SIZE = 8192
 
-_VERIFY_KEYS = ("signature", "exp", "nbf", "iat", "aud", "iss")
+_VERIFY_KEYS = ("signature", "exp", "nbf", "iat", "aud", "iss", "sub", "jti")
 
 _VERIFY_OPTIONS: dict[str, Any] = {f"verify_{key}": True for key in _VERIFY_KEYS} | {
     "require": []
@@ -78,7 +78,7 @@ class _PyJWTWithVerify(PyJWT):
         key: str,
         algorithms: list[str],
         issuer: str | None = None,
-        leeway: int | float | timedelta = 0,
+        leeway: float | timedelta = 0,
         options: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Verify a JWT's signature and claims."""

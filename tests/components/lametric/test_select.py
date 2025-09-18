@@ -48,13 +48,17 @@ async def test_brightness_mode(
 
     device = device_registry.async_get(entry.device_id)
     assert device
-    assert device.configuration_url is None
-    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")}
+    assert device.configuration_url == "https://127.0.0.1/"
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ee"),
+    }
     assert device.entry_type is None
     assert device.hw_version is None
     assert device.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device.manufacturer == "LaMetric Inc."
     assert device.name == "Frenck's LaMetric"
+    assert device.serial_number == "SA110405124500W00BS9"
     assert device.sw_version == "2.2.2"
 
     await hass.services.async_call(
@@ -94,7 +98,6 @@ async def test_select_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("select.frenck_s_lametric_brightness_mode")
     assert state
@@ -124,7 +127,6 @@ async def test_select_connection_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("select.frenck_s_lametric_brightness_mode")
     assert state

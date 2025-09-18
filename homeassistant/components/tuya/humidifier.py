@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -12,14 +13,15 @@ from homeassistant.components.humidifier import (
     HumidifierEntityDescription,
     HumidifierEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantTuyaData
-from .base import IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from . import TuyaConfigEntry
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import TuyaEntity
+from .models import IntegerTypeData
+from .util import ActionDPCodeNotFoundError, get_dpcode
 
 
 @dataclass(frozen=True)
@@ -31,6 +33,20 @@ class TuyaHumidifierEntityDescription(HumidifierEntityDescription):
 
     current_humidity: DPCode | None = None
     humidity: DPCode | None = None
+
+
+def _has_a_valid_dpcode(
+    device: CustomerDevice, description: TuyaHumidifierEntityDescription
+) -> bool:
+    """Check if the device has at least one valid DP code."""
+    properties_to_check: list[DPCode | tuple[DPCode, ...] | None] = [
+        # Main control switch
+        description.dpcode or DPCode(description.key),
+        # Other humidity properties
+        description.current_humidity,
+        description.humidity,
+    ]
+    return any(get_dpcode(device, code) for code in properties_to_check)
 
 
 HUMIDIFIERS: dict[str, TuyaHumidifierEntityDescription] = {
@@ -56,10 +72,12 @@ HUMIDIFIERS: dict[str, TuyaHumidifierEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya (de)humidifier dynamically through Tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
@@ -67,7 +85,9 @@ async def async_setup_entry(
         entities: list[TuyaHumidifierEntity] = []
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
-            if description := HUMIDIFIERS.get(device.category):
+            if (
+                description := HUMIDIFIERS.get(device.category)
+            ) and _has_a_valid_dpcode(device, description):
                 entities.append(
                     TuyaHumidifierEntity(device, hass_data.manager, description)
                 )
@@ -101,8 +121,8 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
         # Determine main switch DPCode
-        self._switch_dpcode = self.find_dpcode(
-            description.dpcode or DPCode(description.key), prefer_function=True
+        self._switch_dpcode = get_dpcode(
+            self.device, description.dpcode or DPCode(description.key)
         )
 
         # Determine humidity parameters
@@ -164,19 +184,30 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
         return round(self._current_humidity.scale_value(current_humidity))
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
+        if self._switch_dpcode is None:
+            raise ActionDPCodeNotFoundError(
+                self.device,
+                self.entity_description.dpcode or self.entity_description.key,
+            )
         self._send_command([{"code": self._switch_dpcode, "value": True}])
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
+        if self._switch_dpcode is None:
+            raise ActionDPCodeNotFoundError(
+                self.device,
+                self.entity_description.dpcode or self.entity_description.key,
+            )
         self._send_command([{"code": self._switch_dpcode, "value": False}])
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self._set_humidity is None:
-            raise RuntimeError(
-                "Cannot set humidity, device doesn't provide methods to set it"
+            raise ActionDPCodeNotFoundError(
+                self.device,
+                self.entity_description.humidity,
             )
 
         self._send_command(
@@ -188,6 +219,6 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
             ]
         )
 
-    def set_mode(self, mode):
+    def set_mode(self, mode: str) -> None:
         """Set new target preset mode."""
         self._send_command([{"code": DPCode.MODE, "value": mode}])

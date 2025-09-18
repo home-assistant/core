@@ -1,6 +1,6 @@
 """The tests for the mochad switch platform."""
 
-import unittest.mock as mock
+from unittest import mock
 
 import pytest
 
@@ -9,22 +9,27 @@ from homeassistant.components.mochad import switch as mochad
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockEntityPlatform
+
 
 @pytest.fixture(autouse=True)
 def pymochad_mock():
     """Mock pymochad."""
-    with mock.patch("homeassistant.components.mochad.switch.device"), mock.patch(
-        "homeassistant.components.mochad.switch.MochadException"
+    with (
+        mock.patch("homeassistant.components.mochad.switch.device"),
+        mock.patch("homeassistant.components.mochad.switch.MochadException"),
     ):
         yield
 
 
 @pytest.fixture
-def switch_mock(hass):
+def switch_mock(hass: HomeAssistant) -> mochad.MochadSwitch:
     """Mock switch."""
     controller_mock = mock.MagicMock()
     dev_dict = {"address": "a1", "name": "fake_switch"}
-    return mochad.MochadSwitch(hass, controller_mock, dev_dict)
+    entity = mochad.MochadSwitch(hass, controller_mock, dev_dict)
+    entity.platform = MockEntityPlatform(hass)
+    return entity
 
 
 async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:

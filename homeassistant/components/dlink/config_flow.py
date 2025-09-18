@@ -8,9 +8,9 @@ from typing import Any
 from pyW215.pyW215 import SmartPlug
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_USE_LEGACY_PROTOCOL, DEFAULT_NAME, DEFAULT_USERNAME, DOMAIN
 
@@ -25,7 +25,7 @@ class DLinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self.ip_address: str | None = None
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         await self.async_set_unique_id(discovery_info.macaddress)
@@ -121,8 +121,8 @@ class DLinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME],
                 user_input[CONF_USE_LEGACY_PROTOCOL],
             )
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception: %s", ex)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return "unknown"
         if not smartplug.authenticated and smartplug.use_legacy_protocol:
             return "cannot_connect"

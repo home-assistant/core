@@ -3,20 +3,48 @@
     "_": {
       "default": "mdi:eye"
     },
+    "absolute_humidity": {
+      "default": "mdi:water-opacity"
+    },
     "apparent_power": {
       "default": "mdi:flash"
     },
     "aqi": {
       "default": "mdi:air-filter"
     },
+    "area": {
+      "default": "mdi:texture-box"
+    },
     "atmospheric_pressure": {
       "default": "mdi:thermometer-lines"
+    },
+    "battery": {
+      "default": "mdi:battery-unknown",
+      "range": {
+        "0": "mdi:battery-alert",
+        "10": "mdi:battery-10",
+        "20": "mdi:battery-20",
+        "30": "mdi:battery-30",
+        "40": "mdi:battery-40",
+        "50": "mdi:battery-50",
+        "60": "mdi:battery-60",
+        "70": "mdi:battery-70",
+        "80": "mdi:battery-80",
+        "90": "mdi:battery-90",
+        "100": "mdi:battery"
+      }
+    },
+    "blood_glucose_concentration": {
+      "default": "mdi:spoon-sugar"
     },
     "carbon_dioxide": {
       "default": "mdi:molecule-co2"
     },
     "carbon_monoxide": {
       "default": "mdi:molecule-co"
+    },
+    "conductivity": {
+      "default": "mdi:sprout-outline"
     },
     "current": {
       "default": "mdi:current-ac"
@@ -105,6 +133,9 @@
     "pressure": {
       "default": "mdi:gauge"
     },
+    "reactive_energy": {
+      "default": "mdi:lightning-bolt"
+    },
     "reactive_power": {
       "default": "mdi:flash"
     },
@@ -138,6 +169,9 @@
     "volume": {
       "default": "mdi:car-coolant-level"
     },
+    "volume_flow_rate": {
+      "default": "mdi:pipe-valve"
+    },
     "volume_storage": {
       "default": "mdi:storage-tank"
     },
@@ -146,6 +180,20 @@
     },
     "weight": {
       "default": "mdi:weight"
+    },
+    "wind_direction": {
+      "default": "mdi:compass-rose",
+      "range": {
+        "0": "mdi:arrow-down",
+        "22.5": "mdi:arrow-bottom-left",
+        "67.5": "mdi:arrow-left",
+        "112.5": "mdi:arrow-top-left",
+        "157.5": "mdi:arrow-up",
+        "202.5": "mdi:arrow-top-right",
+        "247.5": "mdi:arrow-right",
+        "292.5": "mdi:arrow-bottom-right",
+        "337.5": "mdi:arrow-down"
+      }
     },
     "wind_speed": {
       "default": "mdi:weather-windy"

@@ -3,6 +3,7 @@
 from http import HTTPStatus
 import json
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components import alexa
@@ -10,6 +11,8 @@ from homeassistant.components.alexa import intent
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 SESSION_ID = "amzn1.echo-api.session.0000000-0000-0000-0000-00000000000"
 APPLICATION_ID = "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe"
@@ -26,9 +29,11 @@ NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 
 
 @pytest.fixture
-def alexa_client(event_loop, hass, hass_client):
+async def alexa_client(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> TestClient:
     """Initialize a Home Assistant server for testing this module."""
-    loop = event_loop
 
     @callback
     def mock_service(call):
@@ -36,96 +41,92 @@ def alexa_client(event_loop, hass, hass_client):
 
     hass.services.async_register("test", "alexa", mock_service)
 
-    assert loop.run_until_complete(
-        async_setup_component(
-            hass,
-            alexa.DOMAIN,
-            {
-                # Key is here to verify we allow other keys in config too
-                "homeassistant": {},
-                "alexa": {},
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        alexa.DOMAIN,
+        {
+            # Key is here to verify we allow other keys in config too
+            "homeassistant": {},
+            "alexa": {},
+        },
     )
-    assert loop.run_until_complete(
-        async_setup_component(
-            hass,
-            "intent_script",
-            {
-                "intent_script": {
-                    "WhereAreWeIntent": {
-                        "speech": {
-                            "type": "plain",
-                            "text": """
-                            {%- if is_state("device_tracker.paulus", "home")
-                                   and is_state("device_tracker.anne_therese",
-                                                "home") -%}
-                                You are both home, you silly
-                            {%- else -%}
-                                Anne Therese is at {{
-                                    states("device_tracker.anne_therese")
-                                }} and Paulus is at {{
-                                    states("device_tracker.paulus")
-                                }}
-                            {% endif %}
-                        """,
-                        }
+    assert await async_setup_component(
+        hass,
+        "intent_script",
+        {
+            "intent_script": {
+                "WhereAreWeIntent": {
+                    "speech": {
+                        "type": "plain",
+                        "text": """
+                        {%- if is_state("device_tracker.paulus", "home")
+                                and is_state("device_tracker.anne_therese",
+                                            "home") -%}
+                            You are both home, you silly
+                        {%- else -%}
+                            Anne Therese is at {{
+                                states("device_tracker.anne_therese")
+                            }} and Paulus is at {{
+                                states("device_tracker.paulus")
+                            }}
+                        {% endif %}
+                    """,
+                    }
+                },
+                "GetZodiacHoroscopeIntent": {
+                    "speech": {
+                        "type": "plain",
+                        "text": "You told us your sign is {{ ZodiacSign }}.",
+                    }
+                },
+                "GetZodiacHoroscopeIDIntent": {
+                    "speech": {
+                        "type": "plain",
+                        "text": "You told us your sign is {{ ZodiacSign_Id }}.",
+                    }
+                },
+                "AMAZON.PlaybackAction<object@MusicCreativeWork>": {
+                    "speech": {
+                        "type": "plain",
+                        "text": "Playing {{ object_byArtist_name }}.",
+                    }
+                },
+                "CallServiceIntent": {
+                    "speech": {
+                        "type": "plain",
+                        "text": "Service called for {{ ZodiacSign }}",
                     },
-                    "GetZodiacHoroscopeIntent": {
-                        "speech": {
-                            "type": "plain",
-                            "text": "You told us your sign is {{ ZodiacSign }}.",
-                        }
+                    "card": {
+                        "type": "simple",
+                        "title": "Card title for {{ ZodiacSign }}",
+                        "content": "Card content: {{ ZodiacSign }}",
                     },
-                    "GetZodiacHoroscopeIDIntent": {
-                        "speech": {
-                            "type": "plain",
-                            "text": "You told us your sign is {{ ZodiacSign_Id }}.",
-                        }
+                    "action": {
+                        "service": "test.alexa",
+                        "data_template": {"hello": "{{ ZodiacSign }}"},
+                        "entity_id": "switch.test",
                     },
-                    "AMAZON.PlaybackAction<object@MusicCreativeWork>": {
-                        "speech": {
-                            "type": "plain",
-                            "text": "Playing {{ object_byArtist_name }}.",
-                        }
+                },
+                APPLICATION_ID: {
+                    "speech": {
+                        "type": "plain",
+                        "text": "LaunchRequest has been received.",
+                    }
+                },
+                APPLICATION_ID_SESSION_OPEN: {
+                    "speech": {
+                        "type": "plain",
+                        "text": "LaunchRequest has been received.",
                     },
-                    "CallServiceIntent": {
-                        "speech": {
-                            "type": "plain",
-                            "text": "Service called for {{ ZodiacSign }}",
-                        },
-                        "card": {
-                            "type": "simple",
-                            "title": "Card title for {{ ZodiacSign }}",
-                            "content": "Card content: {{ ZodiacSign }}",
-                        },
-                        "action": {
-                            "service": "test.alexa",
-                            "data_template": {"hello": "{{ ZodiacSign }}"},
-                            "entity_id": "switch.test",
-                        },
+                    "reprompt": {
+                        "type": "plain",
+                        "text": "LaunchRequest has been received.",
                     },
-                    APPLICATION_ID: {
-                        "speech": {
-                            "type": "plain",
-                            "text": "LaunchRequest has been received.",
-                        }
-                    },
-                    APPLICATION_ID_SESSION_OPEN: {
-                        "speech": {
-                            "type": "plain",
-                            "text": "LaunchRequest has been received.",
-                        },
-                        "reprompt": {
-                            "type": "plain",
-                            "text": "LaunchRequest has been received.",
-                        },
-                    },
-                }
-            },
-        )
+                },
+            }
+        },
     )
-    return loop.run_until_complete(hass_client())
+    return await hass_client()
 
 
 def _intent_req(client, data=None):

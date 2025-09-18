@@ -8,10 +8,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_ADDRESS, CONF_TYPE
 
 from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 
 DEFAULT_ADDRESS = "localhost:25565"
 
@@ -32,9 +32,11 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             address = user_input[CONF_ADDRESS]
 
+            # Abort config flow if service is already configured.
+            self._async_abort_entries_match({CONF_ADDRESS: address})
+
             # Prepare config entry data.
             config_data = {
-                CONF_NAME: user_input[CONF_NAME],
                 CONF_ADDRESS: address,
             }
 
@@ -75,9 +77,6 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
-                    ): str,
                     vol.Required(
                         CONF_ADDRESS,
                         default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),

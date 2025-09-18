@@ -6,18 +6,23 @@ import logging
 import pytest
 import voluptuous as vol
 
-from homeassistant.bootstrap import async_setup_component
-import homeassistant.components.snips as snips
-from homeassistant.core import HomeAssistant
+from homeassistant.components import snips
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.intent import ServiceIntentHandler, async_register
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message, async_mock_intent, async_mock_service
 from tests.typing import MqttMockHAClient
 
 
-async def test_snips_config(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
+async def test_snips_config(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Test Snips Config."""
-    result = await async_setup_component(
+    assert await async_setup_component(
         hass,
         "snips",
         {
@@ -28,7 +33,10 @@ async def test_snips_config(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) ->
             }
         },
     )
-    assert result
+    assert (
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_system_packages_yaml_integration_{snips.DOMAIN}",
+    ) in issue_registry.issues
 
 
 async def test_snips_no_mqtt(

@@ -12,7 +12,7 @@ from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import template
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     API_PASSWORD,
@@ -52,7 +52,6 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
         """Initialize Alexa view."""
         super().__init__()
         self.flash_briefings = flash_briefings
-        template.attach(hass, self.flash_briefings)
 
     @callback
     def get(

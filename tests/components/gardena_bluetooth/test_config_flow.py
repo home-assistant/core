@@ -31,6 +31,7 @@ async def test_user_selection(
 
     inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
     inject_bluetooth_service_info(hass, WATER_TIMER_UNNAMED_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -103,7 +104,7 @@ async def test_bluetooth(
 
     # Inject the service info will trigger the flow to start
     inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     result = next(iter(hass.config_entries.flow.async_progress_by_handler(DOMAIN)))
 

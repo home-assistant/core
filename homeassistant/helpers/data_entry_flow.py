@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-from typing import Any, Generic
+from typing import Any, Generic, TypeVar
 
 from aiohttp import web
-from typing_extensions import TypeVar
 import voluptuous as vol
 import voluptuous_serialize
 
@@ -18,7 +17,7 @@ from . import config_validation as cv
 
 _FlowManagerT = TypeVar(
     "_FlowManagerT",
-    bound="data_entry_flow.FlowManager[Any]",
+    bound=data_entry_flow.FlowManager[Any, Any, Any],
     default=data_entry_flow.FlowManager,
 )
 
@@ -32,27 +31,27 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT]):
 
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
-    ) -> data_entry_flow.FlowResult:
-        """Convert result to JSON."""
+    ) -> dict[str, Any]:
+        """Convert result to JSON serializable dict."""
         if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
-            data = result.copy()
-            data.pop("result")
-            data.pop("data")
-            data.pop("context")
-            return data
+            assert "result" not in result
+            return {
+                key: val
+                for key, val in result.items()
+                if key not in ("data", "context")
+            }
+
+        data = dict(result)
 
         if "data_schema" not in result:
-            return result
+            return data
 
-        data = result.copy()
-
-        if (schema := data["data_schema"]) is None:
+        if (schema := result["data_schema"]) is None:
             data["data_schema"] = []
         else:
             data["data_schema"] = voluptuous_serialize.convert(
                 schema, custom_serializer=cv.custom_serializer
             )
-
         return data
 
 
@@ -71,7 +70,7 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Initialize a POST request.
 
-        Override `_post_impl` in subclasses which need
+        Override `post` and call `_post_impl` in subclasses which need
         to implement their own `RequestDataValidator`
         """
         return await self._post_impl(request, data)

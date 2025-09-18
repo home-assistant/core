@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from pytrafikverket.trafikverket_camera import TrafikverketCamera
+from pytrafikverket import TrafikverketCamera
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_LOCATION
@@ -19,29 +19,27 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
+TVCameraConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
     """Set up Trafikverket Camera from a config entry."""
 
     coordinator = TVDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
     """Unload Trafikverket Camera config entry."""
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
     """Migrate old entry."""
     api_key = entry.data[CONF_API_KEY]
     web_session = async_get_clientsession(hass)
@@ -52,7 +50,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             camera_info = await camera_api.async_get_camera(location)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.error(
                 "Could not migrate the config entry. No connection to the api"
             )
@@ -78,7 +76,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             camera_info = await camera_api.async_get_camera(location)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.error(
                 "Could not migrate the config entry. No connection to the api"
             )

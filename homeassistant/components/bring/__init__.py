@@ -4,73 +4,56 @@ from __future__ import annotations
 
 import logging
 
-from bring_api.bring import Bring
-from bring_api.exceptions import (
-    BringAuthException,
-    BringParseException,
-    BringRequestException,
-)
+from bring_api import Bring
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .coordinator import BringDataUpdateCoordinator
+from .coordinator import (
+    BringActivityCoordinator,
+    BringConfigEntry,
+    BringCoordinators,
+    BringDataUpdateCoordinator,
+)
+from .services import async_setup_services
 
-PLATFORMS: list[Platform] = [Platform.TODO]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+PLATFORMS: list[Platform] = [Platform.EVENT, Platform.SENSOR, Platform.TODO]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Bring! services."""
+
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: BringConfigEntry) -> bool:
     """Set up Bring! from a config entry."""
 
-    email = entry.data[CONF_EMAIL]
-    password = entry.data[CONF_PASSWORD]
-
     session = async_get_clientsession(hass)
-    bring = Bring(session, email, password)
+    bring = Bring(session, entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
 
-    try:
-        await bring.login()
-        await bring.load_lists()
-    except BringRequestException as e:
-        raise ConfigEntryNotReady(
-            f"Timeout while connecting for email '{email}'"
-        ) from e
-    except BringAuthException as e:
-        _LOGGER.error(
-            "Authentication failed for '%s', check your email and password",
-            email,
-        )
-        raise ConfigEntryError(
-            f"Authentication failed for '{email}', check your email and password"
-        ) from e
-    except BringParseException as e:
-        _LOGGER.error(
-            "Failed to parse request '%s', check your email and password",
-            email,
-        )
-        raise ConfigEntryNotReady(
-            "Failed to parse response request from server, try again later"
-        ) from e
-
-    coordinator = BringDataUpdateCoordinator(hass, bring)
+    coordinator = BringDataUpdateCoordinator(hass, entry, bring)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    activity_coordinator = BringActivityCoordinator(hass, entry, coordinator)
+    await activity_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = BringCoordinators(coordinator, activity_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BringConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

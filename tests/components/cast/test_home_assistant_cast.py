@@ -5,14 +5,15 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.cast import DOMAIN, home_assistant_cast
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry, async_mock_signal
 
 
-async def test_service_show_view(hass: HomeAssistant, mock_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_service_show_view(hass: HomeAssistant) -> None:
     """Test showing a view."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -51,9 +52,8 @@ async def test_service_show_view(hass: HomeAssistant, mock_zeroconf: None) -> No
     assert url_path is None
 
 
-async def test_service_show_view_dashboard(
-    hass: HomeAssistant, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_service_show_view_dashboard(hass: HomeAssistant) -> None:
     """Test casting a specific dashboard."""
     await async_process_ha_core_config(
         hass,
@@ -82,7 +82,8 @@ async def test_service_show_view_dashboard(
     assert url_path == "mock-dashboard"
 
 
-async def test_use_cloud_url(hass: HomeAssistant, mock_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_use_cloud_url(hass: HomeAssistant) -> None:
     """Test that we fall back to cloud url."""
     await async_process_ha_core_config(
         hass,
@@ -111,7 +112,8 @@ async def test_use_cloud_url(hass: HomeAssistant, mock_zeroconf: None) -> None:
     assert controller_data["hass_url"] == "https://something.nabu.casa"
 
 
-async def test_remove_entry(hass: HomeAssistant, mock_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_remove_entry(hass: HomeAssistant) -> None:
     """Test removing config entry removes user."""
     entry = MockConfigEntry(
         data={},
@@ -121,9 +123,10 @@ async def test_remove_entry(hass: HomeAssistant, mock_zeroconf: None) -> None:
 
     entry.add_to_hass(hass)
 
-    with patch(
-        "pychromecast.discovery.discover_chromecasts", return_value=(True, None)
-    ), patch("pychromecast.discovery.stop_discovery"):
+    with (
+        patch("pychromecast.discovery.discover_chromecasts", return_value=(True, None)),
+        patch("pychromecast.discovery.stop_discovery"),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     assert "cast" in hass.config.components

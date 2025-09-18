@@ -16,10 +16,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
@@ -28,13 +28,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from . import NAMDataUpdateCoordinator
 from .const import (
+    ATTR_BH1750_ILLUMINANCE,
     ATTR_BME280_HUMIDITY,
     ATTR_BME280_PRESSURE,
     ATTR_BME280_TEMPERATURE,
@@ -44,6 +44,7 @@ from .const import (
     ATTR_BMP280_TEMPERATURE,
     ATTR_DHT22_HUMIDITY,
     ATTR_DHT22_TEMPERATURE,
+    ATTR_DS18B20_TEMPERATURE,
     ATTR_HECA_HUMIDITY,
     ATTR_HECA_TEMPERATURE,
     ATTR_MHZ14A_CARBON_DIOXIDE,
@@ -69,6 +70,7 @@ from .const import (
     DOMAIN,
     MIGRATION_SENSORS,
 )
+from .coordinator import NAMConfigEntry, NAMDataUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -83,6 +85,15 @@ class NAMSensorEntityDescription(SensorEntityDescription):
 
 
 SENSORS: tuple[NAMSensorEntityDescription, ...] = (
+    NAMSensorEntityDescription(
+        key=ATTR_BH1750_ILLUMINANCE,
+        translation_key="bh1750_illuminance",
+        suggested_display_precision=0,
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda sensors: sensors.bh1750_illuminance,
+    ),
     NAMSensorEntityDescription(
         key=ATTR_BME280_HUMIDITY,
         translation_key="bme280_humidity",
@@ -145,6 +156,15 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda sensors: sensors.bmp280_temperature,
+    ),
+    NAMSensorEntityDescription(
+        key=ATTR_DS18B20_TEMPERATURE,
+        translation_key="ds18b20_temperature",
+        suggested_display_precision=1,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda sensors: sensors.ds18b20_temperature,
     ),
     NAMSensorEntityDescription(
         key=ATTR_HECA_HUMIDITY,
@@ -347,10 +367,12 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NAMConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a Nettigo Air Monitor entities from a config_entry."""
-    coordinator: NAMDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     # Due to the change of the attribute name of two sensors, it is necessary to migrate
     # the unique_ids to the new names.

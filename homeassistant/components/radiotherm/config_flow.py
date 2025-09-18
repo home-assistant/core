@@ -9,11 +9,11 @@ from urllib.error import URLError
 from radiotherm.validate import RadiothermTstatError
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
 from .data import RadioThermInitData, async_get_init_data
@@ -44,7 +44,7 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_init_data: RadioThermInitData | None = None
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Discover via DHCP."""
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
@@ -60,7 +60,9 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_ip = discovery_info.ip
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Attempt to confirm."""
         ip_address = self.discovered_ip
         init_data = self.discovered_init_data
@@ -75,7 +77,7 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         placeholders = {
             "name": init_data.name,
-            "host": self.discovered_ip,
+            "host": ip_address,
             "model": init_data.model or "Unknown",
         }
         self.context["title_placeholders"] = placeholders
@@ -94,7 +96,7 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
                 init_data = await validate_connection(self.hass, user_input[CONF_HOST])
             except CannotConnect:
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

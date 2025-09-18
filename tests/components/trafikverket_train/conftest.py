@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
-from pytrafikverket.trafikverket_train import TrainStop
+from pytrafikverket import StationInfoModel, TrainStopModel
 
 from homeassistant.components.trafikverket_train.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -21,49 +21,64 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="load_int")
 async def load_integration_from_entry(
     hass: HomeAssistant,
-    get_trains: list[TrainStop],
-    get_train_stop: TrainStop,
+    get_trains: list[TrainStopModel],
+    get_train_stop: TrainStopModel,
 ) -> MockConfigEntry:
     """Set up the Trafikverket Train integration in Home Assistant."""
+
+    async def setup_config_entry_with_mocked_data(config_entry_id: str) -> None:
+        """Set up a config entry with mocked trafikverket data."""
+        with (
+            patch(
+                "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
+                return_value=get_trains,
+            ),
+            patch(
+                "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
+                return_value=get_train_stop,
+            ),
+            patch(
+                "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_search_train_station",
+            ),
+            patch(
+                "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_station_from_signature",
+            ),
+        ):
+            await hass.config_entries.async_setup(config_entry_id)
+            await hass.async_block_till_done()
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         options=OPTIONS_CONFIG,
         entry_id="1",
-        unique_id="stockholmc-uppsalac--['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']",
+        version=2,
+        minor_version=1,
     )
     config_entry.add_to_hass(hass)
+    await setup_config_entry_with_mocked_data(config_entry.entry_id)
+
     config_entry2 = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
         data=ENTRY_CONFIG2,
         entry_id="2",
-        unique_id="stockholmc-uppsalac-1100-['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']",
+        version=2,
+        minor_version=1,
     )
     config_entry2.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
-        return_value=get_trains,
-    ), patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
-        return_value=get_train_stop,
-    ), patch(
-        "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_config_entry_with_mocked_data(config_entry2.entry_id)
 
     return config_entry
 
 
 @pytest.fixture(name="get_trains")
-def fixture_get_trains() -> list[TrainStop]:
+def fixture_get_trains() -> list[TrainStopModel]:
     """Construct TrainStop Mock."""
 
-    depart1 = TrainStop(
-        id=13,
+    depart1 = TrainStopModel(
+        train_stop_id=13,
         canceled=False,
         advertised_time_at_location=datetime(2023, 5, 1, 12, 0, tzinfo=dt_util.UTC),
         estimated_time_at_location=datetime(2023, 5, 1, 12, 0, tzinfo=dt_util.UTC),
@@ -73,8 +88,8 @@ def fixture_get_trains() -> list[TrainStop]:
         modified_time=datetime(2023, 5, 1, 12, 0, tzinfo=dt_util.UTC),
         product_description=["Regionaltåg"],
     )
-    depart2 = TrainStop(
-        id=14,
+    depart2 = TrainStopModel(
+        train_stop_id=14,
         canceled=False,
         advertised_time_at_location=datetime(2023, 5, 1, 12, 0, tzinfo=dt_util.UTC)
         + timedelta(minutes=15),
@@ -85,8 +100,8 @@ def fixture_get_trains() -> list[TrainStop]:
         modified_time=datetime(2023, 5, 1, 12, 0, tzinfo=dt_util.UTC),
         product_description=["Regionaltåg"],
     )
-    depart3 = TrainStop(
-        id=15,
+    depart3 = TrainStopModel(
+        train_stop_id=15,
         canceled=False,
         advertised_time_at_location=datetime(2023, 5, 1, 12, 0, tzinfo=dt_util.UTC)
         + timedelta(minutes=30),
@@ -102,11 +117,11 @@ def fixture_get_trains() -> list[TrainStop]:
 
 
 @pytest.fixture(name="get_trains_next")
-def fixture_get_trains_next() -> list[TrainStop]:
+def fixture_get_trains_next() -> list[TrainStopModel]:
     """Construct TrainStop Mock."""
 
-    depart1 = TrainStop(
-        id=13,
+    depart1 = TrainStopModel(
+        train_stop_id=13,
         canceled=False,
         advertised_time_at_location=datetime(2023, 5, 1, 17, 0, tzinfo=dt_util.UTC),
         estimated_time_at_location=datetime(2023, 5, 1, 17, 0, tzinfo=dt_util.UTC),
@@ -116,8 +131,8 @@ def fixture_get_trains_next() -> list[TrainStop]:
         modified_time=datetime(2023, 5, 1, 12, 0, tzinfo=dt_util.UTC),
         product_description=["Regionaltåg"],
     )
-    depart2 = TrainStop(
-        id=14,
+    depart2 = TrainStopModel(
+        train_stop_id=14,
         canceled=False,
         advertised_time_at_location=datetime(2023, 5, 1, 17, 0, tzinfo=dt_util.UTC)
         + timedelta(minutes=15),
@@ -128,8 +143,8 @@ def fixture_get_trains_next() -> list[TrainStop]:
         modified_time=datetime(2023, 5, 1, 12, 0, tzinfo=dt_util.UTC),
         product_description=["Regionaltåg"],
     )
-    depart3 = TrainStop(
-        id=15,
+    depart3 = TrainStopModel(
+        train_stop_id=15,
         canceled=False,
         advertised_time_at_location=datetime(2023, 5, 1, 17, 0, tzinfo=dt_util.UTC)
         + timedelta(minutes=30),
@@ -145,11 +160,11 @@ def fixture_get_trains_next() -> list[TrainStop]:
 
 
 @pytest.fixture(name="get_train_stop")
-def fixture_get_train_stop() -> TrainStop:
+def fixture_get_train_stop() -> TrainStopModel:
     """Construct TrainStop Mock."""
 
-    return TrainStop(
-        id=13,
+    return TrainStopModel(
+        train_stop_id=13,
         canceled=False,
         advertised_time_at_location=datetime(2023, 5, 1, 11, 0, tzinfo=dt_util.UTC),
         estimated_time_at_location=None,
@@ -159,3 +174,57 @@ def fixture_get_train_stop() -> TrainStop:
         modified_time=datetime(2023, 5, 1, 11, 0, tzinfo=dt_util.UTC),
         product_description=["Regionaltåg"],
     )
+
+
+@pytest.fixture(name="get_train_stations")
+def fixture_get_train_station() -> list[list[StationInfoModel]]:
+    """Construct StationInfoModel Mock."""
+
+    return [
+        [
+            StationInfoModel(
+                signature="Cst",
+                station_name="Stockholm C",
+                advertised=True,
+            )
+        ],
+        [
+            StationInfoModel(
+                signature="U",
+                station_name="Uppsala C",
+                advertised=True,
+            )
+        ],
+    ]
+
+
+@pytest.fixture(name="get_multiple_train_stations")
+def fixture_get_multiple_train_station() -> list[list[StationInfoModel]]:
+    """Construct StationInfoModel Mock."""
+
+    return [
+        [
+            StationInfoModel(
+                signature="Cst",
+                station_name="Stockholm C",
+                advertised=True,
+            ),
+            StationInfoModel(
+                signature="Csu",
+                station_name="Stockholm City",
+                advertised=True,
+            ),
+        ],
+        [
+            StationInfoModel(
+                signature="U",
+                station_name="Uppsala C",
+                advertised=True,
+            ),
+            StationInfoModel(
+                signature="Ups",
+                station_name="Uppsala City",
+                advertised=True,
+            ),
+        ],
+    ]

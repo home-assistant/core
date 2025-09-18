@@ -45,8 +45,8 @@ async def get_by_station_number(
         measuring_station = await client.get_by_station_number(station_number)
     except WAQIConnectionError:
         errors["base"] = "cannot_connect"
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception(exc)
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
     return measuring_station, errors
 
@@ -66,24 +66,22 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            async with WAQIClient(
-                session=async_get_clientsession(self.hass)
-            ) as waqi_client:
-                waqi_client.authenticate(user_input[CONF_API_KEY])
-                try:
-                    await waqi_client.get_by_ip()
-                except WAQIAuthenticationError:
-                    errors["base"] = "invalid_auth"
-                except WAQIConnectionError:
-                    errors["base"] = "cannot_connect"
-                except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.exception(exc)
-                    errors["base"] = "unknown"
-                else:
-                    self.data = user_input
-                    if user_input[CONF_METHOD] == CONF_MAP:
-                        return await self.async_step_map()
-                    return await self.async_step_station_number()
+            client = WAQIClient(session=async_get_clientsession(self.hass))
+            client.authenticate(user_input[CONF_API_KEY])
+            try:
+                await client.get_by_ip()
+            except WAQIAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except WAQIConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self.data = user_input
+                if user_input[CONF_METHOD] == CONF_MAP:
+                    return await self.async_step_map()
+                return await self.async_step_station_number()
 
         return self.async_show_form(
             step_id="user",
@@ -107,22 +105,20 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Add measuring station via map."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            async with WAQIClient(
-                session=async_get_clientsession(self.hass)
-            ) as waqi_client:
-                waqi_client.authenticate(self.data[CONF_API_KEY])
-                try:
-                    measuring_station = await waqi_client.get_by_coordinates(
-                        user_input[CONF_LOCATION][CONF_LATITUDE],
-                        user_input[CONF_LOCATION][CONF_LONGITUDE],
-                    )
-                except WAQIConnectionError:
-                    errors["base"] = "cannot_connect"
-                except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.exception(exc)
-                    errors["base"] = "unknown"
-                else:
-                    return await self._async_create_entry(measuring_station)
+            client = WAQIClient(session=async_get_clientsession(self.hass))
+            client.authenticate(self.data[CONF_API_KEY])
+            try:
+                measuring_station = await client.get_by_coordinates(
+                    user_input[CONF_LOCATION][CONF_LATITUDE],
+                    user_input[CONF_LOCATION][CONF_LONGITUDE],
+                )
+            except WAQIConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return await self._async_create_entry(measuring_station)
         return self.async_show_form(
             step_id=CONF_MAP,
             data_schema=self.add_suggested_values_to_schema(
@@ -149,21 +145,19 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Add measuring station via station number."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            async with WAQIClient(
-                session=async_get_clientsession(self.hass)
-            ) as waqi_client:
-                waqi_client.authenticate(self.data[CONF_API_KEY])
-                station_number = user_input[CONF_STATION_NUMBER]
-                measuring_station, errors = await get_by_station_number(
-                    waqi_client, abs(station_number)
+            client = WAQIClient(session=async_get_clientsession(self.hass))
+            client.authenticate(self.data[CONF_API_KEY])
+            station_number = user_input[CONF_STATION_NUMBER]
+            measuring_station, errors = await get_by_station_number(
+                client, abs(station_number)
+            )
+            if not measuring_station:
+                measuring_station, _ = await get_by_station_number(
+                    client,
+                    abs(station_number) - station_number - station_number,
                 )
-                if not measuring_station:
-                    measuring_station, _ = await get_by_station_number(
-                        waqi_client,
-                        abs(station_number) - station_number - station_number,
-                    )
-                if measuring_station:
-                    return await self._async_create_entry(measuring_station)
+            if measuring_station:
+                return await self._async_create_entry(measuring_station)
         return self.async_show_form(
             step_id=CONF_STATION_NUMBER,
             data_schema=vol.Schema(

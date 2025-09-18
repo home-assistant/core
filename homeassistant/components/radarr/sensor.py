@@ -15,14 +15,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RadarrEntity
-from .const import DOMAIN
-from .coordinator import RadarrDataUpdateCoordinator, T
+from .coordinator import RadarrConfigEntry, RadarrDataUpdateCoordinator, T
+from .entity import RadarrEntity
 
 
 def get_space(data: list[Diskspace], name: str) -> str:
@@ -61,10 +59,13 @@ class RadarrSensorEntityDescription(
 ):
     """Class to describe a Radarr sensor."""
 
-    description_fn: Callable[
-        [RadarrSensorEntityDescription[T], RootFolder],
-        tuple[RadarrSensorEntityDescription[T], str] | None,
-    ] | None = None
+    description_fn: (
+        Callable[
+            [RadarrSensorEntityDescription[T], RootFolder],
+            tuple[RadarrSensorEntityDescription[T], str] | None,
+        ]
+        | None
+    ) = None
 
 
 SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
@@ -80,14 +81,12 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
     "movie": RadarrSensorEntityDescription[int](
         key="movies",
         translation_key="movies",
-        native_unit_of_measurement="Movies",
         entity_registry_enabled_default=False,
         value_fn=lambda data, _: data,
     ),
     "queue": RadarrSensorEntityDescription[int](
         key="queue",
         translation_key="queue",
-        native_unit_of_measurement="Movies",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data, _: data,
@@ -114,16 +113,13 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: RadarrConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Radarr sensors based on a config entry."""
-    coordinators: dict[str, RadarrDataUpdateCoordinator[Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
     entities: list[RadarrSensor[Any]] = []
     for coordinator_type, description in SENSOR_TYPES.items():
-        coordinator = coordinators[coordinator_type]
+        coordinator = getattr(entry.runtime_data, coordinator_type)
         if coordinator_type != "disk_space":
             entities.append(RadarrSensor(coordinator, description))
         else:

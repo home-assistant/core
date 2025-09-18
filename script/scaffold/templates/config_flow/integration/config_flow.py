@@ -1,4 +1,4 @@
-"""Config flow for NEW_NAME integration."""
+"""Config flow for the NEW_NAME integration."""
 
 from __future__ import annotations
 
@@ -85,7 +85,7 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

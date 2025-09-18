@@ -6,7 +6,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.light import PLATFORM_SCHEMA, ColorMode, LightEntity
+from homeassistant.components.light import (
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
+    ColorMode,
+    LightEntity,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -16,24 +20,20 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN as SWITCH_DOMAIN
+from .const import DOMAIN
 
 DEFAULT_NAME = "Light Switch"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(SWITCH_DOMAIN),
+        vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
     }
 )
 
@@ -76,7 +76,7 @@ class LightSwitch(LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Forward the turn_on command to the switch in this light switch."""
         await self.hass.services.async_call(
-            SWITCH_DOMAIN,
+            DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: self._switch_entity_id},
             blocking=True,
@@ -86,7 +86,7 @@ class LightSwitch(LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to the switch in this light switch."""
         await self.hass.services.async_call(
-            SWITCH_DOMAIN,
+            DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: self._switch_entity_id},
             blocking=True,

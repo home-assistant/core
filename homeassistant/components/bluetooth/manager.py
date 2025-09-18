@@ -8,8 +8,19 @@ import itertools
 import logging
 
 from bleak_retry_connector import BleakSlotManager
-from bluetooth_adapters import BluetoothAdapters
-from habluetooth import BaseHaRemoteScanner, BaseHaScanner, BluetoothManager
+from bluetooth_adapters import (
+    ADAPTER_TYPE,
+    BluetoothAdapters,
+    adapter_human_name,
+    adapter_model,
+)
+from habluetooth import (
+    BaseHaRemoteScanner,
+    BaseHaScanner,
+    BluetoothManager,
+    BluetoothScanningMode,
+    HaScanner,
+)
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
@@ -19,8 +30,18 @@ from homeassistant.core import (
     HomeAssistant,
     callback as hass_callback,
 )
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import discovery_flow, issue_registry as ir
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.package import is_docker_env
 
+from .const import (
+    CONF_SOURCE,
+    CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DEVICE_ID,
+    CONF_SOURCE_DOMAIN,
+    CONF_SOURCE_MODEL,
+    DOMAIN,
+)
 from .match import (
     ADDRESS,
     CALLBACK,
@@ -42,11 +63,11 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     """Manage Bluetooth for Home Assistant."""
 
     __slots__ = (
-        "hass",
-        "storage",
-        "_integration_matcher",
         "_callback_index",
         "_cancel_logging_listener",
+        "_integration_matcher",
+        "hass",
+        "storage",
     )
 
     def __init__(
@@ -75,12 +96,18 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         self, service_info: BluetoothServiceInfoBleak
     ) -> None:
         """Trigger discovery for matching domains."""
+        discovery_key = discovery_flow.DiscoveryKey(
+            domain=DOMAIN,
+            key=service_info.address,
+            version=1,
+        )
         for domain in self._integration_matcher.match_domains(service_info):
             discovery_flow.async_create_flow(
                 self.hass,
                 domain,
                 {"source": config_entries.SOURCE_BLUETOOTH},
                 service_info,
+                discovery_key=discovery_key,
             )
 
     @hass_callback
@@ -97,10 +124,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         matched_domains = self._integration_matcher.match_domains(service_info)
         if self._debug:
             _LOGGER.debug(
-                "%s: %s %s match: %s",
+                "%s: %s match: %s",
                 self._async_describe_source(service_info),
-                service_info.address,
-                service_info.advertisement,
+                service_info,
                 matched_domains,
             )
 
@@ -108,15 +134,24 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             callback = match[CALLBACK]
             try:
                 callback(service_info, BluetoothChange.ADVERTISEMENT)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Error in bluetooth callback")
 
+        if not matched_domains:
+            return  # avoid creating DiscoveryKey if there are no matches
+
+        discovery_key = discovery_flow.DiscoveryKey(
+            domain=DOMAIN,
+            key=service_info.address,
+            version=1,
+        )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
                 self.hass,
                 domain,
                 {"source": config_entries.SOURCE_BLUETOOTH},
                 service_info,
+                discovery_key=discovery_key,
             )
 
     def _address_disappeared(self, address: str) -> None:
@@ -135,11 +170,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             self._bluetooth_adapters, self.storage
         )
         self._cancel_logging_listener = self.hass.bus.async_listen(
-            EVENT_LOGGING_CHANGED, self._async_logging_changed, run_immediately=True
+            EVENT_LOGGING_CHANGED, self._async_logging_changed
         )
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.async_stop, run_immediately=True
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         seen: set[str] = set()
         for address, service_info in itertools.chain(
             self._connectable_history.items(), self._all_history.items()
@@ -148,6 +181,11 @@ class HomeAssistantBluetoothManager(BluetoothManager):
                 continue
             seen.add(address)
             self._async_trigger_matching_discovery(service_info)
+        async_dispatcher_connect(
+            self.hass,
+            config_entries.signal_discovered_config_entry_removed(DOMAIN),
+            self._handle_config_entry_removed,
+        )
 
     def async_register_callback(
         self,
@@ -185,7 +223,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             if ble_device_matches(callback_matcher, service_info):
                 try:
                     callback(service_info, BluetoothChange.ADVERTISEMENT)
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     _LOGGER.exception("Error in bluetooth callback")
 
         return _async_remove_callback
@@ -209,10 +247,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
 
     def _async_save_scanner_history(self, scanner: BaseHaScanner) -> None:
         """Save the scanner history."""
-        if isinstance(scanner, BaseHaRemoteScanner):
-            self.storage.async_set_advertisement_history(
-                scanner.source, scanner.serialize_discovered_devices()
-            )
+        self.storage.async_set_advertisement_history(
+            scanner.source, scanner.serialize_discovered_devices()
+        )
 
     def _async_unregister_scanner(
         self, scanner: BaseHaScanner, unregister: CALLBACK_TYPE
@@ -221,15 +258,165 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         unregister()
         self._async_save_scanner_history(scanner)
 
+    @hass_callback
+    def async_register_hass_scanner(
+        self,
+        scanner: BaseHaScanner,
+        connection_slots: int | None = None,
+        source_domain: str | None = None,
+        source_model: str | None = None,
+        source_config_entry_id: str | None = None,
+        source_device_id: str | None = None,
+    ) -> CALLBACK_TYPE:
+        """Register a scanner."""
+        cancel = self.async_register_scanner(scanner, connection_slots)
+        if (
+            isinstance(scanner, BaseHaRemoteScanner)
+            and source_domain
+            and source_config_entry_id
+        ):
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                    data={
+                        CONF_SOURCE: scanner.source,
+                        CONF_SOURCE_DOMAIN: source_domain,
+                        CONF_SOURCE_MODEL: source_model,
+                        CONF_SOURCE_CONFIG_ENTRY_ID: source_config_entry_id,
+                        CONF_SOURCE_DEVICE_ID: source_device_id,
+                    },
+                )
+            )
+        return cancel
+
     def async_register_scanner(
         self,
         scanner: BaseHaScanner,
         connection_slots: int | None = None,
     ) -> CALLBACK_TYPE:
         """Register a scanner."""
-        if isinstance(scanner, BaseHaRemoteScanner):
-            if history := self.storage.async_get_advertisement_history(scanner.source):
-                scanner.restore_discovered_devices(history)
+        if history := self.storage.async_get_advertisement_history(scanner.source):
+            scanner.restore_discovered_devices(history)
 
         unregister = super().async_register_scanner(scanner, connection_slots)
         return partial(self._async_unregister_scanner, scanner, unregister)
+
+    @hass_callback
+    def async_remove_scanner(self, source: str) -> None:
+        """Remove a scanner."""
+        self.storage.async_remove_advertisement_history(source)
+        if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, source
+        ):
+            self.hass.async_create_task(
+                self.hass.config_entries.async_remove(entry.entry_id),
+                f"Removing {source} Bluetooth config entry",
+            )
+
+    @hass_callback
+    def _handle_config_entry_removed(
+        self,
+        entry: config_entries.ConfigEntry,
+    ) -> None:
+        """Handle config entry changes."""
+        for discovery_key in entry.discovery_keys[DOMAIN]:
+            if discovery_key.version != 1 or not isinstance(discovery_key.key, str):
+                continue
+            address = discovery_key.key
+            _LOGGER.debug("Rediscover address %s", address)
+            self.async_rediscover_address(address)
+
+    def on_scanner_start(self, scanner: BaseHaScanner) -> None:
+        """Handle when a scanner starts.
+
+        Create or delete repair issues for local adapters based on degraded mode.
+        """
+        super().on_scanner_start(scanner)
+
+        # Only handle repair issues for local adapters (HaScanner instances)
+        if not isinstance(scanner, HaScanner):
+            return
+        self.async_check_degraded_mode(scanner)
+        self.async_check_scanning_mode(scanner)
+
+    @hass_callback
+    def async_check_scanning_mode(self, scanner: HaScanner) -> None:
+        """Check if the scanner is running in passive mode when active mode is requested."""
+        passive_mode_issue_id = f"bluetooth_adapter_passive_mode_{scanner.source}"
+
+        # Check if scanner is NOT in passive mode when active mode was requested
+        if not (
+            scanner.requested_mode is BluetoothScanningMode.ACTIVE
+            and scanner.current_mode is BluetoothScanningMode.PASSIVE
+        ):
+            # Delete passive mode issue if it exists and we're not in passive fallback
+            ir.async_delete_issue(self.hass, DOMAIN, passive_mode_issue_id)
+            return
+
+        # Create repair issue for passive mode fallback
+        adapter_name = adapter_human_name(
+            scanner.adapter, scanner.mac_address or "00:00:00:00:00:00"
+        )
+        adapter_details = self._bluetooth_adapters.adapters.get(scanner.adapter)
+        model = adapter_model(adapter_details) if adapter_details else None
+
+        # Determine adapter type for specific instructions
+        # Default to USB for any other type or unknown
+        if adapter_details and adapter_details.get(ADAPTER_TYPE) == "uart":
+            translation_key = "bluetooth_adapter_passive_mode_uart"
+        else:
+            translation_key = "bluetooth_adapter_passive_mode_usb"
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            passive_mode_issue_id,
+            is_fixable=False,  # Requires a reboot or unplug
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=translation_key,
+            translation_placeholders={
+                "adapter": adapter_name,
+                "model": model or "Unknown",
+            },
+        )
+
+    @hass_callback
+    def async_check_degraded_mode(self, scanner: HaScanner) -> None:
+        """Check if we are in degraded mode and create/delete repair issues."""
+        issue_id = f"bluetooth_adapter_missing_permissions_{scanner.source}"
+
+        # Delete any existing issue if not in degraded mode
+        if not self.is_operating_degraded():
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            return
+
+        # Only create repair issues for Docker-based installations where users
+        # can fix permissions. This includes: Home Assistant Supervised,
+        # Home Assistant Container, and third-party containers
+        if not is_docker_env():
+            return
+
+        # Create repair issue for degraded mode in Docker (including Supervised)
+        adapter_name = adapter_human_name(
+            scanner.adapter, scanner.mac_address or "00:00:00:00:00:00"
+        )
+
+        # Try to get adapter details from the bluetooth adapters
+        adapter_details = self._bluetooth_adapters.adapters.get(scanner.adapter)
+        model = adapter_model(adapter_details) if adapter_details else None
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,  # Not fixable from within HA - requires
+            # container restart with new permissions
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="bluetooth_adapter_missing_permissions",
+            translation_placeholders={
+                "adapter": adapter_name,
+                "model": model or "Unknown",
+                "docs_url": "https://www.home-assistant.io/integrations/bluetooth/#additional-details-for-container",
+            },
+        )

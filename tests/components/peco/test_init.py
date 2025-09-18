@@ -28,18 +28,21 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "peco.PecoOutageApi.get_outage_totals",
-        return_value=OutageResults(
-            customers_out=0,
-            percent_customers_out=0,
-            outage_count=0,
-            customers_served=350394,
+    with (
+        patch(
+            "peco.PecoOutageApi.get_outage_totals",
+            return_value=OutageResults(
+                customers_out=0,
+                percent_customers_out=0,
+                outage_count=0,
+                customers_served=350394,
+            ),
         ),
-    ), patch(
-        "peco.PecoOutageApi.get_map_alerts",
-        return_value=AlertResults(
-            alert_content="Testing 1234", alert_title="Testing 4321"
+        patch(
+            "peco.PecoOutageApi.get_map_alerts",
+            return_value=AlertResults(
+                alert_content="Testing 1234", alert_title="Testing 4321"
+            ),
         ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -48,11 +51,11 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
-    assert entries[0].state == ConfigEntryState.NOT_LOADED
+    assert entries[0].state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -78,7 +81,7 @@ async def test_update_timeout(hass: HomeAssistant, sensor) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get(f"sensor.{sensor}") is None
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
@@ -103,7 +106,7 @@ async def test_total_update_timeout(hass: HomeAssistant, sensor) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get(f"sensor.{sensor}") is None
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
@@ -129,7 +132,7 @@ async def test_http_error(hass: HomeAssistant, sensor: str) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get(f"sensor.{sensor}") is None
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
@@ -155,7 +158,7 @@ async def test_bad_json(hass: HomeAssistant, sensor: str) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get(f"sensor.{sensor}") is None
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unresponsive_meter_error(hass: HomeAssistant) -> None:
@@ -164,28 +167,32 @@ async def test_unresponsive_meter_error(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "peco.PecoOutageApi.meter_check",
-        side_effect=UnresponsiveMeterError(),
-    ), patch(
-        "peco.PecoOutageApi.get_outage_count",
-        return_value=OutageResults(
-            customers_out=0,
-            percent_customers_out=0,
-            outage_count=0,
-            customers_served=350394,
+    with (
+        patch(
+            "peco.PecoOutageApi.meter_check",
+            side_effect=UnresponsiveMeterError(),
         ),
-    ), patch(
-        "peco.PecoOutageApi.get_map_alerts",
-        return_value=AlertResults(
-            alert_content="Testing 1234", alert_title="Testing 4321"
+        patch(
+            "peco.PecoOutageApi.get_outage_count",
+            return_value=OutageResults(
+                customers_out=0,
+                percent_customers_out=0,
+                outage_count=0,
+                customers_served=350394,
+            ),
+        ),
+        patch(
+            "peco.PecoOutageApi.get_map_alerts",
+            return_value=AlertResults(
+                alert_content="Testing 1234", alert_title="Testing 4321"
+            ),
         ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.meter_status") is None
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_meter_http_error(hass: HomeAssistant) -> None:
@@ -194,28 +201,32 @@ async def test_meter_http_error(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "peco.PecoOutageApi.meter_check",
-        side_effect=HttpError(),
-    ), patch(
-        "peco.PecoOutageApi.get_outage_count",
-        return_value=OutageResults(
-            customers_out=0,
-            percent_customers_out=0,
-            outage_count=0,
-            customers_served=350394,
+    with (
+        patch(
+            "peco.PecoOutageApi.meter_check",
+            side_effect=HttpError(),
         ),
-    ), patch(
-        "peco.PecoOutageApi.get_map_alerts",
-        return_value=AlertResults(
-            alert_content="Testing 1234", alert_title="Testing 4321"
+        patch(
+            "peco.PecoOutageApi.get_outage_count",
+            return_value=OutageResults(
+                customers_out=0,
+                percent_customers_out=0,
+                outage_count=0,
+                customers_served=350394,
+            ),
+        ),
+        patch(
+            "peco.PecoOutageApi.get_map_alerts",
+            return_value=AlertResults(
+                alert_content="Testing 1234", alert_title="Testing 4321"
+            ),
         ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.meter_status") is None
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_meter_bad_json(hass: HomeAssistant) -> None:
@@ -224,28 +235,32 @@ async def test_meter_bad_json(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "peco.PecoOutageApi.meter_check",
-        side_effect=BadJSONError(),
-    ), patch(
-        "peco.PecoOutageApi.get_outage_count",
-        return_value=OutageResults(
-            customers_out=0,
-            percent_customers_out=0,
-            outage_count=0,
-            customers_served=350394,
+    with (
+        patch(
+            "peco.PecoOutageApi.meter_check",
+            side_effect=BadJSONError(),
         ),
-    ), patch(
-        "peco.PecoOutageApi.get_map_alerts",
-        return_value=AlertResults(
-            alert_content="Testing 1234", alert_title="Testing 4321"
+        patch(
+            "peco.PecoOutageApi.get_outage_count",
+            return_value=OutageResults(
+                customers_out=0,
+                percent_customers_out=0,
+                outage_count=0,
+                customers_served=350394,
+            ),
+        ),
+        patch(
+            "peco.PecoOutageApi.get_map_alerts",
+            return_value=AlertResults(
+                alert_content="Testing 1234", alert_title="Testing 4321"
+            ),
         ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.meter_status") is None
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_meter_timeout(hass: HomeAssistant) -> None:
@@ -254,28 +269,32 @@ async def test_meter_timeout(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "peco.PecoOutageApi.meter_check",
-        side_effect=TimeoutError(),
-    ), patch(
-        "peco.PecoOutageApi.get_outage_count",
-        return_value=OutageResults(
-            customers_out=0,
-            percent_customers_out=0,
-            outage_count=0,
-            customers_served=350394,
+    with (
+        patch(
+            "peco.PecoOutageApi.meter_check",
+            side_effect=TimeoutError(),
         ),
-    ), patch(
-        "peco.PecoOutageApi.get_map_alerts",
-        return_value=AlertResults(
-            alert_content="Testing 1234", alert_title="Testing 4321"
+        patch(
+            "peco.PecoOutageApi.get_outage_count",
+            return_value=OutageResults(
+                customers_out=0,
+                percent_customers_out=0,
+                outage_count=0,
+                customers_served=350394,
+            ),
+        ),
+        patch(
+            "peco.PecoOutageApi.get_map_alerts",
+            return_value=AlertResults(
+                alert_content="Testing 1234", alert_title="Testing 4321"
+            ),
         ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.meter_status") is None
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_meter_data(hass: HomeAssistant) -> None:
@@ -284,21 +303,25 @@ async def test_meter_data(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "peco.PecoOutageApi.meter_check",
-        return_value=True,
-    ), patch(
-        "peco.PecoOutageApi.get_outage_count",
-        return_value=OutageResults(
-            customers_out=0,
-            percent_customers_out=0,
-            outage_count=0,
-            customers_served=350394,
+    with (
+        patch(
+            "peco.PecoOutageApi.meter_check",
+            return_value=True,
         ),
-    ), patch(
-        "peco.PecoOutageApi.get_map_alerts",
-        return_value=AlertResults(
-            alert_content="Testing 1234", alert_title="Testing 4321"
+        patch(
+            "peco.PecoOutageApi.get_outage_count",
+            return_value=OutageResults(
+                customers_out=0,
+                percent_customers_out=0,
+                outage_count=0,
+                customers_served=350394,
+            ),
+        ),
+        patch(
+            "peco.PecoOutageApi.get_map_alerts",
+            return_value=AlertResults(
+                alert_content="Testing 1234", alert_title="Testing 4321"
+            ),
         ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -306,4 +329,4 @@ async def test_meter_data(hass: HomeAssistant) -> None:
 
     assert hass.states.get("binary_sensor.meter_status") is not None
     assert hass.states.get("binary_sensor.meter_status").state == "on"
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED

@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 from pyhap.const import CATEGORY_FAN
+from pyhap.service import Service
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -14,7 +15,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODES,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    DOMAIN,
+    DOMAIN as FAN_DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
@@ -34,6 +35,7 @@ from homeassistant.core import State, callback
 from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_ACTIVE,
+    CHAR_CONFIGURED_NAME,
     CHAR_NAME,
     CHAR_ON,
     CHAR_ROTATION_DIRECTION,
@@ -56,9 +58,9 @@ class Fan(HomeAccessory):
     Currently supports: state, speed, oscillate, direction.
     """
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(self, *args: Any, category: int = CATEGORY_FAN) -> None:
         """Initialize a new Fan accessory object."""
-        super().__init__(*args, category=CATEGORY_FAN)
+        super().__init__(*args, category=category)
         self.chars: list[str] = []
         state = self.hass.states.get(self.entity_id)
         assert state
@@ -79,12 +81,8 @@ class Fan(HomeAccessory):
             self.chars.append(CHAR_SWING_MODE)
         if features & FanEntityFeature.SET_SPEED:
             self.chars.append(CHAR_ROTATION_SPEED)
-        if self.preset_modes and len(self.preset_modes) == 1:
-            self.chars.append(CHAR_TARGET_FAN_STATE)
 
-        serv_fan = self.add_preload_service(SERV_FANV2, self.chars)
-        self.set_primary_service(serv_fan)
-        self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
+        serv_fan = self.create_services()
 
         self.char_direction = None
         self.char_speed = None
@@ -107,15 +105,25 @@ class Fan(HomeAccessory):
                 properties={PROP_MIN_STEP: percentage_step},
             )
 
-        if self.preset_modes and len(self.preset_modes) == 1:
+        if (
+            self.preset_modes
+            and len(self.preset_modes) == 1
+            # NOTE: This would be missing for air purifiers
+            and CHAR_TARGET_FAN_STATE in self.chars
+        ):
             self.char_target_fan_state = serv_fan.configure_char(
                 CHAR_TARGET_FAN_STATE,
                 value=0,
             )
         elif self.preset_modes:
             for preset_mode in self.preset_modes:
+                if not self.should_add_preset_mode_switch(preset_mode):
+                    continue
+
                 preset_serv = self.add_preload_service(
-                    SERV_SWITCH, CHAR_NAME, unique_id=preset_mode
+                    SERV_SWITCH,
+                    [CHAR_NAME, CHAR_CONFIGURED_NAME],
+                    unique_id=preset_mode,
                 )
                 serv_fan.add_linked_service(preset_serv)
                 preset_serv.configure_char(
@@ -124,12 +132,13 @@ class Fan(HomeAccessory):
                         f"{self.display_name} {preset_mode}"
                     ),
                 )
-
-                setter_callback = (
-                    lambda value, preset_mode=preset_mode: self.set_preset_mode(
-                        value, preset_mode
-                    )
+                preset_serv.configure_char(
+                    CHAR_CONFIGURED_NAME, value=cleanup_name_for_homekit(preset_mode)
                 )
+
+                def setter_callback(value: int, preset_mode: str = preset_mode) -> None:
+                    self.set_preset_mode(value, preset_mode)
+
                 self.preset_mode_chars[preset_mode] = preset_serv.configure_char(
                     CHAR_ON,
                     value=False,
@@ -139,10 +148,27 @@ class Fan(HomeAccessory):
         if CHAR_SWING_MODE in self.chars:
             self.char_swing = serv_fan.configure_char(CHAR_SWING_MODE, value=0)
         self.async_update_state(state)
-        serv_fan.setter_callback = self._set_chars
+        serv_fan.setter_callback = self.set_chars
 
-    def _set_chars(self, char_values: dict[str, Any]) -> None:
-        _LOGGER.debug("Fan _set_chars: %s", char_values)
+    def create_services(self) -> Service:
+        """Create and configure the primary service for this accessory."""
+        if self.preset_modes and len(self.preset_modes) == 1:
+            self.chars.append(CHAR_TARGET_FAN_STATE)
+        serv_fan = self.add_preload_service(SERV_FANV2, self.chars)
+        self.set_primary_service(serv_fan)
+        self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
+        return serv_fan
+
+    def should_add_preset_mode_switch(self, preset_mode: str) -> bool:
+        """Check if a preset mode switch should be added.
+
+        Always true for fans, but can be overridden by subclasses.
+        """
+        return True
+
+    def set_chars(self, char_values: dict[str, Any]) -> None:
+        """Set characteristic values."""
+        _LOGGER.debug("Fan set_chars: %s", char_values)
         if CHAR_ACTIVE in char_values:
             if char_values[CHAR_ACTIVE]:
                 # If the device supports set speed we
@@ -181,12 +207,12 @@ class Fan(HomeAccessory):
                 "%s: Set auto to 1 (%s)", self.entity_id, self.preset_modes[0]
             )
             params[ATTR_PRESET_MODE] = self.preset_modes[0]
-            self.async_call_service(DOMAIN, SERVICE_SET_PRESET_MODE, params)
+            self.async_call_service(FAN_DOMAIN, SERVICE_SET_PRESET_MODE, params)
         elif current_state := self.hass.states.get(self.entity_id):
             percentage: float = current_state.attributes.get(ATTR_PERCENTAGE) or 50.0
             params[ATTR_PERCENTAGE] = percentage
             _LOGGER.debug("%s: Set auto to 0", self.entity_id)
-            self.async_call_service(DOMAIN, SERVICE_TURN_ON, params)
+            self.async_call_service(FAN_DOMAIN, SERVICE_TURN_ON, params)
 
     def set_preset_mode(self, value: int, preset_mode: str) -> None:
         """Set preset_mode if call came from HomeKit."""
@@ -196,36 +222,36 @@ class Fan(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if value:
             params[ATTR_PRESET_MODE] = preset_mode
-            self.async_call_service(DOMAIN, SERVICE_SET_PRESET_MODE, params)
+            self.async_call_service(FAN_DOMAIN, SERVICE_SET_PRESET_MODE, params)
         else:
-            self.async_call_service(DOMAIN, SERVICE_TURN_ON, params)
+            self.async_call_service(FAN_DOMAIN, SERVICE_TURN_ON, params)
 
     def set_state(self, value: int) -> None:
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
         service = SERVICE_TURN_ON if value == 1 else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(FAN_DOMAIN, service, params)
 
     def set_direction(self, value: int) -> None:
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set direction to %d", self.entity_id, value)
         direction = DIRECTION_REVERSE if value == 1 else DIRECTION_FORWARD
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_DIRECTION: direction}
-        self.async_call_service(DOMAIN, SERVICE_SET_DIRECTION, params, direction)
+        self.async_call_service(FAN_DOMAIN, SERVICE_SET_DIRECTION, params, direction)
 
     def set_oscillating(self, value: int) -> None:
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set oscillating to %d", self.entity_id, value)
         oscillating = value == 1
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_OSCILLATING: oscillating}
-        self.async_call_service(DOMAIN, SERVICE_OSCILLATE, params, oscillating)
+        self.async_call_service(FAN_DOMAIN, SERVICE_OSCILLATE, params, oscillating)
 
     def set_percentage(self, value: float) -> None:
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set speed to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_PERCENTAGE: value}
-        self.async_call_service(DOMAIN, SERVICE_SET_PERCENTAGE, params, value)
+        self.async_call_service(FAN_DOMAIN, SERVICE_SET_PERCENTAGE, params, value)
 
     @callback
     def async_update_state(self, new_state: State) -> None:

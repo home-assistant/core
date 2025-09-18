@@ -12,13 +12,13 @@ import pytest
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
-    DOMAIN,
+    DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.xiaomi_miio import UPDATE_INTERVAL
 from homeassistant.components.xiaomi_miio.const import (
     CONF_FLOW_TYPE,
-    DOMAIN as XIAOMI_DOMAIN,
+    DOMAIN,
     MODEL_AIRFRESH_T2017,
 )
 from homeassistant.const import (
@@ -46,12 +46,17 @@ async def setup_test(hass: HomeAssistant):
     mock_airfresh.status().display_orientation = DisplayOrientation.Portrait
     mock_airfresh.status().ptc_level = PtcLevel.Low
 
-    with patch(
-        "homeassistant.components.xiaomi_miio.get_platforms",
-        return_value=[
-            Platform.SELECT,
-        ],
-    ), patch("homeassistant.components.xiaomi_miio.AirFreshT2017") as mock_airfresh_cls:
+    with (
+        patch(
+            "homeassistant.components.xiaomi_miio.get_platforms",
+            return_value=[
+                Platform.SELECT,
+            ],
+        ),
+        patch(
+            "homeassistant.components.xiaomi_miio.AirFreshT2017"
+        ) as mock_airfresh_cls,
+    ):
         mock_airfresh_cls.return_value = mock_airfresh
         yield mock_airfresh
 
@@ -136,12 +141,12 @@ async def test_select_coordinator_update(hass: HomeAssistant, setup_test) -> Non
     assert state.state == "left"
 
 
-async def setup_component(hass, entity_name):
+async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
     """Set up component."""
-    entity_id = f"{DOMAIN}.{entity_name}"
+    entity_id = f"{SELECT_DOMAIN}.{entity_name}"
 
     config_entry = MockConfigEntry(
-        domain=XIAOMI_DOMAIN,
+        domain=DOMAIN,
         unique_id="123456",
         title=entity_name,
         data={

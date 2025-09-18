@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 from operator import attrgetter
-import pathlib
+from pathlib import Path
 import sys
 from time import monotonic
 
@@ -12,22 +12,25 @@ from . import (
     application_credentials,
     bluetooth,
     codeowners,
+    conditions,
     config_flow,
     config_schema,
-    coverage,
     dependencies,
     dhcp,
     docker,
     icons,
+    integration_info,
     json,
     manifest,
     metadata,
     mqtt,
     mypy_config,
+    quality_scale,
     requirements,
     services,
     ssdp,
     translations,
+    triggers,
     usb,
     zeroconf,
 )
@@ -37,23 +40,26 @@ INTEGRATION_PLUGINS = [
     application_credentials,
     bluetooth,
     codeowners,
+    conditions,
     config_schema,
     dependencies,
     dhcp,
     icons,
+    integration_info,
     json,
     manifest,
     mqtt,
+    quality_scale,
     requirements,
     services,
     ssdp,
     translations,
+    triggers,
     usb,
     zeroconf,
     config_flow,  # This needs to run last, after translations are processed
 ]
 HASS_PLUGINS = [
-    coverage,
     docker,
     mypy_config,
     metadata,
@@ -65,9 +71,9 @@ ALL_PLUGIN_NAMES = [
 ]
 
 
-def valid_integration_path(integration_path: pathlib.Path | str) -> pathlib.Path:
+def valid_integration_path(integration_path: Path | str) -> Path:
     """Test if it's a valid integration."""
-    path = pathlib.Path(integration_path)
+    path = Path(integration_path)
     if not path.is_dir():
         raise argparse.ArgumentTypeError(f"{integration_path} is not a directory.")
 
@@ -107,7 +113,19 @@ def get_config() -> Config:
         "--plugins",
         type=validate_plugins,
         default=ALL_PLUGIN_NAMES,
-        help="Comma-separate list of plugins to run. Valid plugin names: %(default)s",
+        help="Comma-separated list of plugins to run. Valid plugin names: %(default)s",
+    )
+    parser.add_argument(
+        "--skip-plugins",
+        type=validate_plugins,
+        default=[],
+        help=f"Comma-separated list of plugins to skip. Valid plugin names: {ALL_PLUGIN_NAMES}",
+    )
+    parser.add_argument(
+        "--core-path",
+        type=Path,
+        default=Path(),
+        help="Path to core",
     )
     parsed = parser.parse_args()
 
@@ -121,12 +139,15 @@ def get_config() -> Config:
 
     if (
         not parsed.integration_path
-        and not pathlib.Path("requirements_all.txt").is_file()
+        and not (parsed.core_path / "requirements_all.txt").is_file()
     ):
         raise RuntimeError("Run from Home Assistant root")
 
+    if parsed.skip_plugins:
+        parsed.plugins = set(parsed.plugins) - set(parsed.skip_plugins)
+
     return Config(
-        root=pathlib.Path(".").absolute(),
+        root=parsed.core_path.absolute(),
         specific_integrations=parsed.integration_path,
         action=parsed.action,
         requirements=parsed.requirements,
@@ -148,12 +169,12 @@ def main() -> int:
         integrations = {}
 
         for int_path in config.specific_integrations:
-            integration = Integration(int_path)
+            integration = Integration(int_path, config)
             integration.load_manifest()
             integrations[integration.domain] = integration
 
     else:
-        integrations = Integration.load_dir(pathlib.Path("homeassistant/components"))
+        integrations = Integration.load_dir(config.core_integrations_path, config)
         plugins += HASS_PLUGINS
 
     for plugin in plugins:

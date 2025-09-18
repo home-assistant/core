@@ -7,10 +7,9 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.core import callback
 
@@ -21,6 +20,7 @@ from .const import (
     DEFAULT_SERVER,
     DOMAIN,
 )
+from .coordinator import SpeedTestConfigEntry
 
 
 class SpeedTestFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -31,10 +31,10 @@ class SpeedTestFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SpeedTestConfigEntry,
     ) -> SpeedTestOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SpeedTestOptionsFlowHandler(config_entry)
+        return SpeedTestOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -49,12 +49,11 @@ class SpeedTestFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
 
-class SpeedTestOptionsFlowHandler(OptionsFlow):
+class SpeedTestOptionsFlowHandler(OptionsFlowWithReload):
     """Handle SpeedTest options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
         self._servers: dict = {}
 
     async def async_step_init(
@@ -73,7 +72,7 @@ class SpeedTestOptionsFlowHandler(OptionsFlow):
 
             return self.async_create_entry(title="", data=user_input)
 
-        self._servers = self.hass.data[DOMAIN].servers
+        self._servers = self.config_entry.runtime_data.servers
 
         options = {
             vol.Optional(

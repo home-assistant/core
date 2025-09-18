@@ -4,11 +4,10 @@ import datetime
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .const import DATA_STORE, DOMAIN
+from .store import GoogleConfigEntry
 
 TO_REDACT = {
     "id",
@@ -40,16 +39,16 @@ def redact_store(data: dict[str, Any]) -> dict[str, Any]:
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: GoogleConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     payload: dict[str, Any] = {
         "now": dt_util.now().isoformat(),
-        "timezone": str(dt_util.DEFAULT_TIME_ZONE),
+        "timezone": str(dt_util.get_default_time_zone()),
         "system_timezone": str(datetime.datetime.now().astimezone().tzinfo),
     }
 
-    store = hass.data[DOMAIN][config_entry.entry_id][DATA_STORE]
-    data = await store.async_load()
-    payload["store"] = redact_store(data)
+    store = config_entry.runtime_data.store
+    if data := await store.async_load():
+        payload["store"] = redact_store(data)
     return payload

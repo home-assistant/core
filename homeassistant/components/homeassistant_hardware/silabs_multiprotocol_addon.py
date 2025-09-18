@@ -17,7 +17,6 @@ from homeassistant.components.hassio import (
     AddonManager,
     AddonState,
     hostname_from_addon_slug,
-    is_hassio,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -28,6 +27,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
@@ -309,8 +309,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Set up the options flow."""
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha.radio_manager import (
+        from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
             ZhaMultiPANMigrationHelper,
         )
 
@@ -318,7 +317,6 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         self.start_task: asyncio.Task | None = None
         self.stop_task: asyncio.Task | None = None
         self._zha_migration_mgr: ZhaMultiPANMigrationHelper | None = None
-        self.config_entry = config_entry
         self.original_addon_config: dict[str, Any] | None = None
         self.revert_reason: str | None = None
 
@@ -417,6 +415,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
             self.install_task = self.hass.async_create_task(
                 multipan_manager.async_install_addon_waiting(),
                 "SiLabs Multiprotocol addon install",
+                eager_start=False,
             )
 
         if not self.install_task.done():
@@ -451,16 +450,11 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure the Silicon Labs Multiprotocol add-on."""
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
-
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha.radio_manager import (
+        from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN  # noqa: PLC0415
+        from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
             ZhaMultiPANMigrationHelper,
         )
-
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha.silabs_multiprotocol import (
+        from homeassistant.components.zha.silabs_multiprotocol import (  # noqa: PLC0415
             async_get_channel as async_get_zha_channel,
         )
 
@@ -524,7 +518,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
 
         if not self.start_task:
             self.start_task = self.hass.async_create_task(
-                multipan_manager.async_start_addon_waiting()
+                multipan_manager.async_start_addon_waiting(), eager_start=False
             )
 
         if not self.start_task.done():
@@ -561,7 +555,8 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         """Prepare info needed to complete the config entry update."""
         # Always reload entry after installing the addon.
         self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            self.hass.config_entries.async_reload(self.config_entry.entry_id),
+            eager_start=False,
         )
 
         # Finish ZHA migration if needed
@@ -721,6 +716,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
             self.install_task = self.hass.async_create_task(
                 flasher_manager.async_install_addon_waiting(),
                 "SiLabs Flasher addon install",
+                eager_start=False,
             )
 
         if not self.install_task.done():
@@ -745,11 +741,8 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Perform initial backup and reconfigure ZHA."""
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
-
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha.radio_manager import (
+        from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN  # noqa: PLC0415
+        from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
             ZhaMultiPANMigrationHelper,
         )
 
@@ -811,6 +804,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
             self.stop_task = self.hass.async_create_task(
                 multipan_manager.async_uninstall_addon_waiting(),
                 "SiLabs Multiprotocol addon uninstall",
+                eager_start=False,
             )
 
         if not self.stop_task.done():
@@ -843,7 +837,9 @@ class OptionsFlowHandler(OptionsFlow, ABC):
                     AddonState.NOT_RUNNING
                 )
 
-            self.start_task = self.hass.async_create_task(start_and_wait_until_done())
+            self.start_task = self.hass.async_create_task(
+                start_and_wait_until_done(), eager_start=False
+            )
 
         if not self.start_task.done():
             return self.async_show_progress(

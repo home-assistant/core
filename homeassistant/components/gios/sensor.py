@@ -15,21 +15,21 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GiosDataUpdateCoordinator
 from .const import (
     ATTR_AQI,
     ATTR_C6H6,
     ATTR_CO,
+    ATTR_NO,
     ATTR_NO2,
+    ATTR_NOX,
     ATTR_O3,
     ATTR_PM10,
     ATTR_PM25,
@@ -39,6 +39,7 @@ from .const import (
     MANUFACTURER,
     URL,
 )
+from .coordinator import GiosConfigEntry, GiosDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +77,14 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         translation_key="co",
     ),
     GiosSensorEntityDescription(
+        key=ATTR_NO,
+        value=lambda sensors: sensors.no.value if sensors.no else None,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
         key=ATTR_NO2,
         value=lambda sensors: sensors.no2.value if sensors.no2 else None,
         suggested_display_precision=0,
@@ -90,6 +99,14 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
         translation_key="no2_index",
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_NOX,
+        translation_key=ATTR_NOX,
+        value=lambda sensors: sensors.nox.value if sensors.nox else None,
+        suggested_display_precision=0,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
         key=ATTR_O3,
@@ -159,13 +176,14 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GiosConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a GIOS entities from a config_entry."""
     name = entry.data[CONF_NAME]
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
+    coordinator = entry.runtime_data.coordinator
     # Due to the change of the attribute name of one sensor, it is necessary to migrate
     # the unique_id to the new name.
     entity_registry = er.async_get(hass)

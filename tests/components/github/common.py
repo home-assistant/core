@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import json
 
-from homeassistant import config_entries
 from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ACCESS_TOKEN = "gho_16C7e42F292c6912E7710c838347Ae178B4a"
@@ -22,12 +22,12 @@ async def setup_github_integration(
     add_entry_to_hass: bool = True,
 ) -> None:
     """Mock setting up the integration."""
-    headers = json.loads(load_fixture("base_headers.json", DOMAIN))
+    headers = json.loads(await async_load_fixture(hass, "base_headers.json", DOMAIN))
     for idx, repository in enumerate(mock_config_entry.options[CONF_REPOSITORIES]):
         aioclient_mock.get(
             f"https://api.github.com/repos/{repository}",
             json={
-                **json.loads(load_fixture("repository.json", DOMAIN)),
+                **json.loads(await async_load_fixture(hass, "repository.json", DOMAIN)),
                 "full_name": repository,
                 "id": idx,
             },
@@ -40,7 +40,7 @@ async def setup_github_integration(
         )
     aioclient_mock.post(
         "https://api.github.com/graphql",
-        json=json.loads(load_fixture("graphql.json", DOMAIN)),
+        json=json.loads(await async_load_fixture(hass, "graphql.json", DOMAIN)),
         headers=headers,
     )
     if add_entry_to_hass:
@@ -50,4 +50,4 @@ async def setup_github_integration(
     await hass.async_block_till_done()
 
     assert setup_result
-    assert mock_config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED

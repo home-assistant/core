@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfElectricPotential,
@@ -22,11 +21,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import DiscovergyUpdateCoordinator
+from .coordinator import DiscovergyConfigEntry, DiscovergyUpdateCoordinator
+
+PARALLEL_UPDATES = 0
 
 
 def _get_and_scale(reading: Reading, key: str, scale: int) -> datetime | float | None:
@@ -163,13 +164,13 @@ ADDITIONAL_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DiscovergyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Discovergy sensors."""
-    coordinators: list[DiscovergyUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id]
-
     entities: list[DiscovergySensor] = []
-    for coordinator in coordinators:
+    for coordinator in entry.runtime_data:
         sensors: tuple[DiscovergySensorEntityDescription, ...] = ()
 
         # select sensor descriptions based on meter type and combine with additional sensors

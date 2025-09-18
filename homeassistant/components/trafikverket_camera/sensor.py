@@ -11,14 +11,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import CameraData, TVDataUpdateCoordinator
+from . import TVCameraConfigEntry
+from .coordinator import CameraData
 from .entity import TrafikverketCameraNonCameraEntity
 
 PARALLEL_UPDATES = 0
@@ -73,11 +72,13 @@ SENSOR_TYPES: tuple[TVCameraSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TVCameraConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Trafikverket Camera sensor platform."""
 
-    coordinator: TVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         TrafikverketCameraSensor(coordinator, entry.entry_id, description)
         for description in SENSOR_TYPES

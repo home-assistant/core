@@ -1,5 +1,6 @@
 """The tests for the Input number component."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -29,7 +30,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):
@@ -64,7 +65,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def set_value(hass, entity_id, value):
+async def set_value(hass: HomeAssistant, entity_id: str, value: str) -> None:
     """Set input_number to value.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -77,7 +78,7 @@ async def set_value(hass, entity_id, value):
     )
 
 
-async def increment(hass, entity_id):
+async def increment(hass: HomeAssistant, entity_id: str) -> None:
     """Increment value of entity.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -87,7 +88,7 @@ async def increment(hass, entity_id):
     )
 
 
-async def decrement(hass, entity_id):
+async def decrement(hass: HomeAssistant, entity_id: str) -> None:
     """Decrement value of entity.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -97,16 +98,19 @@ async def decrement(hass, entity_id):
     )
 
 
-async def test_config(hass: HomeAssistant) -> None:
-    """Test config."""
-    invalid_configs = [
+@pytest.mark.parametrize(
+    "invalid_config",
+    [
         None,
-        {},
         {"name with space": None},
         {"test_1": {"min": 50, "max": 50}},
-    ]
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+        {"test_1": {"min": 0, "max": 10, "initial": 11}},
+    ],
+)
+async def test_config(hass: HomeAssistant, invalid_config) -> None:
+    """Test config."""
+
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
 
 
 async def test_set_value(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from bleak import BleakError
 from bluetooth_data_tools import monotonic_time_coarse
@@ -21,11 +21,9 @@ from .passive_update_processor import PassiveBluetoothProcessorCoordinator
 POLL_DEFAULT_COOLDOWN = 10
 POLL_DEFAULT_IMMEDIATE = True
 
-_T = TypeVar("_T")
 
-
-class ActiveBluetoothProcessorCoordinator(
-    Generic[_T], PassiveBluetoothProcessorCoordinator[_T]
+class ActiveBluetoothProcessorCoordinator[_DataT](
+    PassiveBluetoothProcessorCoordinator[_DataT]
 ):
     """A processor coordinator that parses passive data.
 
@@ -63,11 +61,11 @@ class ActiveBluetoothProcessorCoordinator(
         *,
         address: str,
         mode: BluetoothScanningMode,
-        update_method: Callable[[BluetoothServiceInfoBleak], _T],
+        update_method: Callable[[BluetoothServiceInfoBleak], _DataT],
         needs_poll_method: Callable[[BluetoothServiceInfoBleak, float | None], bool],
         poll_method: Callable[
             [BluetoothServiceInfoBleak],
-            Coroutine[Any, Any, _T],
+            Coroutine[Any, Any, _DataT],
         ]
         | None = None,
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
@@ -110,7 +108,7 @@ class ActiveBluetoothProcessorCoordinator(
 
     async def _async_poll_data(
         self, last_service_info: BluetoothServiceInfoBleak
-    ) -> _T:
+    ) -> _DataT:
         """Fetch the latest data from the source."""
         if self._poll_method is None:
             raise NotImplementedError("Poll method not implemented")
@@ -129,7 +127,7 @@ class ActiveBluetoothProcessorCoordinator(
                 )
                 self.last_poll_successful = False
             return
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             if self.last_poll_successful:
                 self.logger.exception("%s: Failure while polling", self.address)
                 self.last_poll_successful = False

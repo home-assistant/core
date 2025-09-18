@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 
@@ -49,18 +49,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         requires_auth: bool = feedconfig["requires_api_password"]
 
-        title: Template | None
-        if (title := feedconfig.get("title")) is not None:
-            title.hass = hass
-
         items: list[dict[str, Template]] = feedconfig["items"]
-        for item in items:
-            if "title" in item:
-                item["title"].hass = hass
-            if "description" in item:
-                item["description"].hass = hass
-
-        rss_view = RssView(url, requires_auth, title, items)
+        rss_view = RssView(url, requires_auth, feedconfig.get("title"), items)
         hass.http.register_view(rss_view)
 
     return True
@@ -91,9 +81,7 @@ class RssView(HomeAssistantView):
         response += '<rss version="2.0">\n'
         response += "  <channel>\n"
         if self._title is not None:
-            response += "    <title>%s</title>\n" % escape(
-                self._title.async_render(parse_result=False)
-            )
+            response += f"    <title>{escape(self._title.async_render(parse_result=False))}</title>\n"
         else:
             response += "    <title>Home Assistant</title>\n"
 

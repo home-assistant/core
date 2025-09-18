@@ -10,7 +10,7 @@ from broadlink.exceptions import BroadlinkException
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchDeviceClass,
     SwitchEntity,
 )
@@ -29,8 +29,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -56,7 +59,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_SLOTS),
     cv.deprecated(CONF_TIMEOUT),
     cv.deprecated(CONF_TYPE),
-    PLATFORM_SCHEMA.extend(
+    SWITCH_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_MAC): mac_address,
             vol.Optional(CONF_HOST): cv.string,
@@ -85,7 +88,7 @@ async def async_setup_platform(
 
     if switches := config.get(CONF_SWITCHES):
         platform_data = hass.data[DOMAIN].platforms.get(Platform.SWITCH, {})
-        async_add_entities_config_entry: AddEntitiesCallback
+        async_add_entities_config_entry: AddConfigEntryEntitiesCallback
         device: BroadlinkDevice
         async_add_entities_config_entry, device = platform_data.get(
             mac_addr, (None, None)
@@ -111,7 +114,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink switch."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
@@ -129,7 +132,7 @@ async def async_setup_entry(
     elif device.api.type == "BG1":
         switches.extend(BroadlinkBG1Slot(device, slot) for slot in range(1, 3))
 
-    elif device.api.type == "MP1":
+    elif device.api.type in {"MP1", "MP1S"}:
         switches.extend(BroadlinkMP1Slot(device, slot) for slot in range(1, 5))
 
     async_add_entities(switches)

@@ -13,7 +13,10 @@ from georss_ign_sismologia_client import (
 )
 import voluptuous as vol
 
-from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
+from homeassistant.components.geo_location import (
+    PLATFORM_SCHEMA as GEO_LOCATION_PLATFORM_SCHEMA,
+    GeolocationEvent,
+)
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -23,7 +26,7 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_time_interval
@@ -47,7 +50,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 SOURCE = "ign_sismologia"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = GEO_LOCATION_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_LATITUDE): cv.latitude,
         vol.Optional(CONF_LONGITUDE): cv.longitude,
@@ -221,15 +224,15 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_TITLE, self._title),
-            (ATTR_REGION, self._region),
-            (ATTR_MAGNITUDE, self._magnitude),
-            (ATTR_PUBLICATION_DATE, self._publication_date),
-            (ATTR_IMAGE_URL, self._image_url),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_EXTERNAL_ID, self._external_id),
+                (ATTR_TITLE, self._title),
+                (ATTR_REGION, self._region),
+                (ATTR_MAGNITUDE, self._magnitude),
+                (ATTR_PUBLICATION_DATE, self._publication_date),
+                (ATTR_IMAGE_URL, self._image_url),
+            )
+            if value or isinstance(value, bool)
+        }

@@ -1,6 +1,7 @@
 """The tests for the input_test component."""
 
 import logging
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):
@@ -46,12 +47,14 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def test_config(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "invalid_config",
+    [None, 1, {"name with space": None}],
+)
+async def test_config(hass: HomeAssistant, invalid_config) -> None:
     """Test config."""
-    invalid_configs = [None, 1, {}, {"name with space": None}]
 
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
 
 
 async def test_config_options(hass: HomeAssistant) -> None:

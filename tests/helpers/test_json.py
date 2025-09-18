@@ -7,7 +7,7 @@ import math
 import os
 from pathlib import Path
 import time
-from typing import NamedTuple
+from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
 import pytest
@@ -17,6 +17,7 @@ from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     JSONEncoder as DefaultHASSJSONEncoder,
     find_paths_unserializable_data,
+    json_bytes_sorted,
     json_bytes_strip_null,
     json_dumps,
     json_dumps_sorted,
@@ -99,6 +100,14 @@ def test_json_dumps_sorted() -> None:
     assert json_dumps_sorted(data) == json.dumps(
         data, sort_keys=True, separators=(",", ":")
     )
+
+
+def test_json_bytes_sorted() -> None:
+    """Test the json bytes sorted function."""
+    data = {"c": 3, "a": 1, "b": 2}
+    assert json_bytes_sorted(data) == json.dumps(
+        data, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
 
 
 def test_json_dumps_float_subclass() -> None:
@@ -325,10 +334,10 @@ def test_find_unserializable_data() -> None:
     ) == {"$[0](Event: bad_event).data.bad_attribute": bad_data}
 
     class BadData:
-        def __init__(self):
+        def __init__(self) -> None:
             self.bla = bad_data
 
-        def as_dict(self):
+        def as_dict(self) -> dict[str, Any]:
             return {"bla": self.bla}
 
     assert find_paths_unserializable_data(

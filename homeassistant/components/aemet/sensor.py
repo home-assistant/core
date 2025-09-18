@@ -43,7 +43,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -53,7 +52,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -85,13 +84,9 @@ from .const import (
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_MAX_SPEED,
     ATTR_API_WIND_SPEED,
-    ATTRIBUTION,
     CONDITIONS_MAP,
-    DOMAIN,
-    ENTRY_NAME,
-    ENTRY_WEATHER_COORDINATOR,
 )
-from .coordinator import WeatherUpdateCoordinator
+from .coordinator import AemetConfigEntry, WeatherUpdateCoordinator
 from .entity import AemetEntity
 
 
@@ -190,6 +185,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_WIND_DIRECTION],
         name="Daily forecast wind bearing",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     AemetSensorEntityDescription(
         entity_registry_enabled_default=False,
@@ -197,6 +193,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_WIND_DIRECTION],
         name="Hourly forecast wind bearing",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     AemetSensorEntityDescription(
         entity_registry_enabled_default=False,
@@ -253,6 +250,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         name="Rain",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_RAIN_PROB,
@@ -267,6 +265,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         name="Snow",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_SNOW_PROB,
@@ -337,7 +336,8 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         keys=[AOD_WEATHER, AOD_WIND_DIRECTION],
         name="Wind bearing",
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_WIND_MAX_SPEED,
@@ -360,20 +360,23 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AemetConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AEMET OpenData sensor entities based on a config entry."""
-    domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    name: str = domain_data[ENTRY_NAME]
-    coordinator: WeatherUpdateCoordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
+    domain_data = config_entry.runtime_data
+    name = domain_data.name
+    coordinator = domain_data.coordinator
+
+    unique_id = config_entry.unique_id
+    assert unique_id is not None
 
     async_add_entities(
         AemetSensor(
             name,
             coordinator,
             description,
-            config_entry,
+            unique_id,
         )
         for description in FORECAST_SENSORS + WEATHER_SENSORS
         if dict_nested_value(coordinator.data["lib"], description.keys) is not None
@@ -383,7 +386,6 @@ async def async_setup_entry(
 class AemetSensor(AemetEntity, SensorEntity):
     """Implementation of an AEMET OpenData sensor."""
 
-    _attr_attribution = ATTRIBUTION
     entity_description: AemetSensorEntityDescription
 
     def __init__(
@@ -391,13 +393,12 @@ class AemetSensor(AemetEntity, SensorEntity):
         name: str,
         coordinator: WeatherUpdateCoordinator,
         description: AemetSensorEntityDescription,
-        config_entry: ConfigEntry,
+        unique_id: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, name, unique_id)
         self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{config_entry.unique_id}-{description.key}"
+        self._attr_unique_id = f"{unique_id}-{description.key}"
 
     @property
     def native_value(self):

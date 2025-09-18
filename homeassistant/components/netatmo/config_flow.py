@@ -101,7 +101,6 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Netatmo options flow."""
-        self.config_entry = config_entry
         self.options = dict(config_entry.options)
         self.options.setdefault(CONF_WEATHER_AREAS, {})
 
@@ -136,7 +135,7 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
                 vol.Optional(
                     CONF_WEATHER_AREAS,
                     default=weather_areas,
-                ): cv.multi_select({wa: None for wa in weather_areas}),
+                ): cv.multi_select(dict.fromkeys(weather_areas)),
                 vol.Optional(CONF_NEW_AREA): str,
             }
         )
@@ -149,13 +148,13 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
     async def async_step_public_weather(self, user_input: dict) -> ConfigFlowResult:
         """Manage configuration of Netatmo public weather sensors."""
         if user_input is not None and CONF_NEW_AREA not in user_input:
-            self.options[CONF_WEATHER_AREAS][
-                user_input[CONF_AREA_NAME]
-            ] = fix_coordinates(user_input)
+            self.options[CONF_WEATHER_AREAS][user_input[CONF_AREA_NAME]] = (
+                fix_coordinates(user_input)
+            )
 
-            self.options[CONF_WEATHER_AREAS][user_input[CONF_AREA_NAME]][
-                CONF_UUID
-            ] = str(uuid.uuid4())
+            self.options[CONF_WEATHER_AREAS][user_input[CONF_AREA_NAME]][CONF_UUID] = (
+                str(uuid.uuid4())
+            )
 
             return await self.async_step_public_weather_areas()
 
@@ -197,7 +196,7 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
                 vol.Required(
                     CONF_PUBLIC_MODE,
                     default=orig_options.get(CONF_PUBLIC_MODE, "avg"),
-                ): vol.In(["avg", "max"]),
+                ): vol.In(["avg", "max", "min"]),
                 vol.Required(
                     CONF_SHOW_ON_MAP,
                     default=orig_options.get(CONF_SHOW_ON_MAP, False),

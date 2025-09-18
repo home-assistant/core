@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 import logging
 from typing import TYPE_CHECKING, cast
 
 from sqlalchemy.orm.session import Session
 
-from homeassistant.core import Event
+from homeassistant.core import Event, EventStateChangedData
+from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
 from ..db_schema import StateAttributes
 from ..queries import get_shared_attributes
-from ..util import chunked, execute_stmt_lambda_element
+from ..util import execute_stmt_lambda_element
 from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
@@ -36,9 +37,8 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the event type manager."""
         super().__init__(recorder, CACHE_SIZE)
-        self.active = True  # always active
 
-    def serialize_from_event(self, event: Event) -> bytes | None:
+    def serialize_from_event(self, event: Event[EventStateChangedData]) -> bytes | None:
         """Serialize event data."""
         try:
             return StateAttributes.shared_attrs_bytes_from_event(
@@ -47,12 +47,14 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning(
                 "State is not JSON serializable: %s: %s",
-                event.data.get("new_state"),
+                event.data["new_state"],
                 ex,
             )
             return None
 
-    def load(self, events: list[Event], session: Session) -> None:
+    def load(
+        self, events: list[Event[EventStateChangedData]], session: Session
+    ) -> None:
         """Load the shared_attrs to attributes_ids mapping into memory from events.
 
         This call is not thread-safe and must be called from the
@@ -95,7 +97,7 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         return results | self._load_from_hashes(missing_hashes, session)
 
     def _load_from_hashes(
-        self, hashes: Iterable[int], session: Session
+        self, hashes: Collection[int], session: Session
     ) -> dict[str, int | None]:
         """Load the shared_attrs to attributes_ids mapping into memory from a list of hashes.
 
@@ -104,7 +106,7 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         """
         results: dict[str, int | None] = {}
         with session.no_autoflush:
-            for hashs_chunk in chunked(hashes, self.recorder.max_bind_vars):
+            for hashs_chunk in chunked_or_all(hashes, self.recorder.max_bind_vars):
                 for attributes_id, shared_attrs in execute_stmt_lambda_element(
                     session, get_shared_attributes(hashs_chunk), orm_rows=False
                 ):

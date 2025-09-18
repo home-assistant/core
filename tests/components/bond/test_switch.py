@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.bond.const import (
     ATTR_POWER_STATE,
-    DOMAIN as BOND_DOMAIN,
+    DOMAIN,
     SERVICE_SET_POWER_TRACKED_STATE,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -94,7 +94,7 @@ async def test_switch_set_power_belief(hass: HomeAssistant) -> None:
 
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
-            BOND_DOMAIN,
+            DOMAIN,
             SERVICE_SET_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
             blocking=True,
@@ -112,16 +112,17 @@ async def test_switch_set_power_belief_api_error(hass: HomeAssistant) -> None:
         hass, SWITCH_DOMAIN, generic_device("name-1"), bond_device_id="test-device-id"
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
-            BOND_DOMAIN,
+            DOMAIN,
             SERVICE_SET_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_update_reports_switch_is_on(hass: HomeAssistant) -> None:

@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-from anova_wifi import AnovaApi, InvalidLogin, NoDevicesFound
+import logging
+
+from anova_wifi import AnovaApi, InvalidLogin
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .util import serialize_device_list
+
+_LOGGER = logging.getLogger(__name__)
 
 
-class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
+class AnovaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Sets up a config flow for Anova."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -33,22 +37,17 @@ class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             try:
                 await api.authenticate()
-                devices = await api.get_devices()
             except InvalidLogin:
                 errors["base"] = "invalid_auth"
-            except NoDevicesFound:
-                errors["base"] = "no_devices_found"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # We store device list in config flow in order to persist found devices on restart, as the Anova api get_devices does not return any devices that are offline.
-                device_list = serialize_device_list(devices)
                 return self.async_create_entry(
                     title="Anova",
                     data={
-                        CONF_USERNAME: api.username,
-                        CONF_PASSWORD: api.password,
-                        CONF_DEVICES: device_list,
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
 

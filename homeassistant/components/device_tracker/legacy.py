@@ -10,10 +10,10 @@ from types import ModuleType
 from typing import Any, Final, Protocol, final
 
 import attr
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.backports.functools import cached_property
 from homeassistant.components import zone
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config import (
@@ -201,9 +201,47 @@ def see(
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
-async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> None:
+@callback
+def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> None:
+    """Set up the legacy integration."""
+    # The tracker is loaded in the _async_setup_integration task so
+    # we create a future to avoid waiting on it here so that only
+    # async_platform_discovered will have to wait in the rare event
+    # a custom component still uses the legacy device tracker discovery.
+    tracker_future: asyncio.Future[DeviceTracker] = hass.loop.create_future()
+
+    async def async_platform_discovered(
+        p_type: str, info: dict[str, Any] | None
+    ) -> None:
+        """Load a platform."""
+        platform = await async_create_platform_type(hass, config, p_type, {})
+
+        if platform is None or platform.type != PLATFORM_TYPE_LEGACY:
+            return
+
+        tracker = await tracker_future
+        await platform.async_setup_legacy(hass, tracker, info)
+
+    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
+    #
+    # Legacy and platforms load in a non-awaited tracked task
+    # to ensure device tracker setup can continue and config
+    # entry integrations are not waiting for legacy device
+    # tracker platforms to be set up.
+    #
+    hass.async_create_task(
+        _async_setup_integration(hass, config, tracker_future), eager_start=True
+    )
+
+
+async def _async_setup_integration(
+    hass: HomeAssistant,
+    config: ConfigType,
+    tracker_future: asyncio.Future[DeviceTracker],
+) -> None:
     """Set up the legacy integration."""
     tracker = await get_tracker(hass, config)
+    tracker_future.set_result(tracker)
 
     async def async_see_service(call: ServiceCall) -> None:
         """Service to see a device."""
@@ -217,21 +255,6 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
         DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA
     )
 
-    #
-    # The platforms load in a non-awaited tracked task
-    # to ensure device tracker setup can continue and config
-    # entry integrations are not waiting for legacy device
-    # tracker platforms to be set up.
-    #
-    hass.async_create_task(
-        _async_setup_legacy_integration(hass, config, tracker), eager_start=True
-    )
-
-
-async def _async_setup_legacy_integration(
-    hass: HomeAssistant, config: ConfigType, tracker: DeviceTracker
-) -> None:
-    """Set up the legacy integration."""
     legacy_platforms = await async_extract_config(hass, config)
 
     setup_tasks = [
@@ -241,19 +264,6 @@ async def _async_setup_legacy_integration(
 
     if setup_tasks:
         await asyncio.wait(setup_tasks)
-
-    async def async_platform_discovered(
-        p_type: str, info: dict[str, Any] | None
-    ) -> None:
-        """Load a platform."""
-        platform = await async_create_platform_type(hass, config, p_type, {})
-
-        if platform is None or platform.type != PLATFORM_TYPE_LEGACY:
-            return
-
-        await platform.async_setup_legacy(hass, tracker, info)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 
     # Clean up stale devices
     cancel_update_stale = async_track_utc_time_change(
@@ -271,9 +281,7 @@ async def _async_setup_legacy_integration(
         """
         cancel_update_stale()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
 
 @attr.s
@@ -342,7 +350,7 @@ class DeviceTrackerPlatform:
                         discovery_info,
                     )
                 else:
-                    raise HomeAssistantError("Invalid legacy device_tracker platform.")
+                    raise HomeAssistantError("Invalid legacy device_tracker platform.")  # noqa: TRY301
 
                 if scanner is not None:
                     async_setup_scanner_platform(
@@ -357,7 +365,7 @@ class DeviceTrackerPlatform:
 
                 hass.config.components.add(full_name)
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception(
                     "Error setting up platform %s %s", self.type, self.name
                 )
@@ -514,7 +522,7 @@ def async_setup_scanner_platform(
                 ]
                 kwargs["gps_accuracy"] = 0
 
-            hass.async_create_task(async_see_device(**kwargs))
+            hass.async_create_task(async_see_device(**kwargs), eager_start=True)
 
     cancel_legacy_scan = async_track_time_interval(
         hass,
@@ -522,7 +530,7 @@ def async_setup_scanner_platform(
         interval,
         name=f"device_tracker {platform} legacy scan",
     )
-    hass.async_create_task(async_device_tracker_scan(None))
+    hass.async_create_task(async_device_tracker_scan(None), eager_start=True)
 
     @callback
     def _on_hass_stop(_: Event) -> None:
@@ -548,8 +556,7 @@ async def get_tracker(hass: HomeAssistant, config: ConfigType) -> DeviceTracker:
         track_new = defaults.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = await async_load_config(yaml_path, hass, consider_home)
-    tracker = DeviceTracker(hass, consider_home, track_new, defaults, devices)
-    return tracker
+    return DeviceTracker(hass, consider_home, track_new, defaults, devices)
 
 
 class DeviceTracker:
@@ -712,7 +719,8 @@ class DeviceTracker:
         self.hass.async_create_task(
             self.async_update_config(
                 self.hass.config.path(YAML_DEVICES), dev_id, device
-            )
+            ),
+            eager_start=True,
         )
 
     async def async_update_config(self, path: str, dev_id: str, device: Device) -> None:
@@ -733,7 +741,9 @@ class DeviceTracker:
         """
         for device in self.devices.values():
             if (device.track and device.last_update_home) and device.stale(now):
-                self.hass.async_create_task(device.async_update_ha_state(True))
+                self.hass.async_create_task(
+                    device.async_update_ha_state(True), eager_start=True
+                )
 
     async def async_setup_tracked_device(self) -> None:
         """Set up all not exists tracked devices.
@@ -968,9 +978,9 @@ class DeviceScanner:
 
     async def async_scan_devices(self) -> list[str]:
         """Scan for devices."""
-        assert (
-            self.hass is not None
-        ), "hass should be set by async_setup_scanner_platform"
+        assert self.hass is not None, (
+            "hass should be set by async_setup_scanner_platform"
+        )
         return await self.hass.async_add_executor_job(self.scan_devices)
 
     def get_device_name(self, device: str) -> str | None:
@@ -979,9 +989,9 @@ class DeviceScanner:
 
     async def async_get_device_name(self, device: str) -> str | None:
         """Get the name of a device."""
-        assert (
-            self.hass is not None
-        ), "hass should be set by async_setup_scanner_platform"
+        assert self.hass is not None, (
+            "hass should be set by async_setup_scanner_platform"
+        )
         return await self.hass.async_add_executor_job(self.get_device_name, device)
 
     def get_extra_attributes(self, device: str) -> dict:
@@ -990,9 +1000,9 @@ class DeviceScanner:
 
     async def async_get_extra_attributes(self, device: str) -> dict:
         """Get the extra attributes of a device."""
-        assert (
-            self.hass is not None
-        ), "hass should be set by async_setup_scanner_platform"
+        assert self.hass is not None, (
+            "hass should be set by async_setup_scanner_platform"
+        )
         return await self.hass.async_add_executor_job(self.get_extra_attributes, device)
 
 

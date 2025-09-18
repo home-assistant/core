@@ -13,6 +13,7 @@ from homeassistant.auth.models import (
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     TOKEN_TYPE_NORMAL,
     Credentials,
+    RefreshToken,
 )
 from homeassistant.components import auth
 from homeassistant.core import HomeAssistant
@@ -37,7 +38,7 @@ def mock_credential():
     )
 
 
-async def async_setup_user_refresh_token(hass):
+async def async_setup_user_refresh_token(hass: HomeAssistant) -> RefreshToken:
     """Create a testing user with a connected credential."""
     user = await hass.auth.async_create_user("Test User")
 
@@ -546,27 +547,33 @@ async def test_ws_delete_all_refresh_tokens_error(
 
     tokens = result["result"]
 
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "auth/delete_all_refresh_tokens",
+    with patch("homeassistant.components.auth.DELETE_CURRENT_TOKEN_DELAY", 0.001):
+        await ws_client.send_json(
+            {
+                "id": 6,
+                "type": "auth/delete_all_refresh_tokens",
+            }
+        )
+
+        caplog.clear()
+        result = await ws_client.receive_json()
+        assert result, result["success"] is False
+        assert result["error"] == {
+            "code": "token_removing_error",
+            "message": "During removal, an error was raised.",
         }
-    )
 
-    caplog.clear()
-    result = await ws_client.receive_json()
-    assert result, result["success"] is False
-    assert result["error"] == {
-        "code": "token_removing_error",
-        "message": "During removal, an error was raised.",
-    }
+    records = [
+        record
+        for record in caplog.records
+        if record.msg == "Error during refresh token removal"
+    ]
+    assert len(records) == 1
+    assert records[0].levelno == logging.ERROR
+    assert records[0].exc_info and str(records[0].exc_info[1]) == "I'm bad"
+    assert records[0].name == "homeassistant.components.auth"
 
-    assert (
-        "homeassistant.components.auth",
-        logging.ERROR,
-        "During refresh token removal, the following error occurred: I'm bad",
-    ) in caplog.record_tuples
-
+    await hass.async_block_till_done()
     for token in tokens:
         refresh_token = hass.auth.async_get_refresh_token(token["id"])
         assert refresh_token is None
@@ -592,8 +599,8 @@ async def test_ws_delete_all_refresh_tokens(
     hass_admin_credential: Credentials,
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
-    delete_token_type: dict[str:str],
-    delete_current_token: dict[str:bool],
+    delete_token_type: dict[str, str],
+    delete_current_token: dict[str, bool],
     expected_remaining_normal_tokens: int,
     expected_remaining_long_lived_tokens: int,
 ) -> None:
@@ -625,18 +632,20 @@ async def test_ws_delete_all_refresh_tokens(
     result = await ws_client.receive_json()
     assert result["success"], result
 
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "auth/delete_all_refresh_tokens",
-            **delete_token_type,
-            **delete_current_token,
-        }
-    )
+    with patch("homeassistant.components.auth.DELETE_CURRENT_TOKEN_DELAY", 0.001):
+        await ws_client.send_json(
+            {
+                "id": 6,
+                "type": "auth/delete_all_refresh_tokens",
+                **delete_token_type,
+                **delete_current_token,
+            }
+        )
 
-    result = await ws_client.receive_json()
-    assert result, result["success"]
+        result = await ws_client.receive_json()
+        assert result, result["success"]
 
+    await hass.async_block_till_done()
     # We need to enumerate the user since we may remove the token
     # that is used to authenticate the user which will prevent the websocket
     # connection from working
@@ -682,3 +691,72 @@ async def test_ws_sign_path(
     hass, path, expires = mock_sign.mock_calls[0][1]
     assert path == "/api/hello"
     assert expires.total_seconds() == 20
+
+
+async def test_ws_refresh_token_set_expiry(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_admin_credential: Credentials,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test setting expiry of a refresh token."""
+    assert await async_setup_component(hass, "auth", {"http": {}})
+
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
+    )
+    assert refresh_token.expire_at is not None
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "auth/refresh_token_set_expiry",
+            "refresh_token_id": refresh_token.id,
+            "enable_expiry": False,
+        }
+    )
+
+    result = await ws_client.receive_json()
+    assert result["success"], result
+    refresh_token = hass.auth.async_get_refresh_token(refresh_token.id)
+    assert refresh_token.expire_at is None
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "auth/refresh_token_set_expiry",
+            "refresh_token_id": refresh_token.id,
+            "enable_expiry": True,
+        }
+    )
+
+    result = await ws_client.receive_json()
+    assert result["success"], result
+    refresh_token = hass.auth.async_get_refresh_token(refresh_token.id)
+    assert refresh_token.expire_at is not None
+
+
+async def test_ws_refresh_token_set_expiry_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test setting expiry of a invalid refresh token returns error."""
+    assert await async_setup_component(hass, "auth", {"http": {}})
+
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "auth/refresh_token_set_expiry",
+            "refresh_token_id": "invalid",
+            "enable_expiry": False,
+        }
+    )
+
+    result = await ws_client.receive_json()
+    assert result, result["success"] is False
+    assert result["error"] == {
+        "code": "invalid_token_id",
+        "message": "Received invalid token",
+    }

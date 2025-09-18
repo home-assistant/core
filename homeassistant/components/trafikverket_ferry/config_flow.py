@@ -3,19 +3,22 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from pytrafikverket import TrafikverketFerry
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import create_unique_id
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -49,8 +52,6 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    entry: ConfigEntry | None
-
     async def validate_input(
         self, api_key: str, ferry_from: str, ferry_to: str
     ) -> None:
@@ -63,8 +64,6 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-authentication with Trafikverket."""
-
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -76,27 +75,23 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             api_key = user_input[CONF_API_KEY]
 
-            assert self.entry is not None
+            reauth_entry = self._get_reauth_entry()
             try:
                 await self.validate_input(
-                    api_key, self.entry.data[CONF_FROM], self.entry.data[CONF_TO]
+                    api_key, reauth_entry.data[CONF_FROM], reauth_entry.data[CONF_TO]
                 )
             except InvalidAuthentication:
                 errors["base"] = "invalid_auth"
             except NoFerryFound:
                 errors["base"] = "invalid_route"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={
-                        **self.entry.data,
-                        CONF_API_KEY: api_key,
-                    },
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_API_KEY: api_key},
                 )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -121,7 +116,7 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
             if ferry_to:
                 name = name + f" to {ferry_to}"
             if ferry_time != "00:00:00":
-                name = name + f" at {str(ferry_time)}"
+                name = name + f" at {ferry_time!s}"
 
             try:
                 await self.validate_input(api_key, ferry_from, ferry_to)
@@ -129,7 +124,8 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NoFerryFound:
                 errors["base"] = "invalid_route"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
             else:
                 if not errors:

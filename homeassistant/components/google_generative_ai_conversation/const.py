@@ -1,35 +1,63 @@
 """Constants for the Google Generative AI Conversation integration."""
 
+import logging
+
+from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.helpers import llm
+
+LOGGER = logging.getLogger(__package__)
+
 DOMAIN = "google_generative_ai_conversation"
+DEFAULT_TITLE = "Google Generative AI"
+
+DEFAULT_CONVERSATION_NAME = "Google AI Conversation"
+DEFAULT_STT_NAME = "Google AI STT"
+DEFAULT_TTS_NAME = "Google AI TTS"
+DEFAULT_AI_TASK_NAME = "Google AI Task"
+
 CONF_PROMPT = "prompt"
-DEFAULT_PROMPT = """This smart home is controlled by Home Assistant.
+DEFAULT_STT_PROMPT = "Transcribe the attached audio"
 
-An overview of the areas and the devices in this smart home:
-{%- for area in areas() %}
-  {%- set area_info = namespace(printed=false) %}
-  {%- for device in area_devices(area) -%}
-    {%- if not device_attr(device, "disabled_by") and not device_attr(device, "entry_type") and device_attr(device, "name") %}
-      {%- if not area_info.printed %}
-
-{{ area_name(area) }}:
-        {%- set area_info.printed = true %}
-      {%- endif %}
-- {{ device_attr(device, "name") }}{% if device_attr(device, "model") and (device_attr(device, "model") | string) not in (device_attr(device, "name") | string) %} ({{ device_attr(device, "model") }}){% endif %}
-    {%- endif %}
-  {%- endfor %}
-{%- endfor %}
-
-Answer the user's questions about the world truthfully.
-
-If the user wants to control a device, reject the request and suggest using the Home Assistant app.
-"""
+CONF_RECOMMENDED = "recommended"
 CONF_CHAT_MODEL = "chat_model"
-DEFAULT_CHAT_MODEL = "models/gemini-pro"
+RECOMMENDED_CHAT_MODEL = "models/gemini-2.5-flash"
+RECOMMENDED_STT_MODEL = RECOMMENDED_CHAT_MODEL
+RECOMMENDED_TTS_MODEL = "models/gemini-2.5-flash-preview-tts"
+RECOMMENDED_IMAGE_MODEL = "models/gemini-2.5-flash-image-preview"
 CONF_TEMPERATURE = "temperature"
-DEFAULT_TEMPERATURE = 0.9
+RECOMMENDED_TEMPERATURE = 1.0
 CONF_TOP_P = "top_p"
-DEFAULT_TOP_P = 1.0
+RECOMMENDED_TOP_P = 0.95
 CONF_TOP_K = "top_k"
-DEFAULT_TOP_K = 1
+RECOMMENDED_TOP_K = 64
 CONF_MAX_TOKENS = "max_tokens"
-DEFAULT_MAX_TOKENS = 150
+RECOMMENDED_MAX_TOKENS = 3000
+CONF_HARASSMENT_BLOCK_THRESHOLD = "harassment_block_threshold"
+CONF_HATE_BLOCK_THRESHOLD = "hate_block_threshold"
+CONF_SEXUAL_BLOCK_THRESHOLD = "sexual_block_threshold"
+CONF_DANGEROUS_BLOCK_THRESHOLD = "dangerous_block_threshold"
+RECOMMENDED_HARM_BLOCK_THRESHOLD = "BLOCK_MEDIUM_AND_ABOVE"
+CONF_USE_GOOGLE_SEARCH_TOOL = "enable_google_search_tool"
+RECOMMENDED_USE_GOOGLE_SEARCH_TOOL = False
+
+TIMEOUT_MILLIS = 10000
+FILE_POLLING_INTERVAL_SECONDS = 0.05
+
+RECOMMENDED_CONVERSATION_OPTIONS = {
+    CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
+    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+    CONF_RECOMMENDED: True,
+}
+
+RECOMMENDED_STT_OPTIONS = {
+    CONF_PROMPT: DEFAULT_STT_PROMPT,
+    CONF_RECOMMENDED: True,
+}
+
+RECOMMENDED_TTS_OPTIONS = {
+    CONF_RECOMMENDED: True,
+}
+
+RECOMMENDED_AI_TASK_OPTIONS = {
+    CONF_RECOMMENDED: True,
+}
