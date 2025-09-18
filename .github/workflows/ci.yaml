@@ -549,7 +549,8 @@ jobs:
       - name: Remove generated requirements_all
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: rm requirements_all_pytest.txt requirements_all_wheels_*.txt
-      - name: Check dirty
+      - &check-dirty
+        name: Check dirty
         run: |
           ./script/check_dirty
 
@@ -681,7 +682,8 @@ jobs:
       - *checkout
       - *setup-python-default
       - *cache-restore-python-default
-      - name: Register pylint problem matcher
+      - &problem-matcher-pylint
+        name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
       - name: Run pylint (fully)
@@ -712,9 +714,7 @@ jobs:
       - *checkout
       - *setup-python-default
       - *cache-restore-python-default
-      - name: Register pylint problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pylint.json"
+      - *problem-matcher-pylint
       - name: Run pylint (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         run: |
@@ -863,17 +863,20 @@ jobs:
       - *checkout
       - *setup-python-matrix
       - *cache-restore-python-matrix
-      - name: Register Python problem matcher
+      - &problem-matcher-python
+        name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
+      - &problem-matcher-pytest-slow
+        name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Download pytest_buckets
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: pytest_buckets
-      - name: Compile English translations
+      - &compile-english-translations
+        name: Compile English translations
         run: |
           . venv/bin/activate
           python3 -m script.translations develop --all
@@ -921,7 +924,8 @@ jobs:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
-      - name: Beautify test results
+      - &beautify-test-results
+        name: Beautify test results
         # For easier identification of parsing errors
         if: needs.info.outputs.skip_coverage != 'true'
         run: |
@@ -935,9 +939,7 @@ jobs:
           path: junit.xml
       - name: Remove pytest_buckets
         run: rm pytest_buckets.txt
-      - name: Check dirty
-        run: |
-          ./script/check_dirty
+      - *check-dirty
 
   pytest-mariadb:
     runs-on: ubuntu-24.04
@@ -988,20 +990,13 @@ jobs:
       - *checkout
       - *setup-python-matrix
       - *cache-restore-python-matrix
-      - name: Register Python problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
+      - *problem-matcher-python
+      - *problem-matcher-pytest-slow
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
           uv pip install mysqlclient sqlalchemy_utils
-      - name: Compile English translations
-        run: |
-          . venv/bin/activate
-          python3 -m script.translations develop --all
+      - *compile-english-translations
       - name: Run pytest (partially)
         timeout-minutes: 20
         id: pytest-partial
@@ -1054,12 +1049,7 @@ jobs:
             steps.pytest-partial.outputs.mariadb }}
           path: coverage.xml
           overwrite: true
-      - name: Beautify test results
-        # For easier identification of parsing errors
-        if: needs.info.outputs.skip_coverage != 'true'
-        run: |
-          xmllint --format "junit.xml" > "junit.xml-tmp"
-          mv "junit.xml-tmp" "junit.xml"
+      - *beautify-test-results
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -1067,9 +1057,7 @@ jobs:
           name: test-results-mariadb-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
           path: junit.xml
-      - name: Check dirty
-        run: |
-          ./script/check_dirty
+      - *check-dirty
 
   pytest-postgres:
     runs-on: ubuntu-24.04
@@ -1122,20 +1110,13 @@ jobs:
       - *checkout
       - *setup-python-matrix
       - *cache-restore-python-matrix
-      - name: Register Python problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
+      - *problem-matcher-python
+      - *problem-matcher-pytest-slow
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
           uv pip install psycopg2 sqlalchemy_utils
-      - name: Compile English translations
-        run: |
-          . venv/bin/activate
-          python3 -m script.translations develop --all
+      - *compile-english-translations
       - name: Run pytest (partially)
         timeout-minutes: 20
         id: pytest-partial
@@ -1189,12 +1170,7 @@ jobs:
             steps.pytest-partial.outputs.postgresql }}
           path: coverage.xml
           overwrite: true
-      - name: Beautify test results
-        # For easier identification of parsing errors
-        if: needs.info.outputs.skip_coverage != 'true'
-        run: |
-          xmllint --format "junit.xml" > "junit.xml-tmp"
-          mv "junit.xml-tmp" "junit.xml"
+      - *beautify-test-results
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -1202,9 +1178,7 @@ jobs:
           name: test-results-postgres-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
           path: junit.xml
-      - name: Check dirty
-        run: |
-          ./script/check_dirty
+      - *check-dirty
 
   coverage-full:
     name: Upload test coverage to Codecov (full suite)
@@ -1272,16 +1246,9 @@ jobs:
       - *checkout
       - *setup-python-matrix
       - *cache-restore-python-matrix
-      - name: Register Python problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
-      - name: Compile English translations
-        run: |
-          . venv/bin/activate
-          python3 -m script.translations develop --all
+      - *problem-matcher-python
+      - *problem-matcher-pytest-slow
+      - *compile-english-translations
       - name: Run pytest
         timeout-minutes: 10
         id: pytest-partial
@@ -1333,21 +1300,14 @@ jobs:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
-      - name: Beautify test results
-        # For easier identification of parsing errors
-        if: needs.info.outputs.skip_coverage != 'true'
-        run: |
-          xmllint --format "junit.xml" > "junit.xml-tmp"
-          mv "junit.xml-tmp" "junit.xml"
+      - *beautify-test-results
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: test-results-partial-${{ matrix.python-version }}-${{ matrix.group }}
           path: junit.xml
-      - name: Check dirty
-        run: |
-          ./script/check_dirty
+      - *check-dirty
 
   coverage-partial:
     name: Upload test coverage to Codecov (partial suite)
