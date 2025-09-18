@@ -71,7 +71,6 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.VACUUM, async_add_entities)
     platform = entity_platform.async_get_current_platform()
 
-    # This will call Entity.async_handle_get_areas
     platform.async_register_entity_service(
         SERVICE_GET_AREAS,
         schema=None,
@@ -79,7 +78,6 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
-    # This will call Entity.async_handle_clean_areas
     platform.async_register_entity_service(
         SERVICE_CLEAN_AREAS,
         schema={
@@ -88,7 +86,7 @@ async def async_setup_entry(
         func="async_handle_clean_areas",
         supports_response=SupportsResponse.ONLY,
     )
-    # This will call Entity.async_handle_select_areas
+
     platform.async_register_entity_service(
         SERVICE_SELECT_AREAS,
         schema={
