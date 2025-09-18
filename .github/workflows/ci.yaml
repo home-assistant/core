@@ -75,6 +75,7 @@ concurrency:
 jobs:
   info:
     name: Collect information & changes data
+    runs-on: &runs-on-ubuntu ubuntu-24.04
     outputs:
       # In case of issues with the partial run, use the following line instead:
       # test_full_suite: 'true'
@@ -95,7 +96,6 @@ jobs:
       tests: ${{ steps.info.outputs.tests }}
       lint_only: ${{ steps.info.outputs.lint_only }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
-    runs-on: ubuntu-24.04
     steps:
       - &checkout
         name: Check out code from GitHub
@@ -246,13 +246,12 @@ jobs:
 
   pre-commit:
     name: Prepare pre-commit base
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    needs: [info]
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
-    needs:
-      - info
     steps:
       - *checkout
       - &setup-python-default
@@ -295,7 +294,7 @@ jobs:
 
   lint-ruff-format:
     name: Check ruff-format
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
     needs: &needs-pre-commit
       - info
       - pre-commit
@@ -327,7 +326,7 @@ jobs:
 
   lint-ruff:
     name: Check ruff
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
     needs: *needs-pre-commit
     steps:
       - *checkout
@@ -343,7 +342,7 @@ jobs:
 
   lint-other:
     name: Check other linters
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
     needs: *needs-pre-commit
     steps:
       - *checkout
@@ -399,9 +398,8 @@ jobs:
 
   lint-hadolint:
     name: Check ${{ matrix.file }}
-    runs-on: ubuntu-24.04
-    needs:
-      - info
+    runs-on: *runs-on-ubuntu
+    needs: [info]
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -425,8 +423,8 @@ jobs:
 
   base:
     name: Prepare dependencies
-    runs-on: ubuntu-24.04
-    needs: info
+    runs-on: *runs-on-ubuntu
+    needs: [info]
     timeout-minutes: 60
     strategy:
       matrix:
@@ -556,14 +554,14 @@ jobs:
 
   hassfest:
     name: Check hassfest
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    needs: &needs-base
+      - info
+      - base
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
-    needs: &needs-base
-      - info
-      - base
     steps:
       - &cache-restore-apt
         name: Restore apt cache
@@ -600,12 +598,12 @@ jobs:
 
   gen-requirements-all:
     name: Check all requirements
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    needs: *needs-base
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
-    needs: *needs-base
     steps:
       - *checkout
       - *setup-python-default
@@ -617,7 +615,7 @@ jobs:
 
   dependency-review:
     name: Dependency review
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
     needs: *needs-base
     if: |
       github.event.inputs.pylint-only != 'true'
@@ -633,7 +631,7 @@ jobs:
 
   audit-licenses:
     name: Audit licenses
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
     needs: *needs-base
     if: |
       (github.event.inputs.pylint-only != 'true'
@@ -671,13 +669,13 @@ jobs:
 
   pylint:
     name: Check pylint
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    needs: *needs-base
     timeout-minutes: 20
     if: |
       github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
       || github.event.inputs.pylint-only == 'true'
-    needs: *needs-base
     steps:
       - *checkout
       - *setup-python-default
@@ -702,14 +700,14 @@ jobs:
 
   pylint-tests:
     name: Check pylint on tests
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    needs: *needs-base
     timeout-minutes: 20
     if: |
       (github.event.inputs.mypy-only != 'true'
         && github.event.inputs.audit-licenses-only != 'true'
         || github.event.inputs.pylint-only == 'true')
       && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
-    needs: *needs-base
     steps:
       - *checkout
       - *setup-python-default
@@ -731,12 +729,12 @@ jobs:
 
   mypy:
     name: Check mypy
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    needs: *needs-base
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
       || github.event.inputs.mypy-only == 'true'
-    needs: *needs-base
     steps:
       - *checkout
       - *setup-python-default
@@ -777,7 +775,8 @@ jobs:
           mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   prepare-pytest-full:
-    runs-on: ubuntu-24.04
+    name: Split tests for full run
+    runs-on: *runs-on-ubuntu
     if: |
       needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
@@ -790,7 +789,6 @@ jobs:
       - lint-ruff
       - lint-ruff-format
       - mypy
-    name: Split tests for full run
     steps:
       - *cache-restore-apt
       - name: Install additional OS dependencies
@@ -822,10 +820,8 @@ jobs:
           overwrite: true
 
   pytest-full:
-    runs-on: ubuntu-24.04
-    if: |
-      needs.info.outputs.lint_only != 'true'
-      && needs.info.outputs.test_full_suite == 'true'
+    name: Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
+    runs-on: *runs-on-ubuntu
     needs:
       - info
       - base
@@ -836,13 +832,14 @@ jobs:
       - lint-ruff-format
       - mypy
       - prepare-pytest-full
+    if: |
+      needs.info.outputs.lint_only != 'true'
+      && needs.info.outputs.test_full_suite == 'true'
     strategy:
       fail-fast: false
       matrix:
-        group: ${{ fromJson(needs.info.outputs.test_groups) }}
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-    name: >-
-      Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
+        group: ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
       - *cache-restore-apt
       - name: Install additional OS dependencies
@@ -942,7 +939,8 @@ jobs:
       - *check-dirty
 
   pytest-mariadb:
-    runs-on: ubuntu-24.04
+    name: Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
+    runs-on: *runs-on-ubuntu
     services:
       mariadb:
         image: ${{ matrix.mariadb-group }}
@@ -951,9 +949,6 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: password
         options: --health-cmd="mysqladmin ping -uroot -ppassword" --health-interval=5s --health-timeout=2s --health-retries=3
-    if: |
-      needs.info.outputs.lint_only != 'true'
-      && needs.info.outputs.mariadb_groups != '[]'
     needs:
       - info
       - base
@@ -963,13 +958,14 @@ jobs:
       - lint-ruff
       - lint-ruff-format
       - mypy
+    if: |
+      needs.info.outputs.lint_only != 'true'
+      && needs.info.outputs.mariadb_groups != '[]'
     strategy:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
-    name: >-
-      Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
     steps:
       - *cache-restore-apt
       - name: Install additional OS dependencies
@@ -1060,7 +1056,8 @@ jobs:
       - *check-dirty
 
   pytest-postgres:
-    runs-on: ubuntu-24.04
+    name: Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
+    runs-on: *runs-on-ubuntu
     services:
       postgres:
         image: ${{ matrix.postgresql-group }}
@@ -1069,9 +1066,6 @@ jobs:
         env:
           POSTGRES_PASSWORD: password
         options: --health-cmd="pg_isready -hlocalhost -Upostgres" --health-interval=5s --health-timeout=2s --health-retries=3
-    if: |
-      needs.info.outputs.lint_only != 'true'
-      && needs.info.outputs.postgresql_groups != '[]'
     needs:
       - info
       - base
@@ -1081,13 +1075,14 @@ jobs:
       - lint-ruff
       - lint-ruff-format
       - mypy
+    if: |
+      needs.info.outputs.lint_only != 'true'
+      && needs.info.outputs.postgresql_groups != '[]'
     strategy:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
-    name: >-
-      Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
     steps:
       - *cache-restore-apt
       - name: Install additional OS dependencies
@@ -1182,14 +1177,14 @@ jobs:
 
   coverage-full:
     name: Upload test coverage to Codecov (full suite)
-    if: needs.info.outputs.skip_coverage != 'true'
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
     needs:
       - info
       - pytest-full
       - pytest-postgres
       - pytest-mariadb
     timeout-minutes: 10
+    if: needs.info.outputs.skip_coverage != 'true'
     steps:
       - *checkout
       - name: Download all coverage artifacts
@@ -1205,11 +1200,8 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   pytest-partial:
-    runs-on: ubuntu-24.04
-    if: |
-      needs.info.outputs.lint_only != 'true'
-      && needs.info.outputs.tests_glob
-      && needs.info.outputs.test_full_suite == 'false'
+    name: Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
+    runs-on: *runs-on-ubuntu
     needs:
       - info
       - base
@@ -1219,13 +1211,15 @@ jobs:
       - lint-ruff
       - lint-ruff-format
       - mypy
+    if: |
+      needs.info.outputs.lint_only != 'true'
+      && needs.info.outputs.tests_glob
+      && needs.info.outputs.test_full_suite == 'false'
     strategy:
       fail-fast: false
       matrix:
-        group: ${{ fromJson(needs.info.outputs.test_groups) }}
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-    name: >-
-      Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
+        group: ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
       - *cache-restore-apt
       - name: Install additional OS dependencies
@@ -1312,11 +1306,11 @@ jobs:
   coverage-partial:
     name: Upload test coverage to Codecov (partial suite)
     if: needs.info.outputs.skip_coverage != 'true'
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
+    timeout-minutes: 10
     needs:
       - info
       - pytest-partial
-    timeout-minutes: 10
     steps:
       - *checkout
       - name: Download all coverage artifacts
@@ -1332,10 +1326,7 @@ jobs:
 
   upload-test-results:
     name: Upload test results to Codecov
-    # codecov/test-results-action currently doesn't support tokenless uploads
-    # therefore we can't run it on forks
-    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork) && needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
-    runs-on: ubuntu-24.04
+    runs-on: *runs-on-ubuntu
     needs:
       - info
       - pytest-partial
@@ -1343,6 +1334,11 @@ jobs:
       - pytest-postgres
       - pytest-mariadb
     timeout-minutes: 10
+    # codecov/test-results-action currently doesn't support tokenless uploads
+    # therefore we can't run it on forks
+    if: |
+      (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
+      && needs.info.outputs.skip_coverage != 'true' && !cancelled()
     steps:
       - name: Download all coverage artifacts
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
