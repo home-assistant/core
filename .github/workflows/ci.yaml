@@ -296,7 +296,7 @@ jobs:
   lint-ruff-format:
     name: Check ruff-format
     runs-on: ubuntu-24.04
-    needs:
+    needs: &needs-pre-commit
       - info
       - pre-commit
     steps:
@@ -332,9 +332,7 @@ jobs:
   lint-ruff:
     name: Check ruff
     runs-on: ubuntu-24.04
-    needs:
-      - info
-      - pre-commit
+    needs: *needs-pre-commit
     steps:
       - *checkout
       - *setup-python-default
@@ -350,9 +348,7 @@ jobs:
   lint-other:
     name: Check other linters
     runs-on: ubuntu-24.04
-    needs:
-      - info
-      - pre-commit
+    needs: *needs-pre-commit
     steps:
       - *checkout
       - *setup-python-default
@@ -569,7 +565,7 @@ jobs:
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
-    needs:
+    needs: &needs-base
       - info
       - base
     steps:
@@ -618,9 +614,7 @@ jobs:
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
-    needs:
-      - info
-      - base
+    needs: *needs-base
     steps:
       - *checkout
       - *setup-python-default
@@ -633,9 +627,7 @@ jobs:
   dependency-review:
     name: Dependency review
     runs-on: ubuntu-24.04
-    needs:
-      - info
-      - base
+    needs: *needs-base
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -651,9 +643,7 @@ jobs:
   audit-licenses:
     name: Audit licenses
     runs-on: ubuntu-24.04
-    needs:
-      - info
-      - base
+    needs: *needs-base
     if: |
       (github.event.inputs.pylint-only != 'true'
         && github.event.inputs.mypy-only != 'true'
@@ -698,9 +688,7 @@ jobs:
       github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
       || github.event.inputs.pylint-only == 'true'
-    needs:
-      - info
-      - base
+    needs: *needs-base
     steps:
       - *checkout
       - *setup-python-default
@@ -731,9 +719,7 @@ jobs:
         && github.event.inputs.audit-licenses-only != 'true'
         || github.event.inputs.pylint-only == 'true')
       && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
-    needs:
-      - info
-      - base
+    needs: *needs-base
     steps:
       - *checkout
       - *setup-python-default
@@ -762,9 +748,7 @@ jobs:
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
       || github.event.inputs.mypy-only == 'true'
-    needs:
-      - info
-      - base
+    needs: *needs-base
     steps:
       - *checkout
       - *setup-python-default
