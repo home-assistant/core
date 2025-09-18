@@ -57,10 +57,10 @@ build.json @home-assistant/supervisor
 /tests/components/aemet/ @Noltari
 /homeassistant/components/agent_dvr/ @ispysoftware
 /tests/components/agent_dvr/ @ispysoftware
-/homeassistant/components/aidot/ @s1eedz
-/tests/components/aidot/ @s1eedz
 /homeassistant/components/ai_task/ @home-assistant/core
 /tests/components/ai_task/ @home-assistant/core
+/homeassistant/components/aidot/ @s1eedz @HongBryan
+/tests/components/aidot/ @s1eedz @HongBryan
 /homeassistant/components/air_quality/ @home-assistant/core
 /tests/components/air_quality/ @home-assistant/core
 /homeassistant/components/airgradient/ @airgradienthq @joostlek

@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import AidotConfigEntry, AidotDeviceManagerCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
@@ -26,9 +22,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> bool:
     """Unload a config entry."""
-    # This is called when an entry/configured device is to be removed. The class
-    # needs to unload itself, and remove callbacks. See the classes for further
-    # details
-    coordinator = entry.runtime_data
-    coordinator.cleanup()
+    entry.runtime_data.cleanup()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
