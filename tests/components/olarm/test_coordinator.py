@@ -154,9 +154,9 @@ async def test_device_data_defaults() -> None:
     data = OlarmDeviceData(device_name="Test Device")
 
     assert data.device_name == "Test Device"
-    assert data.device_state is None
-    assert data.device_links is None
-    assert data.device_io is None
-    assert data.device_profile is None
-    assert data.device_profile_links is None
-    assert data.device_profile_io is None
+    assert data.device_state == {}
+    assert data.device_links == {}
+    assert data.device_io == {}
+    assert data.device_profile == {}
+    assert data.device_profile_links == {}
+    assert data.device_profile_io == {}
