@@ -66,10 +66,7 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
         value_fn=lambda coord, _: (
             coord.data is not None
             and coord.data.device_state is not None
-            and (
-                coord.data.device_state.get("powerAC") == "ok"
-                or coord.data.device_state.get("power", {}).get("AC") == "1"
-            )
+            and coord.data.device_state.get("powerAC") == "ok"
         ),
         name_fn=lambda index, label: f"{label}",
         unique_id_fn=lambda device_id, index: f"{device_id}.ac_power",
