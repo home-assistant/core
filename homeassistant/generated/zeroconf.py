@@ -639,6 +639,10 @@ ZEROCONF = {
                 "vendor": "tailwind",
             },
         },
+        {
+            "domain": "tuneblade_remote",
+            "name": "*une?lade._http._tcp.local.",
+        },
     ],
     "_hue._tcp.local.": [
         {

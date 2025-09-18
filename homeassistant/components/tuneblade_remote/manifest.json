@@ -1,0 +1,19 @@
+{
+  "domain": "tuneblade_remote",
+  "name": "TuneBlade Remote",
+  "codeowners": ["@spycle"],
+  "config_flow": true,
+  "dependencies": ["media_player", "http"],
+  "documentation": "https://www.home-assistant.io/integrations/tuneblade_remote",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "mqtt": [],
+  "quality_scale": "bronze",
+  "requirements": ["pytuneblade==0.1.1"],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "*une?lade._http._tcp.local."
+    }
+  ]
+}
