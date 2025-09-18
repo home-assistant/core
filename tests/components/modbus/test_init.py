@@ -908,47 +908,59 @@ async def test_pb_service_write(
     "do_read",
     [
         {
-            ATTR_ADDRESS: 14,
-            ATTR_COUNT: 1,
-            ATTR_TYPE: CALL_TYPE_REGISTER_INPUT,
+            DATA: {
+                ATTR_ADDRESS: 14,
+                ATTR_COUNT: 1,
+                ATTR_TYPE: CALL_TYPE_REGISTER_INPUT,
+            },
             FUNC: CALL_TYPE_REGISTER_INPUT,
             RETURN_VALUE: ReadResult([0x0001]),
             EXPECTED_RESULT: {"values": [0x0001]},
         },
         {
-            ATTR_ADDRESS: 15,
-            ATTR_TYPE: CALL_TYPE_REGISTER_INPUT,
+            DATA: {
+                ATTR_ADDRESS: 15,
+                ATTR_TYPE: CALL_TYPE_REGISTER_INPUT,
+            },
             FUNC: CALL_TYPE_REGISTER_INPUT,
             RETURN_VALUE: ReadResult([0x1000]),
             EXPECTED_RESULT: {"values": [0x1000]},
         },
         {
-            ATTR_ADDRESS: 16,
-            ATTR_COUNT: 2,
-            ATTR_TYPE: CALL_TYPE_REGISTER_INPUT,
+            DATA: {
+                ATTR_ADDRESS: 16,
+                ATTR_COUNT: 2,
+                ATTR_TYPE: CALL_TYPE_REGISTER_INPUT,
+            },
             FUNC: CALL_TYPE_REGISTER_INPUT,
             RETURN_VALUE: ReadResult([0x0003, 0x0002]),
             EXPECTED_RESULT: {"values": [0x0003, 0x0002]},
         },
         {
-            ATTR_ADDRESS: 17,
-            ATTR_COUNT: 1,
-            ATTR_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            DATA: {
+                ATTR_ADDRESS: 17,
+                ATTR_COUNT: 1,
+                ATTR_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            },
             FUNC: CALL_TYPE_REGISTER_HOLDING,
             RETURN_VALUE: ReadResult([0x0004]),
             EXPECTED_RESULT: {"values": [0x0004]},
         },
         {
-            ATTR_ADDRESS: 18,
-            ATTR_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            DATA: {
+                ATTR_ADDRESS: 18,
+                ATTR_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            },
             FUNC: CALL_TYPE_REGISTER_HOLDING,
             RETURN_VALUE: ReadResult([0x0005]),
             EXPECTED_RESULT: {"values": [0x0005]},
         },
         {
-            ATTR_ADDRESS: 19,
-            ATTR_COUNT: 2,
-            ATTR_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            DATA: {
+                ATTR_ADDRESS: 19,
+                ATTR_COUNT: 2,
+                ATTR_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            },
             FUNC: CALL_TYPE_REGISTER_HOLDING,
             RETURN_VALUE: ReadResult([0x0006, 0x0007]),
             EXPECTED_RESULT: {"values": [0x0006, 0x0007]},
@@ -988,11 +1000,11 @@ async def test_pb_service_read(
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
         do_slave: 17,
-        ATTR_ADDRESS: do_read[ATTR_ADDRESS],
-        ATTR_TYPE: do_read[ATTR_TYPE],
+        ATTR_ADDRESS: do_read[DATA][ATTR_ADDRESS],
+        ATTR_TYPE: do_read[DATA][ATTR_TYPE],
     }
-    if ATTR_COUNT in do_read:
-        data[ATTR_COUNT] = do_read[ATTR_COUNT]
+    if ATTR_COUNT in do_read[DATA]:
+        data[ATTR_COUNT] = do_read[DATA][ATTR_COUNT]
     mock_modbus_with_pymodbus.reset_mock()
     caplog.clear()
     caplog.set_level(logging.DEBUG)
