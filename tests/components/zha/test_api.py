@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
@@ -26,7 +27,7 @@ def required_platform_only():
 
 
 async def test_async_get_network_settings_active(
-    hass: HomeAssistant, setup_zha
+    hass: HomeAssistant, setup_zha: Callable[..., Coroutine[None]]
 ) -> None:
     """Test reading settings with an active ZHA installation."""
     await setup_zha()
@@ -36,7 +37,9 @@ async def test_async_get_network_settings_active(
 
 
 async def test_async_get_network_settings_inactive(
-    hass: HomeAssistant, setup_zha, zigpy_app_controller: ControllerApplication
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_app_controller: ControllerApplication,
 ) -> None:
     """Test reading settings with an inactive ZHA installation."""
     await setup_zha()
@@ -63,7 +66,9 @@ async def test_async_get_network_settings_inactive(
 
 
 async def test_async_get_network_settings_missing(
-    hass: HomeAssistant, setup_zha, zigpy_app_controller: ControllerApplication
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_app_controller: ControllerApplication,
 ) -> None:
     """Test reading settings with an inactive ZHA installation, no valid channel."""
     await setup_zha()
@@ -86,7 +91,9 @@ async def test_async_get_network_settings_failure(hass: HomeAssistant) -> None:
         await api.async_get_network_settings(hass)
 
 
-async def test_async_get_radio_type_active(hass: HomeAssistant, setup_zha) -> None:
+async def test_async_get_radio_type_active(
+    hass: HomeAssistant, setup_zha: Callable[..., Coroutine[None]]
+) -> None:
     """Test reading the radio type with an active ZHA installation."""
     await setup_zha()
 
@@ -94,7 +101,9 @@ async def test_async_get_radio_type_active(hass: HomeAssistant, setup_zha) -> No
     assert radio_type == RadioType.ezsp
 
 
-async def test_async_get_radio_path_active(hass: HomeAssistant, setup_zha) -> None:
+async def test_async_get_radio_path_active(
+    hass: HomeAssistant, setup_zha: Callable[..., Coroutine[None]]
+) -> None:
     """Test reading the radio path with an active ZHA installation."""
     await setup_zha()
 
@@ -103,7 +112,9 @@ async def test_async_get_radio_path_active(hass: HomeAssistant, setup_zha) -> No
 
 
 async def test_change_channel(
-    hass: HomeAssistant, setup_zha, zigpy_app_controller: ControllerApplication
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_app_controller: ControllerApplication,
 ) -> None:
     """Test changing the channel."""
     await setup_zha()
@@ -113,7 +124,9 @@ async def test_change_channel(
 
 
 async def test_change_channel_auto(
-    hass: HomeAssistant, setup_zha, zigpy_app_controller: ControllerApplication
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_app_controller: ControllerApplication,
 ) -> None:
     """Test changing the channel automatically using an energy scan."""
     await setup_zha()
