@@ -110,8 +110,8 @@ def load_zone_sensors(
     labels = coordinator.data.device_profile.get("zonesLabels", [])
     types = coordinator.data.device_profile.get("zonesTypes", [])
     for zone_index, zone_state in enumerate(zones):
-        zone_label = labels.get(zone_index, "")
-        zone_class = types.get(zone_index, 0)
+        zone_label = labels[zone_index] if zone_index < len(labels) else ""
+        zone_class = types[zone_index] if zone_index < len(types) else 0
         sensors.extend(
             OlarmBinarySensor(
                 coordinator,
@@ -174,15 +174,19 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         self.entity_description = description
 
         # set attributes via description
-        self._attr_name = self.entity_description.name_fn(sensor_index, sensor_label)
+        self._attr_translation_key = self.entity_description.key
+        if self.entity_description.key in ("zone", "zone_bypass"):
+            self._attr_translation_placeholders = {
+                "zone_number": f"{sensor_index + 1:03}",
+                "zone_label": " - " + sensor_label if sensor_label else "",
+            }
         self._attr_unique_id = self.entity_description.unique_id_fn(
             device_id, sensor_index
         )
 
         _LOGGER.debug(
-            "BinarySensor: init %s -> %s -> %s",
+            "BinarySensor: init %s -> %s",
             self.entity_description.key,
-            self._attr_name,
             sensor_state,
         )
 
