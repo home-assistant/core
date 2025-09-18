@@ -26,8 +26,8 @@
         }
       },
       "verification_code": {
-        "title": "iCloud verification code",
-        "description": "Please enter the verification code you just received from iCloud",
+        "title": "Apple Account code",
+        "description": "Please enter the verification code you just received from Apple",
         "data": {
           "verification_code": "Verification code"
         }
