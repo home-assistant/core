@@ -693,7 +693,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         TuyaDeprecatedSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
-            deprecated="replaced by a valve entity",
+            deprecated="deprecated_entity_new_valve",
             breaks_in_ha_version="2026.4.0",
         ),
     ),
@@ -1070,11 +1070,10 @@ def _check_deprecation(
         breaks_in_ha_version=description.breaks_in_ha_version,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
-        translation_key="deprecated_entity",
+        translation_key=description.deprecated,
         translation_placeholders={
             "name": f"{device.name} {entity_entry.name or entity_entry.original_name}",
             "entity": entity_id,
-            "reason": description.deprecated,
         },
     )
     return True
