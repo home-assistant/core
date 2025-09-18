@@ -573,7 +573,8 @@ jobs:
       - info
       - base
     steps:
-      - name: Restore apt cache
+      - &cache-restore-apt
+        name: Restore apt cache
         uses: actions/cache/restore@v4.3.0
         with:
           path: |
@@ -849,15 +850,7 @@ jobs:
       - mypy
     name: Split tests for full run
     steps:
-      - name: Restore apt cache
-        uses: actions/cache/restore@v4.3.0
-        with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
+      - *cache-restore-apt
       - name: Install additional OS dependencies
         timeout-minutes: 10
         run: |
@@ -917,15 +910,7 @@ jobs:
     name: >-
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     steps:
-      - name: Restore apt cache
-        uses: actions/cache/restore@v4.3.0
-        with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
+      - *cache-restore-apt
       - name: Install additional OS dependencies
         timeout-minutes: 10
         run: |
@@ -1058,15 +1043,7 @@ jobs:
     name: >-
       Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
     steps:
-      - name: Restore apt cache
-        uses: actions/cache/restore@v4.3.0
-        with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
+      - *cache-restore-apt
       - name: Install additional OS dependencies
         timeout-minutes: 10
         run: |
@@ -1206,15 +1183,7 @@ jobs:
     name: >-
       Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
     steps:
-      - name: Restore apt cache
-        uses: actions/cache/restore@v4.3.0
-        with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
+      - *cache-restore-apt
       - name: Install additional OS dependencies
         timeout-minutes: 10
         run: |
@@ -1374,15 +1343,7 @@ jobs:
     name: >-
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     steps:
-      - name: Restore apt cache
-        uses: actions/cache/restore@v4.3.0
-        with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
+      - *cache-restore-apt
       - name: Install additional OS dependencies
         timeout-minutes: 10
         run: |
