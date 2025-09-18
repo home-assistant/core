@@ -1,16 +1,23 @@
 """Tests for the ness_alarm component."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from nessclient import ArmingMode, ArmingState
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.components.ness_alarm import config_flow
+from homeassistant.components.ness_alarm import (
+    CONF_SCAN_INTERVAL,
+    CONFIG_SCHEMA,
+    config_flow,
+)
 from homeassistant.components.ness_alarm.const import (
     ATTR_OUTPUT_ID,
     CONF_DEVICE_PORT,
+    CONF_INFER_ARMING_STATE,
     CONF_ZONE_ID,
     CONF_ZONE_NAME,
     CONF_ZONES,
@@ -273,3 +280,232 @@ def mock_nessclient():
         "homeassistant.components.ness_alarm.Client", new=_mock_factory, create=True
     ):
         yield _mock_instance
+
+
+async def test_invalid_yaml_config(hass: HomeAssistant) -> None:
+    """Test setup fails with invalid YAML configuration."""
+    # Missing required host
+    invalid_config = {
+        DOMAIN: {
+            CONF_DEVICE_PORT: 1234,
+            CONF_ZONES: [
+                {CONF_ZONE_NAME: "Zone 1", CONF_ZONE_ID: 1},
+            ],
+        }
+    }
+
+    with patch(
+        "homeassistant.components.ness_alarm.config_flow.NessConfigFlow.async_step_import",
+        side_effect=Exception("Invalid config"),
+    ):
+        result = await async_setup_component(hass, DOMAIN, invalid_config)
+        assert result is False  # Component setup returns True but import will fail
+
+        # Verify that no entities were created
+        await hass.async_block_till_done()
+        assert hass.states.get("alarm_control_panel.alarm_panel") is None
+        assert hass.states.get("binary_sensor.zone_1") is None
+
+
+async def test_invalid_zone_config(hass: HomeAssistant) -> None:
+    """Test setup with invalid zone configuration."""
+    # Zone with invalid ID (negative)
+    invalid_config = {
+        DOMAIN: {
+            CONF_HOST: "alarm.local",
+            CONF_DEVICE_PORT: 1234,
+            CONF_ZONES: [
+                {CONF_ZONE_NAME: "Invalid Zone", CONF_ZONE_ID: -1},
+                {CONF_ZONE_NAME: "Valid Zone", CONF_ZONE_ID: 1},
+            ],
+        }
+    }
+
+    with pytest.raises(vol.Invalid):
+        CONFIG_SCHEMA(invalid_config)  # Only this line inside
+
+    # Zone with duplicate IDs
+    duplicate_config = {
+        DOMAIN: {
+            CONF_HOST: "alarm.local",
+            CONF_DEVICE_PORT: 1234,
+            CONF_ZONES: [
+                {CONF_ZONE_NAME: "Zone 1", CONF_ZONE_ID: 1},
+                {CONF_ZONE_NAME: "Zone 1 Duplicate", CONF_ZONE_ID: 1},
+            ],
+        }
+    }
+
+    # This should be allowed by schema but handled during setup
+    validated = CONFIG_SCHEMA(duplicate_config)
+    assert len(validated[DOMAIN][CONF_ZONES]) == 2
+
+
+async def test_invalid_port_in_yaml(hass: HomeAssistant) -> None:
+    """Test YAML config with invalid port values."""
+    # Port too high
+    invalid_config = {
+        DOMAIN: {
+            CONF_HOST: "alarm.local",
+            CONF_DEVICE_PORT: 70000,  # > 65535
+            CONF_ZONES: [],
+        }
+    }
+
+    with pytest.raises(vol.Invalid):
+        CONFIG_SCHEMA(invalid_config)
+
+    # Negative port
+    negative_port_config = {
+        DOMAIN: {
+            CONF_HOST: "alarm.local",
+            CONF_DEVICE_PORT: -1,
+            CONF_ZONES: [],
+        }
+    }
+
+    with pytest.raises(vol.Invalid):
+        CONFIG_SCHEMA(negative_port_config)
+
+    # Port as string (invalid type)
+    string_port_config = {
+        DOMAIN: {
+            CONF_HOST: "alarm.local",
+            CONF_DEVICE_PORT: "not_a_port",
+            CONF_ZONES: [],
+        }
+    }
+
+    with pytest.raises(vol.Invalid):
+        CONFIG_SCHEMA(string_port_config)
+
+
+async def test_invalid_infer_arming_state(hass: HomeAssistant) -> None:
+    """Test YAML config with invalid infer_arming_state value."""
+    invalid_config = {
+        DOMAIN: {
+            CONF_HOST: "alarm.local",
+            CONF_DEVICE_PORT: 1234,
+            CONF_INFER_ARMING_STATE: "not_a_boolean",
+            CONF_ZONES: [],
+        }
+    }
+
+    with pytest.raises(vol.Invalid):
+        CONFIG_SCHEMA(invalid_config)
+
+    # Test with numeric value (should be converted to boolean)
+    numeric_config = {
+        DOMAIN: {
+            CONF_HOST: "alarm.local",
+            CONF_DEVICE_PORT: 1234,
+            CONF_INFER_ARMING_STATE: 1,
+            CONF_ZONES: [],
+        }
+    }
+
+    validated = CONFIG_SCHEMA(numeric_config)
+    assert validated[DOMAIN][CONF_INFER_ARMING_STATE] is True
+
+
+async def test_zone_missing_required_fields(hass: HomeAssistant) -> None:
+    """Test zone configuration with missing required fields."""
+    # Zone missing ID
+    missing_id_config = {
+        DOMAIN: {
+            CONF_HOST: "alarm.local",
+            CONF_DEVICE_PORT: 1234,
+            CONF_ZONES: [
+                {CONF_ZONE_NAME: "Zone without ID"},
+            ],
+        }
+    }
+
+    with pytest.raises(vol.Invalid):
+        CONFIG_SCHEMA(missing_id_config)
+
+    # Zone missing name
+    missing_name_config = {
+        DOMAIN: {
+            CONF_HOST: "alarm.local",
+            CONF_DEVICE_PORT: 1234,
+            CONF_ZONES: [
+                {CONF_ZONE_ID: 1},
+            ],
+        }
+    }
+
+    with pytest.raises(vol.Invalid):
+        CONFIG_SCHEMA(missing_name_config)
+
+
+async def test_empty_host_string(hass: HomeAssistant) -> None:
+    """Test YAML config with empty host string."""
+    empty_host_config = {
+        DOMAIN: {
+            CONF_HOST: "",
+            CONF_DEVICE_PORT: 1234,
+            CONF_ZONES: [],
+        }
+    }
+
+    # Empty string should pass schema validation but fail during connection
+    validated = CONFIG_SCHEMA(empty_host_config)
+    assert validated[DOMAIN][CONF_HOST] == ""
+
+
+async def test_services_not_registered_without_setup(hass: HomeAssistant) -> None:
+    """Test that services are not registered without proper setup."""
+    # Verify services don't exist before setup
+    assert not hass.services.has_service(DOMAIN, SERVICE_PANIC)
+    assert not hass.services.has_service(DOMAIN, SERVICE_AUX)
+
+    # After failed setup, services should still not exist
+    invalid_config = {
+        DOMAIN: {
+            CONF_DEVICE_PORT: 1234,  # Missing host
+        }
+    }
+
+    with patch(
+        "homeassistant.components.ness_alarm.config_flow.NessConfigFlow.async_step_import",
+        side_effect=Exception("Invalid config"),
+    ):
+        await async_setup_component(hass, DOMAIN, invalid_config)
+        await hass.async_block_till_done()
+
+        assert not hass.services.has_service(DOMAIN, SERVICE_PANIC)
+        assert not hass.services.has_service(DOMAIN, SERVICE_AUX)
+
+
+async def test_panic_service_without_code(hass: HomeAssistant, mock_nessclient) -> None:
+    """Test calling panic service without providing a code."""
+    await async_setup_component(hass, DOMAIN, VALID_CONFIG)
+
+    # Call panic without code parameter
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PANIC, blocking=True, service_data={}
+    )
+
+    # Should be called with None as code
+    mock_nessclient.panic.assert_awaited_once_with(None)
+
+
+async def test_setup_with_timedelta_scan_interval(
+    hass: HomeAssistant, mock_nessclient
+) -> None:
+    """Test setup with timedelta object for scan_interval."""
+
+    config = {
+        DOMAIN: {
+            CONF_HOST: "alarm.local",
+            CONF_DEVICE_PORT: 1234,
+            CONF_SCAN_INTERVAL: timedelta(seconds=30),
+            CONF_ZONES: [],
+        }
+    }
+
+    # This should be properly handled by the schema
+    validated = CONFIG_SCHEMA(config)
+    assert isinstance(validated[DOMAIN][CONF_SCAN_INTERVAL], timedelta)
+    assert validated[DOMAIN][CONF_SCAN_INTERVAL].total_seconds() == 30
