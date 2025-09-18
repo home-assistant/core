@@ -302,7 +302,8 @@ jobs:
     steps:
       - *checkout
       - *setup-python-default
-      - name: Restore base Python virtual environment
+      - &cache-restore-pre-commit-venv
+        name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
@@ -311,7 +312,8 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Restore pre-commit environment from cache
+      - &cache-restore-pre-commit-env
+        name: Restore pre-commit environment from cache
         id: cache-precommit
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
@@ -336,24 +338,8 @@ jobs:
     steps:
       - *checkout
       - *setup-python-default
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Restore pre-commit environment from cache
-        id: cache-precommit
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ env.PRE_COMMIT_CACHE }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-              needs.info.outputs.pre-commit_cache_key }}
+      - *cache-restore-pre-commit-venv
+      - *cache-restore-pre-commit-env
       - name: Run ruff
         run: |
           . venv/bin/activate
@@ -370,24 +356,8 @@ jobs:
     steps:
       - *checkout
       - *setup-python-default
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Restore pre-commit environment from cache
-        id: cache-precommit
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ env.PRE_COMMIT_CACHE }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-              needs.info.outputs.pre-commit_cache_key }}
+      - *cache-restore-pre-commit-venv
+      - *cache-restore-pre-commit-env
 
       - name: Register yamllint problem matcher
         run: |
