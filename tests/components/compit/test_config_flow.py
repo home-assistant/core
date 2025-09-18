@@ -24,7 +24,7 @@ def mock_reauth_entry():
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_EMAIL: "test@example.com"},
+        data=CONFIG_INPUT,
         unique_id=CONFIG_INPUT[CONF_EMAIL],
     )
 
@@ -60,7 +60,7 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
         (Exception, "unknown"),
     ],
 )
-async def test_async_step_user_invalid(
+async def test_async_step_user_failed_auth(
     hass: HomeAssistant,
     exception: Exception,
     expected_error: str,
@@ -86,10 +86,10 @@ async def test_async_step_user_invalid(
         assert result["errors"] == {"base": expected_error}
 
 
-async def test_async_step_reauth_confirm_success(
+async def test_async_step_reauth_success(
     hass: HomeAssistant, mock_reauth_entry: MockConfigEntry
 ) -> None:
-    """Test reauth confirm step with successful authentication."""
+    """Test reauth step with successful authentication."""
     with (
         patch(
             "homeassistant.components.compit.config_flow.CompitApiConnector.init",
@@ -124,7 +124,7 @@ async def test_async_step_reauth_confirm_success(
         (Exception, "unknown"),
     ],
 )
-async def test_async_step_reauth_confirm_invalid(
+async def test_async_step_reauth_confirm_failed_auth(
     hass: HomeAssistant,
     mock_reauth_entry: MockConfigEntry,
     exception: Exception,
