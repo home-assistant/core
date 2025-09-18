@@ -42,7 +42,7 @@
       "init": {
         "description": "Customize how Ridwell events appear in Home Assistant.",
         "data": {
-          "conf_calendar_title": "Event Summary Details"
+          "conf_calendar_title": "Event summary details"
         },
         "data_description": {
           "conf_calendar_title": "Details included (in parentheses) after the event summary/title can be the pickup state, the name of the next rotating category, or no details at all."
