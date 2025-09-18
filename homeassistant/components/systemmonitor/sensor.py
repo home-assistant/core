@@ -72,7 +72,7 @@ SENSORS_NO_ARG = (
 )
 SENSORS_WITH_ARG = {
     "disk_": "disk_arguments",
-    "fan_rpm": "fan_rpm_arguments",
+    "fan_speed": "fan_speed_arguments",
     "ipv": "network_arguments",
     "process_num_fds": "processes",
     **dict.fromkeys(NET_IO_TYPES, "network_arguments"),
@@ -240,15 +240,15 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         none_is_unavailable=True,
         add_to_update=lambda entity: ("disks", entity.argument),
     ),
-    "fan_rpm": SysMonitorSensorEntityDescription(
-        key="fan_rpm",
-        translation_key="fan_rpm",
+    "fan_speed": SysMonitorSensorEntityDescription(
+        key="fan_speed",
+        translation_key="fan_speed",
         placeholder="fan_name",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: entity.coordinator.data.fan_rpm[entity.argument],
+        value_fn=lambda entity: entity.coordinator.data.fan_speed[entity.argument],
         none_is_unavailable=True,
-        add_to_update=lambda entity: ("fan_rpm", ""),
+        add_to_update=lambda entity: ("fan_speed", ""),
     ),
     "ipv4_address": SysMonitorSensorEntityDescription(
         key="ipv4_address",
@@ -505,7 +505,7 @@ async def async_setup_entry(
         return {
             "disk_arguments": get_all_disk_mounts(hass, psutil_wrapper),
             "network_arguments": get_all_network_interfaces(hass, psutil_wrapper),
-            "fan_rpm_arguments": list(sensor_data.fan_rpm),
+            "fan_speed_arguments": list(sensor_data.fan_speed),
         }
 
     cpu_temperature: float | None = None

@@ -394,23 +394,23 @@
 # name: test_sensor[System Monitor Swap use - state]
   '60.0'
 # ---
-# name: test_sensor[System Monitor another-fan fan RPM - attributes]
+# name: test_sensor[System Monitor another-fan fan speed - attributes]
   ReadOnlyDict({
-    'friendly_name': 'System Monitor another-fan fan RPM',
+    'friendly_name': 'System Monitor another-fan fan speed',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': 'rpm',
   })
 # ---
-# name: test_sensor[System Monitor another-fan fan RPM - state]
+# name: test_sensor[System Monitor another-fan fan speed - state]
   '1300'
 # ---
-# name: test_sensor[System Monitor cpu-fan fan RPM - attributes]
+# name: test_sensor[System Monitor cpu-fan fan speed - attributes]
   ReadOnlyDict({
-    'friendly_name': 'System Monitor cpu-fan fan RPM',
+    'friendly_name': 'System Monitor cpu-fan fan speed',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': 'rpm',
   })
 # ---
-# name: test_sensor[System Monitor cpu-fan fan RPM - state]
+# name: test_sensor[System Monitor cpu-fan fan speed - state]
   '1200'
 # ---

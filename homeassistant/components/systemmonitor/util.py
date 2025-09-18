@@ -92,11 +92,11 @@ def read_cpu_temperature(temps: dict[str, list[shwtemp]]) -> float | None:
     return None
 
 
-def read_fan_rpm(fans: dict[str, list[sfan]]) -> dict[str, int]:
+def read_fan_speed(fans: dict[str, list[sfan]]) -> dict[str, int]:
     """Attempt to read fan speed."""
     entry: sfan
 
-    _LOGGER.debug("Fan rpm: %s", fans)
+    _LOGGER.debug("Fan speed: %s", fans)
     if not fans:
         return {}
     # {'asus': [sfan(label='cpu_fan', current=3200)] }

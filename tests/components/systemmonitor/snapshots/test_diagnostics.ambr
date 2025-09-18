@@ -16,7 +16,7 @@
           '/home/notexist/': 'sdiskusage(total=536870912000, used=322122547200, free=214748364800, percent=60.0)',
           '/media/share': 'sdiskusage(total=536870912000, used=322122547200, free=214748364800, percent=60.0)',
         }),
-        'fan_rpm': dict({
+        'fan_speed': dict({
           'another-fan': '1300',
           'cpu-fan': '1200',
         }),
@@ -86,7 +86,7 @@
           '/home/notexist/': 'sdiskusage(total=536870912000, used=322122547200, free=214748364800, percent=60.0)',
           '/media/share': 'sdiskusage(total=536870912000, used=322122547200, free=214748364800, percent=60.0)',
         }),
-        'fan_rpm': dict({
+        'fan_speed': dict({
           'another-fan': '1300',
           'cpu-fan': '1200',
         }),

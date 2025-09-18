@@ -22,7 +22,7 @@ from .const import CONF_PROCESS, PROCESS_ERRORS
 
 if TYPE_CHECKING:
     from . import SystemMonitorConfigEntry
-from .util import read_fan_rpm
+from .util import read_fan_speed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class SensorData:
     boot_time: datetime
     cpu_percent: float | None
     disk_usage: dict[str, sdiskusage]
-    fan_rpm: dict[str, int]
+    fan_speed: dict[str, int]
     io_counters: dict[str, snetio]
     load: tuple[float, float, float]
     memory: VirtualMemory
@@ -53,9 +53,9 @@ class SensorData:
         disk_usage = None
         if self.disk_usage:
             disk_usage = {k: str(v) for k, v in self.disk_usage.items()}
-        fan_rpm = None
-        if self.fan_rpm:
-            fan_rpm = {k: str(v) for k, v in self.fan_rpm.items()}
+        fan_speed = None
+        if self.fan_speed:
+            fan_speed = {k: str(v) for k, v in self.fan_speed.items()}
         io_counters = None
         if self.io_counters:
             io_counters = {k: str(v) for k, v in self.io_counters.items()}
@@ -69,7 +69,7 @@ class SensorData:
             "boot_time": str(self.boot_time),
             "cpu_percent": str(self.cpu_percent),
             "disk_usage": disk_usage,
-            "fan_rpm": fan_rpm,
+            "fan_speed": fan_speed,
             "io_counters": io_counters,
             "load": str(self.load),
             "memory": str(self.memory),
@@ -136,10 +136,8 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             ("addresses", ""): set(),
             ("battery", ""): set(),
             ("boot", ""): set(),
-            ("boot", ""): set(),
             ("cpu_percent", ""): set(),
-            ("cpu_percent", ""): set(),
-            ("fan_rpm", ""): set(),
+            ("fan_speed", ""): set(),
             ("io_counters", ""): set(),
             ("load", ""): set(),
             ("memory", ""): set(),
@@ -171,7 +169,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             boot_time=_data["boot_time"],
             cpu_percent=cpu_percent,
             disk_usage=_data["disks"],
-            fan_rpm=_data["fan_rpm"],
+            fan_speed=_data["fan_speed"],
             io_counters=_data["io_counters"],
             load=load,
             memory=_data["memory"],
@@ -270,12 +268,12 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             except AttributeError:
                 _LOGGER.debug("OS does not provide temperature sensors")
 
-        fan_rpm: dict[str, int] = {}
-        if self.update_subscribers[("fan_rpm", "")] or self._initial_update:
+        fan_speed: dict[str, int] = {}
+        if self.update_subscribers[("fan_speed", "")] or self._initial_update:
             try:
                 fan_sensors = self._psutil.sensors_fans()
-                fan_rpm = read_fan_rpm(fan_sensors)
-                _LOGGER.debug("fan_rpm: %s", fan_rpm)
+                fan_speed = read_fan_speed(fan_sensors)
+                _LOGGER.debug("fan_speed: %s", fan_speed)
             except AttributeError:
                 _LOGGER.debug("OS does not provide fan sensors")
 
@@ -292,7 +290,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             "battery": battery,
             "boot_time": self.boot_time,
             "disks": disks,
-            "fan_rpm": fan_rpm,
+            "fan_speed": fan_speed,
             "io_counters": io_counters,
             "memory": memory,
             "process_fds": process_fds,
