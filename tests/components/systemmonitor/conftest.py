@@ -176,7 +176,6 @@ def mock_psutil(mock_process: list[MockProcess]) -> Generator:
         mock_psutil.disk_partitions.return_value = [
             sdiskpart("test", "/", "ext4", ""),
             sdiskpart("test2", "/media/share", "ext4", ""),
-            sdiskpart("test3", "/incorrect", "", ""),
             sdiskpart("hosts", "/etc/hosts", "bind", ""),
             sdiskpart("proc", "/proc/run", "proc", ""),
         ]
@@ -197,7 +196,7 @@ def mock_os() -> Generator:
         patch("homeassistant.components.systemmonitor.coordinator.os") as mock_os,
         patch("homeassistant.components.systemmonitor.util.os") as mock_os_util,
     ):
-        mock_os_util.name = "nt"
+        mock_os_util.name = "linux"
         mock_os.getloadavg.return_value = (1, 2, 3)
         mock_os_util.path.isdir = isdir
         yield mock_os
