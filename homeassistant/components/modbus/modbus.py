@@ -37,9 +37,9 @@ from homeassistant.util.hass_dict import HassKey
 from .const import (
     _LOGGER,
     ATTR_ADDRESS,
+    ATTR_DEVICE_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
-    ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
@@ -169,43 +169,52 @@ async def async_modbus_setup(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_modbus)
 
+    UNIT = "unit"
+
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
-        slave = 1
-        if ATTR_UNIT in service.data:
-            slave = int(float(service.data[ATTR_UNIT]))
-
-        if ATTR_SLAVE in service.data:
-            slave = int(float(service.data[ATTR_SLAVE]))
-        address = int(float(service.data[ATTR_ADDRESS]))
+        # Make a log message, in case some very old automations still use unit=
+        if UNIT in service.data:
+            _LOGGER.warning(
+                "Be advised: unit= is no longer supported, it will be removed in a later release, please use device_address="
+            )
+            service.data[ATTR_DEVICE_ADDRESS] = service.data[UNIT]
+        device_id = service.data.get(
+            ATTR_DEVICE_ADDRESS, service.data.get(ATTR_SLAVE, 1)
+        )
+        address = service.data[ATTR_ADDRESS]
         value = service.data[ATTR_VALUE]
         hub = hub_collect[service.data.get(ATTR_HUB, DEFAULT_HUB)]
         if isinstance(value, list):
             await hub.async_pb_call(
-                slave,
+                device_id,
                 address,
                 [int(float(i)) for i in value],
                 CALL_TYPE_WRITE_REGISTERS,
             )
         else:
             await hub.async_pb_call(
-                slave, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
+                device_id, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
             )
 
     async def async_write_coil(service: ServiceCall) -> None:
         """Write Modbus coil."""
-        slave = 1
-        if ATTR_UNIT in service.data:
-            slave = int(float(service.data[ATTR_UNIT]))
-        if ATTR_SLAVE in service.data:
-            slave = int(float(service.data[ATTR_SLAVE]))
+        # Make a log message, in case some very old automations still use unit=
+        if UNIT in service.data:
+            _LOGGER.warning(
+                "Be advised: unit= is no longer supported, it will be removed in a later release, please use device_address="
+            )
+            service.data[ATTR_DEVICE_ADDRESS] = service.data[UNIT]
+        device_id = service.data.get(
+            ATTR_DEVICE_ADDRESS, service.data.get(ATTR_SLAVE, 1)
+        )
         address = service.data[ATTR_ADDRESS]
         state = service.data[ATTR_STATE]
         hub = hub_collect[service.data.get(ATTR_HUB, DEFAULT_HUB)]
         if isinstance(state, list):
-            await hub.async_pb_call(slave, address, state, CALL_TYPE_WRITE_COILS)
+            await hub.async_pb_call(device_id, address, state, CALL_TYPE_WRITE_COILS)
         else:
-            await hub.async_pb_call(slave, address, state, CALL_TYPE_WRITE_COIL)
+            await hub.async_pb_call(device_id, address, state, CALL_TYPE_WRITE_COIL)
 
     for x_write in (
         (SERVICE_WRITE_REGISTER, async_write_register, ATTR_VALUE, cv.positive_int),
@@ -218,8 +227,8 @@ async def async_modbus_setup(
             schema=vol.Schema(
                 {
                     vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
+                    vol.Exclusive(ATTR_DEVICE_ADDRESS, "unit"): cv.positive_int,
                     vol.Exclusive(ATTR_SLAVE, "unit"): cv.positive_int,
-                    vol.Exclusive(ATTR_UNIT, "unit"): cv.positive_int,
                     vol.Required(ATTR_ADDRESS): cv.positive_int,
                     vol.Required(x_write[2]): vol.Any(
                         cv.positive_int, vol.All(cv.ensure_list, [x_write[3]])

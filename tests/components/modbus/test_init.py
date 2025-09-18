@@ -27,9 +27,9 @@ from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
+    ATTR_DEVICE_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
-    ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
@@ -827,7 +827,7 @@ SERVICE = "service"
     "do_slave",
     [
         ATTR_SLAVE,
-        ATTR_UNIT,
+        ATTR_DEVICE_ADDRESS,
     ],
 )
 async def test_pb_service_write(
