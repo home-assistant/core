@@ -596,7 +596,8 @@ jobs:
             libturbojpeg
       - *checkout
       - *setup-python-default
-      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
+      - &cache-restore-python-default
+        name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
@@ -623,15 +624,7 @@ jobs:
     steps:
       - *checkout
       - *setup-python-default
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+      - *cache-restore-python-default
       - name: Run gen_requirements_all.py
         run: |
           . venv/bin/activate
@@ -710,15 +703,7 @@ jobs:
     steps:
       - *checkout
       - *setup-python-default
-      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+      - *cache-restore-python-default
       - name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
@@ -751,15 +736,7 @@ jobs:
     steps:
       - *checkout
       - *setup-python-default
-      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+      - *cache-restore-python-default
       - name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
@@ -797,15 +774,7 @@ jobs:
           echo "version=$mypy_version" >> $GITHUB_OUTPUT
           echo "key=mypy-${{ env.MYPY_CACHE_VERSION }}-$mypy_version-${{
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
-      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+      - *cache-restore-python-default
       - name: Restore mypy cache
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
@@ -867,15 +836,7 @@ jobs:
             libgammu-dev
       - *checkout
       - *setup-python-default
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+      - *cache-restore-python-default
       - name: Run split_tests.py
         run: |
           . venv/bin/activate
