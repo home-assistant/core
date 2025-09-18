@@ -1197,10 +1197,14 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         """Serialize ObjectSelector for voluptuous_serialize."""
         _config = deepcopy(self.config)
         if "fields" in _config:
-            for items in _config["fields"].values():
-                if isinstance(items["selector"], Selector):
-                    items["selector"] = {
-                        items["selector"].selector_type: items["selector"].config
+            for field_items in _config["fields"].values():
+                if isinstance(field_items["selector"], ObjectSelector):
+                    field_items["selector"] = field_items["selector"].serialize()
+                elif isinstance(field_items["selector"], Selector):
+                    field_items["selector"] = {
+                        field_items["selector"].selector_type: field_items[
+                            "selector"
+                        ].config
                     }
         return {"selector": {self.selector_type: _config}}
 
