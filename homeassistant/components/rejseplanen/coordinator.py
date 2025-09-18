@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 
-from py_rejseplan.api.departures import departuresAPIClient
+from py_rejseplan.api.departures import DepartureBoard, departuresAPIClient
 from py_rejseplan.dataclasses.departure import Departure
 from py_rejseplan.exceptions import api_error, connection_error, http_error
 from py_rejseplan.version import __version__ as py_rejseplan_version
@@ -20,7 +20,7 @@ from .const import DOMAIN, SCAN_INTERVAL_MINUTES
 _LOGGER = logging.getLogger(__name__)
 
 
-class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator):
+class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
     """Class to manage fetching data from the Rejseplanen API."""
 
     def __init__(self, hass: HomeAssistant, auth_key: str) -> None:
@@ -39,7 +39,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=SCAN_INTERVAL_MINUTES),
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> DepartureBoard:
         """Update data via library."""
         try:
             return await self.hass.async_add_executor_job(self._fetch_data)
@@ -55,8 +55,16 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator):
         except connection_error.RPConnectionError as error:  # network errors
             _LOGGER.error("Connection error while fetching data: %s", error)
             raise UpdateFailed(error) from error
+        except TypeError as error:
+            _LOGGER.error(
+                "Type error fetching data for stop %s: %s", self._stop_ids, error
+            )
+            raise UpdateFailed(error) from error
+        except Exception as error:
+            _LOGGER.error("Error fetching data for stop %s: %s", self._stop_ids, error)
+            raise UpdateFailed(error) from error
 
-    def due_in_minutes(self, timestamp):
+    def due_in_minutes(self, timestamp) -> int:
         """Get the time in minutes from a timestamp.
 
         The timestamp should be in the format day.month.year hour:minute
@@ -75,26 +83,15 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator):
         """Remove a stop ID from the coordinator."""
         self._stop_ids.discard(stop_id)
 
-    def _fetch_data(self):
+    def _fetch_data(self) -> DepartureBoard:
         """Fetch data from Rejseplanen API."""
         if not self._stop_ids:
             _LOGGER.debug("No stop IDs registered, skipping data fetch")
             raise NoStopsRegisteredError
         _LOGGER.debug("Fetching data for stop IDs: %s", self._stop_ids)
-        try:
-            # Get all departures for this stop
-            departure_board, _ = self.api.get_departures(list(self._stop_ids))
-
-        except TypeError as error:
-            _LOGGER.error(
-                "Type error fetching data for stop %s: %s", self._stop_ids, error
-            )
-            raise UpdateFailed(error) from error
-        except Exception as error:
-            _LOGGER.error("Error fetching data for stop %s: %s", self._stop_ids, error)
-            raise
-        else:
-            return departure_board
+        # Get all departures for this stop
+        departure_board, _ = self.api.get_departures(list(self._stop_ids))
+        return departure_board
 
     def get_filtered_departures(
         self,
