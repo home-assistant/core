@@ -264,15 +264,6 @@
 # name: test_sensor[System Monitor Network throughput out eth1 - state]
   'unknown'
 # ---
-# name: test_sensor[System Monitor None - attributes]
-  ReadOnlyDict({
-    'friendly_name': 'System Monitor None',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-  })
-# ---
-# name: test_sensor[System Monitor None - state]
-  '15'
-# ---
 # name: test_sensor[System Monitor Open file descriptors pip - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Open file descriptors pip',
