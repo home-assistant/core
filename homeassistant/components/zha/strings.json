@@ -104,6 +104,7 @@
       "invalid_backup_json": "Invalid backup JSON"
     },
     "abort": {
+      "single_instance_allowed": "Only a single ZHA instance is allowed",
       "not_zha_device": "This device is not a ZHA device",
       "usb_probe_failed": "Failed to probe the USB device",
       "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this.",
