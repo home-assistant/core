@@ -76,12 +76,12 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         else:
             device_data = OlarmDeviceData(
                 device_name=device.get("deviceName") or "Olarm Device",
-                device_state=device.get("deviceState"),
-                device_links=device.get("deviceLinks"),
-                device_io=device.get("deviceIO"),
-                device_profile=device.get("deviceProfile"),
-                device_profile_links=device.get("deviceProfileLinks"),
-                device_profile_io=device.get("deviceProfileIO"),
+                device_state=device.get("deviceState") or {},
+                device_links=device.get("deviceLinks") or {},
+                device_io=device.get("deviceIO") or {},
+                device_profile=device.get("deviceProfile") or {},
+                device_profile_links=device.get("deviceProfileLinks") or {},
+                device_profile_io=device.get("deviceProfileIO") or {},
             )
 
             _LOGGER.debug(
@@ -94,7 +94,7 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
 
             return device_data
 
-    def async_update_from_mqtt(self, payload):
+    def async_update_from_mqtt(self, payload: dict[str, Any]) -> None:
         """Handle subsequent updates from the Olarm MQTT Brokers.
 
         There are different MQTT payloads containing different state about the Olarm device
