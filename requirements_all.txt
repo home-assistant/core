@@ -1063,7 +1063,7 @@ google-cloud-speech==2.31.1
 google-cloud-texttospeech==2.25.1
 
 # homeassistant.components.google_generative_ai_conversation
-google-genai==1.29.0
+google-genai==1.38.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
