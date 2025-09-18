@@ -14,19 +14,19 @@ from homeassistant.util.hass_dict import HassKey
 
 from .analytics import (
     Analytics,
-    AnalyticsConfig,
     AnalyticsInput,
-    DeviceAnalyticsConfig,
-    EntityAnalyticsConfig,
+    AnalyticsModifications,
+    DeviceAnalyticsModifications,
+    EntityAnalyticsModifications,
 )
 from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
 from .http import AnalyticsDevicesView
 
 __all__ = [
-    "AnalyticsConfig",
     "AnalyticsInput",
-    "DeviceAnalyticsConfig",
-    "EntityAnalyticsConfig",
+    "AnalyticsModifications",
+    "DeviceAnalyticsModifications",
+    "EntityAnalyticsModifications",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

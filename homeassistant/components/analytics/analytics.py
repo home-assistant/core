@@ -89,7 +89,7 @@ from .const import (
 DATA_ANALYTICS_MODIFIERS = "analytics_modifiers"
 
 type AnalyticsModifier = Callable[
-    [HomeAssistant, AnalyticsInput], Awaitable[AnalyticsConfig]
+    [HomeAssistant, AnalyticsInput], Awaitable[AnalyticsModifications]
 ]
 
 
@@ -108,24 +108,24 @@ class AnalyticsInput:
     This is sent to integrations that implement the platform.
     """
 
-    devices: Iterable[str] = field(default_factory=list)
-    entities: Iterable[str] = field(default_factory=list)
+    device_ids: Iterable[str] = field(default_factory=list)
+    entity_ids: Iterable[str] = field(default_factory=list)
 
 
 @dataclass
-class AnalyticsConfig:
+class AnalyticsModifications:
     """Analytics config for a single integration.
 
     This is used by integrations that implement the platform.
     """
 
     remove: bool = False
-    devices: Mapping[str, DeviceAnalyticsConfig] | None = None
-    entities: Mapping[str, EntityAnalyticsConfig] | None = None
+    devices: Mapping[str, DeviceAnalyticsModifications] | None = None
+    entities: Mapping[str, EntityAnalyticsModifications] | None = None
 
 
 @dataclass
-class DeviceAnalyticsConfig:
+class DeviceAnalyticsModifications:
     """Analytics config for a single device.
 
     This is used by integrations that implement the platform.
@@ -136,7 +136,7 @@ class DeviceAnalyticsConfig:
 
 
 @dataclass
-class EntityAnalyticsConfig:
+class EntityAnalyticsModifications:
     """Analytics config for a single entity.
 
     This is used by integrations that implement the platform.
@@ -154,7 +154,7 @@ class AnalyticsPlatformProtocol(Protocol):
         self,
         hass: HomeAssistant,
         analytics_input: AnalyticsInput,
-    ) -> AnalyticsConfig:
+    ) -> AnalyticsModifications:
         """Modify the analytics."""
 
 
@@ -503,9 +503,9 @@ def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
     return domains
 
 
-DEFAULT_ANALYTICS_CONFIG = AnalyticsConfig()
-DEFAULT_DEVICE_ANALYTICS_CONFIG = DeviceAnalyticsConfig()
-DEFAULT_ENTITY_ANALYTICS_CONFIG = EntityAnalyticsConfig()
+DEFAULT_ANALYTICS_CONFIG = AnalyticsModifications()
+DEFAULT_DEVICE_ANALYTICS_CONFIG = DeviceAnalyticsModifications()
+DEFAULT_ENTITY_ANALYTICS_CONFIG = EntityAnalyticsModifications()
 
 
 async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
@@ -514,7 +514,7 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
     ent_reg = er.async_get(hass)
 
     integration_inputs: dict[str, tuple[list[str], list[str]]] = {}
-    integration_configs: dict[str, AnalyticsConfig] = {}
+    integration_configs: dict[str, AnalyticsModifications] = {}
 
     # Get device list
     for device_entry in dev_reg.devices.values():
@@ -555,15 +555,19 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                     integration_domain,
                     err,
                 )
-                integration_configs[integration_domain] = AnalyticsConfig(remove=True)
+                integration_configs[integration_domain] = AnalyticsModifications(
+                    remove=True
+                )
                 continue
 
-            if not isinstance(integration_config, AnalyticsConfig):
+            if not isinstance(integration_config, AnalyticsModifications):
                 LOGGER.error(  # type: ignore[unreachable]
                     "Calling async_modify_analytics for integration '%s' did not return an AnalyticsConfig",
                     integration_domain,
                 )
-                integration_configs[integration_domain] = AnalyticsConfig(remove=True)
+                integration_configs[integration_domain] = AnalyticsModifications(
+                    remove=True
+                )
                 continue
 
             integration_configs[integration_domain] = integration_config

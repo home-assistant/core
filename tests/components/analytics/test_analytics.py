@@ -13,10 +13,10 @@ from syrupy.matchers import path_type
 
 from homeassistant.components.analytics.analytics import (
     Analytics,
-    AnalyticsConfig,
     AnalyticsInput,
-    DeviceAnalyticsConfig,
-    EntityAnalyticsConfig,
+    AnalyticsModifications,
+    DeviceAnalyticsModifications,
+    EntityAnalyticsModifications,
     async_devices_payload,
 )
 from homeassistant.components.analytics.const import (
@@ -1375,11 +1375,11 @@ async def test_analytics_platforms(
     async def async_modify_analytics(
         hass: HomeAssistant,
         analytics_input: AnalyticsInput,
-    ) -> AnalyticsConfig:
+    ) -> AnalyticsModifications:
         first = True
         devices_configs = {}
-        for device_id in analytics_input.devices:
-            device_config = DeviceAnalyticsConfig()
+        for device_id in analytics_input.device_ids:
+            device_config = DeviceAnalyticsModifications()
             devices_configs[device_id] = device_config
             if first:
                 first = False
@@ -1389,9 +1389,9 @@ async def test_analytics_platforms(
 
         first = True
         entities_configs = {}
-        for entity_id in analytics_input.entities:
+        for entity_id in analytics_input.entity_ids:
             entity_entry = entity_registry.async_get(entity_id)
-            entity_config = EntityAnalyticsConfig()
+            entity_config = EntityAnalyticsModifications()
             entities_configs[entity_id] = entity_config
             if first:
                 first = False
@@ -1403,7 +1403,7 @@ async def test_analytics_platforms(
             else:
                 entity_config.remove = True
 
-        return AnalyticsConfig(
+        return AnalyticsModifications(
             devices=devices_configs,
             entities=entities_configs,
         )
