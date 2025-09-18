@@ -6,6 +6,7 @@ from enum import StrEnum
 from functools import partial
 from typing import TYPE_CHECKING, Final
 
+from .generated.entity_platforms import EntityPlatforms
 from .helpers.deprecation import (
     DeprecatedConstant,
     DeprecatedConstantEnum,
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 7
+MINOR_VERSION: Final = 10
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -36,54 +37,8 @@ REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
 
-
-class Platform(StrEnum):
-    """Available entity platforms."""
-
-    AI_TASK = "ai_task"
-    AIR_QUALITY = "air_quality"
-    ALARM_CONTROL_PANEL = "alarm_control_panel"
-    ASSIST_SATELLITE = "assist_satellite"
-    BINARY_SENSOR = "binary_sensor"
-    BUTTON = "button"
-    CALENDAR = "calendar"
-    CAMERA = "camera"
-    CLIMATE = "climate"
-    CONVERSATION = "conversation"
-    COVER = "cover"
-    DATE = "date"
-    DATETIME = "datetime"
-    DEVICE_TRACKER = "device_tracker"
-    EVENT = "event"
-    FAN = "fan"
-    GEO_LOCATION = "geo_location"
-    HUMIDIFIER = "humidifier"
-    IMAGE = "image"
-    IMAGE_PROCESSING = "image_processing"
-    LAWN_MOWER = "lawn_mower"
-    LIGHT = "light"
-    LOCK = "lock"
-    MEDIA_PLAYER = "media_player"
-    NOTIFY = "notify"
-    NUMBER = "number"
-    REMOTE = "remote"
-    SCENE = "scene"
-    SELECT = "select"
-    SENSOR = "sensor"
-    SIREN = "siren"
-    STT = "stt"
-    SWITCH = "switch"
-    TEXT = "text"
-    TIME = "time"
-    TODO = "todo"
-    TTS = "tts"
-    UPDATE = "update"
-    VACUUM = "vacuum"
-    VALVE = "valve"
-    WAKE_WORD = "wake_word"
-    WATER_HEATER = "water_heater"
-    WEATHER = "weather"
-
+# Type alias to avoid 1000 MyPy errors
+Platform = EntityPlatforms
 
 BASE_PLATFORMS: Final = {platform.value for platform in Platform}
 
@@ -231,6 +186,7 @@ CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
 CONF_OFFSET: Final = "offset"
 CONF_OPTIMISTIC: Final = "optimistic"
+CONF_OPTIONS: Final = "options"
 CONF_PACKAGES: Final = "packages"
 CONF_PARALLEL: Final = "parallel"
 CONF_PARAMS: Final = "params"
@@ -245,6 +201,7 @@ CONF_PLATFORM: Final = "platform"
 CONF_PORT: Final = "port"
 CONF_PREFIX: Final = "prefix"
 CONF_PROFILE_NAME: Final = "profile_name"
+CONF_PROMPT: Final = "prompt"
 CONF_PROTOCOL: Final = "protocol"
 CONF_PROXY_SSL: Final = "proxy_ssl"
 CONF_QUOTE: Final = "quote"
@@ -468,6 +425,9 @@ ATTR_NAME: Final = "name"
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID: Final = "entity_id"
 
+# Contains one string, the config entry ID
+ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
+
 # Contains one string or a list of strings, each being an area id
 ATTR_AREA_ID: Final = "area_id"
 
@@ -584,7 +544,9 @@ ATTR_PERSONS: Final = "persons"
 class UnitOfApparentPower(StrEnum):
     """Apparent power units."""
 
+    MILLIVOLT_AMPERE = "mVA"
     VOLT_AMPERE = "VA"
+    KILO_VOLT_AMPERE = "kVA"
 
 
 # Power units
@@ -604,6 +566,7 @@ class UnitOfPower(StrEnum):
 class UnitOfReactivePower(StrEnum):
     """Reactive power units."""
 
+    MILLIVOLT_AMPERE_REACTIVE = "mvar"
     VOLT_AMPERE_REACTIVE = "var"
     KILO_VOLT_AMPERE_REACTIVE = "kvar"
 
@@ -665,7 +628,7 @@ class UnitOfElectricCurrent(StrEnum):
 class UnitOfElectricPotential(StrEnum):
     """Electric potential units."""
 
-    MICROVOLT = "µV"
+    MICROVOLT = "μV"
     MILLIVOLT = "mV"
     VOLT = "V"
     KILOVOLT = "kV"
@@ -742,6 +705,7 @@ class UnitOfPressure(StrEnum):
     MBAR = "mbar"
     MMHG = "mmHg"
     INHG = "inHg"
+    INH2O = "inH₂O"
     PSI = "psi"
 
 
@@ -759,6 +723,7 @@ class UnitOfVolume(StrEnum):
 
     CUBIC_FEET = "ft³"
     CENTUM_CUBIC_FEET = "CCF"
+    MILLE_CUBIC_FEET = "MCF"
     CUBIC_METERS = "m³"
     LITERS = "L"
     MILLILITERS = "mL"
@@ -777,6 +742,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     """Volume flow rate units."""
 
     CUBIC_METERS_PER_HOUR = "m³/h"
+    CUBIC_METERS_PER_MINUTE = "m³/min"
     CUBIC_METERS_PER_SECOND = "m³/s"
     CUBIC_FEET_PER_MINUTE = "ft³/min"
     LITERS_PER_HOUR = "L/h"
@@ -815,7 +781,7 @@ class UnitOfMass(StrEnum):
     GRAMS = "g"
     KILOGRAMS = "kg"
     MILLIGRAMS = "mg"
-    MICROGRAMS = "µg"
+    MICROGRAMS = "μg"
     OUNCES = "oz"
     POUNDS = "lb"
     STONES = "st"
@@ -833,13 +799,13 @@ class UnitOfConductivity(
     """Conductivity units."""
 
     SIEMENS_PER_CM = "S/cm"
-    MICROSIEMENS_PER_CM = "µS/cm"
+    MICROSIEMENS_PER_CM = "μS/cm"
     MILLISIEMENS_PER_CM = "mS/cm"
 
     # Deprecated aliases
     SIEMENS = "S/cm"
     """Deprecated: Please use UnitOfConductivity.SIEMENS_PER_CM"""
-    MICROSIEMENS = "µS/cm"
+    MICROSIEMENS = "μS/cm"
     """Deprecated: Please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
     MILLISIEMENS = "mS/cm"
     """Deprecated: Please use UnitOfConductivity.MILLISIEMENS_PER_CM"""
@@ -910,8 +876,9 @@ class UnitOfPrecipitationDepth(StrEnum):
 
 
 # Concentration units
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
+CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = "g/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
+CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "μg/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
@@ -932,6 +899,7 @@ class UnitOfSpeed(StrEnum):
     BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
     INCHES_PER_SECOND = "in/s"
+    METERS_PER_MINUTE = "m/min"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"
     KNOTS = "kn"

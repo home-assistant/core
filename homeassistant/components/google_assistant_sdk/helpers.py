@@ -80,10 +80,10 @@ async def async_send_text_commands(
 
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
+    command_response_list = []
     with TextAssistant(
         credentials, language_code, audio_out=bool(media_players)
     ) as assistant:
-        command_response_list = []
         for command in commands:
             try:
                 resp = await hass.async_add_executor_job(assistant.assist, command)
@@ -117,7 +117,7 @@ async def async_send_text_commands(
                     blocking=True,
                 )
             command_response_list.append(CommandResponse(text_response))
-        return command_response_list
+    return command_response_list
 
 
 def default_language_code(hass: HomeAssistant) -> str:

@@ -1,12 +1,11 @@
 """Entity base class for the Miele integration."""
 
-from pymiele import MieleAction, MieleDevice
+from pymiele import MieleAction, MieleAPI, MieleDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api import AsyncConfigEntryAuth
 from .const import DEVICE_TYPE_TAGS, DOMAIN, MANUFACTURER, MieleAppliance, StateStatus
 from .coordinator import MieleDataUpdateCoordinator
 
@@ -15,6 +14,11 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
     """Base class for Miele entities."""
 
     _attr_has_entity_name = True
+
+    @staticmethod
+    def get_unique_id(device_id: str, description: EntityDescription) -> str:
+        """Generate a unique ID for the entity."""
+        return f"{device_id}-{description.key}"
 
     def __init__(
         self,
@@ -26,7 +30,7 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._device_id = device_id
         self.entity_description = description
-        self._attr_unique_id = f"{device_id}-{description.key}"
+        self._attr_unique_id = MieleEntity.get_unique_id(device_id, description)
 
         device = self.device
         appliance_type = DEVICE_TYPE_TAGS.get(MieleAppliance(device.device_type))
@@ -52,7 +56,7 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         return self.coordinator.data.actions[self._device_id]
 
     @property
-    def api(self) -> AsyncConfigEntryAuth:
+    def api(self) -> MieleAPI:
         """Return the api object."""
         return self.coordinator.api
 

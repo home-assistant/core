@@ -6,6 +6,7 @@ import time
 from typing import Any
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
@@ -132,11 +133,23 @@ async def async_generate_speaker_info(
         value = getattr(speaker, attrib)
         payload[attrib] = get_contents(value)
 
+    entity_registry = er.async_get(hass)
     payload["enabled_entities"] = sorted(
-        entity_id
-        for entity_id, s in config_entry.runtime_data.entity_id_mappings.items()
-        if s is speaker
+        registry_entry.entity_id
+        for registry_entry in entity_registry.entities.get_entries_for_config_entry_id(
+            config_entry.entry_id
+        )
+        if (
+            (
+                entity_speaker
+                := config_entry.runtime_data.unique_id_speaker_mappings.get(
+                    registry_entry.unique_id
+                )
+            )
+            and speaker.uid == entity_speaker.uid
+        )
     )
+
     payload["media"] = await async_generate_media_info(hass, speaker)
     payload["activity_stats"] = speaker.activity_stats.report()
     payload["event_stats"] = speaker.event_stats.report()

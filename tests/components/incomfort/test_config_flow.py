@@ -22,13 +22,13 @@ from tests.common import MockConfigEntry
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="rfgateway",
     ip="192.168.1.12",
-    macaddress="0004A3DEADFF",
+    macaddress=dr.format_mac("00:04:A3:DE:AD:FF").replace(":", ""),
 )
 
 DHCP_SERVICE_INFO_ALT = DhcpServiceInfo(
     hostname="rfgateway",
     ip="192.168.1.99",
-    macaddress="0004A3DEADFF",
+    macaddress=dr.format_mac("00:04:A3:DE:AD:FF").replace(":", ""),
 )
 
 

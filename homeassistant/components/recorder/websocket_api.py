@@ -16,8 +16,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
     AreaConverter,
     BloodGlucoseConcentrationConverter,
+    CarbonMonoxideConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -32,6 +34,7 @@ from homeassistant.util.unit_conversion import (
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
+    ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -59,9 +62,13 @@ UPDATE_STATISTICS_METADATA_TIME_OUT = 10
 
 UNIT_SCHEMA = vol.Schema(
     {
+        vol.Optional("apparent_power"): vol.In(ApparentPowerConverter.VALID_UNITS),
         vol.Optional("area"): vol.In(AreaConverter.VALID_UNITS),
         vol.Optional("blood_glucose_concentration"): vol.In(
             BloodGlucoseConcentrationConverter.VALID_UNITS
+        ),
+        vol.Optional("carbon_monoxide"): vol.In(
+            CarbonMonoxideConcentrationConverter.VALID_UNITS
         ),
         vol.Optional("concentration"): vol.In(
             MassVolumeConcentrationConverter.VALID_UNITS
@@ -79,6 +86,7 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
         vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
         vol.Optional("reactive_energy"): vol.In(ReactiveEnergyConverter.VALID_UNITS),
+        vol.Optional("reactive_power"): vol.In(ReactivePowerConverter.VALID_UNITS),
         vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
         vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
         vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),

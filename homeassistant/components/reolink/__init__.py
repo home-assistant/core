@@ -32,6 +32,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
+    CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
@@ -58,7 +59,7 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
-FIRMWARE_UPDATE_INTERVAL = timedelta(hours=12)
+FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
 NUM_CRED_ERRORS = 3
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -107,6 +108,7 @@ async def async_setup_entry(
         or host.api.supported(None, "privacy_mode")
         != config_entry.data.get(CONF_SUPPORTS_PRIVACY_MODE)
         or host.api.baichuan.port != config_entry.data.get(CONF_BC_PORT)
+        or host.api.baichuan_only != config_entry.data.get(CONF_BC_ONLY)
     ):
         if host.api.port != config_entry.data[CONF_PORT]:
             _LOGGER.warning(
@@ -130,6 +132,7 @@ async def async_setup_entry(
             CONF_PORT: host.api.port,
             CONF_USE_HTTPS: host.api.use_https,
             CONF_BC_PORT: host.api.baichuan.port,
+            CONF_BC_ONLY: host.api.baichuan_only,
             CONF_SUPPORTS_PRIVACY_MODE: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
@@ -240,10 +243,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(entry_update_listener)
-    )
-
     return True
 
 
@@ -292,13 +291,6 @@ async def register_callbacks(
             )
 
 
-async def entry_update_listener(
-    hass: HomeAssistant, config_entry: ReolinkConfigEntry
-) -> None:
-    """Update the configuration of the host entity."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
-
-
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: ReolinkConfigEntry
 ) -> bool:
@@ -330,7 +322,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a device from a config entry."""
     host: ReolinkHost = config_entry.runtime_data.host
-    (device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
+    (_device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
 
     if is_chime:
         await host.api.get_state(cmd="GetDingDongList")
@@ -439,7 +431,9 @@ def migrate_entity_ids(
         if (DOMAIN, host.unique_id) in device.identifiers:
             remove_ids = True  # NVR/Hub in identifiers, keep that one, remove others
         for old_id in device.identifiers:
-            (old_device_uid, old_ch, old_is_chime) = get_device_uid_and_ch(old_id, host)
+            (old_device_uid, _old_ch, _old_is_chime) = get_device_uid_and_ch(
+                old_id, host
+            )
             if (
                 not old_device_uid
                 or old_device_uid[0] != host.unique_id

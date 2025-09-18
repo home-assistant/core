@@ -1,4 +1,4 @@
-"""Support for KNX/IP numeric values."""
+"""Support for KNX number entities."""
 
 from __future__ import annotations
 
@@ -22,9 +22,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import CONF_RESPOND_TO_READ, CONF_STATE_ADDRESS, KNX_ADDRESS, KNX_MODULE_KEY
 from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import NumberSchema
 
 

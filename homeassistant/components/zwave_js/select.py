@@ -4,33 +4,32 @@ from __future__ import annotations
 
 from typing import cast
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass
 from zwave_js_server.const.command_class.lock import TARGET_MODE_PROPERTY
 from zwave_js_server.const.command_class.sound_switch import TONE_ID_PROPERTY, ToneID
 from zwave_js_server.model.driver import Driver
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZwaveJSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Select entity from Config Entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_select(info: ZwaveDiscoveryInfo) -> None:
@@ -69,7 +68,7 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZwaveSelectEntity entity."""
         super().__init__(config_entry, driver, info)
@@ -103,7 +102,7 @@ class ZWaveDoorLockSelectEntity(ZwaveSelectEntity):
     """Representation of a Z-Wave door lock CC mode select entity."""
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZWaveDoorLockSelectEntity entity."""
         super().__init__(config_entry, driver, info)
@@ -126,7 +125,7 @@ class ZWaveConfigParameterSelectEntity(ZwaveSelectEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZWaveConfigParameterSelect entity."""
         super().__init__(config_entry, driver, info)
@@ -145,7 +144,7 @@ class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZwaveDefaultToneSelectEntity entity."""
         super().__init__(config_entry, driver, info)
@@ -194,7 +193,7 @@ class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
     """Representation of a Z-Wave Multilevel Switch CC select entity."""
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZwaveSelectEntity entity."""
         super().__init__(config_entry, driver, info)

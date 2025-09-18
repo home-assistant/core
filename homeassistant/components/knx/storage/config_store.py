@@ -13,10 +13,12 @@ from homeassistant.util.ulid import ulid_now
 
 from ..const import DOMAIN
 from .const import CONF_DATA
+from .migration import migrate_1_to_2, migrate_2_1_to_2_2
 
 _LOGGER = logging.getLogger(__name__)
 
-STORAGE_VERSION: Final = 1
+STORAGE_VERSION: Final = 2
+STORAGE_VERSION_MINOR: Final = 2
 STORAGE_KEY: Final = f"{DOMAIN}/config_store.json"
 
 type KNXPlatformStoreModel = dict[str, dict[str, Any]]  # unique_id: configuration
@@ -45,6 +47,24 @@ class PlatformControllerBase(ABC):
         """Update an existing entities configuration."""
 
 
+class _KNXConfigStoreStorage(Store[KNXConfigStoreModel]):
+    """Storage handler for KNXConfigStore."""
+
+    async def _async_migrate_func(
+        self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        if old_major_version == 1:
+            # version 2.1 introduced in 2025.8
+            migrate_1_to_2(old_data)
+
+        if old_major_version <= 2 and old_minor_version < 2:
+            # version 2.2 introduced in 2025.9.2
+            migrate_2_1_to_2_2(old_data)
+
+        return old_data
+
+
 class KNXConfigStore:
     """Manage KNX config store data."""
 
@@ -56,7 +76,9 @@ class KNXConfigStore:
         """Initialize config store."""
         self.hass = hass
         self.config_entry = config_entry
-        self._store = Store[KNXConfigStoreModel](hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store = _KNXConfigStoreStorage(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+        )
         self.data = KNXConfigStoreModel(entities={})
         self._platform_controllers: dict[Platform, PlatformControllerBase] = {}
 

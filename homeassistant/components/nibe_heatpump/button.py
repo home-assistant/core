@@ -52,6 +52,7 @@ class NibeAlarmResetButton(CoordinatorEntity[CoilCoordinator], ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the command."""
+        await self.coordinator.async_write_coil(self._reset_coil, 0)
         await self.coordinator.async_write_coil(self._reset_coil, 1)
         await self.coordinator.async_read_coil(self._alarm_coil)
 
