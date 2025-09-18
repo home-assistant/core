@@ -30,6 +30,10 @@ async def async_setup_entry(
     async_add_entities([IrmKmiWeather(entry)])
 
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
+
 class IrmKmiWeather(
     IrmKmiBaseEntity,  # WeatherEntity
     SingleCoordinatorWeatherEntity[IrmKmiCoordinator],
