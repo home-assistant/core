@@ -37,6 +37,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from . import SystemMonitorConfigEntry
+from .binary_sensor import BINARY_SENSOR_DOMAIN
 from .const import DOMAIN, NET_IO_TYPES
 from .coordinator import SystemMonitorCoordinator
 from .util import get_all_disk_mounts, get_all_network_interfaces, read_cpu_temperature
@@ -501,7 +502,7 @@ async def async_setup_entry(
 
         if _type == "process_num_fds":
             # Create sensors for processes configured in binary_sensor section
-            processes = entry.options.get("binary_sensor", {}).get("process", [])
+            processes = entry.options.get(BINARY_SENSOR_DOMAIN, {}).get("process", [])
             _LOGGER.debug(
                 "Creating process_num_fds sensors for processes: %s", processes
             )
