@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 from typing import Any
 
@@ -23,12 +23,12 @@ class OlarmDeviceData:
     """Data structure to hold Olarm device information."""
 
     device_name: str
-    device_state: dict[str, Any] | None = None
-    device_links: dict[str, Any] | None = None
-    device_io: dict[str, Any] | None = None
-    device_profile: dict[str, Any] | None = None
-    device_profile_links: dict[str, Any] | None = None
-    device_profile_io: dict[str, Any] | None = None
+    device_state: dict[str, Any] = field(default_factory=dict)
+    device_links: dict[str, Any] = field(default_factory=dict)
+    device_io: dict[str, Any] = field(default_factory=dict)
+    device_profile: dict[str, Any] = field(default_factory=dict)
+    device_profile_links: dict[str, Any] = field(default_factory=dict)
+    device_profile_io: dict[str, Any] = field(default_factory=dict)
 
 
 class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
