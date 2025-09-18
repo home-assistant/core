@@ -1,5 +1,6 @@
 """Test the Ness Alarm binary sensors."""
 
+import logging
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -327,3 +328,171 @@ async def test_zone_availability(
         state = hass.states.get(f"binary_sensor.zone_{zone_id}")
         assert state is not None
         assert state.state != "unavailable"
+
+
+async def test_manual_zone_invalid_format(
+    hass: HomeAssistant,
+    mock_client,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test manual zone count with invalid format."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 2401,
+            "panel_model": "MANUAL_INVALID",  # Invalid format
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.ness_alarm.Client",
+            return_value=mock_client,
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Should log warning and default to 32 zones
+    assert "Invalid manual model format" in caplog.text
+    assert "defaulting to 32 zones" in caplog.text
+
+
+async def test_entity_registry_update_enable_disable(
+    hass: HomeAssistant,
+    mock_client,
+) -> None:
+    """Test entity registry updates when reloading with different zone counts."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 2401,
+            "panel_model": "D8X",  # 8 zones
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.ness_alarm.Client",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+
+    # Verify initial state: zones 1-8 enabled, 9-32 disabled
+    zone_10_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, f"{mock_config_entry.entry_id}_zone_10"
+    )
+    entry = entity_registry.entities.get(zone_10_id)
+    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+    # Unload the entry first
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    # Now update the panel model to support more zones
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            "panel_model": "D16X",  # 16 zones
+        },
+    )
+
+    # Setup again with new model
+    with patch(
+        "homeassistant.components.ness_alarm.Client",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Zone 10 should now be enabled
+    entry = entity_registry.entities.get(zone_10_id)
+    assert entry.disabled_by is None
+
+    # Unload again
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    # Now reduce zones again
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            "panel_model": "D8X",  # Back to 8 zones
+        },
+    )
+
+    with patch(
+        "homeassistant.components.ness_alarm.Client",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Zone 10 should be disabled again
+    entry = entity_registry.entities.get(zone_10_id)
+    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_zone_restore_state(
+    hass: HomeAssistant,
+    mock_client,
+) -> None:
+    """Test zone sensors restore previous state."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 2401,
+            CONF_MAX_SUPPORTED_ZONES: 2,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    # Create different mock restore objects for each zone
+    mock_restore_on = AsyncMock()
+    mock_restore_on.state = "on"
+
+    mock_restore_off = AsyncMock()
+    mock_restore_off.state = "off"
+
+    # Track which zone is being queried
+    call_count = 0
+
+    def get_last_state_side_effect(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        # First call is for zone 1, return "on"
+        if call_count == 1:
+            return mock_restore_on
+        # Other zones return None (no previous state)
+        return None
+
+    with (
+        patch(
+            "homeassistant.components.ness_alarm.Client",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+            side_effect=get_last_state_side_effect,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Zone 1 should restore to "on" state
+    state1 = hass.states.get("binary_sensor.zone_1")
+    assert state1 is not None
+    assert state1.state == STATE_ON
+
+    # Zone 2 had no restored state, should be off
+    state2 = hass.states.get("binary_sensor.zone_2")
+    assert state2 is not None
+    assert state2.state == STATE_OFF

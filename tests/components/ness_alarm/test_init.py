@@ -1,7 +1,7 @@
 """Tests for the ness_alarm component."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from nessclient import ArmingMode, ArmingState
 import pytest
@@ -10,9 +10,12 @@ import voluptuous as vol
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.ness_alarm import (
+    CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONFIG_SCHEMA,
+    async_setup_services,
     config_flow,
+    update_listener,
 )
 from homeassistant.components.ness_alarm.const import (
     ATTR_OUTPUT_ID,
@@ -29,6 +32,7 @@ from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
     CONF_HOST,
+    EVENT_HOMEASSISTANT_STOP,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
@@ -37,6 +41,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
     DOMAIN: {
@@ -509,3 +515,101 @@ async def test_setup_with_timedelta_scan_interval(
     validated = CONFIG_SCHEMA(config)
     assert isinstance(validated[DOMAIN][CONF_SCAN_INTERVAL], timedelta)
     assert validated[DOMAIN][CONF_SCAN_INTERVAL].total_seconds() == 30
+
+
+async def test_services_already_registered(
+    hass: HomeAssistant, mock_nessclient
+) -> None:
+    """Test that services are not re-registered if already present."""
+    # First setup
+    await async_setup_component(hass, DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_PANIC)
+    assert hass.services.has_service(DOMAIN, SERVICE_AUX)
+
+    # Since services are already registered, calling setup again should return early
+    # We'll verify this by checking that no exception is raised and services still exist
+    await async_setup_services(hass)
+
+    # Services should still exist and work
+    assert hass.services.has_service(DOMAIN, SERVICE_PANIC)
+    assert hass.services.has_service(DOMAIN, SERVICE_AUX)
+
+
+async def test_update_listener_reloads_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test that update listener reloads the config entry."""
+
+    # Create a mock config entry
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 2401,
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_reload") as mock_reload:
+        await update_listener(hass, mock_entry)
+        mock_reload.assert_called_once_with(mock_entry.entry_id)
+
+
+async def test_shutdown_handler(
+    hass: HomeAssistant,
+    mock_nessclient,
+) -> None:
+    """Test that shutdown handler closes the client."""
+    await async_setup_component(hass, DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
+
+    # Clear any previous calls
+    mock_nessclient.close.reset_mock()
+
+    # Simulate Home Assistant stopping
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    # Client should have been closed
+    mock_nessclient.close.assert_called()
+
+
+async def test_shutdown_handler_via_config_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test shutdown handler via config entry setup."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 2401,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    mock_client = AsyncMock()
+    mock_client.keepalive = AsyncMock()
+    mock_client.update = AsyncMock()
+    mock_client.close = AsyncMock()
+    mock_client.on_zone_change = MagicMock()
+    mock_client.on_state_change = MagicMock()
+
+    with patch(
+        "homeassistant.components.ness_alarm.Client",
+        return_value=mock_client,
+    ):
+        # Setup the entry
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Clear any setup calls
+        mock_client.close.reset_mock()
+
+        # Fire the stop event
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+        # Client should be closed
+        mock_client.close.assert_called_once()
