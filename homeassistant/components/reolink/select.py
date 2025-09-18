@@ -86,6 +86,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="floodlight_mode",
         cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
         translation_key="floodlight_mode",
         entity_category=EntityCategory.CONFIG,
         get_options=lambda api, ch: api.whiteled_mode_list(ch),
@@ -96,6 +97,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="floodlight_event_mode",
         cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
         translation_key="floodlight_event_mode",
         entity_category=EntityCategory.CONFIG,
         get_options=[mode.name for mode in SpotlightEventModeEnum],
