@@ -255,7 +255,8 @@ jobs:
       - info
     steps:
       - *checkout
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      - &setup-python-default
+        name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
@@ -300,12 +301,7 @@ jobs:
       - pre-commit
     steps:
       - *checkout
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        id: python
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
+      - *setup-python-default
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -339,12 +335,7 @@ jobs:
       - pre-commit
     steps:
       - *checkout
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        id: python
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
+      - *setup-python-default
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -378,12 +369,7 @@ jobs:
       - pre-commit
     steps:
       - *checkout
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        id: python
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
+      - *setup-python-default
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -637,12 +623,7 @@ jobs:
             -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             libturbojpeg
       - *checkout
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
+      - *setup-python-default
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -669,12 +650,7 @@ jobs:
       - base
     steps:
       - *checkout
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
+      - *setup-python-default
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -766,12 +742,7 @@ jobs:
       - base
     steps:
       - *checkout
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
+      - *setup-python-default
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -812,12 +783,7 @@ jobs:
       - base
     steps:
       - *checkout
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
+      - *setup-python-default
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -856,12 +822,7 @@ jobs:
       - base
     steps:
       - *checkout
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
+      - *setup-python-default
       - name: Generate partial mypy restore key
         id: generate-mypy-key
         run: |
@@ -946,12 +907,7 @@ jobs:
             libturbojpeg \
             libgammu-dev
       - *checkout
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
+      - *setup-python-default
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
