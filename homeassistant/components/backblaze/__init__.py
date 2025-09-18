@@ -8,12 +8,7 @@ from b2sdk.v2 import B2Api, Bucket, InMemoryAccountInfo, exception
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
     BACKBLAZE_REALM,
@@ -23,7 +18,11 @@ from .const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
-from .repairs import async_check_for_repair_issues
+from .repairs import (
+    async_check_for_repair_issues,
+    create_bucket_access_restricted_issue,
+    create_bucket_not_found_issue,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,20 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             err,
         )
         # Create repair issue for user to address
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"bucket_access_restricted_{entry.entry_id}",
-            is_fixable=True,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="bucket_access_restricted",
-            translation_placeholders={
-                "title": entry.title,
-                "bucket_name": err.bucket_name,
-                "entry_id": entry.entry_id,
-            },
-        )
+        create_bucket_access_restricted_issue(hass, entry, err.bucket_name)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="restricted_bucket",
@@ -98,19 +84,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             err,
         )
         # Create repair issue for user to address
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"bucket_not_found_{entry.entry_id}",
-            is_fixable=True,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="bucket_not_found",
-            translation_placeholders={
-                "title": entry.title,
-                "bucket_name": entry.data.get(CONF_BUCKET, "unknown"),
-                "entry_id": entry.entry_id,
-            },
+        create_bucket_not_found_issue(
+            hass, entry, entry.data.get(CONF_BUCKET, "unknown")
         )
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -128,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             entry.data[CONF_KEY_ID],
             err,
         )
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
         ) from err

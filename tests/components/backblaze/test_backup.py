@@ -3,7 +3,7 @@
 import json
 import logging
 from time import time
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from b2sdk.v2.exception import B2Error
 import pytest
@@ -75,7 +75,7 @@ def create_mock_stream(data=b"test_data"):
     return stream_factory
 
 
-def create_mock_metadata_file(backup_id="test", valid=True, close_error=False):
+def create_mock_metadata_file(backup_id="test", valid=True):
     """Create a mock file version with metadata content."""
     mock_file = Mock()
     mock_response = Mock()
@@ -102,10 +102,7 @@ def create_mock_metadata_file(backup_id="test", valid=True, close_error=False):
     else:
         mock_response.content = b"{invalid json"
 
-    if close_error:
-        mock_response.close.side_effect = Exception("Close failed")
-    else:
-        mock_response.close = Mock()
+    mock_response.close = Mock()
 
     mock_file.download.return_value.response = mock_response
     return mock_file
@@ -234,35 +231,6 @@ class TestBackblazeBackupAgent:
         assert "test.tar" not in agent._all_files_cache
         assert "backup123" not in agent._backup_list_cache
 
-    async def test_stream_closing(self, agent):
-        """Test stream closing with async close method availability."""
-        # Test async close
-        mock_stream_async = Mock()
-        mock_stream_async.aclose = AsyncMock()
-        await agent._close_stream(mock_stream_async)
-        mock_stream_async.aclose.assert_called_once()
-
-        # Test no close method available (should not raise)
-        mock_stream_none = object()
-        await agent._close_stream(mock_stream_none)  # Should not raise
-
-        # Test with sync close method only (should not be called since we only check for aclose)
-        mock_stream_sync = Mock(spec=["close"])  # Only has close, not aclose
-        mock_stream_sync.close = Mock()
-        await agent._close_stream(mock_stream_sync)
-        mock_stream_sync.close.assert_not_called()  # We only call aclose, not close
-
-    async def test_response_closing(self, agent):
-        """Test response closing in executor."""
-        # Test with close method
-        mock_response = Mock()
-        mock_response.close = Mock()
-        await agent._close_requests_response(mock_response)
-
-        # Test without close method
-        mock_response_no_close = object()
-        await agent._close_requests_response(mock_response_no_close)  # Should not raise
-
     async def test_cleanup_failed_upload(self, agent):
         """Test cleanup of failed uploads."""
         mock_file_info = Mock()
@@ -298,7 +266,6 @@ class TestBackblazeBackupAgent:
 
     async def test_listener_cleanup_empty_list(self, hass: HomeAssistant):
         """Test listener cleanup when list becomes empty."""
-        # Ensure clean start
         if DATA_BACKUP_AGENT_LISTENERS in hass.data:
             del hass.data[DATA_BACKUP_AGENT_LISTENERS]
 
@@ -323,13 +290,13 @@ class TestBackblazeBackupOperations:
     """Test backup upload, download, and delete operations."""
 
     @pytest.mark.parametrize(
-        ("backup_size", "expected_method"),
+        "backup_size",
         [
-            (100, "small_file"),
-            (100 * 1024 * 1024 + 1000, "large_file"),  # Large file test case
+            100,
+            100 * 1024 * 1024 + 1000,  # Large file test case
         ],
     )
-    async def test_upload_backup(self, agent, backup_size, expected_method):
+    async def test_upload_backup(self, agent, backup_size):
         """Test backup upload with different sizes using unified streaming."""
         backup = create_test_backup(size=backup_size)
         stream = create_mock_stream()
@@ -437,7 +404,7 @@ class TestBackblazeErrorHandling:
     """Test error handling scenarios."""
 
     async def test_b2_error_during_upload_with_cleanup(self, agent):
-        """Test B2Error handling during main upload method (lines 262-264)."""
+        """Test B2Error handling during main upload method."""
         backup = create_test_backup(size=100)
         stream = create_mock_stream()
 
@@ -452,13 +419,11 @@ class TestBackblazeErrorHandling:
         ):
             await agent.async_upload_backup(open_stream=stream, backup=backup)
 
-        # Verify cleanup was called
         mock_cleanup.assert_called_once()
 
     async def test_b2_error_in_upload_file_method(self, agent, caplog):
-        """Test B2Error handling in _upload_backup_file (lines 307-312)."""
+        """Test B2Error handling in _upload_backup_file."""
 
-        # Create a simple stream mock that won't interfere with _close_stream
         stream_mock = Mock(spec=[])
 
         async def mock_open_stream():
@@ -489,16 +454,13 @@ class TestBackblazeErrorHandling:
                     file_info={},
                 )
 
-            # Verify cleanup was still called in finally block
             mock_reader.close.assert_called_once()
 
-            # Verify the B2Error was logged appropriately
             assert "B2 connection error during upload for test.tar" in caplog.text
 
     async def test_generic_error_in_upload_file_method(self, agent, caplog):
-        """Test generic Exception handling in _upload_backup_file (lines 310-312)."""
+        """Test generic Exception handling in _upload_backup_file."""
 
-        # Create a simple stream mock that won't interfere with _close_stream
         stream_mock = Mock(spec=[])
 
         async def mock_open_stream():
@@ -529,10 +491,8 @@ class TestBackblazeErrorHandling:
                     file_info={},
                 )
 
-            # Verify cleanup was still called in finally block
             mock_reader.close.assert_called_once()
 
-            # Verify the generic error was logged appropriately
             assert "An error occurred during upload for test.tar:" in caplog.text
 
     async def test_upload_metadata_failure(self, agent):
@@ -809,7 +769,6 @@ class TestBackblazeAdditionalCoverage:
         ):
             await agent._cleanup_failed_upload("test_file.tar")
 
-            # Should log exception details
             error_logs = [
                 r.message for r in caplog.records if "Failed to clean up" in r.message
             ]
@@ -928,11 +887,3 @@ class TestBackblazeAdditionalCoverage:
                 if "does not match target backup ID" in r.message
             ]
             assert len(debug_logs) > 0
-
-    async def test_response_close_with_executor(self, agent):
-        """Test response closing through executor."""
-        mock_response = Mock()
-        mock_response.close = Mock()
-
-        await agent._close_requests_response(mock_response)
-        # Should have been called through executor

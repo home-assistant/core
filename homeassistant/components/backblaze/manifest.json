@@ -1,6 +1,6 @@
 {
   "domain": "backblaze",
-  "name": "Backblaze",
+  "name": "Backblaze B2",
   "codeowners": ["@hugo-vrijswijk", "@ElCruncharino"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/backblaze",

@@ -82,11 +82,11 @@
   "issues": {
     "bucket_access_restricted": {
       "title": "Backblaze bucket access restricted",
-      "description": "Access to your Backblaze bucket {bucket_name} is restricted for the current credentials. This means your application key may only have access to specific buckets, but not this one. To fix this issue:\n\n1. Log in to your Backblaze account\n2. Check your application key restrictions\n3. Either use a different bucket that your key can access, or create a new application key with access to {bucket_name}\n4. Go to Settings > Devices & Services > Backblaze to reconfigure your integration\n\nClick 'Submit' to dismiss this issue."
+      "description": "Access to your Backblaze bucket {bucket_name} is restricted for the current credentials. This means your application key may only have access to specific buckets, but not this one. To fix this issue:\n\n1. Log in to your Backblaze account\n2. Check your application key restrictions\n3. Either use a different bucket that your key can access, or create a new application key with access to {bucket_name}\n4. Go to Settings > Devices & Services > Backblaze and reconfigure the integration settings\n\nOnce you update the integration settings, this issue will be automatically resolved."
     },
     "bucket_not_found": {
       "title": "Backblaze bucket not found",
-      "description": "The Backblaze bucket {bucket_name} cannot be found or accessed. This could mean:\n\n1. The bucket was deleted\n2. The bucket name was changed\n3. Your credentials no longer have access to this bucket\n\nTo fix this issue:\n\n1. Log in to your Backblaze account\n2. Verify the bucket still exists and check its name\n3. Ensure your application key has access to this bucket\n4. Go to Settings > Devices & Services > Backblaze to reconfigure your integration\n\nClick 'Submit' to dismiss this issue."
+      "description": "The Backblaze bucket {bucket_name} cannot be found or accessed. This could mean:\n\n1. The bucket was deleted\n2. The bucket name was changed\n3. Your credentials no longer have access to this bucket\n\nTo fix this issue:\n\n1. Log in to your Backblaze account\n2. Verify the bucket still exists and check its name\n3. Ensure your application key has access to this bucket\n4. Go to Settings > Devices & Services > Backblaze and reconfigure the integration settings\n\nOnce you update the integration settings, this issue will be automatically resolved."
     }
   }
 }
