@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_PROCESS
 from .coordinator import SystemMonitorCoordinator
 from .util import get_all_disk_mounts
 
@@ -50,7 +51,9 @@ async def async_setup_entry(
     _LOGGER.debug("disk arguments to be added: %s", disk_arguments)
 
     # Get list of processes that need FD monitoring from binary_sensor configuration
-    monitor_processes = entry.options.get(BINARY_SENSOR_DOMAIN, {}).get("process", [])
+    monitor_processes = entry.options.get(BINARY_SENSOR_DOMAIN, {}).get(
+        CONF_PROCESS, []
+    )
     _LOGGER.debug("processes to monitor for FDs: %s", monitor_processes)
 
     coordinator: SystemMonitorCoordinator = SystemMonitorCoordinator(
