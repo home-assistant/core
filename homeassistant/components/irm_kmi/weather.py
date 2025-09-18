@@ -54,6 +54,11 @@ class IrmKmiWeather(
         self._attr_unique_id = entry.data[CONF_UNIQUE_ID]
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available
+
+    @property
     def current_weather(self) -> CurrentWeatherData:
         """Return the current weather."""
         return self.coordinator.data.current_weather

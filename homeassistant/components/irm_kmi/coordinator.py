@@ -67,15 +67,18 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
                 and self.last_update_success_time - utcnow()
                 < timedelta(seconds=2.5 * self.update_interval.seconds)
             ):
-                _LOGGER.warning(
-                    "Error communicating with API for general forecast: %s. Keeping the old data",
-                    err,
-                )
                 return self.data
+
+            _LOGGER.warning(
+                "Could not connect to the API since %s", self.last_update_success_time
+            )
             raise UpdateFailed(
                 f"Error communicating with API for general forecast: {err}. "
                 f"Last success time is: {self.last_update_success_time}"
             ) from err
+
+        if not self.last_update_success:
+            _LOGGER.warning("Successfully reconnected to the API")
 
         return await self.process_api_data()
 
