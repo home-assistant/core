@@ -274,8 +274,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
         return self.async_show_progress_done(next_step_id=next_step_id)
 
-    async def _configure_and_start_addon(self) -> None:
-        """Configure and start the addon."""
+    async def _configure_and_start_otbr_addon(self) -> None:
+        """Configure and start the OTBR addon."""
 
         # Before we start the addon, confirm that the correct firmware is running
         # and populate `self._probed_firmware_info` with the correct information
@@ -556,7 +556,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
         if not self.addon_start_task:
             self.addon_start_task = self.hass.async_create_task(
-                self._configure_and_start_addon()
+                self._configure_and_start_otbr_addon()
             )
 
         if not self.addon_start_task.done():
