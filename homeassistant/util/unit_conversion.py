@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfApparentPower,
     UnitOfArea,
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
@@ -28,6 +29,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfReactiveEnergy,
+    UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -80,6 +82,7 @@ _STONE_TO_G = _POUND_TO_G * 14  # 14 pounds to a stone
 # Pressure conversion constants
 _STANDARD_GRAVITY = 9.80665
 _MERCURY_DENSITY = 13.5951
+_INH2O_TO_PA = 249.0889083333348  # 1 inH₂O = 249.0889083333348 Pa at 4°C
 
 # Volume conversion constants
 _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
@@ -163,6 +166,20 @@ class BaseUnitConverter:
     def _are_unit_inverses(cls, from_unit: str | None, to_unit: str | None) -> bool:
         """Return true if one unit is an inverse but not the other."""
         return (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
+
+
+class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
+    """Convert carbon monoxide ratio to mass per volume."""
+
+    UNIT_CLASS = "carbon_monoxide"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_PARTS_PER_MILLION: 1,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1.145609,
+    }
+    VALID_UNITS = {
+        CONCENTRATION_PARTS_PER_MILLION,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    }
 
 
 class DataRateConverter(BaseUnitConverter):
@@ -382,6 +399,22 @@ class MassConverter(BaseUnitConverter):
     }
 
 
+class ApparentPowerConverter(BaseUnitConverter):
+    """Utility to convert apparent power values."""
+
+    UNIT_CLASS = "apparent_power"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfApparentPower.MILLIVOLT_AMPERE: 1 * 1000,
+        UnitOfApparentPower.VOLT_AMPERE: 1,
+        UnitOfApparentPower.KILO_VOLT_AMPERE: 1 / 1000,
+    }
+    VALID_UNITS = {
+        UnitOfApparentPower.MILLIVOLT_AMPERE,
+        UnitOfApparentPower.VOLT_AMPERE,
+        UnitOfApparentPower.KILO_VOLT_AMPERE,
+    }
+
+
 class PowerConverter(BaseUnitConverter):
     """Utility to convert power values."""
 
@@ -393,6 +426,7 @@ class PowerConverter(BaseUnitConverter):
         UnitOfPower.MEGA_WATT: 1 / 1e6,
         UnitOfPower.GIGA_WATT: 1 / 1e9,
         UnitOfPower.TERA_WATT: 1 / 1e12,
+        UnitOfPower.BTU_PER_HOUR: 1 / 0.29307107,
     }
     VALID_UNITS = {
         UnitOfPower.MILLIWATT,
@@ -401,6 +435,7 @@ class PowerConverter(BaseUnitConverter):
         UnitOfPower.MEGA_WATT,
         UnitOfPower.GIGA_WATT,
         UnitOfPower.TERA_WATT,
+        UnitOfPower.BTU_PER_HOUR,
     }
 
 
@@ -417,6 +452,7 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.MBAR: 1 / 100,
         UnitOfPressure.INHG: 1
         / (_IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
+        UnitOfPressure.INH2O: 1 / _INH2O_TO_PA,
         UnitOfPressure.PSI: 1 / 6894.757,
         UnitOfPressure.MMHG: 1
         / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
@@ -429,6 +465,7 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.CBAR,
         UnitOfPressure.MBAR,
         UnitOfPressure.INHG,
+        UnitOfPressure.INH2O,
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
     }
@@ -445,6 +482,22 @@ class ReactiveEnergyConverter(BaseUnitConverter):
     VALID_UNITS = set(UnitOfReactiveEnergy)
 
 
+class ReactivePowerConverter(BaseUnitConverter):
+    """Utility to convert reactive power values."""
+
+    UNIT_CLASS = "reactive_power"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE: 1 * 1000,
+        UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 1,
+        UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 1 / 1000,
+    }
+    VALID_UNITS = {
+        UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+        UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+    }
+
+
 class SpeedConverter(BaseUnitConverter):
     """Utility to convert speed values."""
 
@@ -458,6 +511,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.INCHES_PER_SECOND: 1 / _IN_TO_M,
         UnitOfSpeed.KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
         UnitOfSpeed.KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
+        UnitOfSpeed.METERS_PER_MINUTE: _MIN_TO_SEC,
         UnitOfSpeed.METERS_PER_SECOND: 1,
         UnitOfSpeed.MILLIMETERS_PER_SECOND: 1 / _MM_TO_M,
         UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
@@ -472,6 +526,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.FEET_PER_SECOND,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.KNOTS,
+        UnitOfSpeed.METERS_PER_MINUTE,
         UnitOfSpeed.METERS_PER_SECOND,
         UnitOfSpeed.MILES_PER_HOUR,
         UnitOfSpeed.MILLIMETERS_PER_SECOND,
@@ -718,6 +773,7 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.CUBIC_METERS: 1,
         UnitOfVolume.CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
         UnitOfVolume.CENTUM_CUBIC_FEET: 1 / (100 * _CUBIC_FOOT_TO_CUBIC_METER),
+        UnitOfVolume.MILLE_CUBIC_FEET: 1 / (1000 * _CUBIC_FOOT_TO_CUBIC_METER),
     }
     VALID_UNITS = {
         UnitOfVolume.LITERS,
@@ -727,6 +783,7 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.MILLE_CUBIC_FEET,
     }
 
 
@@ -737,6 +794,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     # Units in terms of m³/h
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 1,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE: 1 / _HRS_TO_MINUTES,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND: 1 / _HRS_TO_SECS,
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _CUBIC_FOOT_TO_CUBIC_METER),
@@ -752,6 +810,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     VALID_UNITS = {
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
         UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,

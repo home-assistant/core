@@ -96,7 +96,7 @@ async def test_unique_id_migration_not_needed(
     assert entity_before.unique_id == f"{ENTRY_ID}_sleep_switch"
 
     with (
-        # Mock a valid camera instance"
+        # Mock a valid camera instance
         patch("homeassistant.components.foscam.FoscamCamera") as mock_foscam_camera,
         patch(
             "homeassistant.components.foscam.async_migrate_entry",

@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+API_ABS_HUMID = "abs_humid"
 API_CO2 = "carbon_dioxide"
 API_DEW_POINT = "dew_point"
 API_DUST = "dust"

@@ -5,14 +5,19 @@ import itertools
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.components import blueprint
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_STATE,
     CONF_UNIQUE_ID,
+    CONF_VALUE_TEMPLATE,
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -20,6 +25,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
     async_get_platforms,
 )
@@ -27,11 +33,12 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
+    CONF_ADVANCED_OPTIONS,
     CONF_ATTRIBUTE_TEMPLATES,
     CONF_ATTRIBUTES,
     CONF_AVAILABILITY,
     CONF_AVAILABILITY_TEMPLATE,
-    CONF_OBJECT_ID,
+    CONF_DEFAULT_ENTITY_ID,
     CONF_PICTURE,
     DOMAIN,
 )
@@ -134,13 +141,14 @@ def rewrite_legacy_to_modern_config(
 
 def rewrite_legacy_to_modern_configs(
     hass: HomeAssistant,
+    domain: str,
     entity_cfg: dict[str, dict],
     extra_legacy_fields: dict[str, str],
 ) -> list[dict]:
     """Rewrite legacy configuration definitions to modern ones."""
     entities = []
     for object_id, entity_conf in entity_cfg.items():
-        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
+        entity_conf = {**entity_conf, CONF_DEFAULT_ENTITY_ID: f"{domain}.{object_id}"}
 
         entity_conf = rewrite_legacy_to_modern_config(
             hass, entity_conf, extra_legacy_fields
@@ -189,7 +197,7 @@ async def async_setup_template_platform(
         if legacy_fields is not None:
             if legacy_key:
                 configs = rewrite_legacy_to_modern_configs(
-                    hass, config[legacy_key], legacy_fields
+                    hass, domain, config[legacy_key], legacy_fields
                 )
             else:
                 configs = [rewrite_legacy_to_modern_config(hass, config, legacy_fields)]
@@ -228,3 +236,44 @@ async def async_setup_template_platform(
         discovery_info["entities"],
         discovery_info["unique_id"],
     )
+
+
+async def async_setup_template_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    state_entity_cls: type[TemplateEntity],
+    config_schema: vol.Schema | vol.All,
+    replace_value_template: bool = False,
+) -> None:
+    """Setup the Template from a config entry."""
+    options = dict(config_entry.options)
+    options.pop("template_type")
+
+    if advanced_options := options.pop(CONF_ADVANCED_OPTIONS, None):
+        options = {**options, **advanced_options}
+
+    if replace_value_template and CONF_VALUE_TEMPLATE in options:
+        options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)
+
+    validated_config = config_schema(options)
+
+    async_add_entities(
+        [state_entity_cls(hass, validated_config, config_entry.entry_id)]
+    )
+
+
+def async_setup_template_preview[T: TemplateEntity](
+    hass: HomeAssistant,
+    name: str,
+    config: ConfigType,
+    state_entity_cls: type[T],
+    schema: vol.Schema | vol.All,
+    replace_value_template: bool = False,
+) -> T:
+    """Setup the Template preview."""
+    if replace_value_template and CONF_VALUE_TEMPLATE in config:
+        config[CONF_STATE] = config.pop(CONF_VALUE_TEMPLATE)
+
+    validated_config = schema(config | {CONF_NAME: name})
+    return state_entity_cls(hass, validated_config, None)

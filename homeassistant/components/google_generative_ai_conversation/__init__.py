@@ -30,18 +30,19 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_PROMPT,
     DEFAULT_AI_TASK_NAME,
+    DEFAULT_STT_NAME,
     DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
     TIMEOUT_MILLIS,
 )
@@ -55,6 +56,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (
     Platform.AI_TASK,
     Platform.CONVERSATION,
+    Platform.STT,
     Platform.TTS,
 )
 
@@ -69,18 +71,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def generate_content(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
 
-        if call.data[CONF_IMAGE_FILENAME]:
-            # Deprecated in 2025.3, to remove in 2025.9
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_image_filename_parameter",
-                breaks_in_ha_version="2025.9.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_image_filename_parameter",
-            )
-
         prompt_parts = [call.data[CONF_PROMPT]]
 
         config_entry: GoogleGenerativeAIConfigEntry = (
@@ -89,7 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         client = config_entry.runtime_data
 
-        files = call.data[CONF_IMAGE_FILENAME] + call.data[CONF_FILENAMES]
+        files = call.data[CONF_FILENAMES]
 
         if files:
             for filename in files:
@@ -102,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             prompt_parts.extend(
                 await async_prepare_files_for_prompt(
-                    hass, client, [Path(filename) for filename in files]
+                    hass, client, [(Path(filename), None) for filename in files]
                 )
             )
 
@@ -121,7 +111,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 f"Error generating content due to content violations, reason: {response.prompt_feedback.block_reason_message}"
             )
 
-        if not response.candidates[0].content.parts:
+        if (
+            not response.candidates
+            or not response.candidates[0].content
+            or not response.candidates[0].content.parts
+        ):
             raise HomeAssistantError("Unknown error generating content")
 
         return {"text": response.text}
@@ -133,9 +127,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema(
             {
                 vol.Required(CONF_PROMPT): cv.string,
-                vol.Optional(CONF_IMAGE_FILENAME, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
                 vol.Optional(CONF_FILENAMES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -253,9 +244,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 entity_disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
                 and not all_disabled
             ):
-                # Device and entity registries don't update the disabled_by flag
-                # when moving a device or entity from one config entry to another,
-                # so we need to do it manually.
+                # Device and entity registries will set the disabled_by flag to None
+                # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
+                # config entry, but we want to set it to DEVICE or USER instead,
                 entity_disabled_by = (
                     er.RegistryEntryDisabler.DEVICE
                     if device
@@ -270,9 +261,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             )
 
         if device is not None:
-            # Device and entity registries don't update the disabled_by flag when
-            # moving a device or entity from one config entry to another, so we
-            # need to do it manually.
+            # Device and entity registries will set the disabled_by flag to None
+            # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
+            # config entry, but we want to set it to USER instead,
             device_disabled_by = device.disabled_by
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
@@ -301,7 +292,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         if not use_existing:
             await hass.config_entries.async_remove(entry.entry_id)
         else:
-            _add_ai_task_subentry(hass, entry)
+            _add_ai_task_and_stt_subentries(hass, entry)
             hass.config_entries.async_update_entry(
                 entry,
                 title=DEFAULT_TITLE,
@@ -350,8 +341,7 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     if entry.version == 2 and entry.minor_version == 2:
-        # Add AI Task subentry with default options
-        _add_ai_task_subentry(hass, entry)
+        _add_ai_task_and_stt_subentries(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=3)
 
     if entry.version == 2 and entry.minor_version == 3:
@@ -393,16 +383,25 @@ async def async_migrate_entry(
     return True
 
 
-def _add_ai_task_subentry(
+def _add_ai_task_and_stt_subentries(
     hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
 ) -> None:
-    """Add AI Task subentry to the config entry."""
+    """Add AI Task and STT subentries to the config entry."""
     hass.config_entries.async_add_subentry(
         entry,
         ConfigSubentry(
             data=MappingProxyType(RECOMMENDED_AI_TASK_OPTIONS),
             subentry_type="ai_task_data",
             title=DEFAULT_AI_TASK_NAME,
+            unique_id=None,
+        ),
+    )
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            data=MappingProxyType(RECOMMENDED_STT_OPTIONS),
+            subentry_type="stt",
+            title=DEFAULT_STT_NAME,
             unique_id=None,
         ),
     )

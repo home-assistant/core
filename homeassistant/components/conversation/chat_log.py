@@ -9,7 +9,7 @@ from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field, replace
 import logging
 from pathlib import Path
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, cast
 
 import voluptuous as vol
 
@@ -161,7 +161,9 @@ class AssistantContent:
     role: Literal["assistant"] = field(init=False, default="assistant")
     agent_id: str
     content: str | None = None
+    thinking_content: str | None = None
     tool_calls: list[llm.ToolInput] | None = None
+    native: Any = None
 
 
 @dataclass(frozen=True)
@@ -183,7 +185,18 @@ class AssistantContentDeltaDict(TypedDict, total=False):
 
     role: Literal["assistant"]
     content: str | None
+    thinking_content: str | None
     tool_calls: list[llm.ToolInput] | None
+    native: Any
+
+
+class ToolResultContentDeltaDict(TypedDict, total=False):
+    """Tool result content."""
+
+    role: Literal["tool_result"]
+    tool_call_id: str
+    tool_name: str
+    tool_result: JsonObjectType
 
 
 @dataclass
@@ -196,6 +209,7 @@ class ChatLog:
     extra_system_prompt: str | None = None
     llm_api: llm.APIInstance | None = None
     delta_listener: Callable[[ChatLog, dict], None] | None = None
+    llm_input_provided_index = 0
 
     @property
     def continue_conversation(self) -> bool:
@@ -230,17 +244,25 @@ class ChatLog:
 
     @callback
     def async_add_assistant_content_without_tools(
-        self, content: AssistantContent
+        self, content: AssistantContent | ToolResultContent
     ) -> None:
-        """Add assistant content to the log."""
+        """Add assistant content to the log.
+
+        Allows assistant content without tool calls or with external tool calls only,
+        as well as tool results for the external tools.
+        """
         LOGGER.debug("Adding assistant content: %s", content)
-        if content.tool_calls is not None:
-            raise ValueError("Tool calls not allowed")
+        if (
+            isinstance(content, AssistantContent)
+            and content.tool_calls is not None
+            and any(not tool_call.external for tool_call in content.tool_calls)
+        ):
+            raise ValueError("Non-external tool calls not allowed")
         self.content.append(content)
 
     async def async_add_assistant_content(
         self,
-        content: AssistantContent,
+        content: AssistantContent | ToolResultContent,
         /,
         tool_call_tasks: dict[str, asyncio.Task] | None = None,
     ) -> AsyncGenerator[ToolResultContent]:
@@ -253,7 +275,11 @@ class ChatLog:
         LOGGER.debug("Adding assistant content: %s", content)
         self.content.append(content)
 
-        if content.tool_calls is None:
+        if (
+            not isinstance(content, AssistantContent)
+            or content.tool_calls is None
+            or all(tool_call.external for tool_call in content.tool_calls)
+        ):
             return
 
         if self.llm_api is None:
@@ -262,13 +288,16 @@ class ChatLog:
         if tool_call_tasks is None:
             tool_call_tasks = {}
         for tool_input in content.tool_calls:
-            if tool_input.id not in tool_call_tasks:
+            if tool_input.id not in tool_call_tasks and not tool_input.external:
                 tool_call_tasks[tool_input.id] = self.hass.async_create_task(
                     self.llm_api.async_call_tool(tool_input),
                     name=f"llm_tool_{tool_input.id}",
                 )
 
         for tool_input in content.tool_calls:
+            if tool_input.external:
+                continue
+
             LOGGER.debug(
                 "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
             )
@@ -291,7 +320,9 @@ class ChatLog:
             yield response_content
 
     async def async_add_delta_content_stream(
-        self, agent_id: str, stream: AsyncIterable[AssistantContentDeltaDict]
+        self,
+        agent_id: str,
+        stream: AsyncIterable[AssistantContentDeltaDict | ToolResultContentDeltaDict],
     ) -> AsyncGenerator[AssistantContent | ToolResultContent]:
         """Stream content into the chat log.
 
@@ -305,6 +336,8 @@ class ChatLog:
         The keys content and tool_calls will be concatenated if they appear multiple times.
         """
         current_content = ""
+        current_thinking_content = ""
+        current_native: Any = None
         current_tool_calls: list[llm.ToolInput] = []
         tool_call_tasks: dict[str, asyncio.Task] = {}
 
@@ -313,34 +346,54 @@ class ChatLog:
 
             # Indicates update to current message
             if "role" not in delta:
-                if delta_content := delta.get("content"):
+                # ToolResultContentDeltaDict will always have a role
+                assistant_delta = cast(AssistantContentDeltaDict, delta)
+                if delta_content := assistant_delta.get("content"):
                     current_content += delta_content
-                if delta_tool_calls := delta.get("tool_calls"):
-                    if self.llm_api is None:
-                        raise ValueError("No LLM API configured")
+                if delta_thinking_content := assistant_delta.get("thinking_content"):
+                    current_thinking_content += delta_thinking_content
+                if delta_native := assistant_delta.get("native"):
+                    if current_native is not None:
+                        raise RuntimeError(
+                            "Native content already set, cannot overwrite"
+                        )
+                    current_native = delta_native
+                if delta_tool_calls := assistant_delta.get("tool_calls"):
                     current_tool_calls += delta_tool_calls
 
                     # Start processing the tool calls as soon as we know about them
                     for tool_call in delta_tool_calls:
-                        tool_call_tasks[tool_call.id] = self.hass.async_create_task(
-                            self.llm_api.async_call_tool(tool_call),
-                            name=f"llm_tool_{tool_call.id}",
-                        )
+                        if not tool_call.external:
+                            if self.llm_api is None:
+                                raise ValueError("No LLM API configured")
+
+                            tool_call_tasks[tool_call.id] = self.hass.async_create_task(
+                                self.llm_api.async_call_tool(tool_call),
+                                name=f"llm_tool_{tool_call.id}",
+                            )
                 if self.delta_listener:
-                    self.delta_listener(self, delta)  # type: ignore[arg-type]
+                    if filtered_delta := {
+                        k: v for k, v in assistant_delta.items() if k != "native"
+                    }:
+                        # We do not want to send the native content to the listener
+                        # as it is not JSON serializable
+                        self.delta_listener(self, filtered_delta)
                 continue
 
             # Starting a new message
-
-            if delta["role"] != "assistant":
-                raise ValueError(f"Only assistant role expected. Got {delta['role']}")
-
             # Yield the previous message if it has content
-            if current_content or current_tool_calls:
-                content = AssistantContent(
+            if (
+                current_content
+                or current_thinking_content
+                or current_tool_calls
+                or current_native
+            ):
+                content: AssistantContent | ToolResultContent = AssistantContent(
                     agent_id=agent_id,
                     content=current_content or None,
+                    thinking_content=current_thinking_content or None,
                     tool_calls=current_tool_calls or None,
+                    native=current_native,
                 )
                 yield content
                 async for tool_result in self.async_add_assistant_content(
@@ -349,18 +402,51 @@ class ChatLog:
                     yield tool_result
                     if self.delta_listener:
                         self.delta_listener(self, asdict(tool_result))
+                current_content = ""
+                current_thinking_content = ""
+                current_native = None
+                current_tool_calls = []
 
-            current_content = delta.get("content") or ""
-            current_tool_calls = delta.get("tool_calls") or []
+            if delta["role"] == "assistant":
+                current_content = delta.get("content") or ""
+                current_thinking_content = delta.get("thinking_content") or ""
+                current_tool_calls = delta.get("tool_calls") or []
+                current_native = delta.get("native")
 
-            if self.delta_listener:
-                self.delta_listener(self, delta)  # type: ignore[arg-type]
+                if self.delta_listener:
+                    if filtered_delta := {
+                        k: v for k, v in delta.items() if k != "native"
+                    }:
+                        self.delta_listener(self, filtered_delta)
+            elif delta["role"] == "tool_result":
+                content = ToolResultContent(
+                    agent_id=agent_id,
+                    tool_call_id=delta["tool_call_id"],
+                    tool_name=delta["tool_name"],
+                    tool_result=delta["tool_result"],
+                )
+                yield content
+                if self.delta_listener:
+                    self.delta_listener(self, asdict(content))
+                self.async_add_assistant_content_without_tools(content)
+            else:
+                raise ValueError(
+                    "Only assistant and tool_result roles expected."
+                    f" Got {delta['role']}"
+                )
 
-        if current_content or current_tool_calls:
+        if (
+            current_content
+            or current_thinking_content
+            or current_tool_calls
+            or current_native
+        ):
             content = AssistantContent(
                 agent_id=agent_id,
                 content=current_content or None,
+                thinking_content=current_thinking_content or None,
                 tool_calls=current_tool_calls or None,
+                native=current_native,
             )
             yield content
             async for tool_result in self.async_add_assistant_content(
@@ -421,14 +507,18 @@ class ChatLog:
     async def async_provide_llm_data(
         self,
         llm_context: llm.LLMContext,
-        user_llm_hass_api: str | list[str] | None = None,
+        user_llm_hass_api: str | list[str] | llm.API | None = None,
         user_llm_prompt: str | None = None,
         user_extra_system_prompt: str | None = None,
     ) -> None:
         """Set the LLM system prompt."""
         llm_api: llm.APIInstance | None = None
 
-        if user_llm_hass_api:
+        if user_llm_hass_api is None:
+            pass
+        elif isinstance(user_llm_hass_api, llm.API):
+            llm_api = await user_llm_hass_api.async_get_api_instance(llm_context)
+        else:
             try:
                 llm_api = await llm.async_get_api(
                     self.hass,
@@ -496,6 +586,7 @@ class ChatLog:
 
         prompt = "\n".join(prompt_parts)
 
+        self.llm_input_provided_index = len(self.content)
         self.llm_api = llm_api
         self.extra_system_prompt = extra_system_prompt
         self.content[0] = SystemContent(content=prompt)

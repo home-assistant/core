@@ -40,7 +40,6 @@ async def test_generic_alarm_control_panel_requires_code(
             object_id="myalarm_control_panel",
             key=1,
             name="my alarm_control_panel",
-            unique_id="my_alarm_control_panel",
             supported_features=EspHomeACPFeatures.ARM_AWAY
             | EspHomeACPFeatures.ARM_CUSTOM_BYPASS
             | EspHomeACPFeatures.ARM_HOME
@@ -173,7 +172,6 @@ async def test_generic_alarm_control_panel_no_code(
             object_id="myalarm_control_panel",
             key=1,
             name="my alarm_control_panel",
-            unique_id="my_alarm_control_panel",
             supported_features=EspHomeACPFeatures.ARM_AWAY
             | EspHomeACPFeatures.ARM_CUSTOM_BYPASS
             | EspHomeACPFeatures.ARM_HOME
@@ -219,7 +217,6 @@ async def test_generic_alarm_control_panel_missing_state(
             object_id="myalarm_control_panel",
             key=1,
             name="my alarm_control_panel",
-            unique_id="my_alarm_control_panel",
             supported_features=EspHomeACPFeatures.ARM_AWAY
             | EspHomeACPFeatures.ARM_CUSTOM_BYPASS
             | EspHomeACPFeatures.ARM_HOME

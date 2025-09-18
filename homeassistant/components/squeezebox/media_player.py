@@ -226,10 +226,7 @@ def get_announce_timeout(extra: dict) -> int | None:
 
 
 class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
-    """Representation of the media player features of a SqueezeBox device.
-
-    Wraps a pysqueezebox.Player() object.
-    """
+    """Representation of the media player features of a SqueezeBox device."""
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.BROWSE_MEDIA
@@ -286,9 +283,11 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     @property
     def browse_limit(self) -> int:
-        """Return the step to be used for volume up down."""
-        return self.coordinator.config_entry.options.get(
-            CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+        """Return the max number of items to return from browse."""
+        return int(
+            self.coordinator.config_entry.options.get(
+                CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+            )
         )
 
     @property
@@ -312,6 +311,11 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         return None
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        await self._browse_data.async_init(self._player, self.browse_limit)
+
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
         self.coordinator.config_entry.runtime_data.known_player_ids.remove(
@@ -321,8 +325,8 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if self._player.volume:
-            return int(float(self._player.volume)) / 100.0
+        if self._player.volume is not None:
+            return float(self._player.volume) / 100.0
 
         return None
 
@@ -431,7 +435,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        volume_percent = str(int(volume * 100))
+        volume_percent = str(round(volume * 100))
         await self._player.async_set_volume(volume_percent)
         await self.coordinator.async_refresh()
 
@@ -603,7 +607,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         _media_content_type_list = (
             query.media_content_type.lower().replace(", ", ",").split(",")
             if query.media_content_type
-            else ["albums", "tracks", "artists", "genres"]
+            else ["albums", "tracks", "artists", "genres", "playlists"]
         )
 
         if query.media_content_type and set(_media_content_type_list).difference(

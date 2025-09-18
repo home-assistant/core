@@ -7,13 +7,16 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN, ImageEntity
+from homeassistant.components.image import (
+    DOMAIN as IMAGE_DOMAIN,
+    ENTITY_ID_FORMAT,
+    ImageEntity,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.device import async_device_info_to_link_from_device_id
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -23,11 +26,12 @@ from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_PICTURE
-from .helpers import async_setup_template_platform
-from .template_entity import (
-    TemplateEntity,
+from .helpers import async_setup_template_entry, async_setup_template_platform
+from .schemas import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     make_template_entity_common_modern_attributes_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,22 +40,24 @@ DEFAULT_NAME = "Template Image"
 
 GET_IMAGE_TIMEOUT = 10
 
-IMAGE_SCHEMA = vol.Schema(
+IMAGE_YAML_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
-).extend(make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema)
-
-
-IMAGE_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME): cv.template,
-        vol.Required(CONF_URL): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-    }
+).extend(
+    make_template_entity_common_modern_attributes_schema(
+        IMAGE_DOMAIN, DEFAULT_NAME
+    ).schema
 )
+
+
+IMAGE_CONFIG_ENTRY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_URL): cv.template,
+        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+    }
+).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 
 
 async def async_setup_platform(
@@ -78,11 +84,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    _options = dict(config_entry.options)
-    _options.pop("template_type")
-    validated_config = IMAGE_CONFIG_SCHEMA(_options)
-    async_add_entities(
-        [StateImageEntity(hass, validated_config, config_entry.entry_id)]
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateImageEntity,
+        IMAGE_CONFIG_ENTRY_SCHEMA,
     )
 
 
@@ -91,6 +98,7 @@ class StateImageEntity(TemplateEntity, ImageEntity):
 
     _attr_should_poll = False
     _attr_image_url: str | None = None
+    _entity_id_format = ENTITY_ID_FORMAT
 
     def __init__(
         self,
@@ -99,13 +107,9 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the image."""
-        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
+        TemplateEntity.__init__(self, hass, config, unique_id)
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
         self._url_template = config[CONF_URL]
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
 
     @property
     def entity_picture(self) -> str | None:
@@ -135,6 +139,7 @@ class TriggerImageEntity(TriggerEntity, ImageEntity):
     """Image entity based on trigger data."""
 
     _attr_image_url: str | None = None
+    _entity_id_format = ENTITY_ID_FORMAT
 
     domain = IMAGE_DOMAIN
     extra_template_keys = (CONF_URL,)

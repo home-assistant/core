@@ -125,8 +125,6 @@ class PsnMediaPlayerEntity(
                     if session.title_id is not None
                     else MediaPlayerState.ON
                 )
-            if session.status == "standby":
-                return MediaPlayerState.STANDBY
         return MediaPlayerState.OFF
 
     @property

@@ -619,7 +619,6 @@ async def test_conversation_agent(
     assert entity_entry
     subentry = mock_config_entry.subentries.get(entity_entry.unique_id)
     assert subentry
-    assert entity_entry.original_name == subentry.title
 
     device_entry = device_registry.async_get(entity_entry.device_id)
     assert device_entry
