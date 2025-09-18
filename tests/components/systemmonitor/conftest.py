@@ -217,7 +217,6 @@ def mock_psutil(mock_process: list[MockProcess]) -> Generator:
         ]
         mock_psutil.boot_time.return_value = 1708786800.0
         mock_psutil.NoSuchProcess = NoSuchProcess
-        # mock_psutil.sensors_fans = Mock()
         mock_psutil.sensors_fans.return_value = {
             "asus": [sfan("cpu-fan", 1200), sfan("another-fan", 1300)],
         }
