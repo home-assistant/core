@@ -666,7 +666,8 @@ jobs:
     steps:
       - *checkout
       - *setup-python-matrix
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - &cache-restore-python-matrix
+        name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
@@ -889,15 +890,7 @@ jobs:
             libxml2-utils
       - *checkout
       - *setup-python-matrix
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+      - *cache-restore-python-matrix
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1022,15 +1015,7 @@ jobs:
             libxml2-utils
       - *checkout
       - *setup-python-matrix
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+      - *cache-restore-python-matrix
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1164,15 +1149,7 @@ jobs:
             postgresql-server-dev-14
       - *checkout
       - *setup-python-matrix
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+      - *cache-restore-python-matrix
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1322,15 +1299,7 @@ jobs:
             libxml2-utils
       - *checkout
       - *setup-python-matrix
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+      - *cache-restore-python-matrix
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
