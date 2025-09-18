@@ -49,7 +49,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
         await self.account.refresh_robots()
         await self.account.load_pets()
         for pet in self.account.pets:
-            # Need to fetch weight history for `get_visits_since`
+            # Fetch weight history for `get_visits_since` sensor
             await pet.fetch_weight_history()
 
     async def _async_setup(self) -> None:

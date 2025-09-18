@@ -37,6 +37,9 @@
       "hopper_connected": {
         "name": "Hopper connected"
       },
+      "hopper_low": {
+        "name": "Hopper low"
+      },
       "sleeping": {
         "name": "Sleeping"
       },

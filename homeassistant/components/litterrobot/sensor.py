@@ -161,6 +161,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda robot: robot.pet_weight,
         ),
+        # Additional LR4 hopper metrics are provided via custom entities below
     ],
     FeederRobot: [
         RobotSensorEntityDescription[FeederRobot](
@@ -266,3 +267,6 @@ class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         return self.entity_description.last_reset_fn() or super().last_reset
+
+
+    
