@@ -6,6 +6,8 @@ from collections.abc import Iterable, MutableSequence
 import random
 from typing import TYPE_CHECKING, Any
 
+from natsort import natsorted, ns
+
 from .base import BaseTemplateExtension, TemplateFunction
 
 if TYPE_CHECKING:
@@ -57,6 +59,12 @@ class CollectionExtension(BaseTemplateExtension):
                     as_global=True,
                     as_filter=True,
                 ),
+                TemplateFunction(
+                    "natural_sort",
+                    self.natural_sort,
+                    as_global=True,
+                    as_filter=True,
+                ),
                 # Type conversion functions
                 TemplateFunction(
                     "set",
@@ -82,6 +90,11 @@ class CollectionExtension(BaseTemplateExtension):
                 TemplateFunction(
                     "tuple",
                     self.is_tuple,
+                    as_test=True,
+                ),
+                TemplateFunction(
+                    "natural_sort",
+                    self.natural_sort,
                     as_test=True,
                 ),
             ],
@@ -169,6 +182,52 @@ class CollectionExtension(BaseTemplateExtension):
             )
 
         return list(set(value) ^ set(other))
+
+    def natural_sort(
+        self,
+        lst: Iterable[Any],
+        key: str | int | None = None,
+        alg: str | None = None,
+        reverse: bool = False,
+    ) -> list[Any]:
+        """Return elements sorted naturally."""
+
+        def _get_key(v: Any) -> Any:
+            """Get the key."""
+            if isinstance(key, str):
+                if isinstance(v, dict):
+                    return v.get(key)
+                return getattr(v, key, None)
+            if not isinstance(key, int):
+                raise KeyError(
+                    f"key expected an integer for list or string for list of lists, got {type(key).__name__}"
+                )
+            return v[key]
+
+        def _get_alg(expr: str | list[str]) -> int:
+            """Get the alg via an alg mask."""
+
+            ALG_MAP = {name: getattr(ns, name) for name in dir(ns) if name.isupper()}
+
+            alg = ns.DEFAULT
+
+            if isinstance(expr, str):
+                parts = [p.strip().replace("ns.", "").upper() for p in expr.split("|")]
+            if not isinstance(expr, str):
+                raise TypeError(f"alg expected as an string, got {type(alg).__name__}")
+
+            for p in parts:
+                if p in ALG_MAP:
+                    alg |= ALG_MAP[p]
+
+            return alg
+
+        return natsorted(
+            lst,
+            key=_get_key if key else None,
+            alg=_get_alg(alg) if alg else ns.DEFAULT,
+            reverse=reverse,
+        )
 
     def to_set(self, value: Any) -> set[Any]:
         """Convert value to set."""
