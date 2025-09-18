@@ -2,22 +2,22 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import contextlib
+from dataclasses import dataclass
+from datetime import datetime
+from functools import lru_cache
 import ipaddress
 import logging
 import socket
 import sys
 import time
-from collections.abc import Callable
-from dataclasses import dataclass
-from datetime import datetime
-from functools import lru_cache
 from typing import Any, Literal
+
+from psutil._common import POWER_TIME_UNKNOWN, POWER_TIME_UNLIMITED
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
-)
-from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -58,9 +58,20 @@ SENSOR_TYPE_MANDATORY_ARG = 4
 
 SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
 
-SENSORS_NO_ARG = ("load_", "memory_", "processor_use", "swap_", "last_boot")
+BATTERY_REMAIN_UNKNOWNS = (POWER_TIME_UNKNOWN, POWER_TIME_UNLIMITED)
+
+SENSORS_NO_ARG = (
+    "battery_left",
+    "battery",
+    "last_boot",
+    "load_",
+    "memory_",
+    "processor_use",
+    "swap_",
+)
 SENSORS_WITH_ARG = {
     "disk_": "disk_arguments",
+    "fan_rpm": "fan_rpm_arguments",
     "ipv": "network_arguments",
     **dict.fromkeys(NET_IO_TYPES, "network_arguments"),
 }
@@ -445,7 +456,7 @@ IO_COUNTER = {
 IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INET6}
 
 
-async def async_setup_entry(  # noqa: C901
+async def async_setup_entry(
     hass: HomeAssistant,
     entry: SystemMonitorConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
@@ -463,6 +474,7 @@ async def async_setup_entry(  # noqa: C901
         return {
             "disk_arguments": get_all_disk_mounts(hass, psutil_wrapper),
             "network_arguments": get_all_network_interfaces(hass, psutil_wrapper),
+            "fan_rpm_arguments": list(sensor_data.fan_rpm),
         }
 
     cpu_temperature: float | None = None
