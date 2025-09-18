@@ -184,9 +184,6 @@ def test_bootstrap_error() -> None:
     assert res["yaml_files"] == {}
 
 
-# New tests for JSON and fail-on-warnings functionality
-
-
 @pytest.mark.parametrize("hass_config_yaml", [BASE_CONFIG])
 @pytest.mark.usefixtures("mock_is_file", "mock_hass_config_yaml")
 def test_run_backwards_compatibility_no_flags() -> None:
