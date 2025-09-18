@@ -500,12 +500,14 @@ jobs:
         id: generate-uv-key
         run: |
           uv_version=$(cat requirements.txt | grep uv | cut -d '=' -f 3)
+          week=$(date -u '+%Y-%W')
+          key_suffix="${uv_version}-${week}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
           echo "version=${uv_version}" >> $GITHUB_OUTPUT
-          echo "key=uv-${{ env.UV_CACHE_VERSION }}-${uv_version}-${{
-            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
+          echo "week=${week}" >> $GITHUB_OUTPUT
+          echo "key=uv-${{ env.UV_CACHE_VERSION }}-${key_suffix}" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: venv
           key: >-
@@ -513,7 +515,7 @@ jobs:
             needs.info.outputs.python_cache_key }}
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: ${{ env.UV_CACHE_DIR }}
           key: >-
@@ -522,7 +524,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-uv-${{
             env.UV_CACHE_VERSION }}-${{ steps.generate-uv-key.outputs.version }}-${{
-            env.HA_SHORT_VERSION }}-
+            steps.generate-uv-key.outputs.week }}-
       - name: Check if apt cache exists
         id: cache-apt-check
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
@@ -578,6 +580,7 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ needs.info.outputs.apt_cache_key }}
       - name: Create Python virtual environment
+        id: create-venv
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv venv
@@ -589,6 +592,24 @@ jobs:
           python -m script.gen_requirements_all ci
           uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
+      - name: Save base Python virtual environment
+        if: steps.create-venv.conclusion == 'success'
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: venv
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Save uv wheel cache
+        if: |
+          github.event_name != 'pull_request'
+          && steps.create-venv.conclusion == 'success'
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
+            steps.generate-uv-key.outputs.key }}
       - name: Dump pip freeze
         run: |
           python -m venv venv
@@ -891,7 +912,7 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore mypy cache
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: .mypy_cache
           key: >-
@@ -905,6 +926,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/mypy.json"
       - name: Run mypy (fully)
+        id: mypy-full-run
         if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
@@ -917,6 +939,16 @@ jobs:
           . venv/bin/activate
           python --version
           mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
+      - name: Save mypy cache
+        if: |
+          github.event_name != 'pull_request'
+          && steps.mypy-full-run.conclusion == 'success'
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: .mypy_cache
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
+            steps.generate-mypy-key.outputs.key }}
 
   prepare-pytest-full:
     runs-on: ubuntu-24.04
