@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+from datetime import datetime
 
 from openwrt.ubus import Ubus
 import voluptuous as vol
@@ -23,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.dt import DEFAULT_TIME_ZONE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,16 +129,13 @@ class UbusDeviceScanner(DeviceScanner):
         return attrs.get("name", None)
 
     def get_extra_attributes(self, device: str) -> dict[str, str]:            
-        """Return the host (to distinguish between multiple routers), the MAC address and the IP address (or None if we don't know)."""
+        """Return the attributes of the given device or {} if we don't know."""
         if self.mac2attrs is None:
             self._generate_mac2attrs()
         if self.mac2attrs is None:
             # Generation of mac2attrs dictionary failed
-            ip = None
-        else:
-            attrs = self.mac2attrs.get(device.upper(), None)
-            ip = None if attrs is None else attrs.get("ip", None)
-        return {"host": self.host, "mac": device.upper(), "ip": ip}
+            return {}
+        return self.mac2attrs.get(device.upper(), {})
 
     @_refresh_on_access_denied
     def _update_info(self):
@@ -165,6 +164,9 @@ class UbusDeviceScanner(DeviceScanner):
                     if device["authorized"]:
                         self.last_results.append(key)
 
+        # Update attributes
+        self._generate_mac2attrs()
+
         return bool(results)
 
 
@@ -190,7 +192,17 @@ class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
                 if i == 0: self.mac2attrs = {}
                 for line in result["data"].splitlines():
                     hosts = line.split(" ")
-                    self.mac2attrs[hosts[1].upper()] = {"name": hosts[3], "ip": hosts[2]}
+                    mac = hosts[1].upper()
+                    expiry = datetime.fromtimestamp(int(hosts[0]), tz=DEFAULT_TIME_ZONE)
+                    # If multiple leases for the same MAC, select the one with the latest expiry
+                    if mac not in self.mac2attrs or expiry > self.mac2attrs[mac]["expiry"]: 
+                        self.mac2attrs[mac] = {
+                            "host": self.host,
+                            "name": hosts[3],
+                            "mac": mac,
+                            "ip": hosts[2],
+                            "expiry": expiry
+                        }
 
 
 class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
@@ -204,7 +216,12 @@ class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
                     mac = lease["mac"]  # mac = aabbccddeeff
                     # Convert it to expected format with colon
                     mac = ":".join(mac[i : i + 2] for i in range(0, len(mac), 2))
-                    self.mac2attrs[mac.upper()] = {"name": lease["hostname"], "ip": lease["address"]}
+                    self.mac2attrs[mac.upper()] = {
+                        "host": self.host,  
+                        "name": lease["hostname"],
+                        "mac": mac.upper(),
+                        "ip": lease["address"]
+                    }
         else:
             # Error, handled in the ubus.get_dhcp_method()
             return
