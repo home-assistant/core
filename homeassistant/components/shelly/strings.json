@@ -141,6 +141,9 @@
       }
     },
     "sensor": {
+      "detected_objects": {
+        "unit_of_measurement": "objects"
+      },
       "gas_detected": {
         "state": {
           "none": "None",
@@ -283,6 +286,21 @@
         },
         "abort": {
           "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+        }
+      }
+    },
+    "wall_display_firmware_unsupported": {
+      "title": "{device_name} is running outdated firmware",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "{device_name} is running outdated firmware",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware}. This firmware version will not be supported by Shelly integration starting from Home Assistant 2025.11.0.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version."
+          }
+        },
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "update_not_available": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::fix_flow::abort::update_not_available%]"
         }
       }
     }

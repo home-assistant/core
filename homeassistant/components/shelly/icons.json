@@ -20,6 +20,9 @@
       }
     },
     "sensor": {
+      "detected_objects": {
+        "default": "mdi:account-group"
+      },
       "gas_concentration": {
         "default": "mdi:gauge"
       },

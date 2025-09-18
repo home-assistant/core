@@ -82,11 +82,26 @@ def assert_condition_trace(expected):
             assert_element(condition_trace[key][index], element, path)
 
 
-async def test_invalid_condition(hass: HomeAssistant) -> None:
-    """Test if invalid condition raises."""
-    with pytest.raises(HomeAssistantError):
-        await condition.async_from_config(
-            hass,
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        (
+            {"condition": 123},
+            "Unexpected value for condition: '123'. Expected a condition, "
+            "a list of conditions or a valid template",
+        )
+    ],
+)
+async def test_invalid_condition(hass: HomeAssistant, config: dict, error: str) -> None:
+    """Test if validating an invalid condition raises."""
+    with pytest.raises(vol.Invalid, match=error):
+        cv.CONDITION_SCHEMA(config)
+
+
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        (
             {
                 "condition": "invalid",
                 "conditions": [
@@ -97,7 +112,15 @@ async def test_invalid_condition(hass: HomeAssistant) -> None:
                     },
                 ],
             },
+            'Invalid condition "invalid" specified',
         )
+    ],
+)
+async def test_unknown_condition(hass: HomeAssistant, config: dict, error: str) -> None:
+    """Test if creating an unknown condition raises."""
+    config = cv.CONDITION_SCHEMA(config)
+    with pytest.raises(HomeAssistantError, match=error):
+        await condition.async_from_config(hass, config)
 
 
 async def test_and_condition(hass: HomeAssistant) -> None:

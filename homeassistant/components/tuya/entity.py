@@ -126,7 +126,7 @@ class TuyaEntity(Entity):
         return None
 
     def get_dptype(
-        self, dpcode: DPCode | None, prefer_function: bool = False
+        self, dpcode: DPCode | None, *, prefer_function: bool = False
     ) -> DPType | None:
         """Find a matching DPCode data type available on for this device."""
         if dpcode is None:
