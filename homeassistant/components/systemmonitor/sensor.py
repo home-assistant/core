@@ -14,6 +14,8 @@ import sys
 import time
 from typing import Any, Literal
 
+from psutil._common import POWER_TIME_UNKNOWN, POWER_TIME_UNLIMITED
+
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -57,7 +59,11 @@ SENSOR_TYPE_MANDATORY_ARG = 4
 
 SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
 
+BATTERY_REMAIN_UNKNOWNS = (POWER_TIME_UNKNOWN, POWER_TIME_UNLIMITED)
+
 SENSORS_NO_ARG = (
+    "battery_left",
+    "battery",
     "last_boot",
     "load_",
     "memory_",
@@ -66,6 +72,7 @@ SENSORS_NO_ARG = (
 )
 SENSORS_WITH_ARG = {
     "disk_": "disk_arguments",
+    "fan_rpm": "fan_rpm_arguments",
     "ipv": "network_arguments",
     "process_num_fds": "processes",
     **dict.fromkeys(NET_IO_TYPES, "network_arguments"),
@@ -496,6 +503,7 @@ async def async_setup_entry(
         return {
             "disk_arguments": get_all_disk_mounts(hass, psutil_wrapper),
             "network_arguments": get_all_network_interfaces(hass, psutil_wrapper),
+            "fan_rpm_arguments": list(sensor_data.fan_rpm),
         }
 
     cpu_temperature: float | None = None
