@@ -575,7 +575,9 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         except (AddonError, AbortFlow) as err:
             _LOGGER.error(err)
             self._failed_addon_name = otbr_manager.addon_name
-            self._failed_addon_reason = getattr(err, "reason", "addon_start_failed")
+            self._failed_addon_reason = (
+                err.reason if isinstance(err, AbortFlow) else "addon_start_failed"
+            )
             return self.async_show_progress_done(next_step_id="addon_operation_failed")
         finally:
             self.addon_start_task = None
