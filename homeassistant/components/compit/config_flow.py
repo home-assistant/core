@@ -59,21 +59,23 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                if not success:
+                    # Api returned unexpected result but no exception
+                    _LOGGER.error("Compit api returned unexpected result")
+                    errors["base"] = "unknown"
+                else:
+                    await self.async_set_unique_id(user_input[CONF_EMAIL])
 
-            if success:
-                await self.async_set_unique_id(user_input[CONF_EMAIL])
-
-                if self.source == SOURCE_REAUTH:
-                    self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
+                    if self.source == SOURCE_REAUTH:
+                        self._abort_if_unique_id_mismatch()
+                        return self.async_update_reload_and_abort(
+                            self._get_reauth_entry(), data_updates=user_input
+                        )
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=user_input[CONF_EMAIL], data=user_input
                     )
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=user_input[CONF_EMAIL], data=user_input
-                )
-
-            errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

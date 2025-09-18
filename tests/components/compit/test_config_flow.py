@@ -1,6 +1,6 @@
 """Test the Compit config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -11,209 +11,139 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import CONFIG_INPUT
+
 from tests.common import MockConfigEntry
 
-CONFIG_INPUT = {
-    CONF_EMAIL: "test@example.com",
-    CONF_PASSWORD: "password",
-}
 
+async def test_async_step_user_success(
+    hass: HomeAssistant, mock_compit_api: AsyncMock
+) -> None:
+    """Test user step with successful authentication."""
+    mock_compit_api.return_value = True
 
-@pytest.fixture
-def mock_reauth_entry():
-    """Return a mock config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG_INPUT,
-        unique_id=CONFIG_INPUT[CONF_EMAIL],
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT
     )
 
-
-async def test_async_step_user_success(hass: HomeAssistant) -> None:
-    """Test user step with successful authentication."""
-    with (
-        patch(
-            "homeassistant.components.compit.config_flow.CompitApiConnector.init",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == config_entries.SOURCE_USER
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG_INPUT
-        )
-
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == CONFIG_INPUT[CONF_EMAIL]
-        assert result["data"] == CONFIG_INPUT
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == CONFIG_INPUT[CONF_EMAIL]
+    assert result["data"] == CONFIG_INPUT
 
 
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
-        (InvalidAuth, "invalid_auth"),
-        (CannotConnect, "cannot_connect"),
-        (Exception, "unknown"),
+        (InvalidAuth(), "invalid_auth"),
+        (CannotConnect(), "cannot_connect"),
+        (Exception(), "unknown"),
+        (False, "unknown"),
     ],
 )
 async def test_async_step_user_failed_auth(
     hass: HomeAssistant,
     exception: Exception,
     expected_error: str,
+    mock_compit_api: AsyncMock,
 ) -> None:
-    """Test user step with invalid authentication."""
-    with (
-        patch(
-            "homeassistant.components.compit.config_flow.CompitApiConnector.init",
-            side_effect=exception,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == config_entries.SOURCE_USER
+    """Test user step with invalid authentication then success after error is cleared."""
+    mock_compit_api.side_effect = [exception, True]
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG_INPUT
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": expected_error}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    # Test success after error is cleared
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == CONFIG_INPUT[CONF_EMAIL]
+    assert result["data"] == CONFIG_INPUT
 
 
 async def test_async_step_reauth_success(
-    hass: HomeAssistant, mock_reauth_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_compit_api: AsyncMock
 ) -> None:
     """Test reauth step with successful authentication."""
-    with (
-        patch(
-            "homeassistant.components.compit.config_flow.CompitApiConnector.init",
-            return_value=True,
-        ),
-    ):
-        mock_reauth_entry.add_to_hass(hass)
+    mock_compit_api.return_value = True
 
-        result = await mock_reauth_entry.start_reauth_flow(hass)
+    mock_config_entry.add_to_hass(hass)
 
-        assert result["step_id"] == "reauth_confirm"
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {}
+    result = await mock_config_entry.start_reauth_flow(hass)
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PASSWORD: "new-password"}
-        )
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
-        assert mock_reauth_entry.data == {
-            CONF_EMAIL: CONFIG_INPUT[CONF_EMAIL],
-            CONF_PASSWORD: "new-password",
-        }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_EMAIL: CONFIG_INPUT[CONF_EMAIL],
+        CONF_PASSWORD: "new-password",
+    }
 
 
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
-        (InvalidAuth, "invalid_auth"),
-        (CannotConnect, "cannot_connect"),
-        (Exception, "unknown"),
+        (InvalidAuth(), "invalid_auth"),
+        (CannotConnect(), "cannot_connect"),
+        (Exception(), "unknown"),
     ],
 )
 async def test_async_step_reauth_confirm_failed_auth(
     hass: HomeAssistant,
-    mock_reauth_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     exception: Exception,
     expected_error: str,
+    mock_compit_api: AsyncMock,
 ) -> None:
-    """Test reauth confirm step with invalid authentication."""
-    with (
-        patch(
-            "homeassistant.components.compit.config_flow.CompitApiConnector.init",
-            side_effect=exception,
-        ),
-    ):
-        mock_reauth_entry.add_to_hass(hass)
+    """Test reauth confirm step with invalid authentication then success after error is cleared."""
+    mock_compit_api.side_effect = [exception, True]
 
-        result = await mock_reauth_entry.start_reauth_flow(hass)
+    mock_config_entry.add_to_hass(hass)
 
-        assert result["step_id"] == "reauth_confirm"
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {}
+    result = await mock_config_entry.start_reauth_flow(hass)
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PASSWORD: "new-password"}
-        )
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": expected_error}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
 
-async def test_async_step_user_success_after_error(hass: HomeAssistant) -> None:
-    """Test user step succeeds after an error is cleared."""
-    with patch(
-        "homeassistant.components.compit.config_flow.CompitApiConnector.init",
-        side_effect=[
-            CannotConnect,
-            True,
-        ],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == config_entries.SOURCE_USER
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG_INPUT
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG_INPUT
-        )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == CONFIG_INPUT[CONF_EMAIL]
-        assert result["data"] == CONFIG_INPUT
-
-
-async def test_async_step_reauth_confirm_success_after_error(
-    hass: HomeAssistant, mock_reauth_entry: MockConfigEntry
-) -> None:
-    """Test reauth confirm step succeeds after an error is cleared."""
-    with patch(
-        "homeassistant.components.compit.config_flow.CompitApiConnector.init",
-        side_effect=[
-            InvalidAuth,
-            True,
-        ],
-    ):
-        mock_reauth_entry.add_to_hass(hass)
-
-        result = await mock_reauth_entry.start_reauth_flow(hass)
-        assert result["step_id"] == "reauth_confirm"
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {}
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "invalid_auth"}
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_EMAIL: CONFIG_INPUT[CONF_EMAIL], CONF_PASSWORD: "correct-password"},
-        )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
-        assert mock_reauth_entry.data == {
-            CONF_EMAIL: CONFIG_INPUT[CONF_EMAIL],
-            CONF_PASSWORD: "correct-password",
-        }
+    # Test success after error is cleared
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: CONFIG_INPUT[CONF_EMAIL], CONF_PASSWORD: "correct-password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_EMAIL: CONFIG_INPUT[CONF_EMAIL],
+        CONF_PASSWORD: "correct-password",
+    }

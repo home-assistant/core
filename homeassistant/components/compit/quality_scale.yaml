@@ -6,7 +6,10 @@ rules:
       This integration does not provide additional actions.
   appropriate-polling: done
   brands: done
-  common-modules: done
+  common-modules:
+    status: exempt
+    comment: |
+      This integration does not use any common modules.
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done

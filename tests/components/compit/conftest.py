@@ -5,6 +5,26 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.compit.const import DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+
+from tests.common import MockConfigEntry
+
+CONFIG_INPUT = {
+    CONF_EMAIL: "test@example.com",
+    CONF_PASSWORD: "password",
+}
+
+
+@pytest.fixture
+def mock_config_entry():
+    """Return a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_INPUT,
+        unique_id=CONFIG_INPUT[CONF_EMAIL],
+    )
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -13,3 +33,12 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.compit.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_compit_api() -> Generator[AsyncMock]:
+    """Mock CompitApiConnector."""
+    with patch(
+        "homeassistant.components.compit.config_flow.CompitApiConnector.init",
+    ) as mock_api:
+        yield mock_api
