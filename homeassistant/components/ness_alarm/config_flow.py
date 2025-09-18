@@ -12,6 +12,7 @@ from nessclient import Client
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -189,6 +190,19 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Store panel model
             data["panel_model"] = info["model"]
+
+            persistent_notification.async_create(
+                self.hass,
+                f"The Ness Alarm integration has been successfully imported from your YAML configuration.\n\n"
+                f"**Connection Details:**\n"
+                f"- Host: {data[CONF_HOST]}\n"
+                f"- Port: {data[CONF_PORT]}\n\n"
+                f"You can now safely remove the `ness_alarm:` section from your configuration.yaml file.\n\n"
+                f"The integration is now managed through the UI at:\n"
+                f"Settings → Devices & Services → Ness Alarm",
+                "Ness Alarm: YAML Configuration Imported",
+                f"{DOMAIN}_yaml_import",
+            )
 
             return self.async_create_entry(
                 title=info["title"],

@@ -7,6 +7,7 @@ import logging
 from nessclient import ArmingMode, ArmingState, Client
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -84,14 +85,52 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ness Alarm component from YAML configuration."""
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[DOMAIN],
+    if DOMAIN not in config:
+        return True
+
+    yaml_config = config[DOMAIN]
+
+    # Check if already configured via UI
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data.get(CONF_HOST) == yaml_config[CONF_HOST] and entry.data.get(
+            CONF_PORT, DEFAULT_PORT
+        ) == yaml_config.get(CONF_PORT, DEFAULT_PORT):
+            _LOGGER.warning(
+                "Ness Alarm YAML configuration found but already configured via UI for %s:%s. "
+                "Please remove the ness_alarm section from configuration.yaml",
+                yaml_config[CONF_HOST],
+                yaml_config.get(CONF_PORT, DEFAULT_PORT),
             )
+
+            persistent_notification.async_create(
+                hass,
+                f"**Duplicate Configuration Detected**\n\n"
+                f"Ness Alarm is already configured through the UI for:\n"
+                f"- Host: `{yaml_config[CONF_HOST]}`\n"
+                f"- Port: `{yaml_config.get(CONF_PORT, DEFAULT_PORT)}`\n\n"
+                f"The YAML configuration in `configuration.yaml` is being ignored.\n\n"
+                f"**Please remove the following from your configuration.yaml:**\n"
+                f"```yaml\n"
+                f"ness_alarm:\n"
+                f"  host: {yaml_config[CONF_HOST]}\n"
+                f"  port: {yaml_config.get(CONF_PORT, DEFAULT_PORT)}\n"
+                f"  # ... any other ness_alarm config\n"
+                f"```\n\n"
+                f"After removing it, restart Home Assistant to clear this warning.",
+                "Ness Alarm: Remove YAML Configuration",
+                f"{DOMAIN}_yaml_duplicate_warning",
+            )
+
+            return True
+
+    # If not configured, import it
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=yaml_config,
         )
+    )
     return True
 
 
