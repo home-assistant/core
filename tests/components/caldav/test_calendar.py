@@ -1218,6 +1218,23 @@ async def test_config_entry_supported_components(
                 "dtend": datetime.date(2025, 8, 9),
             },
         ),
+        # Event with different timezone
+        (
+            {
+                "summary": "Different TZ",
+                "start_date_time": "2025-08-07T09:00:00+02:00",
+                "end_date_time": "2025-08-07T10:00:00+02:00",
+            },
+            {
+                "summary": "Different TZ",
+                "dtstart": datetime.datetime(
+                    2025, 8, 7, 7, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+                "dtend": datetime.datetime(
+                    2025, 8, 7, 8, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+            },
+        ),
         # Rrule is not supported in API (async_call) calls.
     ],
 )
