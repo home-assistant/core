@@ -1260,12 +1260,4 @@ async def test_add_vevent(
 
     calendars[0].add_event.assert_called_once()
     assert calendars[0].add_event.call_args
-    resulting_ics = calendars[0].add_event.call_args[1]
-
-    missing_fields = [
-        field for field in expected_ics_fields if field not in resulting_ics
-    ]
-    assert not missing_fields, f"Missing fields: {missing_fields}"
-
-    for field, expected_value in expected_ics_fields.items():
-        assert resulting_ics[field] == expected_value, f"Field {field} value mismatch"
+    assert calendars[0].add_event.call_args[1] == expected_ics_fields
