@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.olarm.binary_sensor import (
+    OlarmBinarySensor,
     load_ac_power_sensor,
     load_zone_sensors,
 )
@@ -60,7 +61,7 @@ async def test_zone_sensors(hass: HomeAssistant, setup_integration) -> None:
     # Zone 1: closed (should be OFF)
     # Zone 2: bypassed (should be OFF for zone sensor)
 
-    sensors = []
+    sensors: list[OlarmBinarySensor] = []
     load_zone_sensors(mock_coordinator, config_entry, sensors)
 
     # Should create 6 sensors (3 zones + 3 bypass)
@@ -87,7 +88,7 @@ async def test_ac_power_sensor(hass: HomeAssistant, setup_integration) -> None:
     """Test AC power sensor creation and state."""
     config_entry, mock_coordinator = setup_integration
 
-    sensors = []
+    sensors: list[OlarmBinarySensor] = []
     load_ac_power_sensor(mock_coordinator, config_entry, sensors)
 
     # Should create 1 AC power sensor

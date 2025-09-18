@@ -125,6 +125,7 @@ async def test_coordinator_properties(coordinator, mock_olarm_client) -> None:
     coordinator.async_set_updated_data(data)
 
     # Test data access
+    assert coordinator.data is not None
     assert coordinator.data.device_name == "Test Device"
     assert coordinator.data.device_state == {
         "zones": ["a", "c", "b"],

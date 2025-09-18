@@ -1,6 +1,6 @@
 """Test the Olarm integration init."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError, ClientResponseError
 
@@ -65,7 +65,7 @@ async def test_setup_entry_success(hass: HomeAssistant) -> None:
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entry.state is ConfigEntryState.NOT_LOADED
+        assert config_entry.state is ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
         mock_stop_mqtt.assert_called_once()
 
 
@@ -96,7 +96,9 @@ async def test_setup_entry_auth_failed(hass: HomeAssistant) -> None:
     ):
         mock_session_instance = AsyncMock()
         mock_session_instance.async_ensure_token_valid.side_effect = (
-            ClientResponseError(None, None, status=401, message="Unauthorized")
+            ClientResponseError(
+                request_info=Mock(), history=Mock(), status=401, message="Unauthorized"
+            )
         )
         mock_session.return_value = mock_session_instance
 
