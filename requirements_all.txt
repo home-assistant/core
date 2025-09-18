@@ -1637,7 +1637,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.15.4
+opower==0.15.5
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2685,7 +2685,7 @@ renault-api==0.4.0
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.15.0
+reolink-aio==0.15.1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1

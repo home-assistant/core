@@ -1396,7 +1396,7 @@ openhomedevice==2.2.0
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.15.4
+opower==0.15.5
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2234,7 +2234,7 @@ renault-api==0.4.0
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.15.0
+reolink-aio==0.15.1
 
 # homeassistant.components.rflink
 rflink==0.0.67
