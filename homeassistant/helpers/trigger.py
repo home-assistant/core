@@ -182,7 +182,7 @@ class Trigger(abc.ABC):
     class Config:
         """Trigger config."""
 
-        key: str  # The key used to identify the trigger type, e.g. "zwave.event"
+        key: str  # The key used to identify the trigger, e.g. "zwave.event"
         target: dict[str, Any] | None = None
         options: dict[str, Any] | None = None
 
