@@ -178,6 +178,14 @@ _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 class Trigger(abc.ABC):
     """Trigger class."""
 
+    @dataclass(slots=True, frozen=True)
+    class Config:
+        """Trigger config."""
+
+        key: str  # The key used to identify the trigger type, e.g. "zwave.event"
+        target: dict[str, Any] | None = None
+        options: dict[str, Any] | None = None
+
     @classmethod
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
@@ -210,7 +218,7 @@ class Trigger(abc.ABC):
     ) -> ConfigType:
         """Validate config."""
 
-    def __init__(self, hass: HomeAssistant, complete_config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, config: Config) -> None:
         """Initialize trigger."""
 
     @abc.abstractmethod
@@ -552,7 +560,15 @@ async def async_initialize_triggers(
             relative_trigger_key = get_relative_description_key(
                 platform_domain, trigger_key
             )
-            trigger = trigger_descriptors[relative_trigger_key](hass, conf)
+            trigger_cls = trigger_descriptors[relative_trigger_key]
+            trigger = trigger_cls(
+                hass,
+                Trigger.Config(
+                    key=trigger_key,
+                    target=conf.get(CONF_TARGET),
+                    options=conf.get(CONF_OPTIONS),
+                ),
+            )
             coro = trigger.async_attach(action_wrapper, info)
         else:
             coro = platform.async_attach_trigger(hass, conf, action_wrapper, info)

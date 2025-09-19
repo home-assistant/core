@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
@@ -222,7 +223,7 @@ class ValueUpdatedTrigger(Trigger):
     """Z-Wave JS value updated trigger."""
 
     _hass: HomeAssistant
-    _options: ConfigType
+    _options: dict[str, Any]
 
     @classmethod
     async def async_validate_complete_config(
@@ -241,10 +242,11 @@ class ValueUpdatedTrigger(Trigger):
         """Validate config."""
         return await async_validate_trigger_config(hass, config)
 
-    def __init__(self, hass: HomeAssistant, complete_config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, config: Trigger.Config) -> None:
         """Initialize trigger."""
         self._hass = hass
-        self._options = complete_config[CONF_OPTIONS]
+        assert config.options is not None
+        self._options = config.options
 
     async def async_attach(
         self,
