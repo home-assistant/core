@@ -342,3 +342,40 @@ async def test_rpc_remove_virtual_button_when_orphaned(
 
     entry = entity_registry.async_get(entity_id)
     assert not entry
+
+
+async def test_wall_display_virtual_button(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a Wall Display virtual button.
+
+    Wall display does not have "meta" key in the config and defaults to "button" view.
+    """
+    config = deepcopy(mock_rpc_device.config)
+    config["button:200"] = {"name": "Button"}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["button:200"] = {"value": None}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+    entity_id = "button.test_name_button"
+
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot(name=f"{entity_id}-state")
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.button_trigger.assert_called_once_with(200, "single_push")
