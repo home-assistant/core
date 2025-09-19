@@ -180,7 +180,28 @@ async def test_start_charging_action_errors(
             blocking=True,
         )
 
+    # Test when the device is not connected to a valid blue_current config entry.
     get_entry_mock = MagicMock()
+    get_entry_mock.state = ConfigEntryState.LOADED
+
+    with (
+        patch.object(
+            hass.config_entries, "async_get_entry", return_value=get_entry_mock
+        ),
+        pytest.raises(ServiceValidationError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_START_CHARGE_SESSION,
+            {
+                CONF_DEVICE_ID: list(device_registry.devices)[0],
+            },
+            blocking=True,
+        )
+
+    # Test when the blue_current config entry is not loaded.
+    get_entry_mock = MagicMock()
+    get_entry_mock.domain = DOMAIN
     get_entry_mock.state = ConfigEntryState.NOT_LOADED
 
     with (

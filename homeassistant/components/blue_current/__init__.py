@@ -105,16 +105,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_domain=DOMAIN, translation_key="invalid_device_id"
             )
 
-        config_entry = hass.config_entries.async_get_entry(
-            list(device.config_entries)[0]
-        )
+        blue_current_config_entry: ConfigEntry | None = None
 
-        if config_entry is None or config_entry.state is not ConfigEntryState.LOADED:
+        for config_entry_id in device.config_entries:
+            config_entry = hass.config_entries.async_get_entry(config_entry_id)
+            if not config_entry or config_entry.domain != DOMAIN:
+                # Not the blue_current config entry.
+                continue
+
+            if config_entry.state is not ConfigEntryState.LOADED:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="config_entry_not_loaded"
+                )
+
+            blue_current_config_entry = config_entry
+            break
+
+        if not blue_current_config_entry:
+            # The device is not connected to a valid blue_current config entry.
             raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="config_entry_not_loaded"
+                translation_domain=DOMAIN, translation_key="no_config_entry"
             )
 
-        connector = config_entry.runtime_data
+        connector = blue_current_config_entry.runtime_data
 
         # Get the evse_id from the identifier of the device.
         evse_id = next(
