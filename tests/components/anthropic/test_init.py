@@ -156,6 +156,8 @@ async def test_migration_from_v1_to_v2(
 @pytest.mark.parametrize(
     (
         "config_entry_disabled_by",
+        "device_disabled_by",
+        "entity_disabled_by",
         "merged_config_entry_disabled_by",
         "conversation_subentry_data",
         "main_config_entry",
@@ -163,6 +165,8 @@ async def test_migration_from_v1_to_v2(
     [
         (
             [ConfigEntryDisabler.USER, None],
+            [DeviceEntryDisabler.CONFIG_ENTRY, None],
+            [RegistryEntryDisabler.CONFIG_ENTRY, None],
             None,
             [
                 {
@@ -182,18 +186,20 @@ async def test_migration_from_v1_to_v2(
         ),
         (
             [None, ConfigEntryDisabler.USER],
+            [None, DeviceEntryDisabler.CONFIG_ENTRY],
+            [None, RegistryEntryDisabler.CONFIG_ENTRY],
             None,
             [
                 {
                     "conversation_entity_id": "conversation.claude",
-                    "device_disabled_by": DeviceEntryDisabler.USER,
-                    "entity_disabled_by": RegistryEntryDisabler.DEVICE,
+                    "device_disabled_by": None,
+                    "entity_disabled_by": None,
                     "device": 0,
                 },
                 {
                     "conversation_entity_id": "conversation.claude_2",
-                    "device_disabled_by": None,
-                    "entity_disabled_by": None,
+                    "device_disabled_by": DeviceEntryDisabler.USER,
+                    "entity_disabled_by": RegistryEntryDisabler.DEVICE,
                     "device": 1,
                 },
             ],
@@ -201,6 +207,8 @@ async def test_migration_from_v1_to_v2(
         ),
         (
             [ConfigEntryDisabler.USER, ConfigEntryDisabler.USER],
+            [DeviceEntryDisabler.CONFIG_ENTRY, DeviceEntryDisabler.CONFIG_ENTRY],
+            [RegistryEntryDisabler.CONFIG_ENTRY, RegistryEntryDisabler.CONFIG_ENTRY],
             ConfigEntryDisabler.USER,
             [
                 {
@@ -211,8 +219,8 @@ async def test_migration_from_v1_to_v2(
                 },
                 {
                     "conversation_entity_id": "conversation.claude_2",
-                    "device_disabled_by": None,
-                    "entity_disabled_by": None,
+                    "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
+                    "entity_disabled_by": RegistryEntryDisabler.CONFIG_ENTRY,
                     "device": 1,
                 },
             ],
@@ -225,6 +233,8 @@ async def test_migration_from_v1_disabled(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_disabled_by: list[ConfigEntryDisabler | None],
+    device_disabled_by: list[DeviceEntryDisabler | None],
+    entity_disabled_by: list[RegistryEntryDisabler | None],
     merged_config_entry_disabled_by: ConfigEntryDisabler | None,
     conversation_subentry_data: list[dict[str, Any]],
     main_config_entry: int,
@@ -264,7 +274,7 @@ async def test_migration_from_v1_disabled(
         manufacturer="Anthropic",
         model="Claude",
         entry_type=dr.DeviceEntryType.SERVICE,
-        disabled_by=DeviceEntryDisabler.CONFIG_ENTRY,
+        disabled_by=device_disabled_by[0],
     )
     entity_registry.async_get_or_create(
         "conversation",
@@ -273,7 +283,7 @@ async def test_migration_from_v1_disabled(
         config_entry=mock_config_entry,
         device_id=device_1.id,
         suggested_object_id="claude",
-        disabled_by=RegistryEntryDisabler.CONFIG_ENTRY,
+        disabled_by=entity_disabled_by[0],
     )
 
     device_2 = device_registry.async_get_or_create(
@@ -283,6 +293,7 @@ async def test_migration_from_v1_disabled(
         manufacturer="Anthropic",
         model="Claude",
         entry_type=dr.DeviceEntryType.SERVICE,
+        disabled_by=device_disabled_by[1],
     )
     entity_registry.async_get_or_create(
         "conversation",
@@ -291,6 +302,7 @@ async def test_migration_from_v1_disabled(
         config_entry=mock_config_entry_2,
         device_id=device_2.id,
         suggested_object_id="claude",
+        disabled_by=entity_disabled_by[1],
     )
 
     devices = [device_1, device_2]

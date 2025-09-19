@@ -47,18 +47,20 @@ from homeassistant.components.sonos.const import (
     SOURCE_TV,
 )
 from homeassistant.components.sonos.media_player import (
+    LONG_SERVICE_TIMEOUT,
+    VOLUME_INCREMENT,
+)
+from homeassistant.components.sonos.services import (
     ATTR_ALARM_ID,
     ATTR_ENABLED,
     ATTR_INCLUDE_LINKED_ZONES,
     ATTR_MEDIA_ARTIST,
     ATTR_QUEUE_POSITION,
     ATTR_VOLUME,
-    LONG_SERVICE_TIMEOUT,
     SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
     SERVICE_UPDATE_ALARM,
-    VOLUME_INCREMENT,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -1125,11 +1127,11 @@ async def test_volume(
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: "media_player.zone_a", ATTR_MEDIA_VOLUME_LEVEL: 0.30},
+        {ATTR_ENTITY_ID: "media_player.zone_a", ATTR_MEDIA_VOLUME_LEVEL: 0.57},
         blocking=True,
     )
     # SoCo uses 0..100 for its range.
-    assert soco.volume == 30
+    assert soco.volume == 57
 
 
 @pytest.mark.parametrize(

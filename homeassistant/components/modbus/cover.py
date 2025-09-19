@@ -23,7 +23,7 @@ from .const import (
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
 )
-from .entity import BasePlatform
+from .entity import ModbusBaseEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -42,7 +42,7 @@ async def async_setup_platform(
     async_add_entities(ModbusCover(hass, hub, config) for config in covers)
 
 
-class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
+class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
     """Representation of a Modbus cover."""
 
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
@@ -111,7 +111,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._slave, self._write_address, self._state_open, self._write_type
         )
         self._attr_available = result is not None
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -119,7 +119,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._slave, self._write_address, self._state_closed, self._write_type
         )
         self._attr_available = result is not None
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def _async_update(self) -> None:
         """Update the state of the cover."""
