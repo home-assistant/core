@@ -31,13 +31,13 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
-from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import (
-    CONNECTION_BLUETOOTH,
-    CONNECTION_NETWORK_MAC,
-    format_mac,
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    issue_registry as ir,
 )
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .bluetooth import async_connect_scanner
@@ -94,7 +94,7 @@ class ShellyEntryData:
     rpc_poll: ShellyRpcPollingCoordinator | None = None
     rpc_script_events: dict[int, list[str]] | None = None
     rpc_supports_scripts: bool | None = None
-    rpc_zigbee_enabled: bool | None = None
+    rpc_zigbee_firmware: bool | None = None
 
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
@@ -118,6 +118,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         self.device = device
         self.device_id: str | None = None
         self._pending_platforms: list[Platform] | None = None
+        self.suggested_area: str | None = None
         device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
         # The device has come online at least once. In the case of a sleeping RPC
@@ -145,9 +146,19 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         )
 
     @cached_property
+    def configuration_url(self) -> str:
+        """Return the configuration URL for the device."""
+        return f"http://{get_host(self.config_entry.data[CONF_HOST])}:{get_http_port(self.config_entry.data)}"
+
+    @cached_property
     def model(self) -> str:
         """Model of the device."""
         return cast(str, self.config_entry.data[CONF_MODEL])
+
+    @cached_property
+    def model_name(self) -> str | None:
+        """Model name of the device."""
+        return get_shelly_model_name(self.model, self.sleep_period, self.device)
 
     @cached_property
     def mac(self) -> str:
@@ -162,12 +173,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     @property
     def sleep_period(self) -> int:
         """Sleep period of the device."""
-        return self.config_entry.data.get(CONF_SLEEP_PERIOD, 0)
-
-    @property
-    def connections(self) -> set[tuple[str, str]]:
-        """Connections of the device."""
-        return {(CONNECTION_NETWORK_MAC, self.mac)}
+        return self.config_entry.data.get(CONF_SLEEP_PERIOD, 0)  # type: ignore[no-any-return]
 
     def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:
         """Set up the coordinator."""
@@ -176,15 +182,20 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             name=self.name,
-            connections=self.connections,
+            connections={(CONNECTION_NETWORK_MAC, self.mac)},
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
-            model=get_shelly_model_name(self.model, self.sleep_period, self.device),
+            model=self.model_name,
             model_id=self.model,
             sw_version=self.sw_version,
             hw_version=f"gen{get_device_entry_gen(self.config_entry)}",
-            configuration_url=f"http://{get_host(self.config_entry.data[CONF_HOST])}:{get_http_port(self.config_entry.data)}",
+            configuration_url=self.configuration_url,
         )
+        # We want to use the main device area as the suggested area for sub-devices.
+        if (area_id := device_entry.area_id) is not None:
+            area_registry = ar.async_get(self.hass)
+            if (area := area_registry.async_get_area(area_id)) is not None:
+                self.suggested_area = area.name
         self.device_id = device_entry.id
 
     async def shutdown(self) -> None:
@@ -532,14 +543,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """
         return format_mac(bluetooth_mac_from_primary_mac(self.mac)).upper()
 
-    @property
-    def connections(self) -> set[tuple[str, str]]:
-        """Connections of the device."""
-        connections = super().connections
-        if not self.sleep_period:
-            connections.add((CONNECTION_BLUETOOTH, self.bluetooth_source))
-        return connections
-
     async def async_device_online(self, source: str) -> None:
         """Handle device going online."""
         if not self.sleep_period:
@@ -628,6 +631,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device events."""
         events: list[dict[str, Any]] = event_data["events"]
         for event in events:
+            # filter out button events as they are triggered by button entities
+            component = event.get("component")
+            if component is not None and component.startswith("button"):
+                continue
+
             event_type = event.get("event")
             if event_type is None:
                 continue
@@ -737,7 +745,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if not self.sleep_period:
             if (
                 self.config_entry.runtime_data.rpc_supports_scripts
-                and not self.config_entry.runtime_data.rpc_zigbee_enabled
+                and not self.config_entry.runtime_data.rpc_zigbee_firmware
             ):
                 await self._async_connect_ble_scanner()
         else:
@@ -841,6 +849,15 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 await super().shutdown()
             except InvalidAuthError:
                 self.config_entry.async_start_reauth(self.hass)
+                return
+            except RpcCallError as err:
+                # Ignore 404 (No handler for) error
+                if err.code != 404:
+                    LOGGER.debug(
+                        "Error during shutdown for device %s: %s",
+                        self.name,
+                        err.message,
+                    )
                 return
             except DeviceConnectionError as err:
                 # If the device is restarting or has gone offline before

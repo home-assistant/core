@@ -15,7 +15,6 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -25,17 +24,17 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DEFAULT_EFFECT_SPEED, DOMAIN
-from .models import LEDBLEData
+from .const import DEFAULT_EFFECT_SPEED
+from .models import LEDBLEConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LEDBLEConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the light platform for LEDBLE."""
-    data: LEDBLEData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities([LEDBLEEntity(data.coordinator, data.device, entry.title)])
 
 

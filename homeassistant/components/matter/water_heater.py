@@ -108,6 +108,11 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
             await self.send_device_command(
                 clusters.WaterHeaterManagement.Commands.Boost(boostInfo=boost_info)
             )
+        # Trigger CancelBoost command for other modes
+        else:
+            await self.send_device_command(
+                clusters.WaterHeaterManagement.Commands.CancelBoost()
+            )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on water heater."""

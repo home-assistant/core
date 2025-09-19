@@ -13,6 +13,7 @@ from aiohttp import ClientResponseError
 from pysmartthings import (
     Attribute,
     Capability,
+    Category,
     ComponentStatus,
     Device,
     DeviceEvent,
@@ -32,6 +33,7 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
     ATTR_VIA_DEVICE,
     CONF_ACCESS_TOKEN,
@@ -101,6 +103,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
+    Platform.VACUUM,
     Platform.VALVE,
     Platform.WATER_HEATER,
 ]
@@ -194,6 +197,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         }
         devices = await client.get_devices()
         for device in devices:
+            if (
+                (main_component := device.components.get(MAIN)) is not None
+                and main_component.manufacturer_category is Category.BLUETOOTH_TRACKER
+            ):
+                device_status[device.device_id] = FullDevice(
+                    device=device,
+                    status={},
+                    online=True,
+                )
+                continue
             status = process_status(await client.get_device_status(device.device_id))
             online = await client.get_device_health(device.device_id)
             device_status[device.device_id] = FullDevice(
@@ -277,7 +290,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             for identifier in device_entry.identifiers
             if identifier[0] == DOMAIN
         )
-        if device_id in device_status:
+        if any(
+            device_id.startswith(device_identifier)
+            for device_identifier in device_status
+        ):
             continue
         device_registry.async_update_device(
             device_entry.id, remove_config_entry_id=entry.entry_id
@@ -454,14 +470,24 @@ def create_devices(
                     ATTR_SW_VERSION: viper.software_version,
                 }
             )
+        if (
+            device_registry.async_get_device({(DOMAIN, device.device.device_id)})
+            is None
+        ):
+            kwargs.update(
+                {
+                    ATTR_SUGGESTED_AREA: (
+                        rooms.get(device.device.room_id)
+                        if device.device.room_id
+                        else None
+                    )
+                }
+            )
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.device.device_id)},
             configuration_url="https://account.smartthings.com",
             name=device.device.label,
-            suggested_area=(
-                rooms.get(device.device.room_id) if device.device.room_id else None
-            ),
             **kwargs,
         )
 
@@ -476,6 +502,9 @@ KEEP_CAPABILITY_QUIRK: dict[
         lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
     ),
     Capability.DEMAND_RESPONSE_LOAD_CONTROL: lambda _: True,
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: (
+        lambda status: status[Attribute.LIGHTING].value is not None
+    ),
 }
 
 

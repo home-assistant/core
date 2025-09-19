@@ -1,0 +1,203 @@
+# serializer version: 1
+# name: test_entities[media_player.tx_nr7100-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'sound_mode_list': list([
+        'Stereo',
+        'THX',
+      ]),
+      'source_list': list([
+        'TV',
+        'FM Radio',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.tx_nr7100',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 69516>,
+    'translation_key': None,
+    'unique_id': '0009B0123456_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[media_player.tx_nr7100-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'audio_information': dict({
+        'auto_phase_control_phase': 'Normal',
+      }),
+      'friendly_name': 'TX-NR7100',
+      'is_volume_muted': False,
+      'preset': 1,
+      'sound_mode': 'DIRECT',
+      'sound_mode_list': list([
+        'Stereo',
+        'THX',
+      ]),
+      'source': 'FM Radio',
+      'source_list': list([
+        'TV',
+        'FM Radio',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 69516>,
+      'video_information': dict({
+        'input_color_depth': '24bit',
+      }),
+      'video_out': 'yes,out',
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.tx_nr7100',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[media_player.tx_nr7100_zone_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'sound_mode_list': list([
+        'Stereo',
+      ]),
+      'source_list': list([
+        'TV',
+        'FM Radio',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.tx_nr7100_zone_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Zone 2',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 69516>,
+    'translation_key': None,
+    'unique_id': '0009B0123456_zone2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[media_player.tx_nr7100_zone_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Zone 2',
+      'sound_mode': 'Stereo',
+      'sound_mode_list': list([
+        'Stereo',
+      ]),
+      'source': 'VIDEO1 ··· VCR/DVR ··· STB/DVR',
+      'source_list': list([
+        'TV',
+        'FM Radio',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 69516>,
+      'volume_level': 0.625,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.tx_nr7100_zone_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[media_player.tx_nr7100_zone_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'TV',
+        'FM Radio',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.tx_nr7100_zone_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX-NR7100 Zone 3',
+    'platform': 'onkyo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 2944>,
+    'translation_key': None,
+    'unique_id': '0009B0123456_zone3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[media_player.tx_nr7100_zone_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TX-NR7100 Zone 3',
+      'source_list': list([
+        'TV',
+        'FM Radio',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 2944>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.tx_nr7100_zone_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

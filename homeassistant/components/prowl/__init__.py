@@ -2,6 +2,8 @@
 
 import logging
 
+import prowlpy
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
@@ -34,6 +36,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
     except TimeoutError as ex:
         raise ConfigEntryNotReady("API call to Prowl failed") from ex
+    except prowlpy.APIError as ex:
+        if str(ex).startswith("Not accepted: exceeded rate limit"):
+            raise ConfigEntryNotReady(
+                "Prowl API rate limit exceeded, try again later"
+            ) from ex
+        if str(ex).startswith(
+            "Not approved: The user has yet to approve your retrieve request"
+        ):
+            raise ConfigEntryNotReady(
+                "Prowl user has yet to approve your retrieve request"
+            ) from ex
+        raise ConfigEntryAuthFailed("Failed to validate Prowl API key ({ex})") from ex
 
     entry.runtime_data = prowl
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.NOTIFY])

@@ -48,6 +48,9 @@ class SmartThingsSwitchEntityDescription(SwitchEntityDescription):
 
     status_attribute: Attribute
     component_translation_key: dict[str, str] | None = None
+    on_key: str = "on"
+    on_command: Command = Command.ON
+    off_command: Command = Command.OFF
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -65,13 +68,27 @@ SWITCH = SmartThingsSwitchEntityDescription(
 CAPABILITY_TO_COMMAND_SWITCHES: dict[
     Capability | str, SmartThingsCommandSwitchEntityDescription
 ] = {
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: SmartThingsCommandSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING,
+        translation_key="display_lighting",
+        status_attribute=Attribute.LIGHTING,
+        command=Command.SET_LIGHTING_LEVEL,
+        entity_category=EntityCategory.CONFIG,
+    ),
     Capability.CUSTOM_DRYER_WRINKLE_PREVENT: SmartThingsCommandSwitchEntityDescription(
         key=Capability.CUSTOM_DRYER_WRINKLE_PREVENT,
         translation_key="wrinkle_prevent",
         status_attribute=Attribute.DRYER_WRINKLE_PREVENT,
         command=Command.SET_DRYER_WRINKLE_PREVENT,
         entity_category=EntityCategory.CONFIG,
-    )
+    ),
+    Capability.SAMSUNG_CE_STEAM_CLOSET_AUTO_CYCLE_LINK: SmartThingsCommandSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_STEAM_CLOSET_AUTO_CYCLE_LINK,
+        translation_key="auto_cycle_link",
+        status_attribute=Attribute.STEAM_CLOSET_AUTO_CYCLE_LINK,
+        command=Command.SET_STEAM_CLOSET_AUTO_CYCLE_LINK,
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescription] = {
     Capability.SAMSUNG_CE_WASHER_BUBBLE_SOAK: SmartThingsSwitchEntityDescription(
@@ -85,12 +102,44 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         status_attribute=Attribute.SWITCH,
         component_translation_key={
             "icemaker": "ice_maker",
+            "icemaker-02": "ice_maker_2",
         },
     ),
     Capability.SAMSUNG_CE_SABBATH_MODE: SmartThingsSwitchEntityDescription(
         key=Capability.SAMSUNG_CE_SABBATH_MODE,
         translation_key="sabbath_mode",
         status_attribute=Attribute.STATUS,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_POWER_COOL: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_POWER_COOL,
+        translation_key="power_cool",
+        status_attribute=Attribute.ACTIVATED,
+        on_key="True",
+        on_command=Command.ACTIVATE,
+        off_command=Command.DEACTIVATE,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_POWER_FREEZE: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_POWER_FREEZE,
+        translation_key="power_freeze",
+        status_attribute=Attribute.ACTIVATED,
+        on_key="True",
+        on_command=Command.ACTIVATE,
+        off_command=Command.DEACTIVATE,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_STEAM_CLOSET_SANITIZE_MODE: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_STEAM_CLOSET_SANITIZE_MODE,
+        translation_key="sanitize",
+        status_attribute=Attribute.STATUS,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE,
+        translation_key="keep_fresh_mode",
+        status_attribute=Attribute.STATUS,
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 
@@ -152,14 +201,24 @@ async def async_setup_entry(
                 device.device.components[MAIN].manufacturer_category
                 in INVALID_SWITCH_CATEGORIES
             )
-            if media_player or appliance:
-                issue = "media_player" if media_player else "appliance"
+            dhw = Capability.SAMSUNG_CE_EHS_FSV_SETTINGS in device.status[MAIN]
+            if media_player or appliance or dhw:
+                if appliance:
+                    issue = "appliance"
+                    version = "2025.10.0"
+                elif media_player:
+                    issue = "media_player"
+                    version = "2025.10.0"
+                else:
+                    issue = "dhw"
+                    version = "2025.12.0"
                 if deprecate_entity(
                     hass,
                     entity_registry,
                     SWITCH_DOMAIN,
                     f"{device.device.device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
                     f"deprecated_switch_{issue}",
+                    version,
                 ):
                     entities.append(
                         SmartThingsSwitch(
@@ -210,14 +269,14 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         """Turn the switch off."""
         await self.execute_device_command(
             self.switch_capability,
-            Command.OFF,
+            self.entity_description.off_command,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.execute_device_command(
             self.switch_capability,
-            Command.ON,
+            self.entity_description.on_command,
         )
 
     @property
@@ -227,7 +286,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
             self.get_attribute_value(
                 self.switch_capability, self.entity_description.status_attribute
             )
-            == "on"
+            == self.entity_description.on_key
         )
 
 

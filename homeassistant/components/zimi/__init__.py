@@ -16,7 +16,13 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from .const import DOMAIN
 from .helpers import async_connect_to_controller
 
-PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, api.mac)},
         manufacturer=api.brand,
-        name=f"{api.network_name}",
+        name=api.network_name,
         model="Zimi Cloud Connect",
         sw_version=api.firmware_version,
         connections={(CONNECTION_NETWORK_MAC, api.mac)},

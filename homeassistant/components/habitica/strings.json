@@ -4,10 +4,11 @@
     "dailies": "Dailies",
     "config_entry_name": "Select character",
     "task_name": "Task name",
-    "unit_tasks": "tasks",
     "unit_health_points": "HP",
     "unit_mana_points": "MP",
     "unit_experience_points": "XP",
+    "unit_items": "items",
+    "unit_rage": "rage",
     "config_entry_description": "Select the Habitica account to update a task.",
     "task_description": "The name (or task ID) of the task you want to update.",
     "rename_name": "Rename",
@@ -64,7 +65,8 @@
     "repeat_weekly_options_name": "Weekly repeat days",
     "repeat_weekly_options_description": "Options related to weekly repetition, applicable when the repetition interval is set to weekly.",
     "repeat_monthly_options_name": "Monthly repeat day",
-    "repeat_monthly_options_description": "Options related to monthly repetition, applicable when the repetition interval is set to monthly."
+    "repeat_monthly_options_description": "Options related to monthly repetition, applicable when the repetition interval is set to monthly.",
+    "quest_name": "Quest"
   },
   "config": {
     "abort": {
@@ -174,6 +176,9 @@
     "binary_sensor": {
       "pending_quest": {
         "name": "Pending quest invitation"
+      },
+      "quest_running": {
+        "name": "Quest status"
       }
     },
     "button": {
@@ -252,6 +257,9 @@
     "image": {
       "avatar": {
         "name": "Avatar"
+      },
+      "quest_image": {
+        "name": "[%key:component::habitica::common::quest_name%]"
       }
     },
     "sensor": {
@@ -274,10 +282,6 @@
       },
       "health": {
         "name": "Health",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
-      },
-      "health_max": {
-        "name": "Max. health",
         "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
       },
       "mana": {
@@ -318,14 +322,6 @@
           "wizard": "Mage",
           "rogue": "Rogue"
         }
-      },
-      "habits": {
-        "name": "Habits",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
-      },
-      "rewards": {
-        "name": "Rewards",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "strength": {
         "name": "Strength",
@@ -426,6 +422,60 @@
       "quest_scrolls": {
         "name": "Quest scrolls",
         "unit_of_measurement": "scrolls"
+      },
+      "pending_damage": {
+        "name": "Pending damage",
+        "unit_of_measurement": "damage"
+      },
+      "pending_quest_items": {
+        "name": "Pending quest items",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_items%]"
+      },
+      "member_count": {
+        "name": "Member count",
+        "unit_of_measurement": "members"
+      },
+      "group_leader": {
+        "name": "Group leader"
+      },
+      "quest": {
+        "name": "[%key:component::habitica::common::quest_name%]",
+        "state_attributes": {
+          "quest_details": {
+            "name": "Quest details"
+          }
+        }
+      },
+      "boss": {
+        "name": "Quest boss"
+      },
+      "boss_hp": {
+        "name": "Boss health",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
+      },
+      "boss_hp_remaining": {
+        "name": "Boss health remaining",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
+      },
+      "collected_items": {
+        "name": "Collected quest items",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_items%]"
+      },
+      "boss_rage_limit": {
+        "name": "Boss rage limit break",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_rage%]",
+        "state_attributes": {
+          "rage_skill": {
+            "name": "Rage skill"
+          },
+          "effect": {
+            "name": "Effect"
+          }
+        }
+      },
+      "boss_rage": {
+        "name": "Boss rage",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_rage%]"
       }
     },
     "switch": {

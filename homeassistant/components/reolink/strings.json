@@ -31,7 +31,7 @@
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "not_admin": "User needs to be admin, user \"{username}\" has authorization level \"{userlevel}\"",
-      "password_incompatible": "Password contains incompatible special character or is too long, maximum 31 characters and only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}",
+      "password_incompatible": "Password contains incompatible special character or is too long, maximum 31 characters and only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}. The streaming protocols necessitate these additional password restrictions.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "update_needed": "Failed to log in because of outdated firmware, please update the firmware to version {needed_firmware} using the Reolink Download Center: {download_center_url}, currently version {current_firmware} is installed",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
@@ -50,7 +50,7 @@
           "protocol": "Protocol"
         },
         "data_description": {
-          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (h265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
+          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (H.265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
         }
       }
     }
@@ -504,14 +504,17 @@
       "ext_lens_1": {
         "name": "Balanced lens 1"
       },
-      "autotrack_sub": {
-        "name": "Autotrack fluent"
+      "telephoto_sub": {
+        "name": "Telephoto fluent"
       },
-      "autotrack_snapshots_sub": {
-        "name": "Autotrack snapshots fluent"
+      "telephoto_main": {
+        "name": "Telephoto clear"
       },
-      "autotrack_snapshots_main": {
-        "name": "Autotrack snapshots clear"
+      "telephoto_snapshots_sub": {
+        "name": "Telephoto snapshots fluent"
+      },
+      "telephoto_snapshots_main": {
+        "name": "Telephoto snapshots clear"
       }
     },
     "light": {
@@ -532,8 +535,17 @@
       "floodlight_brightness": {
         "name": "Floodlight turn on brightness"
       },
+      "ir_brightness": {
+        "name": "Infrared light brightness"
+      },
       "volume": {
         "name": "Volume"
+      },
+      "volume_speak": {
+        "name": "Speak volume"
+      },
+      "volume_doorbell": {
+        "name": "Doorbell volume"
       },
       "alarm_volume": {
         "name": "Alarm volume"
@@ -567,6 +579,9 @@
       },
       "ai_animal_sensitivity": {
         "name": "AI animal sensitivity"
+      },
+      "cry_sensitivity": {
+        "name": "Baby cry sensitivity"
       },
       "crossline_sensitivity": {
         "name": "AI crossline {zone_name} sensitivity"
@@ -645,6 +660,15 @@
       },
       "image_hue": {
         "name": "Image hue"
+      },
+      "pre_record_time": {
+        "name": "Pre-recording time"
+      },
+      "pre_record_battery_stop": {
+        "name": "Pre-recording stop battery level"
+      },
+      "silent_time": {
+        "name": "Silent time"
       }
     },
     "select": {
@@ -837,6 +861,12 @@
       "sub_bit_rate": {
         "name": "Fluent bit rate"
       },
+      "main_encoding": {
+        "name": "Clear encoding"
+      },
+      "sub_encoding": {
+        "name": "Fluent encoding"
+      },
       "scene_mode": {
         "name": "Scene mode",
         "state": {
@@ -848,6 +878,12 @@
       },
       "packing_time": {
         "name": "Recording packing time"
+      },
+      "pre_record_fps": {
+        "name": "Pre-recording frame rate"
+      },
+      "post_rec_time": {
+        "name": "Post-recording time"
       }
     },
     "sensor": {
@@ -910,6 +946,9 @@
       "auto_focus": {
         "name": "Auto focus"
       },
+      "hardwired_chime_enabled": {
+        "name": "Hardwired chime enabled"
+      },
       "guard_return": {
         "name": "Guard return"
       },
@@ -931,6 +970,9 @@
       "manual_record": {
         "name": "Manual record"
       },
+      "pre_record": {
+        "name": "Pre-recording"
+      },
       "hub_ringtone_on_event": {
         "name": "Hub ringtone on event"
       },
@@ -951,6 +993,9 @@
       },
       "privacy_mode": {
         "name": "Privacy mode"
+      },
+      "privacy_mask": {
+        "name": "Privacy mask"
       }
     }
   }

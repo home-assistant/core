@@ -12,10 +12,10 @@
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
         "data": {
-          "implementation": "Credentials"
+          "implementation": "[%key:common::config_flow::data::implementation%]"
         },
         "data_description": {
-          "implementation": "The credentials to use for the OAuth2 flow"
+          "implementation": "[%key:common::config_flow::description::implementation%]"
         }
       }
     },

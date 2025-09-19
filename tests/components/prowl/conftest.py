@@ -1,18 +1,17 @@
 """Test fixtures for Prowl."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.prowl.const import DOMAIN as PROWL_DOMAIN
+from homeassistant.components.prowl.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-
-API_BASE_URL = "https://api.prowlapp.com/publicapi/"
 
 TEST_NAME = "TestProwl"
 TEST_API_KEY = "f00f" * 10
@@ -25,7 +24,9 @@ BAD_API_RESPONSE = {"base": "bad_api_response"}
 
 
 @pytest.fixture
-async def configure_prowl_through_yaml(hass: HomeAssistant, mock_pyprowl_success):
+async def configure_prowl_through_yaml(
+    hass: HomeAssistant, mock_prowlpy: Generator[Mock]
+) -> Generator[None]:
     """Configure the notify domain with YAML for the Prowl platform."""
     await async_setup_component(
         hass,
@@ -33,8 +34,8 @@ async def configure_prowl_through_yaml(hass: HomeAssistant, mock_pyprowl_success
         {
             NOTIFY_DOMAIN: [
                 {
-                    "name": PROWL_DOMAIN,
-                    "platform": PROWL_DOMAIN,
+                    "name": DOMAIN,
+                    "platform": DOMAIN,
                     "api_key": TEST_API_KEY,
                 },
             ]
@@ -44,67 +45,19 @@ async def configure_prowl_through_yaml(hass: HomeAssistant, mock_pyprowl_success
 
 
 @pytest.fixture
-def mock_pyprowl_success():
-    """Mock a successful call to the PyProwl library."""
-    with patch("pyprowl.Prowl") as MockProwl:
+def mock_prowlpy() -> Generator[Mock]:
+    """Mock the prowlpy library."""
+
+    with patch("homeassistant.components.prowl.notify.prowlpy.Prowl") as MockProwl:
         mock_instance = MockProwl.return_value
         yield mock_instance
 
 
 @pytest.fixture
-def mock_pyprowl():
-    """Mock the PyProwl library."""
-
-    with patch("pyprowl.Prowl") as MockProwl:
-        mock_instance = MockProwl.return_value
-        yield mock_instance
-
-
-@pytest.fixture
-def mock_pyprowl_fail():
-    """Mock an unsuccessful call to the PyProwl library."""
-    with patch("pyprowl.Prowl") as MockProwl:
-        mock_instance = MockProwl.return_value
-        mock_instance.verify_key.side_effect = Exception("500 Error")
-        mock_instance.notify.side_effect = Exception("500 Error")
-        yield mock_instance
-
-
-@pytest.fixture
-def mock_pyprowl_forbidden():
-    """Mock an unsuccessful call to the PyProwl library."""
-    with patch("pyprowl.Prowl") as MockProwl:
-        mock_instance = MockProwl.return_value
-        mock_instance.verify_key.side_effect = Exception("401 Unauthorized")
-        mock_instance.notify.side_effect = Exception("401 Unauthorized")
-        yield mock_instance
-
-
-@pytest.fixture
-def mock_pyprowl_timeout():
-    """Mock a timeout to the PyProwl service."""
-    with patch("pyprowl.Prowl") as MockProwl:
-        mock_instance = MockProwl.return_value
-        mock_instance.verify_key.side_effect = TimeoutError
-        mock_instance.notify.side_effect = TimeoutError
-        yield mock_instance
-
-
-@pytest.fixture
-def mock_pyprowl_syntax_error():
-    """Mock a SyntaxError in the PyProwl service."""
-    with patch("pyprowl.Prowl") as MockProwl:
-        mock_instance = MockProwl.return_value
-        mock_instance.verify_key.side_effect = SyntaxError
-        mock_instance.notify.side_effect = SyntaxError
-        yield mock_instance
-
-
-@pytest.fixture
-async def mock_pyprowl_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+async def mock_prowlpy_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Fixture to create a mocked ConfigEntry."""
     # Load the notify component as our initialization depends on it.
     await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: []})
     await hass.async_block_till_done()
 
-    return MockConfigEntry(title="Mocked Prowl", domain=PROWL_DOMAIN, data=CONF_INPUT)
+    return MockConfigEntry(title="Mocked Prowl", domain=DOMAIN, data=CONF_INPUT)

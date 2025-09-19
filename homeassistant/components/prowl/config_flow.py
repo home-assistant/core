@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
 
+import prowlpy
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -14,10 +16,8 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
-from .notify import ProwlNotificationEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,15 +95,16 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _validate_api_key(self, api_key: str):
+    async def _validate_api_key(self, api_key: str) -> dict[str, str]:
         """Validate the provided API key."""
-        prowl = ProwlNotificationEntity(self.hass, DOMAIN, api_key)
+        prowl = prowlpy.Prowl(api_key)
         try:
-            if not await prowl.async_verify_key():
-                return {"base": "invalid_api_key"}
+            async with asyncio.timeout(10):
+                await self.hass.async_add_executor_job(prowl.verify_key)
+                return {}
         except TimeoutError:
             return {"base": "api_timeout"}
-        except HomeAssistantError:
-            _LOGGER.exception("Unexpected error")
+        except prowlpy.APIError as ex:
+            if str(ex).startswith("Invalid API key"):
+                return {"base": "invalid_api_key"}
             return {"base": "bad_api_response"}
-        return {}

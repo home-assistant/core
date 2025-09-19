@@ -9,5 +9,5 @@
   "iot_class": "cloud_push",
   "loggers": ["prowl"],
   "quality_scale": "legacy",
-  "requirements": ["pyprowl==3.0.1"]
+  "requirements": ["prowlpy==1.0.2"]
 }

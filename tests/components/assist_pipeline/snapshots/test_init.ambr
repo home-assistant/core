@@ -8,6 +8,7 @@
         'pipeline': <ANY>,
         'tts_output': dict({
           'mime_type': 'audio/mpeg',
+          'stream_response': False,
           'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
         }),
@@ -44,6 +45,7 @@
         'intent_input': 'test transcript',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -74,6 +76,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -84,7 +87,7 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/tts.test?message=Sorry,+I+couldn't+understand+that&language=en_US&tts_options=%7B%7D",
+          'media_id': 'media-source://tts/-stream-/test_token.mp3',
           'mime_type': 'audio/mpeg',
           'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
@@ -107,6 +110,7 @@
         'pipeline': <ANY>,
         'tts_output': dict({
           'mime_type': 'audio/mpeg',
+          'stream_response': False,
           'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
         }),
@@ -143,6 +147,7 @@
         'intent_input': 'test transcript',
         'language': 'en-US',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -173,6 +178,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'test',
         'language': 'en-US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -183,7 +189,7 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22Arnold+Schwarzenegger%22%7D",
+          'media_id': 'media-source://tts/-stream-/test_token.mp3',
           'mime_type': 'audio/mpeg',
           'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
@@ -206,6 +212,7 @@
         'pipeline': <ANY>,
         'tts_output': dict({
           'mime_type': 'audio/mpeg',
+          'stream_response': False,
           'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
         }),
@@ -242,6 +249,7 @@
         'intent_input': 'test transcript',
         'language': 'en-US',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -272,6 +280,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'test',
         'language': 'en-US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -282,7 +291,7 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22Arnold+Schwarzenegger%22%7D",
+          'media_id': 'media-source://tts/-stream-/test_token.mp3',
           'mime_type': 'audio/mpeg',
           'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
@@ -305,6 +314,7 @@
         'pipeline': <ANY>,
         'tts_output': dict({
           'mime_type': 'audio/mpeg',
+          'stream_response': False,
           'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
         }),
@@ -365,6 +375,7 @@
         'intent_input': 'test transcript',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -395,6 +406,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -405,7 +417,7 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/tts.test?message=Sorry,+I+couldn't+understand+that&language=en_US&tts_options=%7B%7D",
+          'media_id': 'media-source://tts/-stream-/test_token.mp3',
           'mime_type': 'audio/mpeg',
           'token': 'test_token.mp3',
           'url': '/api/tts_proxy/test_token.mp3',
@@ -428,6 +440,7 @@
         'pipeline': <ANY>,
         'tts_output': dict({
           'mime_type': 'audio/mpeg',
+          'stream_response': False,
           'token': 'mocked-token.mp3',
           'url': '/api/tts_proxy/mocked-token.mp3',
         }),

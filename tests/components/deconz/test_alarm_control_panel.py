@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from pydeconz.models.sensor.ancillary_control import AncillaryControlPanel
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,

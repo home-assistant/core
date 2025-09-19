@@ -37,9 +37,13 @@ async def async_get_config_entry_diagnostics(
 
     appliances_manager = config_entry.runtime_data
     diagnostics_data = {
-        "washer_dryers": {
-            wd.name: get_appliance_diagnostics(wd)
-            for wd in appliances_manager.washer_dryers
+        "washers": {
+            washer.name: get_appliance_diagnostics(washer)
+            for washer in appliances_manager.washers
+        },
+        "dryers": {
+            dryer.name: get_appliance_diagnostics(dryer)
+            for dryer in appliances_manager.dryers
         },
         "aircons": {
             ac.name: get_appliance_diagnostics(ac) for ac in appliances_manager.aircons

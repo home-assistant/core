@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{model} ({host})",
     "step": {
       "user": {
         "data": {
@@ -42,6 +43,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
@@ -49,6 +51,18 @@
     }
   },
   "exceptions": {
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "connection_error": {
+      "message": "Could not connect to \"{target}\"."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while setting the date and time on \"{target}\"."
+    },
     "cannot_connect": {
       "message": "Could not connect to panel."
     },
@@ -56,7 +70,23 @@
       "message": "Incorrect credentials for panel."
     },
     "incorrect_door_state": {
-      "message": "Door cannot be manipulated while it is being cycled."
+      "message": "Door cannot be manipulated while it is momentarily unlocked."
+    }
+  },
+  "services": {
+    "set_date_time": {
+      "name": "Set date & time",
+      "description": "Sets the date and time on the alarm panel.",
+      "fields": {
+        "datetime": {
+          "name": "Date & time",
+          "description": "The date and time to set. The time zone of the Home Assistant instance is assumed. If omitted, the current date and time is used."
+        },
+        "config_entry_id": {
+          "name": "Config entry",
+          "description": "The Bosch Alarm integration ID."
+        }
+      }
     }
   },
   "entity": {
@@ -65,7 +95,7 @@
         "name": "Battery missing"
       },
       "panel_fault_ac_fail": {
-        "name": "AC Failure"
+        "name": "AC failure"
       },
       "panel_fault_parameter_crc_fail_in_pif": {
         "name": "CRC failure in panel configuration"
@@ -74,16 +104,16 @@
         "name": "Phone line failure"
       },
       "panel_fault_sdi_fail_since_rps_hang_up": {
-        "name": "SDI failure since RPS hang up"
+        "name": "SDI failure since last RPS connection"
       },
       "panel_fault_user_code_tamper_since_rps_hang_up": {
-        "name": "User code tamper since RPS hang up"
+        "name": "User code tamper since last RPS connection"
       },
       "panel_fault_fail_to_call_rps_since_rps_hang_up": {
-        "name": "Failure to call RPS since RPS hang up"
+        "name": "Failure to call RPS since last RPS connection"
       },
       "panel_fault_point_bus_fail_since_rps_hang_up": {
-        "name": "Point bus failure since RPS hang up"
+        "name": "Point bus failure since last RPS connection"
       },
       "panel_fault_log_overflow": {
         "name": "Log overflow"
@@ -111,7 +141,7 @@
         "name": "Secured"
       },
       "cycling": {
-        "name": "Cycling"
+        "name": "Momentarily unlocked"
       },
       "locked": {
         "name": "Locked"
