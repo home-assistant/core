@@ -9,7 +9,9 @@ from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_creates_repair_issue(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that setup creates a repair issue."""
     mock_config_entry.add_to_hass(hass)
@@ -18,9 +20,6 @@ async def test_setup_entry_creates_repair_issue(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    # Check that the repair issue was created
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "volvooncall_deprecated")
 
     assert issue is not None
@@ -29,7 +28,9 @@ async def test_setup_entry_creates_repair_issue(
 
 
 async def test_unload_entry_removes_repair_issue(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that unloading the last config entry removes the repair issue."""
     mock_config_entry.add_to_hass(hass)
@@ -39,7 +40,6 @@ async def test_unload_entry_removes_repair_issue(
     await hass.async_block_till_done()
 
     # Check that the repair issue was created
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "volvooncall_deprecated")
     assert issue is not None
 
