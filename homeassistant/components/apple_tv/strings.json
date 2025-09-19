@@ -73,9 +73,9 @@
     }
   },
   "services": {
-    "set_search_text": {
-      "name": "Set Search Text",
-      "description": "Set the search text on the Apple TV.",
+    "set_keyboard_text": {
+      "name": "Set keyboard text",
+      "description": "Sets the keyboard text on the Apple TV.",
       "fields": {
         "text": {
           "name": "Text",
@@ -83,9 +83,9 @@
         }
       }
     },
-    "append_search_text": {
-      "name": "Append Search Text",
-      "description": "Append text to the current search text on the Apple TV.",
+    "append_keyboard_text": {
+      "name": "Append keyboard text",
+      "description": "Appends text to the current keyboard text on the Apple TV.",
       "fields": {
         "text": {
           "name": "Text",
@@ -93,9 +93,9 @@
         }
       }
     },
-    "clear_search_text": {
-      "name": "Clear Search Text",
-      "description": "Clear the current search text on the Apple TV."
+    "clear_keyboard_text": {
+      "name": "Clear keyboard text",
+      "description": "Clears the current keyboard text on the Apple TV."
     }
   },
   "exceptions": {

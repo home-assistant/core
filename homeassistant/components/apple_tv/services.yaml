@@ -1,4 +1,4 @@
-set_search_text:
+set_keyboard_text:
   target:
     entity:
       integration: apple_tv
@@ -10,7 +10,7 @@ set_search_text:
       selector:
         text:
 
-append_search_text:
+append_keyboard_text:
   target:
     entity:
       integration: apple_tv
@@ -22,7 +22,7 @@ append_search_text:
       selector:
         text:
 
-clear_search_text:
+clear_keyboard_text:
   target:
     entity:
       integration: apple_tv

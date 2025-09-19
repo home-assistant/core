@@ -1,13 +1,13 @@
 {
   "services": {
-    "set_search_text": {
-      "service": "mdi:magnify"
+    "append_keyboard_text": {
+      "service": "mdi:keyboard"
     },
-    "append_search_text": {
-      "service": "mdi:magnify-plus"
+    "clear_keyboard_text": {
+      "service": "mdi:keyboard"
     },
-    "clear_search_text": {
-      "service": "mdi:magnify-minus"
+    "set_keyboard_text": {
+      "service": "mdi:keyboard"
     }
   }
 }
