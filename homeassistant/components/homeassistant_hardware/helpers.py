@@ -14,7 +14,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_ca
 from . import DATA_COMPONENT
 
 if TYPE_CHECKING:
-    from .util import FirmwareInfo  # noqa: TC004
+    from .util import FirmwareInfo
 
 _LOGGER = logging.getLogger(__name__)
 
