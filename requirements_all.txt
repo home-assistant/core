@@ -84,7 +84,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.70.0
+PySwitchbot==0.71.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -247,7 +247,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.1.0
+aioesphomeapi==41.4.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -735,6 +735,9 @@ colorlog==6.9.0
 # homeassistant.components.color_extractor
 colorthief==0.2.1
 
+# homeassistant.components.compit
+compit-inext-api==0.2.1
+
 # homeassistant.components.concord232
 concord232==0.15.1
 
@@ -1177,7 +1180,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.80
+holidays==0.81
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250903.5
@@ -2254,7 +2257,7 @@ pypaperless==4.1.1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.8.10
+pypck==0.8.12
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2522,7 +2525,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.18.2
+python-roborock==2.44.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.44
@@ -2895,7 +2898,7 @@ switchbot-api==2.8.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==4.1.10
+systembridgeconnector==5.1.0
 
 # homeassistant.components.tailscale
 tailscale==0.6.2
@@ -3041,7 +3044,7 @@ universal-silabs-flasher==0.0.32
 upb-lib==0.6.1
 
 # homeassistant.components.upcloud
-upcloud-api==2.6.0
+upcloud-api==2.8.0
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
