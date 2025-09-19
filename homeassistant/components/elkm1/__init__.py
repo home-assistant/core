@@ -27,7 +27,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -219,22 +219,8 @@ def _async_find_matching_config_entry(
     return None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
-    """Set up Elk-M1 Control from a config entry."""
-    conf = entry.data
-
-    host = hostname_from_url(entry.data[CONF_HOST])
-
-    _LOGGER.debug("Setting up elkm1 %s", conf["host"])
-
-    if (not entry.unique_id or ":" not in entry.unique_id) and is_ip_address(host):
-        _LOGGER.debug(
-            "Unique id for %s is missing during setup, trying to fill from discovery",
-            host,
-        )
-        if device := await async_discover_device(hass, host):
-            async_update_entry_from_discovery(hass, entry, device)
-
+def _setup_elk_config(conf: dict[str, Any]) -> dict[str, Any]:
+    """Set up ElkM1 configuration based on user settings."""
     config: dict[str, Any] = {}
 
     if not conf[CONF_AUTO_CONFIGURE]:
@@ -248,10 +234,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
             try:
                 _included(conf[item]["include"], True, config[item]["included"])
                 _included(conf[item]["exclude"], False, config[item]["included"])
-            except (ValueError, vol.Invalid) as err:
-                _LOGGER.error("Config item: %s; %s", item, err)
-                return False
+            except ValueError:
+                _LOGGER.error("Invalid include/exclude ranges")
+                raise
+    return config
 
+
+def _create_elk_connection(conf: dict[str, Any]) -> Elk:
+    """Create and initialize ElkM1 connection."""
     elk = Elk(
         {
             "url": conf[CONF_HOST],
@@ -260,6 +250,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
         }
     )
     elk.connect()
+    return elk
+
+
+def _setup_keypad_handlers(hass: HomeAssistant, elk: Elk) -> None:
+    """Set up keypad event handlers."""
 
     def _keypad_changed(keypad: Element, changeset: dict[str, Any]) -> None:
         if (keypress := changeset.get("last_keypress")) is None:
@@ -278,11 +273,74 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
     for keypad in elk.keypads:
         keypad.add_callback(_keypad_changed)
 
+
+async def _ensure_elk_connection(elk: Elk, host: str) -> None:
+    """Ensure ElkM1 connection is established and authenticated."""
+
+    def _raise_auth_failed(message: str) -> None:
+        """Raise ConfigEntryAuthFailed with cleanup."""
+        elk.disconnect()
+        raise ConfigEntryAuthFailed(message)
+
+    def _raise_not_ready(message: str, exc: Exception) -> None:
+        """Raise ConfigEntryNotReady with cleanup."""
+        elk.disconnect()
+        raise ConfigEntryNotReady(message) from exc
+
     try:
         if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT):
-            return False
+            # Connection failed, likely due to invalid credentials
+            _LOGGER.error("Failed to connect to ElkM1 at %s", host)
+            _raise_auth_failed(f"Authentication failed for {host}")
     except TimeoutError as exc:
-        raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
+        _raise_not_ready(f"Timed out connecting to {host}", exc)
+    except Exception as exc:
+        if "login failed" in str(exc).lower() or "invalid" in str(exc).lower():
+            _raise_auth_failed(f"Authentication failed for {host}")
+        elk.disconnect()
+        raise
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
+    """Set up Elk-M1 Control from a config entry."""
+    conf = dict(entry.data)  # Convert once at the beginning
+    host = hostname_from_url(entry.data[CONF_HOST])
+
+    _LOGGER.debug("Setting up elkm1 %s", conf["host"])
+
+    # Try to update unique ID from discovery if needed
+    if (not entry.unique_id or ":" not in entry.unique_id) and is_ip_address(host):
+        _LOGGER.debug(
+            "Unique id for %s is missing during setup, trying to fill from discovery",
+            host,
+        )
+        try:
+            if device := await async_discover_device(hass, host):
+                async_update_entry_from_discovery(hass, entry, device)
+            else:
+                _LOGGER.debug(
+                    "No device discovered for %s, continuing with manual configuration",
+                    host,
+                )
+        except (OSError, TimeoutError) as exc:
+            _LOGGER.warning("Discovery failed for %s: %s", host, exc)
+            # Continue with manual configuration even if discovery fails
+
+    # Set up configuration
+    try:
+        config = _setup_elk_config(conf)
+    except ValueError as err:
+        _LOGGER.error("Configuration error: %s", err)
+        return False
+
+    # Create and establish connection
+    elk = _create_elk_connection(conf)
+
+    # Set up event handlers
+    _setup_keypad_handlers(hass, elk)
+
+    # Ensure connection is established
+    await _ensure_elk_connection(elk, host)
 
     elk_temp_unit = elk.panel.temperature_units
     if elk_temp_unit == "C":
