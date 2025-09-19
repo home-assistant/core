@@ -290,6 +290,15 @@
     },
     "delay_no_call": {
       "message": "Delayed call notifications are not supported"
+    },
+    "media_source_not_supported": {
+      "message": "Media source currently not supported"
+    },
+    "attach_url_xor_local": {
+      "message": "Only one attachment source is allowed: URL or local file"
+    },
+    "image_source_not_found": {
+      "message": "The selected image source could not be found"
     }
   },
   "services": {
@@ -328,6 +337,10 @@
         "attach": {
           "name": "Attachment URL",
           "description": "Attach images or other files by URL."
+        },
+        "attach_file": {
+          "name": "Attach local file",
+          "description": "Attach images or other files by uploading from a local file, camera, or image media source. When selecting a camera feed, the current snapshot will be uploaded and attached to the notification."
         },
         "email": {
           "name": "Forward to email",
