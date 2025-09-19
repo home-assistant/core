@@ -294,7 +294,7 @@ class NumberDeviceClass(StrEnum):
     PM4 = "pm4"
     """Particulate matter <= 4 μm.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     POWER_FACTOR = "power_factor"
