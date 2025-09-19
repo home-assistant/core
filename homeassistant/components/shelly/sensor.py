@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final, cast
 
@@ -31,15 +30,17 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_SLEEP_PERIOD, ROLE_TO_DEVICE_CLASS_MAP
+from .const import CONF_SLEEP_PERIOD
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -79,7 +80,6 @@ class BlockSensorDescription(BlockEntityDescription, SensorEntityDescription):
 class RpcSensorDescription(RpcEntityDescription, SensorEntityDescription):
     """Class to describe a RPC sensor."""
 
-    device_class_fn: Callable[[dict], SensorDeviceClass | None] | None = None
     emeter_phase: str | None = None
 
 
@@ -105,12 +105,6 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
 
         if self.option_map:
             self._attr_options = list(self.option_map.values())
-
-        if description.device_class_fn is not None:
-            if device_class := description.device_class_fn(
-                coordinator.device.config[key]
-            ):
-                self._attr_device_class = device_class
 
     @property
     def native_value(self) -> StateType:
@@ -1390,6 +1384,7 @@ RPC_SENSORS: Final = {
         removal_condition=lambda config, _status, key: not is_view_for_platform(
             config, key, SENSOR_PLATFORM
         ),
+        role="generic",
     ),
     "number": RpcSensorDescription(
         key="number",
@@ -1398,9 +1393,7 @@ RPC_SENSORS: Final = {
             config, key, SENSOR_PLATFORM
         ),
         unit=get_virtual_component_unit,
-        device_class_fn=lambda config: ROLE_TO_DEVICE_CLASS_MAP.get(config["role"])
-        if "role" in config
-        else None,
+        role="generic",
     ),
     "enum": RpcSensorDescription(
         key="enum",
@@ -1410,6 +1403,7 @@ RPC_SENSORS: Final = {
         ),
         options_fn=lambda config: config["options"],
         device_class=SensorDeviceClass.ENUM,
+        role="generic",
     ),
     "valve_position": RpcSensorDescription(
         key="blutrv",
@@ -1459,6 +1453,49 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_class=RpcPresenceSensor,
     ),
+    "number_current_humidity": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="current_humidity",
+    ),
+    "number_current_temperature": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="current_temperature",
+    ),
+    "number_flow_rate": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="flow_rate",
+    ),
+    "number_water_pressure": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        native_unit_of_measurement=UnitOfPressure.KPA,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="water_pressure",
+    ),
+    "number_water_temperature": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="water_temperature",
+    ),
     "object_water_consumption": RpcSensorDescription(
         key="object",
         sub_key="value",
@@ -1467,7 +1504,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=3,
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        object_role="water_consumption",
+        role="water_consumption",
     ),
     "object_energy_consumption": RpcSensorDescription(
         key="object",
@@ -1478,7 +1515,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        object_role="phase_info",
+        role="phase_info",
     ),
     "object_total_act_energy": RpcSensorDescription(
         key="object",
@@ -1490,7 +1527,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        object_role="phase_info",
+        role="phase_info",
     ),
     "object_total_power": RpcSensorDescription(
         key="object",
@@ -1502,7 +1539,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        object_role="phase_info",
+        role="phase_info",
     ),
     "object_phase_a_voltage": RpcSensorDescription(
         key="object",
@@ -1513,7 +1550,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        object_role="phase_info",
+        role="phase_info",
     ),
     "object_phase_b_voltage": RpcSensorDescription(
         key="object",
@@ -1524,7 +1561,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        object_role="phase_info",
+        role="phase_info",
     ),
     "object_phase_c_voltage": RpcSensorDescription(
         key="object",
@@ -1535,7 +1572,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        object_role="phase_info",
+        role="phase_info",
     ),
 }
 
