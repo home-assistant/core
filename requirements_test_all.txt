@@ -1929,7 +1929,7 @@ pyrainbird==6.0.1
 pyrate-limiter==3.9.0
 
 # homeassistant.components.rejseplanen
-pyrejseplan==0.1.24
+pyrejseplan==0.1.26
 
 # homeassistant.components.risco
 pyrisco==0.6.7

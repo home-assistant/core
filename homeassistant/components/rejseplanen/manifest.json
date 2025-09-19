@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pyRejsePlan"],
-  "requirements": ["pyrejseplan==0.1.24"]
+  "requirements": ["pyrejseplan==0.1.26"]
 }
