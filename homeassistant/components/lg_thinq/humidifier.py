@@ -150,13 +150,26 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
         )
 
     def _adjust_target_humidity(
-        self, requested: int, step: int = 5, method: str = "round"
+        self,
+        current_target_humidity: float | None,
+        step: int,
+        requested: int,
     ) -> int:
         """Adjust target humidity by device's step."""
         # current: 65, step: 5
         # requested: 66, ceil -> result: 70
         # requested: 64, floor -> result: 60
         # requested: 53, round -> result: 55
+        method = (
+            "round"
+            if (
+                current_target_humidity is None
+                or abs(requested - current_target_humidity) > step
+            )
+            else "ceil"
+            if requested > current_target_humidity
+            else "floor"
+        )
         if method == "round":
             return round(requested / step) * step
         if method == "floor":
@@ -171,20 +184,9 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
             return
 
         if self._target_humidity_step > 1:
-            method = (
-                "round"
-                if (
-                    self.target_humidity is None
-                    or abs(humidity - self.target_humidity) > self._target_humidity_step
-                )
-                else "ceil"
-                if humidity > self.target_humidity
-                else "floor"
-            )
             _adjusted = self._adjust_target_humidity(
-                humidity, self._target_humidity_step, method
+                self.target_humidity, self._target_humidity_step or 5, humidity
             )
-
         _LOGGER.debug(
             "[%s:%s] async_set_humidity: %s, adjusted: %s, step: %s",
             self.coordinator.device_name,
