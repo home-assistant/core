@@ -43,7 +43,7 @@ def mock_is_file():
     """Mock is_file."""
     # All files exist except for the old entity registry file
     with patch(
-        "os.path.isfile", lambda path: not path.endswith("entity_registry.yaml")
+        "os.path.isfile", lambda path: not str(path).endswith("entity_registry.yaml")
     ):
         yield
 

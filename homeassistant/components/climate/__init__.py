@@ -105,11 +105,6 @@ DEFAULT_MAX_HUMIDITY = 99
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH]
 
-# Can be removed in 2025.1 after deprecation period of the new feature flags
-CHECK_TURN_ON_OFF_FEATURE_FLAG = (
-    ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-)
-
 SET_TEMPERATURE_SCHEMA = vol.All(
     cv.has_at_least_one_key(
         ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
@@ -260,7 +255,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     )
 
     entity_description: ClimateEntityDescription
-    _attr_current_humidity: int | None = None
+    _attr_current_humidity: float | None = None
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None

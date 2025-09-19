@@ -102,7 +102,7 @@ async def test_dhcp_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=DhcpServiceInfo(
-            hostname="connbox1234", ip="192.168.1.1", macaddress="11:22:33:44:55:66"
+            hostname="connbox1234", ip="192.168.1.1", macaddress="112233445566"
         ),
         context={"source": SOURCE_DHCP},
     )
@@ -131,7 +131,7 @@ async def test_dhcp_flow_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=DhcpServiceInfo(
-            hostname="connbox1234", ip="192.168.1.1", macaddress="11:22:33:44:55:66"
+            hostname="connbox1234", ip="192.168.1.1", macaddress="112233445566"
         ),
         context={"source": SOURCE_DHCP},
     )

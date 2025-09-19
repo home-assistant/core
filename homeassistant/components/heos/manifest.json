@@ -13,5 +13,6 @@
     {
       "st": "urn:schemas-denon-com:device:ACT-Denon:1"
     }
-  ]
+  ],
+  "zeroconf": ["_heos-audio._tcp.local."]
 }

@@ -3,14 +3,19 @@
     "binary_sensor": {
       "leaving_dock": {
         "default": "mdi:debug-step-out"
-      },
-      "returning_to_dock": {
-        "default": "mdi:debug-step-into"
       }
     },
     "button": {
       "sync_clock": {
         "default": "mdi:clock-check-outline"
+      },
+      "reset_cutting_blade_usage_time": {
+        "default": "mdi:saw-blade"
+      }
+    },
+    "event": {
+      "message": {
+        "default": "mdi:alert-circle-check-outline"
       }
     },
     "number": {
@@ -26,6 +31,9 @@
     "sensor": {
       "error": {
         "default": "mdi:alert-circle-outline"
+      },
+      "inactive_reason": {
+        "default": "mdi:sleep"
       },
       "my_lawn_last_time_completed": {
         "default": "mdi:clock-outline"
@@ -47,6 +55,26 @@
       },
       "work_area_progress": {
         "default": "mdi:collage"
+      }
+    },
+    "switch": {
+      "my_lawn_work_area": {
+        "default": "mdi:square-outline",
+        "state": {
+          "on": "mdi:square"
+        }
+      },
+      "work_area_work_area": {
+        "default": "mdi:square-outline",
+        "state": {
+          "on": "mdi:square"
+        }
+      },
+      "stay_out_zones": {
+        "default": "mdi:rhombus-outline",
+        "state": {
+          "on": "mdi:rhombus"
+        }
       }
     }
   },

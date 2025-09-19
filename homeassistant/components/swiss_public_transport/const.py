@@ -29,7 +29,6 @@ PLACEHOLDERS = {
     "opendata_url": "http://transport.opendata.ch",
 }
 
-ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
 ATTR_LIMIT: Final = "limit"
 
 SERVICE_FETCH_CONNECTIONS = "fetch_connections"

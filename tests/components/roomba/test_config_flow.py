@@ -77,12 +77,12 @@ DISCOVERY_DEVICES = [
 DHCP_DISCOVERY_DEVICES_WITHOUT_MATCHING_IP = [
     DhcpServiceInfo(
         ip="4.4.4.4",
-        macaddress="50:14:79:DD:EE:FF",
+        macaddress="501479ddeeff",
         hostname="irobot-blid",
     ),
     DhcpServiceInfo(
         ip="5.5.5.5",
-        macaddress="80:A5:89:DD:EE:FF",
+        macaddress="80a589ddeeff",
         hostname="roomba-blid",
     ),
 ]

@@ -2,8 +2,10 @@
 
 from abc import abstractmethod
 import asyncio
+from collections.abc import Callable, Sequence
 import io
 import logging
+from ssl import SSLContext
 from types import MappingProxyType
 from typing import Any
 
@@ -13,6 +15,7 @@ from telegram import (
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    InputPollOption,
     Message,
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
@@ -34,7 +37,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -74,7 +76,6 @@ from .const import (
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
     CONF_CHAT_ID,
-    CONF_PROXY_PARAMS,
     CONF_PROXY_URL,
     DOMAIN,
     EVENT_TELEGRAM_CALLBACK,
@@ -100,13 +101,26 @@ _LOGGER = logging.getLogger(__name__)
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 
 
+def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
+    return {
+        "config_entry_id": config_entry.entry_id,
+        "id": bot.id,
+        "first_name": bot.first_name,
+        "last_name": bot.last_name,
+        "username": bot.username,
+    }
+
+
 class BaseTelegramBot:
     """The base class for the telegram bot."""
 
-    def __init__(self, hass: HomeAssistant, config: TelegramBotConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config: TelegramBotConfigEntry, bot: Bot
+    ) -> None:
         """Initialize the bot base class."""
         self.hass = hass
         self.config = config
+        self._bot = bot
 
     @abstractmethod
     async def shutdown(self) -> None:
@@ -132,6 +146,8 @@ class BaseTelegramBot:
         else:
             _LOGGER.warning("Unhandled update: %s", update)
             return True
+
+        event_data["bot"] = _get_bot_info(self._bot, self.config)
 
         event_context = Context()
 
@@ -262,7 +278,9 @@ class TelegramNotificationService:
 
         return allowed_chat_ids
 
-    def _get_msg_ids(self, msg_data, chat_id):
+    def _get_msg_ids(
+        self, msg_data: dict[str, Any], chat_id: int
+    ) -> tuple[Any | None, int | None]:
         """Get the message id to edit.
 
         This can be one of (message_id, inline_message_id) from a msg dict,
@@ -270,7 +288,8 @@ class TelegramNotificationService:
         **You can use 'last' as message_id** to edit
         the message last sent in the chat_id.
         """
-        message_id = inline_message_id = None
+        message_id: Any | None = None
+        inline_message_id: int | None = None
         if ATTR_MESSAGEID in msg_data:
             message_id = msg_data[ATTR_MESSAGEID]
             if (
@@ -283,29 +302,37 @@ class TelegramNotificationService:
             inline_message_id = msg_data["inline_message_id"]
         return message_id, inline_message_id
 
-    def _get_target_chat_ids(self, target):
+    def get_target_chat_ids(self, target: int | list[int] | None) -> list[int]:
         """Validate chat_id targets or return default target (first).
 
         :param target: optional list of integers ([12234, -12345])
         :return list of chat_id targets (integers)
         """
         allowed_chat_ids: list[int] = self._get_allowed_chat_ids()
-        default_user: int = allowed_chat_ids[0]
-        if target is not None:
-            if isinstance(target, int):
-                target = [target]
-            chat_ids = [t for t in target if t in allowed_chat_ids]
-            if chat_ids:
-                return chat_ids
-            _LOGGER.warning(
-                "Disallowed targets: %s, using default: %s", target, default_user
-            )
-        return [default_user]
 
-    def _get_msg_kwargs(self, data):
+        if target is None:
+            return [allowed_chat_ids[0]]
+
+        chat_ids = [target] if isinstance(target, int) else target
+        valid_chat_ids = [
+            chat_id for chat_id in chat_ids if chat_id in allowed_chat_ids
+        ]
+        if not valid_chat_ids:
+            raise ServiceValidationError(
+                "Invalid chat IDs",
+                translation_domain=DOMAIN,
+                translation_key="invalid_chat_ids",
+                translation_placeholders={
+                    "chat_ids": ", ".join(str(chat_id) for chat_id in chat_ids),
+                    "bot_name": self.config.title,
+                },
+            )
+        return valid_chat_ids
+
+    def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
 
-        def _make_row_inline_keyboard(row_keyboard):
+        def _make_row_inline_keyboard(row_keyboard: Any) -> list[InlineKeyboardButton]:
             """Make a list of InlineKeyboardButtons.
 
             It can accept:
@@ -321,8 +348,8 @@ class TelegramNotificationService:
                 for key in row_keyboard.split(","):
                     if ":/" in key:
                         # check if command or URL
-                        if key.startswith("https://"):
-                            label = key.split(",")[0]
+                        if "https://" in key:
+                            label = key.split(":")[0]
                             url = key[len(label) + 1 :]
                             buttons.append(InlineKeyboardButton(label, url=url))
                         else:
@@ -350,7 +377,7 @@ class TelegramNotificationService:
             return buttons
 
         # Defaults
-        params = {
+        params: dict[str, Any] = {
             ATTR_PARSER: self.parse_mode,
             ATTR_DISABLE_NOTIF: False,
             ATTR_DISABLE_WEB_PREV: None,
@@ -362,9 +389,7 @@ class TelegramNotificationService:
         }
         if data is not None:
             if ATTR_PARSER in data:
-                params[ATTR_PARSER] = self._parsers.get(
-                    data[ATTR_PARSER], self.parse_mode
-                )
+                params[ATTR_PARSER] = data[ATTR_PARSER]
             if ATTR_TIMEOUT in data:
                 params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
             if ATTR_DISABLE_NOTIF in data:
@@ -396,17 +421,25 @@ class TelegramNotificationService:
                 params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
                     [_make_row_inline_keyboard(row) for row in keys]
                 )
+        if params[ATTR_PARSER] == PARSER_PLAIN_TEXT:
+            params[ATTR_PARSER] = None
         return params
 
     async def _send_msg(
-        self, func_send, msg_error, message_tag, *args_msg, context=None, **kwargs_msg
-    ):
+        self,
+        func_send: Callable,
+        msg_error: str,
+        message_tag: str | None,
+        *args_msg: Any,
+        context: Context | None = None,
+        **kwargs_msg: Any,
+    ) -> Any:
         """Send one message."""
         try:
             out = await func_send(*args_msg, **kwargs_msg)
-            if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
+            if isinstance(out, Message):
                 chat_id = out.chat_id
-                message_id = out[ATTR_MESSAGEID]
+                message_id = out.message_id
                 self._last_message_id[chat_id] = message_id
                 _LOGGER.debug(
                     "Last message ID: %s (from chat_id %s)",
@@ -414,7 +447,7 @@ class TelegramNotificationService:
                     chat_id,
                 )
 
-                event_data = {
+                event_data: dict[str, Any] = {
                     ATTR_CHAT_ID: chat_id,
                     ATTR_MESSAGEID: message_id,
                 }
@@ -424,12 +457,11 @@ class TelegramNotificationService:
                     event_data[ATTR_MESSAGE_THREAD_ID] = kwargs_msg[
                         ATTR_MESSAGE_THREAD_ID
                     ]
+
+                event_data["bot"] = _get_bot_info(self.bot, self.config)
+
                 self.hass.bus.async_fire(
                     EVENT_TELEGRAM_SENT, event_data, context=context
-                )
-            elif not isinstance(out, bool):
-                _LOGGER.warning(
-                    "Update last message: out_type:%s, out=%s", type(out), out
                 )
         except TelegramError as exc:
             _LOGGER.error(
@@ -438,13 +470,19 @@ class TelegramNotificationService:
             return None
         return out
 
-    async def send_message(self, message="", target=None, context=None, **kwargs):
+    async def send_message(
+        self,
+        message: str = "",
+        target: Any = None,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> dict[int, int]:
         """Send a message to one or multiple pre-allowed chat IDs."""
         title = kwargs.get(ATTR_TITLE)
         text = f"{title}\n{message}" if title else message
         params = self._get_msg_kwargs(kwargs)
         msg_ids = {}
-        for chat_id in self._get_target_chat_ids(target):
+        for chat_id in self.get_target_chat_ids(target):
             _LOGGER.debug("Send message in chat ID %s with params: %s", chat_id, params)
             msg = await self._send_msg(
                 self.bot.send_message,
@@ -465,12 +503,17 @@ class TelegramNotificationService:
                 msg_ids[chat_id] = msg.id
         return msg_ids
 
-    async def delete_message(self, chat_id=None, context=None, **kwargs):
+    async def delete_message(
+        self,
+        chat_id: int | None = None,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> bool:
         """Delete a previously sent message."""
-        chat_id = self._get_target_chat_ids(chat_id)[0]
+        chat_id = self.get_target_chat_ids(chat_id)[0]
         message_id, _ = self._get_msg_ids(kwargs, chat_id)
         _LOGGER.debug("Delete message %s in chat ID %s", message_id, chat_id)
-        deleted = await self._send_msg(
+        deleted: bool = await self._send_msg(
             self.bot.delete_message,
             "Error deleting message",
             None,
@@ -484,9 +527,15 @@ class TelegramNotificationService:
             self._last_message_id[chat_id] -= 1
         return deleted
 
-    async def edit_message(self, type_edit, chat_id=None, context=None, **kwargs):
+    async def edit_message(
+        self,
+        type_edit: str,
+        chat_id: int | None = None,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> Any:
         """Edit a previously sent message."""
-        chat_id = self._get_target_chat_ids(chat_id)[0]
+        chat_id = self.get_target_chat_ids(chat_id)[0]
         message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
@@ -542,8 +591,13 @@ class TelegramNotificationService:
         )
 
     async def answer_callback_query(
-        self, message, callback_query_id, show_alert=False, context=None, **kwargs
-    ):
+        self,
+        message: str | None,
+        callback_query_id: str,
+        show_alert: bool = False,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> None:
         """Answer a callback originated with a press in an inline keyboard."""
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
@@ -563,17 +617,43 @@ class TelegramNotificationService:
             context=context,
         )
 
+    async def send_chat_action(
+        self,
+        chat_action: str = "",
+        target: Any = None,
+        context: Context | None = None,
+        **kwargs: Any,
+    ) -> dict[int, int]:
+        """Send a chat action to pre-allowed chat IDs."""
+        result = {}
+        for chat_id in self.get_target_chat_ids(target):
+            _LOGGER.debug("Send action %s in chat ID %s", chat_action, chat_id)
+            is_successful = await self._send_msg(
+                self.bot.send_chat_action,
+                "Error sending action",
+                None,
+                chat_id=chat_id,
+                action=chat_action,
+                context=context,
+            )
+            result[chat_id] = is_successful
+        return result
+
     async def send_file(
-        self, file_type=SERVICE_SEND_PHOTO, target=None, context=None, **kwargs
-    ):
+        self,
+        file_type: str,
+        target: Any = None,
+        context: Context | None = None,
+        **kwargs: Any,
+    ) -> dict[int, int]:
         """Send a photo, sticker, video, or document."""
         params = self._get_msg_kwargs(kwargs)
         file_content = await load_data(
             self.hass,
             url=kwargs.get(ATTR_URL),
             filepath=kwargs.get(ATTR_FILE),
-            username=kwargs.get(ATTR_USERNAME),
-            password=kwargs.get(ATTR_PASSWORD),
+            username=kwargs.get(ATTR_USERNAME, ""),
+            password=kwargs.get(ATTR_PASSWORD, ""),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
             verify_ssl=(
                 get_default_context()
@@ -584,7 +664,7 @@ class TelegramNotificationService:
 
         msg_ids = {}
         if file_content:
-            for chat_id in self._get_target_chat_ids(target):
+            for chat_id in self.get_target_chat_ids(target):
                 _LOGGER.debug("Sending file to chat ID %s", chat_id)
 
                 if file_type == SERVICE_SEND_PHOTO:
@@ -690,14 +770,19 @@ class TelegramNotificationService:
 
         return msg_ids
 
-    async def send_sticker(self, target=None, context=None, **kwargs) -> dict:
+    async def send_sticker(
+        self,
+        target: Any = None,
+        context: Context | None = None,
+        **kwargs: Any,
+    ) -> dict[int, int]:
         """Send a sticker from a telegram sticker pack."""
         params = self._get_msg_kwargs(kwargs)
         stickerid = kwargs.get(ATTR_STICKER_ID)
 
         msg_ids = {}
         if stickerid:
-            for chat_id in self._get_target_chat_ids(target):
+            for chat_id in self.get_target_chat_ids(target):
                 msg = await self._send_msg(
                     self.bot.send_sticker,
                     "Error sending sticker",
@@ -713,17 +798,22 @@ class TelegramNotificationService:
                 )
                 msg_ids[chat_id] = msg.id
             return msg_ids
-        return await self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
+        return await self.send_file(SERVICE_SEND_STICKER, target, context, **kwargs)
 
     async def send_location(
-        self, latitude, longitude, target=None, context=None, **kwargs
-    ):
+        self,
+        latitude: Any,
+        longitude: Any,
+        target: Any = None,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> dict[int, int]:
         """Send a location."""
         latitude = float(latitude)
         longitude = float(longitude)
         params = self._get_msg_kwargs(kwargs)
         msg_ids = {}
-        for chat_id in self._get_target_chat_ids(target):
+        for chat_id in self.get_target_chat_ids(target):
             _LOGGER.debug(
                 "Send location %s/%s to chat ID %s", latitude, longitude, chat_id
             )
@@ -745,19 +835,19 @@ class TelegramNotificationService:
 
     async def send_poll(
         self,
-        question,
-        options,
-        is_anonymous,
-        allows_multiple_answers,
-        target=None,
-        context=None,
-        **kwargs,
-    ):
+        question: str,
+        options: Sequence[str | InputPollOption],
+        is_anonymous: bool | None,
+        allows_multiple_answers: bool | None,
+        target: Any = None,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> dict[int, int]:
         """Send a poll."""
         params = self._get_msg_kwargs(kwargs)
         openperiod = kwargs.get(ATTR_OPEN_PERIOD)
         msg_ids = {}
-        for chat_id in self._get_target_chat_ids(target):
+        for chat_id in self.get_target_chat_ids(target):
             _LOGGER.debug("Send poll '%s' to chat ID %s", question, chat_id)
             msg = await self._send_msg(
                 self.bot.send_poll,
@@ -778,12 +868,50 @@ class TelegramNotificationService:
             msg_ids[chat_id] = msg.id
         return msg_ids
 
-    async def leave_chat(self, chat_id=None, context=None, **kwargs):
+    async def leave_chat(
+        self,
+        chat_id: int | None = None,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> Any:
         """Remove bot from chat."""
-        chat_id = self._get_target_chat_ids(chat_id)[0]
+        chat_id = self.get_target_chat_ids(chat_id)[0]
         _LOGGER.debug("Leave from chat ID %s", chat_id)
         return await self._send_msg(
             self.bot.leave_chat, "Error leaving chat", None, chat_id, context=context
+        )
+
+    async def set_message_reaction(
+        self,
+        reaction: str,
+        chat_id: int | None = None,
+        is_big: bool = False,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> None:
+        """Set the bot's reaction for a given message."""
+        chat_id = self.get_target_chat_ids(chat_id)[0]
+        message_id, _ = self._get_msg_ids(kwargs, chat_id)
+        params = self._get_msg_kwargs(kwargs)
+
+        _LOGGER.debug(
+            "Set reaction to message %s in chat ID %s to %s with params: %s",
+            message_id,
+            chat_id,
+            reaction,
+            params,
+        )
+
+        await self._send_msg(
+            self.bot.set_message_reaction,
+            "Error setting message reaction",
+            params[ATTR_MESSAGE_TAG],
+            chat_id,
+            message_id,
+            reaction=reaction,
+            is_big=is_big,
+            read_timeout=params[ATTR_TIMEOUT],
+            context=context,
         )
 
 
@@ -791,52 +919,9 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
     """Initialize telegram bot with proxy support."""
     api_key: str = p_config[CONF_API_KEY]
     proxy_url: str | None = p_config.get(CONF_PROXY_URL)
-    proxy_params: dict | None = p_config.get(CONF_PROXY_PARAMS)
 
     if proxy_url is not None:
-        auth = None
-        if proxy_params is None:
-            # CONF_PROXY_PARAMS has been kept for backwards compatibility.
-            proxy_params = {}
-        elif "username" in proxy_params and "password" in proxy_params:
-            # Auth can actually be stuffed into the URL, but the docs have previously
-            # indicated to put them here.
-            auth = proxy_params.pop("username"), proxy_params.pop("password")
-            ir.create_issue(
-                hass,
-                DOMAIN,
-                "proxy_params_auth_deprecation",
-                breaks_in_ha_version="2024.10.0",
-                is_persistent=False,
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_placeholders={
-                    "proxy_params": CONF_PROXY_PARAMS,
-                    "proxy_url": CONF_PROXY_URL,
-                    "telegram_bot": "Telegram bot",
-                },
-                translation_key="proxy_params_auth_deprecation",
-                learn_more_url="https://github.com/home-assistant/core/pull/112778",
-            )
-        else:
-            ir.create_issue(
-                hass,
-                DOMAIN,
-                "proxy_params_deprecation",
-                breaks_in_ha_version="2024.10.0",
-                is_persistent=False,
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_placeholders={
-                    "proxy_params": CONF_PROXY_PARAMS,
-                    "proxy_url": CONF_PROXY_URL,
-                    "httpx": "httpx",
-                    "telegram_bot": "Telegram bot",
-                },
-                translation_key="proxy_params_deprecation",
-                learn_more_url="https://github.com/home-assistant/core/pull/112778",
-            )
-        proxy = httpx.Proxy(proxy_url, auth=auth, **proxy_params)
+        proxy = httpx.Proxy(proxy_url)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
         request = HTTPXRequest(connection_pool_size=8)
@@ -845,19 +930,19 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
 
 async def load_data(
     hass: HomeAssistant,
-    url=None,
-    filepath=None,
-    username=None,
-    password=None,
-    authentication=None,
-    num_retries=5,
-    verify_ssl=None,
-):
+    url: str | None,
+    filepath: str | None,
+    username: str,
+    password: str,
+    authentication: str | None,
+    verify_ssl: SSLContext,
+    num_retries: int = 5,
+) -> io.BytesIO:
     """Load data into ByteIO/File container from a source."""
     if url is not None:
         # Load data from URL
         params: dict[str, Any] = {}
-        headers = {}
+        headers: dict[str, str] = {}
         _validate_credentials_input(authentication, username, password)
         if authentication == HTTP_BEARER_AUTHENTICATION:
             headers = {"Authorization": f"Bearer {password}"}
@@ -930,7 +1015,7 @@ def _validate_credentials_input(
 ) -> None:
     if (
         authentication in (HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
-        and username is None
+        and not username
     ):
         raise ServiceValidationError(
             "Username is required.",
@@ -946,7 +1031,7 @@ def _validate_credentials_input(
             HTTP_BEARER_AUTHENTICATION,
             HTTP_BEARER_AUTHENTICATION,
         )
-        and password is None
+        and not password
     ):
         raise ServiceValidationError(
             "Password is required.",

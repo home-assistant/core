@@ -57,6 +57,7 @@ from .const import (
     COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
+    DEVICE_UNIT_MAP,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -451,7 +452,7 @@ def get_rpc_entity_name(
 
 def get_device_entry_gen(entry: ConfigEntry) -> int:
     """Return the device generation from config entry."""
-    return entry.data.get(CONF_GEN, 1)
+    return entry.data.get(CONF_GEN, 1)  # type: ignore[no-any-return]
 
 
 def get_rpc_key_instances(
@@ -653,6 +654,22 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
     return ids
 
 
+def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> bool:
+    """Return true if the virtual component view match the platform."""
+    component = VIRTUAL_COMPONENTS_MAP[platform]
+    view = config[key]["meta"]["ui"]["view"]
+    return view in component["modes"]
+
+
+def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
+    """Return the unit of a virtual component.
+
+    If the unit is not set, the device sends an empty string
+    """
+    unit = config["meta"]["ui"]["unit"]
+    return DEVICE_UNIT_MAP.get(unit, unit) if unit else None
+
+
 @callback
 def async_remove_orphaned_entities(
     hass: HomeAssistant,
@@ -672,20 +689,20 @@ def async_remove_orphaned_entities(
     ):
         return
 
-    device_id = devices[0].id
-    entities = er.async_entries_for_device(entity_reg, device_id, True)
-    for entity in entities:
-        if not entity.entity_id.startswith(platform):
-            continue
-        if key_suffix is not None and key_suffix not in entity.unique_id:
-            continue
-        # we are looking for the component ID, e.g. boolean:201, em1data:1
-        if not (match := COMPONENT_ID_PATTERN.search(entity.unique_id)):
-            continue
+    for device in devices:
+        entities = er.async_entries_for_device(entity_reg, device.id, True)
+        for entity in entities:
+            if not entity.entity_id.startswith(platform):
+                continue
+            if key_suffix is not None and key_suffix not in entity.unique_id:
+                continue
+            # we are looking for the component ID, e.g. boolean:201, em1data:1
+            if not (match := COMPONENT_ID_PATTERN.search(entity.unique_id)):
+                continue
 
-        key = match.group()
-        if key not in keys:
-            orphaned_entities.append(entity.unique_id.split("-", 1)[1])
+            key = match.group()
+            if key not in keys:
+                orphaned_entities.append(entity.unique_id.split("-", 1)[1])
 
     if orphaned_entities:
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
@@ -749,8 +766,12 @@ async def get_rpc_scripts_event_types(
 def get_rpc_device_info(
     device: RpcDevice,
     mac: str,
+    configuration_url: str,
+    model: str,
+    model_name: str | None = None,
     key: str | None = None,
     emeter_phase: str | None = None,
+    suggested_area: str | None = None,
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     if key is None:
@@ -770,7 +791,11 @@ def get_rpc_device_info(
             identifiers={(DOMAIN, f"{mac}-{key}-{emeter_phase.lower()}")},
             name=get_rpc_sub_device_name(device, key, emeter_phase),
             manufacturer="Shelly",
+            model=model_name,
+            model_id=model,
+            suggested_area=suggested_area,
             via_device=(DOMAIN, mac),
+            configuration_url=configuration_url,
         )
 
     if (
@@ -784,12 +809,16 @@ def get_rpc_device_info(
         identifiers={(DOMAIN, f"{mac}-{key}")},
         name=get_rpc_sub_device_name(device, key),
         manufacturer="Shelly",
+        model=model_name,
+        model_id=model,
+        suggested_area=suggested_area,
         via_device=(DOMAIN, mac),
+        configuration_url=configuration_url,
     )
 
 
 def get_blu_trv_device_info(
-    config: dict[str, Any], ble_addr: str, parent_mac: str
+    config: dict[str, Any], ble_addr: str, parent_mac: str, fw_ver: str | None
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     model_id = config.get("local_name")
@@ -801,11 +830,18 @@ def get_blu_trv_device_info(
         model=BLU_TRV_MODEL_NAME.get(model_id) if model_id else None,
         model_id=config.get("local_name"),
         name=config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}",
+        sw_version=fw_ver,
     )
 
 
 def get_block_device_info(
-    device: BlockDevice, mac: str, block: Block | None = None
+    device: BlockDevice,
+    mac: str,
+    configuration_url: str,
+    model: str,
+    model_name: str | None = None,
+    block: Block | None = None,
+    suggested_area: str | None = None,
 ) -> DeviceInfo:
     """Return device info for Block device."""
     if (
@@ -820,7 +856,11 @@ def get_block_device_info(
         identifiers={(DOMAIN, f"{mac}-{block.description}")},
         name=get_block_sub_device_name(device, block),
         manufacturer="Shelly",
+        model=model_name,
+        model_id=model,
+        suggested_area=suggested_area,
         via_device=(DOMAIN, mac),
+        configuration_url=configuration_url,
     )
 
 
@@ -851,3 +891,27 @@ def remove_stale_blu_trv_devices(
 
         LOGGER.debug("Removing stale BLU TRV device %s", device.name)
         dev_reg.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
+
+
+@callback
+def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove sub devices without entities."""
+    dev_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
+
+    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+
+    for device in devices:
+        if not device.via_device_id:
+            # Device is not a sub-device, skip
+            continue
+
+        if er.async_entries_for_device(entity_reg, device.id, True):
+            # Device has entities, skip
+            continue
+
+        if any(identifier[0] == DOMAIN for identifier in device.identifiers):
+            LOGGER.debug("Removing empty sub-device %s", device.name)
+            dev_reg.async_update_device(
+                device.id, remove_config_entry_id=entry.entry_id
+            )

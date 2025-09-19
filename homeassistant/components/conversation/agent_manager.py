@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -12,12 +12,7 @@ from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
 
-from .const import (
-    DATA_COMPONENT,
-    DATA_DEFAULT_ENTITY,
-    HOME_ASSISTANT_AGENT,
-    OLD_HOME_ASSISTANT_AGENT,
-)
+from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT
 from .entity import ConversationEntity
 from .models import (
     AbstractConversationAgent,
@@ -32,6 +27,9 @@ from .trace import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from .default_agent import DefaultAgent
 
 
 @singleton.singleton("conversation_agent")
@@ -54,8 +52,10 @@ def async_get_agent(
     hass: HomeAssistant, agent_id: str | None = None
 ) -> AbstractConversationAgent | ConversationEntity | None:
     """Get specified agent."""
-    if agent_id is None or agent_id in (HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT):
-        return hass.data[DATA_DEFAULT_ENTITY]
+    manager = get_agent_manager(hass)
+
+    if agent_id is None or agent_id == HOME_ASSISTANT_AGENT:
+        return manager.default_agent
 
     if "." in agent_id:
         return hass.data[DATA_COMPONENT].get_entity(agent_id)
@@ -76,6 +76,7 @@ async def async_converse(
     language: str | None = None,
     agent_id: str | None = None,
     device_id: str | None = None,
+    satellite_id: str | None = None,
     extra_system_prompt: str | None = None,
 ) -> ConversationResult:
     """Process text and get intent."""
@@ -102,6 +103,7 @@ async def async_converse(
         context=context,
         conversation_id=conversation_id,
         device_id=device_id,
+        satellite_id=satellite_id,
         language=language,
         agent_id=agent_id,
         extra_system_prompt=extra_system_prompt,
@@ -137,6 +139,7 @@ class AgentManager:
         """Initialize the conversation agents."""
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
+        self.default_agent: DefaultAgent | None = None
 
     @callback
     def async_get_agent(self, agent_id: str) -> AbstractConversationAgent | None:
@@ -185,3 +188,7 @@ class AgentManager:
     def async_unset_agent(self, agent_id: str) -> None:
         """Unset the agent."""
         self._agents.pop(agent_id, None)
+
+    async def async_setup_default_agent(self, agent: DefaultAgent) -> None:
+        """Set up the default agent."""
+        self.default_agent = agent

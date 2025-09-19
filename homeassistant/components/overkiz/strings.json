@@ -21,7 +21,7 @@
         }
       },
       "cloud": {
-        "description": "Enter your application credentials.",
+        "description": "Enter your credentials.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -123,7 +123,7 @@
     "sensor": {
       "battery": {
         "state": {
-          "full": "Full",
+          "full": "[%key:common::state::full%]",
           "low": "[%key:common::state::low%]",
           "normal": "[%key:common::state::normal%]",
           "medium": "[%key:common::state::medium%]",
