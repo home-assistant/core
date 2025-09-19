@@ -120,6 +120,7 @@ class AppleTvMediaPlayer(
         """Initialize the Apple TV media player."""
         super().__init__(name, identifier, manager)
         self._playing: Playing | None = None
+        self._power: PowerState | None = None
         self._playing_last_updated: datetime | None = None
         self._app_list: dict[str, str] = {}
 
@@ -192,6 +193,8 @@ class AppleTvMediaPlayer(
             and self.atv.power.power_state == PowerState.Off
         ):
             return MediaPlayerState.OFF
+        if self._power == PowerState.Off:
+            return MediaPlayerState.OFF
         if self._playing:
             state = self._playing.device_state
             if state in (DeviceState.Idle, DeviceState.Loading):
@@ -200,6 +203,8 @@ class AppleTvMediaPlayer(
                 return MediaPlayerState.PLAYING
             if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
                 return MediaPlayerState.PAUSED
+            if self._power == PowerState.On:
+                return MediaPlayerState.ON
             return MediaPlayerState.IDLE  # Bad or unknown state?
         return None
 
@@ -229,6 +234,7 @@ class AppleTvMediaPlayer(
 
         This is a callback function from pyatv.interface.PowerListener.
         """
+        self._power = new_state
         self.async_write_ha_state()
 
     @callback
