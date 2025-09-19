@@ -104,5 +104,4 @@ async def test_user_step_duplicate_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    # Login should not be called if already configured
     mock_api.login.assert_not_called()

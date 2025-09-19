@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 from redgtech_api.api import RedgtechAPI, RedgtechAuthError, RedgtechConnectionError
 
@@ -16,7 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-UPDATE_INTERVAL = timedelta(seconds=10)
+UPDATE_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -39,7 +40,7 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
 
     def __init__(self, hass: HomeAssistant, config_entry: RedgtechConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.api = RedgtechAPI()
+        self.api: Any = RedgtechAPI()  # type: ignore[no-untyped-call]
         self.access_token: str | None = None
         self.email = config_entry.data[CONF_EMAIL]
         self.password = config_entry.data[CONF_PASSWORD]
@@ -69,14 +70,21 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
         self.access_token = await self.api.login(email, password)
         _LOGGER.debug("Access token renewed successfully")
 
+    async def ensure_token(self) -> None:
+        """Ensure we have a valid access token, renewing if necessary."""
+        if not self.access_token:
+            _LOGGER.debug("No access token, logging in")
+            self.access_token = await self.login(self.email, self.password)
+        else:
+            _LOGGER.debug("Using existing access token")
+
     async def _async_update_data(self) -> list[RedgtechDevice]:
         """Fetch data from the API on demand."""
         _LOGGER.debug("Fetching data from Redgtech API on demand")
         try:
-            if not self.access_token:
-                self.access_token = await self.api.login(self.email, self.password)
+            await self.ensure_token()
 
-            data = await self.api.get_data(self.access_token)
+            data = await self.api.get_data(self.access_token or "")
         except RedgtechAuthError:
             _LOGGER.debug("Auth failed, trying to renew token")
             try:
@@ -84,11 +92,21 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
                     self.config_entry.data[CONF_EMAIL],
                     self.config_entry.data[CONF_PASSWORD],
                 )
-                data = await self.api.get_data(self.access_token)
+                data = await self.api.get_data(self.access_token or "")
             except RedgtechAuthError as e:
-                raise ConfigEntryError(
-                    "Authentication error while renewing access token"
-                ) from e
+                # Start reauth flow instead of raising ConfigEntryError
+                _LOGGER.warning("Authentication failed, starting reauth flow")
+                self.hass.async_create_task(
+                    self.hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={
+                            "source": "reauth",
+                            "entry_id": self.config_entry.entry_id,
+                        },
+                        data=self.config_entry.data,
+                    )
+                )
+                raise UpdateFailed("Authentication failed, reauth flow started") from e
             except RedgtechConnectionError as e:
                 raise UpdateFailed("Connection error during token renewal") from e
 
