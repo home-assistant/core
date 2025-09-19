@@ -197,6 +197,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_PM1,
                     CONF_IS_PM10,
                     CONF_IS_PM25,
+                    CONF_IS_PM4,
                     CONF_IS_PRECIPITATION,
                     CONF_IS_PRECIPITATION_INTENSITY,
                     CONF_IS_PRESSURE,

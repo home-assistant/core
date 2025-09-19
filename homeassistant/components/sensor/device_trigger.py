@@ -195,6 +195,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_PM1,
                     CONF_PM10,
                     CONF_PM25,
+                    CONF_PM4,
                     CONF_POWER,
                     CONF_POWER_FACTOR,
                     CONF_PRECIPITATION,
