@@ -47,8 +47,6 @@ class LunatoneLight(
 
     unique_id: str
 
-    _unavailable_logged: bool = False
-
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_has_entity_name = True
