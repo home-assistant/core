@@ -111,6 +111,13 @@ async def test_entities_setup(hass: HomeAssistant) -> None:
     assert device is not None
     assert device.serial_number == "SN1"
 
+    # Zone 2 (disabled flag) should be disabled by default in the registry
+    disabled_switch = ent_reg.async_get_entity_id("switch", DOMAIN, "yid123-1")
+    assert disabled_switch is not None
+    disabled_entry = ent_reg.async_get(disabled_switch)
+    assert disabled_entry is not None and disabled_entry.disabled
+    assert disabled_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
 
 @pytest.mark.asyncio
 async def test_binary_sensors_state(hass: HomeAssistant) -> None:
@@ -353,9 +360,9 @@ async def test_disabled_by_default_entities(hass: HomeAssistant) -> None:
         )
         assert eid is not None
         reg_entry = ent_reg.async_get(eid)
-    assert reg_entry is not None and reg_entry.disabled
-    assert reg_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-    assert reg_entry.entity_category is EntityCategory.DIAGNOSTIC
+        assert reg_entry is not None and reg_entry.disabled
+        assert reg_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert reg_entry.entity_category is EntityCategory.DIAGNOSTIC
 
     # Diagnostic sensors disabled by default
     for dom, uid in (
@@ -370,3 +377,84 @@ async def test_disabled_by_default_entities(hass: HomeAssistant) -> None:
         assert reg_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         assert reg_entry.entity_category is EntityCategory.DIAGNOSTIC
 
+
+@pytest.mark.asyncio
+async def test_switch_start_irrigation_passes_minutes(hass: HomeAssistant) -> None:
+    """start_irrigation service forwards minutes directly to the client."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.2.3.4",
+            "access_token": "abc",
+            "name": "Yardian",
+            "yid": "yid123",
+            "model": "PRO1902",
+            "serialNumber": "SN1",
+        },
+        title="Yardian Smart Sprinkler",
+        unique_id="yid123",
+    )
+    entry.add_to_hass(hass)
+
+    fake = FakeYardianClient()
+    with (
+        patch(
+            "homeassistant.components.yardian.AsyncYardianClient",
+            return_value=fake,
+        ),
+        patch(
+            "homeassistant.requirements.RequirementsManager.async_process_requirements",
+            return_value=None,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    ent_reg = er.async_get(hass)
+    switch_entity_id = ent_reg.async_get_entity_id("switch", DOMAIN, "yid123-0")
+    assert switch_entity_id is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        "start_irrigation",
+        {"entity_id": switch_entity_id, "duration": 7},
+        blocking=True,
+    )
+    fake.start_irrigation.assert_awaited_with(0, 7)
+
+
+@pytest.mark.asyncio
+async def test_switch_service_registered(hass: HomeAssistant) -> None:
+    """Ensure start_irrigation entity service is registered."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.2.3.4",
+            "access_token": "abc",
+            "name": "Yardian",
+            "yid": "yid123",
+            "model": "PRO1902",
+            "serialNumber": "SN1",
+        },
+        title="Yardian Smart Sprinkler",
+        unique_id="yid123",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.yardian.AsyncYardianClient",
+            return_value=FakeYardianClient(),
+        ),
+        patch(
+            "homeassistant.requirements.RequirementsManager.async_process_requirements",
+            return_value=None,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    services = hass.services.async_services().get(DOMAIN, {})
+    assert "start_irrigation" in services
