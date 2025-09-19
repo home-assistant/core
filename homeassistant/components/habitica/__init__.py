@@ -101,7 +101,18 @@ async def async_setup_entry(
     coordinator.async_add_listener(_party_update_listener)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(_async_update_listener)
+    )
     return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, entry: HabiticaConfigEntry
+) -> None:
+    """Handle update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def shutdown_party_coordinator(hass: HomeAssistant, party_added: UUID) -> None:
