@@ -35,6 +35,6 @@ class NintendoDevice(CoordinatorEntity[NintendoUpdateCoordinator]):
         await super().async_added_to_hass()
         self._device.add_device_callback(self.async_write_ha_state)
 
-    async def async_removed_from_registry(self) -> None:
-        """When entity is removed."""
+    async def async_will_remove_from_hass(self) -> None:
+        """When will be removed from HASS."""
         self._device.remove_device_callback(self.async_write_ha_state)
