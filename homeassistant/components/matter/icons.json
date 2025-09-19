@@ -136,6 +136,9 @@
     "number": {
       "cook_time": {
         "default": "mdi:microwave"
+      },
+      "unoccupied_heating_temperature_setpoint": {
+        "default": "mdi:home-export-outline"
       }
     },
     "switch": {
