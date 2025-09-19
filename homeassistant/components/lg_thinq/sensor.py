@@ -315,7 +315,7 @@ WATER_FILTER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.WATER_FILTER_1_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.WATER_FILTER_1_REMAIN_PERCENT,
         native_unit_of_measurement=PERCENTAGE,
-        translation_key=ThinQProperty.WATER_FILTER_STATE,
+        translation_key=ThinQProperty.WATER_FILTER_1_REMAIN_PERCENT,
     ),
     ThinQProperty.WATER_FILTER_2_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.WATER_FILTER_2_REMAIN_PERCENT,

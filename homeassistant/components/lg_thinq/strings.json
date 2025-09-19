@@ -619,6 +619,9 @@
       "water_filter_state": {
         "name": "Water filter"
       },
+      "water_filter_1_remain_percent": {
+        "name": "Water filter"
+      },
       "water_filter_2_remain_percent": {
         "name": "Water filter stage 2"
       },
