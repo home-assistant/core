@@ -182,7 +182,6 @@ class Trigger(abc.ABC):
     class Config:
         """Trigger config."""
 
-        key: str  # The key used to identify the trigger type, e.g. "zwave.event"
         target: dict[str, Any] | None = None
         options: dict[str, Any] | None = None
 
@@ -564,9 +563,7 @@ async def async_initialize_triggers(
             trigger = trigger_cls(
                 hass,
                 Trigger.Config(
-                    key=trigger_key,
-                    target=conf.get(CONF_TARGET),
-                    options=conf.get(CONF_OPTIONS),
+                    target=conf.get(CONF_TARGET), options=conf.get(CONF_OPTIONS)
                 ),
             )
             coro = trigger.async_attach(action_wrapper, info)
