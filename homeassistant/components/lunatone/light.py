@@ -18,6 +18,7 @@ from .coordinator import LunatoneConfigEntry, LunatoneDevicesDataUpdateCoordinat
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+STATUS_UPDATE_DELAY = 0.02
 
 
 async def async_setup_entry(
@@ -97,7 +98,7 @@ class LunatoneLight(
         if self._device is None:
             return
         await self._device.switch_on()
-        await asyncio.sleep(0.02)
+        await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -105,5 +106,5 @@ class LunatoneLight(
         if self._device is None:
             return
         await self._device.switch_off()
-        await asyncio.sleep(0.02)
+        await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self.coordinator.async_refresh()
