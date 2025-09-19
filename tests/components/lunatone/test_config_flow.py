@@ -10,6 +10,8 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import BASE_URL
+
 from tests.common import MockConfigEntry
 
 
@@ -80,11 +82,11 @@ async def test_device_already_configured(
 
 
 async def test_user_step_invalid_url(
-    hass: HomeAssistant, base_url: str, mock_lunatone_info: AsyncMock
+    hass: HomeAssistant, mock_lunatone_info: AsyncMock
 ) -> None:
     """Test if cannot connect."""
     mock_lunatone_info.async_update.side_effect = aiohttp.InvalidUrlClientError(
-        base_url
+        BASE_URL
     )
 
     result = await hass.config_entries.flow.async_init(

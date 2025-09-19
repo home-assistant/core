@@ -4,22 +4,22 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from lunatone_rest_api_client import Device
-from lunatone_rest_api_client.models import ControlData, DeviceData
+from lunatone_rest_api_client.models import ControlData
 import pytest
 
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.components.lunatone.light import LunatoneLight
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import DEVICE_DATA_LIST, SERIAL_NUMBER
+
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_lunatone_device(
-    mock_lunatone_auth: AsyncMock, device_data_list: list[DeviceData]
-) -> Device:
+def mock_lunatone_device(mock_lunatone_auth: AsyncMock) -> Device:
     """Mock a Lunatone device object."""
-    device = Device(mock_lunatone_auth, device_data_list[0])
+    device = Device(mock_lunatone_auth, DEVICE_DATA_LIST[0])
     device.async_update = AsyncMock()
     device.async_control = AsyncMock()
     return device
@@ -51,11 +51,8 @@ def mock_lunatone_devices_coordinator(
 
 @pytest.fixture
 def light_entity(
-    mock_lunatone_devices_coordinator: AsyncMock,
-    mock_lunatone_device: Device,
-    serial_number: int,
-    device_data_list: list[DeviceData],
-):
+    mock_lunatone_devices_coordinator: AsyncMock, mock_lunatone_device: Device
+) -> LunatoneLight:
     """Create a LunatoneLight entity using the mock device."""
 
     async def fake_control(control_data: ControlData):
@@ -67,7 +64,7 @@ def light_entity(
     mock_lunatone_device.async_control.side_effect = fake_control
 
     entity = LunatoneLight(
-        mock_lunatone_devices_coordinator, mock_lunatone_device.id, serial_number
+        mock_lunatone_devices_coordinator, mock_lunatone_device.id, SERIAL_NUMBER
     )
     entity._device = mock_lunatone_device
     entity.async_write_ha_state = MagicMock()
@@ -76,14 +73,12 @@ def light_entity(
 
 async def test_setup(
     setup_integration: MockConfigEntry,
-    device_data_list: list[DeviceData],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    serial_number: int,
 ) -> None:
     """Test the Lunatone configuration entry loading/unloading."""
-    for device_data in device_data_list:
-        expected_unique_id = f"{serial_number}-device{device_data.id}"
+    for device_data in DEVICE_DATA_LIST:
+        expected_unique_id = f"{SERIAL_NUMBER}-device{device_data.id}"
 
         entry = entity_registry.async_get(f"light.device_{device_data.id}")
         assert entry

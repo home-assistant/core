@@ -9,6 +9,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from . import BASE_URL, VERSION
+
 from tests.common import MockConfigEntry
 
 
@@ -113,8 +115,6 @@ async def test_config_entry_not_ready_no_serial_number(
 
 
 async def test_device_info(
-    base_url: str,
-    version: str,
     setup_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
@@ -126,8 +126,8 @@ async def test_device_info(
     )
     assert device_entry is not None
     assert device_entry.manufacturer == "Lunatone"
-    assert device_entry.sw_version == version
-    assert device_entry.configuration_url == base_url
+    assert device_entry.sw_version == VERSION
+    assert device_entry.configuration_url == BASE_URL
 
 
 async def test_serial_number_is_missing(
