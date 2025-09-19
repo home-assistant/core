@@ -9,7 +9,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
+from homeassistant.const import (
+    ATTR_RESTORED,
+    CONF_ATTRIBUTE,
+    CONF_FOR,
+    CONF_PLATFORM,
+    MATCH_ALL,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -136,6 +142,11 @@ async def async_attach_trigger(
         entity = event.data["entity_id"]
         from_s = event.data["old_state"]
         to_s = event.data["new_state"]
+
+        # Skip triggering automations if the new state has the restored flag
+        # This prevents duplicate automation triggers during integration reloads
+        if to_s and to_s.attributes.get(ATTR_RESTORED):
+            return
 
         if from_s is None:
             old_value = None
