@@ -229,7 +229,7 @@ def _setup_elk_config(conf: dict[str, Any]) -> dict[str, Any]:
         for item, max_ in ELK_ELEMENTS.items():
             config[item] = {
                 "enabled": conf[item][CONF_ENABLED],
-                "included": [not conf[item]["include"]] * max_,
+                "included": [False] * max_,
             }
             try:
                 _included(conf[item]["include"], True, config[item]["included"])
@@ -366,16 +366,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
 
 def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -> None:
     for rng in ranges:
-        if not rng[0] <= rng[1] <= len(values):
+        if not (rng[0] >= 1 and rng[0] <= rng[1] and rng[1] <= len(values)):
             raise vol.Invalid(f"Invalid range {rng}")
-        values[rng[0] - 1 : rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
+        values[rng[0] - 1 : rng[1] + 1] = [set_to] * (rng[1] - rng[0] + 1)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     # disconnect cleanly
-    entry.runtime_data.elk.disconnect()
+    if getattr(entry, "runtime_data", None) and getattr(
+        entry.runtime_data, "elk", None
+    ):
+        entry.runtime_data.elk.disconnect()
     return unload_ok
 
 
