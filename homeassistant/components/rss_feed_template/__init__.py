@@ -30,6 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
                                 {
                                     vol.Optional("title"): cv.template,
                                     vol.Optional("description"): cv.template,
+                                    vol.Optional("link"): cv.template,
                                 }
                             ],
                         ),
@@ -98,6 +99,10 @@ class RssView(HomeAssistantView):
                 response += "      <description>"
                 response += escape(item["description"].async_render(parse_result=False))
                 response += "</description>\n"
+            if "link" in item:
+                response += "      <link>"
+                response += escape(item["link"].async_render(parse_result=False))
+                response += "</link>\n"
             response += "    </item>\n"
 
         response += "  </channel>\n"
