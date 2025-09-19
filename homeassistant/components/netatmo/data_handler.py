@@ -49,8 +49,10 @@ from .const import (
     NETATMO_CREATE_WEATHER_SENSOR,
     PLATFORMS,
     WEBHOOK_ACTIVATION,
+    WEBHOOK_DBCAMERA_CONNECTION,
     WEBHOOK_DEACTIVATION,
     WEBHOOK_NACAMERA_CONNECTION,
+    WEBHOOK_NOCAMERA_CONNECTION,
     WEBHOOK_PUSH_TYPE,
 )
 
@@ -186,7 +188,7 @@ class NetatmoDataHandler:
         self.config_entry.async_on_unload(
             async_dispatcher_connect(
                 self.hass,
-                f"signal-{DOMAIN}-webhook-None",
+                f"webhook-{DOMAIN}-webhook-None",
                 self.handle_event,
             )
         )
@@ -246,9 +248,17 @@ class NetatmoDataHandler:
             _LOGGER.debug("%s webhook unregistered", MANUFACTURER)
             self._webhook = False
 
-        elif event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_NACAMERA_CONNECTION:
+        elif event["data"][WEBHOOK_PUSH_TYPE] in [
+            WEBHOOK_DBCAMERA_CONNECTION,
+            WEBHOOK_NACAMERA_CONNECTION,
+            WEBHOOK_NOCAMERA_CONNECTION,
+        ]:
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
             self.async_force_update(ACCOUNT)
+        else:
+            _LOGGER.debug(
+                "Received webhook event without unexpected push_type: %s", event
+            )
 
     async def async_fetch_data(self, signal_name: str) -> bool:
         """Fetch data and notify."""

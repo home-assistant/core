@@ -15,6 +15,7 @@ from homeassistant.components.netatmo.const import (
     SERVICE_SET_CAMERA_LIGHT,
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
+    WEBHOOK_PUSH_TYPE,
 )
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -23,6 +24,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .common import (
+    FAKE_WEBHOOK_ACTIVATION,
     fake_post_request,
     selected_platforms,
     simulate_webhook,
@@ -54,85 +56,123 @@ async def test_setup_component_with_webhook(
     hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test setup with webhook."""
-    with selected_platforms([Platform.CAMERA]):
+    fake_post_hits = 0
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Fake error during requesting backend data."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook_generate_url",
+        ) as mock_webhook,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_webhook.return_value = "https://example.com"
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
+    # Define the mock home_id and camera_id for the test
+    _home_id = "91763b24c43d3e344f424e8b"
+    _camera_id_indoor = "12:34:56:00:f1:62"
+    _camera_entity_indoor = "camera.hall"
+    _camera_id_outdoor = "12:34:56:10:b9:0e"
+    _camera_entity_outdoor = "camera.front"
+
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     await hass.async_block_till_done()
 
-    camera_entity_indoor = "camera.hall"
-    camera_entity_outdoor = "camera.front"
-    assert hass.states.get(camera_entity_indoor).state == "streaming"
+    assert hass.states.get(_camera_entity_indoor).state == "streaming"
+
     response = {
+        "user_id": "1234567890",
         "event_type": "off",
-        "device_id": "12:34:56:00:f1:62",
-        "camera_id": "12:34:56:00:f1:62",
-        "event_id": "601dce1560abca1ebad9b723",
-        "push_type": "NACamera-off",
+        "device_id": _camera_id_indoor,
+        "camera_id": _camera_id_indoor,
+        "event_id": "1234567890",
+        "home_id": _home_id,
+        WEBHOOK_PUSH_TYPE: "NACamera-off",
     }
     await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
 
-    assert hass.states.get(camera_entity_indoor).state == "idle"
+    assert hass.states.get(_camera_entity_indoor).state == "idle"
 
     response = {
         "event_type": "on",
-        "device_id": "12:34:56:00:f1:62",
-        "camera_id": "12:34:56:00:f1:62",
+        "device_id": _camera_id_indoor,
+        "camera_id": _camera_id_indoor,
         "event_id": "646227f1dc0dfa000ec5f350",
+        "home_id": _home_id,
         "push_type": "NACamera-on",
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert hass.states.get(camera_entity_indoor).state == "streaming"
+    assert hass.states.get(_camera_entity_indoor).state == "streaming"
 
     response = {
         "event_type": "light_mode",
-        "device_id": "12:34:56:10:b9:0e",
-        "camera_id": "12:34:56:10:b9:0e",
+        "device_id": _camera_id_outdoor,
+        "camera_id": _camera_id_outdoor,
         "event_id": "601dce1560abca1ebad9b723",
+        "home_id": _home_id,
         "push_type": "NOC-light_mode",
         "sub_type": "on",
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert hass.states.get(camera_entity_outdoor).state == "streaming"
-    assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "on"
+    assert hass.states.get(_camera_entity_outdoor).state == "streaming"
+    assert hass.states.get(_camera_entity_outdoor).attributes["light_state"] == "on"
 
     response = {
         "event_type": "light_mode",
-        "device_id": "12:34:56:10:b9:0e",
-        "camera_id": "12:34:56:10:b9:0e",
+        "device_id": _camera_id_outdoor,
+        "camera_id": _camera_id_outdoor,
         "event_id": "601dce1560abca1ebad9b723",
+        "home_id": _home_id,
+        "push_type": "NOC-light_mode",
+        "sub_type": "off",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(_camera_entity_outdoor).attributes["light_state"] == "off"
+
+    response = {
+        "event_type": "light_mode",
+        "device_id": _camera_id_outdoor,
+        "camera_id": _camera_id_outdoor,
+        "event_id": "601dce1560abca1ebad9b723",
+        "home_id": _home_id,
         "push_type": "NOC-light_mode",
         "sub_type": "auto",
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "auto"
-
-    response = {
-        "event_type": "light_mode",
-        "device_id": "12:34:56:10:b9:0e",
-        "event_id": "601dce1560abca1ebad9b723",
-        "push_type": "NOC-light_mode",
-    }
-    await simulate_webhook(hass, webhook_id, response)
-
-    assert hass.states.get(camera_entity_indoor).state == "streaming"
-    assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "auto"
+    assert hass.states.get(_camera_entity_outdoor).state == "streaming"
+    assert hass.states.get(_camera_entity_outdoor).attributes["light_state"] == "auto"
 
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
-            "camera", "turn_off", service_data={"entity_id": "camera.hall"}
+            "camera", "turn_off", service_data={"entity_id": _camera_entity_indoor}
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {
                 "modules": [
                     {
-                        "id": "12:34:56:00:f1:62",
+                        "id": _camera_id_indoor,
                         "monitoring": "off",
                     }
                 ]
@@ -141,14 +181,14 @@ async def test_setup_component_with_webhook(
 
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
-            "camera", "turn_on", service_data={"entity_id": "camera.hall"}
+            "camera", "turn_on", service_data={"entity_id": _camera_entity_indoor}
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {
                 "modules": [
                     {
-                        "id": "12:34:56:00:f1:62",
+                        "id": _camera_id_indoor,
                         "monitoring": "on",
                     }
                 ]
@@ -430,25 +470,64 @@ async def test_camera_reconnect_webhook(
 
         await hass.async_block_till_done()
 
+        _home_id = "91763b24c43d3e344f424e8b"
+        _camera_id_indoor = "12:34:56:00:f1:62"
+        _camera_entity_indoor = "camera.hall"
+
         webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
         # Fake webhook activation
-        response = {
-            "push_type": "webhook_activation",
-        }
-        await simulate_webhook(hass, webhook_id, response)
+        await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 9
+        assert fake_post_hits == 8
 
         calls = fake_post_hits
 
-        # Fake camera reconnect
+        # Fake camera disconnect
         response = {
-            "push_type": "NACamera-connection",
+            "user_id": "1234567890",
+            "event_type": "disconnection",
+            "event_id": "1234567890",
+            "camera_id": _camera_id_indoor,
+            "device_id": _camera_id_indoor,
+            "home_id": _home_id,
+            WEBHOOK_PUSH_TYPE: "NACamera-disconnection",
         }
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
+
+        assert hass.states.get(_camera_entity_indoor).state == "idle"
+
+        # Fake camera reconnect
+        response = {
+            "user_id": "1234567890",
+            "event_type": "connection",
+            "event_id": "1234567890",
+            "camera_id": _camera_id_indoor,
+            "device_id": _camera_id_indoor,
+            "home_id": _home_id,
+            "message": "MYHOME: Indoor Camera has reconnected to the server",
+            WEBHOOK_PUSH_TYPE: "NACamera-connection",
+        }
+        await simulate_webhook(hass, webhook_id, response)
+        await hass.async_block_till_done()
+
+        # Fake camera on
+        response = {
+            "user_id": "1234567890",
+            "event_type": "on",
+            "event_id": "1234567890",
+            "camera_id": _camera_id_indoor,
+            "device_id": _camera_id_indoor,
+            "home_id": _home_id,
+            "message": "MYHOME: Indoor Camera has reconnected to the server",
+            WEBHOOK_PUSH_TYPE: "NACamera-on",
+        }
+        await simulate_webhook(hass, webhook_id, response)
+        await hass.async_block_till_done()
+
+        assert hass.states.get(_camera_entity_indoor).state == "streaming"
 
         async_fire_time_changed(
             hass,
@@ -528,7 +607,7 @@ async def test_setup_component_no_devices(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 9
+        assert fake_post_hits == 8
 
 
 async def test_camera_image_raises_exception(
@@ -578,4 +657,4 @@ async def test_camera_image_raises_exception(
         await camera.async_get_image(hass, camera_entity_indoor)
 
     assert excinfo.value.args == ("Unable to get image",)
-    assert fake_post_hits == 10
+    assert fake_post_hits == 9
