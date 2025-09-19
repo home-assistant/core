@@ -46,8 +46,6 @@ class LunatoneLight(
 ):
     """Representation of a Lunatone light."""
 
-    unique_id: str
-
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_has_entity_name = True
@@ -72,7 +70,7 @@ class LunatoneLight(
         """Return the device info."""
         name = self._device.name if self._device is not None else None
         return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, str(self.unique_id))},
             name=name,
             via_device=(DOMAIN, str(self._interface_serial_number)),
         )
