@@ -1379,8 +1379,7 @@ async def test_position_updates(
     state = hass.states.get(entity_id)
 
     assert state.attributes[ATTR_MEDIA_POSITION] == 42
-    # Updated at should be recent
-
+    # updated_at should be recent
     updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
     assert updated_at > now
 
