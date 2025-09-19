@@ -1376,16 +1376,13 @@ async def test_position_updates(
     soco.avTransport.subscribe.return_value.callback(media_event)
 
     with freeze_time("2024-01-01T12:00:00Z") as frozen_time:
-        now = datetime.now(UTC)
         await hass.async_block_till_done(wait_background_tasks=True)
-
         entity_id = "media_player.zone_a"
         state = hass.states.get(entity_id)
-
         assert state.attributes[ATTR_MEDIA_POSITION] == 42
         # updated_at should be recent
         updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
-        assert updated_at == now
+        assert updated_at == datetime.now(UTC)
 
         # Position only updated by 1 second; should not update attributes
         new_track_info = current_track_info.copy()
@@ -1398,7 +1395,6 @@ async def test_position_updates(
         frozen_time.tick(delta=timedelta(seconds=1))
         soco.avTransport.subscribe.return_value.callback(new_media_event)
         await hass.async_block_till_done(wait_background_tasks=True)
-
         state = hass.states.get(entity_id)
         assert state.attributes[ATTR_MEDIA_POSITION] == 42
         assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == updated_at
