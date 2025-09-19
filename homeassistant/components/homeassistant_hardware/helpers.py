@@ -1,5 +1,7 @@
 """Home Assistant Hardware integration helpers."""
 
+from __future__ import annotations
+
 from collections import defaultdict
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
