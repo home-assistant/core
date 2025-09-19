@@ -145,6 +145,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     # enums
     host_mock.whiteled_mode.return_value = 1
     host_mock.whiteled_mode_list.return_value = ["off", "auto"]
+    host_mock.whiteled_color_temperature.return_value = 3000
     host_mock.doorbell_led.return_value = "Off"
     host_mock.doorbell_led_list.return_value = ["stayoff", "auto"]
     host_mock.auto_track_method.return_value = 3
